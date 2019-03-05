@@ -48,16 +48,16 @@ def get_image_parameters(
     """
     
     image_parameters = {}
-    image_parameters['Particle Center X List'] = particle_center_x_list()
-    image_parameters['Particle Center Y List'] = particle_center_y_list()
-    image_parameters['Particle Radius List'] = particle_radius_list()
-    image_parameters['Particle Bessel Orders List'] = particle_bessel_orders_list()
-    image_parameters['Particle Intensities List'] = particle_intensities_list()
-    image_parameters['Image Half-Size'] = image_half_size()
-    image_parameters['Image Background Level'] = image_background_level()
-    image_parameters['Signal to Noise Ratio'] = signal_to_noise_ratio()
-    image_parameters['Gradient Intensity'] = gradient_intensity()
-    image_parameters['Gradient Direction'] = gradient_direction()
+    image_parameters['Particle Center X List'] = particle_center_x_list
+    image_parameters['Particle Center Y List'] = particle_center_y_list
+    image_parameters['Particle Radius List'] = particle_radius_list
+    image_parameters['Particle Bessel Orders List'] = particle_bessel_orders_list
+    image_parameters['Particle Intensities List'] = particle_intensities_list
+    image_parameters['Image Half-Size'] = image_half_size
+    image_parameters['Image Background Level'] = image_background_level
+    image_parameters['Signal to Noise Ratio'] = signal_to_noise_ratio
+    image_parameters['Gradient Intensity'] = gradient_intensity
+    image_parameters['Gradient Direction'] = gradient_direction
 
     return image_parameters
 
@@ -163,9 +163,15 @@ def get_image_generator(image_parameters_function=lambda : get_image_parameters(
     """    
     
     image_number = 0
+    
+    lamdict = image_parameters_function()
+    image_parameters = {}
+    
     while image_number<max_number_of_images:
         
-        image_parameters = image_parameters_function()
+        for key, value in lamdict.items():
+            image_parameters[key] = value()
+
         image = generate_image(image_parameters)
 
         yield image_number, image, image_parameters
