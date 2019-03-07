@@ -581,6 +581,7 @@ def track_frame(
     """  
 
     import numpy as np
+    import cv2
     
     frame_width = frame.shape[1]
     frame_height = frame.shape[0]
@@ -616,9 +617,13 @@ def track_frame(
             # Define the scanning box
             boxes[j, k] = frame[int(box_center_x[j] - box_half_size):int(box_center_x[j] + box_half_size + 1), 
                                 int(box_center_y[k] - box_half_size):int(box_center_y[k] + box_half_size + 1)]
-
+            
+            box_predict = boxes[j, k]
+            
+            box_predict = cv2.resize(boxes[j, k], (51, 51))
+            
             # Predict position of particle with respect to the scanning box
-            prediction_wrt_box[j, k] = network.predict(np.reshape(boxes[j, k], (1, 51, 51, 1)))
+            prediction_wrt_box[j, k] = network.predict(np.reshape(box_predict, (1, 51, 51, 1)))
 
             prediction_wrt_box[j, k][0] = prediction_wrt_box[j, k][0] * box_half_size + box_half_size
             prediction_wrt_box[j, k][1] = prediction_wrt_box[j, k][1] * box_half_size + box_half_size
@@ -645,13 +650,16 @@ def track_video(
     network: the pre-trained network
     number_frames_to_be_tracked: number of frames to by analyzed from video begining. If number_frames is equal to 0 then the whole video is tracked.
     box_half_size: half the size of the scanning box. If box_half_size is equal to 0 then a single particle is tracked in a frame.
-    box_scanning_step: the size of the scanning step 
+    box_scanning_step: the size of the scanning step
+    frame_normalize: option to normalize the frame before tracking.
+    frame_enhance: option to enhance the frame before tracking.
     
     Output:
     frames: frames from video
     predicted_positions_wrt_frame: x, y and r coordinates with respect to the all frames (pixels) 
     predicted_positions_wrt_box: x, y and r coordinates with respect to the boxes for all frames (pixels) 
     boxes_all: the part of the frame corresponding to each box for all frames
+    number_frames_to_be_tracked: the number of frames that have been tracked. 
     """
     
     import cv2
@@ -667,7 +675,7 @@ def track_video(
     video_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
 
     # Initialize variables
-    frames = np.zeros((min(number_frames_to_be_tracked,10), video_height, video_width))
+    frames = np.zeros((number_frames_to_be_tracked, video_height, video_width))
 
    
     box_center_x = np.arange(box_half_size, 
@@ -712,8 +720,8 @@ def track_video(
 
         (prediction_wrt_box, prediction_wrt_frame, boxes) = track_frame(network, frame, box_half_size, box_scanning_step)
 
-        if i < 10:
-            frames[i] = frame
+
+        frames[i] = frame
             
         predicted_positions_wrt_box[i] = prediction_wrt_box
         predicted_positions_wrt_frame[i] = prediction_wrt_frame
@@ -721,8 +729,9 @@ def track_video(
 
     # Release the video
     video.release()
+    
 
-    return (frames, predicted_positions_wrt_frame, predicted_positions_wrt_box, boxes_all)
+    return (number_frames_to_be_tracked, frames, predicted_positions_wrt_frame, predicted_positions_wrt_box, boxes_all)
 
 def plot_tracked_scanning_boxes(
     frame_to_be_shown,
@@ -746,21 +755,14 @@ def plot_tracked_scanning_boxes(
     """
 
     import matplotlib.pyplot as plt
-    
+       
     plt.figure(10)
 
     for i in list(frame_to_be_shown):
         for j in list(rows_to_be_shown):
             for k in list(columns_to_be_shown):
 
-                print ('frame', i)
-                print ('row', j)
-                print ('column', k)
-
-                print ('particle center x = %5.2f px' % predicted_positions_wrt_box[i, j, k, 0])
-                print ('particle center y = %5.2f px' % predicted_positions_wrt_box[i, j, k, 1])
-                print ('particle radius = %5.2f px' % predicted_positions_wrt_box[i, j, k, 2])
-
+                plt.subplot(1, 2, 1)
                 plt.imshow(boxes_all[i, j, k],
                            cmap='gray', 
                            vmin=0, 
@@ -769,7 +771,25 @@ def plot_tracked_scanning_boxes(
                 plt.plot(predicted_positions_wrt_box[i, j, k, 1],
                          predicted_positions_wrt_box[i, j, k, 0], 
                          'ob')
+                plt.xlabel('y (px)', fontsize=16)
+                plt.ylabel('x (px)', fontsize=16)
+                
+                
+                plt.subplot(1, 2, 2)
 
+                plt.text(0, .8, 'frame = %1.0f' % i, fontsize=16)
+                plt.text(0, .7, 'row = %1.0f' % j, fontsize=16)
+                plt.text(0, .6, 'column = %1.0f' % k, fontsize=16)
+                
+                plt.text(0, .4, 'particle center x = %5.2f px' % predicted_positions_wrt_box[i, j, k, 0], 
+                         fontsize=16, color='b')
+                plt.text(0, .3, 'particle center y = %5.2f px' % predicted_positions_wrt_box[i, j, k, 1], 
+                         fontsize=16, color='b')
+                plt.text(0, .2, 'particle radius = %5.2f px' % predicted_positions_wrt_box[i, j, k, 2], 
+                         fontsize=16, color='b')
+                plt.axis('off')
+
+                
                 plt.show()
 
 def centroids(
@@ -906,6 +926,8 @@ def show_tracked_frames(
             fillstyle='none',
             markersize=10,
             )
+        
+    return(particle_positions, particle_centroids)
 
 def track_video_single_particle(
     video_file_name,
@@ -938,7 +960,7 @@ def track_video_single_particle(
     video_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     # Initialize variables
-    frames = np.zeros((min(number_frames_to_be_tracked, 10), video_height, video_width))
+    frames = np.zeros((number_frames_to_be_tracked, video_height, video_width))
 
     predicted_positions = np.zeros((number_frames_to_be_tracked, 3))
 
@@ -972,6 +994,7 @@ def track_video_single_particle(
         predicted_positions[i, 1] = predicted_position_y
         predicted_positions[i, 2] = predicted_position_r
     
+       
         if i < 10:
             frames[i] = frame
         
@@ -979,7 +1002,7 @@ def track_video_single_particle(
     # Release the video
     video.release()
 
-    return (frames, predicted_positions)
+    return (number_frames_to_be_tracked, frames, predicted_positions)
 
 def show_tracked_frames_single_particle(
     number_frames_to_be_shown,
