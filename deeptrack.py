@@ -927,7 +927,7 @@ def show_tracked_frames(
             markersize=10,
             )
         
-    return(particle_positions, particle_centroids)
+    return #(particle_positions, particle_centroids)
 
 def track_video_single_particle(
     video_file_name,
