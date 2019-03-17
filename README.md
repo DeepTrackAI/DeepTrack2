@@ -3,7 +3,7 @@ By Saga Helgadottir, Aykut Argun and Giovanni Volpe.
 
 DeepTrack is a trainable convolutional neural network that predicts the positon of objects in microscope images. This is the code for the paper [Digital video microscopy enhanced by deep learning](https://arxiv.org/abs/1812.02653 "Digital video microscopy enhanced by deep learning"). 
 
-<img src="https://github.com/giovannivolpe/DeepTrack/blob/develop/fig1.png" />
+<img src="https://github.com/giovannivolpe/DeepTrack/blob/develop/DeepTrack architecture.png" />
 
 ## Dependencies 
 * Python 3.6 
@@ -22,7 +22,7 @@ The network is trained on various kinds of simulated images of particles with gi
 
 After the network has been trained it can be used to track different kind of objects in images. For example, the particles and bacteria in the video below can be tracked seperately:
 
-![](video4.gif)
+![](sample_video.gif)
 
 
 ## Citations
