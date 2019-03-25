@@ -31,3 +31,7 @@ DeepTrack is an open-source library and is licensed under the GNU General Public
 
 Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "Digital video microscopy enhanced by deep learning." arXiv preprint arXiv:1812.02653 (2018).
 
+
+## Funding
+This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511).
+
