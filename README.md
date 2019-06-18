@@ -1,7 +1,7 @@
 # DeepTrack 
 By Saga Helgadottir, Aykut Argun and Giovanni Volpe.
 
-DeepTrack is a trainable convolutional neural network that predicts the positon of objects in microscope images. This is the code for the paper [Digital video microscopy enhanced by deep learning](https://arxiv.org/abs/1812.02653 "Digital video microscopy enhanced by deep learning"). 
+DeepTrack is a trainable convolutional neural network that predicts the positon of objects in microscope images. This is the code for the paper [Digital video microscopy enhanced by deep learning](https://www.osapublishing.org/optica/abstract.cfm?uri=optica-6-4-506 "Digital video microscopy enhanced by deep learning"). 
 
 <img src="https://github.com/giovannivolpe/DeepTrack/blob/develop/figures/DeepTrack architecture.png" />
 
