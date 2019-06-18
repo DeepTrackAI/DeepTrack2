@@ -29,7 +29,8 @@ After the network has been trained it can be used to track different kind of obj
 
 DeepTrack is an open-source library and is licensed under the GNU General Public License (v3). For questions contact Giovanni Volpe at giovanni.volpe@physics.gu.se. If you are using this library please cite:
 
-Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "Digital video microscopy enhanced by deep learning." arXiv preprint arXiv:1812.02653 (2018).
+Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "Digital video microscopy enhanced by deep learning." Optica 6.4 (2019): 506-513.
+
 
 
 ## Funding
