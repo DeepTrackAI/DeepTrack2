@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from timeit import default_timer as timer
 
 G = Generator(
-    shape = (64,64),
+    shape = (256,256),
     NA = 0.7,
     pixel_size=0.1,
     wavelength=0.68
