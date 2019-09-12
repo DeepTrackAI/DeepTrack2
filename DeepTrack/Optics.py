@@ -1,6 +1,13 @@
 import numpy as np
+
+'''
+    An optical device that generates the pupil based on input parameters.
+    The base device is stateless, but will be extended to allow for aberrations.
+'''
+
 class BaseOpticalDevice2D:
     
+    # Calculates the pupil of the optical system using the NA, wavelength and the pixel size.
     def getPupil(self,
                     shape,
                     NA=0.7,
