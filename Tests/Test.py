@@ -4,20 +4,25 @@
 import sys
 sys.path.append("../DeepTrack")
 
-from DeepTrack.DataGeneration.Generator import Generator
-from DeepTrack.DataGeneration.Particles import SphericalParticle
+from DeepTrack.Generators import Generator
+from DeepTrack.Particles import SphericalParticle
+from DeepTrack.Backend.Distributions import uniform_random
 import numpy as np
 import matplotlib.pyplot as plt
 
 from timeit import default_timer as timer
 
 G = Generator(
-    shape = (256,256),
-    NA = 0.7,
-    pixel_size=0.1,
-    wavelength=0.68
+    shape = (128,128),  # Desired output shape of the generator.
+    NA = 0.7,           # The NA of the optical system.
+    pixel_size=0.1,     # The pixel_size of the optical system (mu^-1).
+    wavelength=0.68     # The wavelength of the illuminating source (mu).
 )
-G.add_particle(SphericalParticle(radius = 0.1, intensity = 0.5))
+G.add_particle(SphericalParticle(
+    radius = 0.1,       # Radius of the generated particles
+    intensity = 0.5,    # Peak intensity of the generated particle
+    position_distribution=uniform_random((128,128))
+))
 
 
 start = timer()

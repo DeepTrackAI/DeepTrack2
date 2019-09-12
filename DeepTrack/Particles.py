@@ -18,7 +18,7 @@ class SphericalParticle(Particle):
     def __init__(self,
             radius = 1,
             intensity = 1,
-            position_distribution = uniform_random
+            position_distribution = None
         ):
         self.position_distribution = position_distribution
 
@@ -36,7 +36,11 @@ class SphericalParticle(Particle):
                         NA=0.7,
                         wavelength=0.66,
                         pixel_size=0.1):
-        position =      self.position_distribution(shape)
+        try:
+            position = self.position_distribution()
+        except TypeError:
+            position = np.random.rand(2)*np.array(shape[0:2])
+        
         intensity =     np.random.choice(self.intensity,1)
         radius =         np.random.choice(self.radius,1) * pixel_size
 

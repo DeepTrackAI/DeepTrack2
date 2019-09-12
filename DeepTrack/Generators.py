@@ -2,8 +2,8 @@
     Base class for a generator
 '''
 
-from DeepTrack.DataGeneration.OpticalDevice import BaseOpticalDevice2D
-from DeepTrack.DataGeneration.Particles import Particle
+from DeepTrack.Optics import BaseOpticalDevice2D
+from DeepTrack.Particles import Particle
 import numpy as np
 class Generator:
     def __init__(self,
@@ -12,7 +12,7 @@ class Generator:
         pixel_size = 0.1,
         NA = 0.7
     ):
-        self.shape = shape
+        self.shape = np.array(shape)
         self.wavelength = wavelength
         self.pixel_size = pixel_size
         self.NA = NA
@@ -26,15 +26,12 @@ class Generator:
     
     def get(self):
         assert len(self.Particles) != 0, "Generator needs to have at least one particle. Add one using add_particle"
-
         Particle = np.random.choice(self.Particles, 1)[0]
-
-        I, position =     Particle.getIntensity(self.shape,
+        I, position =     Particle.getIntensity(self.shape * 2,
                                         wavelength = self.wavelength,
                                         pixel_size = self.pixel_size,
                                         NA         = self.NA)
-
-        Pupil = self.OpticalDevice.getPupil(self.shape,
+        Pupil = self.OpticalDevice.getPupil(self.shape * 2,
                                         wavelength = self.wavelength,
                                         pixel_size = self.pixel_size,
                                         NA         = self.NA)
@@ -42,5 +39,6 @@ class Generator:
         assert I.shape == Pupil.shape, "The output shape of the optical device and the particle needs to match"
 
         PhaseMask = I * Pupil
-
-        return np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(PhaseMask)))), position
+        AbsField = np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(PhaseMask))))[:self.shape[0], :self.shape[1]]
+        
+        return AbsField, position
