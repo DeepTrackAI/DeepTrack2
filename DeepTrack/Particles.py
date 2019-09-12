@@ -1,19 +1,29 @@
-'''
-    Abstract base class for all particles.
-'''
 
-from abc import ABC, abstractmethod
+
 from DeepTrack.Backend.Distributions import uniform_random
 from scipy import special
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+'''
+    Base class for all particles. Will be made abstract. 
+'''
 class Particle:
-    def getIntensity():
-        return 0
+    def getIntensity(shape):
+        return 1
 
+'''
+    Implementation of the Particle class,
+    Approximates the Fourier transform of the intensity-map of a 
+    spherical particle using a bessel function.
 
-    
+    Inputs: 
+        radius                  A set of particle radii (mu) that can be simulated 
+        intensity               The peak field magnitude of the the particle
+        position_distribution   The distribution from which to draw th particle position 
+                                (May be moved to the generator)
+'''
 class SphericalParticle(Particle):
     def __init__(self,
             radius = 1,
@@ -30,7 +40,7 @@ class SphericalParticle(Particle):
         if len(self.intensity.shape) == 0:
             self.intensity = np.array([intensity])
 
-
+    # Retrieves the fourier transformed intensity map of the spherical particle.
     def getIntensity(self, 
                         shape,
                         NA=0.7,
@@ -42,7 +52,7 @@ class SphericalParticle(Particle):
             position = np.random.rand(2)*np.array(shape[0:2])
         
         intensity =     np.random.choice(self.intensity,1)
-        radius =         np.random.choice(self.radius,1) * pixel_size
+        radius =         np.random.choice(self.radius,1)
 
         X = np.linspace(
             -pixel_size * shape[0] / 2,
@@ -66,7 +76,6 @@ class SphericalParticle(Particle):
         fy = np.arange(-sampling_frequency_y/2, sampling_frequency_y/2, step = sampling_frequency_y / shape[1])
         FX, FY = np.meshgrid(fx, fy)
         RHO = np.sqrt(FX ** 2 + FY ** 2)
-
 
         particle_field = intensity * 2 * np.pi * radius * special.jn(1, radius * RHO) / RHO
         
