@@ -77,8 +77,8 @@ class SphericalParticle(Particle):
         FX, FY = np.meshgrid(fx, fy)
         RHO = np.sqrt(FX ** 2 + FY ** 2)
 
-        particle_field = intensity * 2 * np.pi * radius * special.jn(1, radius * RHO) / RHO
-        
+        # 40 here is a fudge faactor. Will need to know exact value
+        particle_field = 40 * intensity * 2 * np.pi * special.jn(1, radius * RHO) / RHO
         particle_field = particle_field * np.exp(-1j * pixel_size * (FX * (position[0] - shape[0]/2) + FY * (position[1] - shape[1]/2)))
 
       

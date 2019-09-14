@@ -7,6 +7,7 @@ sys.path.append("../DeepTrack")
 from DeepTrack.Generators import Generator
 from DeepTrack.Particles import SphericalParticle
 from DeepTrack.Backend.Distributions import uniform_random
+from DeepTrack.Noise import Gaussian
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -30,15 +31,17 @@ G = Generator(
 
 
 G.add_particle(SphericalParticle(
-    radius = 0.5,                                   # Radius of the generated particles
-    intensity = 0.5,                                # Peak intensity of the generated particle
-    position_distribution=uniform_random((64,64))   # The distrbution from which to draw the position of the particle
+    radius = [0.3, 0.4, 0.5],                                # Radius of the generated particles
+    intensity = np.linspace(0.5,1),                          # Peak intensity of the generated particle
+    position_distribution=uniform_random((64,64))            # The distrbution from which to draw the position of the particle
 ))
-G.add_particle(SphericalParticle(
-    radius = 0.2,       
-    intensity = 0.5,    
-    position_distribution=uniform_random((64,64))
+
+# Add a Gaussian noise to the image
+G.add_noise(Gaussian(
+    mu=0, 
+    sigma=np.linspace(0.02,0.05)
 ))
+
 
 # Time the average generation time for 100 particles
 start = timer()

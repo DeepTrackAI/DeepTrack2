@@ -2,6 +2,7 @@
 
 from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Particles import Particle
+from DeepTrack.Noise import Noise
 import numpy as np
 
 '''
@@ -32,12 +33,18 @@ class Generator:
         self.NA = NA
         self.OpticalDevice = BaseOpticalDevice2D()
         self.Particles = []
+        self.Noise = []
 
     # Adds a particle to the set of particles that can be generated
     def add_particle(self, P):
         assert isinstance(P, Particle), "Argument supplied to add_particle is not an instance of Particle"
         
         self.Particles.append(P)
+
+    def add_noise(self, N):
+        assert isinstance(N, Noise), "Argument supplied to add_particle is not an instance of Particle"
+        
+        self.Noise.append(N)
     
     # Generates a single random image.
     def get(self):
@@ -55,6 +62,11 @@ class Generator:
         assert I.shape == Pupil.shape, "The output shape of the optical device and the particle needs to match"
 
         PhaseMask = I * Pupil
-        AbsField = np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(PhaseMask))))[:self.shape[0], :self.shape[1]]
+        AbsField = np.array(np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(PhaseMask))))[:self.shape[0], :self.shape[1]])
+        
+
+
+        for N in self.Noise:
+            AbsField = N + AbsField 
         
         return AbsField, position
