@@ -67,6 +67,6 @@ class Generator:
 
 
         for N in self.Noise:
-            AbsField = N + AbsField 
+            AbsField += N
         
         return AbsField, position

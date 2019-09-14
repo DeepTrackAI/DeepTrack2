@@ -2,6 +2,7 @@ from DeepTrack.Backend.Distributions import draw
 import numpy as np
 
 class Noise:
+    __array_priority__ = 2 # Avoid Numpy array distribution on operator overlaod
     def get(self, shape):
         return 0
 
