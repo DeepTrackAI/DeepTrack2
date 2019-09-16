@@ -1,17 +1,20 @@
 
 
 from DeepTrack.Backend.Distributions import uniform_random, draw
+from DeepTrack.Backend.Image import Output
 from scipy import special
 import numpy as np
 import matplotlib.pyplot as plt
 
+import abc
 
 '''
-    Base class for all particles. Will be made abstract. 
+    Base class for all particles. 
 '''
-class Particle:
-    def getIntensity(shape):
-        return 1
+class Particle(Output):
+    pass
+
+    
 
 '''
     Implementation of the Particle class,
@@ -41,34 +44,20 @@ class SphericalParticle(Particle):
             self.intensity = np.array([intensity])
 
     # Retrieves the fourier transformed intensity map of the spherical particle.
-    def getIntensity(self, 
-                        shape,
-                        NA=0.7,
-                        wavelength=0.66,
-                        pixel_size=0.1):
+    def get(self, 
+                Image,
+                Optics):
 
+        shape = Image.shape
+        pixel_size = Optics.pixel_size
+
+        
         if self.position_distribution is None:
             position = draw(uniform_random(shape))
         else:
             position = draw(self.position_distribution)
-
-        intensity =     np.random.choice(self.intensity,1)
-        radius =        np.random.choice(self.radius,1)
-
-        X = np.linspace(
-            -pixel_size * shape[0] / 2,
-             pixel_size * shape[0] / 2,
-            num=shape[0],
-            endpoint=True)
-        
-        Y = np.linspace(
-            -pixel_size * shape[1] / 2,
-             pixel_size * shape[1] / 2,
-            num=shape[1],
-            endpoint=True)
-
-        dx = X[1] - X[0]
-        dy = Y[1] - Y[0]
+        intensity =     draw(self.intensity)
+        radius =        draw(self.radius)
         
         sampling_frequency_x = 2 * np.pi / pixel_size
         sampling_frequency_y = 2 * np.pi / pixel_size
@@ -77,13 +66,16 @@ class SphericalParticle(Particle):
         fy = np.arange(-sampling_frequency_y/2, sampling_frequency_y/2, step = sampling_frequency_y / shape[1])
         FX, FY = np.meshgrid(fx, fy)
         RHO = np.sqrt(FX ** 2 + FY ** 2)
-
-        # 40 here is a fudge faactor. Will need to know exact value
+        
+        
         particle_field = 40 * intensity * 2 * np.pi * special.jn(1, radius * RHO) / RHO
         particle_field = particle_field * np.exp(-1j * pixel_size * (FX * (position[0] - shape[0]/2) + FY * (position[1] - shape[1]/2)))
-
-      
-        return particle_field, position
+        pupil = Optics.getPupil()
+        
+        convolved_field = particle_field * pupil
+        particle = np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(convolved_field))))
+        properties = {"type": "SphericalParticle", "position": position, "radius": radius, "intensity": intensity}
+        return Image + particle, properties
 
 
 

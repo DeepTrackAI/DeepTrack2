@@ -8,50 +8,53 @@ from DeepTrack.Generators import Generator
 from DeepTrack.Particles import SphericalParticle
 from DeepTrack.Backend.Distributions import uniform_random
 from DeepTrack.Noise import Gaussian, Offset
+from DeepTrack.Optics import BaseOpticalDevice2D
 import numpy as np
 import matplotlib.pyplot as plt
 
 from timeit import default_timer as timer
 
 '''
-    Simple example showcassing current possiblites.
+    Simple example showcasing current possiblites.
     
     A generator is created with certai optical properties. To the generator two particles are added.
  '''
 
 
-
-
-G = Generator(
-    shape = (64,64),    # Desired output shape of the generator.
-    NA = 0.7,           # The NA of the optical system.
+Optics = BaseOpticalDevice2D(
+    shape=(64,64),      # Desired output shape of the generator.
+    NA=0.7,             # The NA of the optical system.
     pixel_size=0.1,     # The pixel_size of the optical system (mu^-1).
     wavelength=0.68     # The wavelength of the illuminating source (mu).
 )
 
+G = Generator(
+    Optics
+)
 
-G.add_particle(SphericalParticle(
-    radius = [0.3, 0.4, 0.5],                                # Radius of the generated particles
-    intensity = np.linspace(0.5,1),                          # Peak intensity of the generated particle
-    position_distribution=uniform_random((64,64))            # The distrbution from which to draw the position of the particle
-))
+P = SphericalParticle(
+    radius=1.5,                                             # Radius of the generated particles
+    intensity=np.linspace(0.5,1),                           # Peak intensity of the generated particle
+    position_distribution=uniform_random((64,64))           # The distrbution from which to draw the position of the particle
+)
 
-# Add a Gaussian noise to the image
-G.add_noise(Gaussian(
+N1 = Gaussian(
     mu=0, 
-    sigma=  np.linspace(0.02,0.05)
-))
+    sigma=np.linspace(0.02,0.05)
+)
 
-G.add_noise(Offset(
-    offset = np.linspace(-0.2,0.2)
-))
+N2 = Offset(
+    offset=np.linspace(-0.2,0.2)
+)
+
+G.get(P + N1 + N2)
 
 
 # Time the average generation time for 100 particles
 start = timer()
 
 for i in range(100):
-    image, position = G.get()
+    image, position = G.get(P + N1 + N2)
 
 end = timer()
 
@@ -61,8 +64,7 @@ print("Generates (128,128) particles at {0}s per image".format((end - start)/100
 # Show one typical particle
 plt.gray()
 for i in range(1):
-    image, position = G.get()
+    image, position = G.get(P + N1 + N2)
     plt.imshow(image, vmin=-0.2, vmax=1)
-    plt.scatter(position[0], position[1], 2)
     plt.show()
 

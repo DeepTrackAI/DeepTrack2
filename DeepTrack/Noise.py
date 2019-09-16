@@ -1,4 +1,6 @@
 from DeepTrack.Backend.Distributions import draw
+from DeepTrack.Backend.Image import Output
+import abc
 import numpy as np
 
 '''
@@ -10,26 +12,8 @@ Basic operators are overloaded to easily allow it to be added to an image
 without explicity generating a new image each time
 '''
 
-class Noise:
-    __array_priority__ = 2 # Avoid Numpy array distribution on operator overlaod
-    def get(self, shape):
-        return 0
-
-    def __add__(self, other):
-        return other + self.get(other.shape) 
-
-    def __sub__(self, other):
-        return other - self.get(other.shape) 
-    
-    def __mul__(self, other):
-        return other * self.get(other.shape) 
-    
-    def __div__(self, other):
-        return other / self.get(other.shape) 
-    
-    __rsub__ = __sub__
-    __radd__ = __add__ 
-
+class Noise(Output):
+    pass
 
 '''
 Implementation of the Noise class to generate IID gaussian pixels.
@@ -44,10 +28,11 @@ class Gaussian(Noise):
         self.mu = mu
         self.sigma = sigma
     
-    def get(self, shape):
+    def get(self, Image, Optics):
+        shape = Image.shape
         mu =    np.ones(shape) * draw(self.mu)
         sigma = np.ones(shape) * draw(self.sigma)
-        return np.random.normal(mu, sigma)
+        return Image + np.random.normal(mu, sigma), {"type": "Gaussian", "mu": mu, "sigma": sigma}
 
  
 '''
@@ -60,5 +45,7 @@ class Offset(Noise):
     def __init__(self,offset):
         self.offset = offset
     
-    def get(self,shape):
-        return np.ones(shape) * draw(self.offset)
+    def get(self, Image, Optics):
+        shape = Image.shape
+        offset = draw(self.offset)
+        return Image + np.ones(shape) * offset, {"type": "Offset", "offset": offset}
