@@ -47,8 +47,8 @@ class SphericalParticle(Particle):
     def get(self, 
                 Image,
                 Optics):
-
-        shape = Image.shape
+        out_shape = Image.shape
+        shape = 2 * np.array(Image.shape)
         pixel_size = Optics.pixel_size
 
         
@@ -70,10 +70,10 @@ class SphericalParticle(Particle):
         
         particle_field = 40 * intensity * 2 * np.pi * special.jn(1, radius * RHO) / RHO
         particle_field = particle_field * np.exp(-1j * pixel_size * (FX * (position[0] - shape[0]/2) + FY * (position[1] - shape[1]/2)))
-        pupil = Optics.getPupil()
+        pupil = Optics.getPupil(shape)
         
         convolved_field = particle_field * pupil
-        particle = np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(convolved_field))))
+        particle = np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(convolved_field))))[0:out_shape[0], 0:out_shape[1]]
         properties = {"type": "SphericalParticle", "position": position, "radius": radius, "intensity": intensity}
         return Image + particle, properties
 

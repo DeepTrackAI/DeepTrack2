@@ -30,9 +30,11 @@ class Gaussian(Noise):
     
     def get(self, Image, Optics):
         shape = Image.shape
-        mu =    np.ones(shape) * draw(self.mu)
-        sigma = np.ones(shape) * draw(self.sigma)
-        return Image + np.random.normal(mu, sigma), {"type": "Gaussian", "mu": mu, "sigma": sigma}
+        mu_val = draw(self.mu)
+        sigma_val = draw(self.sigma)
+        mu =    np.ones(shape) * mu_val
+        sigma = np.ones(shape) * sigma_val
+        return Image + np.random.normal(mu, sigma), {"type": "Gaussian", "mu": mu_val, "sigma": sigma_val}
 
  
 '''

@@ -33,7 +33,7 @@ G = Generator(
 )
 
 P = SphericalParticle(
-    radius=1.5,                                             # Radius of the generated particles
+    radius=np.linspace(0.1,1),                                             # Radius of the generated particles
     intensity=np.linspace(0.5,1),                           # Peak intensity of the generated particle
     position_distribution=uniform_random((64,64))           # The distrbution from which to draw the position of the particle
 )
@@ -54,7 +54,7 @@ G.get(P + N1 + N2)
 start = timer()
 
 for i in range(100):
-    image, position = G.get(P + N1 + N2)
+    image, position = G.get(P*0.9 + N1 + N2)
 
 end = timer()
 

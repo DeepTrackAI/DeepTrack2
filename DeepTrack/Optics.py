@@ -17,17 +17,19 @@ class BaseOpticalDevice2D:
         self.wavelength = wavelength
         self.pixel_size = pixel_size
     # Calculates the pupil of the optical system using the NA, wavelength and the pixel size.
-    def getPupil(self):
-
+    def getPupil(self, shape=None):
+        if shape is None:
+            shape = self.shape
+        
         X = np.linspace(
-            -self.pixel_size * self.shape[0] / 2,
-            self.pixel_size * self.shape[0] / 2,
+            -self.pixel_size * shape[0] / 2,
+            self.pixel_size * shape[0] / 2,
             num=self.shape[0],
             endpoint=True)
         
         Y = np.linspace(
-            -self.pixel_size * self.shape[1] / 2,
-            self.pixel_size * self.shape[1] / 2,
+            -self.pixel_size * shape[1] / 2,
+            self.pixel_size * shape[1] / 2,
             num=self.shape[1],
             endpoint=True)
 
@@ -37,12 +39,12 @@ class BaseOpticalDevice2D:
         sampling_frequency_x = 1/dx
         sampling_frequency_y = 1/dy
 
-        x_radius = self.NA / (self.wavelength * sampling_frequency_x / self.shape[0])
-        y_radius = self.NA / (self.wavelength * sampling_frequency_y / self.shape[1])
+        x_radius = self.NA / (self.wavelength * sampling_frequency_x / shape[0])
+        y_radius = self.NA / (self.wavelength * sampling_frequency_y / shape[1])
 
-        W, H = np.meshgrid(np.arange(0, self.shape[0]), np.arange(0, self.shape[1]))
+        W, H = np.meshgrid(np.arange(0, shape[0]), np.arange(0, shape[1]))
 
-        pupilMask = ((W - self.shape[0] / 2) / x_radius) ** 2  + ((H - self.shape[1] / 2) / (y_radius) ) **2 <= 1
+        pupilMask = ((W - shape[0] / 2) / x_radius) ** 2  + ((H - shape[1] / 2) / (y_radius) ) **2 <= 1
         
         pupil = pupilMask * (1 + 0j)
         return pupil
