@@ -51,19 +51,19 @@ class SphericalParticle(Particle):
             position = draw(uniform_random(shape))
         else:
             position = draw(self.position_distribution)
-            
+
         intensity =     np.random.choice(self.intensity,1)
         radius =        np.random.choice(self.radius,1)
 
         X = np.linspace(
             -pixel_size * shape[0] / 2,
-            pixel_size * shape[0] / 2,
+             pixel_size * shape[0] / 2,
             num=shape[0],
             endpoint=True)
         
         Y = np.linspace(
             -pixel_size * shape[1] / 2,
-            pixel_size * shape[1] / 2,
+             pixel_size * shape[1] / 2,
             num=shape[1],
             endpoint=True)
 
