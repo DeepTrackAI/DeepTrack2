@@ -12,7 +12,7 @@ import numpy as np
     Generators combine a set of particles, an optical system and a ruleset
     to continuously create random images of particles.
 
-    The base convolves the intensity map of the particle with an optical pupil
+    This base class convolves the intensity map of the particle with an optical pupil
     to simulate particles.
 
     Input arguments:
@@ -43,7 +43,7 @@ class Generator:
         self.Particles.append(P)
 
     def add_noise(self, N):
-        assert isinstance(N, Noise), "Argument supplied to add_particle is not an instance of Particle"
+        assert isinstance(N, Noise), "Argument supplied to add_particle is not an instance of Noise"
         
         self.Noise.append(N)
     
@@ -72,3 +72,5 @@ class Generator:
             AbsField += N
         
         return AbsField, position
+
+    

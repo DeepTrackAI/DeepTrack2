@@ -20,6 +20,8 @@ def uniform_random(scale):
     For lists or ndarrays, a single element is drawn
 
     If the input is neither callable, a list, nor an ndarray, return the element.
+
+    To return multiple values, store them as a tuple. 
 '''
 def draw(E):
     

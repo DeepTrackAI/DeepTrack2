@@ -52,8 +52,9 @@ for i in range(100):
 end = timer()
 
 print("Generates (128,128) particles at {0}s per image".format((end - start)/100))
-# Show one typical particle
 
+
+# Show one typical particle
 plt.gray()
 for i in range(1):
     image, position = G.get()
