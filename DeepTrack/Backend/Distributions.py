@@ -8,7 +8,7 @@ Input arguments:
 '''
 def uniform_random(scale):
     def distribution():
-        return np.random.rand(len(scale))*np.array(scale)
+        return tuple(np.random.rand(len(scale))*np.array(scale))
     return distribution
 
 

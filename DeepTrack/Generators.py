@@ -3,6 +3,7 @@
 from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Particles import Particle
 from DeepTrack.Noise import Noise
+from DeepTrack.Backend.Distributions import draw
 import numpy as np
 
 '''
@@ -50,9 +51,9 @@ class Generator:
     def get(self):
         assert len(self.Particles) != 0, "Generator needs to have at least one particle. Add one using add_particle"
 
-        Particle = np.random.choice(self.Particles)
+        Particle = draw(self.Particles)
 
-        I, position =     Particle.getIntensity(self.shape * 2,
+        I, position = Particle.getIntensity(self.shape * 2,
                                         wavelength = self.wavelength,
                                         pixel_size = self.pixel_size,
                                         NA         = self.NA)

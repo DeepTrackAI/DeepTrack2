@@ -1,6 +1,6 @@
 
 
-from DeepTrack.Backend.Distributions import uniform_random
+from DeepTrack.Backend.Distributions import uniform_random, draw
 from scipy import special
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,8 +30,8 @@ class SphericalParticle(Particle):
             intensity = 1,
             position_distribution = None
         ):
+        
         self.position_distribution = position_distribution
-
         self.radius = np.array(radius)
         if len(self.radius.shape) == 0:
             self.radius = np.array([radius])
@@ -46,13 +46,14 @@ class SphericalParticle(Particle):
                         NA=0.7,
                         wavelength=0.66,
                         pixel_size=0.1):
-        try:
-            position = self.position_distribution()
-        except TypeError:
-            position = np.random.rand(2)*np.array(shape[0:2])
-        
+
+        if self.position_distribution is None:
+            position = draw(uniform_random(shape))
+        else:
+            position = draw(self.position_distribution)
+            
         intensity =     np.random.choice(self.intensity,1)
-        radius =         np.random.choice(self.radius,1)
+        radius =        np.random.choice(self.radius,1)
 
         X = np.linspace(
             -pixel_size * shape[0] / 2,

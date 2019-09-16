@@ -50,7 +50,12 @@ class Gaussian(Noise):
         return np.random.normal(mu, sigma)
 
  
+'''
+Implementation of the Noise class to generate a random background offset.
 
+Input arguments:
+    offset:     The value of the offset (number, array, distribution)        
+'''
 class Offset(Noise):
     def __init__(self,offset):
         self.offset = offset
