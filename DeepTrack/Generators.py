@@ -16,9 +16,9 @@ import numpy as np
 
     Input arguments:
         shape           Shape of the output (tuple)
-        wavelength      wavelength of the illumination source (mu)
-        pixel_size      size of the pixels (mu)
-        NA              the effective NA of the optical systen           
+        wavelength      wavelength of the illumination source in microns (number)
+        pixel_size      size of the pixels in microns (number)
+        NA              the effective NA of the optical systen (number)          
 '''
 class Generator:
     def __init__(self,
@@ -49,11 +49,14 @@ class Generator:
     # Generates a single random image.
     def get(self):
         assert len(self.Particles) != 0, "Generator needs to have at least one particle. Add one using add_particle"
-        Particle = np.random.choice(self.Particles, 1)[0]
+
+        Particle = np.random.choice(self.Particles)
+
         I, position =     Particle.getIntensity(self.shape * 2,
                                         wavelength = self.wavelength,
                                         pixel_size = self.pixel_size,
                                         NA         = self.NA)
+
         Pupil = self.OpticalDevice.getPupil(self.shape * 2,
                                         wavelength = self.wavelength,
                                         pixel_size = self.pixel_size,
@@ -64,8 +67,6 @@ class Generator:
         PhaseMask = I * Pupil
         AbsField = np.array(np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(PhaseMask))))[:self.shape[0], :self.shape[1]])
         
-
-
         for N in self.Noise:
             AbsField += N
         
