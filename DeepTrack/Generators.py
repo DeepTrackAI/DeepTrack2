@@ -41,10 +41,10 @@ class Generator:
         self.Noise.append(N)
     
     # Generates a single random image.
-    def get(self, Tree):
+    def get(self, Features):
         
-        Image, Properties = Tree.resolve(self.Optics)
+        Image = Features.resolve(self.Optics)
         
-        return Image, Properties
+        return Image
 
     

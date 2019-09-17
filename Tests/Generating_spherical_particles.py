@@ -54,7 +54,7 @@ G.get(P + N1 + N2)
 start = timer()
 
 for i in range(100):
-    image, position = G.get(P*0.9 + N1 + N2)
+    image = G.get(P*0.9 + P*0.2 + N1 + N2)
 
 end = timer()
 
@@ -63,8 +63,8 @@ print("Generates (128,128) particles at {0}s per image".format((end - start)/100
 
 # Show one typical particle
 plt.gray()
-for i in range(1):
-    image, position = G.get(P + N1 + N2)
-    plt.imshow(image, vmin=-0.2, vmax=1)
+for i in range(20):
+    Image = G.get(P + P + N1 + N2)
+    plt.imshow(Image, vmin=-0.2, vmax=1)
     plt.show()
 

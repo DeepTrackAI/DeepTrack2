@@ -1,7 +1,7 @@
 
 
 from DeepTrack.Backend.Distributions import uniform_random, draw
-from DeepTrack.Backend.Image import Output
+from DeepTrack.Backend.Image import Feature
 from scipy import special
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,7 +11,7 @@ import abc
 '''
     Base class for all particles. 
 '''
-class Particle(Output):
+class Particle(Feature):
     pass
 
     

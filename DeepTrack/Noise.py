@@ -1,5 +1,5 @@
 from DeepTrack.Backend.Distributions import draw
-from DeepTrack.Backend.Image import Output
+from DeepTrack.Backend.Image import Feature
 import abc
 import numpy as np
 
@@ -12,7 +12,7 @@ Basic operators are overloaded to easily allow it to be added to an image
 without explicity generating a new image each time
 '''
 
-class Noise(Output):
+class Noise(Feature):
     pass
 
 '''
