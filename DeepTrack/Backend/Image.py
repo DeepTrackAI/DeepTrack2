@@ -22,12 +22,21 @@ class Image(np.ndarray):
         self.properties.append(properties)
     
     def __array_wrap__(self, out_arr, context=None):
+        if out_arr is self:  # for in-place operations
+            result = out_arr
+        else:
+            result = Image(out_arr)
 
-
-        props = getattr(context[1][1], "properties", [])
-        for property in props:
-            out_arr.append(property) 
-        return super(Image, self).__array_wrap__(out_arr, self, context)
+        if context is not None:
+            func, args, out_i = context
+            input_args = args[:func.nin]
+            
+            for arg in input_args:
+                
+                props = getattr(arg, "properties", [])
+                for p in props:
+                    result.append(p)
+        return result
 
 
     def __array_finalize__(self, obj):
@@ -40,6 +49,7 @@ class Image(np.ndarray):
         props = getattr(obj, "properties", [])
         for property in props:
             self.append(property) 
+
 
 
 
@@ -69,7 +79,7 @@ class FeatureMap(ABC):
 
     def resolve(self, Optics, image=None):
         if image is None:
-            image = Image(Optics.shape)
+            image = Image(np.zeros(Optics.shape))
             image[:] = 0
         
         for branch in self.Tree:
@@ -96,7 +106,6 @@ class Feature(ABC):
     def __call__(self, Image, Optics):
 
         Image, props = self.get(Image, Optics)
-
         Image.append(props)
 
         return Image
