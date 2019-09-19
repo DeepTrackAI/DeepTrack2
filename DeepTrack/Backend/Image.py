@@ -60,9 +60,9 @@ class FeatureMap(ABC):
         T.Tree = [(self, other)]
         return T
 
-    def __or__(self, other):
-        F = Fork(self)
-        return F
+    # def __or__(self, other):
+    #     F = Fork(self)
+    #     return F
 
     def __call__(self, image, Optics):
         return self.resolve(Optics, image=image)
