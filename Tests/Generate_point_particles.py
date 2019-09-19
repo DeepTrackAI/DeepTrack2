@@ -22,11 +22,6 @@ from timeit import default_timer as timer
  '''
 
 
-
-C = A + B
-
-
-
 Optics = BaseOpticalDevice2D(
     shape=(64,64),      # Desired output shape of the generator.
     NA=0.7,             # The NA of the optical system.
