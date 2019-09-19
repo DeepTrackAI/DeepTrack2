@@ -96,7 +96,7 @@ class SphericalParticle(Particle):
         FX, FY = np.meshgrid(fx, fy)
         RHO = np.sqrt(FX ** 2 + FY ** 2)
         
-        particle_field = 40 * intensity * 2 * np.pi * special.jn(1, radius * RHO) / RHO
+        particle_field = intensity * 2 * special.jn(1, radius * RHO) / (RHO * radius)
 
         shift = _get_particle_shift(position, shape, Optics)
         
@@ -104,7 +104,7 @@ class SphericalParticle(Particle):
         pupil = Optics.getPupil(shape)
         
         convolved_field = particle_field * pupil
-        particle = np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(convolved_field))))[0:out_shape[0], 0:out_shape[1]]
+        particle = (np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(convolved_field))))[0:out_shape[0], 0:out_shape[1]])
         properties = {"type": "SphericalParticle", "position": position, "radius": radius, "intensity": intensity}
         return Image + particle, properties
 
