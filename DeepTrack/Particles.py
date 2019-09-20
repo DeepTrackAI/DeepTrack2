@@ -19,13 +19,20 @@ class Particle(Feature):
 '''
     Implementation of the Particle class,
     Approximates the Fourier transform of the intensity-map of a 
-    spherical particle using a bessel function.
+    point particle as a constant.
 
     Inputs: 
         radius                  A set of particle radii (mu) that can be simulated 
         intensity               The peak field magnitude of the the particle
-        position_distribution   The distribution from which to draw th particle position 
+        position_distribution   The distribution from which to draw the particle position 
                                 (May be moved to the generator)
+
+    Properties
+        x                       horizontal position of particle     (px)
+        y                       vertical position of particle       (px)
+        z                       perpendicular position of particle  (px)
+        intensity               The peak of the unaborrated particle intensity (a.u) 
+
 '''
 
 class PointParticle(Particle):
@@ -55,10 +62,37 @@ class PointParticle(Particle):
         
         convolved_field = particle_field * pupil
         particle = np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(convolved_field)))[0:out_shape[0], 0:out_shape[1]])
-
-        properties = {"type": "PointParticle", "position": position, "intensity": intensity}
+        x = position[0]
+        y = position[1]
+        try:
+            z = position[2]
+        except IndexError:
+            z = 0
+    
+        properties = {"type": "PointParticle", "x": x, "y": y, "z": z, "intensity": intensity}
 
         return Image + particle, properties
+
+
+
+'''
+    Implementation of the Particle class,
+    Approximates the Fourier transform of the intensity-map of a 
+    spherical particle using a bessel function.
+
+    Inputs: 
+        radius                  A set of particle radii (mu) that can be simulated 
+        intensity               The peak field magnitude of the the particle
+        position_distribution   The distribution from which to draw the particle position 
+                                (May be moved to the generator)
+
+    Properties
+        x                       horizontal position of particle     (px)
+        y                       vertical position of particle       (px)
+        z                       perpendicular position of particle  (px)
+        intensity               The peak of the unaborrated particle intensity (a.u) 
+
+'''
 
 
 class SphericalParticle(Particle):
@@ -106,13 +140,20 @@ class SphericalParticle(Particle):
         
         convolved_field = particle_field * pupil
         particle = (np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(convolved_field))))[0:out_shape[0], 0:out_shape[1]])
-        properties = {"type": "SphericalParticle", "position": position, "radius": radius, "intensity": intensity}
+
+
+        x = position[0]
+        y = position[1]
+        try:
+            z = position[2]
+        except IndexError:
+            z = 0
+
+        properties = {"type": "SphericalParticle", "x": x, "y": y, "z": z, "radius": radius, "intensity": intensity}
         return Image + particle, properties
 
 
 
-        
-        
 
 
 def _get_particle_shift(position, shape, Optics):

@@ -28,7 +28,7 @@ class Image(np.ndarray):
             result = Image(out_arr)
 
         if context is not None:
-            func, args, out_i = context
+            func, args, _ = context
             input_args = args[:func.nin]
             
             for arg in input_args:
@@ -116,3 +116,38 @@ class Feature(ABC):
     
     __radd__ = __add__
     __rmul__ = __mul__
+
+class Label:
+    def __init__(self, L, on_none=None, on_multiple=None):
+        self.attr = ""
+        if isinstance(L, Label):
+            self = L
+            return
+
+        self.attr = L
+        if on_none is not None:
+            self.on_none = on_none
+
+        if on_multiple is not None:
+            self.on_multiple = on_multiple
+
+    def on_none(self, props):
+        return 0
+
+    def on_multiple(self, found, props):
+        return found[0]
+
+    def __call__(self, properties):
+        res = []
+        for p in properties:
+            a = getattr(p,self.attr,None)
+            if a is not None:
+                res.append(a)
+        
+        if len(res) == 0:
+            return self.on_none(properties)
+
+        if len(res) > 1:
+            return self.on_multiple(res, properties)
+
+        return res[0]

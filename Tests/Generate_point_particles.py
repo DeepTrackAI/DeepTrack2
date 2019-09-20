@@ -10,6 +10,8 @@ from DeepTrack.Backend.Distributions import uniform_random
 from DeepTrack.Noise import Gaussian, Offset
 from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Backend.Image import Image
+from DeepTrack.Callbacks import Storage
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -47,14 +49,17 @@ N2 = Offset(
 
 G.get(P + N1 + N2)
 
-
+S = Storage("./Tests/Storage/Particle")
 # Time the average generation time for 100 particles
 start = timer()
-
-images = next(G.generate(P*0.9 + P*0.2 + N1 + N2, None, batch_size=100))
-
+images = next(G.generate(P*0.9 + P*0.2 + N1 + N2, ["x", "y"], batch_size=100, callbacks=[S]))
 end = timer()
-print("Generates {0} batch at {1}s per image".format(images[0].shape, (end - start)/100))
+print("Generates a {0} batch in {1}s".format(images[0].shape, (end - start)))
+
+start = timer()
+images = next(G.generate("./Tests/Storage", ["x", "y"], batch_size=100, callbacks=[S]))
+end = timer()
+print("Loads a {0} batch in {1}s".format(images[0].shape, (end - start)))
 
 
 # Show one typical particle
