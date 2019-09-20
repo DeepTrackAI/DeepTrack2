@@ -51,19 +51,16 @@ G.get(P + N1 + N2)
 # Time the average generation time for 100 particles
 start = timer()
 
-for i in range(0):
-    image = G.get(P*0.9 + P*0.2 + N1 + N2)
+images = next(G.generate(P*0.9 + P*0.2 + N1 + N2, None, batch_size=100))
 
 end = timer()
-
-print("Generates (128,128) particles at {0}s per image".format((end - start)/100))
+print("Generates {0} batch at {1}s per image".format(images[0].shape, (end - start)/100))
 
 
 # Show one typical particle
 plt.gray()
 for i in range(1):
     Image = G.get(P + P + N1 + N2)
-    print(Image.properties)
     plt.imshow(Image)
     plt.show()
 

@@ -57,8 +57,7 @@ class PointParticle(Particle):
         particle = np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(convolved_field)))[0:out_shape[0], 0:out_shape[1]])
 
         properties = {"type": "PointParticle", "position": position, "intensity": intensity}
-        print(Image.properties)
-        
+
         return Image + particle, properties
 
 
