@@ -58,7 +58,7 @@ class FlipUD(Augmentation):
     def __call__(self, Images):
         for i in range(len(Images)):
             image = Images[i]
-            new_image = np.flipup(image)
+            new_image = np.flipud(image)
             self.update_props(new_image)
 
     def update_props(self, Image):
