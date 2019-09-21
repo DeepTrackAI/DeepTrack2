@@ -11,10 +11,8 @@ from DeepTrack.Noise import Gaussian, Offset
 from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Backend.Image import Image
 from DeepTrack.Callbacks import Storage
-
 import numpy as np
 import matplotlib.pyplot as plt
-
 from timeit import default_timer as timer
 
 '''
@@ -47,7 +45,6 @@ N2 = Offset(
     offset=np.linspace(-0.2,0.2)
 )
 
-G.get(P + N1 + N2)
 
 S = Storage("./Tests/Storage/Particle")
 # Time the average generation time for 100 particles

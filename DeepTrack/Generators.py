@@ -4,7 +4,7 @@ from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Particles import Particle
 from DeepTrack.Noise import Noise
 from DeepTrack.Backend.Distributions import draw
-from DeepTrack.Backend.Image import Label
+from DeepTrack.Backend.Image import Label, FeatureMap
 import random
 
 from typing import List, Tuple, Dict, TextIO
@@ -49,9 +49,7 @@ class Generator(keras.utils.Sequence):
     
     # Generates a single random image.
     def get(self, Features):
-        
-        Image = Features.resolve(self.Optics)
-        
+        Image = FeatureMap(Features).resolve(self.Optics)
         return Image
 
     def get_epoch(self):
