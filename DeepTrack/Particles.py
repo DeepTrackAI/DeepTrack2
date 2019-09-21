@@ -38,17 +38,13 @@ class Particle(Feature):
 class PointParticle(Particle):
     def __init__(self, 
             intensity=1,
-            position_distribution=None,
-            upscale=2):
+            position_distribution=None):
         self.position_distribution = position_distribution
         self.intensity = intensity
-        self.upscale = 2
 
     def get(self,
                 Image,
                 Optics):
-        
-        upscale = self.draw()
 
         out_shape = Image.shape
         shape = np.array(out_shape) * 2
