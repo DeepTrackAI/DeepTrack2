@@ -55,8 +55,10 @@ class Image(np.ndarray):
 
 
 class FeatureMap(ABC):
-    def __init__(self):
+    def __init__(self, features=None):
         self.Tree = []
+        if features is not None:
+            self = self + features
 
     def __add__(self, other):
         if isinstance(other, tuple):
@@ -140,7 +142,7 @@ class Label:
     def __call__(self, properties):
         res = []
         for p in properties:
-            a = getattr(p,self.attr,None)
+            a = p.get(self.attr,None)
             if a is not None:
                 res.append(a)
         

@@ -4,7 +4,7 @@ from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Particles import Particle
 from DeepTrack.Noise import Noise
 from DeepTrack.Backend.Distributions import draw
-from DeepTrack.Backend.Image import Label
+from DeepTrack.Backend.Image import Label, FeatureMap
 import random
 
 from typing import List, Tuple, Dict, TextIO
@@ -49,9 +49,7 @@ class Generator(keras.utils.Sequence):
     
     # Generates a single random image.
     def get(self, Features):
-        
-        Image = Features.resolve(self.Optics)
-        
+        Image = FeatureMap(Features).resolve(self.Optics)
         return Image
 
     def get_epoch(self):
@@ -84,10 +82,9 @@ class Generator(keras.utils.Sequence):
             labels = []
             for _ in range(batch_size):
                 
-                Image = next(get_one)
+                Image = [next(get_one)]
 
                 for augmented_image in self.augment(Image, augmentation):
-                    
                     Label = self.get_labels(augmented_image, Labels)
                     batch.append(augmented_image)
                     labels.append(np.array(Label))
@@ -107,6 +104,10 @@ class Generator(keras.utils.Sequence):
                     for c in callbacks:
                         c(self, sub_batch)
 
+                sub_batch = np.array(sub_batch)
+                sub_labels = np.array(sub_labels)
+                if sub_batch.ndim == 3 and sub_labels.ndim == 2: # Needs to add a channel
+                    sub_batch = np.expand_dims(sub_batch, axis=-1)
                 yield (np.array(sub_batch), np.array(sub_labels))
                 self.epoch += 1
 
@@ -116,11 +117,16 @@ class Generator(keras.utils.Sequence):
                 
 
     # Placeholder
-    def augment(self, Image, Augmentations):
+    def augment(self, Images, Augmentations):
         if Augmentations is None:
-            return [Image]
+            return Images
         else:
-            return [Image]
+            if not isinstance(Augmentations,List):
+                Augmentations = [Augmentations]
+            for a in Augmentations:
+                Images = a(Images)
+            return Images
+
         
     def shuffle(self,a,b):
         import random
@@ -138,8 +144,12 @@ class Generator(keras.utils.Sequence):
         if not isinstance(Labels, List):
             Labels = [Labels]
 
+        l = []
         for L in Labels:
-            L = Label(L)
+            l.append(Label(L)(image.properties))
+        return l
+        
+
     
     def _get_from_path(self, paths):
         if not isinstance(paths, List):

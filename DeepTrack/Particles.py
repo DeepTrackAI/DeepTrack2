@@ -45,7 +45,7 @@ class PointParticle(Particle):
     def get(self,
                 Image,
                 Optics):
-        
+
         out_shape = Image.shape
         shape = np.array(out_shape) * 2
         if self.position_distribution is None:
