@@ -142,7 +142,7 @@ class Label:
     def __call__(self, properties):
         res = []
         for p in properties:
-            a = getattr(p,self.attr,None)
+            a = p.get(self.attr,None)
             if a is not None:
                 res.append(a)
         
