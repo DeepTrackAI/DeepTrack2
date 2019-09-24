@@ -17,66 +17,85 @@ Assumes first dimension is batch dimension.
 
 from abc import ABC, abstractmethod
 import numpy as np
+from DeepTrack.Backend.Image import Image
+import copy
 class Augmentation(ABC):
-    
-    def update_props(self):
-        pass
+    __append__ = False
+    def update_props(self, image):
+        return image
 
-    @abstractmethod
-    def __call__(self, Image):
-        pass
-
-class NormalizeMinMax(Augmentation):
     def __call__(self, Images):
-        for image in Images:
-            image = image - np.amin(image)
-            image = image / np.amax(image)
-            image[np.isnan(image)] = 0
+        for i in range(len(Images)):
+            I = Image(Images[i])
+            I.properties = copy.deepcopy(Images[i].properties)
+            I = self.augment(I)
+            I = self.update_props(I)
+            if type(self).__append__:
+                Images.append(I)
+            else:
+                Images[i] = I
         return Images
 
+            
+
+    @abstractmethod
+    def augment(self, image):
+        pass
+
+
+
+class NormalizeMinMax(Augmentation):
+    def augment(self, image):
+        image = image - np.amin(image)
+        image = image / np.amax(image)
+        image[np.isnan(image)] = 0
+        return image
+
 class NormalizeStandard(Augmentation):
-    def __call__(self, Images):
-        for image in Images:
-            image = image - np.mean(image)
-            image = image / np.std(image)
-            image[np.isnan(image)] = 0
+    def augment(self, image):
+        image = image - np.mean(image)
+        image = image / np.std(image)
+        image[np.isnan(image)] = 0
+        return image
 
 class FlipLR(Augmentation):
-    def __call__(self, Images):
-        for i in range(len(Images)):
-            image = Images[i]
-            new_image = np.fliplr(image)
-            self.update_props(new_image)
-            Images.append()
+    __append__ = True
+    def augment(self, image):
+        image = np.fliplr(image)
+        return image
 
     def update_props(self, Image):
-        for p in Image.properties:
-            if hasattr(p, "x"):
-                p["x"] = Image.shape[0] - p["x"]
+        for i in range(len(Image.properties)):
+            p = Image.properties[i]
+            if "x" in p:
+                Image.properties[i]["x"]= Image.shape[1] - p["x"] - 1
+        return Image
 
 class FlipUD(Augmentation):
-    def __call__(self, Images):
-        for i in range(len(Images)):
-            image = Images[i]
-            new_image = np.flipud(image)
-            self.update_props(new_image)
+    __append__ = True
+    def augment(self, image):
+        image = np.flipud(image)
+        return image
 
     def update_props(self, Image):
-        for p in Image.properties:
-            if hasattr(p, "y"):
-                p["y"] = Image.shape[0] - p["y"]
+        for i in range(len(Image.properties)):
+            p = Image.properties[i]
+            if "y" in p:
+                Image.properties[i]["y"]= Image.shape[1] - p["y"] - 1
+        return Image
 
 class Transpose(Augmentation):
-    def __call__(self, Images):
-        for i in range(len(Images)):
-            image = Images[i]
-            new_image = np.transpose(image)
-            self.update_props(new_image)
+    __append__ = True
+    def augment(self, image):
+        image = np.transpose(image)
+        return image
 
     def update_props(self, Image):
-        for p in Image.properties:
-            if hasattr(p, "x") and hasattr(p, "y"):
+        for i in range(len(Image.properties)):
+            p = Image.properties[i]
+            if "x" in p and "y" in p:
                 x = p["x"]
                 y = p["y"]
-                p["x"] = y
-                p["y"] = x
+                Image.properties[i]["x"] = y
+                Image.properties[i]["y"] = x
+        return Image

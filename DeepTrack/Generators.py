@@ -82,10 +82,9 @@ class Generator(keras.utils.Sequence):
             labels = []
             for _ in range(batch_size):
                 
-                Image = next(get_one)
+                Image = [next(get_one)]
 
                 for augmented_image in self.augment(Image, augmentation):
-                    
                     Label = self.get_labels(augmented_image, Labels)
                     batch.append(augmented_image)
                     labels.append(np.array(Label))
@@ -118,11 +117,16 @@ class Generator(keras.utils.Sequence):
                 
 
     # Placeholder
-    def augment(self, Image, Augmentations):
+    def augment(self, Images, Augmentations):
         if Augmentations is None:
-            return [Image]
+            return Images
         else:
-            return [Image]
+            if not isinstance(Augmentations,List):
+                Augmentations = [Augmentations]
+            for a in Augmentations:
+                Images = a(Images)
+            return Images
+
         
     def shuffle(self,a,b):
         import random
