@@ -90,6 +90,7 @@ class PointParticle(Particle):
         x                       horizontal position of particle     (px)
         y                       vertical position of particle       (px)
         z                       perpendicular position of particle  (px)
+        radius                  The radius of the particle (m) 
         intensity               The peak of the unaborrated particle intensity (a.u) 
 
 '''

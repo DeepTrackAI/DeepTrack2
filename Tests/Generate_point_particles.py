@@ -23,10 +23,11 @@ from timeit import default_timer as timer
 
 
 Optics = BaseOpticalDevice2D(
-    shape=(64,64),      # Desired output shape of the generator.
-    NA=0.7,             # The NA of the optical system.
-    pixel_size=0.1e-6,     # The pixel_size of the optical system (m^-1).
-    wavelength=0.68e-6     # The wavelength of the illuminating source (m).
+    shape=(64,64),          # Desired output shape of the generator.
+    NA=0.7,                 # The NA of the optical system.
+    pixel_size=0.1e-6,      # The pixel_size of the optical system (m^-1).
+    wavelength=0.68e-6,     # The wavelength of the illuminating source (m).
+    upscale=4               # Finetunes the resolution of the pupil.
 )
 
 G = Generator(Optics)
@@ -62,7 +63,7 @@ print("Loads a {0} batch in {1}s".format(images[0].shape, (end - start)))
 # Show one typical particle
 plt.gray()
 for i in range(1):
-    Image = G.get(P + P + N1 + N2)
+    Image = G.get(P)
     plt.imshow(Image)
     plt.show()
 
