@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 import numpy as np
+import pickle
 
 "Interface for Callbacks. Implementations need to override the __call__ method, taking the Generator class and a list of Images"
 
@@ -38,8 +39,11 @@ class Storage(Callback):
         while os.path.isfile(full_path) and not self.overwrite:
             full_path = self.modify(full_path, num=idd)
             idd += 1
-
-        np.save(full_path, Images)
+        
+        # Step 2
+        with open(full_path, 'wb') as f:
+        # Step 3
+            pickle.dump(Images, f)
 
 
     def modify(self, path, num=0):
