@@ -13,8 +13,6 @@ class Image(np.ndarray):
             properties = []
 
         obj.properties = properties
-
-        
         
         return obj
 
@@ -45,12 +43,22 @@ class Image(np.ndarray):
 
         self.properties = getattr(self, "properties", [])
 
-
         props = getattr(obj, "properties", [])
         for property in props:
             self.append(property) 
 
+    def __reduce__(self):
+        # Get the parent's __reduce__ tuple
+        pickled_state = super(Image, self).__reduce__()
+        # Create our own tuple to pass to __setstate__, appending properties
+        new_state = pickled_state[2] + (self.properties,)
+        # Return a tuple that replaces the parent's __setstate__ tuple with our own
+        return (pickled_state[0], pickled_state[1], new_state)
 
+    def __setstate__(self, state):
+        self.properties = state[-1]  # Set the peroperties attribute
+        # Call the parent's __setstate__ with the other tuple elements.
+        super(Image, self).__setstate__(state[0:-1])
 
 
 
