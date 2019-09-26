@@ -145,7 +145,7 @@ class Label:
         return 0
 
     def on_multiple(self, found, props):
-        return found[0]
+        return found[0][self.attr]
 
     def __call__(self, properties):
         res = []

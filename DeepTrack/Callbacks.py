@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import os
 import numpy as np
 import pickle
+import re
 
 "Interface for Callbacks. Implementations need to override the __call__ method, taking the Generator class and a list of Images"
 
@@ -25,29 +26,35 @@ class Storage(Callback):
     def __call__(self, G, Images):
         full_path = self.filepath
 
+        
         base_dir = os.path.dirname(full_path)
-
-        files = os.listdir(base_dir)
-        for file in reversed(files):
-            file = os.path.join(base_dir,file)
-            if not os.path.isfile(file):
-                del file
         
-        if len(files) > self.max_files:
+        if self.too_many_files(base_dir):
             return
-        idd = 0
-        while os.path.isfile(full_path) and not self.overwrite:
-            full_path = self.modify(full_path, num=idd)
-            idd += 1
         
+        idd = 0
+        new_path = full_path[:]
+        while os.path.isfile(new_path) and not self.overwrite:
+            new_path = self.modify(full_path, num=idd)
+            idd += 1
+        full_path = new_path
         # Step 2
         with open(full_path, 'wb') as f:
         # Step 3
             pickle.dump(Images, f)
 
+    def too_many_files(self,dir):
+        files = os.listdir(dir)
+        for file in reversed(files):
+            file = os.path.join(dir,file)
+            if not os.path.isfile(file):
+                del file
+        return len(files) > self.max_files
+        
 
     def modify(self, path, num=0):
         return path + "_" + str(num)
 
-
+        
+            
         
