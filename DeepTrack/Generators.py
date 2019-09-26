@@ -35,17 +35,6 @@ class Generator(keras.utils.Sequence):
         self.Optics = Optics
         self.Particles = []
         self.Noise = []
-
-    # Adds a particle to the set of particles that can be generated
-    def add_particle(self, P):
-        assert isinstance(P, Particle), "Argument supplied to add_particle is not an instance of Particle"
-        
-        self.Particles.append(P)
-
-    def add_noise(self, N):
-        assert isinstance(N, Noise), "Argument supplied to add_particle is not an instance of Noise"
-        
-        self.Noise.append(N)
     
     # Generates a single random image.
     def get(self, Features):
@@ -54,6 +43,7 @@ class Generator(keras.utils.Sequence):
 
     def get_epoch(self):
         return self.epoch
+
     def generate(self,
                     Features,
                     Labels,
