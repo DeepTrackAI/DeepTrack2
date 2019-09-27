@@ -87,17 +87,17 @@ class Image(np.ndarray):
 class Feature(ABC):
 
     def __add__(self,other):
-        o_copy = copy.deepcopy(other)
+        o_copy = copy.copy(other)
         o_copy.parent = self
         return o_copy
 
     def __radd__(self, other): 
-        o_copy = copy.deepcopy(other)
+        o_copy = copy.copy(other)
         self.parent = o_copy
         return o_copy
 
     def __mul__(self, other):
-        o_copy = copy.deepcopy(self)
+        o_copy = copy.copy(self)
         o_copy.probability = other
         return o_copy
 
@@ -122,9 +122,9 @@ class Feature(ABC):
     '''
     def __resolve__(self, Optics):
         
-        __cache = getattr(self, "__cache", None)
-        if not __cache is None:
-            return __cache
+        cache = getattr(self, "cache", None)
+        if not cache is None:
+            return cache
 
         parent = getattr(self, "parent", None)
 
@@ -150,7 +150,8 @@ class Feature(ABC):
             image.append(props)
         
         # Store to cache
-        self.__cache = image
+        self.cache = copy.copy(image)
+        
         return image
 
     '''
@@ -158,7 +159,7 @@ class Feature(ABC):
     to ensure a correct initial state.
     '''
     def __clear__(self):
-        self.__cache = None
+        self.cache = None
         parent = getattr(self, "parent", None)
         if isinstance(parent, Feature):
             parent.__clear__()
