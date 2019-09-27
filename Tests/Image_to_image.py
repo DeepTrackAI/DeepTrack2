@@ -11,6 +11,7 @@ from DeepTrack.Noise import Gaussian, Offset
 from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Backend.Image import Image
 from DeepTrack.Callbacks import Storage
+from DeepTrack.Augmentation import FlipLR, FlipUD, Transpose
 from DeepTrack.Losses import mae
 
 from tensorflow import keras
@@ -50,14 +51,16 @@ model.add(Conv(16, kernel_size=5, activation="relu", padding="same"))
 model.add(Conv(16, kernel_size=5, activation="relu", padding="same"))
 model.add(Conv(1, kernel_size=5, activation="relu", padding="same"))
 model.compile(keras.optimizers.Adam(), loss=mae)
+
+
 # Create your generators. (Features to generate, Labels to extract, batch_size)
-training_generator = G.generate(P, P + N, batch_size=100)
+training_generator = G.generate(P, P + N, batch_size=100, augmentation=[FlipLR(), FlipUD(), Transpose()])
 validation_generator = G.generate(P, P + N, batch_size=4)
 
 
 model.fit_generator(training_generator,  
-                        steps_per_epoch=4,
-                        epochs=100, 
+                        steps_per_epoch=16,
+                        epochs=50, 
                         workers=1)
 
 test_batch, labels = next(validation_generator)
@@ -71,7 +74,6 @@ for i in range(4):
     plt.imshow(np.squeeze(test_batch[i,:,:,0]))
     plt.subplot(4,3,3 + i*3)
     plt.imshow(np.squeeze(test_prediction[i,:,:,0]))
-    # plt.scatter(test_prediction[i,0], test_prediction[i,1], 20, 'b')
 plt.show()
 
 
