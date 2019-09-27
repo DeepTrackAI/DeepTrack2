@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from DeepTrack.Backend.Distributions import draw
 import numpy as np
+import copy
 '''
 Make a subclass of ndarray
 '''
@@ -62,70 +63,110 @@ class Image(np.ndarray):
 
 
 
-class FeatureMap(ABC):
-    def __init__(self, features=None):
-        self.Tree = []
-        if features is not None:
-            self = self + features
+# class FeatureMap(ABC):
 
-    def __add__(self, other):
-        if isinstance(other, tuple):
-            self.Tree.append(other)
-        else:
-            self.Tree.append((other,1))
-        return self
+#     def __call__(self, image, Optics):
+#         return self.resolve(Optics, image=image)
 
-    def __mul__(self, other):
-        T = FeatureMap()
-        T.Tree = [(self, other)]
-        return T
-
-    # def __or__(self, other):
-    #     F = Fork(self)
-    #     return F
-
-    def __call__(self, image, Optics):
-        return self.resolve(Optics, image=image)
-
-    def resolve(self, Optics, image=None):
-        if image is None:
-            image = Image(np.zeros(Optics.shape))
-            image[:] = 0
+#     def resolve(self, Optics, image=None):
+#         if image is None:
+#             image = Image(np.zeros(Optics.shape))
+#             image[:] = 0
         
-        for branch in self.Tree:
-            if np.random.rand() <= branch[1]:
-                image = branch[0](image, Optics)
-        return image
+#         for branch in self.Tree:
+#             if np.random.rand() <= branch[1]:
+#                 image = branch[0](image, Optics)
+#         return image
     
-    __rmul__ = __mul__
-    __radd__ = __add__
+#     __rmul__ = __mul__
+#     __radd__ = __add__
     
-# class Fork(FeatureMap):
-#     def __init__(self, root):
+# # class Fork(FeatureMap):
+# #     def __init__(self, root):
 
 class Feature(ABC):
 
     def __add__(self,other):
-        T = FeatureMap()
-        T = T + self + other
-        return T
+        o_copy = copy.deepcopy(other)
+        o_copy.parent = self
+        return o_copy
+
+    def __radd__(self, other): 
+        o_copy = copy.deepcopy(other)
+        self.parent = o_copy
+        return o_copy
 
     def __mul__(self, other):
-        return (self, other)
+        o_copy = copy.deepcopy(self)
+        o_copy.probability = other
+        return o_copy
+
+    __rmul__ = __mul__
+
+    '''
+    Recursively resolves the feature feature tree backwards, starting at this node. 
+    Each recursive step checks the content of __cache to check if the node has already 
+    been calculated. This allows for a very efficient evaluation of more complex structures
+    with several outputs.
+
+    The function checks its parent property. For None values, the node is seen as input, 
+    and creates a new image. For ndarrays and Images, those values are copied over. For
+    Features, the image is calculated by recursivelt calling the __resolve__ method on the 
+    parent.
+
+    INPUTS:
+        Optics: Optical system used to image the particle
     
-    def __call__(self, Image, Optics):
+    OUTPUTS:
+        Image: An Image instance.
+    '''
+    def __resolve__(self, Optics):
+        
+        __cache = getattr(self, "__cache", None)
+        if not __cache is None:
+            return __cache
 
-        Image, props = self.get(Image, Optics)
-        Image.append(props)
+        parent = getattr(self, "parent", None)
 
-        return Image
+        # If parent does not exist, initiate with zeros
+        if parent is None:
+            image = Image(np.zeros(Optics.shape))
+        # If parent is ndarray, set as ndarray
+        elif isinstance(parent, np.ndarray):
+            image = Image(parent)
+        # If parent is image, set as Image
+        elif isinstance(parent, Image):
+            image = parent
+        # If parent is Feature, retrieve it
+        elif isinstance(parent, Feature):
+            image = parent.__resolve__(Optics)
+        # else, pray
+        else:
+            image = parent
+        # Get probability of draw
+        p = getattr(self, "probability", 1)
+        if np.random.rand() <= p:
+            image, props = self.get(image, Optics)
+            image.append(props)
+        
+        # Store to cache
+        self.__cache = image
+        return image
+
+    '''
+    Rcursively clears the __cache property. Should be on each output node between each call to __resolve__
+    to ensure a correct initial state.
+    '''
+    def __clear__(self):
+        self.__cache = None
+        parent = getattr(self, "parent", None)
+        if isinstance(parent, Feature):
+            parent.__clear__()
 
     @abstractmethod
     def get(self, Image, Optics):
         pass
     
-    __radd__ = __add__
-    __rmul__ = __mul__
 
 class Label:
     def __init__(self, L, on_none=None, on_multiple=None):
@@ -145,7 +186,7 @@ class Label:
         return 0
 
     def on_multiple(self, found, props):
-        return found[0][self.attr]
+        return found[0]
 
     def __call__(self, properties):
         res = []

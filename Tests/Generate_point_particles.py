@@ -50,7 +50,7 @@ N2 = Offset(
 S = Storage("./Tests/Storage/Particle")
 # Time the average generation time for 100 particles
 start = timer()
-images = next(G.generate(P*0.9 + P*0.2 + N1 + N2, ["x", "y"], batch_size=100, callbacks=[S]))
+images = next(G.generate(P + P + N1 + N2, ["x", "y"], batch_size=100, callbacks=[S]))
 end = timer()
 print("Generates a {0} batch in {1}s".format(images[0].shape, (end - start)))
 

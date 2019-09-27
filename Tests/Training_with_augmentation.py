@@ -61,11 +61,11 @@ model.compile(keras.optimizers.Adam(), loss="rmse")
 training_generator =   G.generate(P + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=100)
 validation_generator = G.generate(P + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=10)
 
-model.fit_generator(training_generator,  
+model.fit_generator(training_generator,
                         steps_per_epoch=32,
                         epochs=100,
                         workers=1,
-                        use_multiprocessing=False)
+                        use_multiprocessing=False,)
 
 test_batch, labels = next(validation_generator)
 test_prediction = model.predict(test_batch)

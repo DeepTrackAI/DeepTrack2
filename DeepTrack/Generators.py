@@ -4,7 +4,7 @@ from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Particles import Particle
 from DeepTrack.Noise import Noise
 from DeepTrack.Backend.Distributions import draw
-from DeepTrack.Backend.Image import Label, FeatureMap, Image
+from DeepTrack.Backend.Image import Label, Image
 import random
 
 from typing import List, Tuple, Dict, TextIO
@@ -38,8 +38,11 @@ class Generator(keras.utils.Sequence):
     
     # Generates a single random image.
     def get(self, Features):
-        Image = FeatureMap(Features).resolve(self.Optics)
-        return Image
+        if isinstance(Features, List):
+            return [F.__resolve__(self.Optics) for F in Features]
+        else:
+            return Features.__resolve__(self.Optics)
+
 
     def get_epoch(self):
         return self.epoch
@@ -58,7 +61,7 @@ class Generator(keras.utils.Sequence):
             assert os.path.exists(Features), "Path does not exist"
 
             if os.path.isdir(Features):
-                Features = [os.path.join(Features,file) for file in os.listdir(Features) if os.path.isfile(os.path.join(Features,file) )]
+                Features = [os.path.join(Features,file) for file in os.listdir(Features) if os.path.isfile(os.path.join(Features,file))]
             else:
                 Features = [Features]
             
@@ -151,9 +154,9 @@ class Generator(keras.utils.Sequence):
                 for I in Images:
                         yield I
 
-    def _get_from_map(self, FeatureMap):
+    def _get_from_map(self, Features):
         while True:
-            yield self.get(FeatureMap)
+            yield self.get(Features)
                 
 
     

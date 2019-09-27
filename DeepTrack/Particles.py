@@ -59,8 +59,7 @@ class PointParticle(Particle):
         particle_field = intensity * np.exp(shift)
 
         pupil = Optics.getPupil(shape)
-        
-        convolved_field = particle_field * pupil
+        convolved_field = particle_field * pupil 
         particle = np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(convolved_field)))[0:out_shape[0], 0:out_shape[1]])
         x = position[0]
         y = position[1]
