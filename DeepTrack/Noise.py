@@ -28,8 +28,7 @@ class Gaussian(Noise):
         self.mu = mu
         self.sigma = sigma
     
-    def get(self, Image, Optics):
-        shape = Image.shape
+    def get(self, shape, Image, Optics=None):
         mu_val = draw(self.mu)
         sigma_val = draw(self.sigma)
         mu =    np.ones(shape) * mu_val
@@ -47,7 +46,6 @@ class Offset(Noise):
     def __init__(self,offset):
         self.offset = offset
     
-    def get(self, Image, Optics):
-        shape = Image.shape
+    def get(self, shape, Image, Optics=None):
         offset = draw(self.offset)
         return Image + np.ones(shape) * offset, {"type": "Offset", "offset": offset}

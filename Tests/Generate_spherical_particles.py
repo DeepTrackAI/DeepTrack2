@@ -22,8 +22,8 @@ from timeit import default_timer as timer
 
 
 Optics = BaseOpticalDevice2D(
-    shape=(64,64),      # Desired output shape of the generator.
-    NA=0.7,             # The NA of the optical system.
+    shape=(64,64),         # Desired output shape of the generator.
+    NA=0.7,                # The NA of the optical system.
     pixel_size=0.1e-6,     # The pixel_size of the optical system (m).
     wavelength=0.68e-6     # The wavelength of the illuminating source (m).
 )
@@ -47,14 +47,11 @@ N2 = Offset(
     offset=np.linspace(-0.2,0.2)
 )
 
-G.get(P + N1 + N2)
-
 
 # Time the average generation time for 100 particles
 start = timer()
 
-for i in range(100):
-    image = G.get(P*0.9 + P*0.2 + N1 + N2)
+next(G.generate(Optics(P*0.1 + P*0.9), ["x", "y"], shape=(64,64), batch_size=100))
 
 end = timer()
 
@@ -63,8 +60,8 @@ print("Generates (128,128) particles at {0}s per image".format((end - start)/100
 
 # Show one typical particle
 plt.gray()
-for i in range(1):
-    Image = G.get(P + P + N1 + N2)
+for i in range(10):
+    Image = G.get((64,64), Optics(P + P) + N1 + N2)
     plt.imshow(Image, vmin=-0.2, vmax=1)
     plt.show()
 

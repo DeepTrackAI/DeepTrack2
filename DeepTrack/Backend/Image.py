@@ -8,20 +8,19 @@ Make a subclass of ndarray
 class Image(np.ndarray):
     __array_priority__ = 2
     def __new__(cls, input_array, properties=None):
-
         obj = np.asarray(input_array).view(cls)
         if properties is None:
             properties = []
-
         obj.properties = properties
-        
         return obj
 
     def append(self, properties):
         self.properties.append(properties)
     
     def __array_wrap__(self, out_arr, context=None):
+        
         if out_arr is self:  # for in-place operations
+            
             result = out_arr
         else:
             result = Image(out_arr)
@@ -62,44 +61,24 @@ class Image(np.ndarray):
         super(Image, self).__setstate__(state[0:-1])
 
 
-
-# class FeatureMap(ABC):
-
-#     def __call__(self, image, Optics):
-#         return self.resolve(Optics, image=image)
-
-#     def resolve(self, Optics, image=None):
-#         if image is None:
-#             image = Image(np.zeros(Optics.shape))
-#             image[:] = 0
-        
-#         for branch in self.Tree:
-#             if np.random.rand() <= branch[1]:
-#                 image = branch[0](image, Optics)
-#         return image
-    
-#     __rmul__ = __mul__
-#     __radd__ = __add__
-    
-# # class Fork(FeatureMap):
-# #     def __init__(self, root):
-
 class Feature(ABC):
+    def __input_shape__(self, shape):
+        return shape
 
-    def __add__(self,other):
+    def __add__(self, other):
         o_copy = copy.copy(other)
-        o_copy.parent = self
+        o_copy = o_copy.setParent(self)
         return o_copy
 
     def __radd__(self, other): 
         o_copy = copy.copy(other)
-        self.parent = o_copy
-        return o_copy
+        self = self.setParent(o_copy)
+        return self
 
     def __mul__(self, other):
-        o_copy = copy.copy(self)
-        o_copy.probability = other
-        return o_copy
+        G = Group(copy.copy(self))
+        G.probability = other
+        return G
 
     __rmul__ = __mul__
 
@@ -120,17 +99,16 @@ class Feature(ABC):
     OUTPUTS:
         Image: An Image instance.
     '''
-    def __resolve__(self, Optics):
-        
+    def __resolve__(self, shape, **kwargs):
+
         cache = getattr(self, "cache", None)
         if not cache is None:
             return cache
 
         parent = getattr(self, "parent", None)
-
         # If parent does not exist, initiate with zeros
         if parent is None:
-            image = Image(np.zeros(Optics.shape))
+            image = Image(np.zeros(self.__input_shape__(shape)))
         # If parent is ndarray, set as ndarray
         elif isinstance(parent, np.ndarray):
             image = Image(parent)
@@ -139,21 +117,21 @@ class Feature(ABC):
             image = parent
         # If parent is Feature, retrieve it
         elif isinstance(parent, Feature):
-            image = parent.__resolve__(Optics)
+            image = parent.__resolve__(shape, **kwargs)
         # else, pray
         else:
             image = parent
+        
         # Get probability of draw
         p = getattr(self, "probability", 1)
         if np.random.rand() <= p:
-            image, props = self.get(image, Optics)
+            image, props = self.get(shape, image, **kwargs)
             image.append(props)
         
         # Store to cache
         self.cache = copy.copy(image)
-        
         return image
-
+    
     '''
     Rcursively clears the __cache property. Should be on each output node between each call to __resolve__
     to ensure a correct initial state.
@@ -164,10 +142,55 @@ class Feature(ABC):
         if isinstance(parent, Feature):
             parent.__clear__()
 
+    def getRoot(self):
+        if hasattr(self, "parent"):
+            return self.parent.getRoot()
+        else:
+            return self
+
+    def setParent(self, Feature):
+        if hasattr(self, "parent"):
+            G = Group(self)
+            G = G.setParent(Feature)
+            return G
+        else:            
+            self.parent = Feature
+            return self
+
     @abstractmethod
-    def get(self, Image, Optics):
+    def get(self, Image, Optics=None):
         pass
     
+class Group(Feature):
+    def __init__(self, Features):
+        self.group = Features
+
+    def __input_shape__(self,shape):
+        return self.group.__input_shape__(shape)
+
+    def __clear__(self):
+        # print("clearing " + str(type(self)))
+        group = getattr(self, "group", None)
+        if isinstance(group, Feature) and hasattr(group, "parent"):
+            group.__clear__()
+            
+
+        self.cache = None
+        parent = getattr(self, "parent", None)
+        if isinstance(parent, Feature):
+            parent.__clear__()
+    
+
+    def get(self, shape, Image, **kwargs):
+        return self.group.__resolve__(shape, **kwargs), {}
+
+    # TODO: What if already has parent? Possible?
+    def setParent(self, Feature):
+        self.parent = Feature
+        self.group.getRoot().setParent(Feature)
+        return self
+
+
 
 class Label:
     def __init__(self, L, on_none=None, on_multiple=None):

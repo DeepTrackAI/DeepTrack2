@@ -54,12 +54,12 @@ N = Gaussian(
 
 # Create a model. This model is likely too simple to achieve subpixel resolution.
 model = DeepTrackNetwork(input_shape=(64,64,1), number_of_outputs=2)
-model.compile(keras.optimizers.Adam(), loss="rmse")
+model.compile(keras.optimizers.Adam(), loss="mse")
 
 
 # Create your generators. (Features to generate, Labels to extract, augmentations, batch_size)
-training_generator =   G.generate(P + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=100)
-validation_generator = G.generate(P + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=10)
+training_generator =   G.generate(Optics(P) + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=100)
+validation_generator = G.generate(Optics(P) + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=10)
 
 model.fit_generator(training_generator,
                         steps_per_epoch=32,

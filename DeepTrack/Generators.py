@@ -36,26 +36,35 @@ class Generator(keras.utils.Sequence):
         self.Particles = []
         self.Noise = []
     
-    # Generates a single random image.
-    def get(self, Features):
+    '''
+        Resolves a single set of images given an input set of features before
+        clearing the cache.
+        If the input is a list, the function will iterate through them all
+        before clearing the cache. 
+    '''
+    def get(self, shape, Features):
         if isinstance(Features, List):
-            Images = [F.__resolve__(self.Optics) for F in reversed(Features)]
+            Images = [F.__resolve__(shape) for F in reversed(Features)]
             for F in Features:
                 F.__clear__()
         else:
-            Images = Features.__resolve__(self.Optics)
+            Images = Features.__resolve__(shape)
             Features.__clear__()
         
         return Images
 
+    '''
+        Image to Image generator.
 
-    def get_epoch(self):
-        return self.epoch
-
-
+        A base generator for Image to Image translation. This differs from 
+        Image to Label generation in that the labels are also a Feature-set.
+        This means that the Labels will be run through the augmentation step
+        as well.
+    '''
     def I2I_generator(self,
                     Features,
                     Labels,
+                    shape=(64,64),
                     batch_size=1,
                     callbacks=None,
                     augmentation=None,
@@ -69,9 +78,9 @@ class Generator(keras.utils.Sequence):
             else:
                 Features = [Features]
             
-            get_one = self._get_from_path(Features)
+            get_one = self._get_from_path(shape, Features)
         else:
-            get_one = self._get_from_map([Features, Labels])
+            get_one = self._get_from_map(shape, [Features, Labels])
         
         while True:
             batch = []
@@ -109,10 +118,17 @@ class Generator(keras.utils.Sequence):
                     sub_labels = np.expand_dims(sub_labels, axis=-1)
                 yield (np.array(sub_batch), np.array(sub_labels))
         
-    
+    '''
+        Image to Label generator.
+
+        A base generator for Image to Label translation. Given a feature set,
+        this will generate a (batch_size, *shape) batch of images, and their
+        corresponding labels. 
+    '''
     def I2L_generator(self,
                     Features,
                     Labels,
+                    shape=(64,64),
                     batch_size=1,
                     callbacks=None,
                     augmentation=None,
@@ -126,9 +142,9 @@ class Generator(keras.utils.Sequence):
             else:
                 Features = [Features]
             
-            get_one = self._get_from_path(Features)
+            get_one = self._get_from_path(shape,Features)
         else:
-            get_one = self._get_from_map(Features)
+            get_one = self._get_from_map(shape,Features)
 
         
 
@@ -162,33 +178,38 @@ class Generator(keras.utils.Sequence):
                 yield (np.array(sub_batch), np.array(sub_labels))
                 self.epoch += 1
 
-
+    '''
+        Defalt generator. This choses between available generators based on input. 
+    '''
     def generate(self,
                     Features,
                     Labels,
+                    shape=(64,64),
                     batch_size=1,
                     callbacks=None,
                     augmentation=None,
                     shuffle_batch=True):
-        
+        self.epoch = 0
         # If string, handle as path
         if isinstance(Labels, Feature):
             G = self.I2I_generator(
                 Features,
                 Labels,
-                batch_size,
-                callbacks,
-                augmentation,
-                shuffle_batch
+                shape=(64,64),
+                batch_size=batch_size,
+                callbacks=callbacks,
+                augmentation=augmentation,
+                shuffle_batch=shuffle_batch
             )
         else:
             G = self.I2L_generator(
                 Features,
                 Labels,
-                batch_size,
-                callbacks,
-                augmentation,
-                shuffle_batch
+                shape=(64,64),
+                batch_size=batch_size,
+                callbacks=callbacks,
+                augmentation=augmentation,
+                shuffle_batch=shuffle_batch
             )
         while True:
             yield next(G) 
@@ -196,7 +217,10 @@ class Generator(keras.utils.Sequence):
 
                 
 
-    # Placeholder
+    '''
+        Augments the input Images. Each augmentation internally handles appending values
+        to the list.
+    '''
     def augment(self, Images, Augmentations):
         if Augmentations is None:
             return Images
@@ -231,7 +255,7 @@ class Generator(keras.utils.Sequence):
         
 
     
-    def _get_from_path(self, paths):
+    def _get_from_path(self, shape, paths):
         if not isinstance(paths, List):
             paths = [paths]
         
@@ -239,11 +263,12 @@ class Generator(keras.utils.Sequence):
             for path in paths:
                 Images = np.load(path)
                 for I in Images:
-                        yield I
+                    yield I
 
-    def _get_from_map(self, Features):
+
+    def _get_from_map(self, shape, Features):
         while True:
-            yield self.get(Features)
+            yield self.get(shape, Features)
                 
 
     

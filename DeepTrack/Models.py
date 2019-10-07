@@ -15,8 +15,6 @@ def DeepTrackNetwork(
     Output:
     network: deep learning network
     """    
-
-    
     
     ### INITIALIZE DEEP LEARNING NETWORK
     network = models.Sequential()

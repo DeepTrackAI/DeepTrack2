@@ -12,8 +12,8 @@ class Callback(ABC):
     def __call__(self, G, Images):
         pass
 
-class Storage(Callback):
 
+class Storage(Callback):
     def __init__(self,
                     filepath,
                     overwrite=True,

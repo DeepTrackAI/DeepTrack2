@@ -55,16 +55,24 @@ model.compile(keras.optimizers.Adam(), loss="mse")
 
 
 # Create your generators. (Features to generate, Labels to extract, batch_size)
-training_generator = G.generate(P, ["x", "y"], batch_size=100)
-validation_generator = G.generate(P, ["x", "y"], batch_size=4)
+
+
+
+training_generator = G.generate(Optics(P), ["x", "y"], batch_size=100)
+validation_generator = G.generate(Optics(P), ["x", "y"], batch_size=4)
+
+
+
 
 model.fit_generator(training_generator,  
                         steps_per_epoch=4,
                         epochs=100, 
                         validation_data=validation_generator,
                         validation_steps=1,
-                        workers=1)
+                        workers=1,
+                        max_queue_size=1)
 
+# TODO: Weird bug where validator very rarely outputs multiple particles
 test_batch, labels = next(validation_generator)
 test_prediction = model.predict(test_batch)
 

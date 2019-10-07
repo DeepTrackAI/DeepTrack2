@@ -15,4 +15,4 @@ def mse(T, P):
 def rmse(T, P):
     T = K.flatten(T)
     P = K.flatten(P)
-    return K.root(K.mean(K.square(P - T)))
+    return K.sqrt(K.mean(K.square(P - T)))

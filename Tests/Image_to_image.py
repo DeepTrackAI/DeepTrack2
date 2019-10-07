@@ -26,7 +26,7 @@ from timeit import default_timer as timer
     A generator is created with certain optical properties. A simple tracker is trained.
  '''
 
-
+# TODO Figure out why generation gets slower over time
 Optics = BaseOpticalDevice2D(
     shape=(64,64),      # Desired output shape of the generator.
     NA=0.7,             # The NA of the optical system.
@@ -49,13 +49,15 @@ model = keras.models.Sequential()
 model.add(Conv(16, kernel_size=5, activation="relu", padding="same", input_shape=(64,64,1)))
 model.add(Conv(16, kernel_size=5, activation="relu", padding="same"))
 model.add(Conv(16, kernel_size=5, activation="relu", padding="same"))
-model.add(Conv(1, kernel_size=5, activation="relu", padding="same"))
+model.add(Conv(1, kernel_size=5, padding="same"))
 model.compile(keras.optimizers.Adam(), loss=mae)
 
 
+P0 = Optics(P*0.2 + P*0.2 + P*0.2 + P*0.2 + P*0.2)
+
 # Create your generators. (Features to generate, Labels to extract, batch_size)
-training_generator = G.generate(P, P + N, batch_size=100, augmentation=[FlipLR(), FlipUD(), Transpose()])
-validation_generator = G.generate(P, P + N, batch_size=4)
+training_generator = G.generate(P0, P0 + N, batch_size=100, augmentation=[FlipLR(), FlipUD(), Transpose()])
+validation_generator = G.generate(P0, P0 + N, batch_size=4)
 
 
 model.fit_generator(training_generator,  

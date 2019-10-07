@@ -22,6 +22,7 @@ from DeepTrack.Models import DeepTrackNetwork
 from DeepTrack.Noise import Gaussian, Offset
 from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Particles import PointParticle
+from DeepTrack.Features import Load
 
 
 
@@ -54,7 +55,7 @@ N = Gaussian(
 
 S = Storage("./Tests/Storage/chkp.npy", overwrite=False)
 
-storage_generator =   G.generate(P + N, ["x", "y"], callbacks=[S], batch_size=100)
+storage_generator =   G.generate(Optics(P), ["x", "y"], callbacks=[S], batch_size=100)
 
 # Prefill the storage with 20 batches.
 for _ in range(20):
@@ -65,8 +66,10 @@ model = DeepTrackNetwork(input_shape=(64,64,1), number_of_outputs=2)
 model.compile(keras.optimizers.Adam(), loss="mse")
 
 
-training_generator =   G.generate("./Tests/Storage/", ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=100)
-validation_generator = G.generate("./Tests/Storage/", ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=10)
+
+
+training_generator =   G.generate(Load("./Tests/Storage/") + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=100)
+validation_generator = G.generate(Load("./Tests/Storage/") + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=10)
 
 model.fit_generator(training_generator,  
                         steps_per_epoch=32,
