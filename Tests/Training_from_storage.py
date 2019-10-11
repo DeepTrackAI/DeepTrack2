@@ -22,6 +22,7 @@ from DeepTrack.Models import DeepTrackNetwork
 from DeepTrack.Noise import Gaussian, Offset
 from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Particles import PointParticle
+from DeepTrack.Features import Load
 
 
 
@@ -52,28 +53,33 @@ N = Gaussian(
     sigma=np.linspace(0.03,0.08),
 )
 
-# Create a model. This model is likely too simple to achieve subpixel resolution.
+S = Storage("./Tests/Storage/Particle_Batch.npy", overwrite=False)
+L = Label()["position"][0:2]
+storage_generator =   G.generate(Optics(P), L, callbacks=[S], batch_size=100)
+
+# Prefill the storage with 20 batches.
+for _ in range(20):
+    next(storage_generator)
+
+
 model = DeepTrackNetwork(input_shape=(64,64,1), number_of_outputs=2)
 model.compile(keras.optimizers.Adam(), loss="mse")
 
+training_generator =   G.generate(Load("./Tests/Storage/") + N, L, augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=100)
+validation_generator = G.generate(Load("./Tests/Storage/") + N, L, augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=10)
 
-# Create your generators. (Features to generate, Labels to extract, augmentations, batch_size)
-L = Label()["position"][0:2]
-training_generator =   G.generate(Optics(P) + N, L, augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=100)
-validation_generator = G.generate(Optics(P) + N, L, augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=10)
-
-model.fit_generator(training_generator,
+model.fit_generator(training_generator,  
                         steps_per_epoch=32,
-                        epochs=10,
+                        epochs=100,
                         workers=1,
                         use_multiprocessing=False)
 
-test_batch, labels = next(validation_generator)    
-test_prediction = model.predict(test_batch) 
+test_batch, labels = next(validation_generator)
+test_prediction = model.predict(test_batch)
+
 
 plt.gray()
 for i in range(9):
-    
     plt.subplot(331 + i)
     plt.imshow(np.squeeze(test_batch[i,:,:,0]))
     plt.scatter(labels[i,0], labels[i,1], 20, 'g')

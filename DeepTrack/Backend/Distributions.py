@@ -6,10 +6,67 @@ Returns a ndarray of the same shape as the input argument, with each number unif
 Input arguments:
     scale:          The maximum of the distribution for each output.
 '''
+
 def uniform_random(scale):
     def distribution():
-        return tuple(np.random.rand(len(scale))*np.array(scale))
+        return np.random.rand(len(scale))*np.array(scale)
     return distribution
+
+class Distribution:
+    def __init__(self, D):
+        self.D = D
+    
+    def __update__(self, history):
+        if self not in history:
+            history.append(self)
+            self.value = sample(self)
+        return self
+    
+
+    def __sample__(self):
+        try:
+            return self.D.__sample__()
+        except AttributeError:
+            pass
+        
+        if isinstance(self.D, dict):
+            out = {}
+            for key, val in self.D.items():
+                out[key] = sample(val)
+            return out
+        
+        try:
+            return next(self.D)
+        except TypeError:
+            pass
+            
+        if callable(self.D):
+            return self.D()
+        
+        # Else, check if input is an array, and extract a single element
+        if isinstance(self.D, (list, np.ndarray)):
+            return sample(np.random.choice(self.D))
+
+        # Else, assume it's elementary.
+        return self.D
+
+
+    @property
+    def value(self):
+         self._value
+
+    @value.setter
+    def value(self, v):
+        self._value = v
+    
+    @value.getter
+    def value(self):
+        if not hasattr(self, "_value"):
+            sample(self)
+        return self._value
+
+
+
 
 
 '''
@@ -23,15 +80,10 @@ def uniform_random(scale):
 
     To return multiple values, store them as a tuple. 
 '''
-def draw(E):
+def sample(E):
+    try:
+        return E.__sample__()
+    except AttributeError:
+        return E
     
-    # If the input it callable, treat it as a distribution.
-    if callable(E):
-        return draw(E())
-    
-    # Else, check if input is an array, and extract a single element
-    if isinstance(E, (list, np.ndarray)):
-        return draw(np.random.choice(E))
 
-    # Else, assume it's elementary.
-    return E

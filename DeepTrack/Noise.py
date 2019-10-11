@@ -1,4 +1,4 @@
-from DeepTrack.Backend.Distributions import draw
+from DeepTrack.Backend.Distributions import sample
 from DeepTrack.Backend.Image import Feature
 import abc
 import numpy as np
@@ -24,17 +24,14 @@ Input arguments:
 '''
 
 class Gaussian(Noise):
-    def __init__(self, mu=0, sigma=1):
-        self.mu = mu
-        self.sigma = sigma
-    
-    def get(self, Image, Optics):
-        shape = Image.shape
-        mu_val = draw(self.mu)
-        sigma_val = draw(self.sigma)
-        mu =    np.ones(shape) * mu_val
-        sigma = np.ones(shape) * sigma_val
-        return Image + np.random.normal(mu, sigma), {"type": "Gaussian", "mu": mu_val, "sigma": sigma_val}
+    __name__ = "GaussianNoise"
+    def __init__(self, mu=0, sigma=1, **kwargs):
+        super().__init__(mu=mu, sigma=sigma, **kwargs)
+
+    def get(self, shape, Image, mu=0, sigma=1, **kwargs):
+        mu =    np.ones(shape) * mu
+        sigma = np.ones(shape) * sigma
+        return Image + np.random.normal(mu, sigma)
 
  
 '''
@@ -44,10 +41,8 @@ Input arguments:
     offset:     The value of the offset (number, array, distribution)        
 '''
 class Offset(Noise):
-    def __init__(self,offset):
-        self.offset = offset
-    
-    def get(self, Image, Optics):
-        shape = Image.shape
-        offset = draw(self.offset)
-        return Image + np.ones(shape) * offset, {"type": "Offset", "offset": offset}
+    __name__ = "OffsetNoise"
+    def get(self, shape, Image, offset=0, **kwargs):
+        
+        return Image + np.ones(shape) * offset
+

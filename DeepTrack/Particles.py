@@ -1,6 +1,6 @@
 
 
-from DeepTrack.Backend.Distributions import uniform_random, draw
+from DeepTrack.Backend.Distributions import uniform_random, sample
 from DeepTrack.Backend.Image import Feature
 from scipy import special
 import numpy as np
@@ -12,7 +12,16 @@ import abc
     Base class for all particles. 
 '''
 class Particle(Feature):
-    pass
+    
+    def __get_properties__(self):
+        d = super().__get_properties__()
+        d["x"] = d["position"][0]
+        d["y"] = d["position"][1]
+        d["z"] = d["position"][2]
+        return d
+
+    def __input_shape__(self, shape):
+        return tuple(np.array(shape)*2)
 
     
 
@@ -36,42 +45,23 @@ class Particle(Feature):
 '''
 
 class PointParticle(Particle):
-    def __init__(self, 
-            intensity=1,
-            position_distribution=None):
-        self.position_distribution = position_distribution
-        self.intensity = intensity
-
+    __name__ = "PointParticle"
     def get(self,
+                shape,
                 Image,
-                Optics):
+                position=None,
+                intensity=None,
+                Optics=None,
+                **kwargs):
+        out_shape = np.array(shape) * 2
 
-        out_shape = Image.shape
-        shape = np.array(out_shape) * 2
-        if self.position_distribution is None:
-            position = draw(uniform_random(out_shape))
-        else:
-            position = draw(self.position_distribution)
-        intensity =     draw(self.intensity)
-
-        shift = _get_particle_shift(position, shape, Optics)
+        shift = _get_particle_shift(position, out_shape, Optics)
 
         particle_field = intensity * np.exp(shift)
 
-        pupil = Optics.getPupil(shape)
-        
-        convolved_field = particle_field * pupil
-        particle = np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(convolved_field)))[0:out_shape[0], 0:out_shape[1]])
-        x = position[0]
-        y = position[1]
-        try:
-            z = position[2]
-        except IndexError:
-            z = 0
-    
-        properties = {"type": "PointParticle", "x": x, "y": y, "z": z, "intensity": intensity}
+        particle = np.fft.ifftshift(particle_field)
 
-        return Image + particle, properties
+        return Image + particle
 
 
 
@@ -83,93 +73,66 @@ class PointParticle(Particle):
     Inputs: 
         radius                  A set of particle radii (mu) that can be simulated 
         intensity               The peak field magnitude of the the particle
-        position_distribution   The distribution from which to draw the particle position 
-                                (May be moved to the generator)
+        position_distribution   The distribution from which to draw the particle position
 
     Properties
         x                       horizontal position of particle     (px)
         y                       vertical position of particle       (px)
         z                       perpendicular position of particle  (px)
+        radius                  The radius of the particle (m) 
         intensity               The peak of the unaborrated particle intensity (a.u) 
 
 '''
 
 
 class SphericalParticle(Particle):
-    def __init__(self,
-            radius=1,
-            intensity=1,
-            position_distribution=None
-        ):
+    __name__ = "SphericalParticle"
         
-        self.position_distribution = position_distribution
-        self.radius = radius
-        self.intensity = intensity
-        
-
     # Retrieves the fourier transformed intensity map of the spherical particle.
-    def get(self, 
+    def get(self,
+                shape,
                 Image,
-                Optics):
-        out_shape = Image.shape
-        shape = 2 * np.array(Image.shape)
-        pixel_size = Optics.pixel_size
-
-        
-        if self.position_distribution is None:
-            position = draw(uniform_random(shape))
-        else:
-            position = draw(self.position_distribution)
-        intensity =     draw(self.intensity)
-        radius =        draw(self.radius)
+                position=None,
+                intensity=None,
+                radius=None,
+                Optics=None,
+                **kwargs):
+        out_shape = np.array(shape) * 2
+        pixel_size = Optics.get_property("pixel_size")
         
         sampling_frequency_x = 2 * np.pi / pixel_size
         sampling_frequency_y = 2 * np.pi / pixel_size
 
-        fx = np.arange(-sampling_frequency_x/2, sampling_frequency_x/2, step = sampling_frequency_x / shape[0])
-        fy = np.arange(-sampling_frequency_y/2, sampling_frequency_y/2, step = sampling_frequency_y / shape[1])
+        fx = np.arange(-sampling_frequency_x/2, sampling_frequency_x/2, step = sampling_frequency_x / out_shape[0])
+        fy = np.arange(-sampling_frequency_y/2, sampling_frequency_y/2, step = sampling_frequency_y / out_shape[1])
         FX, FY = np.meshgrid(fx, fy)
         RHO = np.sqrt(FX ** 2 + FY ** 2)
         
-        particle_field = intensity * 2 * special.jn(1, radius * RHO) / (RHO * radius)
+        particle_field = self.get_property("intensity") * 2 * special.jn(1, self.get_property("radius") * RHO) / (RHO * self.get_property("radius"))
 
-        shift = _get_particle_shift(position, shape, Optics)
+        shift = _get_particle_shift(self.get_property("position"), out_shape, Optics)
         
         particle_field = particle_field * np.exp(shift)
-        pupil = Optics.getPupil(shape)
-        
-        convolved_field = particle_field * pupil
-        particle = (np.abs(np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(convolved_field))))[0:out_shape[0], 0:out_shape[1]])
-
-
-        x = position[0]
-        y = position[1]
-        try:
-            z = position[2]
-        except IndexError:
-            z = 0
-
-        properties = {"type": "SphericalParticle", "x": x, "y": y, "z": z, "radius": radius, "intensity": intensity}
-        return Image + particle, properties
-
-
+        particle = np.fft.ifftshift(particle_field)
+        return Image + particle
 
 
 
 def _get_particle_shift(position, shape, Optics):
-    sampling_frequency_x = 2 * np.pi / Optics.pixel_size
-    sampling_frequency_y = 2 * np.pi / Optics.pixel_size
+    sampling_frequency_x = 2 * np.pi / Optics.get_property("pixel_size")
+    sampling_frequency_y = 2 * np.pi / Optics.get_property("pixel_size")
 
     fx = np.arange(-sampling_frequency_x/2, sampling_frequency_x/2, step = sampling_frequency_x / shape[0])
     fy = np.arange(-sampling_frequency_y/2, sampling_frequency_y/2, step = sampling_frequency_y / shape[1])
     FX, FY = np.meshgrid(fx, fy)
     RHO = np.sqrt(FX ** 2 + FY ** 2)
     
-    shift = -1j * Optics.pixel_size * (FX * (position[0] - shape[0]/2) + FY * (position[1] - shape[1]/2))
+    shift = -1j * Optics.get_property("pixel_size") * (FX * (position[0]) + FY * (position[1]))
     if len(position) >= 3:
-        k = 2 * np.pi / Optics.wavelength
+        k = 2 * np.pi / Optics.get_property("wavelength")
         K_MAT = k ** 2 - RHO ** 2
         K_MAT[K_MAT < 0] = 0
         K_MAT = np.sqrt(K_MAT)
-        shift = shift + 1j * position[2] * Optics.pixel_size * (K_MAT-k)
+        shift = shift + 1j * position[2] * Optics.get_property("pixel_size") * (K_MAT-k)
     return shift
+

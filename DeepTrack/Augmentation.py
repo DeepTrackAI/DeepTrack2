@@ -67,8 +67,8 @@ class FlipLR(Augmentation):
     def update_props(self, Image):
         for i in range(len(Image.properties)):
             p = Image.properties[i]
-            if "x" in p:
-                Image.properties[i]["x"]= Image.shape[1] - p["x"] - 1
+            if "position" in p:
+                Image.properties[i]["position"][0] = Image.shape[1] - p["position"][0] - 1
         return Image
 
 class FlipUD(Augmentation):
@@ -80,8 +80,8 @@ class FlipUD(Augmentation):
     def update_props(self, Image):
         for i in range(len(Image.properties)):
             p = Image.properties[i]
-            if "y" in p:
-                Image.properties[i]["y"]= Image.shape[1] - p["y"] - 1
+            if "position" in p:
+                Image.properties[i]["position"][1] = Image.shape[1] - p["position"][1] - 1
         return Image
 
 class Transpose(Augmentation):
@@ -93,9 +93,9 @@ class Transpose(Augmentation):
     def update_props(self, Image):
         for i in range(len(Image.properties)):
             p = Image.properties[i]
-            if "x" in p and "y" in p:
-                x = p["x"]
-                y = p["y"]
-                Image.properties[i]["x"] = y
-                Image.properties[i]["y"] = x
+            if "position" in p:
+                x = p["position"][0]
+                y = p["position"][1]
+                Image.properties[i]["position"][0] = y
+                Image.properties[i]["position"][1] = x
         return Image
