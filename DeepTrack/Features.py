@@ -1,17 +1,27 @@
 from DeepTrack.Backend.Image import Feature
+from DeepTrack.Backend.Distributions import Distribution
 import os
 import re
 import numpy as np
 
 class Load(Feature):
+    __name__ = "Load"
     def __init__(self,
                     path):
         self.path = path
-        self.iter = next(self)
+        self.__properties__ = {"path": path}
 
+        # Initiates the iterator
+        self.iter = next(self)
+    
     def get(self, shape, image, **kwargs):
-        return next(self.iter)
-        
+        return self.res
+    
+    def __update__(self,history):
+        if self not in history:
+            history.append(self)
+            self.res = next(self.iter)
+            super().__update__(history)
     
     def __next__(self):
         while True:
@@ -19,7 +29,10 @@ class Load(Feature):
             image = np.load(file)
             np.random.shuffle(image)
             for i in range(len(image)):
-                yield image[i], {"type": "Load", "path": file, "index": i}
+                yield image[i]
+
+        
+
 
     def setParent(self, F):
         raise Exception("The Load class cannot have a parent. For literal addition, use the Add class")
@@ -32,14 +45,4 @@ class Load(Feature):
             files =  os.listdir(dirname)
             pattern = os.path.basename(self.path)
             return [os.path.join(self.path,file) for file in files if os.path.isfile(os.path.join(self.path,file)) and re.match(pattern,file)]
-
-class Add(Feature):
-    def __init__(self, F1, F2):
-        self.F1 = F1
-        self.F2 = F2
-    
-    def get(self, shape, image, **kwargs):
-        I1 = self.F1.__shape__(shape, **kwargs)
-        I2 = self.F2.__shape__(shape, **kwargs)
-        return I1 + I2, {"type": "Add"}
         

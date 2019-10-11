@@ -38,7 +38,7 @@ G = Generator(Optics)
 
 P = PointParticle(                                         # Radius of the generated particles
     intensity=np.linspace(50,100),                           # Peak intensity of the generated particle
-    position_distribution=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
+    position=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
 )
 
 N = Gaussian(0,np.linspace(0,0.2))
@@ -53,7 +53,7 @@ model.add(Conv(1, kernel_size=5, padding="same"))
 model.compile(keras.optimizers.Adam(), loss=mae)
 
 
-P0 = Optics(P*0.2 + P*0.2 + P*0.2 + P*0.2 + P*0.2)
+P0 = Optics(P*0.4 + P*0.4 + P*0.4 + P*0.4 + P*0.4)
 
 # Create your generators. (Features to generate, Labels to extract, batch_size)
 training_generator = G.generate(P0, P0 + N, batch_size=100, augmentation=[FlipLR(), FlipUD(), Transpose()])
@@ -73,7 +73,7 @@ for i in range(4):
     plt.subplot(4,3,1 + i*3)
     plt.imshow(np.squeeze(test_batch[i,:,:,0]))
     plt.subplot(4,3,2 + i*3)
-    plt.imshow(np.squeeze(test_batch[i,:,:,0]))
+    plt.imshow(np.squeeze(labels[i,:,:,0]))
     plt.subplot(4,3,3 + i*3)
     plt.imshow(np.squeeze(test_prediction[i,:,:,0]))
 plt.show()

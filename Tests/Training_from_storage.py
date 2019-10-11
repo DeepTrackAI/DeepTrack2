@@ -15,7 +15,7 @@ sys.path.append("../DeepTrack")
 
 from DeepTrack.Augmentation import FlipLR, FlipUD, NormalizeMinMax, Transpose
 from DeepTrack.Backend.Distributions import uniform_random
-from DeepTrack.Backend.Image import Image
+from DeepTrack.Backend.Image import Image, Label
 from DeepTrack.Callbacks import Storage
 from DeepTrack.Generators import Generator
 from DeepTrack.Models import DeepTrackNetwork
@@ -46,16 +46,16 @@ G = Generator(Optics)
 
 P = PointParticle(                                         # Radius of the generated particles
     intensity=np.linspace(50,100),                           # Peak intensity of the generated particle
-    position_distribution=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
+    position=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
 )
 
 N = Gaussian(
     sigma=np.linspace(0.03,0.08),
 )
 
-S = Storage("./Tests/Storage/chkp.npy", overwrite=False)
-
-storage_generator =   G.generate(Optics(P), ["x", "y"], callbacks=[S], batch_size=100)
+S = Storage("./Tests/Storage/Particle_Batch.npy", overwrite=False)
+L = Label()["position"][0:2]
+storage_generator =   G.generate(Optics(P), L, callbacks=[S], batch_size=100)
 
 # Prefill the storage with 20 batches.
 for _ in range(20):
@@ -65,11 +65,8 @@ for _ in range(20):
 model = DeepTrackNetwork(input_shape=(64,64,1), number_of_outputs=2)
 model.compile(keras.optimizers.Adam(), loss="mse")
 
-
-
-
-training_generator =   G.generate(Load("./Tests/Storage/") + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=100)
-validation_generator = G.generate(Load("./Tests/Storage/") + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=10)
+training_generator =   G.generate(Load("./Tests/Storage/") + N, L, augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=100)
+validation_generator = G.generate(Load("./Tests/Storage/") + N, L, augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=10)
 
 model.fit_generator(training_generator,  
                         steps_per_epoch=32,

@@ -15,7 +15,7 @@ sys.path.append("../DeepTrack")
 
 from DeepTrack.Augmentation import FlipLR, FlipUD, NormalizeMinMax, Transpose
 from DeepTrack.Backend.Distributions import uniform_random
-from DeepTrack.Backend.Image import Image
+from DeepTrack.Backend.Image import Image, Label
 from DeepTrack.Callbacks import Storage
 from DeepTrack.Generators import Generator
 from DeepTrack.Models import DeepTrackNetwork
@@ -45,7 +45,7 @@ G = Generator(Optics)
 
 P = PointParticle(                                         # Radius of the generated particles
     intensity=np.linspace(50,100),                           # Peak intensity of the generated particle
-    position_distribution=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
+    position=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
 )
 
 N = Gaussian(
@@ -58,21 +58,22 @@ model.compile(keras.optimizers.Adam(), loss="mse")
 
 
 # Create your generators. (Features to generate, Labels to extract, augmentations, batch_size)
-training_generator =   G.generate(Optics(P) + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=100)
-validation_generator = G.generate(Optics(P) + N, ["x", "y"], augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=10)
+L = Label()["position"][0:2]
+training_generator =   G.generate(Optics(P) + N, L, augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=100)
+validation_generator = G.generate(Optics(P) + N, L, augmentation=[NormalizeMinMax(), FlipLR(), FlipUD(), Transpose()], batch_size=10)
 
 model.fit_generator(training_generator,
                         steps_per_epoch=32,
-                        epochs=100,
+                        epochs=10,
                         workers=1,
-                        use_multiprocessing=False,)
+                        use_multiprocessing=False)
 
-test_batch, labels = next(validation_generator)
-test_prediction = model.predict(test_batch)
-
+test_batch, labels = next(validation_generator)    
+test_prediction = model.predict(test_batch) 
 
 plt.gray()
 for i in range(9):
+    
     plt.subplot(331 + i)
     plt.imshow(np.squeeze(test_batch[i,:,:,0]))
     plt.scatter(labels[i,0], labels[i,1], 20, 'g')

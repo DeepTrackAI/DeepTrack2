@@ -9,7 +9,7 @@ from DeepTrack.Particles import PointParticle
 from DeepTrack.Backend.Distributions import uniform_random
 from DeepTrack.Noise import Gaussian, Offset
 from DeepTrack.Optics import BaseOpticalDevice2D
-from DeepTrack.Backend.Image import Image
+from DeepTrack.Backend.Image import Image, Label
 from DeepTrack.Callbacks import Storage
 
 from tensorflow import keras
@@ -36,7 +36,7 @@ G = Generator(Optics)
 
 P = PointParticle(                                         # Radius of the generated particles
     intensity=np.linspace(50,100),                           # Peak intensity of the generated particle
-    position_distribution=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
+    position=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
 )
 
 
@@ -54,12 +54,10 @@ model.add(Dense(2))
 model.compile(keras.optimizers.Adam(), loss="mse")
 
 
-# Create your generators. (Features to generate, Labels to extract, batch_size)
-
-
-
-training_generator = G.generate(Optics(P), ["x", "y"], batch_size=100)
-validation_generator = G.generate(Optics(P), ["x", "y"], batch_size=4)
+# Create your generators. (Features to generate, Labels to extract, batch_size)  
+L = Label()["position"][0:2]
+training_generator = G.generate(Optics(P), L, batch_size=100)
+validation_generator = G.generate(Optics(P), L, batch_size=4)
 
 
 

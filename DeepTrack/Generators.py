@@ -3,8 +3,9 @@
 from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Particles import Particle
 from DeepTrack.Noise import Noise
-from DeepTrack.Backend.Distributions import draw
+from DeepTrack.Backend.Distributions import sample
 from DeepTrack.Backend.Image import Label, Feature, Image
+import copy
 import random
 
 from typing import List, Tuple, Dict, TextIO
@@ -12,6 +13,8 @@ from typing import List, Tuple, Dict, TextIO
 import os
 import numpy as np
 from tensorflow import keras
+
+from timeit import default_timer as timer
 
 '''
     Base class for a generator.
@@ -43,13 +46,26 @@ class Generator(keras.utils.Sequence):
         before clearing the cache. 
     '''
     def get(self, shape, Features):
+    
         if isinstance(Features, List):
-            Images = [F.__resolve__(shape) for F in reversed(Features)]
+
+            history = []
+            
             for F in Features:
                 F.__clear__()
+
+            for f in Features:
+                f.__rupdate__(history)
+
+            Images = [F.__resolve__(shape) for F in reversed(Features)]
+
+
         else:
-            Images = Features.__resolve__(shape)
             Features.__clear__()
+            Features.__rupdate__([])
+            
+            Images = Features.__resolve__(shape)
+            
         
         return Images
 
@@ -243,15 +259,18 @@ class Generator(keras.utils.Sequence):
     
     def get_labels(self, image, Labels):
         if Labels is None:
-            return np.array([0])
+            return np.array([])
         
         if not isinstance(Labels, List):
             Labels = [Labels]
 
         l = []
         for L in Labels:
-            l.append(Label(L)(image.properties))
-        return l
+
+            Lab = L.__resolve__(image.properties)
+            l.append(Lab)
+
+        return np.squeeze(l)
         
 
     

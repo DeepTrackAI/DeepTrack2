@@ -35,7 +35,7 @@ G = Generator(
 P = SphericalParticle(
     radius=np.linspace(0.1e-6,1e-6),                                             # Radius of the generated particles
     intensity=np.linspace(40, 60),                           # Peak intensity of the generated particle
-    position_distribution=uniform_random((64,64,10))           # The distrbution from which to draw the position of the particle
+    position=uniform_random((64,64,10))           # The distrbution from which to draw the position of the particle
 )
 
 N1 = Gaussian(
@@ -51,7 +51,7 @@ N2 = Offset(
 # Time the average generation time for 100 particles
 start = timer()
 
-next(G.generate(Optics(P*0.1 + P*0.9), ["x", "y"], shape=(64,64), batch_size=100))
+next(G.generate(Optics(P*0.1 + P*0.9), [], shape=(64,64), batch_size=100))
 
 end = timer()
 

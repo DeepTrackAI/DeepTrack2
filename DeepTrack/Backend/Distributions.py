@@ -6,37 +6,66 @@ Returns a ndarray of the same shape as the input argument, with each number unif
 Input arguments:
     scale:          The maximum of the distribution for each output.
 '''
+
 def uniform_random(scale):
     def distribution():
-        return tuple(np.random.rand(len(scale))*np.array(scale))
+        return np.random.rand(len(scale))*np.array(scale)
     return distribution
 
-class SequenceGenerator:
-    def __init__(
-        self,
-        init,
-        next=None,
-        correlation_length=1,
-        return_all = False
-    ):
-        self.init = init
-        if next is None:
-            next = init
-        self.next = init
-        self.correlation_length=correlation_length
-        self.return_all=return_all
+class Distribution:
+    def __init__(self, D):
+        self.D = D
+    
+    def __update__(self, history):
+        if self not in history:
+            history.append(self)
+            self.value = sample(self)
+        return self
+    
+
+    def __sample__(self):
+        try:
+            return self.D.__sample__()
+        except AttributeError:
+            pass
         
-    def __iter__(self):
-        self.X = [draw(self.init)]
+        if isinstance(self.D, dict):
+            out = {}
+            for key, val in self.D.items():
+                out[key] = sample(val)
+            return out
+        
+        try:
+            return next(self.D)
+        except TypeError:
+            pass
+            
+        if callable(self.D):
+            return self.D()
+        
+        # Else, check if input is an array, and extract a single element
+        if isinstance(self.D, (list, np.ndarray)):
+            return sample(np.random.choice(self.D))
 
-    def __next__(self):
+        # Else, assume it's elementary.
+        return self.D
 
-        self.X.append(self.next(self.X[-self.correlation_length:]))
 
-        if self.return_all:
-            return self.X
-        else:
-            return self.X[-1]
+    @property
+    def value(self):
+         self._value
+
+    @value.setter
+    def value(self, v):
+        self._value = v
+    
+    @value.getter
+    def value(self):
+        if not hasattr(self, "_value"):
+            sample(self)
+        return self._value
+
+
 
 
 
@@ -51,20 +80,10 @@ class SequenceGenerator:
 
     To return multiple values, store them as a tuple. 
 '''
-def draw(E):
+def sample(E):
+    try:
+        return E.__sample__()
+    except AttributeError:
+        return E
     
-    # If the input is a sequence generator, retrieve next item
 
-    if isinstance(E, SequenceGenerator):
-        return draw(next(E))
-
-    # If the input is callable, treat it as a distribution.
-    if callable(E):
-        return draw(E())
-    
-    # Else, check if input is an array, and extract a single element
-    if isinstance(E, (list, np.ndarray)):
-        return draw(np.random.choice(E))
-
-    # Else, assume it's elementary.
-    return E

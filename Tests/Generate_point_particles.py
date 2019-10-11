@@ -34,7 +34,7 @@ G = Generator(Optics)
 
 P = PointParticle(                                         # Radius of the generated particles
     intensity=np.linspace(50,100),                           # Peak intensity of the generated particle
-    position_distribution=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
+    position=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
 )
 
 N1 = Gaussian(
@@ -50,12 +50,12 @@ N2 = Offset(
 S = Storage("./Tests/Storage/Particle")
 # Time the average generation time for 100 particles
 start = timer()
-images = next(G.generate(Optics(P + P) + N1 + N2, ["x", "y"], shape=(64,64), batch_size=100, callbacks=[S]))
+images = next(G.generate(Optics(P + P) + N1 + N2, [], shape=(64,64), batch_size=100, callbacks=[S]))
 end = timer()
 print("Generates a {0} batch in {1}s".format(images[0].shape, (end - start)))
 
 start = timer()
-images = next(G.generate("./Tests/Storage", ["x", "y"], shape=(64,64), batch_size=100, callbacks=[S]))
+images = next(G.generate("./Tests/Storage", [], shape=(64,64), batch_size=100, callbacks=[S]))
 end = timer()
 print("Loads a {0} batch in {1}s".format(images[0].shape, (end - start)))
 
@@ -63,7 +63,7 @@ print("Loads a {0} batch in {1}s".format(images[0].shape, (end - start)))
 # Show one typical particle
 plt.gray()
 for i in range(1):
-    Image = G.get((64,64), Optics(P))
+    Image = G.get((64,64), Optics(P+P))
     plt.imshow(np.abs(Image))
     plt.show()
 
