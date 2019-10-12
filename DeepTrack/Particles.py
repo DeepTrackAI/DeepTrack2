@@ -1,7 +1,7 @@
 
 
-from DeepTrack.Backend.Distributions import uniform_random, sample
-from DeepTrack.Backend.Image import Feature
+from DeepTrack.Distributions import uniform_random, sample
+from DeepTrack.Features import Feature
 from scipy import special
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,15 +10,11 @@ import abc
 
 '''
     Base class for all particles. 
+
+    A particle will typically be defined by the fourier transform of it's intensity map. 
+    This allows later classes to correctly model the optics the particle is imaged through.
 '''
 class Particle(Feature):
-    
-    def __get_properties__(self):
-        d = super().__get_properties__()
-        d["x"] = d["position"][0]
-        d["y"] = d["position"][1]
-        d["z"] = d["position"][2]
-        return d
 
     def __input_shape__(self, shape):
         return tuple(np.array(shape)*2)
@@ -33,13 +29,11 @@ class Particle(Feature):
     Inputs: 
         radius                  A set of particle radii (mu) that can be simulated 
         intensity               The peak field magnitude of the the particle
-        position_distribution   The distribution from which to draw the particle position 
+        position                The distribution from which to draw the particle position 
                                 (May be moved to the generator)
 
     Properties
-        x                       horizontal position of particle     (px)
-        y                       vertical position of particle       (px)
-        z                       perpendicular position of particle  (px)
+        position                Position of the particle [x,y(,z)], in px.
         intensity               The peak of the unaborrated particle intensity (a.u) 
 
 '''
@@ -54,13 +48,9 @@ class PointParticle(Particle):
                 Optics=None,
                 **kwargs):
         out_shape = np.array(shape) * 2
-
         shift = _get_particle_shift(position, out_shape, Optics)
-
         particle_field = intensity * np.exp(shift)
-
         particle = np.fft.ifftshift(particle_field)
-
         return Image + particle
 
 
@@ -73,12 +63,10 @@ class PointParticle(Particle):
     Inputs: 
         radius                  A set of particle radii (mu) that can be simulated 
         intensity               The peak field magnitude of the the particle
-        position_distribution   The distribution from which to draw the particle position
+        position                The distribution from which to draw the particle position
 
     Properties
-        x                       horizontal position of particle     (px)
-        y                       vertical position of particle       (px)
-        z                       perpendicular position of particle  (px)
+        position                Position of the particle [x,y(,z)], in px.
         radius                  The radius of the particle (m) 
         intensity               The peak of the unaborrated particle intensity (a.u) 
 
@@ -117,7 +105,15 @@ class SphericalParticle(Particle):
         return Image + particle
 
 
+'''
+    Calculates a complex field that, when element-wise multiplied with
+    a fourier field, move each point in real space by a 3d vector.
 
+    Inputs:
+        position                The direction vector to shift each point with
+        shape                   The shape of the output field
+        Optics                  The optical system of the image (Only wavelength needed, and only if z=/=0)
+'''
 def _get_particle_shift(position, shape, Optics):
     sampling_frequency_x = 2 * np.pi / Optics.get_property("pixel_size")
     sampling_frequency_y = 2 * np.pi / Optics.get_property("pixel_size")

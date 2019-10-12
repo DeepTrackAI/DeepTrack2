@@ -1,17 +1,28 @@
 import numpy as np
 from abc import ABC, abstractmethod
-from DeepTrack.Backend.Image import Feature, Image
+from DeepTrack.Backend.Image import Image
+from DeepTrack.Features import Feature
 import matplotlib.pyplot as plt
 '''
     An optical device that images a fourier representation of the field. 
+
+    Main responsibility is storing parameters of the optical system, as well
+    as imaging an intensity map.
 '''
 class Optics(Feature):
+    '''
+        The function called to image an intensity map.
+    '''
     def image(self, shape, Image):
         pass
 
+    '''
+        Alternative and perhaps more intuitive syntax to add an optical 
+        system to a Feature tree. Equivalent to Optics + (F1 + ... + Fn)
+    '''
     def __call__(self, Features):
         return Features + self 
-
+    
     def __resolve__(self, shape, **kwargs):
         kwargs["Optics"] = self 
         return super().__resolve__(shape, **kwargs)
