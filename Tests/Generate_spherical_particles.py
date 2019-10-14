@@ -6,7 +6,7 @@ sys.path.append("../DeepTrack")
 
 from DeepTrack.Generators import Generator
 from DeepTrack.Particles import SphericalParticle
-from DeepTrack.Backend.Distributions import uniform_random
+from DeepTrack.Distributions import uniform_random
 from DeepTrack.Noise import Gaussian, Offset
 from DeepTrack.Optics import BaseOpticalDevice2D
 import numpy as np

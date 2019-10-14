@@ -1,5 +1,5 @@
-from DeepTrack.Backend.Distributions import sample
-from DeepTrack.Backend.Image import Feature
+from DeepTrack.Distributions import sample
+from DeepTrack.Features import Feature
 import abc
 import numpy as np
 

@@ -14,8 +14,9 @@ from tensorflow.keras.layers import MaxPooling2D as Pool
 sys.path.append("../DeepTrack")
 
 from DeepTrack.Augmentation import FlipLR, FlipUD, NormalizeMinMax, Transpose
-from DeepTrack.Backend.Distributions import uniform_random
-from DeepTrack.Backend.Image import Image, Label
+from DeepTrack.Distributions import uniform_random
+from DeepTrack.Backend.Image import Image
+from DeepTrack.Labels import Label
 from DeepTrack.Callbacks import Storage
 from DeepTrack.Generators import Generator
 from DeepTrack.Models import DeepTrackNetwork

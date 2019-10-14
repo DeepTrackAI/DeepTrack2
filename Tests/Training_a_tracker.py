@@ -6,10 +6,11 @@ sys.path.append("../DeepTrack")
 
 from DeepTrack.Generators import Generator
 from DeepTrack.Particles import PointParticle
-from DeepTrack.Backend.Distributions import uniform_random
+from DeepTrack.Distributions import uniform_random
 from DeepTrack.Noise import Gaussian, Offset
 from DeepTrack.Optics import BaseOpticalDevice2D
-from DeepTrack.Backend.Image import Image, Label
+from DeepTrack.Backend.Image import Image
+from DeepTrack.Labels import Label
 from DeepTrack.Callbacks import Storage
 
 from tensorflow import keras
