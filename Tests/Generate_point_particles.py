@@ -7,7 +7,7 @@ sys.path.append("../DeepTrack")
 from DeepTrack.Generators import Generator
 from DeepTrack.Particles import PointParticle
 from DeepTrack.Distributions import uniform_random
-from DeepTrack.Noise import Gaussian, Offset
+from DeepTrack.Noise import Gaussian, Offset, Poisson
 from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Backend.Image import Image
 from DeepTrack.Callbacks import Storage
@@ -37,20 +37,19 @@ P = PointParticle(                                         # Radius of the gener
     position=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
 )
 
-N1 = Gaussian(
-    mu=0, 
-    sigma=np.linspace(0.02,0.05)
+N1 = Poisson(
+    SNr=np.linspace(10,20)
 )
 
 N2 = Offset(
-    offset=np.linspace(-0.2,0.2)
+    offset=np.linspace(0,0.2)
 )
 
 
 S = Storage("./Tests/Storage/Particle")
 # Time the average generation time for 100 particles
 start = timer()
-images = next(G.generate(Optics(P + P) + N1 + N2, [], shape=(64,64), batch_size=100, callbacks=[S]))
+images = next(G.generate(Optics(P + P) + N2 + N2, [], shape=(64,64), batch_size=100, callbacks=[S]))
 end = timer()
 print("Generates a {0} batch in {1}s".format(images[0].shape, (end - start)))
 
@@ -63,7 +62,7 @@ print("Loads a {0} batch in {1}s".format(images[0].shape, (end - start)))
 # Show one typical particle
 plt.gray()
 for i in range(1):
-    Image = G.get((64,64), Optics(P+P))
+    Image = G.get((64,64), Optics(P) + N1)
     plt.imshow(np.abs(Image))
     plt.show()
 

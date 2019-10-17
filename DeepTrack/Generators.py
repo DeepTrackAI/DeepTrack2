@@ -191,8 +191,8 @@ class Generator(keras.utils.Sequence):
                         c(self, sub_batch)
                 sub_batch = np.array(sub_batch)
                 sub_labels = np.array(sub_labels)
-                if sub_batch.ndim == 3 and sub_labels.ndim == 2: # Needs to add a channel
-                    sub_batch = np.expand_dims(sub_batch, axis=-1)
+                # if sub_batch.ndim == 3 and sub_labels.ndim == 2: # Needs to add a channel
+                sub_batch = np.expand_dims(sub_batch, axis=-1)
                 yield (np.array(sub_batch), np.array(sub_labels))
                 self.epoch += 1
 

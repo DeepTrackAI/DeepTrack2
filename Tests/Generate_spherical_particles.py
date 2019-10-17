@@ -52,7 +52,6 @@ N2 = Offset(
 start = timer()
 
 next(G.generate(Optics(P*0.1 + P*0.9), [], shape=(64,64), batch_size=100))
-
 end = timer()
 
 print("Generates (128,128) particles at {0}s per image".format((end - start)/100))

@@ -51,7 +51,7 @@ P = PointParticle(                                         # Radius of the gener
 )
 
 N = Gaussian(
-    sigma=np.linspace(0.03,0.08),
+    sigma=np.linspace(0,0.001),
 )
 
 S = Storage("./Tests/Storage/Particle_Batch.npy", overwrite=False)
@@ -71,7 +71,7 @@ validation_generator = G.generate(Load("./Tests/Storage/") + N, L, augmentation=
 
 model.fit_generator(training_generator,  
                         steps_per_epoch=32,
-                        epochs=100,
+                        epochs=50,
                         workers=1,
                         use_multiprocessing=False)
 

@@ -41,7 +41,7 @@ P = PointParticle(                                         # Radius of the gener
     position=uniform_random((64,64,20))           # The distrbution from which to draw the position of the particle
 )
 
-N = Gaussian(0,np.linspace(0,0.2))
+N = Gaussian(0,np.linspace(0,0.01))
 
 
 # Create a model. This model is likely too simple to achieve subpixel resolution.

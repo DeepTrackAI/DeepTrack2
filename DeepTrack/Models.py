@@ -1,4 +1,26 @@
 from tensorflow.keras import models, layers
+from itertools import product
+import numpy as np
+class EnsembleGridSearch:
+    def __init__(self, ensemble_fun, ensemble_size=10, **kwargs):
+        self.ensemble_size = ensemble_size
+        self.ensemble_fun = ensemble_fun
+        self.params = kwargs
+
+
+    def fit_and_evaluate(self, Y, **kwargs):
+
+        for argument in product(*self.params.values()):
+            prediction = []
+            for _ in range(self.ensemble_size):
+                model, generator = self.ensemble_fun(argument)
+                prediction.append(model.fit(generator, **kwargs).predict(Y))
+            
+            prediction = np.array(prediction)
+
+            print(np.mean(np.std(prediction, axis=0)))
+
+
 
 def DeepTrackNetwork(
     input_shape = (51, 51, 1),

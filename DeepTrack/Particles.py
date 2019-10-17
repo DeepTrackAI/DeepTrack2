@@ -21,6 +21,25 @@ class Particle(Feature):
 
     
 
+    def get(self, shape, Image, **kwargs):
+        return Image + kwargs["Optics"].image(shape, self, **kwargs)
+
+
+    # One of the following has to be defined
+    def field(self, shape, **kwargs):
+        return np.fft.ifft2(self.fourier_field(shape, **kwargs))
+
+    def squared_field(self, shape, **kwargs):
+        return np.square(np.abs(self.field(shape,**kwargs)))
+
+    def fourier_field(self, shape, **kwargs):
+        return np.fft.fft2(self.field(shape,**kwargs))
+
+    def squared_fourier_field(self, shape, **kwargs):
+        return np.fft.fft2(self.squared_field(shape,**kwargs))
+    
+    
+
 '''
     Implementation of the Particle class,
     Approximates the Fourier transform of the intensity-map of a 
@@ -40,19 +59,19 @@ class Particle(Feature):
 
 class PointParticle(Particle):
     __name__ = "PointParticle"
-    def get(self,
+    def fourier_field(self,
                 shape,
-                Image,
-                position=None,
                 intensity=None,
-                Optics=None,
                 **kwargs):
         out_shape = np.array(shape) * 2
-        shift = _get_particle_shift(position, out_shape, Optics)
-        particle_field = intensity * np.exp(shift)
-        particle = np.fft.ifftshift(particle_field)
-        return Image + particle
+        return np.ones(out_shape) * np.sqrt(intensity)
 
+    def squared_fourier_field(self,
+                shape,
+                intensity=None,
+                **kwargs):
+        out_shape = np.array(shape) * 2
+        return np.ones(out_shape) * intensity
 
 
 '''
@@ -77,58 +96,27 @@ class SphericalParticle(Particle):
     __name__ = "SphericalParticle"
         
     # Retrieves the fourier transformed intensity map of the spherical particle.
-    def get(self,
+    def fourier_field(self,
                 shape,
-                Image,
-                position=None,
                 intensity=None,
                 radius=None,
                 Optics=None,
-                **kwargs):
+                **kwargs): 
         out_shape = np.array(shape) * 2
         pixel_size = Optics.get_property("pixel_size")
-        
         sampling_frequency_x = 2 * np.pi / pixel_size
         sampling_frequency_y = 2 * np.pi / pixel_size
-
         fx = np.arange(-sampling_frequency_x/2, sampling_frequency_x/2, step = sampling_frequency_x / out_shape[0])
         fy = np.arange(-sampling_frequency_y/2, sampling_frequency_y/2, step = sampling_frequency_y / out_shape[1])
         FX, FY = np.meshgrid(fx, fy)
         RHO = np.sqrt(FX ** 2 + FY ** 2)
-        
-        particle_field = self.get_property("intensity") * 2 * special.jn(1, self.get_property("radius") * RHO) / (RHO * self.get_property("radius"))
 
-        shift = _get_particle_shift(self.get_property("position"), out_shape, Optics)
-        
-        particle_field = particle_field * np.exp(shift)
+        factor = np.sqrt(intensity) * 2 * (radius / pixel_size) ** 2
+
+        particle_field = factor * special.jn(1, radius * RHO) / (RHO * radius)
         particle = np.fft.ifftshift(particle_field)
-        return Image + particle
+        return particle
 
-
-'''
-    Calculates a complex field that, when element-wise multiplied with
-    a fourier field, move each point in real space by a 3d vector.
-
-    Inputs:
-        position                The direction vector to shift each point with
-        shape                   The shape of the output field
-        Optics                  The optical system of the image (Only wavelength needed, and only if z=/=0)
-'''
-def _get_particle_shift(position, shape, Optics):
-    sampling_frequency_x = 2 * np.pi / Optics.get_property("pixel_size")
-    sampling_frequency_y = 2 * np.pi / Optics.get_property("pixel_size")
-
-    fx = np.arange(-sampling_frequency_x/2, sampling_frequency_x/2, step = sampling_frequency_x / shape[0])
-    fy = np.arange(-sampling_frequency_y/2, sampling_frequency_y/2, step = sampling_frequency_y / shape[1])
-    FX, FY = np.meshgrid(fx, fy)
-    RHO = np.sqrt(FX ** 2 + FY ** 2)
-    
-    shift = -1j * Optics.get_property("pixel_size") * (FX * (position[0]) + FY * (position[1]))
-    if len(position) >= 3:
-        k = 2 * np.pi / Optics.get_property("wavelength")
-        K_MAT = k ** 2 - RHO ** 2
-        K_MAT[K_MAT < 0] = 0
-        K_MAT = np.sqrt(K_MAT)
-        shift = shift + 1j * position[2] * Optics.get_property("pixel_size") * (K_MAT-k)
-    return shift
+    def squared_fourier_field(self, shape, intensity=None, **kwargs):
+        return self.fourier_field(shape, intensity=intensity, **kwargs) * np.sqrt(intensity)
 

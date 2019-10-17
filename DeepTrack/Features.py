@@ -194,12 +194,14 @@ class Feature(ABC):
             except AttributeError:
                 pass
 
-
-
     @abstractmethod
     def get(self, shape, Image, Optics=None):
         pass
-    
+
+
+'''
+    Allows a tree of features to be seen as a whole.    
+'''
 class Group(Feature):
     __name__ = "Group"
     def __init__(self, Features):
@@ -260,4 +262,14 @@ class Load(Feature):
             files =  os.listdir(dirname)
             pattern = os.path.basename(self.path)
             return [os.path.join(self.path,file) for file in files if os.path.isfile(os.path.join(self.path,file)) and re.match(pattern,file)]
+        
+class Update(Feature):
+    def __init__(rules, **kwargs):
+        self.rules = rules
+        super().__init__(**kwargs)
+    
+    def __call__(F):
+        return F + self
+
+    def __resolve__(self, shape, **kwargs):
         
