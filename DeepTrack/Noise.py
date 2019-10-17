@@ -46,3 +46,16 @@ class Offset(Noise):
         
         return Image + np.ones(shape) * offset
 
+'''
+Implementation of the Noise class to simulate photon noise, or poisson noise.
+
+Input arguments:
+    SNr:     The signal to noise ratio (number, array, distribution)      
+'''
+class Poisson(Noise):
+    __name__ = "PoissonNoise"
+    def get(self, shape, Image, SNr, **kwargs):
+        peak = np.max(Image)
+        rescale = SNr**2 / peak
+
+        return np.random.poisson(Image * rescale) / rescale
