@@ -4,9 +4,9 @@ from DeepTrack.Optics import BaseOpticalDevice2D
 from DeepTrack.Particles import Particle
 from DeepTrack.Noise import Noise
 from DeepTrack.Distributions import sample
-from DeepTrack.Labels import Label
+# from DeepTrack.Labels import Label
 from DeepTrack.Features import Feature
-from DeepTrack.Backend.Image import Image
+from DeepTrack.Image import Image
 import copy
 import random
 
@@ -34,13 +34,6 @@ from timeit import default_timer as timer
         NA              the effective NA of the optical systen (number)          
 '''
 class Generator(keras.utils.Sequence):
-    def __init__(self,
-        Optics
-    ):
-        self.Optics = Optics
-        self.Particles = []
-        self.Noise = []
-    
     '''
         Resolves a single set of images given an input set of features before
         clearing the cache.
@@ -50,12 +43,11 @@ class Generator(keras.utils.Sequence):
     def get(self, shape, Features):
     
         if isinstance(Features, List):
-
-            history = []
             
             for F in Features:
                 F.__clear__()
 
+            history = []
             for f in Features:
                 f.__rupdate__(history)
 
@@ -65,9 +57,7 @@ class Generator(keras.utils.Sequence):
         else:
             Features.__clear__()
             Features.__rupdate__([])
-            
             Images = Features.__resolve__(shape)
-            
         
         return Images
 
@@ -88,17 +78,8 @@ class Generator(keras.utils.Sequence):
                     augmentation=None,
                     shuffle_batch=True):
 
-        if isinstance(Features, str):
-            assert os.path.exists(Features), "Path does not exist"
 
-            if os.path.isdir(Features):
-                Features = [os.path.join(Features,file) for file in os.listdir(Features) if os.path.isfile(os.path.join(Features,file))]
-            else:
-                Features = [Features]
-            
-            get_one = self._get_from_path(shape, Features)
-        else:
-            get_one = self._get_from_map(shape, [Features, Labels])
+        get_one = self._get_from_map(shape, [Features, Labels])
         
         while True:
             batch = []
@@ -152,19 +133,7 @@ class Generator(keras.utils.Sequence):
                     augmentation=None,
                     shuffle_batch=True):
 
-        if isinstance(Features, str):
-            assert os.path.exists(Features), "Path does not exist"
-
-            if os.path.isdir(Features):
-                Features = [os.path.join(Features,file) for file in os.listdir(Features) if os.path.isfile(os.path.join(Features,file))]
-            else:
-                Features = [Features]
-            
-            get_one = self._get_from_path(shape,Features)
-        else:
-            get_one = self._get_from_map(shape,Features)
-
-        
+        get_one = self._get_from_map(shape,Features)
 
         while True:
             batch = []

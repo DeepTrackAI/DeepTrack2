@@ -1,5 +1,5 @@
 from DeepTrack.Distributions import Distribution
-from DeepTrack.Backend.Image import Image
+from DeepTrack.Image import Image
 from abc import ABC, abstractmethod
 import os
 import re
@@ -263,13 +263,13 @@ class Load(Feature):
             pattern = os.path.basename(self.path)
             return [os.path.join(self.path,file) for file in files if os.path.isfile(os.path.join(self.path,file)) and re.match(pattern,file)]
         
-class Update(Feature):
-    def __init__(rules, **kwargs):
-        self.rules = rules
-        super().__init__(**kwargs)
+# class Update(Feature):
+#     def __init__(rules, **kwargs):
+#         self.rules = rules
+#         super().__init__(**kwargs)
     
-    def __call__(F):
-        return F + self
+#     def __call__(F):
+#         return F + self
 
-    def __resolve__(self, shape, **kwargs):
+#     def __resolve__(self, shape, **kwargs):
         

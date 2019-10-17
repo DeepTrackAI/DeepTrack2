@@ -1,6 +1,6 @@
 import numpy as np
 from abc import ABC, abstractmethod
-from DeepTrack.Backend.Image import Image
+from DeepTrack.Image import Image
 from DeepTrack.Features import Feature
 import matplotlib.pyplot as plt
 '''
@@ -20,7 +20,6 @@ class Optics(Feature):
         else:
             Object = Feature.squared_fourier_field(shape, **kwargs)
             pupil = self.squared_pupil(Object.shape, kwargs["position"])
-
             return pupil * Object
 
     def finalize(self, shape, image):
@@ -28,7 +27,7 @@ class Optics(Feature):
         
         ROI = self.get_property("ROI")
         
-        res = Image(np.abs(np.fft.ifft2(image)))[ROI[0]:shape[0], ROI[1]:shape[1]]
+        res = Image(np.fft.ifft2(image))[ROI[0]:shape[0], ROI[1]:shape[1]]
         
         if self.mode == "coherent":
             res = np.abs(np.square(res))
@@ -57,7 +56,6 @@ class Optics(Feature):
 
 class BaseOpticalDevice2D(Optics):
     def __init__(self,
-                    shape,
                     NA=0.7,
                     wavelength=0.66e-6,
                     refractive_index_medium=1.33,
@@ -72,7 +70,6 @@ class BaseOpticalDevice2D(Optics):
 
         # These will not be randomized.
         self.mode = mode
-        self.shape = shape
         self.upscale = upscale
         
         super().__init__(

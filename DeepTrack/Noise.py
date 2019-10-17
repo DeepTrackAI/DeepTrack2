@@ -15,6 +15,7 @@ without explicity generating a new image each time
 class Noise(Feature):
     pass
 
+
 '''
 Implementation of the Noise class to generate IID gaussian pixels.
 
@@ -34,6 +35,7 @@ class Gaussian(Noise):
         return Image + np.random.normal(mu, sigma)
 
  
+
 '''
 Implementation of the Noise class to generate a random background offset.
 
@@ -45,6 +47,7 @@ class Offset(Noise):
     def get(self, shape, Image, offset=0, **kwargs):
         
         return Image + np.ones(shape) * offset
+
 
 '''
 Implementation of the Noise class to simulate photon noise, or poisson noise.
