@@ -1,3 +1,5 @@
+# TODO: overall description
+
 import numpy as np
 
 '''
@@ -7,83 +9,66 @@ Input arguments:
     scale:          The maximum of the distribution for each output.
 '''
 
-def uniform_random(scale):
-    def distribution():
-        return np.random.rand(len(scale))*np.array(scale)
-    return distribution
-
 class Distribution:
-    def __init__(self, D):
-        self.D = D
+# TODO: description of class
+    
+    @property
+    def current_value(self):
+         self._current_value
+
+    @current_value.setter
+    def current_value(self, updated_current_value):
+        self._current_value = updated_current_value
+    
+    @current_value.getter
+    def current_value(self):
+        if not hasattr(self, "_current_value"):
+            self.__update__([]) # generate new current value
+        return self._current_value
+
+    
+    def __init__(self, sampling_rule):
+        self.sampling_rule = sampling_rule
+
     
     def __update__(self, history):
         if self not in history:
             history.append(self)
-            self.value = sample(self)
+            self.current_value = self.__sample__()
         return self
-    
 
+    
     def __sample__(self):
+        # TODO: if else + help functions
+        
         try:
-            return self.D.__sample__()
+            return self.sampling_rule.__sample__()
         except AttributeError:
             pass
         
-        if isinstance(self.D, dict):
+        if isinstance(self.sampling_rule, dict):
             out = {}
-            for key, val in self.D.items():
+            for key, val in self.sampling_rule.items():
                 out[key] = sample(val)
             return out
         
         try:
-            return next(self.D)
+            return next(self.sampling_rule)
         except TypeError:
             pass
             
-        if callable(self.D):
-            return self.D()
+        if callable(self.sampling_rule):
+            return self.sampling_rule()
         
         # Else, check if input is an array, and extract a single element
-        if isinstance(self.D, (list, np.ndarray)):
-            return sample(np.random.choice(self.D))
+        if isinstance(self.sampling_rule, (list, np.ndarray)):
+            return np.random.choice(self.sampling_rule)
 
         # Else, assume it's elementary.
-        return self.D
+        return self.sampling_rule
 
 
-    @property
-    def value(self):
-         self._value
-
-    @value.setter
-    def value(self, v):
-        self._value = v
-    
-    @value.getter
-    def value(self):
-        if not hasattr(self, "_value"):
-            sample(self)
-        return self._value
-
-
-
-
-
-'''
-    Takes an input and recursively extracts a single elementary type.
-
-    For callable elements, the output of the call is drawn
-
-    For lists or ndarrays, a single element is drawn
-
-    If the input is neither callable, a list, nor an ndarray, return the element.
-
-    To return multiple values, store them as a tuple. 
-'''
-def sample(E):
-    try:
-        return E.__sample__()
-    except AttributeError:
-        return E
-    
-
+def random_uniform(scale):
+    def distribution():
+        return np.random.rand(len(scale)) * np.array(scale)
+    return distribution

@@ -32,7 +32,9 @@ class Optics(Feature):
         if self.mode == "coherent":
             res = np.abs(np.square(res))
 
+        res = np.real(res) # The imaginary part should be essentially zero at this point.
         res.properties=image.properties
+
         return res
 
     def squared_pupil(self,shape, position, **kwargs):

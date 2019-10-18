@@ -6,7 +6,9 @@ import copy
 Make a subclass of ndarray
 '''
 class Image(np.ndarray):
+    
     __array_priority__ = 2
+    
     def __new__(cls, input_array, properties=None):
         obj = np.asarray(input_array).view(cls)
         if properties is None:
@@ -14,8 +16,11 @@ class Image(np.ndarray):
         obj.properties = properties
         return obj
 
+
     def append(self, properties):
         self.properties.append(properties)
+
+    
     
     def __array_wrap__(self, out_arr, context=None):
         
@@ -47,6 +52,7 @@ class Image(np.ndarray):
         for property in props:
             self.append(property) 
 
+
     def __reduce__(self):
         # Get the parent's __reduce__ tuple
         pickled_state = super(Image, self).__reduce__()
@@ -55,11 +61,8 @@ class Image(np.ndarray):
         # Return a tuple that replaces the parent's __setstate__ tuple with our own
         return (pickled_state[0], pickled_state[1], new_state)
 
+
     def __setstate__(self, state):
         self.properties = state[-1]  # Set the peroperties attribute
         # Call the parent's __setstate__ with the other tuple elements.
         super(Image, self).__setstate__(state[0:-1])
-
-
-
-

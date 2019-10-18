@@ -51,6 +51,7 @@ class Feature(ABC):
         props = {}
         for key, value in self.__properties__.items():
             try: 
+                # TODO: call value.value value.current_value
                 props[key] = value.value
             except AttributeError:
                 props[key] = value

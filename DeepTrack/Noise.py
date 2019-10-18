@@ -25,16 +25,17 @@ Input arguments:
 '''
 
 class Gaussian(Noise):
+    
     __name__ = "GaussianNoise"
+    
     def __init__(self, mu=0, sigma=1, **kwargs):
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
     def get(self, shape, Image, mu=0, sigma=1, **kwargs):
-        mu =    np.ones(shape) * mu
+        mu = np.ones(shape) * mu
         sigma = np.ones(shape) * sigma
         return Image + np.random.normal(mu, sigma)
-
- 
+    
 
 '''
 Implementation of the Noise class to generate a random background offset.
