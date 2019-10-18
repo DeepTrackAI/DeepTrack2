@@ -49,27 +49,15 @@ class Feature(ABC):
 
     def get_properties(self):
         props = {}
-        for key, value in self.__properties__.items():
-            try: 
-                # TODO: call value.value value.current_value
-                props[key] = value.value
-            except AttributeError:
-                props[key] = value
+        for key, distribution in self.__properties__.items():
+            props[key] = distribution.current_value
         return props 
     
     def get_property(self, key, default=None):
-        try: 
-            return self.__properties__[key].value
-        except AttributeError:
-            return self.__properties__[key]
-        except KeyError:
-            return default
+            return self.__properties__[key].current_value
     
     def set_property(self, key, value):
-        try: 
-            self.__properties__[key].value = key
-        except AttributeError:
-            self.__properties__[key] = key
+        self.__properties__[key].current_value = key
 
     def getRoot(self):
         if hasattr(self, "parent"):
