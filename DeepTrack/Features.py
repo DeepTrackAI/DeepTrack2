@@ -36,13 +36,13 @@ class Feature(ABC):
         dict is sent as input to the get function, and is appended
         to the properties field of the output image.
     cache: Image
-        Stores the output of a \_\_resolve\_\_ call. If this is not
+        Stores the output of a __resolve__ call. If this is not
         None, it will be returned instead of calling the get method.
     probability: number
         The probability of calling the get function of this feature
-        during a \_\_resolve\_\_() call
+        during a __resolve__() call
     parent: Feature | ndarray
-        During a \_\_resolve\_\_() call, this will serve as the input
+        During a __resolve__() call, this will serve as the input
         to the get() method. 
      
     Methods
@@ -53,13 +53,13 @@ class Feature(ABC):
         the parent if it exists.
     __update__(history : list)
         If self is not in history, it calls the __update__ method
-        of all values in the \_\_properties\_\_ field, and appends
+        of all values in the __properties__ field, and appends
         itself to the history list.
     __rupdate__(history : list) 
         If self is not in history, it appends itself to history,
-        calls the \_\_update\_\_() method of itself and its parent.
+        calls the __update__() method of itself and its parent.
     __resolve__(shape : tuple, **kwargs)
-        Uses the current_value of the \_\_properties\_\_ field to
+        Uses the current_value of the __properties__ field to
         generate an image using the .get() method. If the feature has
         a parent, the output of the __resolve__() call on the parent is 
         used as the input to the .get() method, otherwise an Image of
