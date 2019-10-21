@@ -85,11 +85,7 @@ class Feature(ABC):
             properties[key] = Distribution(value)  
         self.__properties__ = properties
 
-    '''
-        When a feature is sampled, each attribute that is either a Distribution
-        or a feature is in turn sampled. This randomizes the feature, and recursively
-        samples its parent.
-    '''
+
 
     def get_properties(self):
         props = {}
@@ -97,17 +93,21 @@ class Feature(ABC):
             props[key] = distribution.current_value
         return props 
     
+
     def get_property(self, key, default=None):
             return self.__properties__[key].current_value
     
+
     def set_property(self, key, value):
         self.__properties__[key].current_value = key
+
 
     def getRoot(self):
         if hasattr(self, "parent"):
             return self.parent.getRoot()
         else:
             return self
+
 
     def setParent(self, Feature):
         if hasattr(self, "parent"):
@@ -118,10 +118,12 @@ class Feature(ABC):
             self.parent = Feature
             return self
 
+
     def __rupdate__(self, history):
         self.__update__(history)
         if hasattr(self, "parent"):
             self.parent.__rupdate__(history)
+
 
     '''
         Updates the state of all properties.
@@ -131,6 +133,7 @@ class Feature(ABC):
             history.append(self)
             for val in self.__properties__.values():
                 val.__update__(history)
+
 
     def __input_shape__(self, shape):
         return shape
