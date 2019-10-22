@@ -296,11 +296,14 @@ class Group(Feature):
         self.__properties__ = {"group": Features}
         super().__init__()
 
+
     def __input_shape__(self,shape):
         return self.get_property("group").__input_shape__(shape)
 
+
     def get(self, shape, Image, group=None, **kwargs):
         return group.__resolve__(shape, **kwargs)
+
 
     # TODO: What if already has parent? Possible?
     def setParent(self, Feature):
@@ -318,16 +321,19 @@ class Load(Feature):
 
         # Initiates the iterator
         self.iter = next(self)
-    
+
+
     def get(self, shape, image, **kwargs):
         return self.res
-    
+
+
     def __update__(self,history):
         if self not in history:
             history.append(self)
             self.res = next(self.iter)
             super().__update__(history)
-    
+
+
     def __next__(self):
         while True:
             file = np.random.choice(self.get_files())
@@ -336,8 +342,10 @@ class Load(Feature):
             for i in range(len(image)):
                 yield image[i]
 
+
     def setParent(self, F):
         raise Exception("The Load class cannot have a parent. For literal addition, use the Add class")
+
 
     def get_files(self):
         if os.path.isdir(self.path):
