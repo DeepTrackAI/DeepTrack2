@@ -3,8 +3,8 @@
 Contains tools used to randomize the properties of a Feature. 
 This randomization is typically performed using the Distribution class,
 which samples random values according to a ruleset defined as its 
-input. However, any object with a defined current_value field and a 
-__update__(history) method are valid substitutions.
+input. However, any object with a defined `current_value` field and a 
+`update(history:list)` method are valid substitutions.
 
 The module also contains standard implementations of rulesets,
 such as random_uniform.
