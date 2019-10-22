@@ -98,7 +98,7 @@ class Distribution:
     def update(self, history:list):
         r'''Updates the current value field
 
-        The `update` function samples the sampling rule
+        The `update()` method samples the sampling rule
         and sets the `current_value` property as the output.
         It takes a history parameter as an input, which 
         helps avoiding multiple updates during recursive
@@ -125,16 +125,16 @@ class Distribution:
         `sampling_rule`. These are checked in the following order of
         priority:
 
-        1. Any object with a callable sample method has this
+        1. Any object with a callable `sample` method has this
             method called and returned.
-        2. If the rule is a dict, the dict is copied and any value
+        2. If the rule is a ``dict``, the ``dict`` is copied and any value
             with has a callable sample method is replaced with the
             output of that call.
-        3. If the rule is an iterable, return the next output.
+        3. If the rule is an ``iterable``, return the next output.
         4. If the rule is callable, return the output of a call with
             no input parameters.
-        5. If the rule is a list or a 1-dimensional ndarray, return 
-            a single element drawn from that list/ndarray.
+        5. If the rule is a ``list`` or a 1-dimensional ``ndarray``, return 
+            a single element drawn from that ``list``/``ndarray``.
         6. If none of the above apply, return the rule itself.
 
         Returns
