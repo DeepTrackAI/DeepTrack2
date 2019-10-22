@@ -102,7 +102,7 @@ class Feature(ABC):
         properties = getattr(self, "__properties__", {})
         for key, value in kwargs.items():
             properties[key] = Distribution(value)  
-        self.__properties__ = properties
+        self.__properties__ = Properties(**properties)
 
 
 
@@ -114,11 +114,11 @@ class Feature(ABC):
     
 
     def get_property(self, key, default=None):
-            return self.__properties__[key].current_value
+        return self.__properties__[key]
     
 
     def set_property(self, key, value):
-        self.__properties__[key].current_value = key
+        self.__properties__[key] = key
 
 
     def getRoot(self):
@@ -150,8 +150,7 @@ class Feature(ABC):
     def __update__(self, history):
         if self not in history:
             history.append(self)
-            for val in self.__properties__.values():
-                val.__update__(history)
+            self.__properties__.__update__(history)
 
 
     def __input_shape__(self, shape):
@@ -221,7 +220,7 @@ class Feature(ABC):
         # Get probability of draw
         p = getattr(self, "probability", 1)
         if np.random.rand() <= p:
-            properties = self.get_properties()
+            properties = self.__properties__.current_value()
             # TODO: find a better way to pass information between features
             image = self.get(shape, image, **properties, **kwargs)
             properties["name"] = self.__name__
@@ -252,6 +251,40 @@ class Feature(ABC):
     @abstractmethod
     def get(self, shape, Image, Optics=None):
         pass
+
+class Properties(dict):
+    def __init__(self, *args, **kwargs):
+        self.data = dict(*args, **kwargs)
+
+
+    def __sample__(self):
+        sampled_dict = {}
+        for key in self.data.keys():
+            sampled_dict[key] = self.data[key].__sample__()
+        return sampled_dict
+
+
+    def __update__(self, history):
+        if self not in history:
+            history.append(self)
+            for distribution in self.data.values():
+                distribution.__update__(history)
+
+
+    def __getitem__(self, key):
+        return self.data[key].current_value
+
+
+    def __setitem__(self, key, value):
+        self.data[key].current_value = value
+
+
+    def current_value(self):
+        current_value_dict = {}
+        for key in self.data.keys():
+            current_value_dict[key] = self.data[key].current_value
+        return current_value_dict
+
 
 
 '''
@@ -302,9 +335,6 @@ class Load(Feature):
             np.random.shuffle(image)
             for i in range(len(image)):
                 yield image[i]
-
-        
-
 
     def setParent(self, F):
         raise Exception("The Load class cannot have a parent. For literal addition, use the Add class")
