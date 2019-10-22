@@ -149,15 +149,15 @@ class Distribution:
         if hasfunction(sampling_rule, "sample"):
             # If the ruleset itself implements a sample function,
             # call it instead.
-            return sampling_rule.__sample__()
+            return sampling_rule.sample()
 
         elif isinstance(sampling_rule, dict):
             # If the ruleset is a dict, return a new dict with each
             # element being sampled from the original dict.
             out = {}
             for key, val in self.sampling_rule.items():
-                if hasfunction(val, '__sample__'):
-                    out[key] = val.__sample__()
+                if hasfunction(val, 'sample'):
+                    out[key] = val.sample()
                 else:
                     out[key] = val
             return out
