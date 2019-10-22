@@ -10,7 +10,7 @@ The module also contains standard implementations of rulesets,
 such as random_uniform.
 
 '''
-from DeepTrack.utils import isiterable, hasfunctions
+from DeepTrack.utils import isiterable, hasfunction
 import numpy as np
 
 
