@@ -9,18 +9,6 @@ __update__(history) method are valid substitutions.
 The module also contains standard implementations of rulesets,
 such as random_uniform.
 
-Classes
---------
-Distribution
-    Standard way to randomize properties. Updates the current_value field
-    according to a sampling rule.
-
-Methods
--------
-random_uniform(scale : array-like)
-    returns a function that, when called, returns a uniform random ndarray
-    of the same shape as scale, with each element between 0 and scale.
-
 '''
 from DeepTrack.utils import isiterable, hasfunctions
 import numpy as np
