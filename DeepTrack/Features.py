@@ -59,20 +59,16 @@ class Feature(ABC):
         Cleans up the tree after execution. Default behavior is
         to set the cache field to None and call clear() on
         the parent if it exists.
-    update(history : list)
+    update()
         If self is not in history, it calls the update method
         on the `properties` and `parent` and appends itself to
         the history list.
-
-    resolve(shape : tuple, **kwargs)
+    resolve(image : ndarray, **kwargs)
         Uses the current_value of the properties field to
         generate an image using the .get() method. If the feature has
         a parent, the output of the resolve() call on the parent is 
         used as the input to the .get() method, otherwise an Image of
         all zeros is used.
-    input_shape(shape : tuple)
-        Returns the expected input shape of a shape, given an expected
-        final shape.
     get_properties()
         Returns a copy of the properties field, with each value
         replaced by the current_value field.
@@ -80,12 +76,6 @@ class Feature(ABC):
         Returns the current_value of the field matching the key in properties.
     set_property(key : str, value : any)
         Sets the current_value of the field matching the key in properties.
-    getRoot()
-        Calls getRoot() on its parent if it has one, else it returns itself.
-    setParent(Feature : Feature | ndarray)
-        If the feature has no parent, set the parent field to the input feature,
-        else create a Group out of iteself, and sets the parent of the group
-        to the input feature.
     '''
 
     __name__ = "Unnamed feature"
@@ -105,37 +95,40 @@ class Feature(ABC):
         # Set up flags
 
 
-
     @abstractmethod
-    def get(self, shape, Image, Optics=None):
+    def get(self, image, **kwargs):
         pass
-
 
 
     def get_properties(self):
         return self.properties.current_value()
     
 
-
     def get_property(self, key, default=None):
         return self.properties[key]
     
-
 
     def set_property(self, key, value):
         self.properties[key] = key
 
 
+    def sample(self):
+        self.properties.update()
+        return self
     
+
     def update(self):
         '''
         Updates the state of all properties.
         '''
         self.properties.update()
 
+
     def resolve(self, image):
         properties = self.get_properties()
         return self.get(image, **properties)
+
+
 
     def clear(self):
         '''
@@ -147,18 +140,33 @@ class Feature(ABC):
             if hasmethod(val, 'clear'):
                 val.clear()
 
+
     def input_shape(self, shape):
         return shape
-    
 
 
+    def __add__(self, other):
+        return FeatureBranch(self, other)
+    
+
+    def __mul__(self, other):
+        return FeatureProbability(self, other)
+
+    __rmul__ = __mul__
+
+
+    def __pow__(self, other):
+        return FeatureDuplicate(self, other)
     
 
     
-from utils import hasmethod
+from DeepTrack.utils import hasmethod
 class Properties(dict):
+
+
     def __init__(self, *args, **kwargs):
         self.data = dict(*args, **kwargs)
+
 
     def clear(self):
         for v in self.data.values():
@@ -173,21 +181,9 @@ class Properties(dict):
         return sampled_dict
 
 
-
     def update(self):
         for property in self.data.values():
             property.update()
-
-
-
-    def __getitem__(self, key):
-        return self.data[key].current_value
-
-
-
-    def __setitem__(self, key, value):
-        self.data[key].current_value = value
-
 
 
     def current_value(self):
@@ -198,22 +194,66 @@ class Properties(dict):
 
 
 
-'''
-    Allows a tree of features to be seen as a whole.    
-'''
-class Group(Feature):
-    __name__ = "Group"
-    def __init__(self, Features):
-        self.properties = {"group": Features}
-        super().__init__(group=Feature)
+
+class FeatureBranch(Feature):
+    
+
+    def __init__(self, F1, F2, **kwargs):
+        super().__init__(feature_1=F1, feature_2=F2, **kwargs)
+    
+
+    def get(self, image, feature_1=None, feature_2=None, **kwargs):
+        image = feature_1.resolve(image)
+        image = feature_2.resolve(image)
+        return image
 
 
-    def input_shape(self,shape):
-        return self.properties["group"].input_shape(shape)
+
+class FeatureProbability(Feature):
 
 
-    def get(self, shape, Image, group=None, **kwargs):
-        return group.resolve(shape, **kwargs)
+    def __init__(self, feature, probability, **kwargs):
+        super().__init__(
+            feature = feature,
+            probability=probability, 
+            random_number=np.random.rand, 
+            **kwargs)
+    
+
+    def get(self, image,
+            feature=None, 
+            probability=None, 
+            random_number=None, 
+            **kwargs):
+        
+        if random_number < probability:
+            image = feature.resolve(image)
+
+        return image
+
+
+# TODO: Better name.
+class FeatureDuplicate(Feature):
+
+
+    def __init__(self, feature, times, **kwargs):
+        self.feature = feature
+        super().__init__(features=(), num_duplicates=times, **kwargs)
+    
+
+    def update(self):
+        super().update()
+        times = self.get_property("num_duplicates")
+        feature = self.feature
+        features = [copy.deepcopy(feature).update() for _ in range(times)]
+        self.set_property("features", features)
+        return self
+
+
+    def get(self, image, features=None, **kwargs):
+        for feature in features:
+            image = feature.resolve(image)
+        return image
 
 
 class Load(Feature):
@@ -234,6 +274,7 @@ class Load(Feature):
     def update(self):
         self.res = next(self.iter)
         super().update()
+        return self
 
 
     def __next__(self):
