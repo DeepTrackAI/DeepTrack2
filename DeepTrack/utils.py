@@ -13,19 +13,19 @@ isiterable(object:any)
 '''
 
 
-def hasfunction(object:any, function_name:str) -> bool:
-    ''' Checks if the input has a callable function named function_name
+def hasmethod(object:any, method_name:str) -> bool:
+    ''' Checks if the input has a callable method named method_name
     Parameters
     ----------
     object
         The object upon which to check.
-    function_name : str
-        the name of the function
+    functmethod_nameion_name : str
+        the name of the method
         
     Returns
     -------
     bool
-        True if the object has an attribute function_name, and that
+        True if the object has an attribute method_name, and that
         attribute is callable.
     '''
     return hasattr(object, function_name) and callable(object.function_name) 
