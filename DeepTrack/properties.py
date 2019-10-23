@@ -2,17 +2,21 @@
 
 This module contains:
     
-The class Property, which represents the values of a property of a feature.
+The class `Property`, which represents the values of a property of a feature.
 A Property can be represented by:
 * A constant (inizialization with, e.g., a number, a tuple)
 * A sequence of variables (inizialization with, e.g., a generator)
 * A discrete random variable (inizialization with, e.g., a list, a dictionary)
 * A continuous random variable (inizialization with, e.g., a function)
 
+The class `Properties`, which is a dictionary with each element a Property. 
+The class provides utility functions to update, sample, clear and retrieve 
+properties. 
+
 A series of standard functions:
     
-    random_uniform(scale) -> function
-        Uniform random distribution
+random_uniform(scale) -> function
+    Uniform random distribution
 
 '''
 
@@ -180,6 +184,80 @@ class Property:
             # Else, assume it's elementary.
             return self.sampling_rule
 
+# TODO: Maybe PropertyDict is clearer?
+class Properties(dict):
+    ''' Dictionary with Property elements
+    
+    A dictionary of properties. It provides utility functions to update, 
+    sample, reset and retrieve properties.
+
+    Parameters
+    ----------
+    *args, **kwargs
+        Arguments used to initialize a dict
+    
+    '''
+
+    def __init__(self, *args, **kwargs):
+        self.data = dict(*args, **kwargs)
+
+
+    def clear(self) -> 'Properties':
+        ''' Clears/resets properties
+
+        Clears any property with a defined method `clear`  
+
+        Returns
+        -------
+        Properties
+            Returns itself
+        '''
+        for v in self.data.values():
+            if hasmethod(v, 'clear'):
+                v.clear()
+        return self
+    
+
+    def sample(self) -> dict:
+        ''' Samples all properties
+
+        Returns
+        -------
+        dict
+            A dictionary with each key-value pair the result of a 
+            `sample()` call on the property with the same key.
+
+        '''
+
+        sampled_dict = {}
+        for key in self.data.keys():
+            sampled_dict[key] = self.data[key].sample()
+        return sampled_dict
+
+
+    def update(self) -> 'Properties':
+        ''' Updates all properties
+
+        Calls the method `update` on each property in the dictionary.
+
+        Returns
+        -------
+        Properties
+            Returns itself
+
+        '''
+        for property in self.data.values():
+            property.update()
+        return self
+
+    
+    def current_value(self):
+        '''
+        '''
+        current_value_dict = {}
+        for key in self.data.keys():
+            current_value_dict[key] = self.data[key].current_value
+        return current_value_dict
 
 
 # FUNCTIONS
