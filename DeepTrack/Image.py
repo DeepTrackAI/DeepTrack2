@@ -5,64 +5,49 @@ import copy
 '''
 Make a subclass of ndarray
 '''
-class Image(np.ndarray):
+class Image:
     
-    __array_priority__ = 2
-    
-    def __new__(cls, input_array, properties=None):
-        obj = np.asarray(input_array).view(cls)
-        if properties is None:
-            properties = []
-        obj.properties = properties
-        return obj
-
-
-    def append(self, properties):
-        self.properties.append(properties)
-
-    
-    
-    def __array_wrap__(self, out_arr, context=None):
-        
-        if out_arr is self:  # for in-place operations
-            
-            result = out_arr
+    def __init__(self, features:list, copy_mode="deep"):
+        if copy_mode == "deep":
+            self.features = copy.deepcopy(features)
+        elif copy_mode == "shallow":
+            self.features = copy.copy(features)
         else:
-            result = Image(out_arr)
+            self.features = features
 
-        if context is not None:
-            func, args, _ = context
-            input_args = args[:func.nin]
-            
-            for arg in input_args:
-                
-                props = getattr(arg, "properties", [])
-                for p in props:
-                    result.append(p)
-        return result
+        self.has_updated_since_last_resolve = list((False) * len(features))
 
+    def resolve(self, image, order=None):
+        if order is None:
+            order = np.arange(len(self.features))
 
-    def __array_finalize__(self, obj):
+        assert len(order) == len(self.features), "Order argument needs to be the same length as features"
+        
+        for feature in self.features:
+            image = feature.resolve(image)
+        
+        return image
+    
+    def update(self):
+        for feature, has_updated in zip(self.features, self.has_updated_since_last_resolve):
+            if not has_updated:
+                feature.update()
+    
+    def clear(self):
+        for feature in self.features:
+            feature.clear()
+    
+    def append(self, properties):
+        self.features.append(properties)
 
-        if obj is None: return
+    def add(self, feature):
+        self.append(feature)
 
-        self.properties = getattr(self, "properties", [])
-
-        props = getattr(obj, "properties", [])
-        for property in props:
-            self.append(property) 
-
-
-    def __reduce__(self):
-        # Get the parent's __reduce__ tuple
-        pickled_state = super(Image, self).__reduce__()
-        # Create our own tuple to pass to __setstate__, appending properties
-        new_state = pickled_state[2] + (self.properties,)
-        # Return a tuple that replaces the parent's __setstate__ tuple with our own
-        return (pickled_state[0], pickled_state[1], new_state)
-
-
-    def __setstate__(self, state):
-        self.properties = state[-1]  # Set the peroperties attribute
-        # Call the parent's __setstate__ with the other tuple elements.
-        super(Image, self).__setstate__(state[0:-1])
+    def __add__(self, other):
+        self.append(other)
+    
+    def __getitem__(self, key):
+        return self.features[key]
+    
+    def __setitem__(self, key, value):
+        self.features[key] = value

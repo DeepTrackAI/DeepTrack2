@@ -1,4 +1,4 @@
-from DeepTrack.Distributions import Distribution
+from DeepTrack.properties import Property
 from DeepTrack.Image import Image
 from abc import ABC, abstractmethod
 import os
@@ -99,153 +99,73 @@ class Feature(ABC):
         '''
         properties = getattr(self, "properties", {})
         for key, value in kwargs.items():
-            properties[key] = Distribution(value)  
+            properties[key] = Property(value)  
         self.properties = Properties(**properties)
+
+        # Set up flags
+
+
 
     @abstractmethod
     def get(self, shape, Image, Optics=None):
         pass
 
+
+
     def get_properties(self):
-        props = {}
-        for key, distribution in self.properties.items():
-            props[key] = distribution.current_value
-        return props 
+        return self.properties.current_value()
     
+
 
     def get_property(self, key, default=None):
         return self.properties[key]
     
 
+
     def set_property(self, key, value):
         self.properties[key] = key
 
 
-    def getRoot(self):
-        if hasattr(self, "parent"):
-            return self.parent.getRoot()
-        else:
-            return self
-
-
-    def setParent(self, Feature):
-        if hasattr(self, "parent"):
-            G = Group(self)
-            G = G.setParent(Feature)
-            return G
-        else:            
-            self.parent = Feature
-            return self
-
-    '''
+    
+    def update(self):
+        '''
         Updates the state of all properties.
-    '''
-    def update(self, history):
-        if self not in history:
-            history.append(self)
-            self.properties.update(history)
-            self.parent.update(history)
+        '''
+        self.properties.update()
 
+    def resolve(self, image):
+        properties = self.get_properties()
+        return self.get(image, **properties)
+
+    def clear(self):
+        '''
+        Recursively clears the cache property. Should be on each output node between each call to resolve
+        to ensure a correct initial state.
+        '''
+        self.cache = None
+        for val in self.__dict__.values():
+            if hasmethod(val, 'clear'):
+                val.clear()
 
     def input_shape(self, shape):
         return shape
-
-    '''
-        Arithmetic operator overload. Creates copies of objects.
-    '''
-    def __add__(self, other):
-        o_copy = copy.deepcopy(other)
-        o_copy = o_copy.setParent(self)
-        return o_copy
-
-    def __radd__(self, other): 
-        self_copy = copy.deepcopy(self)
-        self_copy = self_copy.setParent(other)
-        return self_copy
-
-    def __mul__(self, other):
-        G = Group(copy.deepcopy(self))
-        G.probability = other
-        return G
-
-    __rmul__ = __mul__
-
-
-    '''
-    Recursively resolves the feature feature tree backwards, starting at this node. 
-    Each recursive step checks the content of "cache" to check if the node has already 
-    been calculated. This allows for a very efficient evaluation of more complex structures
-    with several outputs.
-
-    The function checks its parent property. For None values, the node is seen as input, 
-    and creates a new image. For ndarrays and Images, those values are copied over. For
-    Features, the image is calculated by recursivelt calling the resolve method on the 
-    parent.
-
-    INPUTS:
-        shape:      requested image shape
-    
-    OUTPUTS:
-        Image: An Image instance.
-    '''
-    def resolve(self, shape, **kwargs):
-
-        cache = getattr(self, "cache", None)
-        if cache is not None:
-            return cache
-
-        parent = getattr(self, "parent", None)
-        # If parent does not exist, initiate with zeros
-        if parent is None:
-            image = Image(np.zeros(self.input_shape(shape)))
-        # If parent is ndarray, set as ndarray
-        elif isinstance(parent, np.ndarray):
-            image = Image(parent)
-        # If parent is image, set as Image
-        elif isinstance(parent, Image):
-            image = parent
-        # If parent is Feature, retrieve it
-        elif isinstance(parent, Feature):
-            image = parent.resolve(shape, **kwargs)
-        # else, pray
-        else:
-            image = parent
-        
-        # Get probability of draw
-        p = getattr(self, "probability", 1)
-        if np.random.rand() <= p:
-            properties = self.properties.current_value()
-            # TODO: find a better way to pass information between features
-            image = self.get(shape, image, **properties, **kwargs)
-            properties["name"] = type(self).__name__
-            image.append(properties)
-        
-        # Store to cache
-        self.cache = copy.deepcopy(image)
-        return image
     
 
-    '''
-    Recursively clears the cache property. Should be on each output node between each call to resolve
-    to ensure a correct initial state.
-    '''
-    def clear(self):
-        self.cache = None
-        for val in self.__dict__.values():
-            if hasfunction(val, 'clear'):
-                val.clear()
 
     
-from utils import hasfunction
+
+    
+from utils import hasmethod
 class Properties(dict):
     def __init__(self, *args, **kwargs):
         self.data = dict(*args, **kwargs)
 
     def clear(self):
         for v in self.data.values():
-            if hasfunction(v, 'clear'):
+            if hasmethod(v, 'clear'):
                 v.clear()
     
+
     def sample(self):
         sampled_dict = {}
         for key in self.data.keys():
@@ -253,19 +173,21 @@ class Properties(dict):
         return sampled_dict
 
 
-    def update(self, history):
-        if self not in history:
-            history.append(self)
-            for distribution in self.data.values():
-                distribution.update(history)
+
+    def update(self):
+        for property in self.data.values():
+            property.update()
+
 
 
     def __getitem__(self, key):
         return self.data[key].current_value
 
 
+
     def __setitem__(self, key, value):
         self.data[key].current_value = value
+
 
 
     def current_value(self):
@@ -282,23 +204,16 @@ class Properties(dict):
 class Group(Feature):
     __name__ = "Group"
     def __init__(self, Features):
-        self.__properties__ = {"group": Features}
-        super().__init__()
+        self.properties = {"group": Features}
+        super().__init__(group=Feature)
 
 
     def input_shape(self,shape):
-        return self.get_property("group").input_shape(shape)
+        return self.properties["group"].input_shape(shape)
 
 
     def get(self, shape, Image, group=None, **kwargs):
         return group.resolve(shape, **kwargs)
-
-
-    # TODO: What if already has parent? Possible?
-    def setParent(self, Feature):
-        self.parent = Feature
-        self.get_property("group").getRoot().setParent(Feature)
-        return self
 
 
 class Load(Feature):
@@ -316,10 +231,9 @@ class Load(Feature):
         return self.res
 
 
-    def update(self,history):
-        if self not in history:
-            self.res = next(self.iter)
-            super().update(history)
+    def update(self):
+        self.res = next(self.iter)
+        super().update()
 
 
     def __next__(self):
