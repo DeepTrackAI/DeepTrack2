@@ -1,15 +1,20 @@
-''' Feature Property Randomization.
+'''Tools to manage the properties of features
 
-Contains tools used to randomize the properties of a Feature. 
-This randomization is typically performed using the Distribution class,
-which samples random values according to a ruleset defined as its 
-input. However, any object with a defined `current_value` field and a 
-`update(history:list)` method are valid substitutions.
+This module contains:
+    
+The class Distribution, which represents the values of a property of a feature.
+A property can be a constant (inizialization with, e.g., a number, a tuple),
+a sequence of variables (inizialization with, e.g., a generator), 
+a discrete random variable (inizialization with, e.g., a list, a dictionary), 
+a continuous random variable (inizialization with, e.g., a function).
 
-The module also contains standard implementations of rulesets,
-such as random_uniform.
+A series of standard functions:
+    
+    random_uniform(scale) -> function
+        Uniform random distribution
 
 '''
+
 from DeepTrack.utils import isiterable, hasfunction
 import numpy as np
 
@@ -17,42 +22,46 @@ import numpy as np
 # CLASSES
 
 class Distribution:
-    r'''Class for randomizing Features.
+    r'''Represents a property of a feature
     
-    The Distribution class wraps an input, which is treated
-    internally as a sampling rule. It uses this sampling rule
-    to update and store an value sampled from this ruleset. 
-    The ruleset can be virtually anything, from classes, to
-    numbers, lists and dictionaries.
+    The class Distribution wraps an input, which is treated
+    internally as a sampling rule. This sampling rule is used 
+    to update the value of the property of the feature. 
+    The sampling rule can be, for example:
+    * a constant (inizialization with, e.g., a number, a tuple),
+    * a sequence of variables (inizialization with, e.g., a generator), 
+    * a discrete random variable (inizialization with, e.g., a list, a dictionary), 
+    * a continuous random variable (inizialization with, e.g., a function).
 
     Parameters
     ----------
     sampling_rule : any        
-        defines the output space of the distribution. See 
-        `sample` for how different types are sampled.
+        Defines the sampling rule to update the value of the feature property. 
+        See function `sample` for how different sampling rules are sampled.
 
     Attributes
     ----------
     sampling_rule : any
-        A property used to define how the distribution is sampled.
+        The sampling rule to update the value of the feature property.
     current_value : any
-        The current value drawn from the distribution.
+        The current value obtained from the last call to the sampling rule.
     
     Examples
     --------
-    The distribution of a number will always return the number
+    When the sampling rule is a number, 
+    the current value is always the number itself:
 
-    >>> np.random.seed(0)
-    >>> D = Disitribution(1)
+    >>> D = Distribution(1)
     >>> D.current_value
     1
     >>> D.update([])
     >>> D.current_value
     1
 
-    The Distribution of a list will randomly return one of the 
-    elements.
+    When the sampling rule is a list, 
+    the current value is one of the elements of the list:
 
+    >>> np.random.seed(0)
     >>> D = Distribution([1, 2, 3])
     >>> D.current_value # Either 1, 2 or 3 randomly
     2 #random
@@ -71,13 +80,14 @@ class Distribution:
 
     @property
     def current_value(self):
-        r'''Current value of distribution
+        r'''Current value of the property of the feature
 
-        `current_value` is the result of the latest `update`
-        call. Allows consistent access to a random parameter.
+        `current_value` is the result of the latest `update` call.
+        Note that any randomization only occurs when the method `update` is called
+        and, therefore, the current value does not change between calls.
 
-        The getter function is overridden to update itself 
-        once if current_value has not yet been set.
+        The method getter calls the method `update` 
+        if `current_value` has not yet been set.
 
         '''
 
@@ -96,10 +106,10 @@ class Distribution:
     
 
     def update(self, history:list):
-        r'''Updates the current value field
+        r'''Updates the current value
 
-        The `update()` method samples the sampling rule
-        and sets the `current_value` property as the output.
+        The method `update` sets the property `current_value` 
+        as the output of the method `sample`.
         It takes a history parameter as an input, which 
         helps avoiding multiple updates during recursive
         calls. It also appends itself to the history.
@@ -107,7 +117,7 @@ class Distribution:
         Parameters
         ------
         history  
-            A list of objects that has been updated.
+            A list of objects that has been updated
 
         '''
 
@@ -189,13 +199,17 @@ import types
 def random_uniform(scale) -> types.FunctionType:
     ''' Uniform random distribution
 
-    Returns a ndarray of the same shape as the input argument, with each 
-    number uniformly distributed between 0 and `scale`
-
     Parameters
     ----------
     scale          
-        The maximum of the distribution.
+        The maximum of the distribution
+        
+    Returns
+    -------
+    function
+        function that returns a ndarray of the same shape 
+        as the input argument `scale`, where each number 
+        uniformly distributed between 0 and `scale`
 
     '''
 

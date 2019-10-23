@@ -1,4 +1,5 @@
-''' Unit tests for the distributions module.
+''' Unit tests for distributions.py
+
 '''
 
 import unittest
@@ -8,11 +9,12 @@ from DeepTrack.distributions import Distribution, random_uniform
 class TestDistributions(unittest.TestCase):
 
     def test_number(self):
-        D = Distribution(1)
+        input_number = 1
+        D = Distribution(input_number)
         for i in range(20):
             with self.subTest(i=i):
                 D.__update__([])
-                self.assertEqual(D.current_value, 1)
+                self.assertEqual(D.current_value, input_number)
 
 
     def test_tuple(self):
@@ -35,7 +37,8 @@ class TestDistributions(unittest.TestCase):
 
     def test_random_unifrom(self):
         scale = (1, 2, 3)
-        D = Distribution(random_uniform(scale))
+        input_random_uniform_numbers = random_uniform(scale)
+        D = Distribution(input_random_uniform_numbers)
         for i in range(20):
             with self.subTest(i=i):
                 D.__update__([])
