@@ -161,6 +161,7 @@ class Feature(ABC):
 
     
 from DeepTrack.utils import hasmethod
+# TODO: Move to properties.py ince it has been merged into develop.
 class Properties(dict):
 
 
