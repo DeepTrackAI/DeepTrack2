@@ -43,4 +43,4 @@ def isiterable(object:any) -> bool:
         True if the object either has a __iter__ field or a __getitem__
         field.
     '''
-    return hasattr(object, "__iter__") or hasattr(object, "__getitem__")
+    return hasattr(object, "__next__")

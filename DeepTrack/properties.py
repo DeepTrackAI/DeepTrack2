@@ -9,7 +9,7 @@ A Property can be represented by:
 * A discrete random variable (inizialization with, e.g., a list, a dictionary)
 * A continuous random variable (inizialization with, e.g., a function)
 
-The class `Properties`, which is a dictionary with each element a Property. 
+The class `PropertyDict`, which is a dictionary with each element a Property. 
 The class provides utility functions to update, sample, clear and retrieve 
 properties. 
 
@@ -82,17 +82,16 @@ class Property:
         self.sampling_rule = sampling_rule
     
 
-
     @property
     def current_value(self):
         r'''Current value of the property of the feature
 
-        `current_value` is the result of the latest `update` call.
-        Note that any randomization only occurs when the method `update` is called
+        `current_value` is the result of the latest `update()` call.
+        Note that any randomization only occurs when the method `update()` is called
         and, therefore, the current value does not change between calls.
 
-        The method getter calls the method `update` 
-        if `current_value` has not yet been set.
+        The method getter calls the method `update()` if `current_value`
+        has not yet been set.
 
         '''
 
@@ -109,16 +108,21 @@ class Property:
         return self._current_value
 
     
-
-    def update(self):
+    def update(self) -> 'Property':
         r'''Updates the current value
 
-        The method `update` sets the property `current_value` 
-        as the output of the method `sample`.
+        The method `update()` sets the property `current_value` 
+        as the output of the method `sample()`.
 
+        Returns
+        -------
+        Property
+            Returns itself.
+             
         '''
         self.current_value = self.sample()
 
+        return self
 
 
     def sample(self):
@@ -129,7 +133,7 @@ class Property:
         `sampling_rule`. These are checked in the following order of
         priority:
 
-        1. Any object with a callable `sample` method has this
+        1. Any object with a callable `sample()` method has this
             method called and returned.
         2. If the rule is a ``dict``, the ``dict`` is copied and any value
             with has a callable sample method is replaced with the
@@ -184,8 +188,10 @@ class Property:
             # Else, assume it's elementary.
             return self.sampling_rule
 
-# TODO: Maybe PropertyDict is clearer?
-class Properties(dict):
+
+
+
+class PropertyDict(dict):
     ''' Dictionary with Property elements
     
     A dictionary of properties. It provides utility functions to update, 
@@ -199,26 +205,41 @@ class Properties(dict):
     '''
 
     def __init__(self, *args, **kwargs):
-        self.prop_dict = dict(*args, **kwargs)
+         super().__init__(*args, **kwargs)
+    
+
+    def current_value_dict(self):
+        ''' Retrieves the current value of all properties as a dictionary
+
+        Returns
+        -------
+        dict
+            A dictionary with the current value of all properties
+        
+        '''
+
+        current_value_dict = {}
+        for key, property in self.items():
+            current_value_dict[key] = property.current_value
+        return current_value_dict
 
 
-    # TODO: call reset
-    # TODO: change prop to property / properties
-    def clear(self) -> 'Properties':
-        ''' Clears/resets properties
+    def update(self) -> 'PropertyDict':
+        ''' Updates all properties
 
-        Clears any property with a defined method `clear`  
+        Calls the method `update()` on each property in the dictionary.
 
         Returns
         -------
         Properties
             Returns itself
+
         '''
-        for prop in self.data.values():
-            if hasmethod(prop, 'clear'):
-                prop.clear()
+
+        for property in self.values():
+            property.update()
         return self
-    
+
 
     def sample(self) -> dict:
         ''' Samples all properties
@@ -232,39 +253,20 @@ class Properties(dict):
         '''
 
         sample_dict = {}
-        for key in self.prop_dict.keys():
-            sample_dict[key] = self.prop_dict[key].sample()
+        for key, property in self.items():
+            sample_dict[key] = property.sample()
+
         return sample_dict
 
 
-    def update(self) -> 'Properties':
-        ''' Updates all properties
+    
 
-        Calls the method `update` on each property in the dictionary.
-
-        Returns
-        -------
-        Properties
-            Returns itself
-
-        '''
-        for prop in self.prop_dict.values():
-            prop.update()
-        return self
-
-    # TODO: first method, also order other methods readably    
-    def current_value_dict(self):
-        '''
-        '''
-        current_value_dict = {}
-        for key in self.prop_dict.keys():
-            current_value_dict[key] = self.prop_dict[key].current_value
-        return current_value_dict
 
 
 # FUNCTIONS
 
 import types
+
 # TODO: allow for min/max definition
 def random_uniform(scale) -> types.FunctionType:
     ''' Uniform random distribution
@@ -286,4 +288,5 @@ def random_uniform(scale) -> types.FunctionType:
     scale = np.array(scale)
     def distribution():
         return np.random.rand(*scale.shape) * scale
+        
     return distribution
