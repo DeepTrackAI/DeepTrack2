@@ -29,7 +29,7 @@ import numpy as np
 class Property:
     r'''Represents a property of a feature
     
-    The class Distribution wraps an input, which is treated
+    The class Property wraps an input, which is treated
     internally as a sampling rule. This sampling rule is used 
     to update the value of the property of the feature. 
     The sampling rule can be, for example:
@@ -199,9 +199,11 @@ class Properties(dict):
     '''
 
     def __init__(self, *args, **kwargs):
-        self.data = dict(*args, **kwargs)
+        self.prop_dict = dict(*args, **kwargs)
 
 
+    # TODO: call reset
+    # TODO: change prop to property / properties
     def clear(self) -> 'Properties':
         ''' Clears/resets properties
 
@@ -212,9 +214,9 @@ class Properties(dict):
         Properties
             Returns itself
         '''
-        for v in self.data.values():
-            if hasmethod(v, 'clear'):
-                v.clear()
+        for prop in self.data.values():
+            if hasmethod(prop, 'clear'):
+                prop.clear()
         return self
     
 
@@ -229,10 +231,10 @@ class Properties(dict):
 
         '''
 
-        sampled_dict = {}
-        for key in self.data.keys():
-            sampled_dict[key] = self.data[key].sample()
-        return sampled_dict
+        sample_dict = {}
+        for key in self.prop_dict.keys():
+            sample_dict[key] = self.prop_dict[key].sample()
+        return sample_dict
 
 
     def update(self) -> 'Properties':
@@ -246,17 +248,17 @@ class Properties(dict):
             Returns itself
 
         '''
-        for property in self.data.values():
-            property.update()
+        for prop in self.prop_dict.values():
+            prop.update()
         return self
 
-    
-    def current_value(self):
+    # TODO: first method, also order other methods readably    
+    def current_value_dict(self):
         '''
         '''
         current_value_dict = {}
-        for key in self.data.keys():
-            current_value_dict[key] = self.data[key].current_value
+        for key in self.prop_dict.keys():
+            current_value_dict[key] = self.prop_dict[key].current_value
         return current_value_dict
 
 
