@@ -93,7 +93,7 @@ class Feature(ABC):
         self.properties = Properties(**properties)
 
         # Set up flags
-
+        self.has_updated_since_last_resolve = False
 
     @abstractmethod
     def get(self, image, **kwargs):
@@ -121,14 +121,18 @@ class Feature(ABC):
         '''
         Updates the state of all properties.
         '''
-        self.properties.update()
+        if not self.has_updated_since_last_resolve:
+            self.properties.update()
+        self.has_updated_since_last_resolve = True
+        return self
 
 
     def resolve(self, image):
         properties = self.get_properties()
-        return self.get(image, **properties)
-
-
+        image = self.get(image, **properties)
+        image.append(properties)
+        self.has_updated_since_last_resolve = False
+        return image
 
     def clear(self):
         '''
@@ -140,7 +144,7 @@ class Feature(ABC):
             if hasmethod(val, 'clear'):
                 val.clear()
 
-
+        return self
     def input_shape(self, shape):
         return shape
 
@@ -243,11 +247,12 @@ class FeatureDuplicate(Feature):
     
 
     def update(self):
-        super().update()
-        times = self.get_property("num_duplicates")
-        feature = self.feature
-        features = [copy.deepcopy(feature).update() for _ in range(times)]
-        self.set_property("features", features)
+        if not self.has_updated_since_last_resolve:
+            super().update()
+            times = self.get_property("num_duplicates")
+            feature = self.feature
+            features = [copy.deepcopy(feature).update() for _ in range(times)]
+            self.set_property("features", features)
         return self
 
 
@@ -262,20 +267,13 @@ class Load(Feature):
     def __init__(self,
                     path):
         self.path = path
-        self.properties = {"path": path}
 
         # Initiates the iterator
-        self.iter = next(self)
+        super().__init__(loaded_image=next(self))
 
 
-    def get(self, shape, image, **kwargs):
-        return self.res
-
-
-    def update(self):
-        self.res = next(self.iter)
-        super().update()
-        return self
+    def get(self, image, loaded_image=None, **kwargs):
+        return image + loaded_image
 
 
     def __next__(self):

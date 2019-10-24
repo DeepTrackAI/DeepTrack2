@@ -21,8 +21,8 @@ class Particle(Feature):
 
     
 
-    def get(self, shape, Image, **kwargs):
-        return Image + kwargs["Optics"].image(shape, self, **kwargs)
+    def get(self, Image, **kwargs):
+        return Image + kwargs["Optics"].image(self, **kwargs)
 
 
     # One of the following has to be defined
