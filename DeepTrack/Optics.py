@@ -48,12 +48,12 @@ class Optics(Feature):
     def __call__(self, Features):
         return Features + self 
     
-    def __resolve__(self, shape, **kwargs):
+    def resolve(self, shape, **kwargs):
         kwargs["Optics"] = self 
-        return super().__resolve__(shape, **kwargs)
+        return super().resolve(shape, **kwargs)
 
-    def get(self, shape, Image, **kwargs):
-        return self.finalize(shape, Image)
+    def get(self, Image, **kwargs):
+        return self.finalize(Image)
     
 
 class BaseOpticalDevice2D(Optics):

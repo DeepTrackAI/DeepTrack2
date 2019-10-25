@@ -31,9 +31,9 @@ class Gaussian(Noise):
     def __init__(self, mu=0, sigma=1, **kwargs):
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
-    def get(self, shape, Image, mu=0, sigma=1, **kwargs):
-        mu = np.ones(shape) * mu
-        sigma = np.ones(shape) * sigma
+    def get(self, Image, mu=0, sigma=1, **kwargs):
+        mu = np.ones(Image.shape) * mu
+        sigma = np.ones(Image.shape) * sigma
         return Image + np.random.normal(mu, sigma)
     
 
@@ -45,9 +45,8 @@ Input arguments:
 '''
 class Offset(Noise):
     __name__ = "OffsetNoise"
-    def get(self, shape, Image, offset=0, **kwargs):
-        
-        return Image + np.ones(shape) * offset
+    def get(self, Image, offset=0, **kwargs):
+        return Image + np.ones(Image.shape) * offset
 
 
 '''
@@ -58,8 +57,7 @@ Input arguments:
 '''
 class Poisson(Noise):
     __name__ = "PoissonNoise"
-    def get(self, shape, Image, SNr, **kwargs):
+    def get(self, Image, SNr, **kwargs):
         peak = np.max(Image)
         rescale = SNr**2 / peak
-
         return np.random.poisson(Image * rescale) / rescale

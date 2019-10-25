@@ -1,11 +1,4 @@
-
-
-from DeepTrack.Optics import BaseOpticalDevice2D
-from DeepTrack.Particles import Particle
-from DeepTrack.Noise import Noise
-from DeepTrack.Distributions import sample
-# from DeepTrack.Labels import Label
-from DeepTrack.Features import Feature
+from DeepTrack.features import Feature
 from DeepTrack.Image import Image
 import copy
 import random
@@ -40,24 +33,15 @@ class Generator(keras.utils.Sequence):
         If the input is a list, the function will iterate through them all
         before clearing the cache. 
     '''
-    def get(self, shape, Features):
+    def get(self, input_shape, Features):
     
         if isinstance(Features, List):
-            
             for F in Features:
-                F.__clear__()
-
-            history = []
-            for f in Features:
-                f.__rupdate__(history)
-
-            Images = [F.__resolve__(shape) for F in reversed(Features)]
-
-
+                F.update()
+            Images = [F.resolve(Image(np.zeros(input_shape))) for F in reversed(Features)]
         else:
-            Features.__clear__()
-            Features.__rupdate__([])
-            Images = Features.__resolve__(shape)
+            Features.update()
+            Images = Features.resolve(Image(np.zeros(input_shape)))
         
         return Images
 

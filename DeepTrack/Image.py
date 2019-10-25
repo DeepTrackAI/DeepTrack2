@@ -1,5 +1,13 @@
 from abc import ABC, abstractmethod
 from DeepTrack.Distributions import Distribution, sample
+from DeepTrack.Features import Feature
+import numpy as np
+import copy
+'''
+Make a subclass of ndarray
+'''
+from abc import ABC, abstractmethod
+from DeepTrack.Distributions import Distribution, sample
 import numpy as np
 import copy
 '''
