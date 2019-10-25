@@ -208,7 +208,7 @@ class PropertyDict(dict):
          super().__init__(*args, **kwargs)
     
 
-    def current_value_dict(self):
+    def current_value_dict(self) -> dict:
         ''' Retrieves the current value of all properties as a dictionary
 
         Returns
@@ -288,5 +288,5 @@ def random_uniform(scale) -> types.FunctionType:
     scale = np.array(scale)
     def distribution():
         return np.random.rand(*scale.shape) * scale
-        
+
     return distribution
