@@ -101,7 +101,7 @@ class Feature(ABC):
 
 
     def resolve(self, image):
-        properties = self.get_properties()
+        properties = self.properties.current_value_dict()
         image = self.get(image, **properties)
         image.append(properties)
         self.has_updated_since_last_resolve = False
