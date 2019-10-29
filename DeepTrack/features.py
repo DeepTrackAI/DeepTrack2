@@ -72,10 +72,6 @@ class Feature(ABC):
     get_properties()
         Returns a copy of the properties field, with each value
         replaced by the current_value field.
-    get_property(key : str)
-        Returns the current_value of the field matching the key in properties.
-    set_property(key : str, value : any)
-        Sets the current_value of the field matching the key in properties.
     '''
 
     __name__ = "Unnamed feature"
