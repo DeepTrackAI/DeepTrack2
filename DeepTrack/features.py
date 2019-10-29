@@ -95,6 +95,7 @@ class Feature(ABC):
         # Set up flags
         self.has_updated_since_last_resolve = False
 
+
     @abstractmethod
     def get(self, image, **kwargs):
         pass
@@ -106,6 +107,7 @@ class Feature(ABC):
         image.append(properties)
         self.has_updated_since_last_resolve = False
         return image
+
 
     def update(self):
         '''
