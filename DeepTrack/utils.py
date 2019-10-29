@@ -28,7 +28,7 @@ def hasmethod(object:any, method_name:str) -> bool:
         True if the object has an attribute method_name, and that
         attribute is callable.
     '''
-    return hasattr(object, method_name) and callable(object.method_name) 
+    return hasattr(object, method_name) and callable(getattr(object, method_name, None)) 
     
 def isiterable(object:any) -> bool:
     ''' Checks if the input is iterable

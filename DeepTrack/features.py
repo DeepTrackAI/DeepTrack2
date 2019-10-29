@@ -1,4 +1,4 @@
-from DeepTrack.properties import Property
+from DeepTrack.properties import Property, PropertyDict
 from DeepTrack.Image import Image
 from abc import ABC, abstractmethod
 import os
@@ -90,32 +90,24 @@ class Feature(ABC):
         properties = getattr(self, "properties", {})
         for key, value in kwargs.items():
             properties[key] = Property(value)  
-        self.properties = Properties(**properties)
+        self.properties = PropertyDict(**properties)
 
         # Set up flags
         self.has_updated_since_last_resolve = False
+
 
     @abstractmethod
     def get(self, image, **kwargs):
         pass
 
 
-    def get_properties(self):
-        return self.properties.current_value()
-    
+    def resolve(self, image):
+        properties = self.properties.current_value_dict()
+        image = self.get(image, **properties)
+        image.append(properties)
+        self.has_updated_since_last_resolve = False
+        return image
 
-    def get_property(self, key, default=None):
-        return self.properties[key]
-    
-
-    def set_property(self, key, value):
-        self.properties[key] = key
-
-
-    def sample(self):
-        self.properties.update()
-        return self
-    
 
     def update(self):
         '''
@@ -127,26 +119,17 @@ class Feature(ABC):
         return self
 
 
-    def resolve(self, image):
-        properties = self.get_properties()
-        image = self.get(image, **properties)
-        image.append(properties)
-        self.has_updated_since_last_resolve = False
-        return image
-
-    def clear(self):
-        '''
-        Recursively clears the cache property. Should be on each output node between each call to resolve
-        to ensure a correct initial state.
-        '''
-        self.cache = None
-        for val in self.__dict__.values():
-            if hasmethod(val, 'clear'):
-                val.clear()
-
+    def sample(self):
+        self.properties.update()
         return self
-    def input_shape(self, shape):
-        return shape
+    
+    # TODO: interface for PropertyDict, encapsulation
+
+    
+
+    #TODO: Restructure the shape propagation
+    def output_shape(self, input_shape):
+        return input_shape
 
 
     def __add__(self, other):
@@ -162,41 +145,6 @@ class Feature(ABC):
     def __pow__(self, other):
         return FeatureDuplicate(self, other)
     
-
-    
-from DeepTrack.utils import hasmethod
-# TODO: Move to properties.py ince it has been merged into develop.
-class Properties(dict):
-
-
-    def __init__(self, *args, **kwargs):
-        self.data = dict(*args, **kwargs)
-
-
-    def clear(self):
-        for v in self.data.values():
-            if hasmethod(v, 'clear'):
-                v.clear()
-    
-
-    def sample(self):
-        sampled_dict = {}
-        for key in self.data.keys():
-            sampled_dict[key] = self.data[key].sample()
-        return sampled_dict
-
-
-    def update(self):
-        for property in self.data.values():
-            property.update()
-
-
-    def current_value(self):
-        current_value_dict = {}
-        for key in self.data.keys():
-            current_value_dict[key] = self.data[key].current_value
-        return current_value_dict
-
 
 
 
@@ -241,19 +189,12 @@ class FeatureProbability(Feature):
 class FeatureDuplicate(Feature):
 
 
-    def __init__(self, feature, times, **kwargs):
+    def __init__(self, feature, num_duplicates, **kwargs):
         self.feature = feature
-        super().__init__(features=(), num_duplicates=times, **kwargs)
-    
-
-    def update(self):
-        if not self.has_updated_since_last_resolve:
-            super().update()
-            times = self.get_property("num_duplicates")
-            feature = self.feature
-            features = [copy.deepcopy(feature).update() for _ in range(times)]
-            self.set_property("features", features)
-        return self
+        super().__init__(
+            num_duplicates=num_duplicates, #py > 3.6 dicts are ordered by insert time.
+            features=lambda: [copy.deepcopy(feature).update() for _ in range(self.properties["num_duplicates"].current_value)], 
+            **kwargs)
 
 
     def get(self, image, features=None, **kwargs):
