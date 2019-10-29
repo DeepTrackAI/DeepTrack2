@@ -101,8 +101,10 @@ class Feature(ABC):
         pass
 
 
-    def resolve(self, image):
+    def resolve(self, image, **kwargs):
         properties = self.properties.current_value_dict()
+        properties.update(kwargs)
+        
         image = self.get(image, **properties)
         image.append(properties)
         self.has_updated_since_last_resolve = False
