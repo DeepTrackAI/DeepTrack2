@@ -123,9 +123,13 @@ class Feature(ABC):
         self.properties.update()
         return self
     
+    # TODO: interface for PropertyDict, encapsulation
 
-    def input_shape(self, shape):
-        return shape
+    
+
+    #TODO: Restructure the shape propagation
+    def output_shape(self, input_shape):
+        return input_shape
 
 
     def __add__(self, other):
