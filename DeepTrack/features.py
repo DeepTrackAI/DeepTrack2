@@ -1,5 +1,5 @@
 from DeepTrack.properties import Property, PropertyDict
-from DeepTrack.Image import Image
+from DeepTrack.image import Image
 from abc import ABC, abstractmethod
 import os
 import re
@@ -74,7 +74,7 @@ class Feature(ABC):
         replaced by the current_value field.
     '''
 
-    __name__ = "Unnamed feature"
+    __property_verbosity__ = 1
 
     
     def __init__(self, **kwargs):
@@ -93,16 +93,26 @@ class Feature(ABC):
 
 
     @abstractmethod
-    def get(self, image, **kwargs):
+    def get(self, image, _resolve_options=None, **kwargs):
         pass
 
 
-    def resolve(self, image, **kwargs):
-        properties = self.properties.current_value_dict()
-        properties.update(kwargs)
+    def resolve(
+        self, 
+        image, 
+        **global_kwargs
+        ):
+
+        current_properties = self.properties.current_value_dict()
+        image = self.get(image, _resolve_options=global_kwargs, **current_properties)
+
+        # Add current_properties to the image the class attribute __property_verbosity__
+        # is not larger than the passed property_verbosity keyword
+        property_verbosity = global_kwargs.get("property_verbosity", 1)
+        if type(self).__property_verbosity__ <= property_verbosity:
+            current_properties["name"] = type(self).__name__
+            image.append(current_properties)
         
-        image = self.get(image, **properties)
-        image.append(properties)
         self.has_updated_since_last_resolve = False
         return image
 
@@ -148,19 +158,23 @@ class Feature(ABC):
 
 class FeatureBranch(Feature):
     
+    __property_verbosity__ = 2
+
 
     def __init__(self, F1, F2, **kwargs):
         super().__init__(feature_1=F1, feature_2=F2, **kwargs)
     
 
-    def get(self, image, feature_1=None, feature_2=None, **kwargs):
-        image = feature_1.resolve(image)
-        image = feature_2.resolve(image)
+    def get(self, image, _resolve_options=None, feature_1=None, feature_2=None, **kwargs):
+        image = feature_1.resolve(image, **_resolve_options)
+        image = feature_2.resolve(image, **_resolve_options)
         return image
 
 
 
 class FeatureProbability(Feature):
+
+    __property_verbosity__ = 2
 
 
     def __init__(self, feature, probability, **kwargs):
@@ -174,17 +188,20 @@ class FeatureProbability(Feature):
     def get(self, image,
             feature=None, 
             probability=None, 
-            random_number=None, 
+            random_number=None,
+            _resolve_options=None,
             **kwargs):
         
         if random_number < probability:
-            image = feature.resolve(image)
+            image = feature.resolve(image, **_resolve_options)
 
         return image
 
 
 # TODO: Better name.
 class FeatureDuplicate(Feature):
+
+    __property_verbosity__ = 2
 
 
     def __init__(self, feature, num_duplicates, **kwargs):
@@ -195,14 +212,15 @@ class FeatureDuplicate(Feature):
             **kwargs)
 
 
-    def get(self, image, features=None, **kwargs):
+    def get(self, image, features=None, _resolve_options=None, **kwargs):
         for feature in features:
-            image = feature.resolve(image)
+            image = feature.resolve(image, **_resolve_options)
         return image
 
 
 class Load(Feature):
-    __name__ = "Load"
+
+
     def __init__(self,
                     path):
         self.path = path
@@ -223,9 +241,6 @@ class Load(Feature):
             for i in range(len(image)):
                 yield image[i]
 
-
-    def setParent(self, F):
-        raise Exception("The Load class cannot have a parent. For literal addition, use the Add class")
 
 
     def get_files(self):
