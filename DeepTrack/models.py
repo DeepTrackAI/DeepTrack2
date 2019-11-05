@@ -1,4 +1,4 @@
-from tensorflow.keras import models, layers, optimizers
+    from tensorflow.keras import models, layers, optimizers
 from DeepTrack.losses import nd_mean_absolute_error
 import numpy as np
 
@@ -82,10 +82,11 @@ def unet(
 
     if layer_function is None:
         layer_function = lambda dimensions: layers.Conv2D(
-                                                conv_layer_dimension, 
-                                                kernel_size=3,
-                                                activation="relu",
-                                                padding="same") 
+            conv_layer_dimension, 
+            kernel_size=3,
+            activation="relu",
+            padding="same"
+        ) 
 
     unet_input = layers.Input(input_shape)
 
