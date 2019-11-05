@@ -55,10 +55,6 @@ class Feature(ABC):
 
     Methods
     -------
-    clear() 
-        Cleans up the tree after execution. Default behavior is
-        to set the cache field to None and call clear() on
-        the parent if it exists.
     update()
         If self is not in history, it calls the update method
         on the `properties` and `parent` and appends itself to
@@ -69,9 +65,6 @@ class Feature(ABC):
         a parent, the output of the resolve() call on the parent is 
         used as the input to the .get() method, otherwise an Image of
         all zeros is used.
-    get_properties()
-        Returns a copy of the properties field, with each value
-        replaced by the current_value field.
     '''
 
     __property_verbosity__ = 1
@@ -93,9 +86,8 @@ class Feature(ABC):
 
 
     @abstractmethod
-    def get(self, image, _resolve_options=None, **kwargs):
+    def get(self, image, **kwargs):
         pass
-
 
     def resolve(
         self, 
@@ -103,15 +95,18 @@ class Feature(ABC):
         **global_kwargs
         ):
 
-        current_properties = self.properties.current_value_dict()
-        image = self.get(image, _resolve_options=global_kwargs, **current_properties)
+        feature_input = self.properties.current_value_dict()
+        feature_input.update(global_kwargs)
+
+        image = self.get(image, **feature_input)
 
         # Add current_properties to the image the class attribute __property_verbosity__
         # is not larger than the passed property_verbosity keyword
         property_verbosity = global_kwargs.get("property_verbosity", 1)
+        
         if type(self).__property_verbosity__ <= property_verbosity:
-            current_properties["name"] = type(self).__name__
-            image.append(current_properties)
+            feature_input["name"] = type(self).__name__
+            image.append(feature_input)
         
         self.has_updated_since_last_resolve = False
         return image
@@ -133,30 +128,25 @@ class Feature(ABC):
     
     # TODO: interface for PropertyDict, encapsulation
 
-    
-
-    #TODO: Restructure the shape propagation
-    def output_shape(self, input_shape):
-        return input_shape
-
 
     def __add__(self, other):
-        return FeatureBranch(self, other)
+        return Branch(self, other)
     
 
     def __mul__(self, other):
-        return FeatureProbability(self, other)
+        return Probability(self, other)
 
     __rmul__ = __mul__
 
 
     def __pow__(self, other):
-        return FeatureDuplicate(self, other)
+        return Duplicate(self, other)
     
+    def __call__(self, other):
+        return Wrap(other, self)
 
 
-
-class FeatureBranch(Feature):
+class Branch(Feature):
     
     __property_verbosity__ = 2
 
@@ -165,14 +155,14 @@ class FeatureBranch(Feature):
         super().__init__(feature_1=F1, feature_2=F2, **kwargs)
     
 
-    def get(self, image, _resolve_options=None, feature_1=None, feature_2=None, **kwargs):
-        image = feature_1.resolve(image, **_resolve_options)
-        image = feature_2.resolve(image, **_resolve_options)
+    def get(self, image, feature_1=None, feature_2=None, **kwargs):
+        image = feature_1.resolve(image, **kwargs)
+        image = feature_2.resolve(image, **kwargs)
         return image
 
 
 
-class FeatureProbability(Feature):
+class Probability(Feature):
 
     __property_verbosity__ = 2
 
@@ -189,17 +179,16 @@ class FeatureProbability(Feature):
             feature=None, 
             probability=None, 
             random_number=None,
-            _resolve_options=None,
             **kwargs):
         
         if random_number < probability:
-            image = feature.resolve(image, **_resolve_options)
+            image = feature.resolve(image, **kwargs)
 
         return image
 
 
 # TODO: Better name.
-class FeatureDuplicate(Feature):
+class Duplicate(Feature):
 
     __property_verbosity__ = 2
 
@@ -212,9 +201,23 @@ class FeatureDuplicate(Feature):
             **kwargs)
 
 
-    def get(self, image, features=None, _resolve_options=None, **kwargs):
+    def get(self, image, features=None, **kwargs):
         for feature in features:
-            image = feature.resolve(image, **_resolve_options)
+            image = feature.resolve(image, **kwargs)
+        return image
+
+
+
+class Wrap(Feature):
+
+    __property_verbosity__ = 2
+
+    def __init__(self, feature_1, feature_2, **kwargs): 
+        super().__init__(feature_1=feature_1, feature_2=feature_2)
+
+    def get(self, image, feature_1=None, feature_2=None, **kwargs):
+        image = feature_1.resolve(image, **feature_2.properties.current_value_dict(), **kwargs)
+        image = feature_2.resolve(image, **kwargs)
         return image
 
 
