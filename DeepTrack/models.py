@@ -1,4 +1,4 @@
-    from tensorflow.keras import models, layers, optimizers
+from tensorflow.keras import models, layers, optimizers
 from DeepTrack.losses import nd_mean_absolute_error
 import numpy as np
 

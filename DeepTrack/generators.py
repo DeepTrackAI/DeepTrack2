@@ -52,9 +52,6 @@ class Generator(keras.utils.Sequence):
             
         
 
-    '''
-        Defalt generator. This choses between available generators based on input. 
-    '''
     def generate(self,
                     features,
                     label_function,
