@@ -1,62 +1,102 @@
+''' Imaging features through optical systems
+
+Any feature can be viewed through an optical system. The current image
+will be regarded as a map of the complex field. 
+
+Contains
+--------
+Optics
+    Base abstract class for optical devices.
+
+OpticsBranch
+    Special feature for imaging features. 
+
+OpticalDevice
+    Implementation of Optics. Handles incoherent fields.
+
+'''
+
 import numpy as np
 from DeepTrack.features import Feature
-'''
-    An optical device that images a fourier representation of the field. 
+from DeepTrack.image import Image
 
-    Main responsibility is storing parameters of the optical system, as well
-    as imaging an intensity map.
-'''
+import matplotlib.pyplot as plt
+
 class Optics(Feature):
+    '''Abstract base class for optical devices
+    
+    '''
+    pass
 
+class OpticalDevice(Optics):
+    '''Optical device for incoherent light
 
-    def __call__(self, feature):
-        return feature + self
+    Stores optical parameters and convolves images with pupil functions.
+    Treats the input image as an incoherent field. The output image is
+    as such 
 
-        
-    def get(self, image, **kwargs):
-        mode = kwargs.get("mode", "incoherent")
-        
-        pupil = self.pupil(image.shape, **kwargs)
+    .. math :: |image|^2 * |pupil|^2
 
-        # If incoherent, get squared pupil
-        if mode == "incoherent":
-            psf = np.square(np.abs(np.fft.ifft2(pupil)))
-            pupil = np.fft.fft2(psf)
+    evaluated using the fourier transform. 
 
-        convolved_fourier_field = image * pupil
-        field = np.fft.ifft2(convolved_fourier_field)
-
-        # TODO: FFT does not propagate properties correctly
-        field.properties = convolved_fourier_field.properties
-
-        # If coherent, get squared field
-        if mode == "coherent":
-             field = np.square(np.abs(field))
-
-        return field
-
-
-class BaseOpticalDevice2D(Optics):
+    Parameters
+    ----------
+    NA 
+        The NA of the limiting aperatur
+    wavelength
+        The wavelength of the scattered light in meters
+    pixel_size
+        The pixel to meter conversion ratio
+    refractive_index_medium
+        The refractive index of the medium
+    defocus
+        The distance from the focal plane in meters
+    upscale
+        Upscales the pupil function for a more accurate result.
+    ROI
+        The region of the image to output (x,y,width,height). Default
+        None returns entire image.
+    '''
     def __init__(self,
                     NA=0.7,
                     wavelength=0.66e-6,
-                    refractive_index_medium=1.33,
                     pixel_size=0.1e-6,
+                    refractive_index_medium=1.33,
                     defocus=0,
                     upscale=2,
-                    mode="incoherent",
-                    ROI=(0,0)):
+                    ROI=None,
+                    **kwargs):
         
         super().__init__(
             NA=NA,
-            mode = mode,
-            upscale=upscale,
+            defocus=defocus,
             wavelength=wavelength,
             refractive_index_medium=refractive_index_medium,
             pixel_size=pixel_size,
-            ROI=ROI
+            upscale=upscale,
+            ROI=ROI,
+            **kwargs
         )
 
+    def get(self, image, **kwargs):
+        ''' Convolves the image with a pupil function
+        '''
+        
+        pupil = self.pupil(image.shape, **kwargs)
+        psf = np.square(np.abs(np.fft.ifft2(pupil)))
+        OTF = np.fft.fft2(psf)
+
+        fourier_field = np.fft.fft2(np.square(np.abs(image)))
+        convolved_fourier_field = fourier_field * OTF
+
+        # TODO: fft does not propagate properties correctly
+        field = Image(np.fft.ifft2(convolved_fourier_field))
+        field.properties = image.properties
+
+
+        # Discard remaining imaginary part (should be 0 up to rounding error)
+        field = np.real(field)
+        return field
 
     # TODO: Split into smaller functions
     def pupil(self, shape, 
@@ -66,8 +106,16 @@ class BaseOpticalDevice2D(Optics):
                 pixel_size=None,
                 defocus=None,
                 upscale=None,
-                mode=None,
-                ROI=None):
+                **kwargs):
+        ''' Calculates pupil function
+        
+        Parameters
+        ----------
+        shape
+            The shape of the pupil function
+        kwargs
+            The current values of the properties of the optical device
+        '''
 
         shape = np.array(shape) 
         upscaled_shape = shape*upscale
@@ -88,10 +136,8 @@ class BaseOpticalDevice2D(Optics):
 
 
         # Defocus
-        if defocus != 0:
-            z_shift = 2 * np.pi * refractive_index_medium/wavelength * (1 - NA**2 / refractive_index_medium**2 * RHO)**0.5 * pixel_size * defocus
-        else:
-            z_shift = 0
+        z_shift = 2 * np.pi * refractive_index_medium/wavelength * (1 - NA**2 / refractive_index_medium**2 * RHO)**0.5 * pixel_size * defocus
+
 
         # Downsample the upsampled pupil
         if upscale > 1:
@@ -105,9 +151,3 @@ class BaseOpticalDevice2D(Optics):
     
         return np.fft.fftshift(pupil)
 
-class ZernikeAberration:
-    def __init__(self,
-                    Z_index,
-                    Z_coefficient):
-        
-        assert len(Z_index) == len(Z_coefficient), "Z_index and Z_coefficient must have same length"
