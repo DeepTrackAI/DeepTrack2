@@ -54,7 +54,7 @@ class Generator(keras.utils.Sequence):
 
     def generate(self,
                     features,
-                    label_function,
+                    label_function = None,
                     shape=(64,64),
                     batch_size=1,
                     callbacks=None,
@@ -69,7 +69,8 @@ class Generator(keras.utils.Sequence):
             for _ in range(batch_size):
                 image = next(get_one)
                 batch.append(image)
-                labels.append(label_function(image))
+                if not label_function is None:
+                    labels.append(label_function(image))
 
             if shuffle_batch:
                 self.shuffle(batch,labels)
@@ -78,12 +79,16 @@ class Generator(keras.utils.Sequence):
             labels = np.array(labels)
 
             batch = np.expand_dims(batch, axis=-1)
-            yield batch, labels
+
+            if not label_function is None:
+                yield batch, labels
+            else: 
+                yield batch
 
         
     def shuffle(self,a,b):
         import random
-        assert len(a) == len(b)
+        # assert len(a) == len(b)
         start_state = random.getstate()
         random.shuffle(a)
         random.setstate(start_state)
@@ -97,4 +102,3 @@ class Generator(keras.utils.Sequence):
             yield self.get(shape, features)
                 
 
-    

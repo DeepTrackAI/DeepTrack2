@@ -96,6 +96,9 @@ class OpticalDevice(Optics):
 
         # Discard remaining imaginary part (should be 0 up to rounding error)
         field = np.real(field)
+
+        field = self.extract_roi(field, **kwargs)
+
         return field
 
     # TODO: Split into smaller functions
@@ -151,3 +154,11 @@ class OpticalDevice(Optics):
     
         return np.fft.fftshift(pupil)
 
+
+    def extract_roi(self, image, ROI=None, **kwargs):        
+        if ROI is None:
+            return image
+        
+        assert len(ROI) >= 4, "ROI should be at of length 4, got {0}".format(len(ROI)) 
+
+        return image[ROI[0]:ROI[2], ROI[1]:ROI[3]]

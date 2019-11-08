@@ -62,9 +62,10 @@ class Image(np.ndarray):
 
     def __new__(cls, input_array, properties=None):
         # Converts input to ndarray, and then to an Image
-        obj = np.asarray(input_array).view(cls)
+        obj = np.array(input_array).view(cls)
         if properties is None:
-            properties = []
+            # If input_array has properties attribute, retrieve a copy of it
+            properties = getattr(input_array, "properties", [])[:]
         obj.properties = properties
         return obj
 

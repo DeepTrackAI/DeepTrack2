@@ -71,7 +71,7 @@ class Feature(ABC):
 
     
     def __init__(self, **kwargs):
-        ''' Constructor
+        '''Constructor
         All keyword arguments passed to the base Feature class will be 
         wrapped as a Distribution, as such randomized during a update
         step.         
@@ -95,8 +95,16 @@ class Feature(ABC):
         **global_kwargs
         ):
 
+        # Ensure that image is of type Image
+        image = Image(image)
+
+        # Retrieve the keyword arguments of .get()
         feature_input = self.properties.current_value_dict()
+        # Add and update any global keyword arguments
         feature_input.update(global_kwargs)
+        # Call the _process_properties hook, default does nothing.
+        feature_input = self._process_properties(feature_input)
+
 
         image = self.get(image, **feature_input)
 
@@ -111,7 +119,6 @@ class Feature(ABC):
         self.has_updated_since_last_resolve = False
         return image
 
-
     def update(self):
         '''
         Updates the state of all properties.
@@ -120,6 +127,16 @@ class Feature(ABC):
             self.properties.update()
         self.has_updated_since_last_resolve = True
         return self
+
+
+    def _process_properties(self, propertydict):
+        '''Preprocess the input to the method .get()
+
+            Optional hook for subclasses to preprocess data before calling
+            the method .get()
+
+        '''
+        return propertydict
 
 
     def sample(self):
@@ -254,14 +271,4 @@ class Load(Feature):
             files =  os.listdir(dirname)
             pattern = os.path.basename(self.path)
             return [os.path.join(self.path,file) for file in files if os.path.isfile(os.path.join(self.path,file)) and re.match(pattern,file)]
-        
-# class Update(Feature):
-#     def __init__(rules, **kwargs):
-#         self.rules = rules
-#         super().__init__(**kwargs)
-    
-#     def __call__(F):
-#         return F + self
-
-#     def __resolve__(self, shape, **kwargs):
         

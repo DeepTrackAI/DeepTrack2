@@ -29,21 +29,19 @@ class Gaussian(Noise):
     sigma       
         The root of the variance of the distribution.
     '''
-    __name__ = "GaussianNoise"
     def __init__(self, mu=0, sigma=1, **kwargs):
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
-    def get(self, shape, Image, mu=0, sigma=1, **kwargs):
-        mu = np.ones(shape) * mu
-        sigma = np.ones(shape) * sigma
-        return Image + np.random.normal(mu, sigma)
+    def get(self, image, mu=0, sigma=1, **kwargs):
+        mu = np.ones(image.shape) * mu
+        sigma = np.ones(image.shape) * sigma
+        return image + np.random.normal(mu, sigma)
 
  
 
 class Offset(Noise):
-    __name__ = "OffsetNoise"
-    def get(self, Image, offset=0, **kwargs):  
-        return Image + offset
+    def get(self, image, offset=0, **kwargs):  
+        return image + offset
 
 
 class Poisson(Noise):
