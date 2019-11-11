@@ -45,9 +45,9 @@ class Offset(Noise):
 
 
 class Poisson(Noise):
-    def get(self, image, SNr=None, **kwargs):
+    def get(self, image, snr=None, **kwargs):
         peak = np.max(image)
-        rescale = SNr**2 / peak
+        rescale = snr**2 / peak
         noised_image = Image(np.random.poisson(image * rescale) / rescale)
         noised_image.properties = image.properties
         return noised_image
