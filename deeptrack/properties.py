@@ -1,7 +1,7 @@
 '''Tools to manage the properties of features
 
 This module contains:
-    
+
 The class `Property`, which represents the values of a property of a feature.
 A Property can be represented by:
 * A constant (inizialization with, e.g., a number, a tuple)
@@ -9,29 +9,29 @@ A Property can be represented by:
 * A discrete random variable (inizialization with, e.g., a list, a dictionary)
 * A continuous random variable (inizialization with, e.g., a function)
 
-The class `PropertyDict`, which is a dictionary with each element a Property. 
-The class provides utility functions to update, sample, clear and retrieve 
-properties. 
+The class `PropertyDict`, which is a dictionary with each element a Property.
+The class provides utility functions to update, sample, clear and retrieve
+properties.
 
 A series of standard functions:
-    
+
 random_uniform(scale) -> function
     Uniform random distribution
 
 '''
-
-from deeptrack.utils import isiterable, hasmethod
 import numpy as np
+from deeptrack.utils import isiterable, hasmethod
+
 
 
 # CLASSES
 
 class Property:
     r'''Represents a property of a feature
-    
+
     The class Property wraps an input, which is treated
-    internally as a sampling rule. This sampling rule is used 
-    to update the value of the property of the feature. 
+    internally as a sampling rule. This sampling rule is used
+    to update the value of the property of the feature.
     The sampling rule can be, for example:
     * A constant (initialization with, e.g., a number, a tuple)
     * A sequence of variables (initialization with, e.g., a generator)
@@ -40,8 +40,8 @@ class Property:
 
     Parameters
     ----------
-    sampling_rule : any        
-        Defines the sampling rule to update the value of the feature property. 
+    sampling_rule : any
+        Defines the sampling rule to update the value of the feature property.
         See method `sample()` for how different sampling rules are sampled.
 
     Attributes
@@ -50,10 +50,10 @@ class Property:
         The sampling rule to update the value of the feature property.
     current_value : any
         The current value obtained from the last call to the sampling rule.
-    
+
     Examples
     --------
-    When the sampling rule is a number, 
+    When the sampling rule is a number,
     the current value is always the number itself:
 
     >>> D = Property(1)
@@ -63,7 +63,7 @@ class Property:
     >>> D.current_value
     1
 
-    When the sampling rule is a list, 
+    When the sampling rule is a list,
     the current value is one of the elements of the list:
 
     >>> np.random.seed(0)
@@ -74,11 +74,11 @@ class Property:
     2 #random
     >>> D.update()
     >>> D.current_value
-    1 #random        
+    1 #random
 
     '''
 
-    def __init__(self, sampling_rule:any):
+    def __init__(self, sampling_rule: any):
         self.sampling_rule = sampling_rule
     
 
@@ -97,28 +97,30 @@ class Property:
 
         self._current_value
 
+
     @current_value.setter
     def current_value(self, updated_current_value):
         self._current_value = updated_current_value
-    
+
+
     @current_value.getter
     def current_value(self):
         if not hasattr(self, "_current_value"):
             self.update() # generate new current value
         return self._current_value
 
-    
+
     def update(self) -> 'Property':
         r'''Updates the current value
 
-        The method `update()` sets the property `current_value` 
+        The method `update()` sets the property `current_value`
         as the output of the method `sample()`.
 
         Returns
         -------
         Property
             Returns itself.
-             
+
         '''
         self.current_value = self.sample()
 
@@ -138,7 +140,7 @@ class Property:
         2. If the rule is a ``dict``, the ``dict`` is copied and any value
             with has a callable sample method is replaced with the
             output of that call.
-        3. If the rule is a ``list`` or a 1-dimensional ``ndarray``, return 
+        3. If the rule is a ``list`` or a 1-dimensional ``ndarray``, return
         4. If the rule is an ``iterable``, return the next output.
         5. If the rule is callable, return the output of a call with
             no input parameters.
@@ -148,8 +150,8 @@ class Property:
         Returns
         -------
         any
-            A sampled instance of the `sampling_rule`. 
-            
+            A sampled instance of the `sampling_rule`.
+
         '''
 
         sampling_rule = self.sampling_rule
@@ -169,21 +171,21 @@ class Property:
                 else:
                     out[key] = val
             return out
-        
+
         elif (isinstance(sampling_rule, list) or
               isinstance(sampling_rule, np.ndarray) and sampling_rule.ndim == 1):
             # If it's either a list or a 1-dimensional ndarray,
             # return a random element from the list. 
             return np.random.choice(sampling_rule)
-        
+
         elif isiterable(sampling_rule):
             # If it's iterable, return the next value
             return next(sampling_rule)
-            
+  
         elif callable(sampling_rule):
             # If it's a function, call it without parameters
             return sampling_rule()
-        
+
         else:
             # Else, assume it's elementary.
             return self.sampling_rule
@@ -193,7 +195,7 @@ class Property:
 
 class PropertyDict(dict):
     ''' Dictionary with Property elements
-    
+
     A dictionary of properties. It provides utility functions to update, 
     sample, reset and retrieve properties.
 
@@ -201,12 +203,9 @@ class PropertyDict(dict):
     ----------
     *args, **kwargs
         Arguments used to initialize a dict
-    
+
     '''
 
-    def __init__(self, *args, **kwargs):
-         super().__init__(*args, **kwargs)
-    
 
     def current_value_dict(self) -> dict:
         ''' Retrieves the current value of all properties as a dictionary
@@ -215,7 +214,7 @@ class PropertyDict(dict):
         -------
         dict
             A dictionary with the current value of all properties
-        
+
         '''
 
         current_value_dict = {}
@@ -247,7 +246,7 @@ class PropertyDict(dict):
         Returns
         -------
         dict
-            A dictionary with each key-value pair the result of a 
+            A dictionary with each key-value pair the result of a
             `sample()` call on the property with the same key.
 
         '''
@@ -259,7 +258,7 @@ class PropertyDict(dict):
         return sample_dict
 
 
-    
+   
 
 
 
@@ -273,14 +272,14 @@ def random_uniform(scale) -> types.FunctionType:
 
     Parameters
     ----------
-    scale          
+    scale    
         The maximum of the distribution
-        
+
     Returns
     -------
     function
-        function that returns a ndarray of the same shape 
-        as the input argument `scale`, where each number 
+        function that returns a ndarray of the same shape
+        as the input argument `scale`, where each number
         uniformly distributed between 0 and `scale`
 
     '''

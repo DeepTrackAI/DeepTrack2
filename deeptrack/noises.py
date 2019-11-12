@@ -1,20 +1,18 @@
-
+import numpy as np
 from deeptrack.features import Feature
 from deeptrack.image import Image
-import abc
-import numpy as np
+
 
 
 
 class Noise(Feature):
     '''Base class for the Noise object.
 
-    Creates an image of desired shape, as defined by the implementing class. 
+    Creates an image of desired shape, as defined by the implementing class.
 
-    Basic operators are overloaded to easily allow it to be added to an image 
+    Basic operators are overloaded to easily allow it to be added to an image
     without explicity generating a new image each time
     '''
-    pass
 
 
 
@@ -24,9 +22,9 @@ class Gaussian(Noise):
 
     Parameters
     ----------
-    mu         
+    mu
         The mean of the distribution.
-    sigma       
+    sigma
         The root of the variance of the distribution.
     '''
     def __init__(self, mu=0, sigma=1, **kwargs):
@@ -37,10 +35,10 @@ class Gaussian(Noise):
         sigma = np.ones(image.shape) * sigma
         return image + np.random.normal(mu, sigma)
 
- 
+
 
 class Offset(Noise):
-    def get(self, image, offset=0, **kwargs):  
+    def get(self, image, offset=0, **kwargs):
         return image + offset
 
 

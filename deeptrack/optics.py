@@ -1,7 +1,7 @@
 ''' Imaging features through optical systems
 
 Any feature can be viewed through an optical system. The current image
-will be regarded as a map of the complex field. 
+will be regarded as a map of the complex field.
 
 Contains
 --------
@@ -9,7 +9,7 @@ Optics
     Base abstract class for optical devices.
 
 OpticsBranch
-    Special feature for imaging features. 
+    Special feature for imaging features.
 
 OpticalDevice
     Implementation of Optics. Handles incoherent fields.
@@ -20,28 +20,25 @@ import numpy as np
 from deeptrack.features import Feature
 from deeptrack.image import Image
 
-import matplotlib.pyplot as plt
-
 class Optics(Feature):
     '''Abstract base class for optical devices
-    
+
     '''
-    pass
 
 class OpticalDevice(Optics):
     '''Optical device for incoherent light
 
     Stores optical parameters and convolves images with pupil functions.
     Treats the input image as an incoherent field. The output image is
-    as such 
+    as such,
 
     .. math :: |image|^2 * |pupil|^2
 
-    evaluated using the fourier transform. 
+    evaluated using the fourier transform.
 
     Parameters
     ----------
-    NA 
+    NA
         The NA of the limiting aperatur
     wavelength
         The wavelength of the scattered light in meters
@@ -58,15 +55,15 @@ class OpticalDevice(Optics):
         None returns entire image.
     '''
     def __init__(self,
-                    NA=0.7,
-                    wavelength=0.66e-6,
-                    pixel_size=0.1e-6,
-                    refractive_index_medium=1.33,
-                    defocus=0,
-                    upscale=2,
-                    ROI=None,
-                    **kwargs):
-        
+                 NA=0.7,
+                 wavelength=0.66e-6,
+                 pixel_size=0.1e-6,
+                 refractive_index_medium=1.33,
+                 defocus=0,
+                 upscale=2,
+                 ROI=None,
+                 **kwargs):
+
         super().__init__(
             NA=NA,
             defocus=defocus,
@@ -81,7 +78,7 @@ class OpticalDevice(Optics):
     def get(self, image, **kwargs):
         ''' Convolves the image with a pupil function
         '''
-        
+
         pupil = self.pupil(image.shape, **kwargs)
         psf = np.square(np.abs(np.fft.ifft2(pupil)))
         OTF = np.fft.fft2(psf)
@@ -102,17 +99,17 @@ class OpticalDevice(Optics):
 
         return field
 
-    # TODO: Split into smaller functions
-    def pupil(self, shape, 
-                NA=None,
-                wavelength=None,
-                refractive_index_medium=None,
-                pixel_size=None,
-                defocus=None,
-                upscale=None,
-                **kwargs):
+
+    def pupil(self, shape,
+              NA=None,
+              wavelength=None,
+              refractive_index_medium=None,
+              pixel_size=None,
+              defocus=None,
+              upscale=None,
+              **kwargs):
         ''' Calculates pupil function
-        
+
         Parameters
         ----------
         shape
@@ -131,7 +128,7 @@ class OpticalDevice(Optics):
 
         x = (np.linspace(-(upscaled_shape[0] / 2), upscaled_shape[0] / 2 - 1, upscaled_shape[0])) / x_radius + 1e-8
         y = (np.linspace(-(upscaled_shape[1] / 2), upscaled_shape[1] / 2 - 1, upscaled_shape[1])) / y_radius + 1e-8
-        
+
         W, H = np.meshgrid(x, y)
         RHO = W**2 + H**2
 
@@ -147,19 +144,19 @@ class OpticalDevice(Optics):
         if upscale > 1:
             pupil = np.reshape(pupil, (shape[0], upscale, shape[1], upscale)).mean(axis=(3,1))
             z_shift = np.reshape(z_shift, (shape[0], upscale, shape[1], upscale)).mean(axis=(3,1))
-        
+
 
         pupil = pupil*np.exp(1j * z_shift)
-        
+
         pupil[np.isnan(pupil)] = 0
-    
+
         return np.fft.fftshift(pupil)
 
 
-    def extract_roi(self, image, ROI=None, **kwargs):        
+    def extract_roi(self, image, ROI=None, **kwargs):
         if ROI is None:
             return image
-        
-        assert len(ROI) >= 4, "ROI should be at of length 4, got {0}".format(len(ROI)) 
+
+        assert len(ROI) >= 4, "ROI should be at of length 4, got {0}".format(len(ROI))
 
         return image[ROI[0]:ROI[2], ROI[1]:ROI[3]]
