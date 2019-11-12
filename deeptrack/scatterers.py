@@ -17,7 +17,7 @@ class PointParticle
 
 '''
 
-from DeepTrack.features import Feature
+from deeptrack.features import Feature
 from scipy import special
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,7 +30,17 @@ class Scatterer(Feature):
 
     A scatterer defines the scattered complex field at each pixel. 
     ''' 
-    pass
+    def __init__(self, position_unit="meter", **kwargs):
+        super().__init__(position_unit=position_unit, **kwargs)
+
+
+    def _process_properties(self, properties):
+        if "position" in properties: 
+            if properties["position_unit"] == "meter":
+                properties["position"] = np.array(properties["position"]) / properties["pixel_size"]
+
+        return properties
+
 
 
 
@@ -63,12 +73,12 @@ class PointParticle(Scatterer):
         yp = position[0] - y0
         x0 = int(np.floor(position[1]))
         xp = position[1] - x0
-
+        # TODO: make more readable. 
         try:
-            image[x0, y0] = intensity * ((1 - xp) * (1 - yp))
-            image[x0 + 1,y0] = intensity * (xp * (1 - yp))
-            image[x0, y0 + 1] = intensity * ((1 - xp) * yp)
-            image[x0 + 1, y0 + 1] = intensity * (xp * yp)
+            image[x0, y0] = np.sqrt(intensity * ((1 - xp) * (1 - yp)))
+            image[x0 + 1,y0] = np.sqrt(intensity * (xp * (1 - yp)))
+            image[x0, y0 + 1] = np.sqrt(intensity * ((1 - xp) * yp))
+            image[x0 + 1, y0 + 1] = np.sqrt(intensity * (xp * yp))
         except IndexError:
             pass
 

@@ -1,6 +1,6 @@
 
-from DeepTrack.features import Feature
-from DeepTrack.image import Image
+from deeptrack.features import Feature
+from deeptrack.image import Image
 import abc
 import numpy as np
 
@@ -29,27 +29,25 @@ class Gaussian(Noise):
     sigma       
         The root of the variance of the distribution.
     '''
-    __name__ = "GaussianNoise"
     def __init__(self, mu=0, sigma=1, **kwargs):
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
-    def get(self, shape, Image, mu=0, sigma=1, **kwargs):
-        mu = np.ones(shape) * mu
-        sigma = np.ones(shape) * sigma
-        return Image + np.random.normal(mu, sigma)
+    def get(self, image, mu=0, sigma=1, **kwargs):
+        mu = np.ones(image.shape) * mu
+        sigma = np.ones(image.shape) * sigma
+        return image + np.random.normal(mu, sigma)
 
  
 
 class Offset(Noise):
-    __name__ = "OffsetNoise"
-    def get(self, Image, offset=0, **kwargs):  
-        return Image + offset
+    def get(self, image, offset=0, **kwargs):  
+        return image + offset
 
 
 class Poisson(Noise):
-    def get(self, image, SNr=None, **kwargs):
+    def get(self, image, snr=None, **kwargs):
         peak = np.max(image)
-        rescale = SNr**2 / peak
+        rescale = snr**2 / peak
         noised_image = Image(np.random.poisson(image * rescale) / rescale)
         noised_image.properties = image.properties
         return noised_image

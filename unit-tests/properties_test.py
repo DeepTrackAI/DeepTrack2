@@ -4,7 +4,7 @@
 
 import unittest
 import numpy as np
-from DeepTrack.distributions import Distribution, random_uniform
+from deeptrack.distributions import Distribution, random_uniform
 
 class TestDistributions(unittest.TestCase):
 

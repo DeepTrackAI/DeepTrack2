@@ -20,7 +20,7 @@ random_uniform(scale) -> function
 
 '''
 
-from DeepTrack.utils import isiterable, hasmethod
+from deeptrack.utils import isiterable, hasmethod
 import numpy as np
 
 

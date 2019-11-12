@@ -17,8 +17,8 @@ OpticalDevice
 '''
 
 import numpy as np
-from DeepTrack.features import Feature
-from DeepTrack.image import Image
+from deeptrack.features import Feature
+from deeptrack.image import Image
 
 import matplotlib.pyplot as plt
 
@@ -87,6 +87,7 @@ class OpticalDevice(Optics):
         OTF = np.fft.fft2(psf)
 
         fourier_field = np.fft.fft2(np.square(np.abs(image)))
+
         convolved_fourier_field = fourier_field * OTF
 
         # TODO: fft does not propagate properties correctly
@@ -96,6 +97,9 @@ class OpticalDevice(Optics):
 
         # Discard remaining imaginary part (should be 0 up to rounding error)
         field = np.real(field)
+
+        field = self.extract_roi(field, **kwargs)
+
         return field
 
     # TODO: Split into smaller functions
@@ -151,3 +155,11 @@ class OpticalDevice(Optics):
     
         return np.fft.fftshift(pupil)
 
+
+    def extract_roi(self, image, ROI=None, **kwargs):        
+        if ROI is None:
+            return image
+        
+        assert len(ROI) >= 4, "ROI should be at of length 4, got {0}".format(len(ROI)) 
+
+        return image[ROI[0]:ROI[2], ROI[1]:ROI[3]]

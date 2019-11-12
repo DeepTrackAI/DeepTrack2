@@ -1,8 +1,8 @@
 from tensorflow.keras import models, layers, optimizers
-from DeepTrack.losses import nd_mean_absolute_error
+from deeptrack.losses import nd_mean_absolute_error
 import numpy as np
 
-def DeepTrackNetwork(
+def convolutional(
     input_shape = (51, 51, 1),
     conv_layers_dimensions = (16, 32, 64, 128), 
     dense_layers_dimensions = (32, 32),
@@ -72,10 +72,11 @@ def DeepTrackNetwork(
 
 def unet(
     input_shape=(256, 256, 1),
-    conv_layers_dimensions=[16, 32, 64, 128],
-    base_conv_layers_dimensions=[128, 128],
-    output_conv_layer_dimensions=[16, 16],
+    conv_layers_dimensions=(16, 32, 64, 128),
+    base_conv_layers_dimensions=(128, 128),
+    output_conv_layers_dimensions=(16, 16),
     steps_per_pooling=1,
+    number_of_outputs=1 ,
     layer_function=None,
     loss=nd_mean_absolute_error
     ):
@@ -114,7 +115,7 @@ def unet(
             layer = layer_function(conv_layer_dimension)(layer)
 
     # Output step
-    for conv_layer_dimension in output_conv_layer_dimensions:
+    for conv_layer_dimension in output_conv_layers_dimensions:
         layer = layer_function(conv_layer_dimension)(layer)
 
     layer = layers.Conv2D(

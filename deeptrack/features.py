@@ -1,5 +1,5 @@
-from DeepTrack.properties import Property, PropertyDict
-from DeepTrack.image import Image
+from deeptrack.properties import Property, PropertyDict
+from deeptrack.image import Image
 from abc import ABC, abstractmethod
 import os
 import re
@@ -71,7 +71,7 @@ class Feature(ABC):
 
     
     def __init__(self, **kwargs):
-        ''' Constructor
+        '''Constructor
         All keyword arguments passed to the base Feature class will be 
         wrapped as a Distribution, as such randomized during a update
         step.         
@@ -95,9 +95,18 @@ class Feature(ABC):
         **global_kwargs
         ):
 
-        feature_input = self.properties.current_value_dict()
-        feature_input.update(global_kwargs)
+        # Ensure that image is of type Image
+        image = Image(image)
 
+
+        # Get the input arguments to the method .get()
+        feature_input = self.properties.current_value_dict()
+        # Add and update any global keyword arguments
+        feature_input.update(global_kwargs)
+        # Call the _process_properties hook, default does nothing.
+        feature_input = self._process_properties(feature_input)
+
+        
         image = self.get(image, **feature_input)
 
         # Add current_properties to the image the class attribute __property_verbosity__
@@ -107,10 +116,8 @@ class Feature(ABC):
         if type(self).__property_verbosity__ <= property_verbosity:
             feature_input["name"] = type(self).__name__
             image.append(feature_input)
-        
         self.has_updated_since_last_resolve = False
         return image
-
 
     def update(self):
         '''
@@ -120,6 +127,31 @@ class Feature(ABC):
             self.properties.update()
         self.has_updated_since_last_resolve = True
         return self
+
+    def plot(self, shape=(128,128), **kwargs):
+        ''' Resolves the image and shows the result
+
+        Parameters
+        ----------
+        shape
+            shape of the image to be drawn
+        kwargs
+            keyword arguments passed to the method plt.imshow()
+        '''
+        import matplotlib.pyplot as plt
+        input_image = np.zeros(shape)
+        output_image = self.resolve(input_image)
+        plt.imshow(output_image, **kwargs)
+        plt.show()
+
+    def _process_properties(self, propertydict):
+        '''Preprocess the input to the method .get()
+
+        Optional hook for subclasses to preprocess data before calling
+        the method .get()
+
+        '''
+        return propertydict
 
 
     def sample(self):
@@ -254,14 +286,4 @@ class Load(Feature):
             files =  os.listdir(dirname)
             pattern = os.path.basename(self.path)
             return [os.path.join(self.path,file) for file in files if os.path.isfile(os.path.join(self.path,file)) and re.match(pattern,file)]
-        
-# class Update(Feature):
-#     def __init__(rules, **kwargs):
-#         self.rules = rules
-#         super().__init__(**kwargs)
-    
-#     def __call__(F):
-#         return F + self
-
-#     def __resolve__(self, shape, **kwargs):
         
