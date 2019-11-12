@@ -17,8 +17,8 @@ OpticalDevice
 '''
 
 import numpy as np
-from DeepTrack.features import Feature
-from DeepTrack.image import Image
+from deeptrack.features import Feature
+from deeptrack.image import Image
 
 import matplotlib.pyplot as plt
 
@@ -87,6 +87,7 @@ class OpticalDevice(Optics):
         OTF = np.fft.fft2(psf)
 
         fourier_field = np.fft.fft2(np.square(np.abs(image)))
+
         convolved_fourier_field = fourier_field * OTF
 
         # TODO: fft does not propagate properties correctly

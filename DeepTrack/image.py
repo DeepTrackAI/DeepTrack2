@@ -11,7 +11,7 @@ class Image(np.ndarray):
     `properties` as a list of dictionaries, in the same order that the 
     features were evaluated. 
 
-    This is used thoughout the DeepTrack model to store and extract 
+    This is used thoughout the deeptrack model to store and extract 
     information about how an image was generated. Examples include
 
     * Features may depend on earlier features in the feature series.
@@ -82,10 +82,10 @@ class Image(np.ndarray):
             input_args = args[:func.nin]
             
             for arg in input_args:
-                
-                props = getattr(arg, "properties", [])
-                for p in props:
-                    result.append(p)
+                if not arg is self:
+                    props = getattr(arg, "properties", [])
+                    for p in props:
+                        result.append(p)
         return result
 
 
@@ -95,21 +95,23 @@ class Image(np.ndarray):
 
         self.properties = getattr(self, "properties", [])
 
+        
         props = getattr(obj, "properties", [])
-        for property in props:
-            self.append(property) 
+        if not props is self.properties:
+            for property in props:
+                self.append(property) 
 
 
-    def __reduce__(self):
-        # Get the parent's __reduce__ tuple
-        pickled_state = super(Image, self).__reduce__()
-        # Create our own tuple to pass to __setstate__, appending properties
-        new_state = pickled_state[2] + (self.properties,)
-        # Return a tuple that replaces the parent's __setstate__ tuple with our own
-        return (pickled_state[0], pickled_state[1], new_state)
+    # def __reduce__(self):
+    #     # Get the parent's __reduce__ tuple
+    #     pickled_state = super(Image, self).__reduce__()
+    #     # Create our own tuple to pass to __setstate__, appending properties
+    #     new_state = pickled_state[2] + (self.properties,)
+    #     # Return a tuple that replaces the parent's __setstate__ tuple with our own
+    #     return (pickled_state[0], pickled_state[1], new_state)
 
 
-    def __setstate__(self, state):
-        self.properties = state[-1]  # Set the peroperties attribute
-        # Call the parent's __setstate__ with the other tuple elements.
-        super(Image, self).__setstate__(state[0:-1])
+    # def __setstate__(self, state):
+    #     self.properties = state[-1]  # Set the peroperties attribute
+    #     # Call the parent's __setstate__ with the other tuple elements.
+    #     super(Image, self).__setstate__(state[0:-1])

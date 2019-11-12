@@ -1,6 +1,6 @@
 
-from DeepTrack.features import Feature
-from DeepTrack.image import Image
+from deeptrack.features import Feature
+from deeptrack.image import Image
 import abc
 import numpy as np
 

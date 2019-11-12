@@ -1,5 +1,5 @@
-from DeepTrack.properties import Property, PropertyDict
-from DeepTrack.image import Image
+from deeptrack.properties import Property, PropertyDict
+from deeptrack.image import Image
 from abc import ABC, abstractmethod
 import os
 import re
@@ -97,7 +97,6 @@ class Feature(ABC):
 
         # Ensure that image is of type Image
         image = Image(image)
-
         # Retrieve the keyword arguments of .get()
         feature_input = self.properties.current_value_dict()
         # Add and update any global keyword arguments
@@ -105,7 +104,7 @@ class Feature(ABC):
         # Call the _process_properties hook, default does nothing.
         feature_input = self._process_properties(feature_input)
 
-
+        
         image = self.get(image, **feature_input)
 
         # Add current_properties to the image the class attribute __property_verbosity__
@@ -115,7 +114,6 @@ class Feature(ABC):
         if type(self).__property_verbosity__ <= property_verbosity:
             feature_input["name"] = type(self).__name__
             image.append(feature_input)
-        
         self.has_updated_since_last_resolve = False
         return image
 

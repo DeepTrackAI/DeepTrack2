@@ -17,7 +17,7 @@ class PointParticle
 
 '''
 
-from DeepTrack.features import Feature
+from deeptrack.features import Feature
 from scipy import special
 import numpy as np
 import matplotlib.pyplot as plt
