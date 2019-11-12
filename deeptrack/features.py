@@ -89,6 +89,7 @@ class Feature(ABC):
     def get(self, image, **kwargs):
         pass
 
+
     def resolve(
         self, 
         image, 
@@ -119,6 +120,7 @@ class Feature(ABC):
         self.has_updated_since_last_resolve = False
         return image
 
+
     def update(self):
         '''
         Updates the state of all properties.
@@ -127,6 +129,7 @@ class Feature(ABC):
             self.properties.update()
         self.has_updated_since_last_resolve = True
         return self
+
 
     def plot(self, shape=(128,128), **kwargs):
         ''' Resolves the image and shows the result
@@ -143,6 +146,7 @@ class Feature(ABC):
         output_image = self.resolve(input_image)
         plt.imshow(output_image, **kwargs)
         plt.show()
+
 
     def _process_properties(self, propertydict):
         '''Preprocess the input to the method .get()
