@@ -97,7 +97,9 @@ class Feature(ABC):
 
         # Ensure that image is of type Image
         image = Image(image)
-        # Retrieve the keyword arguments of .get()
+
+
+        # Get the input arguments to the method .get()
         feature_input = self.properties.current_value_dict()
         # Add and update any global keyword arguments
         feature_input.update(global_kwargs)
@@ -126,12 +128,27 @@ class Feature(ABC):
         self.has_updated_since_last_resolve = True
         return self
 
+    def plot(self, shape=(128,128), **kwargs):
+        ''' Resolves the image and shows the result
+
+        Parameters
+        ----------
+        shape
+            shape of the image to be drawn
+        kwargs
+            keyword arguments passed to the method plt.imshow()
+        '''
+        import matplotlib.pyplot as plt
+        input_image = np.zeros(shape)
+        output_image = self.resolve(input_image)
+        plt.imshow(output_image, **kwargs)
+        plt.show()
 
     def _process_properties(self, propertydict):
         '''Preprocess the input to the method .get()
 
-            Optional hook for subclasses to preprocess data before calling
-            the method .get()
+        Optional hook for subclasses to preprocess data before calling
+        the method .get()
 
         '''
         return propertydict
