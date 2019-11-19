@@ -241,7 +241,7 @@ class Duplicate(Feature):
             **kwargs)
 
 
-    def get(self, image, features=None, **kwargs):
+    def get(self, image, features=None, num_duplicates=None, **kwargs):
         for feature in features:
             image = feature.resolve(image, **kwargs)
         return image
