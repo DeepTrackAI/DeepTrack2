@@ -15,12 +15,6 @@ _COMPATIBLE_LOSS_FUNCTIONS = [
 ]
 
 
-
-for keras_loss_function in _COMPATIBLE_LOSS_FUNCTIONS:
-    deeptrack_loss_function = flatten(keras_loss_function)
-    globals()[deeptrack_loss_function.__name__] = deeptrack_loss_function
-
-
 # LOSS WRAPPERS
 def flatten(func):
     # Flattens T and P before calling
@@ -41,11 +35,14 @@ def sigmoid(func):
     return wrapper
 
 
-
-
-
 def weighted_crossentropy(weight=(1, 1), eps=1e-4):
     def unet_crossentropy(T, P):
 
         return -K.mean(weight[0] * T * K.log(P + eps) + weight[1] * (1 - T) * K.log(1 - P + eps)) / (weight[0] + weight[1])
     return unet_crossentropy
+
+
+# Wrap standard keras loss function with flatten.
+for keras_loss_function in _COMPATIBLE_LOSS_FUNCTIONS:
+    deeptrack_loss_function = flatten(keras_loss_function)
+    globals()[deeptrack_loss_function.__name__] = deeptrack_loss_function
