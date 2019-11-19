@@ -132,13 +132,18 @@ class OpticalDevice(Optics):
         W, H = np.meshgrid(x, y)
         RHO = W**2 + H**2
 
-        # Pupil magnitude. TODO: Throws warning
-        pupil = (RHO < 1) / ((1 - NA**2 / refractive_index_medium**2 * RHO)**0.25) 
+        pupil_correction = (1 - NA**2 / refractive_index_medium**2 * RHO)
+        correction_is_positive = pupil_correction > 0
+        pupil_correction[~correction_is_positive] = 0
+
+        pupil = (RHO < 1) * 1.0
+        pupil[correction_is_positive] /= pupil_correction[correction_is_positive]**0.25
 
 
         # Defocus
-        z_shift = 2 * np.pi * refractive_index_medium/wavelength * (1 - NA**2 / refractive_index_medium**2 * RHO)**0.5 * pixel_size * defocus
-
+        z_shift = 2 * np.pi * refractive_index_medium / wavelength * pixel_size * defocus
+        
+        z_shift *= pupil_correction**0.5
 
         # Downsample the upsampled pupil
         if upscale > 1:
@@ -149,6 +154,7 @@ class OpticalDevice(Optics):
         pupil = pupil*np.exp(1j * z_shift)
 
         pupil[np.isnan(pupil)] = 0
+        pupil[np.isinf(pupil)] = 0
 
         return np.fft.fftshift(pupil)
 
