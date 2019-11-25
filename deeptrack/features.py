@@ -72,6 +72,7 @@ class Feature(ABC):
         all zeros is used.
     '''
 
+    # TODO: clarify verbosity role
     __property_verbosity__ = 1
 
 
@@ -118,12 +119,15 @@ class Feature(ABC):
 
         # Add current_properties to the image the class attribute __property_verbosity__
         # is not larger than the passed property_verbosity keyword
+        # TODO: This (verbosity) is not clear
         property_verbosity = global_kwargs.get("property_verbosity", 1)
 
         if type(self).__property_verbosity__ <= property_verbosity:
             feature_input["name"] = type(self).__name__
             image.append(feature_input)
-        self.has_updated_since_last_resolve = False
+            
+        self.has_updated_since_last_resolve = False # TODO: move inside if?
+        
         return image
 
 
@@ -133,7 +137,9 @@ class Feature(ABC):
         '''
         if not self.has_updated_since_last_resolve:
             self.properties.update()
-        self.has_updated_since_last_resolve = True
+
+        self.has_updated_since_last_resolve = True # TODO: move inside if?
+        
         return self
 
 

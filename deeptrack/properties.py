@@ -264,6 +264,8 @@ class PropertyDict(dict):
 
 # FUNCTIONS
 
+# TODO: Not sure that we need these functions (they don't seem to be in use in the rest of the code.
+
 import types
 
 # TODO: allow for min/max definition
