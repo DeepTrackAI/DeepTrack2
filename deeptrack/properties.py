@@ -13,11 +13,6 @@ The class `PropertyDict`, which is a dictionary with each element a Property.
 The class provides utility functions to update, sample, clear and retrieve
 properties.
 
-A series of standard functions:
-
-random_uniform(scale) -> function
-    Uniform random distribution
-
 '''
 import numpy as np
 from deeptrack.utils import isiterable, hasmethod
@@ -256,38 +251,3 @@ class PropertyDict(dict):
             sample_dict[key] = property.sample()
 
         return sample_dict
-
-
-   
-
-
-
-# FUNCTIONS
-
-# TODO: Not sure that we need these functions (they don't seem to be in use in the rest of the code.
-
-import types
-
-# TODO: allow for min/max definition
-def random_uniform(scale) -> types.FunctionType:
-    ''' Uniform random distribution
-
-    Parameters
-    ----------
-    scale    
-        The maximum of the distribution
-
-    Returns
-    -------
-    function
-        function that returns a ndarray of the same shape
-        as the input argument `scale`, where each number
-        uniformly distributed between 0 and `scale`
-
-    '''
-
-    scale = np.array(scale)
-    def distribution():
-        return np.random.rand(*scale.shape) * scale
-
-    return distribution
