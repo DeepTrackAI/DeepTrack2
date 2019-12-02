@@ -74,8 +74,8 @@ class Feature(ABC):
 
     # Class attribute which defines if its properties should be added to the list
     # of properties used to generate the image. 1 will be included by default,
-    # while larger values are not.
-    __property_verbosity__ = 1
+    # while smaller values are not.
+    __is_memorable__ = 1
 
 
     def __init__(self, **kwargs):
@@ -119,13 +119,13 @@ class Feature(ABC):
 
         image = self.get(image, **feature_input)
 
-        # Retrieve the property verbosity limit from the global keyword
+        # Retrieve the memory level from the global keyword
         # arguments. 
-        property_verbosity = global_kwargs.get("property_verbosity", 1)
+        memory_level = global_kwargs.get("memory_level", 1)
 
-        # If the class attribute __property_verbosity__ is larger than the
-        # property verbosity limit, do not append feature_input to the image
-        if type(self).__property_verbosity__ <= property_verbosity:
+        # If the class attribute __is_memorable__ is larger than the
+        # memory level, do not append feature_input to the image
+        if type(self).__is_memorable__ >= memory_level:
             feature_input["name"] = type(self).__name__
             image.append(feature_input)
             
@@ -198,7 +198,7 @@ class Feature(ABC):
 
 class Branch(Feature):
 
-    __property_verbosity__ = 2
+    __is_memorable__ = 2
 
 
     def __init__(self, F1, F2, **kwargs):
@@ -214,7 +214,7 @@ class Branch(Feature):
 
 class Probability(Feature):
 
-    __property_verbosity__ = 2
+    __is_memorable__ = 2
 
 
     def __init__(self, feature, probability, **kwargs):
@@ -239,7 +239,7 @@ class Probability(Feature):
 
 class Duplicate(Feature):
 
-    __property_verbosity__ = 2
+    __is_memorable__ = 2
 
 
     def __init__(self, feature, num_duplicates, **kwargs):
@@ -259,7 +259,7 @@ class Duplicate(Feature):
 
 class Wrap(Feature):
 
-    __property_verbosity__ = 2
+    __is_memorable__ = 2
 
     def __init__(self, feature_1, feature_2, **kwargs): 
         super().__init__(feature_1=feature_1, feature_2=feature_2)
