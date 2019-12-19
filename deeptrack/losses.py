@@ -14,7 +14,6 @@ _COMPATIBLE_LOSS_FUNCTIONS = [
     losses.mape
 ]
 
-
 # LOSS WRAPPERS
 def flatten(func):
     # Flattens T and P before calling
@@ -46,3 +45,4 @@ def weighted_crossentropy(weight=(1, 1), eps=1e-4):
 for keras_loss_function in _COMPATIBLE_LOSS_FUNCTIONS:
     deeptrack_loss_function = flatten(keras_loss_function)
     globals()[deeptrack_loss_function.__name__] = deeptrack_loss_function
+
