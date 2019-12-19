@@ -72,11 +72,10 @@ class Feature(ABC):
         used as the input to the .get() method, otherwise an Image of
         all zeros is used.
     '''
-
+    
     __property_verbosity__ = 1
     __list_merge_strategy__ = MERGE_STRATEGY_OVERRIDE
     __distributed__ = True
-    
 
 
     def __init__(self, *args, **kwargs):
@@ -146,6 +145,7 @@ class Feature(ABC):
             return image_list[0]
         else:
             return image_list
+
 
 
     def update(self):
@@ -243,6 +243,7 @@ class StructuralFeature(Feature):
     __property_verbosity__ = 2
     __distributed__ = False
 
+
 class Branch(StructuralFeature):
 
     def __init__(self, F1, F2, *args, **kwargs):
@@ -257,6 +258,7 @@ class Branch(StructuralFeature):
 
 
 class Probability(StructuralFeature):
+
 
     def __init__(self, feature, probability, *args, **kwargs):
         super().__init__(
@@ -282,6 +284,7 @@ class Probability(StructuralFeature):
 class Duplicate(StructuralFeature):
 
     def __init__(self, feature, num_duplicates, *args, **kwargs):
+
         self.feature = feature
         super().__init__(
             *args,
