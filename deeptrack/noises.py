@@ -27,8 +27,8 @@ class Gaussian(Noise):
     sigma
         The root of the variance of the distribution.
     '''
-    def __init__(self, mu=0, sigma=1, **kwargs):
-        super().__init__(mu=mu, sigma=sigma, **kwargs)
+    def __init__(self, *args, mu=0, sigma=1, **kwargs):
+        super().__init__(*args, mu=mu, sigma=sigma, **kwargs)
 
     def get(self, image, mu=0, sigma=1, **kwargs):
         mu = np.ones(image.shape) * mu
@@ -44,6 +44,7 @@ class Offset(Noise):
 
 class Poisson(Noise):
     def get(self, image, snr=None, **kwargs):
+        image[image < 0] = 0
         peak = np.max(image)
         rescale = snr**2 / peak
         noised_image = Image(np.random.poisson(image * rescale) / rescale)

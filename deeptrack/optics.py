@@ -20,12 +20,180 @@ import numpy as np
 from deeptrack.features import Feature
 from deeptrack.image import Image
 
+from scipy.interpolate import RectBivariateSpline
+
+
+class Microscope(Feature):
+
+    __distributed__ = False
+
+    def __init__(self, sample, objective, *args, **kwargs):
+        super().__init__(*args, sample=sample, objective=objective, **kwargs)
+
+    def get(self, image, sample=None, objective=None):
+
+        list_of_scatterers = sample.resolve(**objective.properties.current_value_dict())
+        
+        sample_volume, limits = create_volume(list_of_scatterers)
+        
+
+
+        sample_volume = Image(sample_volume)
+        sample_volume.append({"limits": limits, "metric": "quantum_yield"})
+
+        for scatterer in list_of_scatterers:
+            sample_volume.properties += scatterer.properties
+
+        imaged_sample = objective.resolve(sample_volume)
+
+
+        # Merge with input
+        if not image:
+            return imaged_sample
+
+        if not isinstance(image, list):
+            image = [image]
+        
+        for i in range(len(image)):
+            image[i] += imaged_sample
+            image[i].properties += imaged_sample.properties
+
+        
+        return image
+
+
 class Optics(Feature):
-    '''Abstract base class for optical devices
 
-    '''
+    def __init__(self,
+                *args,
+                 NA=0.7,
+                 wavelength=0.66e-6,
+                 magnification=1,
+                 resolution=(1e-6, 1e-6, 1e-6),
+                 refractive_index_medium=1.33,
+                 upscale=2,
+                 padding=(10, 10, 10, 10),
+                 output_region=(None, None, None, None),
+                 **kwargs):
 
-class OpticalDevice(Optics):
+        auxiliary_dict = {"voxel_size": self.get_voxel_size}
+
+        super().__init__(
+            auxiliary_dict,
+            *args,
+            NA=NA,
+            wavelength=wavelength,
+            refractive_index_medium=refractive_index_medium,
+            magnification=magnification,
+            resolution=resolution,
+            upscale=upscale,
+            padding=padding,
+            output_region=output_region,
+            **kwargs
+        )
+
+    def get_voxel_size(self):
+
+        resolution = self.properties["resolution"].current_value
+        magnification = self.properties["magnification"].current_value
+
+        if not isinstance(resolution, (list, tuple, np.ndarray)) or len(resolution) == 1:
+            resolution = (resolution,) * 3
+        elif len(resolution) == 2:
+            resolution = (*resolution, np.min(resolution))
+
+        return np.array(resolution) / magnification
+
+    def pupil(self, shape,
+              NA=None,
+              wavelength=None,
+              refractive_index_medium=None,
+              voxel_size=None,
+              defocus=None,
+              upscale=None,
+              **kwargs):
+        ''' Calculates pupil function
+
+        Parameters
+        ----------
+        shape
+            The shape of the pupil function
+        kwargs
+            The current values of the properties of the optical device
+        '''
+        shape = np.array(shape) 
+
+        upscaled_shape = shape*upscale
+        # Pupil radius
+        R = NA / wavelength * np.array(voxel_size)[:2]
+
+        x_radius = R[0] * upscaled_shape[0]
+        y_radius = R[1] * upscaled_shape[1]
+
+        x = (np.linspace(-(upscaled_shape[0] / 2), upscaled_shape[0] / 2 - 1, upscaled_shape[0])) / x_radius + 1e-8
+        y = (np.linspace(-(upscaled_shape[1] / 2), upscaled_shape[1] / 2 - 1, upscaled_shape[1])) / y_radius + 1e-8
+
+        W, H = np.meshgrid(y, x)
+        RHO = W**2 + H**2
+        RHO[RHO > 1] = 1
+        pupil = (RHO < 1) * 1.0
+        
+        # Defocus
+        z_shift = (2 * np.pi * refractive_index_medium / wavelength * voxel_size[2] * defocus
+                   * np.sqrt(1 - (NA / refractive_index_medium * RHO)**2))
+
+        # Downsample the upsampled pupil
+        if upscale > 1:
+            pupil = np.reshape(pupil, (shape[0], upscale, shape[1], upscale)).mean(axis=(3, 1))
+            z_shift = np.reshape(z_shift, (shape[0], upscale, shape[1], upscale)).mean(axis=(3, 1))
+
+        pupil = pupil * np.exp(1j * z_shift)
+
+        pupil[np.isnan(pupil)] = 0
+
+        pupil[np.isinf(pupil)] = 0
+        
+        return pupil
+
+    def _pad_volume(self, volume, limits=None, padding=None, output_region=None, **kwargs):
+        
+        new_limits = np.array(limits)
+        output_region = np.array(output_region) 
+
+        new_limits[0, 0] -= padding[0]
+        new_limits[0, 1] += padding[1]
+        new_limits[1, 0] -= padding[2]
+        new_limits[1, 1] += padding[3]
+
+        # Replace None entries with current limit
+        output_region[0] = output_region[0] or new_limits[0, 0]
+        output_region[1] = output_region[1] or new_limits[0, 1]
+        output_region[2] = output_region[2] or new_limits[1, 0]
+        output_region[3] = output_region[3] or new_limits[1, 1]
+
+        for i in range(2):
+            new_limits[i, :] = (
+                np.min([new_limits[i, 0], output_region[i]]),
+                np.max([new_limits[i, 1], output_region[i + 2]]),
+                )
+
+        new_volume = np.zeros(np.diff(new_limits, axis=1)[:, 0].astype(np.int32))
+
+        old_region = limits - new_limits
+        new_volume[
+            old_region[0, 0]:old_region[0, 0] + limits[0, 1] - limits[0, 0],
+            old_region[1, 0]:old_region[1, 0] + limits[1, 1] - limits[1, 0],
+            old_region[2, 0]:old_region[2, 0] + limits[2, 1] - limits[2, 0]
+        ] = volume
+
+        return new_volume, new_limits
+
+    def __call__(self, sample):
+        return Microscope(sample, self)
+
+
+
+class Fluorescence(Optics):
     '''Optical device for incoherent light
 
     Stores optical parameters and convolves images with pupil functions.
@@ -42,7 +210,7 @@ class OpticalDevice(Optics):
         The NA of the limiting aperatur
     wavelength
         The wavelength of the scattered light in meters
-    pixel_size
+    voxel_size
         The pixel to meter conversion ratio
     refractive_index_medium
         The refractive index of the medium
@@ -54,115 +222,153 @@ class OpticalDevice(Optics):
         The region of the image to output (x,y,width,height). Default
         None returns entire image.
     '''
-    def __init__(self,
-                 NA=0.7,
-                 wavelength=0.66e-6,
-                 pixel_size=0.1e-6,
-                 refractive_index_medium=1.33,
-                 defocus=0,
-                 upscale=2,
-                 ROI=None,
-                 **kwargs):
-
-        super().__init__(
-            NA=NA,
-            defocus=defocus,
-            wavelength=wavelength,
-            refractive_index_medium=refractive_index_medium,
-            pixel_size=pixel_size,
-            upscale=upscale,
-            ROI=ROI,
-            **kwargs
-        )
-
-    def get(self, image, **kwargs):
+    
+    def get(self, illuminated_volume, **kwargs):
         ''' Convolves the image with a pupil function
         '''
-
-        pupil = self.pupil(image.shape, **kwargs)
-        psf = np.square(np.abs(np.fft.ifft2(pupil)))
-        OTF = np.fft.fft2(psf)
-
-        fourier_field = np.fft.fft2(np.square(np.abs(image)))
-
-        convolved_fourier_field = fourier_field * OTF
-
-        # TODO: fft does not propagate properties correctly
-        field = Image(np.fft.ifft2(convolved_fourier_field))
-        field.properties = image.properties
-
-
-        # Discard remaining imaginary part (should be 0 up to rounding error)
-        field = np.real(field)
-
-        field = self.extract_roi(field, **kwargs)
-
-        return field
-
-
-    def pupil(self, shape,
-              NA=None,
-              wavelength=None,
-              refractive_index_medium=None,
-              pixel_size=None,
-              defocus=None,
-              upscale=None,
-              **kwargs):
-        ''' Calculates pupil function
-
-        Parameters
-        ----------
-        shape
-            The shape of the pupil function
-        kwargs
-            The current values of the properties of the optical device
-        '''
-
-        shape = np.array(shape) 
-        upscaled_shape = shape*upscale
-
-        # Pupil radius
-        R = NA / wavelength * pixel_size
-        x_radius = R * upscaled_shape[0]
-        y_radius = R * upscaled_shape[1]
-
-        x = (np.linspace(-(upscaled_shape[0] / 2), upscaled_shape[0] / 2 - 1, upscaled_shape[0])) / x_radius + 1e-8
-        y = (np.linspace(-(upscaled_shape[1] / 2), upscaled_shape[1] / 2 - 1, upscaled_shape[1])) / y_radius + 1e-8
-
-        W, H = np.meshgrid(x, y)
-        RHO = W**2 + H**2
-
-        pupil_correction = (1 - NA**2 / refractive_index_medium**2 * RHO)
-        correction_is_positive = pupil_correction > 0
-        pupil_correction[~correction_is_positive] = 0
-
-        pupil = (RHO < 1) * 1.0
-        pupil[correction_is_positive] /= pupil_correction[correction_is_positive]**0.25
-
-
-        # Defocus
-        z_shift = 2 * np.pi * refractive_index_medium / wavelength * pixel_size * defocus
         
-        z_shift *= pupil_correction**0.5
+        limits = get_property(illuminated_volume, "limits")
+        padded_volume, limits = self._pad_volume(illuminated_volume, limits=limits, **kwargs)
 
-        # Downsample the upsampled pupil
-        if upscale > 1:
-            pupil = np.reshape(pupil, (shape[0], upscale, shape[1], upscale)).mean(axis=(3,1))
-            z_shift = np.reshape(z_shift, (shape[0], upscale, shape[1], upscale)).mean(axis=(3,1))
+        z_limits = limits[2, :]
 
+        output_image = Image(np.zeros((*padded_volume.shape[0:2], 1)))
 
-        pupil = pupil*np.exp(1j * z_shift)
-
-        pupil[np.isnan(pupil)] = 0
-        pupil[np.isinf(pupil)] = 0
-
-        return np.fft.fftshift(pupil)
+        index_iterator = range(padded_volume.shape[2])
+        z_iterator = np.linspace(z_limits[0], z_limits[1], num=padded_volume.shape[2], endpoint=False)
 
 
-    def extract_roi(self, image, ROI=None, **kwargs):
-        if ROI is None:
-            return image
+        for i, z in zip(index_iterator, z_iterator):
+            image = padded_volume[:, :, i]
 
-        assert len(ROI) >= 4, "ROI should be at of length 4, got {0}".format(len(ROI))
+            if (image == 0).all():
+                continue
+            pupil = self.pupil(image.shape, defocus=z, **kwargs)
+            psf = np.square(np.abs(np.fft.ifft2(pupil)))
+        
+            optical_transfer_function = np.fft.fft2(psf)
 
-        return image[ROI[0]:ROI[2], ROI[1]:ROI[3]]
+            fourier_field = np.fft.fft2(image)
+            convolved_fourier_field = fourier_field * optical_transfer_function
+
+            # TODO: fft does not propagate properties correctly
+            field = Image(np.fft.ifft2(convolved_fourier_field))
+
+            # Discard remaining imaginary part (should be 0 up to rounding error)
+            field = np.real(field)
+
+            output_image[:, :, 0] += field
+        output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+
+        output_region[0] = None if output_region[0] is None else int(output_region[0] - limits[0, 0])
+        output_region[1] = None if output_region[1] is None else int(output_region[1] - limits[1, 0])
+        output_region[2] = None if output_region[2] is None else int(output_region[2] - limits[0, 0])
+        output_region[3] = None if output_region[3] is None else int(output_region[3] - limits[1, 0])
+        output_image = output_image[output_region[0]:output_region[2], output_region[1]:output_region[3]]
+        output_image.properties = illuminated_volume.properties
+        return output_image
+
+
+    
+
+# HELPER FUNCTIONS
+def get_property(feature, key, default=None):
+    for property in feature.properties:
+        if key in property:
+            return property[key]
+    return default
+
+
+def get_position(feature, mode="center", return_z=False):
+
+    num_outputs = 2 + return_z
+
+    if mode == "corner":
+        shift = (np.array(feature.shape) - 1)/ 2
+    else:
+        shift = np.array((num_outputs))
+
+    position = get_property(feature, "position")
+
+    if position is None:
+        return position
+
+    if len(position) == 3:
+        if return_z:
+            return position - shift
+        else:
+            return position[0:2] - shift[0:2]
+
+    elif len(position) == 2:
+        if return_z:
+            return np.array([position[0], position[1], get_property(feature, "z", 0)]) - shift
+        else:
+            return position - shift[0:2]
+
+    return position
+
+def create_volume(list_of_scatterers, **kwargs):
+    
+    if not isinstance(list_of_scatterers, list):
+        list_of_scatterers = [list_of_scatterers]
+    volume = np.zeros((1, 1, 1))
+
+    # x, y, z limits of the volume
+    limits = np.array(((0, 1), (0, 1), (0, 1)))
+    
+    for scatterer in list_of_scatterers:
+
+        
+
+        padded_scatterer = Image(np.pad(scatterer, [(2, 2), (2, 2), (0, 0)], 'constant', constant_values=0))
+        padded_scatterer.properties = scatterer.properties
+        scatterer = padded_scatterer
+
+        shape = np.array(scatterer.shape)
+
+
+        position = get_position(scatterer, mode="corner", return_z=True)
+
+        if position is None:
+            RuntimeWarning("Optical device received a feature without a position property. It will be ignored.")
+            continue
+
+        x_pos = position[0] + np.arange(scatterer.shape[0]) 
+        y_pos = position[1] + np.arange(scatterer.shape[1]) 
+
+        target_x_pos = np.round(x_pos)
+        target_y_pos = np.round(y_pos)
+
+        for z in range(scatterer.shape[2]):
+            scatterer_spline = RectBivariateSpline(x_pos, y_pos, scatterer[:, :, z])
+            scatterer[1:-1, 1:-1, z] = scatterer_spline(target_x_pos[1:-1], target_y_pos[1:-1])
+
+        position = np.round(position)
+        new_limits = np.zeros(limits.shape, dtype=np.int32)
+        for i in range(3):
+            new_limits[i, :] = (
+                np.min([limits[i, 0], position[i]]),
+                np.max([limits[i, 1], position[i] + shape[i]]),
+                )
+            
+        if not (np.array(new_limits) == np.array(limits)).all():
+            new_volume = np.zeros(np.diff(new_limits, axis=1)[:, 0].astype(np.int32))
+            old_region = limits - new_limits
+            new_volume[
+                old_region[0, 0]:old_region[0, 0] + limits[0, 1] - limits[0, 0],
+                old_region[1, 0]:old_region[1, 0] + limits[1, 1] - limits[1, 0],
+                old_region[2, 0]:old_region[2, 0] + limits[2, 1] - limits[2, 0]
+            ] = volume
+            volume = new_volume
+            limits = new_limits
+
+        within_volume_position = position - limits[:, 0]
+
+        # NOTE: Maybe shouldn't be additive.
+        volume[
+            int(within_volume_position[0]):int(within_volume_position[0] + shape[0]),
+            int(within_volume_position[1]):int(within_volume_position[1] + shape[1]),
+            int(within_volume_position[2]):int(within_volume_position[2] + shape[2])
+            ] += scatterer
+
+    return volume, limits

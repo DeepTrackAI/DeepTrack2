@@ -9,7 +9,8 @@ from deeptrack.image import Image
 from deeptrack.properties import Property, PropertyDict
 
 
-
+MERGE_STRATEGY_OVERRIDE = 0
+MERGE_STRATEGY_APPEND = 1
 
 
 class Feature(ABC):
@@ -71,22 +72,26 @@ class Feature(ABC):
         used as the input to the .get() method, otherwise an Image of
         all zeros is used.
     '''
+    
+    __property_verbosity__ = 1
+    __list_merge_strategy__ = MERGE_STRATEGY_OVERRIDE
+    __distributed__ = True
 
-    # Class attribute which defines if its properties should be added to the list
-    # of properties used to generate the image. 1 will be included by default,
-    # while smaller values are not.
-    __is_memorable__ = 1
 
-
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         '''Constructor
         All keyword arguments passed to the base Feature class will be
         wrapped as a Distribution, as such randomized during a update
         step.
         '''
         properties = getattr(self, "properties", {})
-        for key, value in kwargs.items():
-            properties[key] = Property(value)  
+
+        all_dicts = (kwargs,) + args
+
+        for property_dict in all_dicts:
+            for key, value in property_dict.items():
+                properties[key] = Property(value)
+
         self.properties = PropertyDict(**properties)
 
         # Set up flags
@@ -102,11 +107,11 @@ class Feature(ABC):
 
     def resolve(
             self,
-            image,
+            image_list=None,
             **global_kwargs):
 
-        # Ensure that image is of type Image
-        image = Image(image)
+        # Ensure that image is a list
+        image_list = self._format_input(image_list, **global_kwargs)
 
 
         # Get the input arguments to the method .get()
@@ -117,21 +122,30 @@ class Feature(ABC):
         feature_input = self._process_properties(feature_input)
 
 
-        image = self.get(image, **feature_input)
+        new_list = self._process_and_get(image_list, **feature_input)
 
-        # Retrieve the memory level from the global keyword
-        # arguments. 
-        memory_level = global_kwargs.get("memory_level", 1)
-
-        # If the class attribute __is_memorable__ is larger than the
-        # memory level, do not append feature_input to the image
-        if type(self).__is_memorable__ >= memory_level:
-            feature_input["name"] = type(self).__name__
-            image.append(feature_input)
-            
-        self.has_updated_since_last_resolve = False # TODO: move inside if?
         
-        return image
+        # Add current_properties to the image the class attribute __property_verbosity__
+        # is not larger than the passed property_verbosity keyword
+        property_verbosity = global_kwargs.get("property_verbosity", 1)
+        feature_input["name"] = type(self).__name__
+        if self.__property_verbosity__ <= property_verbosity:
+            for image in new_list:
+                    image.append(feature_input)
+
+        # Merge input and new_list
+        if self.__list_merge_strategy__ == MERGE_STRATEGY_OVERRIDE:
+            image_list = new_list
+        elif self.__list_merge_strategy__ == MERGE_STRATEGY_APPEND:
+            image_list = image_list + new_list
+
+        self.has_updated_since_last_resolve = False
+
+        if len(image_list) == 1:
+            return image_list[0]
+        else:
+            return image_list
+
 
 
     def update(self):
@@ -140,13 +154,25 @@ class Feature(ABC):
         '''
         if not self.has_updated_since_last_resolve:
             self.properties.update()
-
-        self.has_updated_since_last_resolve = True # TODO: move inside if?
-        
+        self.has_updated_since_last_resolve = True
         return self
 
 
-    def plot(self, shape=(128, 128), **kwargs):
+    def _process_and_get(self, image_list, **feature_input):
+
+        if self.__distributed__:
+            return [Image(self.get(image, **feature_input)) for image in image_list]
+        else:
+            new_list = self.get(image_list, **feature_input)
+
+            if not isinstance(new_list, list):
+                new_list = [Image(new_list)]
+            
+            return new_list
+
+
+
+    def plot(self, input_image=None, **kwargs):
         ''' Resolves the image and shows the result
 
         Parameters
@@ -157,11 +183,27 @@ class Feature(ABC):
             keyword arguments passed to the method plt.imshow()
         '''
         import matplotlib.pyplot as plt
-        input_image = np.zeros(shape)
+
+        if input_image is not None:
+            input_image = [Image(input_image)]
+
         output_image = self.resolve(input_image)
-        plt.imshow(output_image, **kwargs)
+        plt.imshow(output_image[:, :, 0], **kwargs)
         plt.show()
 
+
+    def _format_input(self, image_list, **kwargs):
+        
+        if image_list is None:
+            if self.__distributed__:
+                return [None]
+            else:
+                return []
+        elif not isinstance(image_list, list):
+            return [image_list]
+        else:
+            return image_list
+            
 
     def _process_properties(self, propertydict):
         '''Preprocess the input to the method .get()
@@ -196,13 +238,16 @@ class Feature(ABC):
         return Wrap(other, self)
 
 
-class Branch(Feature):
 
-    __is_memorable__ = 2
+class StructuralFeature(Feature):
+    __property_verbosity__ = 2
+    __distributed__ = False
 
 
-    def __init__(self, F1, F2, **kwargs):
-        super().__init__(feature_1=F1, feature_2=F2, **kwargs)
+class Branch(StructuralFeature):
+
+    def __init__(self, F1, F2, *args, **kwargs):
+        super().__init__(*args, feature_1=F1, feature_2=F2, **kwargs)
 
 
     def get(self, image, feature_1=None, feature_2=None, **kwargs):
@@ -212,14 +257,13 @@ class Branch(Feature):
 
 
 
-class Probability(Feature):
-
-    __is_memorable__ = 2
+class Probability(StructuralFeature):
 
 
-    def __init__(self, feature, probability, **kwargs):
+    def __init__(self, feature, probability, *args, **kwargs):
         super().__init__(
-            feature = feature,
+            *args,
+            feature=feature,
             probability=probability,
             random_number=np.random.rand,
             **kwargs)
@@ -237,34 +281,33 @@ class Probability(Feature):
         return image
 
 
-class Duplicate(Feature):
+class Duplicate(StructuralFeature):
 
-    __is_memorable__ = 2
+    def __init__(self, feature, num_duplicates, *args, **kwargs):
 
-
-    def __init__(self, feature, num_duplicates, **kwargs):
         self.feature = feature
         super().__init__(
+            *args,
             num_duplicates=num_duplicates, #py > 3.6 dicts are ordered by insert time.
             features=lambda: [copy.deepcopy(feature).update() for _ in range(self.properties["num_duplicates"].current_value)],
             **kwargs)
 
 
+
     def get(self, image, features=None, num_duplicates=None, **kwargs):
+
         for feature in features:
             image = feature.resolve(image, **kwargs)
         return image
 
 
 
-class Wrap(Feature):
+class Wrap(StructuralFeature):
 
-    __is_memorable__ = 2
-
-    def __init__(self, feature_1, feature_2, **kwargs): 
+    def __init__(self, feature_1, feature_2, *args, **kwargs): 
         super().__init__(feature_1=feature_1, feature_2=feature_2)
 
-    def get(self, image, feature_1=None, feature_2=None, **kwargs):
+    def get(self, image, *args, feature_1=None, feature_2=None, **kwargs):
         image = feature_1.resolve(image, **feature_2.properties.current_value_dict(), **kwargs)
         image = feature_2.resolve(image, **kwargs)
         return image
