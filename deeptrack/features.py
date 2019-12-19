@@ -72,6 +72,9 @@ class Feature(ABC):
         all zeros is used.
     '''
 
+    # Class attribute which defines if its properties should be added to the list
+    # of properties used to generate the image. 1 will be included by default,
+    # while larger values are not.
     __property_verbosity__ = 1
 
 
@@ -116,14 +119,18 @@ class Feature(ABC):
 
         image = self.get(image, **feature_input)
 
-        # Add current_properties to the image the class attribute __property_verbosity__
-        # is not larger than the passed property_verbosity keyword
+        # Retrieve the property verbosity limit from the global keyword
+        # arguments. 
         property_verbosity = global_kwargs.get("property_verbosity", 1)
 
+        # If the class attribute __property_verbosity__ is larger than the
+        # property verbosity limit, do not append feature_input to the image
         if type(self).__property_verbosity__ <= property_verbosity:
             feature_input["name"] = type(self).__name__
             image.append(feature_input)
-        self.has_updated_since_last_resolve = False
+            
+        self.has_updated_since_last_resolve = False # TODO: move inside if?
+        
         return image
 
 
@@ -133,7 +140,9 @@ class Feature(ABC):
         '''
         if not self.has_updated_since_last_resolve:
             self.properties.update()
-        self.has_updated_since_last_resolve = True
+
+        self.has_updated_since_last_resolve = True # TODO: move inside if?
+        
         return self
 
 
