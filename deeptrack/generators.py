@@ -26,7 +26,7 @@ class Generator(keras.utils.Sequence):
     '''
 
 
-    def get(self, shape, features: Feature or List[Feature]) -> Image:
+    def get(self, features: Feature or List[Feature]) -> Image:
         '''
         Resolves a single set of images given an input set of features before
         clearing the cache.
@@ -38,22 +38,21 @@ class Generator(keras.utils.Sequence):
         if isinstance(features, List):
             for feature in features:
                 feature.update()
-            return [feature.resolve(Image(np.zeros(shape))) for feature in reversed(features)]
+            return [feature.resolve() for feature in reversed(features)]
 
         else:
             features.update()
-            return features.resolve(Image(np.zeros(shape)))
+            return features.resolve()
 
 
 
     def generate(self,
                  features,
                  label_function=None,
-                 shape=(64, 64),
                  batch_size=1,
                  shuffle_batch=True):
 
-        get_one = self._get_from_map(shape, features)
+        get_one = self._get_from_map(features)
         while True:
             batch = []
             labels = []
@@ -70,8 +69,6 @@ class Generator(keras.utils.Sequence):
             batch = np.array(batch)
             labels = np.array(labels)
 
-            batch = np.expand_dims(batch, axis=-1)
-
             if not label_function is None:
                 yield batch, labels
             else: 
@@ -86,6 +83,6 @@ class Generator(keras.utils.Sequence):
         random.shuffle(y)
 
 
-    def _get_from_map(self, shape, features):
+    def _get_from_map(self, features):
         while True:
-            yield self.get(shape, features)
+            yield self.get(features)
