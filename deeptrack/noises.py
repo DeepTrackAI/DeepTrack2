@@ -16,6 +16,12 @@ class Noise(Feature):
 
 
 
+class Offset(Noise):
+    def get(self, image, offset=0, **kwargs):
+        return image + offset
+
+
+    
 class Gaussian(Noise):
     '''Adds gaussian noise to image
     Implementation of the Noise class to generate IID gaussian pixels.
@@ -33,13 +39,9 @@ class Gaussian(Noise):
     def get(self, image, mu=0, sigma=1, **kwargs):
         mu = np.ones(image.shape) * mu
         sigma = np.ones(image.shape) * sigma
-        return image + np.random.normal(mu, sigma)
+        noisy_image = image + np.random.normal(mu, sigma)
+        return noisy_image
 
-
-
-class Offset(Noise):
-    def get(self, image, offset=0, **kwargs):
-        return image + offset
 
 
 class Poisson(Noise):
@@ -47,6 +49,6 @@ class Poisson(Noise):
         image[image < 0] = 0
         peak = np.max(image)
         rescale = snr**2 / peak
-        noised_image = Image(np.random.poisson(image * rescale) / rescale)
-        noised_image.properties = image.properties
-        return noised_image
+        noisy_image = Image(np.random.poisson(image * rescale) / rescale)
+        noisy_image.properties = image.properties
+        return noisy_image
