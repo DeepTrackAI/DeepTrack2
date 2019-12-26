@@ -92,11 +92,9 @@ class Property:
 
         self._current_value
 
-
     @current_value.setter
     def current_value(self, updated_current_value):
         self._current_value = updated_current_value
-
 
     @current_value.getter
     def current_value(self):
