@@ -45,3 +45,10 @@ def isiterable(obj: any) -> bool:
         field.
     '''
     return hasattr(obj, "__next__")
+
+
+def as_list(obj): 
+    try:
+        return list(obj)
+    except TypeError:
+        return [obj]

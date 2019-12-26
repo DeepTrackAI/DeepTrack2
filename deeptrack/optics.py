@@ -19,6 +19,7 @@ OpticalDevice
 import numpy as np
 from deeptrack.features import Feature
 from deeptrack.image import Image
+from deeptrack.utils import as_list
 
 from scipy.interpolate import RectBivariateSpline
 
@@ -27,24 +28,26 @@ class Microscope(Feature):
 
     __distributed__ = False
 
-    def __init__(self, sample, objective, *args, **kwargs):
-        super().__init__(*args, sample=sample, objective=objective, **kwargs)
+    def __init__(self, sample, objective, pupil, *args, **kwargs):
+        super().__init__(*args, sample=sample, objective=objective, pupil=pupil, **kwargs)
 
-    def get(self, image, sample=None, objective=None):
+    def get(self, image, sample=None, objective=None, pupil=None):
 
         list_of_scatterers = sample.resolve(**objective.properties.current_value_dict())
+        if not isinstance(list_of_scatterers, list):
+            list_of_scatterers = [list_of_scatterers]
         
         sample_volume, limits = create_volume(list_of_scatterers)
         
 
 
         sample_volume = Image(sample_volume)
-        sample_volume.append({"limits": limits, "metric": "quantum_yield"})
+        sample_volume.append({"limits": limits, "metric": "quantum_yield", "name": "Volume"})
 
         for scatterer in list_of_scatterers:
             sample_volume.properties += scatterer.properties
 
-        imaged_sample = objective.resolve(sample_volume)
+        imaged_sample = objective.resolve(sample_volume, pupil=pupil)
 
 
         # Merge with input
@@ -58,7 +61,6 @@ class Microscope(Feature):
             image[i] += imaged_sample
             image[i].properties += imaged_sample.properties
 
-        
         return image
 
 
@@ -74,6 +76,7 @@ class Optics(Feature):
                  upscale=2,
                  padding=(10, 10, 10, 10),
                  output_region=(None, None, None, None),
+                 pupil=None,
                  **kwargs):
 
         auxiliary_dict = {"voxel_size": self.get_voxel_size}
@@ -89,6 +92,7 @@ class Optics(Feature):
             upscale=upscale,
             padding=padding,
             output_region=output_region,
+            pupil=pupil,
             **kwargs
         )
 
@@ -109,8 +113,9 @@ class Optics(Feature):
               wavelength=None,
               refractive_index_medium=None,
               voxel_size=None,
-              defocus=None,
+              defocus=None, 
               upscale=None,
+              pupil=None,
               **kwargs):
         ''' Calculates pupil function
 
@@ -136,7 +141,7 @@ class Optics(Feature):
         W, H = np.meshgrid(y, x)
         RHO = W**2 + H**2
         RHO[RHO > 1] = 1
-        pupil = (RHO < 1) * 1.0
+        pupil_function = (RHO < 1) * 1.0
         
         # Defocus
         z_shift = (2 * np.pi * refractive_index_medium / wavelength * voxel_size[2] * defocus
@@ -145,16 +150,21 @@ class Optics(Feature):
 
         # Downsample the upsampled pupil
         if upscale > 1:
-            pupil = np.reshape(pupil, (shape[0], upscale, shape[1], upscale)).mean(axis=(3, 1))
+            pupil_function = np.reshape(pupil_function, (shape[0], upscale, shape[1], upscale)).mean(axis=(3, 1))
             z_shift = np.reshape(z_shift, (shape[0], upscale, shape[1], upscale)).mean(axis=(3, 1))
 
-        pupil = pupil * np.exp(1j * z_shift)
+        pupil_function = pupil_function * np.exp(1j * z_shift)
 
-        pupil[np.isnan(pupil)] = 0
+        pupil_function[np.isnan(pupil_function)] = 0
+        pupil_function[np.isinf(pupil_function)] = 0
 
-        pupil[np.isinf(pupil)] = 0
+        if isinstance(pupil, Feature):
+            pupil_function = pupil.resolve(pupil_function)
+        elif isinstance(pupil, np.ndarray):
+            pupil_function *= pupil
         
-        return pupil
+        return pupil_function
+
 
     def _pad_volume(self, volume, limits=None, padding=None, output_region=None, **kwargs):
         
@@ -189,8 +199,8 @@ class Optics(Feature):
 
         return new_volume, new_limits
 
-    def __call__(self, sample):
-        return Microscope(sample, self)
+    def __call__(self, sample, pupil=None):
+        return Microscope(sample, self, pupil)
 
 
 
@@ -244,8 +254,8 @@ class Fluorescence(Optics):
 
             if (image == 0).all():
                 continue
-            pupil = self.pupil(image.shape, defocus=z, **kwargs)
-            psf = np.square(np.abs(np.fft.ifft2(pupil)))
+            pupil = Image(self.pupil(image.shape, defocus=z, **kwargs))
+            psf = np.square(np.abs(np.fft.ifft2(np.fft.fftshift(pupil))))
         
             optical_transfer_function = np.fft.fft2(psf)
 
@@ -266,11 +276,9 @@ class Fluorescence(Optics):
         output_region[2] = None if output_region[2] is None else int(output_region[2] - limits[0, 0])
         output_region[3] = None if output_region[3] is None else int(output_region[3] - limits[1, 0])
         output_image = output_image[output_region[0]:output_region[2], output_region[1]:output_region[3]]
-        output_image.properties = illuminated_volume.properties
+        output_image.properties = illuminated_volume.properties + pupil.properties
         return output_image
 
-
-    
 
 # HELPER FUNCTIONS
 def get_property(feature, key, default=None):
@@ -307,6 +315,7 @@ def get_position(feature, mode="center", return_z=False):
             return position - shift[0:2]
 
     return position
+
 
 def create_volume(list_of_scatterers, **kwargs):
     

@@ -123,8 +123,7 @@ class Feature(ABC):
 
 
         new_list = self._process_and_get(image_list, **feature_input)
-
-        
+ 
         # Add current_properties to the image the class attribute __property_verbosity__
         # is not larger than the passed property_verbosity keyword
         property_verbosity = global_kwargs.get("property_verbosity", 1)

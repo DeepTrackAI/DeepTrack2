@@ -117,12 +117,12 @@ class Property:
             Returns itself.
 
         '''
-        self.current_value = self.sample()
+        self.current_value = self.sample(self.sampling_rule)
 
         return self
 
 
-    def sample(self):
+    def sample(self, sampling_rule):
         r'''Samples the sampling rule
 
         Returns a sampled instance of the `sampling_rule` field.
@@ -149,8 +149,6 @@ class Property:
 
         '''
 
-        sampling_rule = self.sampling_rule
-
         if hasmethod(sampling_rule, "sample"):
             # If the ruleset itself implements a sample method,
             # call it instead.
@@ -161,17 +159,15 @@ class Property:
             # element being sampled from the original dict.
             out = {}
             for key, val in self.sampling_rule.items():
-                if hasmethod(val, 'sample'):
-                    out[key] = val.sample()
-                else:
-                    out[key] = val
+                    out[key] = self.sample(val)
             return out
 
-        elif (isinstance(sampling_rule, list) or
-              isinstance(sampling_rule, np.ndarray) and sampling_rule.ndim == 1):
-            # If it's either a list or a 1-dimensional ndarray,
-            # return a random element from the list. 
-            return np.random.choice(sampling_rule)
+        elif isinstance(sampling_rule, list):
+            return [self.sample(item) for item in sampling_rule]
+
+        elif isinstance(sampling_rule, (tuple, np.ndarray)):
+            # tuple and ndarrays are elementary
+            return sampling_rule
 
         elif isiterable(sampling_rule):
             # If it's iterable, return the next value
