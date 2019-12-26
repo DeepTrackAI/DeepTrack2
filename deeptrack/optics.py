@@ -128,7 +128,7 @@ class Optics(Feature):
         '''
         shape = np.array(shape) 
 
-        upscaled_shape = shape*upscale
+        upscaled_shape = shape * upscale
         # Pupil radius
         R = NA / wavelength * np.array(voxel_size)[:2]
 
