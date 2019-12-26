@@ -171,11 +171,15 @@ class Property:
 
         elif isiterable(sampling_rule):
             # If it's iterable, return the next value
-            return next(sampling_rule)
+            try:
+                return next(sampling_rule)
+            except StopIteration:
+                return self.current_value
   
         elif callable(sampling_rule):
             # If it's a function, call it without parameters
             return sampling_rule()
+            
 
         else:
             # Else, assume it's elementary.
