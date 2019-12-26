@@ -84,6 +84,7 @@ class Feature(ABC):
         wrapped as a Distribution, as such randomized during a update
         step.
         '''
+        
         properties = getattr(self, "properties", {})
 
         all_dicts = (kwargs,) + args
@@ -98,13 +99,14 @@ class Feature(ABC):
         self.has_updated_since_last_resolve = False
 
 
+        
     @abstractmethod
     def get(self, image, **kwargs):
         ''' Alters an image
         '''
 
 
-
+        
     def resolve(
             self,
             image_list=None,
@@ -116,8 +118,10 @@ class Feature(ABC):
 
         # Get the input arguments to the method .get()
         feature_input = self.properties.current_value_dict()
+        
         # Add and update any global keyword arguments
         feature_input.update(global_kwargs)
+        
         # Call the _process_properties hook, default does nothing.
         feature_input = self._process_properties(feature_input)
 
@@ -181,6 +185,7 @@ class Feature(ABC):
         kwargs
             keyword arguments passed to the method plt.imshow()
         '''
+        
         import matplotlib.pyplot as plt
 
         if input_image is not None:
@@ -191,6 +196,7 @@ class Feature(ABC):
         plt.show()
 
 
+        
     def _format_input(self, image_list, **kwargs):
         
         if image_list is None:
@@ -351,4 +357,3 @@ class Load(Feature):
                 for file in files
                 if os.path.isfile(os.path.join(self.path, file))
                 and re.match(pattern, file)]
-
