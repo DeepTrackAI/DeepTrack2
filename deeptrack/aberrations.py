@@ -2,6 +2,7 @@ import numpy as np
 from deeptrack.features import Feature
 from deeptrack.image import Image
 from deeptrack.utils import as_list
+
 # PHASE ABERRATIONS
 
 class Aberration(Feature):
@@ -26,7 +27,7 @@ class Aberration(Feature):
 
 
 class Zernike(Aberration):
-    ''' Zernikle phase aberration
+    ''' Zernike phase aberration
     
     Multiplies the input by the phase mask as calculated by
 
@@ -38,7 +39,7 @@ class Zernike(Aberration):
         n_list = as_list(n)
         coefficients = as_list(coefficient)
 
-        assert len(m_list) == len(n_list),"The number of indices need to match"
+        assert len(m_list) == len(n_list), "The number of indices need to match"
         assert len(m_list) == len(coefficients), "The number of indices need to match the number of coefficients"
 
         pupil_bool = pupil != 0
