@@ -69,11 +69,7 @@ class PointParticle(Scatterer):
             intensity=None,
             **kwargs):
 
-
-
-        return np.ones((1, 1, 1))*intensity
-
-import matplotlib.pyplot as plt
+        return np.ones((1, 1, 1)) * intensity
 
 class Ellipse(Scatterer):
     ''' Generates ellipsoidal scatterers
