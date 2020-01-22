@@ -380,12 +380,6 @@ def create_volume(list_of_scatterers, pad=(0, 0, 0, 0), output_region=(None, Non
         position = get_position(scatterer, mode="corner", return_z=True)
         shape = np.array(scatterer.shape)
 
-
-        
-
-        if position[0] < -10 or position[0] > 266 or position[1] < -10 or position[1] > 266:
-            continue
-
         if position is None:
             RuntimeWarning("Optical device received a feature without a position property. It will be ignored.")
             continue
