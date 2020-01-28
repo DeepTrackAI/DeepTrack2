@@ -33,7 +33,9 @@ class Microscope(Feature):
 
     def get(self, image, sample=None, objective=None, pupil=None, **kwargs):
         
-        kwargs.update(objective.properties.current_value_dict())
+        new_kwargs = objective.properties.current_value_dict
+        new_kwargs.update(kwargs)
+        kwargs = new_kwargs
 
         list_of_scatterers = sample.resolve(**kwargs)
         if not isinstance(list_of_scatterers, list):
@@ -339,7 +341,8 @@ def get_position(feature, mode="center", return_z=False):
 
     elif len(position) == 2:
         if return_z:
-            return np.array([position[0], position[1], get_property(feature, "z", 0)]) - shift
+            outp = np.array([position[0], position[1], get_property(feature, "z", 0)]) - shift
+            return outp
         else:
             return position - shift[0:2]
 
