@@ -33,7 +33,9 @@ class Microscope(Feature):
 
     def get(self, image, sample=None, objective=None, pupil=None, **kwargs):
         
-        kwargs.update(objective.properties.current_value_dict())
+        new_kwargs = objective.properties.current_value_dict()
+        new_kwargs.update(kwargs)
+        kwargs = new_kwargs
 
         list_of_scatterers = sample.resolve(**kwargs)
         if not isinstance(list_of_scatterers, list):
