@@ -66,6 +66,7 @@ class Microscope(Feature):
 
         return image
 
+## OPTICAL SYSTEMS
 
 class Optics(Feature):
 
@@ -198,7 +199,7 @@ class Optics(Feature):
                 np.min([new_limits[i, 0], output_region[i] - padding[1]]),
                 np.max([new_limits[i, 1], output_region[i + 2] + padding[i + 2]]),
                 )
-        new_volume = np.zeros(np.diff(new_limits, axis=1)[:, 0].astype(np.int32))
+        new_volume = np.zeros(np.diff(new_limits, axis=1)[:, 0].astype(np.int32), dtype=np.complex)
 
         old_region = limits - new_limits
         new_volume[
@@ -311,6 +312,127 @@ class Fluorescence(Optics):
         return output_image
 
 
+class Brightfield(Optics):
+    '''Optical device for coherent or partially coherent light
+
+    Stores optical parameters and convolves images with pupil functions.
+    Treats the input image as an incoherent field. The output image is
+    as such,
+
+    .. math :: |image|^2 * |pupil|^2
+
+    evaluated using the fourier transform.
+
+    Parameters
+    ----------
+    NA
+        The NA of the limiting aperatur
+    wavelength
+        The wavelength of the scattered light in meters
+    voxel_size
+        The pixel to meter conversion ratio
+    refractive_index_medium
+        The refractive index of the medium
+    defocus
+        The distance from the focal plane in meters
+    upscale
+        Upscales the pupil function for a more accurate result.
+    ROI
+        The region of the image to output (x,y,width,height). Default
+        None returns entire image.
+    '''
+    
+    def get(self, illuminated_volume, **kwargs):
+        ''' Convolves the image with a pupil function
+        '''
+        
+        limits = get_property(illuminated_volume, "limits")
+        padded_volume, limits = self._pad_volume(illuminated_volume, limits=limits, **kwargs)
+
+        pad = kwargs.get("padding", (0, 0, 0, 0))
+        output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+    
+        output_region[0] = None if output_region[0] is None else int(output_region[0] - limits[0, 0] - pad[0])
+        output_region[1] = None if output_region[1] is None else int(output_region[1] - limits[1, 0] - pad[1])
+        output_region[2] = None if output_region[2] is None else int(output_region[2] - limits[0, 0] + pad[2])
+        output_region[3] = None if output_region[3] is None else int(output_region[3] - limits[1, 0] + pad[3])
+        
+        padded_volume = padded_volume[output_region[0]:output_region[2], output_region[1]:output_region[3], :]
+        z_limits = limits[2, :]
+
+        output_image = Image(np.zeros((*padded_volume.shape[0:2], 1)))
+
+        index_iterator = range(padded_volume.shape[2])
+        z_iterator = np.linspace(z_limits[0], z_limits[1], num=padded_volume.shape[2], endpoint=False)
+
+        
+        zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+        z_values = z_iterator[~zero_plane]
+
+        volume = pad_image_to_fft(padded_volume, axes=(0, 1))
+
+        voxel_size = kwargs['voxel_size']
+
+        pupils = self.pupil(volume.shape[:2], defocus=[1, -z_limits[1]], **kwargs)
+
+        pupil_step = np.fft.fftshift(pupils[0])
+        light_in = np.zeros(volume.shape[:2])
+        light_in[0, 0] = light_in.size
+
+        K = 2*np.pi/kwargs["wavelength"] 
+
+        for i, z in zip(index_iterator, z_iterator):
+            
+            light_in = light_in * pupil_step
+
+            if zero_plane[i]:
+                continue
+
+            ri_slice = volume[:, :, i]
+
+            light = np.fft.ifft2(light_in)
+            
+            light_out = light * np.exp(1j * ri_slice * voxel_size[-1] * K)
+
+            light_in = np.fft.fft2(light_out)
+
+        # import matplotlib.pyplot as plt 
+
+        # plt.imshow(np.abs(light_out))
+        # plt.show()
+
+        # plt.imshow(np.abs(light_in))
+        # plt.show()
+
+        # plt.imshow(np.abs(pupil_step))
+        # plt.show()
+        light_in_focus = light_in * np.fft.fftshift(pupils[-1])
+
+        output_image = np.fft.ifft2(light_in_focus)[:padded_volume.shape[0], :padded_volume.shape[1]]
+        output_image = Image(output_image[pad[0]:-pad[2], pad[1]:-pad[3]])
+        
+        if not kwargs.get("return_field", False):
+            output_image = np.square(np.abs(output_image))
+
+        
+        output_image.properties = illuminated_volume.properties
+        
+        return output_image
+
+
+## LIGHT SOURCES
+
+# class Light(Feature):
+
+#     def get(self, 
+#             *,
+#             output_region=None,
+#             effect=1, # W / m^2
+#             ): 
+
+#         intensity = np.ones((output_region[2] - output_region[0], output_region[3] - output_region[1]))
+
+
 # HELPER FUNCTIONS
 def get_property(feature, key, default=None):
     for property in feature.properties:
@@ -341,7 +463,8 @@ def get_position(feature, mode="center", return_z=False):
 
     elif len(position) == 2:
         if return_z:
-            return np.array([position[0], position[1], get_property(feature, "z", 0)]) - shift
+            outp = np.array([position[0], position[1], get_property(feature, "z", 0)]) - shift
+            return outp
         else:
             return position - shift[0:2]
 
@@ -354,7 +477,7 @@ def create_volume(list_of_scatterers, pad=(0, 0, 0, 0), output_region=(None, Non
 
     if not isinstance(list_of_scatterers, list):
         list_of_scatterers = [list_of_scatterers]
-    volume = np.zeros((1, 1, 1))
+    volume = np.zeros((1, 1, 1), dtype=np.complex)
 
     # x, y, z limits of the volume
     limits = np.array(((0, 1), (0, 1), (0, 1)))
@@ -392,10 +515,17 @@ def create_volume(list_of_scatterers, pad=(0, 0, 0, 0), output_region=(None, Non
         target_x_pos = np.round(x_pos)
         target_y_pos = np.round(y_pos)
 
+        splined_scatterer = np.zeros_like(scatterer)
         for z in range(scatterer.shape[2]):
-            scatterer_spline = RectBivariateSpline(x_pos, y_pos, scatterer[:, :, z])
-            scatterer[1:-1, 1:-1, z] = scatterer_spline(target_x_pos[1:-1], target_y_pos[1:-1])
+            
+            scatterer_spline = RectBivariateSpline(x_pos, y_pos, np.real(scatterer[:, :, z]))
+            splined_scatterer[1:-1, 1:-1, z] = scatterer_spline(target_x_pos[1:-1], target_y_pos[1:-1])
+            
+            if scatterer.dtype == np.complex:
+                scatterer_spline = RectBivariateSpline(x_pos, y_pos, np.imag(scatterer[:, :, z]))
+                splined_scatterer[1:-1, 1:-1, z] += 1j * scatterer_spline(target_x_pos[1:-1], target_y_pos[1:-1])
 
+        scatterer = splined_scatterer
         position = np.round(position)
         new_limits = np.zeros(limits.shape, dtype=np.int32)
         for i in range(3):
@@ -405,7 +535,7 @@ def create_volume(list_of_scatterers, pad=(0, 0, 0, 0), output_region=(None, Non
                 )
             
         if not (np.array(new_limits) == np.array(limits)).all():
-            new_volume = np.zeros(np.diff(new_limits, axis=1)[:, 0].astype(np.int32))
+            new_volume = np.zeros(np.diff(new_limits, axis=1)[:, 0].astype(np.int32), dtype=np.complex)
             old_region = limits - new_limits
             new_volume[
                 old_region[0, 0]:old_region[0, 0] + limits[0, 1] - limits[0, 0],
