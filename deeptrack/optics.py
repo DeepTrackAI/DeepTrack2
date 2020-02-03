@@ -120,6 +120,7 @@ class Optics(Feature):
               defocus=None, 
               upscale=None,
               pupil=None,
+              include_aberration=True,
               **kwargs):
         ''' Calculates pupil function
 
@@ -164,11 +165,11 @@ class Optics(Feature):
         pupil_function[np.isinf(pupil_function)] = 0
         pupil_function_is_nonzero = pupil_function != 0
 
-
-        if isinstance(pupil, Feature):
-            pupil_function = pupil.resolve(pupil_function)
-        elif isinstance(pupil, np.ndarray):
-            pupil_function *= pupil
+        if include_aberration:
+            if isinstance(pupil, Feature):
+                pupil_function = pupil.resolve(pupil_function)
+            elif isinstance(pupil, np.ndarray):
+                pupil_function *= pupil
 
 
         pupil_functions = []
@@ -176,9 +177,6 @@ class Optics(Feature):
             pupil_at_z = Image(pupil_function)
             pupil_at_z[pupil_function_is_nonzero] *= np.exp(1j * z_shift[pupil_function_is_nonzero] * z)
             pupil_functions.append(pupil_at_z)
-
-
-        
         
         return pupil_functions
 
@@ -373,7 +371,8 @@ class Brightfield(Optics):
 
         voxel_size = kwargs['voxel_size']
 
-        pupils = self.pupil(volume.shape[:2], defocus=[1, -z_limits[1]], **kwargs)
+        pupils = (self.pupil(volume.shape[:2], defocus=[1], include_aberration=False, **kwargs) + 
+                  self.pupil(volume.shape[:2], defocus=[-z_limits[1]], include_aberration=True, **kwargs))
 
         pupil_step = np.fft.fftshift(pupils[0])
         light_in = np.zeros(volume.shape[:2])
@@ -396,16 +395,6 @@ class Brightfield(Optics):
 
             light_in = np.fft.fft2(light_out)
 
-        # import matplotlib.pyplot as plt 
-
-        # plt.imshow(np.abs(light_out))
-        # plt.show()
-
-        # plt.imshow(np.abs(light_in))
-        # plt.show()
-
-        # plt.imshow(np.abs(pupil_step))
-        # plt.show()
         light_in_focus = light_in * np.fft.fftshift(pupils[-1])
 
         output_image = np.fft.ifft2(light_in_focus)[:padded_volume.shape[0], :padded_volume.shape[1]]
@@ -414,7 +403,6 @@ class Brightfield(Optics):
         if not kwargs.get("return_field", False):
             output_image = np.square(np.abs(output_image))
 
-        
         output_image.properties = illuminated_volume.properties
         
         return output_image
