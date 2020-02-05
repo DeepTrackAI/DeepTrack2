@@ -468,17 +468,24 @@ def create_volume(list_of_scatterers, pad=(0, 0, 0, 0), output_region=(None, Non
     volume = np.zeros((1, 1, 1), dtype=np.complex)
 
     # x, y, z limits of the volume
-    limits = np.array(((0, 1), (0, 1), (0, 1)))
+    limits = None
 
-    OR = np.zeros((4,))
+    OR = np.zeros((4, ))
     for scatterer in list_of_scatterers:
+
+        position = get_position(scatterer, mode="corner", return_z=True)
+
+        if limits is None:
+            limits = np.zeros((3, 2))
+            limits[:, 0] = np.round(position).astype(np.int32)
+            limits[:, 1] = np.round(position).astype(np.int32) + 1
 
         OR[0] = np.inf if output_region[0] is None else int(output_region[0] - limits[0, 0] - pad[0])
         OR[1] = -np.inf if output_region[1] is None else int(output_region[1] - limits[1, 0] - pad[1])
         OR[2] = np.inf if output_region[2] is None else int(output_region[2] - limits[0, 0] + pad[2])
         OR[3] = -np.inf if output_region[3] is None else int(output_region[3] - limits[1, 0] + pad[3])
 
-        position = get_position(scatterer, mode="corner", return_z=True)
+        
 
         if (position[0] + scatterer.shape[0] < OR[0]  or 
             position[0] > OR[2] or
@@ -524,7 +531,7 @@ def create_volume(list_of_scatterers, pad=(0, 0, 0, 0), output_region=(None, Non
             
         if not (np.array(new_limits) == np.array(limits)).all():
             new_volume = np.zeros(np.diff(new_limits, axis=1)[:, 0].astype(np.int32), dtype=np.complex)
-            old_region = limits - new_limits
+            old_region = (limits - new_limits).astype(np.int32)
             new_volume[
                 old_region[0, 0]:old_region[0, 0] + limits[0, 1] - limits[0, 0],
                 old_region[1, 0]:old_region[1, 0] + limits[1, 1] - limits[1, 0],
