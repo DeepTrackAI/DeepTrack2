@@ -11,7 +11,7 @@ hasfunction(object:any, function_name:str) -> bool
 isiterable(object:any)
     returns True if the object is iterable, else, return False.
 '''
-
+import inspect
 import numpy as np
 from deeptrack.image import Image
 
@@ -56,7 +56,7 @@ def as_list(obj):
     except TypeError:
         return [obj]
 
-import inspect
+
 def get_kwarg_names(function):
     argspec = inspect.getfullargspec(function)
 
@@ -65,14 +65,55 @@ def get_kwarg_names(function):
 
     return argspec.args[-len(argspec.defaults):]
 
+
+def only_keyword_arguments(function, ignore_self=False):
+    argspec = inspect.getfullargspec(function)
+    return argspec.args
+
+
+
+class cached_function:
+
+    def __init__(self, func):
+        assert only_keyword_arguments(func), "Cached function may only receive keyword arguments"
+
+        self.previous_inputs = None
+        self.previous_output = None
+        self.kwarg_names = get_kwarg_names(func)
+        self.function = func
+
+    def __call__(self, **kwargs):
+
+        safe_input = {}
+        for key in self.kwarg_names:
+            if key in kwarg:
+                safe_input[key] = kwargs[key]
+
+        kwargs = safe_input
+        
+        if self.previous_inputs is None:
+            new_value = self.function(self, **kwargs)
+
+        elif self.previous_inputs == kwargs:
+            new_value = self.previous_output
+        
+        else: 
+            new_value = self.function(self, **kwargs)
+        
+        self.previous_inputs = kwargs
+        self.previous_output =  new_value
+
+        return new_value
+
+
 # TODO: More exact
-fastest_sizes = [0]
+FASTEST_SIZES = [0]
 for n in range(1, 10):
-    fastest_sizes += [2**a * 3**(n - a - 1) for a in range(n)]
-fastest_sizes = np.sort(fastest_sizes)
+    FASTEST_SIZES += [2**a * 3**(n - a - 1) for a in range(n)]
+FASTEST_SIZES = np.sort(FASTEST_SIZES)
 
 def closest(dim):
-    for size in fastest_sizes:
+    for size in FASTEST_SIZES:
         if size >= dim:
             return size
 
