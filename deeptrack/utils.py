@@ -65,13 +65,6 @@ def get_kwarg_names(function):
 
     return argspec.args[-len(argspec.defaults):]
 
-def call_with_kwargs(function, *args, **kwargs):
-    keyword_names = get_kwarg_names(function)
-    new_input = {}
-    for key in keyword_names:
-        if key in kwargs:
-
-        new_input[key] = 
 
 def only_keyword_arguments(function, ignore_self=False):
     argspec = inspect.getfullargspec(function)
@@ -95,6 +88,7 @@ class cached_function:
         for key in self.kwarg_names:
             if key in kwarg:
                 safe_input[key] = kwargs[key]
+
         kwargs = safe_input
         
         if self.previous_inputs is None:
@@ -104,15 +98,12 @@ class cached_function:
             new_value = self.previous_output
         
         else: 
-            new_value = self.func(self, **kwargs)
+            new_value = self.function(self, **kwargs)
         
         self.previous_inputs = kwargs
-        self.previous_output = new_value
+        self.previous_output =  new_value
 
         return new_value
-
-
-
 
 
 # TODO: More exact
