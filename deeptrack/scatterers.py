@@ -111,7 +111,9 @@ class Ellipse(Scatterer):
         x_ceil = np.max((x_ceil, y_ceil))
         y_ceil = np.max((x_ceil, y_ceil))
 
-        to_add = (x_ceil * 2) % upsample
+        to_add = (upsample - ((x_ceil * 2) % upsample)) % upsample
+
+
         X, Y = np.meshgrid(np.arange(-x_ceil, x_ceil + to_add), np.arange(-y_ceil, y_ceil + to_add))
 
         if rotation != 0:
