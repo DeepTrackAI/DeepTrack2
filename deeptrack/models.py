@@ -80,6 +80,7 @@ def unet(
         steps_per_pooling=1,
         number_of_outputs=1,
         layer_function=None,
+        output_activation="sigmoid",    
         loss=nd_mean_absolute_error):
 
     if layer_function is None:
@@ -122,7 +123,7 @@ def unet(
     layer = layers.Conv2D(
         number_of_outputs,
         kernel_size=3,
-        activation="sigmoid",
+        activation=output_activation,
         padding="same")(layer)
 
     model = models.Model(unet_input, layer)
