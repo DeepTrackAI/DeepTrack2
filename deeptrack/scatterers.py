@@ -66,10 +66,9 @@ class PointParticle(Scatterer):
 
     def get(self,
             image,
-            intensity=None,
             **kwargs):
 
-        return np.ones((1, 1, 1)) * intensity
+        return np.ones((1, 1, 1)) * 1.0
 
 class Ellipse(Scatterer):
     ''' Generates ellipsoidal scatterers
@@ -91,7 +90,6 @@ class Ellipse(Scatterer):
     def get(
             self, 
             image,
-            intensity=None,
             radius=None,
             rotation=0,
             voxel_size=None,
@@ -123,7 +121,7 @@ class Ellipse(Scatterer):
             Y = Yt 
 
 
-        mask = ((X * X) / (x_rad * x_rad) + (Y * Y) / (y_rad * y_rad) < 1) * 1.0 * intensity
+        mask = ((X * X) / (x_rad * x_rad) + (Y * Y) / (y_rad * y_rad) < 1)
 
         if upsample != 1:
             mask = np.reshape(mask, (mask.shape[0] // upsample, upsample, mask.shape[1] // upsample, upsample)).mean(axis=(3,1))

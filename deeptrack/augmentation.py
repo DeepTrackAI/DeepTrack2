@@ -39,7 +39,7 @@ class Augmentation(Feature):
         
     def _process_and_get(self, *args, update_properties=None, index=0, **kwargs):
 
-        image = self.preloaded_results[index]
+        image = Image(self.preloaded_results[index])
 
         new_image = self.get(image, **kwargs)
     
@@ -51,6 +51,7 @@ class Augmentation(Feature):
         
         for image in new_image:
             update_properties(image, **kwargs)
+
         return new_image
 
 
@@ -77,20 +78,20 @@ class FlipLR(PreLoad):
         super().__init__(feature, load_size=1, updates_per_reload=2, **kwargs)
 
     def get(self, image, number_of_updates=0, **kwargs):
-        if number_of_updates == 0:
+        if number_of_updates == 1:
             return image 
         else:
             return np.fliplr(image)
 
     def update_properties(self, image, number_of_updates=0, **kwargs):
-        if number_of_updates == 0:
-            return 
 
         for prop in image.properties:
+            
             if "position" in prop:
                 position = prop["position"]
                 new_position = (position[0], image.shape[1] - position[1], *position[2:])
                 prop["position"] = new_position
+
 
 
 class FlipUD(PreLoad):
@@ -99,14 +100,12 @@ class FlipUD(PreLoad):
         super().__init__(feature, load_size=1, updates_per_reload=2, **kwargs)
 
     def get(self, image, number_of_updates=0, **kwargs):
-        if number_of_updates == 0:
+        if number_of_updates == 1:
             return image 
         else:
             return np.flipud(image)
 
     def update_properties(self, image, number_of_updates=0, **kwargs):
-        if number_of_updates == 0:
-            return 
 
         for prop in image.properties:
             if "position" in prop:
@@ -120,14 +119,10 @@ class FlipDiagonal(Augmentation):
         super().__init__(feature, load_size=1, updates_per_reload=2, **kwargs)
 
     def get(self, image, number_of_updates=0, axes=(1, 0, 2), **kwargs):
-        if number_of_updates == 0:
+        if number_of_updates == 1:
             return image 
         else:
             return np.transpose(image, axes=axes)
-
-    def update_properties(self, image, number_of_updates=0, **kwargs):
-        if number_of_updates == 0:
-            return 
 
     def update_properties(self, image, **kwargs):
         for prop in image.properties:

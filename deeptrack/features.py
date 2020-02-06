@@ -86,6 +86,7 @@ class Feature(ABC):
         '''
         
         properties = getattr(self, "properties", {})
+        properties["hash_key"] = Property([lambda: np.random.randint(2 ** 31) for _ in range(4)])
 
         all_dicts = (kwargs,) + args
 
@@ -221,6 +222,12 @@ class Feature(ABC):
 
     def __add__(self, other):
         return Branch(self, other)
+
+    def __radd__(self, other):
+        if not other:
+            return self
+        else:
+            return NotImplemented
 
 
     def __mul__(self, other):
