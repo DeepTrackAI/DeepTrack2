@@ -117,7 +117,7 @@ class Property:
             Returns itself.
 
         '''
-        if self.has_updated_since_last_resolve:
+        if self.has_updated_since_last_resolve and not kwargs.get("force_update", False):
             return self
         
         self.has_updated_since_last_resolve = True

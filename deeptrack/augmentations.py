@@ -39,20 +39,22 @@ class Augmentation(Feature):
         
     def _process_and_get(self, *args, update_properties=None, index=0, **kwargs):
 
-        image = Image(self.preloaded_results[index])
-
-        new_image = self.get(image, **kwargs)
-    
-        if not isinstance(new_image, list):
-            new_image = [new_image]
-
-        if update_properties is None:
-            return new_image
+        image_list = self.preloaded_results[index]
         
-        for image in new_image:
-            update_properties(image, **kwargs)
+        if not isinstance(image_list, list):
+            image_list = [image_list]
 
-        return new_image
+        image_list_copy = image_list
+        
+        new_image_list = [self.get(image, **kwargs) for image in image_list_copy]
+        
+        if update_properties:
+            for image in new_image_list:
+                update_properties(image, **kwargs)
+        
+        self.preloaded_results[index] = new_image_list
+
+        return new_image_list
 
 
     def load(self, load_size):
@@ -72,21 +74,17 @@ class PreLoad(Augmentation):
         return image
 
 
-class FlipLR(PreLoad):
+class FlipLR(Augmentation):
 
     def __init__(self, feature, **kwargs):
         super().__init__(feature, load_size=1, updates_per_reload=2, **kwargs)
 
-    def get(self, image, number_of_updates=0, **kwargs):
-        if number_of_updates == 1:
-            return image 
-        else:
-            return np.fliplr(image)
+    def get(self, image, **kwargs):
+        return np.fliplr(image)
 
-    def update_properties(self, image, number_of_updates=0, **kwargs):
+    def update_properties(self, image, **kwargs):
 
         for prop in image.properties:
-            
             if "position" in prop:
                 position = prop["position"]
                 new_position = (position[0], image.shape[1] - position[1], *position[2:])
@@ -94,16 +92,13 @@ class FlipLR(PreLoad):
 
 
 
-class FlipUD(PreLoad):
+class FlipUD(Augmentation):
 
     def __init__(self, feature, **kwargs):
         super().__init__(feature, load_size=1, updates_per_reload=2, **kwargs)
 
     def get(self, image, number_of_updates=0, **kwargs):
-        if number_of_updates == 1:
-            return image 
-        else:
-            return np.flipud(image)
+        return np.flipud(image)
 
     def update_properties(self, image, number_of_updates=0, **kwargs):
 
@@ -119,10 +114,7 @@ class FlipDiagonal(Augmentation):
         super().__init__(feature, load_size=1, updates_per_reload=2, **kwargs)
 
     def get(self, image, number_of_updates=0, axes=(1, 0, 2), **kwargs):
-        if number_of_updates == 1:
-            return image 
-        else:
-            return np.transpose(image, axes=axes)
+        return np.transpose(image, axes=axes)
 
     def update_properties(self, image, **kwargs):
         for prop in image.properties:
