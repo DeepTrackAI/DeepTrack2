@@ -122,6 +122,7 @@ class Optics(Feature):
               defocus=None, 
               upscale=None,
               pupil=None,
+              aberration=None,
               include_aberration=True,
               **kwargs):
         ''' Calculates pupil function
@@ -165,6 +166,7 @@ class Optics(Feature):
         pupil_function_is_nonzero = pupil_function != 0
 
         if include_aberration:
+            pupil = pupil or aberration
             if isinstance(pupil, Feature):
                 pupil_function = pupil.resolve(pupil_function)
             elif isinstance(pupil, np.ndarray):

@@ -58,7 +58,10 @@ def as_list(obj):
 
 
 def get_kwarg_names(function):
-    argspec = inspect.getfullargspec(function)
+    try:
+        argspec = inspect.getfullargspec(function)
+    except TypeError:
+        return []
 
     if (not argspec.args) or (not argspec.defaults):
         return []
@@ -128,3 +131,25 @@ def pad_image_to_fft(image, axes=(0, 1)):
 
 
     return np.pad(image, pad_width, mode='constant')
+
+import scipy.ndimage as ndimage
+def track_segmented_image(image,
+                          erosion=0,
+                          dilation=0,
+                          threshold=0.95,
+                          min_area=0):
+
+    binary_image = image > threshold
+
+    if dilation:
+        binary_image = ndimage.binary_dilation(binary_image, iterations=dilation) 
+
+    if erosion:
+        binary_image = ndimage.binary_erosion(binary_image, iterations=erosion) 
+
+    components, _ = ndimage.measurements.label(binary_image)
+    
+    area = ndimage.measurements.sum(binary_image, labels=components)
+    position = ndimage.measurements.center_of_mass(binary_image, labels=components)
+
+    return position[area > min_area]

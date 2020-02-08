@@ -3,7 +3,7 @@ from deeptrack.features import Feature
 from deeptrack.image import Image
 from deeptrack.utils import as_list
 
-# PHASE ABERRATIONS
+
 
 class Aberration(Feature):
 
@@ -25,6 +25,15 @@ class Aberration(Feature):
             new_list += super()._process_and_get([image], rho=rho, theta=theta, **kwargs)
         return new_list
 
+# AMPLITUDE ABERRATIONS
+
+class GaussianApodization(Aberration):
+    
+    # Flips the input image.
+    def get(self, pupil, sigma=1, rho=None, **kwargs):
+        return pupil * np.exp(-(rho / sigma) ** 2) 
+
+# PHASE ABERRATIONS
 
 class Zernike(Aberration):
     ''' Zernike phase aberration

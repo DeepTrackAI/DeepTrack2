@@ -27,7 +27,8 @@ class Sequence(Feature):
         super().update(**kwargs)
 
         sequence_length = self.properties["sequence_length"].current_value
-        kwargs["sequence_length"] = sequence_length
+        if "sequence_length" not in kwargs:
+            kwargs["sequence_length"] = sequence_length
 
         self.feature.update(**kwargs)
 
