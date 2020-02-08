@@ -19,6 +19,7 @@ OpticalDevice
 import numpy as np
 from deeptrack.features import Feature
 from deeptrack.image import Image
+from deeptrack.utils import as_list, pad_image_to_fft
 
 from scipy.interpolate import RectBivariateSpline
 
@@ -27,24 +28,28 @@ class Microscope(Feature):
 
     __distributed__ = False
 
-    def __init__(self, sample, objective, *args, **kwargs):
-        super().__init__(*args, sample=sample, objective=objective, **kwargs)
+    def __init__(self, sample, objective, pupil, *args, **kwargs):
+        super().__init__(*args, sample=sample, objective=objective, pupil=pupil, **kwargs)
 
-    def get(self, image, sample=None, objective=None):
-
-        list_of_scatterers = sample.resolve(**objective.properties.current_value_dict())
+    def get(self, image, sample=None, objective=None, pupil=None, **kwargs):
         
-        sample_volume, limits = create_volume(list_of_scatterers)
-        
+        new_kwargs = objective.properties.current_value_dict()
+        new_kwargs.update(kwargs)
+        kwargs = new_kwargs
 
+        list_of_scatterers = sample.resolve(**kwargs)
+        if not isinstance(list_of_scatterers, list):
+            list_of_scatterers = [list_of_scatterers]
+        
+        sample_volume, limits = create_volume(list_of_scatterers, **kwargs)
+        
 
         sample_volume = Image(sample_volume)
-        sample_volume.append({"limits": limits, "metric": "quantum_yield"})
 
         for scatterer in list_of_scatterers:
             sample_volume.properties += scatterer.properties
 
-        imaged_sample = objective.resolve(sample_volume)
+        imaged_sample = objective.resolve(sample_volume, pupil=pupil, limits=limits)
 
 
         # Merge with input
@@ -56,11 +61,14 @@ class Microscope(Feature):
         
         for i in range(len(image)):
             image[i] += imaged_sample
-            image[i].properties += imaged_sample.properties
+            for prop in imaged_sample.properties:
+                if not any([prop["hash_key"] == prop2["hash_key"] for prop2 in image[i].properties]):
+                    image[i].properties.append(prop)
 
-        
+
         return image
 
+## OPTICAL SYSTEMS
 
 class Optics(Feature):
 
@@ -74,6 +82,7 @@ class Optics(Feature):
                  upscale=2,
                  padding=(10, 10, 10, 10),
                  output_region=(None, None, None, None),
+                 pupil=None,
                  **kwargs):
 
         auxiliary_dict = {"voxel_size": self.get_voxel_size}
@@ -89,6 +98,7 @@ class Optics(Feature):
             upscale=upscale,
             padding=padding,
             output_region=output_region,
+            pupil=pupil,
             **kwargs
         )
 
@@ -109,21 +119,24 @@ class Optics(Feature):
               wavelength=None,
               refractive_index_medium=None,
               voxel_size=None,
-              defocus=None,
+              defocus=None, 
               upscale=None,
+              pupil=None,
+              aberration=None,
+              include_aberration=True,
               **kwargs):
         ''' Calculates pupil function
 
         Parameters
-        ----------
+        ----------      
         shape
             The shape of the pupil function
         kwargs
             The current values of the properties of the optical device
         '''
-        shape = np.array(shape) 
+        shape = np.array(shape)
 
-        upscaled_shape = shape*upscale
+        upscaled_shape = shape * upscale
         # Pupil radius
         R = NA / wavelength * np.array(voxel_size)[:2]
 
@@ -136,51 +149,61 @@ class Optics(Feature):
         W, H = np.meshgrid(y, x)
         RHO = W**2 + H**2
         RHO[RHO > 1] = 1
-        pupil = (RHO < 1) * 1.0
-        
+        pupil_function = ((RHO < 1) * 1.0).astype(np.complex)
+
         # Defocus
-        z_shift = (2 * np.pi * refractive_index_medium / wavelength * voxel_size[2] * defocus
+        z_shift = (2 * np.pi * refractive_index_medium / wavelength * voxel_size[2]
                    * np.sqrt(1 - (NA / refractive_index_medium * RHO)**2))
 
 
         # Downsample the upsampled pupil
         if upscale > 1:
-            pupil = np.reshape(pupil, (shape[0], upscale, shape[1], upscale)).mean(axis=(3, 1))
+            pupil_function = np.reshape(pupil_function, (shape[0], upscale, shape[1], upscale)).mean(axis=(3, 1))
             z_shift = np.reshape(z_shift, (shape[0], upscale, shape[1], upscale)).mean(axis=(3, 1))
 
-        pupil = pupil * np.exp(1j * z_shift)
+        pupil_function[np.isnan(pupil_function)] = 0
+        pupil_function[np.isinf(pupil_function)] = 0
+        pupil_function_is_nonzero = pupil_function != 0
 
-        pupil[np.isnan(pupil)] = 0
+        if include_aberration:
+            pupil = pupil or aberration
+            if isinstance(pupil, Feature):
+                pupil_function = pupil.resolve(pupil_function)
+            elif isinstance(pupil, np.ndarray):
+                pupil_function *= pupil
 
-        pupil[np.isinf(pupil)] = 0
+
+        pupil_functions = []
+        for z in defocus:
+            pupil_at_z = Image(pupil_function)
+            pupil_at_z[pupil_function_is_nonzero] *= np.exp(1j * z_shift[pupil_function_is_nonzero] * z)
+            pupil_functions.append(pupil_at_z)
         
-        return pupil
+        return pupil_functions
+
 
     def _pad_volume(self, volume, limits=None, padding=None, output_region=None, **kwargs):
-        
+        if limits is None:
+            limits = np.zeros((3, 2))
+            
         new_limits = np.array(limits)
         output_region = np.array(output_region) 
 
-        new_limits[0, 0] -= padding[0]
-        new_limits[0, 1] += padding[1]
-        new_limits[1, 0] -= padding[2]
-        new_limits[1, 1] += padding[3]
-
         # Replace None entries with current limit
-        output_region[0] = output_region[0] or new_limits[0, 0]
-        output_region[1] = output_region[1] or new_limits[0, 1]
-        output_region[2] = output_region[2] or new_limits[1, 0]
-        output_region[3] = output_region[3] or new_limits[1, 1]
+        output_region[0] = output_region[0] if not output_region[0] is None else new_limits[0, 0]
+        output_region[1] = output_region[1] if not output_region[1] is None else new_limits[0, 1]
+        output_region[2] = output_region[2] if not output_region[2] is None else new_limits[1, 0]
+        output_region[3] = output_region[3] if not output_region[3] is None else new_limits[1, 1]
 
         for i in range(2):
             new_limits[i, :] = (
-                np.min([new_limits[i, 0], output_region[i]]),
-                np.max([new_limits[i, 1], output_region[i + 2]]),
+                np.min([new_limits[i, 0], output_region[i] - padding[1]]),
+                np.max([new_limits[i, 1], output_region[i + 2] + padding[i + 2]]),
                 )
+        new_volume = np.zeros(np.diff(new_limits, axis=1)[:, 0].astype(np.int32), dtype=np.complex)
 
-        new_volume = np.zeros(np.diff(new_limits, axis=1)[:, 0].astype(np.int32))
-
-        old_region = limits - new_limits
+        old_region = (limits - new_limits).astype(np.int32)
+        limits = limits.astype(np.int32)
         new_volume[
             old_region[0, 0]:old_region[0, 0] + limits[0, 1] - limits[0, 0],
             old_region[1, 0]:old_region[1, 0] + limits[1, 1] - limits[1, 0],
@@ -189,8 +212,8 @@ class Optics(Feature):
 
         return new_volume, new_limits
 
-    def __call__(self, sample):
-        return Microscope(sample, self)
+    def __call__(self, sample, pupil=None):
+        return Microscope(sample, self, pupil)
 
 
 
@@ -224,13 +247,21 @@ class Fluorescence(Optics):
         None returns entire image.
     '''
     
-    def get(self, illuminated_volume, **kwargs):
+    def get(self, illuminated_volume, limits=None, **kwargs):
         ''' Convolves the image with a pupil function
         '''
-        
-        limits = get_property(illuminated_volume, "limits")
+    
         padded_volume, limits = self._pad_volume(illuminated_volume, limits=limits, **kwargs)
 
+        pad = kwargs.get("padding", (0, 0, 0, 0))
+        output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+    
+        output_region[0] = None if output_region[0] is None else int(output_region[0] - limits[0, 0] - pad[0])
+        output_region[1] = None if output_region[1] is None else int(output_region[1] - limits[1, 0] - pad[1])
+        output_region[2] = None if output_region[2] is None else int(output_region[2] - limits[0, 0] + pad[2])
+        output_region[3] = None if output_region[3] is None else int(output_region[3] - limits[1, 0] + pad[3])
+        
+        padded_volume = padded_volume[output_region[0]:output_region[2], output_region[1]:output_region[3], :]
         z_limits = limits[2, :]
 
         output_image = Image(np.zeros((*padded_volume.shape[0:2], 1)))
@@ -238,14 +269,25 @@ class Fluorescence(Optics):
         index_iterator = range(padded_volume.shape[2])
         z_iterator = np.linspace(z_limits[0], z_limits[1], num=padded_volume.shape[2], endpoint=False)
 
+        
+        zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+        z_values = z_iterator[~zero_plane]
+
+        volume = pad_image_to_fft(padded_volume, axes=(0, 1))
+
+        pupils = self.pupil(volume.shape[:2], defocus=z_values, **kwargs)
+
+        pupil_iterator = iter(pupils)
 
         for i, z in zip(index_iterator, z_iterator):
-            image = padded_volume[:, :, i]
-
-            if (image == 0).all():
+            
+            if zero_plane[i]:
                 continue
-            pupil = self.pupil(image.shape, defocus=z, **kwargs)
-            psf = np.square(np.abs(np.fft.ifft2(pupil)))
+
+            image = volume[:, :, i]
+            pupil = Image(next(pupil_iterator))
+
+            psf = np.square(np.abs(np.fft.ifft2(np.fft.fftshift(pupil))))
         
             optical_transfer_function = np.fft.fft2(psf)
 
@@ -256,21 +298,150 @@ class Fluorescence(Optics):
             field = Image(np.fft.ifft2(convolved_fourier_field))
 
             # Discard remaining imaginary part (should be 0 up to rounding error)
-            field = np.real(field)
+            field = np.real(field) 
 
-            output_image[:, :, 0] += field
-        output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+            output_image[:, :, 0] += field[:padded_volume.shape[0], :padded_volume.shape[1]]
 
-        output_region[0] = None if output_region[0] is None else int(output_region[0] - limits[0, 0])
-        output_region[1] = None if output_region[1] is None else int(output_region[1] - limits[1, 0])
-        output_region[2] = None if output_region[2] is None else int(output_region[2] - limits[0, 0])
-        output_region[3] = None if output_region[3] is None else int(output_region[3] - limits[1, 0])
-        output_image = output_image[output_region[0]:output_region[2], output_region[1]:output_region[3]]
-        output_image.properties = illuminated_volume.properties
+        
+        
+        output_image = output_image[pad[0]:-pad[2], pad[1]:-pad[3]]
+        try:
+            output_image.properties = illuminated_volume.properties + pupil.properties
+        except UnboundLocalError:
+            output_image.properties = illuminated_volume.properties
+        
         return output_image
 
 
+class Brightfield(Optics):
+    '''Optical device for coherent or partially coherent light
+
+    Stores optical parameters and convolves images with pupil functions.
+    Treats the input image as an incoherent field. The output image is
+    as such,
+
+    .. math :: |image|^2 * |pupil|^2
+
+    evaluated using the fourier transform.
+
+    Parameters
+    ----------
+    NA
+        The NA of the limiting aperatur
+    wavelength
+        The wavelength of the scattered light in meters
+    voxel_size
+        The pixel to meter conversion ratio
+    refractive_index_medium
+        The refractive index of the medium
+    defocus
+        The distance from the focal plane in meters
+    upscale
+        Upscales the pupil function for a more accurate result.
+    ROI
+        The region of the image to output (x,y,width,height). Default
+        None returns entire image.
+    '''
     
+    def get(self, illuminated_volume, limits=None, **kwargs):
+        ''' Convolves the image with a pupil function
+        '''
+        
+        padded_volume, limits = self._pad_volume(illuminated_volume, limits=limits, **kwargs)
+
+        pad = kwargs.get("padding", (0, 0, 0, 0))
+        output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+    
+        output_region[0] = None if output_region[0] is None else int(output_region[0] - limits[0, 0] - pad[0])
+        output_region[1] = None if output_region[1] is None else int(output_region[1] - limits[1, 0] - pad[1])
+        output_region[2] = None if output_region[2] is None else int(output_region[2] - limits[0, 0] + pad[2])
+        output_region[3] = None if output_region[3] is None else int(output_region[3] - limits[1, 0] + pad[3])
+        
+        padded_volume = padded_volume[output_region[0]:output_region[2], output_region[1]:output_region[3], :]
+        z_limits = limits[2, :]
+
+        output_image = Image(np.zeros((*padded_volume.shape[0:2], 1)))
+
+        index_iterator = range(padded_volume.shape[2])
+        z_iterator = np.linspace(z_limits[0], z_limits[1], num=padded_volume.shape[2], endpoint=False)
+
+        
+        zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+        z_values = z_iterator[~zero_plane]
+
+        volume = pad_image_to_fft(padded_volume, axes=(0, 1))
+
+        voxel_size = kwargs['voxel_size']
+
+        pupils = (self.pupil(volume.shape[:2], defocus=[1], include_aberration=False, **kwargs) + 
+                  self.pupil(volume.shape[:2], defocus=[-z_limits[1]], include_aberration=True, **kwargs))
+
+        pupil_step = np.fft.fftshift(pupils[0])
+        
+        if "illumination" in kwargs:
+            light_in = np.ones(volume.shape[:2])
+            light_in = kwargs["illumination"].resolve(light_in, **kwargs)
+            light_in = np.fft.fft2(light_in)
+        else:
+            light_in = np.zeros(volume.shape[:2])
+            light_in[0, 0] = light_in.size
+
+        K = 2*np.pi/kwargs["wavelength"]
+
+        for i, z in zip(index_iterator, z_iterator):
+            
+            light_in = light_in * pupil_step
+
+            if zero_plane[i]:
+                continue
+
+            ri_slice = volume[:, :, i]
+
+            light = np.fft.ifft2(light_in)
+            
+            light_out = light * np.exp(1j * ri_slice * voxel_size[-1] * K)
+
+            light_in = np.fft.fft2(light_out)
+
+        light_in_focus = light_in * np.fft.fftshift(pupils[-1])
+
+        output_image = np.fft.ifft2(light_in_focus)[:padded_volume.shape[0], :padded_volume.shape[1]]
+        output_image = np.expand_dims(output_image, axis=-1)
+        output_image = Image(output_image[pad[0]:-pad[2], pad[1]:-pad[3]])
+        
+        
+        if not kwargs.get("return_field", False):
+            output_image = np.square(np.abs(output_image))
+
+        output_image.properties = illuminated_volume.properties
+        
+        return output_image
+
+
+class IlluminationGradient(Feature):
+    def get(self, image, gradient=(0, 0), vmin=0, vmax=np.inf, **kwargs):
+        
+        x = np.arange(image.shape[0]) / image.shape[0] - 0.5
+        y = np.arange(image.shape[1]) / image.shape[1] - 0.5
+        
+        X, Y = np.meshgrid(x, y)
+        
+        amplitude = (X * gradient[0] + Y * gradient[1]) 
+        image = np.clip(image + amplitude, vmin, vmax)
+        
+        return image
+## LIGHT SOURCES
+
+# class Light(Feature):
+
+#     def get(self, 
+#             *,
+#             output_region=None,
+#             effect=1, # W / m^2
+#             ): 
+
+#         intensity = np.ones((output_region[2] - output_region[0], output_region[3] - output_region[1]))
+
 
 # HELPER FUNCTIONS
 def get_property(feature, key, default=None):
@@ -302,33 +473,58 @@ def get_position(feature, mode="center", return_z=False):
 
     elif len(position) == 2:
         if return_z:
-            return np.array([position[0], position[1], get_property(feature, "z", 0)]) - shift
+            outp = np.array([position[0], position[1], get_property(feature, "z", 0)]) - shift
+            return outp
         else:
             return position - shift[0:2]
 
     return position
 
-def create_volume(list_of_scatterers, **kwargs):
+
+def create_volume(list_of_scatterers, pad=(0, 0, 0, 0), output_region=(None, None, None, None), **kwargs):
+
     
+
     if not isinstance(list_of_scatterers, list):
         list_of_scatterers = [list_of_scatterers]
-    volume = np.zeros((1, 1, 1))
+    volume = np.zeros((1, 1, 1), dtype=np.complex)
 
     # x, y, z limits of the volume
-    limits = np.array(((0, 1), (0, 1), (0, 1)))
-    
+    limits =np.array([(0, 1), (0, 1), (0, 1)])
+
+    OR = np.zeros((4, ))
     for scatterer in list_of_scatterers:
 
+        position = get_position(scatterer, mode="corner", return_z=True)
+
+        scatterer_value = get_property(scatterer, "value") or get_property(scatterer, "intensity") or get_property(scatterer, "refractive_index")
+
+        scatterer = scatterer * scatterer_value
+
+        if limits is None:
+            limits = np.zeros((3, 2))
+            limits[:, 0] = np.round(position).astype(np.int32)
+            limits[:, 1] = np.round(position).astype(np.int32) + 1
+
+        OR[0] = np.inf if output_region[0] is None else int(output_region[0] - limits[0, 0] - pad[0])
+        OR[1] = -np.inf if output_region[1] is None else int(output_region[1] - limits[1, 0] - pad[1])
+        OR[2] = np.inf if output_region[2] is None else int(output_region[2] - limits[0, 0] + pad[2])
+        OR[3] = -np.inf if output_region[3] is None else int(output_region[3] - limits[1, 0] + pad[3])
+
         
+
+        if (position[0] + scatterer.shape[0] < OR[0]  or 
+            position[0] > OR[2] or
+            position[1] + scatterer.shape[1] < OR[1]  or 
+            position[1] > OR[3]):
+            continue
 
         padded_scatterer = Image(np.pad(scatterer, [(2, 2), (2, 2), (0, 0)], 'constant', constant_values=0))
         padded_scatterer.properties = scatterer.properties
         scatterer = padded_scatterer
 
-        shape = np.array(scatterer.shape)
-
-
         position = get_position(scatterer, mode="corner", return_z=True)
+        shape = np.array(scatterer.shape)
 
         if position is None:
             RuntimeWarning("Optical device received a feature without a position property. It will be ignored.")
@@ -340,10 +536,17 @@ def create_volume(list_of_scatterers, **kwargs):
         target_x_pos = np.round(x_pos)
         target_y_pos = np.round(y_pos)
 
+        splined_scatterer = np.zeros_like(scatterer)
         for z in range(scatterer.shape[2]):
-            scatterer_spline = RectBivariateSpline(x_pos, y_pos, scatterer[:, :, z])
-            scatterer[1:-1, 1:-1, z] = scatterer_spline(target_x_pos[1:-1], target_y_pos[1:-1])
+            
+            scatterer_spline = RectBivariateSpline(x_pos, y_pos, np.real(scatterer[:, :, z]))
+            splined_scatterer[1:-1, 1:-1, z] = scatterer_spline(target_x_pos[1:-1], target_y_pos[1:-1])
+            
+            if scatterer.dtype == np.complex:
+                scatterer_spline = RectBivariateSpline(x_pos, y_pos, np.imag(scatterer[:, :, z]))
+                splined_scatterer[1:-1, 1:-1, z] += 1j * scatterer_spline(target_x_pos[1:-1], target_y_pos[1:-1])
 
+        scatterer = splined_scatterer
         position = np.round(position)
         new_limits = np.zeros(limits.shape, dtype=np.int32)
         for i in range(3):
@@ -353,8 +556,9 @@ def create_volume(list_of_scatterers, **kwargs):
                 )
             
         if not (np.array(new_limits) == np.array(limits)).all():
-            new_volume = np.zeros(np.diff(new_limits, axis=1)[:, 0].astype(np.int32))
-            old_region = limits - new_limits
+            new_volume = np.zeros(np.diff(new_limits, axis=1)[:, 0].astype(np.int32), dtype=np.complex)
+            old_region = (limits - new_limits).astype(np.int32)
+            limits = limits.astype(np.int32)
             new_volume[
                 old_region[0, 0]:old_region[0, 0] + limits[0, 1] - limits[0, 0],
                 old_region[1, 0]:old_region[1, 0] + limits[1, 1] - limits[1, 0],

@@ -72,7 +72,7 @@ class Feature(ABC):
         used as the input to the .get() method, otherwise an Image of
         all zeros is used.
     '''
-    
+
     __property_verbosity__ = 1
     __list_merge_strategy__ = MERGE_STRATEGY_OVERRIDE
     __distributed__ = True
@@ -84,7 +84,9 @@ class Feature(ABC):
         wrapped as a Distribution, as such randomized during a update
         step.
         '''
+        
         properties = getattr(self, "properties", {})
+        properties["hash_key"] = Property([lambda: np.random.randint(2 ** 31) for _ in range(4)])
 
         all_dicts = (kwargs,) + args
 
@@ -94,17 +96,15 @@ class Feature(ABC):
 
         self.properties = PropertyDict(**properties)
 
-        # Set up flags
-        self.has_updated_since_last_resolve = False
 
-
+        
     @abstractmethod
     def get(self, image, **kwargs):
         ''' Alters an image
         '''
 
 
-
+        
     def resolve(
             self,
             image_list=None,
@@ -115,16 +115,16 @@ class Feature(ABC):
 
 
         # Get the input arguments to the method .get()
-        feature_input = self.properties.current_value_dict()
+        feature_input = self.properties.current_value_dict(is_resolving=True, **global_kwargs)
+        
         # Add and update any global keyword arguments
         feature_input.update(global_kwargs)
+        
         # Call the _process_properties hook, default does nothing.
         feature_input = self._process_properties(feature_input)
 
-
         new_list = self._process_and_get(image_list, **feature_input)
-
-        
+ 
         # Add current_properties to the image the class attribute __property_verbosity__
         # is not larger than the passed property_verbosity keyword
         property_verbosity = global_kwargs.get("property_verbosity", 1)
@@ -148,13 +148,11 @@ class Feature(ABC):
 
 
 
-    def update(self):
+    def update(self, **kwargs):
         '''
         Updates the state of all properties.
         '''
-        if not self.has_updated_since_last_resolve:
-            self.properties.update()
-        self.has_updated_since_last_resolve = True
+        self.properties.update(**kwargs)
         return self
 
 
@@ -182,6 +180,7 @@ class Feature(ABC):
         kwargs
             keyword arguments passed to the method plt.imshow()
         '''
+        
         import matplotlib.pyplot as plt
 
         if input_image is not None:
@@ -192,6 +191,7 @@ class Feature(ABC):
         plt.show()
 
 
+        
     def _format_input(self, image_list, **kwargs):
         
         if image_list is None:
@@ -215,13 +215,19 @@ class Feature(ABC):
         return propertydict
 
 
-    def sample(self):
-        self.properties.update()
+    def sample(self, **kwargs):
+        self.update(**kwargs)
         return self
 
 
     def __add__(self, other):
         return Branch(self, other)
+
+    def __radd__(self, other):
+        if not other:
+            return self
+        else:
+            return NotImplemented
 
 
     def __mul__(self, other):
@@ -289,17 +295,21 @@ class Duplicate(StructuralFeature):
         super().__init__(
             *args,
             num_duplicates=num_duplicates, #py > 3.6 dicts are ordered by insert time.
-            features=lambda: [copy.deepcopy(feature).update() for _ in range(self.properties["num_duplicates"].current_value)],
+            features=lambda: [copy.deepcopy(feature) for _ in range(self.properties["num_duplicates"].current_value)],
             **kwargs)
 
-
-
-    def get(self, image, features=None, num_duplicates=None, **kwargs):
+    def get(self, image, features=None, **kwargs):
 
         for feature in features:
             image = feature.resolve(image, **kwargs)
         return image
 
+
+    def update(self, **kwargs):
+        super().update(**kwargs)
+
+        for feature in self.properties["features"].current_value:
+            feature.update(**kwargs)
 
 
 class Wrap(StructuralFeature):
@@ -352,4 +362,3 @@ class Load(Feature):
                 for file in files
                 if os.path.isfile(os.path.join(self.path, file))
                 and re.match(pattern, file)]
-

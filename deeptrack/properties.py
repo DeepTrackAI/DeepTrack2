@@ -15,7 +15,8 @@ properties.
 
 '''
 import numpy as np
-from deeptrack.utils import isiterable, hasmethod
+import inspect
+from deeptrack.utils import isiterable, hasmethod, get_kwarg_names
 
 
 
@@ -75,6 +76,7 @@ class Property:
 
     def __init__(self, sampling_rule: any):
         self.sampling_rule = sampling_rule
+        self.has_updated_since_last_resolve = False
     
 
     @property
@@ -92,11 +94,9 @@ class Property:
 
         self._current_value
 
-
     @current_value.setter
     def current_value(self, updated_current_value):
         self._current_value = updated_current_value
-
 
     @current_value.getter
     def current_value(self):
@@ -105,7 +105,7 @@ class Property:
         return self._current_value
 
 
-    def update(self) -> 'Property':
+    def update(self, **kwargs) -> 'Property':
         r'''Updates the current value
 
         The method `update()` sets the property `current_value`
@@ -117,12 +117,18 @@ class Property:
             Returns itself.
 
         '''
-        self.current_value = self.sample()
+        if self.has_updated_since_last_resolve and not kwargs.get("force_update", False):
+            return self
+        
+        self.has_updated_since_last_resolve = True
+
+
+        self.current_value = self.sample(self.sampling_rule, **kwargs)
 
         return self
 
 
-    def sample(self):
+    def sample(self, sampling_rule, **kwargs):
         r'''Samples the sampling rule
 
         Returns a sampled instance of the `sampling_rule` field.
@@ -149,44 +155,89 @@ class Property:
 
         '''
 
-        sampling_rule = self.sampling_rule
-
         if hasmethod(sampling_rule, "sample"):
             # If the ruleset itself implements a sample method,
             # call it instead.
-            return sampling_rule.sample()
+            return sampling_rule.sample(**kwargs)
 
         elif isinstance(sampling_rule, dict):
             # If the ruleset is a dict, return a new dict with each
             # element being sampled from the original dict.
             out = {}
             for key, val in self.sampling_rule.items():
-                if hasmethod(val, 'sample'):
-                    out[key] = val.sample()
-                else:
-                    out[key] = val
+                    out[key] = self.sample(val, **kwargs)
             return out
 
-        elif (isinstance(sampling_rule, list) or
-              isinstance(sampling_rule, np.ndarray) and sampling_rule.ndim == 1):
-            # If it's either a list or a 1-dimensional ndarray,
-            # return a random element from the list. 
-            return np.random.choice(sampling_rule)
+        elif isinstance(sampling_rule, list):
+            return [self.sample(item, **kwargs) for item in sampling_rule]
+
+        elif isinstance(sampling_rule, (tuple, np.ndarray)):
+            # tuple and ndarrays are elementary
+            return sampling_rule
 
         elif isiterable(sampling_rule):
             # If it's iterable, return the next value
-            return next(sampling_rule)
+            try:
+                return next(sampling_rule)
+            except StopIteration:
+                return self.current_value
   
         elif callable(sampling_rule):
-            # If it's a function, call it without parameters
-            return sampling_rule()
+            # If it's a function
+            function_input = {}
+            for key in get_kwarg_names(sampling_rule):
+                if key in kwargs:
+                    if isinstance(kwargs[key], Property):
+                        kwargs[key].update(**kwargs)
+                        
+                        if isinstance(kwargs[key], SequentialProperty):
+                            kwargs[key] = kwargs[key].current_value[kwargs["sequence_step"]]
+                        else:
+                            kwargs[key] = kwargs[key].current_value
 
+                    
+                         
+                    function_input[key] = kwargs[key]
+
+            return sampling_rule(**function_input)
+            
         else:
             # Else, assume it's elementary.
-            return self.sampling_rule
+            return sampling_rule
 
 
+class SequentialProperty(Property):
 
+    def __init__(self, initializer, sampling_rule):
+        self.initializer = initializer
+        self.sampling_rule = sampling_rule
+        self.has_updated_since_last_resolve = False
+        
+
+    def update(self, sequence_length=0, **kwargs):
+
+        if self.has_updated_since_last_resolve:
+            return self
+
+        self.has_updated_since_last_resolve = True
+
+        new_current_value = []
+
+        for step in range(sequence_length):
+
+            ruleset = self.initializer if step == 0 else self.sampling_rule
+            kwargs.update(
+                sequence_step=step,
+                sequence_length=sequence_length,
+                previous_value=None if step == 0 else new_current_value[-1],
+                previous_values=new_current_value)
+            
+            new_current_value.append(
+                self.sample(ruleset, **kwargs))
+
+        self.current_value = new_current_value
+
+        return self
 
 class PropertyDict(dict):
     ''' Dictionary with Property elements
@@ -202,7 +253,7 @@ class PropertyDict(dict):
     '''
 
 
-    def current_value_dict(self) -> dict:
+    def current_value_dict(self, is_resolving=False, **kwargs) -> dict:
         ''' Retrieves the current value of all properties as a dictionary
 
         Returns
@@ -211,14 +262,26 @@ class PropertyDict(dict):
             A dictionary with the current value of all properties
 
         '''
-
         current_value_dict = {}
         for key, property in self.items():
-            current_value_dict[key] = property.current_value
+            
+            property_value = property.current_value
+
+            # If the property is sequential, retrieve the value
+            # of the current timestep
+            if isinstance(property, SequentialProperty):
+                sequence_step = kwargs.get("sequence_step", 0)
+                property_value = property_value[sequence_step]
+
+            current_value_dict[key] = property_value
+
+            if is_resolving:
+                property.has_updated_since_last_resolve = False
+
         return current_value_dict
 
 
-    def update(self) -> 'PropertyDict':
+    def update(self, **kwargs) -> 'PropertyDict':
         ''' Updates all properties
 
         Calls the method `update()` on each property in the dictionary.
@@ -231,11 +294,12 @@ class PropertyDict(dict):
         '''
 
         for property in self.values():
-            property.update()
+            kwargs.update(self)
+            property.update(**kwargs)
         return self
 
 
-    def sample(self) -> dict:
+    def sample(self, **kwargs) -> dict:
         ''' Samples all properties
 
         Returns
@@ -248,6 +312,6 @@ class PropertyDict(dict):
 
         sample_dict = {}
         for key, property in self.items():
-            sample_dict[key] = property.sample()
+            sample_dict[key] = property.sample(**kwargs)
 
         return sample_dict

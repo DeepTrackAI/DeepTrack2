@@ -66,14 +66,9 @@ class PointParticle(Scatterer):
 
     def get(self,
             image,
-            intensity=None,
             **kwargs):
 
-
-
-        return np.ones((1, 1, 1))*intensity
-
-import matplotlib.pyplot as plt
+        return np.ones((1, 1, 1)) * 1.0
 
 class Ellipse(Scatterer):
     ''' Generates ellipsoidal scatterers
@@ -95,23 +90,30 @@ class Ellipse(Scatterer):
     def get(
             self, 
             image,
-            intensity=None,
             radius=None,
             rotation=0,
-            pixel_size=None,
             voxel_size=None,
+            upsample=4,
             **kwargs):
+
 
         if not isinstance(radius, (tuple, list, np.ndarray)):
             radius = (radius, radius)
         
-        x_rad = radius[0] / voxel_size[0]
-        y_rad = radius[1] / voxel_size[1]
+        x_rad = radius[0] / voxel_size[0] * upsample
+        y_rad = radius[1] / voxel_size[1] * upsample
 
         x_ceil = int(np.ceil(x_rad))
         y_ceil = int(np.ceil(y_rad))
 
-        X, Y = np.meshgrid(np.arange(-x_ceil, x_ceil), np.arange(-y_ceil, y_rad))
+        x_ceil = np.max((x_ceil, y_ceil))
+        y_ceil = np.max((x_ceil, y_ceil))
+
+        to_add = (upsample - ((x_ceil * 2) % upsample)) % upsample
+
+
+        X, Y = np.meshgrid(np.arange(-x_ceil, x_ceil + to_add), np.arange(-y_ceil, y_ceil + to_add))
+
         if rotation != 0:
             Xt =  (X * np.cos(rotation) + Y * np.sin(rotation))
             Yt = (-X * np.sin(rotation) + Y * np.cos(rotation))
@@ -119,7 +121,10 @@ class Ellipse(Scatterer):
             Y = Yt 
 
 
-        mask = ((X * X) / (x_rad * x_rad) + (Y * Y) / (y_rad * y_rad) < 1) * 1.0 * intensity
+        mask = ((X * X) / (x_rad * x_rad) + (Y * Y) / (y_rad * y_rad) < 1)
+
+        if upsample != 1:
+            mask = np.reshape(mask, (mask.shape[0] // upsample, upsample, mask.shape[1] // upsample, upsample)).mean(axis=(3,1))
 
         mask = mask[~np.all(mask == 0, axis=1)]
         mask = mask[:, ~np.all(mask == 0, axis=0)]

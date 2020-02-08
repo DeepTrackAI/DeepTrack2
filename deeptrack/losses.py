@@ -28,6 +28,7 @@ def flatten(func):
 def sigmoid(func):
     # Takes the Sigmoid function of the prediction
     def wrapper(T, P):
+        P = K.clip(P, -50, 50)
         P = 1 / (1 + K.exp(-P))
         return func(T, P)
     wrapper.__name__ = "sigmoid_" + func.__name__
