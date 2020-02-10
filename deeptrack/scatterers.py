@@ -96,7 +96,6 @@ class Ellipse(Scatterer):
             upsample=4,
             **kwargs):
 
-
         if not isinstance(radius, (tuple, list, np.ndarray)):
             radius = (radius, radius)
         
@@ -124,11 +123,67 @@ class Ellipse(Scatterer):
         mask = ((X * X) / (x_rad * x_rad) + (Y * Y) / (y_rad * y_rad) < 1)
 
         if upsample != 1:
-            mask = np.reshape(mask, (mask.shape[0] // upsample, upsample, mask.shape[1] // upsample, upsample)).mean(axis=(3,1))
+            mask = np.reshape(mask, (mask.shape[0] // upsample, upsample, mask.shape[1] // upsample, upsample)).mean(axis=(3, 1))
 
         mask = mask[~np.all(mask == 0, axis=1)]
         mask = mask[:, ~np.all(mask == 0, axis=0)]
 
         mask = np.expand_dims(mask, axis=-1)
+
+        return mask
+
+
+class Sphere(Scatterer):
+    ''' Generates ellipsoidal scatterers
+
+    Parameters
+    ----------
+    position               
+        The position of the point particle. Defined as (0,0) in the
+        upper left corner.
+    intensity               
+        The magnitude of the complex field scattered by the point particle. 
+        Mathematically the integral over the delta distribution. 
+    radius
+        The radius of the sphere, in meters
+    rotation
+        If defined, rotates the ellipsoid by this amount in radians
+    '''
+
+    def get(
+            self, 
+            image,
+            radius=None,
+            voxel_size=None,
+            upsample=4,
+            **kwargs):
+
+
+
+        rad = radius / voxel_size * upsample
+
+        rad_ceil = np.ceil(rad)
+
+        to_add = (upsample - ((rad_ceil * 2) % upsample)) % upsample
+
+        x = np.arange(-rad_ceil[0], rad_ceil[0] + to_add[0])
+        y = np.arange(-rad_ceil[1], rad_ceil[1] + to_add[1])
+        z = np.arange(-rad_ceil[2], rad_ceil[2] + to_add[2])
+
+        X, Y, Z = np.meshgrid((x / rad[0])**2, (y / rad[1])**2, (z / rad[2])**2)
+
+
+
+        mask = X + Y + Z < 1
+
+        if upsample != 1:
+            mask = np.reshape(mask, 
+                                (mask.shape[0] // upsample, upsample, 
+                                 mask.shape[1] // upsample, upsample,
+                                 mask.shape[2] // upsample, upsample)).mean(axis=(5, 3, 1))
+
+        mask = mask[~np.all(mask == 0, axis=(1, 2))]
+        mask = mask[:, ~np.all(mask == 0, axis=(0, 2))]
+        mask = mask[:, :, ~np.all(mask == 0, axis=(0, 1))]
 
         return mask
