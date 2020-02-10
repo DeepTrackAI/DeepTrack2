@@ -6,7 +6,9 @@ def convolutional(
         input_shape=(51, 51, 1),
         conv_layers_dimensions=(16, 32, 64, 128),
         dense_layers_dimensions=(32, 32),
-        number_of_outputs=3):
+        number_of_outputs=3,
+        output_activation=None,
+        loss="mse"):
     """Creates and compiles a deep learning network.
 
     Inputs:
@@ -61,10 +63,10 @@ def convolutional(
 
     # OUTPUT LAYER
 
-    output_layer = layers.Dense(number_of_outputs, name='output')
+    output_layer = layers.Dense(number_of_outputs, activation=output_activation, name='output')
     network.add(output_layer)
 
-    network.compile(optimizer='rmsprop', loss='mse', metrics=['mse', 'mae'])
+    network.compile(optimizer='rmsprop', loss=loss, metrics=['mse', 'mae'])
 
     return network
 
