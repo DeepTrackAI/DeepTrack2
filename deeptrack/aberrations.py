@@ -115,15 +115,15 @@ class ObliqueTrefoil(Zernike):
 
 class VerticalComa(Zernike):
     def __init__(self, *args, coefficient=0):
-        super().__init__(*args, n=3, m=-3, coefficient=coefficient)
+        super().__init__(*args, n=3, m=-1, coefficient=coefficient)
 
 class HorizontalComa(Zernike):
     def __init__(self, *args, coefficient=0):
-        super().__init__(*args, n=3, m=-3, coefficient=coefficient)
+        super().__init__(*args, n=3, m=1, coefficient=coefficient)
 
 class Trefoil(Zernike):
     def __init__(self, *args, coefficient=0):
-        super().__init__(*args, n=3, m=-3, coefficient=coefficient)
+        super().__init__(*args, n=3, m=3, coefficient=coefficient)
 
 class SphericalAberration(Zernike):
     def __init__(self, *args, coefficient=0):
