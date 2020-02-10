@@ -63,7 +63,7 @@ class Zernike(Aberration):
                 continue
 
             R = 0
-            for k in range((n - np.abs(m)) // 2):
+            for k in range((n - np.abs(m)) // 2 + 1):
                 R += ((-1) ** k * np.math.factorial(n - k) / (np.math.factorial(k) * 
                      np.math.factorial((n - m) // 2 - k) * np.math.factorial((n + m) // 2 - k)) *
                      rho**(n - 2*k))
