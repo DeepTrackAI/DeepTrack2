@@ -11,18 +11,6 @@ from deeptrack.image import Image
 class Generator(keras.utils.Sequence):
     '''
     Base class for a generator.
-
-    Generators combine a set of particles, an optical system and a ruleset
-    to continuously create random images of particles.
-
-    This base class convolves the intensity map of the particle with an optical pupil
-    to simulate particles.
-
-    Input arguments:
-        shape           Shape of the output (tuple)
-        wavelength      wavelength of the illumination source in microns (number)
-        pixel_size      size of the pixels in microns (number)
-        NA              the effective NA of the optical systen (number)       
     '''
 
 
@@ -50,7 +38,8 @@ class Generator(keras.utils.Sequence):
                  features,
                  label_function=None,
                  batch_size=1,
-                 shuffle_batch=True):
+                 shuffle_batch=True,
+                 ndim=4):
 
         get_one = self._get_from_map(features)
         while True:
@@ -60,8 +49,10 @@ class Generator(keras.utils.Sequence):
             for _ in range(batch_size):
                 image = next(get_one)
                 batch.append(image)
-                if not label_function is None:
+                if label_function:
                     labels.append(label_function(image))
+
+
 
             if shuffle_batch:
                 self.shuffle(batch, labels)
@@ -69,9 +60,14 @@ class Generator(keras.utils.Sequence):
             batch = np.array(batch)
             labels = np.array(labels)
 
-            if not label_function is None:
+            if batch.ndim > ndim:
+                dims_to_remove = batch.ndim - ndim
+                batch = np.reshape(batch, (-1, *batch.shape[dims_to_remove + 1:]))
+                labels = np.reshape(labels, (-1, *labels.shape[dims_to_remove + 1:]))
+
+            if label_function:
                 yield batch, labels
-            else: 
+            else:
                 yield batch
 
 
