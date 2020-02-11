@@ -6,7 +6,9 @@ def convolutional(
         input_shape=(51, 51, 1),
         conv_layers_dimensions=(16, 32, 64, 128),
         dense_layers_dimensions=(32, 32),
-        number_of_outputs=3):
+        number_of_outputs=3,
+        output_activation=None,
+        loss="mse"):
     """Creates and compiles a deep learning network.
 
     Inputs:
@@ -61,17 +63,17 @@ def convolutional(
 
     # OUTPUT LAYER
 
-    output_layer = layers.Dense(number_of_outputs, name='output')
+    output_layer = layers.Dense(number_of_outputs, activation=output_activation, name='output')
     network.add(output_layer)
 
-    network.compile(optimizer='rmsprop', loss='mse', metrics=['mse', 'mae'])
+    network.compile(optimizer='rmsprop', loss=loss, metrics=['mse', 'mae'])
 
     return network
 
 
 
 def unet(
-        input_shape=(256, 256, 1),
+        input_shape=(None, None, 1),
         conv_layers_dimensions=(16, 32, 64, 128),
         base_conv_layers_dimensions=(128, 128),
         output_conv_layers_dimensions=(16, 16),
@@ -79,15 +81,13 @@ def unet(
         number_of_outputs=1,
         layer_function=None,
         output_activation="sigmoid",    
-        loss=nd_mean_absolute_error,
-        data_format="channels_last"):
+        loss=nd_mean_absolute_error):
 
     if layer_function is None:
         layer_function = lambda dimensions: layers.Conv2D(
             conv_layer_dimension,
             kernel_size=3,
             activation="relu",
-            data_format=data_format,
             padding="same"
         )
 
@@ -113,10 +113,9 @@ def unet(
 
         layer = layers.Conv2DTranspose(conv_layer_dimension,
                                        kernel_size=2,
-                                       data_format=data_format,
                                        strides=2)(layer)
 
-        layer = layers.Concatenate(axis=-3)([layer, concat_layer])
+        layer = layers.Concatenate(axis=-1)([layer, concat_layer])
         for _ in range(steps_per_pooling):
             layer = layer_function(conv_layer_dimension)(layer)
 
@@ -128,7 +127,6 @@ def unet(
         number_of_outputs,
         kernel_size=3,
         activation=output_activation,
-        data_format=data_format,
         padding="same")(layer)
 
     model = models.Model(unet_input, layer)

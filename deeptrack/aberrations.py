@@ -63,7 +63,7 @@ class Zernike(Aberration):
                 continue
 
             R = 0
-            for k in range((n - np.abs(m)) // 2):
+            for k in range((n - np.abs(m)) // 2 + 1):
                 R += ((-1) ** k * np.math.factorial(n - k) / (np.math.factorial(k) * 
                      np.math.factorial((n - m) // 2 - k) * np.math.factorial((n + m) // 2 - k)) *
                      rho**(n - 2*k))
@@ -115,15 +115,15 @@ class ObliqueTrefoil(Zernike):
 
 class VerticalComa(Zernike):
     def __init__(self, *args, coefficient=0):
-        super().__init__(*args, n=3, m=-3, coefficient=coefficient)
+        super().__init__(*args, n=3, m=-1, coefficient=coefficient)
 
 class HorizontalComa(Zernike):
     def __init__(self, *args, coefficient=0):
-        super().__init__(*args, n=3, m=-3, coefficient=coefficient)
+        super().__init__(*args, n=3, m=1, coefficient=coefficient)
 
 class Trefoil(Zernike):
     def __init__(self, *args, coefficient=0):
-        super().__init__(*args, n=3, m=-3, coefficient=coefficient)
+        super().__init__(*args, n=3, m=3, coefficient=coefficient)
 
 class SphericalAberration(Zernike):
     def __init__(self, *args, coefficient=0):
