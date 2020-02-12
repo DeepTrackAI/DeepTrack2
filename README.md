@@ -23,7 +23,7 @@ These may serve as a useful starting point from which to build a solution.
 The notebooks can be read in any order, but we provide a suggested order to introduce new concepts more naturally. 
 This order is as follows:
 
-1. deeptrack_introduction_tutorial
+1. [deeptrack_introduction_tutorial](tutorials/deeptrack_introduction_tutorial.ipynb)
 2. tracking_particles_cnn_tutorial
 3. tracking_multiple_particles_unet_tutorial
 4. characterizing_aberrations_tutorial
