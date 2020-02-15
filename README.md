@@ -24,7 +24,7 @@ The notebooks can be read in any order, but we provide a suggested order to intr
 This order is as follows:
 
 1. [deeptrack_introduction_tutorial](tutorials/deeptrack_introduction_tutorial.ipynb)
-2. [tracking_particles_cnn_tutorial](tutorials/tracking_particles_cnn_tutorial.ipynb)
+2. [tracking_particles_cnn_tutorial](tutorials/tracking_particle_cnn_tutorial.ipynb)
 3. [tracking_multiple_particles_unet_tutorial](tutorials/tracking_multiple_particles_unet_tutorial.ipynb)
 4. [characterizing_aberrations_tutorial](tutorials/characterizing_aberrations_tutorial.ipynb)
 5. [distinguishing_particles_in_brightfield_tutorial](tutorials/distinguishing_particles_in_brightfield_tutorial.ipynb)
