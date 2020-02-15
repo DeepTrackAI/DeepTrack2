@@ -216,7 +216,6 @@ class Feature(ABC):
 
 
     def sample(self, **kwargs):
-        self.update(**kwargs)
         return self
 
 

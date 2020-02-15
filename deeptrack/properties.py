@@ -101,7 +101,7 @@ class Property:
     @current_value.getter
     def current_value(self):
         if not hasattr(self, "_current_value"):
-            self.update() # generate new current value
+            self._current_value = self.sample(self.sampling_rule)
         return self._current_value
 
 
@@ -117,11 +117,14 @@ class Property:
             Returns itself.
 
         '''
-        if self.has_updated_since_last_resolve and not kwargs.get("force_update", False):
+
+        if not kwargs.get("force_update", False) and self.has_updated_since_last_resolve:
             return self
         
         self.has_updated_since_last_resolve = True
 
+        if hasmethod(self.sampling_rule, "update"):
+            self.sampling_rule.update(**kwargs)
 
         self.current_value = self.sample(self.sampling_rule, **kwargs)
 
