@@ -481,7 +481,11 @@ def get_position(feature, mode="center", return_z=False):
     return position
 
 
-def create_volume(list_of_scatterers, pad=(0, 0, 0, 0), output_region=(None, None, None, None), **kwargs):
+def create_volume(list_of_scatterers, 
+                  pad=(0, 0, 0, 0), 
+                  output_region=(None, None, None, None), 
+                  refractive_index_medium=1.33
+                  **kwargs):
 
     
 
@@ -497,7 +501,9 @@ def create_volume(list_of_scatterers, pad=(0, 0, 0, 0), output_region=(None, Non
 
         position = get_position(scatterer, mode="corner", return_z=True)
 
-        scatterer_value = get_property(scatterer, "value") or get_property(scatterer, "intensity") or get_property(scatterer, "refractive_index")
+        scatterer_value = (get_property(scatterer, "value") or 
+                           get_property(scatterer, "intensity") or 
+                           get_property(scatterer, "refractive_index") - refractive_index_medium
 
         scatterer = scatterer * scatterer_value
 
