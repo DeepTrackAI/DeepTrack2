@@ -168,7 +168,7 @@ class Optics(Feature):
         if include_aberration:
             pupil = pupil or aberration
             if isinstance(pupil, Feature):
-                pupil_function = pupil.resolve(pupil_function)
+                pupil_function = pupil.resolve(pupil_function, **kwargs)
             elif isinstance(pupil, np.ndarray):
                 pupil_function *= pupil
 
