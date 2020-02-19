@@ -484,7 +484,7 @@ def get_position(feature, mode="center", return_z=False):
 def create_volume(list_of_scatterers, 
                   pad=(0, 0, 0, 0), 
                   output_region=(None, None, None, None), 
-                  refractive_index_medium=1.33
+                  refractive_index_medium=1.33,
                   **kwargs):
 
     
