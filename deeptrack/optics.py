@@ -503,7 +503,7 @@ def create_volume(list_of_scatterers,
 
         scatterer_value = (get_property(scatterer, "value") or 
                            get_property(scatterer, "intensity") or 
-                           get_property(scatterer, "refractive_index") - refractive_index_medium
+                           get_property(scatterer, "refractive_index") - refractive_index_medium)
 
         scatterer = scatterer * scatterer_value
 
