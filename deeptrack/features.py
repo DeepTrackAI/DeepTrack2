@@ -7,6 +7,7 @@ import numpy as np
 
 from deeptrack.image import Image
 from deeptrack.properties import Property, PropertyDict
+from deeptrack.utils import get_property
 
 
 MERGE_STRATEGY_OVERRIDE = 0
@@ -170,25 +171,66 @@ class Feature(ABC):
 
 
 
-    def plot(self, input_image=None, **kwargs):
+    def plot(self, input_image=None, interval=None, **kwargs):
         ''' Resolves the image and shows the result
 
         Parameters
         ----------
         shape
             shape of the image to be drawn
+        input_image
+            
         kwargs
             keyword arguments passed to the method plt.imshow()
         '''
         
         import matplotlib.pyplot as plt
+        import matplotlib.animation as animation
+        from IPython.display import HTML, display
 
         if input_image is not None:
             input_image = [Image(input_image)]
 
         output_image = self.resolve(input_image)
-        plt.imshow(output_image[:, :, 0], **kwargs)
-        plt.show()
+
+        # If a list, assume video
+        if isinstance(output_image, Image):
+            # Single image
+            plt.imshow(output_image[:, :, 0], **kwargs)
+            plt.show()
+
+        else:
+            # Assume video
+            fig = plt.figure()
+            images = []
+            for image in output_image:
+                images.append([plt.imshow(image[:, :, 0], **kwargs)])
+
+            interval = (interval
+                        or get_property(output_image[0], "interval") 
+                        or (1 / 30 * 1000))
+
+
+            anim = animation.ArtistAnimation(fig, images, interval=interval, blit=True,
+                                    repeat_delay=0)
+
+            try: 
+                get_ipython # Throws NameError if not in Notebook
+                display(HTML(anim.to_jshtml()))
+
+            except NameError as e:
+                # Not in an notebook
+                plt.show()
+
+            except RuntimeError as e:
+                # In notebook, but animation failed
+                import ipywidgets as widgets
+                Warning("Javascript animation failed. This is a non-performant fallback.")
+                def plotter(frame=0):
+                    plt.imshow(output_image[frame][:, :, 0], **kwargs)
+                    plt.show()
+
+                return widgets.interact(plotter, frame=widgets.IntSlider(value=0, min=0, max=len(images)-1, step=1))
 
 
         

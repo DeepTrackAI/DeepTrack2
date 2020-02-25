@@ -19,7 +19,7 @@ OpticalDevice
 import numpy as np
 from deeptrack.features import Feature
 from deeptrack.image import Image
-from deeptrack.utils import as_list, pad_image_to_fft
+from deeptrack.utils import as_list, pad_image_to_fft, get_property
 
 from scipy.interpolate import RectBivariateSpline
 
@@ -444,11 +444,7 @@ class IlluminationGradient(Feature):
 
 
 # HELPER FUNCTIONS
-def get_property(feature, key, default=None):
-    for property in feature.properties:
-        if key in property:
-            return property[key]
-    return default
+
 
 
 def get_position(feature, mode="center", return_z=False):
