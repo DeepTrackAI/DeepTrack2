@@ -7,11 +7,11 @@ class Image(np.ndarray):
     The Image subclass of numpy ndarrays are used by features to resolve
     images and store the current value of the properties of each feature
     in the feature series. These properties are stored in the field
-    `properties` as a list of dictionaries, in the same order that the
-    features were evaluated.
+    `properties` as a list of dictionaries, in the same order as that 
+    in which the features were evaluated.
 
     This is used thoughout the deeptrack model to store and extract
-    information about how an image was generated. Examples include
+    information about how an image was generated. Examples include:
 
     * Features may depend on earlier features in the feature series.
 
@@ -55,6 +55,7 @@ class Image(np.ndarray):
         Image
             Returns itself
         '''
+        
         self.properties.append(property_dict)
         return self
 
