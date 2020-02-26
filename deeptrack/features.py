@@ -89,7 +89,7 @@ class Feature(ABC):
         properties = getattr(self, "properties", {})
         properties["hash_key"] = Property([lambda: np.random.randint(2 ** 31) for _ in range(4)])
 
-        all_dicts = (kwargs,) + args
+        all_dicts = (kwargs, ) + args
 
         for property_dict in all_dicts:
             for key, value in property_dict.items():
