@@ -19,7 +19,7 @@ OpticalDevice
 import numpy as np
 from deeptrack.features import Feature
 from deeptrack.image import Image
-from deeptrack.utils import as_list, pad_image_to_fft
+from deeptrack.utils import as_list, pad_image_to_fft, get_property
 
 from scipy.interpolate import RectBivariateSpline
 
@@ -168,7 +168,7 @@ class Optics(Feature):
         if include_aberration:
             pupil = pupil or aberration
             if isinstance(pupil, Feature):
-                pupil_function = pupil.resolve(pupil_function)
+                pupil_function = pupil.resolve(pupil_function, **kwargs)
             elif isinstance(pupil, np.ndarray):
                 pupil_function *= pupil
 
@@ -444,11 +444,7 @@ class IlluminationGradient(Feature):
 
 
 # HELPER FUNCTIONS
-def get_property(feature, key, default=None):
-    for property in feature.properties:
-        if key in property:
-            return property[key]
-    return default
+
 
 
 def get_position(feature, mode="center", return_z=False):
@@ -481,7 +477,11 @@ def get_position(feature, mode="center", return_z=False):
     return position
 
 
-def create_volume(list_of_scatterers, pad=(0, 0, 0, 0), output_region=(None, None, None, None), **kwargs):
+def create_volume(list_of_scatterers, 
+                  pad=(0, 0, 0, 0), 
+                  output_region=(None, None, None, None), 
+                  refractive_index_medium=1.33,
+                  **kwargs):
 
     
 
@@ -497,7 +497,9 @@ def create_volume(list_of_scatterers, pad=(0, 0, 0, 0), output_region=(None, Non
 
         position = get_position(scatterer, mode="corner", return_z=True)
 
-        scatterer_value = get_property(scatterer, "value") or get_property(scatterer, "intensity") or get_property(scatterer, "refractive_index")
+        scatterer_value = (get_property(scatterer, "value") or 
+                           get_property(scatterer, "intensity") or 
+                           get_property(scatterer, "refractive_index") - refractive_index_medium)
 
         scatterer = scatterer * scatterer_value
 

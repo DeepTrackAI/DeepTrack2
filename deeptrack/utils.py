@@ -57,6 +57,13 @@ def as_list(obj):
         return [obj]
 
 
+def get_property(feature, key, default=None):
+    for property in feature.properties:
+        if key in property:
+            return property[key]
+    return default
+
+
 def get_kwarg_names(function):
     try:
         argspec = inspect.getfullargspec(function)
