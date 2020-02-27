@@ -1,17 +1,18 @@
 import numpy as np
 
 
+
 class Image(np.ndarray):
-    '''Subclass of numpy ndarray with additional attribute "properties"
+    '''Subclass of numpy ndarray with additional attribute "properties".
 
-    The Image subclass of numpy ndarrays are used by features to resolve
-    images and store the current value of the properties of each feature
-    in the feature series. These properties are stored in the field
-    `properties` as a list of dictionaries, in the same order as that
-    in which the features were evaluated.
+    The class Image is used by features to resolve images and store 
+    the current values of the properties of each feature in the feature 
+    series. These properties are stored in the field `properties` 
+    as a list of dictionaries, in the same order as that in which 
+    the features have been evaluated.
 
-    This is used thoughout the deeptrack model to store and extract
-    information about how an image was generated.
+    The field `properties` is used to store and extract information 
+    about how an image has been generated.
 
     Parameters
     ----------
@@ -45,7 +46,7 @@ class Image(np.ndarray):
         Returns
         -------
         Image
-            Returns itself
+            Returns itself.
         '''
         
         self.properties.append(property_dict)
@@ -59,9 +60,9 @@ class Image(np.ndarray):
         '''Retrieve a property.
         
         If the feature has the property defined by `key`, return
-        its current_value. Otherwise, return `default`. If get_one
-        is True, the first instance is returned, otherwise, all
-        instances are returned as a list.
+        its current_value. Otherwise, return `default`. 
+        If `get_one` is True, the first instance is returned; 
+        otherwise, all instances are returned as a list.
 
         Parameters
         ----------
@@ -96,9 +97,9 @@ class Image(np.ndarray):
         Uniqueness of a dictionary of properties is determined from the
         `hash_key` property.
 
-        Most function involving two Images should automatically output an image with
+        Most functions involving two images should automatically output an image with
         merged properties. However, since each property is guaranteed to be unique,
-        it is safe to manually call this function if there's any uncertainty.
+        it is safe to manually call this function if there is any uncertainty.
 
         Parameters
         ----------
@@ -132,6 +133,7 @@ class Image(np.ndarray):
 
     def __new__(cls, input_array, properties=None):
         # Converts input to ndarray, and then to an Image
+        
         obj = np.array(input_array).view(cls)
         if properties is None:
             # If input_array has properties attribute, retrieve a copy of it
@@ -142,6 +144,7 @@ class Image(np.ndarray):
 
 
     def __array_wrap__(self, out_arr, context=None):
+        # 
 
         if out_arr is self:  # for in-place operations
             result = out_arr
@@ -183,14 +186,6 @@ for n in range(1, 10):
 FASTEST_SIZES = np.sort(FASTEST_SIZES)
 
 
-def _closest(dim):
-    # Returns the smallest value frin FASTEST_SIZES
-    # larger than dim
-    for size in FASTEST_SIZES:
-        if size >= dim:
-            return size
-
-
 def pad_image_to_fft(image: Image, axes=(0, 1)) -> Image:
     ''' Pads image to speed up fast fourier transforms.
     Pads image to speed up fast fourier transforms by adding 0s to the
@@ -203,6 +198,13 @@ def pad_image_to_fft(image: Image, axes=(0, 1)) -> Image:
     axes : iterable of int, optional
         The axes along which to pad.
     '''
+
+    def _closest(dim):
+        # Returns the smallest value frin FASTEST_SIZES
+        # larger than dim
+        for size in FASTEST_SIZES:
+            if size >= dim:
+                return size
 
     new_shape = np.array(image.shape)
     for axis in axes:
