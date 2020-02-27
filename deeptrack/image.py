@@ -173,7 +173,7 @@ class Image(np.ndarray):
 
         # Merge from obj if obj is Image
         if isinstance(obj, Image):
-            self.merge_properties_from(Image)
+            self.merge_properties_from(obj)
 
 
 
