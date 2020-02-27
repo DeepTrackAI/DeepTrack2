@@ -114,8 +114,8 @@ class Ellipse(Scatterer):
         X, Y = np.meshgrid(np.arange(-x_ceil, x_ceil + to_add), np.arange(-y_ceil, y_ceil + to_add))
 
         if rotation != 0:
-            Xt =  (X * np.cos(rotation) + Y * np.sin(rotation))
-            Yt = (-X * np.sin(rotation) + Y * np.cos(rotation))
+            Xt =  (X * np.cos(-rotation) + Y * np.sin(-rotation))
+            Yt = (-X * np.sin(-rotation) + Y * np.cos(-rotation))
             X = Xt
             Y = Yt 
 
@@ -217,7 +217,9 @@ class Ellipsoid(Scatterer):
 
 
         # Ensure radius has three values
-        radius = propertydict["radius"]
+        radius = np.array(propertydict["radius"])
+        if radius.ndim == 0:
+            radius = np.array([radius])
         if radius.size == 1:
             # If only one value, assume sphere
             radius = (*radius,) * 3
@@ -230,7 +232,10 @@ class Ellipsoid(Scatterer):
         propertydict["radius"] = radius
 
         # Ensure rotation has three values
-        rotation = propertydict["rotation"]
+        rotation = np.array(propertydict["rotation"])
+        if rotation.ndim == 0:
+            rotation = np.array([rotation])
+
         if rotation.size == 1:
             # If only one value, pad with two zeros
             rotation = (*rotation, 0, 0) 
@@ -240,7 +245,9 @@ class Ellipsoid(Scatterer):
         elif rotation.size == 3:
             # If three values, convert to tuple for consistency
             rotation = (*rotation, )
+        propertydict["rotation"] = rotation
 
+        return propertydict
 
     def get(self,
             image,
