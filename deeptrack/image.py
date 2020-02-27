@@ -91,7 +91,7 @@ class Image(np.ndarray):
 
     
     def merge_properties_from(self, other: "Image") -> "Image":
-        ''' Merges properties with ones from another Image.
+        ''' Merge properties with ones from another Image.
 
         Appends properties from another images such that no property is duplicated.
         Uniqueness of a dictionary of properties is determined from the
