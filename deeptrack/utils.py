@@ -20,6 +20,8 @@ get_kwarg_names(function: Callable)
 
 import inspect
 
+from typing import Callable, List
+
 
 
 def hasmethod(obj: any, method_name: str) -> bool:
