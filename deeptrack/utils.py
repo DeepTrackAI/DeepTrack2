@@ -14,7 +14,7 @@ isiterable(object:any)
 import inspect
 import numpy as np
 from deeptrack.image import Image
-
+[].
 
 def hasmethod(obj: any, method_name: str) -> bool:
     ''' Checks if the input has a callable method named method_name
