@@ -37,7 +37,7 @@ class TestUtils(unittest.TestCase):
         
         self.assertEqual(utils.get_kwarg_names(func1), [])
 
-        def func2(key1, key2=1, key3=3, **kwarg):
+        def func2(key1, key2=1, key3=3, **kwargs):
             pass
         
         self.assertEqual(utils.get_kwarg_names(func2), ['key2', 'key3'])
