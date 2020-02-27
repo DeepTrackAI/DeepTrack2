@@ -421,8 +421,8 @@ class Brightfield(Optics):
 class IlluminationGradient(Feature):
     def get(self, image, gradient=(0, 0), vmin=0, vmax=np.inf, **kwargs):
         
-        x = np.arange(image.shape[0]) / image.shape[0] - 0.5
-        y = np.arange(image.shape[1]) / image.shape[1] - 0.5
+        x = np.arange(image.shape[0])
+        y = np.arange(image.shape[1])
         
         X, Y = np.meshgrid(x, y)
         
