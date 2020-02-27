@@ -18,8 +18,8 @@ OpticalDevice
 
 import numpy as np
 from deeptrack.features import Feature
-from deeptrack.image import Image
-from deeptrack.utils import as_list, pad_image_to_fft, get_property
+from deeptrack.image import Image, pad_image_to_fft
+from deeptrack.utils import as_list
 
 from scipy.interpolate import RectBivariateSpline
 
@@ -447,16 +447,16 @@ class IlluminationGradient(Feature):
 
 
 
-def get_position(feature, mode="center", return_z=False):
+def _get_position(image, mode="center", return_z=False):
 
     num_outputs = 2 + return_z
 
     if mode == "corner":
-        shift = (np.array(feature.shape) - 1)/ 2
+        shift = (np.array(image.shape) - 1)/ 2
     else:
         shift = np.array((num_outputs))
 
-    position = get_property(feature, "position")
+    position = image.get_property("position")
 
     if position is None:
         return position
@@ -469,7 +469,7 @@ def get_position(feature, mode="center", return_z=False):
 
     elif len(position) == 2:
         if return_z:
-            outp = np.array([position[0], position[1], get_property(feature, "z", 0)]) - shift
+            outp = np.array([position[0], position[1], image.get_property("z", 0)]) - shift
             return outp
         else:
             return position - shift[0:2]
@@ -477,7 +477,7 @@ def get_position(feature, mode="center", return_z=False):
     return position
 
 
-def create_volume(list_of_scatterers, 
+def _create_volume(list_of_scatterers, 
                   pad=(0, 0, 0, 0), 
                   output_region=(None, None, None, None), 
                   refractive_index_medium=1.33,
@@ -497,9 +497,10 @@ def create_volume(list_of_scatterers,
 
         position = get_position(scatterer, mode="corner", return_z=True)
 
-        scatterer_value = (get_property(scatterer, "value") or 
-                           get_property(scatterer, "intensity") or 
-                           get_property(scatterer, "refractive_index") - refractive_index_medium)
+        scatterer_value = (scatterer.get_property("value") or 
+                           scatterer.get_property("intensity") or 
+                           scatterer.get_property("refractive_index") - refractive_index_medium or
+                           1.0)
 
         scatterer = scatterer * scatterer_value
 

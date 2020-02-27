@@ -59,6 +59,31 @@ class Image(np.ndarray):
         self.properties.append(property_dict)
         return self
 
+    def get_property(self,
+                     key: str,
+                     default: any = None) -> any:
+        ''' Retrieve a property
+        If the feature has the property defined by `key`, return
+        its current_value. Otherwise, return `default`.
+
+        Parameters
+        ----------
+        key
+            The name of the property
+        default : optional
+            What is returned if the property is not found
+
+        Returns
+        -------
+        any
+            The value of the property if found, else `default`
+
+        '''
+        for prop in image.properties:
+            if key in prop:
+                return prop[key]
+        return default
+
 
     def __new__(cls, input_array, properties=None):
         # Converts input to ndarray, and then to an Image
@@ -102,16 +127,40 @@ class Image(np.ndarray):
                 self.append(property)
 
 
-    # def __reduce__(self):
-    #     # Get the parent's __reduce__ tuple
-    #     pickled_state = super(Image, self).__reduce__()
-    #     # Create our own tuple to pass to __setstate__, appending properties
-    #     new_state = pickled_state[2] + (self.properties,)
-    #     # Return a tuple that replaces the parent's __setstate__ tuple with our own
-    #     return (pickled_state[0], pickled_state[1], new_state)
+
+FASTEST_SIZES = [0]
+for n in range(1, 10):
+    FASTEST_SIZES += [2**a * 3**(n - a - 1) for a in range(n)]
+FASTEST_SIZES = np.sort(FASTEST_SIZES)
 
 
-    # def __setstate__(self, state):
-    #     self.properties = state[-1]  # Set the peroperties attribute
-    #     # Call the parent's __setstate__ with the other tuple elements.
-    #     super(Image, self).__setstate__(state[0:-1])
+def _closest(dim):
+    # Returns the smallest value frin FASTEST_SIZES
+    # larger than dim
+    for size in FASTEST_SIZES:
+        if size >= dim:
+            return size
+
+
+def pad_image_to_fft(image: Image, axes=(0, 1)) -> Image:
+    ''' Pads image to speed up fast fourier transforms.
+    Pads image to speed up fast fourier transforms by adding 0s to the
+    end of the image.
+
+    Parameters
+    ----------
+    image
+        The image to pad
+    axes : iterable of int, optional
+        The axes along which to pad.
+    '''
+
+    new_shape = np.array(image.shape)
+    for axis in axes:
+        new_shape[axis] = _closest(new_shape[axis])
+
+    increase = np.array(new_shape) - image.shape
+    pad_width = [(0, inc) for inc in increase]
+
+
+    return np.pad(image, pad_width, mode='constant')
