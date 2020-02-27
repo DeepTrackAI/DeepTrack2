@@ -3,6 +3,7 @@ import unittest
 import utils
 
 
+
 class TestUtils(unittest.TestCase):
     
     def test_hasmethod(self):
@@ -40,6 +41,7 @@ class TestUtils(unittest.TestCase):
             pass
         
         self.assertEqual(utils.get_kwarg_names(func2), ['key2', 'key3'])
+
 
 
 if __name__ == '__main__':
