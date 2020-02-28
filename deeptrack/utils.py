@@ -19,9 +19,8 @@ get_kwarg_names(function: Callable)
 '''
 
 import inspect
-import numpy as np
 
-from typing import Callable, List, Iterable
+from typing import Callable, List
 
 
 
