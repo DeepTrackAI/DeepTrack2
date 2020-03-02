@@ -343,13 +343,6 @@ class Duplicate(StructuralFeature):
         for feature in features:
             image = feature.resolve(image, **kwargs)
         return image
-
-
-    def update(self, **kwargs):
-
-        for feature in self.properties["features"].current_value:
-
-        super().update(**kwargs)
         
 
 
