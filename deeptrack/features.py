@@ -86,7 +86,7 @@ class Feature(ABC):
         '''
         
         properties = getattr(self, "properties", {})
-        properties["hash_key"] = Property([lambda: np.random.randint(2 ** 31) for _ in range(4)])
+        kwargs["hash_key"] = lambda: list(np.random.randint(2 ** 31, size=(4,)))
 
         all_dicts = (kwargs, ) + args
 
@@ -103,11 +103,11 @@ class Feature(ABC):
         ''' Alters an image
         '''
 
-
         
     def resolve(
             self,
             image_list=None,
+            hash_key=None, # Removes from globals
             **global_kwargs):
 
         # Ensure that image is a list
@@ -335,7 +335,7 @@ class Duplicate(StructuralFeature):
         super().__init__(
             *args,
             num_duplicates=num_duplicates, #py > 3.6 dicts are ordered by insert time.
-            features=lambda: [copy.deepcopy(feature) for _ in range(self.properties["num_duplicates"].current_value)],
+            features=lambda: [copy.deepcopy(feature).update(force_update=True) for _ in range(self.properties["num_duplicates"].current_value)],
             **kwargs)
 
     def get(self, image, features=None, **kwargs):
@@ -346,10 +346,11 @@ class Duplicate(StructuralFeature):
 
 
     def update(self, **kwargs):
-        super().update(**kwargs)
 
         for feature in self.properties["features"].current_value:
-            feature.update(**kwargs)
+
+        super().update(**kwargs)
+        
 
 
 class Wrap(StructuralFeature):
