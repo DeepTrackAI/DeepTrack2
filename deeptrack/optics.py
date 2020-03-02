@@ -447,7 +447,7 @@ class IlluminationGradient(Feature):
 
 
 
-def _get_position(image, mode="center", return_z=False):
+def get_position(image, mode="center", return_z=False):
 
     num_outputs = 2 + return_z
 
@@ -469,7 +469,7 @@ def _get_position(image, mode="center", return_z=False):
 
     elif len(position) == 2:
         if return_z:
-            outp = np.array([position[0], position[1], image.get_property("z", 0)]) - shift
+            outp = np.array([position[0], position[1], image.get_property("z", default=0)]) - shift
             return outp
         else:
             return position - shift[0:2]
@@ -477,7 +477,7 @@ def _get_position(image, mode="center", return_z=False):
     return position
 
 
-def _create_volume(list_of_scatterers, 
+def create_volume(list_of_scatterers, 
                   pad=(0, 0, 0, 0), 
                   output_region=(None, None, None, None), 
                   refractive_index_medium=1.33,
