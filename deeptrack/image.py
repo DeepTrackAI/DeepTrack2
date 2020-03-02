@@ -142,6 +142,7 @@ class Image(np.ndarray):
 
 
     def __array_wrap__(self, out_arr, context=None):
+        # Called at end of function call
 
         if out_arr is self:  # for in-place operations
             result = out_arr
