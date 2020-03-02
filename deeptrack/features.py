@@ -7,7 +7,6 @@ import numpy as np
 
 from deeptrack.image import Image
 from deeptrack.properties import Property, PropertyDict
-from deeptrack.utils import get_property
 
 
 MERGE_STRATEGY_OVERRIDE = 0
@@ -207,7 +206,7 @@ class Feature(ABC):
                 images.append([plt.imshow(image[:, :, 0], **kwargs)])
 
             interval = (interval
-                        or get_property(output_image[0], "interval") 
+                        or output_image[0].get_property("interval") 
                         or (1 / 30 * 1000))
 
 

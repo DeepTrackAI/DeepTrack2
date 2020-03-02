@@ -1,32 +1,25 @@
 import numpy as np
 
 
+
 class Image(np.ndarray):
-    '''Subclass of numpy ndarray with additional attribute "properties"
+    '''Subclass of numpy ndarray with additional attribute "properties".
 
-    The Image subclass of numpy ndarrays are used by features to resolve
-    images and store the current value of the properties of each feature
-    in the feature series. These properties are stored in the field
-    `properties` as a list of dictionaries, in the same order as that 
-    in which the features were evaluated.
+    The class Image is used by features to resolve images and store 
+    the current values of the properties of each feature in the feature 
+    series. These properties are stored in the field `properties` 
+    as a list of dictionaries, in the same order as that in which 
+    the features have been evaluated.
 
-    This is used thoughout the deeptrack model to store and extract
-    information about how an image was generated. Examples include:
-
-    * Features may depend on earlier features in the feature series.
-
-    * The class `Label`, which extract numeric information
-    about the image to be sent to machine learning models.  
-
-    * Loading previously generated images from storage without
-    losing information about the image.
+    The field `properties` is used to store and extract information 
+    about how an image has been generated.
 
     Parameters
     ----------
     input_array : array_like
-        An array_like object that is used to instantiate the ndarray
-    properties : {None, list}
-        Optional parameter to set as the initial value for the field properties
+        An array_like object that is used to instantiate the ndarray.
+    properties : list of dicts, optional
+        Optional parameter to set as the initial value for the field properties.
 
     Attributes
     ----------
@@ -42,7 +35,7 @@ class Image(np.ndarray):
 
 
     def append(self, property_dict: dict):
-        ''' Appends a dictionary to the properties list
+        ''' Appends a dictionary to the properties list.
 
         Parameters
         ----------
@@ -53,49 +46,105 @@ class Image(np.ndarray):
         Returns
         -------
         Image
-            Returns itself
+            Returns itself.
         '''
         
         self.properties.append(property_dict)
         return self
 
+
     def get_property(self,
                      key: str,
-                     default: any = None) -> any:
-        ''' Retrieve a property
+                     get_one: bool = True,
+                     default: any = None) -> list or any:
+        '''Retrieve a property.
+        
         If the feature has the property defined by `key`, return
-        its current_value. Otherwise, return `default`.
+        its current_value. Otherwise, return `default`. 
+        If `get_one` is True, the first instance is returned; 
+        otherwise, all instances are returned as a list.
 
         Parameters
         ----------
         key
-            The name of the property
+            The name of the property.
+        get_one: optional
+            Whether to return all instances of that property or just the first.
         default : optional
-            What is returned if the property is not found
+            What is returned if the property is not found.
 
         Returns
         -------
         any
-            The value of the property if found, else `default`
+            The value of the property if found, else `default`.
 
         '''
-        for prop in image.properties:
-            if key in prop:
-                return prop[key]
-        return default
 
+        if get_one:
+            for prop in self.properties:
+                if key in prop:
+                    return prop[key]
+            return default
+        else:
+            return [prop[key] for prop in self.properties if key in prop] or default
+    
+
+    
+    def merge_properties_from(self, other: "Image") -> "Image":
+        ''' Merge properties with ones from another Image.
+
+        Appends properties from another images such that no property is duplicated.
+        Uniqueness of a dictionary of properties is determined from the
+        `hash_key` property.
+
+        Most functions involving two images should automatically output an image with
+        merged properties. However, since each property is guaranteed to be unique,
+        it is safe to manually call this function if there is any uncertainty.
+
+        Parameters
+        ----------
+        other
+            The Image to retrieve properties from.
+
+        '''
+
+        for new_prop in other.properties:
+
+            # If no hash_key, add it
+            if "hash_key" not in new_prop:
+                self.append(new_prop)
+                continue
+
+            should_append = True
+            # Else, see if hash is unique
+            for my_prop in self.properties:
+
+                if ("hash_key" in my_prop and
+                        my_prop["hash_key"] == new_prop["hash_key"]):
+
+                    # Key is not unique, don't add
+                    should_append = False
+                    break
+
+            if should_append:
+                self.append(new_prop)
+
+        return self
 
     def __new__(cls, input_array, properties=None):
         # Converts input to ndarray, and then to an Image
+        
         obj = np.array(input_array).view(cls)
         if properties is None:
             # If input_array has properties attribute, retrieve a copy of it
             properties = getattr(input_array, "properties", [])[:]
         obj.properties = properties
+
         return obj
 
 
     def __array_wrap__(self, out_arr, context=None):
+        # Called at end of function call
 
         if out_arr is self:  # for in-place operations
             result = out_arr
@@ -103,28 +152,31 @@ class Image(np.ndarray):
             result = Image(out_arr)
 
         if context is not None:
+            # context is information about operation
+
             func, args, _ = context
             input_args = args[:func.nin]
 
             for arg in input_args:
-                if not arg is self:
-                    props = getattr(arg, "properties", [])
-                    for p in props:
-                        result.append(p)
+
+                if not arg is self and isinstance(arg, Image):
+                    self.merge_properties_from(arg)
+
         return result
 
 
     def __array_finalize__(self, obj):
+        # Finalizes the array after a function
 
-        if obj is None: return
+        if obj is None:
+            return
 
+        # Ensure self has properties defined
         self.properties = getattr(self, "properties", [])
 
-
-        props = getattr(obj, "properties", [])
-        if not props is self.properties:
-            for property in props:
-                self.append(property)
+        # Merge from obj if obj is Image
+        if isinstance(obj, Image):
+            self.merge_properties_from(obj)
 
 
 
@@ -132,14 +184,6 @@ FASTEST_SIZES = [0]
 for n in range(1, 10):
     FASTEST_SIZES += [2**a * 3**(n - a - 1) for a in range(n)]
 FASTEST_SIZES = np.sort(FASTEST_SIZES)
-
-
-def _closest(dim):
-    # Returns the smallest value frin FASTEST_SIZES
-    # larger than dim
-    for size in FASTEST_SIZES:
-        if size >= dim:
-            return size
 
 
 def pad_image_to_fft(image: Image, axes=(0, 1)) -> Image:
@@ -154,6 +198,13 @@ def pad_image_to_fft(image: Image, axes=(0, 1)) -> Image:
     axes : iterable of int, optional
         The axes along which to pad.
     '''
+
+    def _closest(dim):
+        # Returns the smallest value frin FASTEST_SIZES
+        # larger than dim
+        for size in FASTEST_SIZES:
+            if size >= dim:
+                return size
 
     new_shape = np.array(image.shape)
     for axis in axes:
