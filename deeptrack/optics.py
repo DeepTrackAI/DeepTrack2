@@ -153,7 +153,7 @@ class Optics(Feature):
 
         # Defocus
         z_shift = (2 * np.pi * refractive_index_medium / wavelength * voxel_size[2]
-                   * np.sqrt(1 - (NA / refractive_index_medium * RHO)**2))
+                   * np.sqrt(1 - (NA / refractive_index_medium)**2 * RHO))
 
 
         # Downsample the upsampled pupil
