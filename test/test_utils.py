@@ -1,6 +1,6 @@
 import unittest
 
-import utils
+import deeptrack.utils as utils
 
 
 
