@@ -1,16 +1,16 @@
-'''Tools to manage the properties of features
+'''Tools to manage the properties of a feature
 
 CLASSES
 -------
 Property
 The class `Property`, which represents the values of a property of a feature.
-A Property can be represented by:
+A Property be:
 * A constant (initialization with, e.g., a number, a tuple)
 * A sequence of variables (initialization with, e.g., an iterator)
 * A random variable (initialization with, e.g., a function)
 
 SequentialProperty
-The class `SequentialProperty` which extends `Property` to sample one value
+The class `SequentialProperty`, which extends `Property` to sample one value
 for each step in a sequence.
 
 PropertyDict
