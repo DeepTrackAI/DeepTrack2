@@ -1,16 +1,16 @@
-'''Tools to manage the properties of features
+'''Tools to manage the properties of a feature
 
 CLASSES
 -------
 Property
 The class `Property`, which represents the values of a property of a feature.
-A Property can be represented by:
+A Property be:
 * A constant (initialization with, e.g., a number, a tuple)
 * A sequence of variables (initialization with, e.g., an iterator)
 * A random variable (initialization with, e.g., a function)
 
 SequentialProperty
-The class `SequentialProperty` which extends `Property` to sample one value
+The class `SequentialProperty`, which extends `Property` to sample one value
 for each step in a sequence.
 
 PropertyDict
@@ -29,9 +29,9 @@ from deeptrack.utils import isiterable, hasmethod, get_kwarg_names
 class Property:
     '''Represents a property of a feature
 
-    The class Property wraps an input, which is treated
+    The class Property` wraps an input, which is treated
     internally as a sampling rule. This sampling rule is used
-    to update the value of the property of the feature.
+    to update the value of the property.
     The sampling rule can be, for example:
     * A constant (initialization with, e.g., a number, a tuple)
     * A sequence of variables (initialization with, e.g., a generator)
@@ -69,7 +69,7 @@ class Property:
         and, therefore, the current value does not change between calls.
 
         The method getter calls the method `update()` if `current_value`
-        has not yet been set.
+        has not been set yet.
 
         '''
 
@@ -82,12 +82,12 @@ class Property:
     @current_value.getter
     def current_value(self):
         if not hasattr(self, "_current_value"):
-            self._current_value = self.sample(self.sampling_rule)
+            self.update()
         return self._current_value
 
 
     def update(self, force_update: bool = False, **kwargs) -> 'Property':
-        r'''Updates the current value
+        '''Updates the current value
 
         The method `update()` sets the property `current_value`
         as the output of the method `sample()`. Will only update
@@ -209,22 +209,22 @@ class Property:
 class SequentialProperty(Property):
     ''' Property that has multiple sequential values
 
-        Extends standard Property to resolve one value for each step
-        in the sequence.
+        Extends standard `Property` to resolve one value for each step
+        in a sequence of images. This is often used when creating movies.
 
         Parameters
         ----------
         initializer : any
-            Sampling rule for the first step of the sequence
+            Sampling rule for the first step of the sequence.
         sampling_rule : any
-            Sampling rule for each step after the first
+            Sampling rule for each step after the first.
         
         Attributes
         ----------
         initializer : any
-            Sampling rule for the first step of the sequence
+            Sampling rule for the first step of the sequence.
         sampling_rule : any
-            Sampling rule for each step after the first
+            Sampling rule for each step after the first.
         has_updated_since_last_resolve : bool
             Whether the property has been updated since the last resolve.
 

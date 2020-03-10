@@ -34,6 +34,19 @@ class Image(np.ndarray):
     __array_priority__ = 999
 
 
+    def __new__(cls, input_array, properties=None):
+        # Converts input to ndarray, and then to an Image
+        # In particular, it creates the properties
+        
+        image = np.array(input_array).view(cls)
+        if properties is None:
+            # If input_array has properties attribute, retrieve a copy of it
+            properties = getattr(input_array, "properties", [])[:]
+        image.properties = properties
+
+        return image
+
+
     def append(self, property_dict: dict):
         ''' Appends a dictionary to the properties list.
 
@@ -131,25 +144,17 @@ class Image(np.ndarray):
 
         return self
 
-    def __new__(cls, input_array, properties=None):
-        # Converts input to ndarray, and then to an Image
-        
-        obj = np.array(input_array).view(cls)
-        if properties is None:
-            # If input_array has properties attribute, retrieve a copy of it
-            properties = getattr(input_array, "properties", [])[:]
-        obj.properties = properties
 
-        return obj
+    def __array_wrap__(self, image_after_function, context=None):
+        # Called at end when a function is called on an image
+        # It might be that the information about properties is lost, 
+        # this method restores it.
+        # This method also correctly concatenate the the properties of two images.
 
-
-    def __array_wrap__(self, out_arr, context=None):
-        # Called at end of function call
-
-        if out_arr is self:  # for in-place operations
-            result = out_arr
+        if image_after_function is self:  # for in-place operations
+            image_with_restored_properties = image_after_function
         else:
-            result = Image(out_arr)
+            image_with_restored_properties = Image(image_after_function)
 
         if context is not None:
             # context is information about operation
@@ -162,21 +167,23 @@ class Image(np.ndarray):
                 if not arg is self and isinstance(arg, Image):
                     self.merge_properties_from(arg)
 
-        return result
+        return image_with_restored_properties
 
 
-    def __array_finalize__(self, obj):
-        # Finalizes the array after a function
+    def __array_finalize__(self, image):
+        # Called when an image is created
+        # It might be that the information about properties is lost, 
+        # this method restores it.
 
-        if obj is None:
+        if image is None:
             return
 
         # Ensure self has properties defined
         self.properties = getattr(self, "properties", [])
 
-        # Merge from obj if obj is Image
-        if isinstance(obj, Image):
-            self.merge_properties_from(obj)
+        # Merge from image if image is Image
+        if isinstance(image, Image):
+            self.merge_properties_from(image)
 
 
 
