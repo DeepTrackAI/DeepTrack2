@@ -29,9 +29,9 @@ from deeptrack.utils import isiterable, hasmethod, get_kwarg_names
 class Property:
     '''Represents a property of a feature
 
-    The class Property wraps an input, which is treated
+    The class Property` wraps an input, which is treated
     internally as a sampling rule. This sampling rule is used
-    to update the value of the property of the feature.
+    to update the value of the property.
     The sampling rule can be, for example:
     * A constant (initialization with, e.g., a number, a tuple)
     * A sequence of variables (initialization with, e.g., a generator)
@@ -69,7 +69,7 @@ class Property:
         and, therefore, the current value does not change between calls.
 
         The method getter calls the method `update()` if `current_value`
-        has not yet been set.
+        has not been set yet.
 
         '''
 
@@ -87,7 +87,7 @@ class Property:
 
 
     def update(self, force_update: bool = False, **kwargs) -> 'Property':
-        r'''Updates the current value
+        '''Updates the current value
 
         The method `update()` sets the property `current_value`
         as the output of the method `sample()`. Will only update
