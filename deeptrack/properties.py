@@ -82,7 +82,7 @@ class Property:
     @current_value.getter
     def current_value(self):
         if not hasattr(self, "_current_value"):
-            self._current_value = self.sample(self.sampling_rule)
+            self.update()
         return self._current_value
 
 
