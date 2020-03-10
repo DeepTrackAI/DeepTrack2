@@ -209,22 +209,22 @@ class Property:
 class SequentialProperty(Property):
     ''' Property that has multiple sequential values
 
-        Extends standard Property to resolve one value for each step
-        in the sequence.
+        Extends standard `Property` to resolve one value for each step
+        in a sequence of images. This is often used when creating movies.
 
         Parameters
         ----------
         initializer : any
-            Sampling rule for the first step of the sequence
+            Sampling rule for the first step of the sequence.
         sampling_rule : any
-            Sampling rule for each step after the first
+            Sampling rule for each step after the first.
         
         Attributes
         ----------
         initializer : any
-            Sampling rule for the first step of the sequence
+            Sampling rule for the first step of the sequence.
         sampling_rule : any
-            Sampling rule for each step after the first
+            Sampling rule for each step after the first.
         has_updated_since_last_resolve : bool
             Whether the property has been updated since the last resolve.
 
