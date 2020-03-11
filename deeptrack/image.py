@@ -1,9 +1,28 @@
+''' Image class and relative functions
+
+Defines the Image class and functions that operate on it.
+
+CLASSES
+---------
+Image
+    Subclass of numpy `ndarray`. Has the additional attribute properties
+    which contains the properties used to generate it as a `list` of
+    `dicts`.
+
+Functions
+---------
+pad_image_to_fft(image: Image, axes = (0, 1))
+    Pads the image with zeros to optimize the speed of Fast Fourier
+    Transforms.
+
+'''
+
 import numpy as np
 
 
 
 class Image(np.ndarray):
-    '''Subclass of numpy ndarray with additional attribute "properties".
+    '''Subclass of numpy ndarray
 
     The class Image is used by features to resolve images and store 
     the current values of the properties of each feature in the feature 
