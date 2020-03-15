@@ -31,16 +31,34 @@ class TestUtils(unittest.TestCase):
 
 
     def test_get_kwarg_names(self):
-        
-        def func1(key1, key2, key3, *argv):
-            pass
-        
+
+        def func1():
+            pass    
         self.assertEqual(utils.get_kwarg_names(func1), [])
 
-        def func2(key1, key2=1, key3=3, **kwargs):
-            pass
+        def func2(key1):
+            pass    
+        self.assertEqual(utils.get_kwarg_names(func2), ['key1'])
+
+        def func3(key1, key2=2):
+            pass    
+        self.assertEqual(utils.get_kwarg_names(func3), ['key1'])
+
+        def func4(key1, *argv, key2=2):
+            pass    
+        self.assertEqual(utils.get_kwarg_names(func4), ['key2'])
+
+        def func5(*argv, key1, key2=2):
+            pass    
+        self.assertEqual(utils.get_kwarg_names(func5), ['key1', 'key2'])
         
-        self.assertEqual(utils.get_kwarg_names(func2), ['key2', 'key3'])
+        def func6(key1, key2, key3, *argv):
+            pass    
+        self.assertEqual(utils.get_kwarg_names(func6), [])
+
+        def func7(key1, key2=1, key3=3, **kwargs):
+            pass
+        self.assertEqual(utils.get_kwarg_names(func7), ['key1', 'key2', 'key3'])
 
 
 

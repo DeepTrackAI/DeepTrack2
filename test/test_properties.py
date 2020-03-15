@@ -32,9 +32,38 @@ class TestUtils(unittest.TestCase):
             self.assertTrue(P.current_value >= 0 and P.current_value <= 1)
     
 
-    def test_SequentialProperty(self): #TODO
-        pass
-    
+    def test_SequentialProperty_Constant(self):
+        sampling_rule = 1
+        P = properties.SequentialProperty(sampling_rule, initializer=0)
+        P.update(force_update=True, sequence_length=10)
+        self.assertEqual(P.current_value, [0, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+
+
+    def test_SequentialProperty_timedependent(self):
+        
+        def steady_increase(previous_value=None):
+            return previous_value + 1;
+        
+        sampling_rule = steady_increase
+        P = properties.SequentialProperty(sampling_rule, initializer=0)
+        P.update(force_update=True, sequence_length=5)
+        self.assertEqual(P.current_value, [0, 1, 2, 3, 4])
+
+    def test_SequentialProperty_dependence_on_SequentialProperty(self):
+        
+        def steady_increase(previous_value=None):
+            return previous_value + 1;
+        
+        P1 = properties.SequentialProperty(steady_increase, initializer=0)
+        
+        def geometric_increase(previous_value=None, step_length=None):
+            return previous_value + step_length;
+
+        P2 = properties.SequentialProperty(geometric_increase, initializer=0)
+        
+        P2.update(force_update=True, sequence_length=5, step_length=P1)
+        self.assertEqual(P2.current_value, [0, 1, 3, 6, 10])
+        
     
     def test_PropertyDict(self):
         property_dict = properties.PropertyDict(

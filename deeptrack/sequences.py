@@ -49,7 +49,7 @@ def Sequential(feature, *args, **kwargs):
             else:
                 initializer = sampling_rule
                 
-            feature.properties[property_name] = SequentialProperty(initializer, sampling_rule)
+            feature.properties[property_name] = SequentialProperty(sampling_rule, initializer=initializer)
 
     return feature
 

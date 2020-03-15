@@ -110,13 +110,8 @@ def get_kwarg_names(function: Callable) -> List[str]:
     except TypeError:
         return []
 
-    kwargs = []
-
-    if argspec.args and argspec.defaults:
-        kwargs = argspec.args[-len(argspec.defaults):]
-
-    if argspec.kwonlyargs:
-        kwargs = kwargs + argspec.kwonlyargs
-
-    return  kwargs
+    if argspec.varargs:
+        return argspec.kwonlyargs or []
+    else:
+        return argspec.args or []
 

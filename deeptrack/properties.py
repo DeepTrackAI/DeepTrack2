@@ -106,16 +106,16 @@ class Property:
             Returns itself.
 
         '''
-
-        if not force_update and self.has_updated_since_last_resolve:
+        
+        if (not force_update) and self.has_updated_since_last_resolve:
             return self
+
+        self.has_updated_since_last_resolve = True
 
         if hasmethod(self.sampling_rule, "update"):
             self.sampling_rule.update(force_update=force_update, **kwargs)
         
         self.current_value = self.sample(self.sampling_rule, force_update=force_update, **kwargs)
-
-        self.has_updated_since_last_resolve = True
 
         return self
 
@@ -230,8 +230,13 @@ class SequentialProperty(Property):
 
     '''
 
-    def __init__(self, initializer, sampling_rule):
-        self.initializer = initializer
+    def __init__(self, sampling_rule, initializer=None):
+
+        if initializer is None:
+            self.initializer = sampling_rule
+        else:
+            self.initializer = initializer
+
         self.sampling_rule = sampling_rule
         self.has_updated_since_last_resolve = False
         
@@ -263,7 +268,7 @@ class SequentialProperty(Property):
             returns self
         '''
 
-        if self.has_updated_since_last_resolve:
+        if self.has_updated_since_last_resolve and not kwargs.get("force_update", False):
             return self
 
         self.has_updated_since_last_resolve = True
@@ -273,16 +278,16 @@ class SequentialProperty(Property):
         for step in range(sequence_length):
             # Use initializer for first time step
             ruleset = self.initializer if step == 0 else self.sampling_rule
-
+            
             # Elements inserted here can be passed to property functions
             kwargs.update(
                 sequence_step=step,
                 sequence_length=sequence_length,
-                previous_value=None if step == 0 else new_current_value[-1],
                 previous_values=new_current_value)
+            if step > 0:
+                kwargs.update(previous_value=new_current_value[-1])
             
-            new_current_value.append(
-                self.sample(ruleset, **kwargs))
+            new_current_value.append(self.sample(ruleset, **kwargs))
 
         self.current_value = new_current_value
 
@@ -341,9 +346,8 @@ class PropertyDict(dict):
             Returns itself
 
         '''
-
-        for property in self.values():
-            kwargs.update(self)
+        kwargs.update(self)
+        for key, property in self.items():
             property.update(**kwargs)
 
         return self
