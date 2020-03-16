@@ -1,10 +1,4 @@
-'''Features modelling light scattering object
-
-Instances of implementations of the class Scatterers need to be
-wrapped by an instance of the Optics class. This provides the feature
-access to the optical properties. 
-
-Scatterers should generate the complex field at each pixel. 
+'''Features modelling object interacting with the optical device.
 
 Contains
 --------
@@ -23,21 +17,48 @@ import numpy as np
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
 from deeptrack.image import Image
 
+
 class Scatterer(Feature):
-    '''Base class for scatterers.
+    '''Base abstract class for scatterers.
 
-    A scatterer defines the scattered complex field at each pixel.
+    A scatterer defined by a 3-dimensional volume of pixels. Each pixel 
+    can be thought of as representing a occupancy factor. That is, how much
+    of that pixel does the scatterer occupy. This number is, however, not
+    necessarily limited to the [0, 1] range. It can be any number, and the
+    interpretation of this number is left to the optical device that images
+    the scatterer.
 
+    This abstract class implements the `_process_properties` method to convert
+    the position to pixel units. 
+
+    Parameters
+    ----------
+    position : array_like of length 2 or 3
+        The position of the  particle. Third index is optional, 
+        and represents the position in the direction normal to the
+        camera plane.
+    z : float
+        The position in the direction normal to the
+        camera plane. Used if `position`
     '''
 
     __list_merge_strategy__ = MERGE_STRATEGY_APPEND
     __distributed__ = False
 
-    def __init__(self, *args, position_unit="meter", **kwargs):
-        super().__init__(*args, position_unit=position_unit, **kwargs)
+    def __init__(self,
+                 position: np.ndarray,
+                 z: float = 0.0,
+                 value: float = 1.0,
+                 position_unit: str = "meter",
+                 **kwargs):
+        super().__init__(position=position,
+                         z=z,
+                         value=value,
+                         position_unit=position_unit,
+                         **kwargs)
 
 
-    def _process_properties(self, properties):
+    def _process_properties(self, properties: dict) -> dict:
         if "position" in properties:
             if properties["position_unit"] == "meter":
                 properties["position"] = np.array(properties["position"]) / np.array(properties["voxel_size"])[:len(properties["position"])]
@@ -46,21 +67,25 @@ class Scatterer(Feature):
 
 
 
-
 class PointParticle(Scatterer):
     '''Generates a point particle
 
     A point particle is approximated by the size of a pixel. For subpixel
-    positioning, the intensity is interpolated linearly.
+    positioning, the position is interpolated linearly.
 
     Parameters
     ----------
-    intensity
-        The magnitude of the complex field scattered by the point particle.
-        Mathematically the integral over the delta distribution.
-    position
-        The pixel position of the point particle. Defined as (0,0) in the
-        upper left corner.
+    position : array_like of length 2 or 3
+        The position of the  particle. Third index is optional, 
+        and represents the position in the direction normal to the
+        camera plane.
+    z : float
+        The position in the direction normal to the
+        camera plane. Used if `position` is of length 2.
+    value : float
+        A default value of the characteristic of the particle. Used by
+        optics unless a more direct property is set: (eg. `refractive_index`
+        for `Brightfield` and `intensity` for `Fluorescence`).
 
     '''
 
@@ -70,22 +95,34 @@ class PointParticle(Scatterer):
 
         return np.ones((1, 1, 1)) * 1.0
 
+
+
 class Ellipse(Scatterer):
-    ''' Generates ellipsoidal scatterers
+     '''Generates an elliptic disk scatterer
+
+    A point particle is approximated by the size of a pixel. For subpixel
+    positioning, the position is interpolated linearly.
 
     Parameters
     ----------
-    position               
-        The position of the point particle. Defined as (0,0) in the
-        upper left corner.
-    intensity               
-        The magnitude of the complex field scattered by the point particle. 
-        Mathematically the integral over the delta distribution. 
-    radius
-        If number, the radius of a circle. If a list or tuple, the x and y radius of the particle.
-    rotation
-        If defined, rotates the ellipsoid by this amount in radians
+    position : array_like of length 2 or 3
+        The position of the  particle. Third index is optional, 
+        and represents the position in the direction normal to the
+        camera plane.
+    z : float
+        The position in the direction normal to the
+        camera plane. Used if `position` is of length 2.
+    value : float
+        A default value of the characteristic of the particle. Used by
+        optics unless a more direct property is set: (eg. `refractive_index`
+        for `Brightfield` and `intensity` for `Fluorescence`).
+
     '''
+    def __init__(self,
+                radius: float,
+                rotation: float=0,
+                **kwargs):
+        super().__init__(radius=radius, rotation=rotation, **kwargs)
 
     def get(
             self, 
@@ -131,6 +168,7 @@ class Ellipse(Scatterer):
         mask = np.expand_dims(mask, axis=-1)
 
         return mask
+
 
 
 class Sphere(Scatterer):
@@ -182,6 +220,7 @@ class Sphere(Scatterer):
         mask = mask[:, :, ~np.all(mask == 0, axis=(0, 1))]
 
         return mask
+
 
 
 class Ellipsoid(Scatterer):
