@@ -13,7 +13,7 @@
         sequentially.
     Probability
         Implementation of `StructuralFeature` that randomly resolves a feature 
-        with a certain probability
+        with a certain probability.
     Duplicate
         Implementation of `StructuralFeature` that sequentially resolves an 
         integer number of deep-copies of a feature.
