@@ -40,16 +40,22 @@ class Scatterer(Feature):
     z : float
         The position in the direction normal to the
         camera plane. Used if `position`
+    value : float
+        A default value of the characteristic of the particle. Used by
+        optics unless a more direct property is set: (eg. `refractive_index`
+        for `Brightfield` and `intensity` for `Fluorescence`).
+    position_unit : "meter" or "pixel"
+        The unit of the provided position property
     '''
 
     __list_merge_strategy__ = MERGE_STRATEGY_APPEND
     __distributed__ = False
 
     def __init__(self,
-                 position: np.ndarray,
-                 z: float = 0.0,
-                 value: float = 1.0,
-                 position_unit: str = "meter",
+                 position,
+                 z= 0.0,
+                 value=1.0,
+                 position_unit="meter",
                  **kwargs):
         super().__init__(position=position,
                          z=z,
@@ -89,24 +95,27 @@ class PointParticle(Scatterer):
 
     '''
 
-    def get(self,
-            image,
-            **kwargs):
+    def get(self, image, **kwargs):
 
         return np.ones((1, 1, 1)) * 1.0
 
 
 
 class Ellipse(Scatterer):
-     '''Generates an elliptic disk scatterer
+    '''Generates an elliptic disk scatterer
 
     A point particle is approximated by the size of a pixel. For subpixel
     positioning, the position is interpolated linearly.
 
     Parameters
     ----------
-    position : array_like of length 2 or 3
-        The position of the  particle. Third index is optional, 
+    radius : float or array_like[float (, float)]
+        Radius of the ellipse in meters. If only one value,
+        assume circular.
+    rotation : float
+        Angle of the ellipse in the camera plane in radians.
+    position : array_like[float, float (, float)]
+        The position of the particle. Third index is optional, 
         and represents the position in the direction normal to the
         camera plane.
     z : float
@@ -116,39 +125,41 @@ class Ellipse(Scatterer):
         A default value of the characteristic of the particle. Used by
         optics unless a more direct property is set: (eg. `refractive_index`
         for `Brightfield` and `intensity` for `Fluorescence`).
+    upsample : int
 
     '''
     def __init__(self,
-                radius: float,
-                rotation: float=0,
+                radius,
+                rotation=0,
+                upsample=4,
                 **kwargs):
-        super().__init__(radius=radius, rotation=rotation, **kwargs)
+        super().__init__(radius=radius, rotation=rotation, upsample=upsample **kwargs)
+    
+    def _process_properties(self, properties):
+        properties = super._process_properties(self, properties)
 
-    def get(
-            self, 
-            image,
-            radius=None,
-            rotation=0,
-            voxel_size=None,
-            upsample=4,
-            **kwargs):
+        radius = np.array(properties["radius"])
+        if radius.ndim == 0:
+            radius = np.array((properties["radius"], properties["radius"]))
+        elif radius.size == 1:
+            radius = np.array((*radius,)*2)
+        else:
+            radius = radius[:2]
+        properties["radius"] = radius
 
-        if not isinstance(radius, (tuple, list, np.ndarray)):
-            radius = (radius, radius)
+        return properties
+
+
+    def get(self, *ignore, radius, rotation, upsample, voxel_size, **kwargs):
         
-        x_rad = radius[0] / voxel_size[0] * upsample
-        y_rad = radius[1] / voxel_size[1] * upsample
+        rad = radius[:2] / voxel_size[:2] * upsample
 
-        x_ceil = int(np.ceil(x_rad))
-        y_ceil = int(np.ceil(y_rad))
-
-        x_ceil = np.max((x_ceil, y_ceil))
-        y_ceil = np.max((x_ceil, y_ceil))
-
-        to_add = (upsample - ((x_ceil * 2) % upsample)) % upsample
+        ceil = np.max(int(np.ceil(rad)))
 
 
-        X, Y = np.meshgrid(np.arange(-x_ceil, x_ceil + to_add), np.arange(-y_ceil, y_ceil + to_add))
+        to_add = (upsample - ((ceil * 2) % upsample)) % upsample
+
+        X, Y = np.meshgrid(np.arange(ceil, ceil + to_add), np.arange(ceil, ceil + to_add))
 
         if rotation != 0:
             Xt =  (X * np.cos(-rotation) + Y * np.sin(-rotation))
@@ -157,10 +168,14 @@ class Ellipse(Scatterer):
             Y = Yt 
 
 
-        mask = ((X * X) / (x_rad * x_rad) + (Y * Y) / (y_rad * y_rad) < 1)
+        mask = ((X * X) / (rad[0] * rad[0]) + (Y * Y) / (rad[1] * rad[1]) < 1)
 
         if upsample != 1:
-            mask = np.reshape(mask, (mask.shape[0] // upsample, upsample, mask.shape[1] // upsample, upsample)).mean(axis=(3, 1))
+            mask = np.reshape(mask,
+                              (mask.shape[0] // upsample,
+                               upsample,
+                               mask.shape[1] // upsample, 
+                               upsample)).mean(axis=(3, 1))
 
         mask = mask[~np.all(mask == 0, axis=1)]
         mask = mask[:, ~np.all(mask == 0, axis=0)]
