@@ -14,7 +14,8 @@ class TestUtils(unittest.TestCase):
     def test_Property_constant(self):
         P = properties.Property(1)
         self.assertEqual(P.current_value, 1)
-        P.update(force_update=True)
+        P.has_updated_since_last_resolve = False
+        P.update()
         self.assertEqual(P.current_value, 1)
         
         
@@ -25,20 +26,23 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(P.current_value, 1)
         for i in range(1, 5):
             self.assertEqual(P.current_value, i)
-            P.update(force_update=True)
+            P.has_updated_since_last_resolve = False
+            P.update()
     
     
     def test_Property_random(self):
         P = properties.Property(lambda: np.random.rand())
         for _ in range(100):
-            P.update(force_update=True)
+            P.has_updated_since_last_resolve = False
+            P.update()
             self.assertTrue(P.current_value >= 0 and P.current_value <= 1)
     
 
     def test_SequentialProperty_Constant(self):
         sampling_rule = 1
         P = properties.SequentialProperty(sampling_rule, initializer=0)
-        P.update(force_update=True, sequence_length=10)
+        P.has_updated_since_last_resolve = False
+        P.update(sequence_length=10)
         self.assertEqual(P.current_value, [0, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 
 
@@ -49,8 +53,10 @@ class TestUtils(unittest.TestCase):
         
         sampling_rule = steady_increase
         P = properties.SequentialProperty(sampling_rule, initializer=0)
-        P.update(force_update=True, sequence_length=5)
+        P.has_updated_since_last_resolve = False
+        P.update(sequence_length=5)
         self.assertEqual(P.current_value, [0, 1, 2, 3, 4])
+
 
     def test_SequentialProperty_dependence_on_SequentialProperty(self):
         
@@ -64,7 +70,8 @@ class TestUtils(unittest.TestCase):
 
         P2 = properties.SequentialProperty(geometric_increase, initializer=0)
         
-        P2.update(force_update=True, sequence_length=5, step_length=P1)
+        P2.has_updated_since_last_resolve = False
+        P2.update(sequence_length=5, step_length=P1)
         self.assertEqual(P2.current_value, [0, 1, 3, 6, 10])
         
     
@@ -79,11 +86,11 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(current_value_dict['P2'], 1)
         self.assertTrue(current_value_dict['P3'] >= 0 and current_value_dict['P3'] <= 1)
         for i in range(1, 100):
-            current_value_dict = property_dict.current_value_dict()
+            current_value_dict = property_dict.current_value_dict(is_resolving=True)
             self.assertEqual(current_value_dict['P1'], 1)
             self.assertEqual(current_value_dict['P2'], np.min((i, 5)))
             self.assertTrue(current_value_dict['P3'] >= 0 and current_value_dict['P3'] <= 1)            
-            property_dict.update(force_update=True)
+            property_dict.update()
 
 
     

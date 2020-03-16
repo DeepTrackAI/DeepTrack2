@@ -86,7 +86,7 @@ class Property:
         return self._current_value
 
 
-    def update(self, force_update: bool = False, **kwargs) -> 'Property':
+    def update(self, **kwargs) -> 'Property':
         '''Updates the current value
 
         The method `update()` sets the property `current_value`
@@ -95,11 +95,6 @@ class Property:
 
         Any object that implements the method `update()` will have it called.
 
-        Parameters
-        ----------
-        force_update
-            If True, ignore the one update per resolve limit.
-
         Returns
         -------
         Property
@@ -107,15 +102,15 @@ class Property:
 
         '''
         
-        if (not force_update) and self.has_updated_since_last_resolve:
+        if self.has_updated_since_last_resolve:
             return self
 
         self.has_updated_since_last_resolve = True
 
         if hasmethod(self.sampling_rule, "update"):
-            self.sampling_rule.update(force_update=force_update, **kwargs)
+            self.sampling_rule.update(**kwargs)
         
-        self.current_value = self.sample(self.sampling_rule, force_update=force_update, **kwargs)
+        self.current_value = self.sample(self.sampling_rule, **kwargs)
 
         return self
 
@@ -268,7 +263,7 @@ class SequentialProperty(Property):
             returns self
         '''
 
-        if self.has_updated_since_last_resolve and not kwargs.get("force_update", False):
+        if self.has_updated_since_last_resolve:
             return self
 
         self.has_updated_since_last_resolve = True
