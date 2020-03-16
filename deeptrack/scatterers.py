@@ -306,9 +306,9 @@ class Ellipsoid(Scatterer):
 
     Parameters
     ----------
-    radius : float or array_like[float (, float)]
+    radius : float or array_like[float (, float, float)]
         Radius of the ellipsoid in meters. If only one value,
-        assume circular.
+        assume spherical.
     rotation : float
         Rotation of the ellipsoid in about the x, y and z axis.
     position : array_like[float, float (, float)]
