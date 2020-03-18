@@ -28,7 +28,7 @@ class Microscope(Feature):
 
     __distributed__ = False
 
-    def __init__(self, sample, objective, pupil, *args, **kwargs):
+    def __init__(self, sample: Feature, objective: Feature, pupil: Feature, *args, **kwargs):
         super().__init__(*args, sample=sample, objective=objective, pupil=pupil, **kwargs)
 
     def get(self, image, sample=None, objective=None, pupil=None, **kwargs):
