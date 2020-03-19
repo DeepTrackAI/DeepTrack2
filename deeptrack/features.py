@@ -17,6 +17,7 @@ Probability
 Duplicate
     Implementation of `StructuralFeature` that sequentially resolves an 
     integer number of deep-copies of a feature.
+
 '''
 
 import copy
