@@ -17,14 +17,12 @@ PropertyDict
 The class `PropertyDict`, which is a dictionary with each element a Property.
 The class provides utility functions to update, sample, clear and retrieve
 properties.
-
 '''
+
 import numpy as np
 from deeptrack.utils import isiterable, hasmethod, get_kwarg_names
 
 
-
-# CLASSES
 
 class Property:
     '''Represents a property of a feature
