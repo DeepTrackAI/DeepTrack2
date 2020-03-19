@@ -103,6 +103,8 @@ class Scatterer(Feature):
         # Calculates upsampled voxel_size
         if upsample_axes is None:
                 upsample_axes = range(3)
+
+        voxel_size = np.array(voxel_size)
         for axis in upsample_axes:
             voxel_size[axis] /= upsample
 
@@ -111,7 +113,7 @@ class Scatterer(Feature):
         new_image = new_image[0]
 
         # Downsamples the image along the axes it was upsampled
-        if upsample != 1:
+        if upsample != 1 and upsample_axes:
             
             # Pad image to ensure it is divisible by upsample
             increase = np.array(new_image.shape)
@@ -124,13 +126,13 @@ class Scatterer(Feature):
             new_shape = []
             for axis in range(new_image.ndim):
                 if axis in upsample_axes:
-                    new_shape += [new_image.shape[axis] // upsample, upsample_axes]
+                    new_shape += [new_image.shape[axis] // upsample, upsample]
                 else:
                     new_shape += [new_image.shape[axis]]
 
             # Downsamples
-            new_image = np.reshape(new_image, new_shape).mean(axis=np.array(upsample_axes) * 2 + 1)
-
+            new_image = np.reshape(new_image, new_shape).mean(axis=tuple(np.array(upsample_axes, dtype=np.int32) * 2 + 1))
+            
         # Crops empty slices
         if crop_empty:
             new_image = new_image[~np.all(new_image == 0, axis=(1, 2))]
@@ -210,7 +212,7 @@ class Ellipse(Scatterer):
         is a single value, the particle is made circular
         '''
 
-        properties = super()._process_properties(self, properties)
+        properties = super()._process_properties(properties)
 
         # Ensure radius is of length 2
         radius = np.array(properties["radius"])
@@ -229,7 +231,7 @@ class Ellipse(Scatterer):
         
         # Create a grid to calculate on
         rad = radius[:2] / voxel_size[:2]
-        ceil = np.max(int(np.ceil(rad)))
+        ceil = int(np.max(np.ceil(rad)))
         X, Y = np.meshgrid(np.arange(-ceil, ceil), np.arange(-ceil, ceil))
 
         # Rotate the grid
