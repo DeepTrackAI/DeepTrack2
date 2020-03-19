@@ -1,22 +1,22 @@
-''' Base class Feature and structural features
+'''Base class Feature and structural features
 
-    Provides classes and tools for creating and interacting with features.
+Provides classes and tools for creating and interacting with features.
 
-    Classes
-    -------
-    Feature
-        Base abstract class.
-    StructuralFeature
-        Abstract extension of feature for interactions between features.
-    Branch
-        Implementation of `StructuralFeature` that resolves two features 
-        sequentially.
-    Probability
-        Implementation of `StructuralFeature` that randomly resolves a feature 
-        with a certain probability.
-    Duplicate
-        Implementation of `StructuralFeature` that sequentially resolves an 
-        integer number of deep-copies of a feature.
+Classes
+-------
+Feature
+    Base abstract class.
+StructuralFeature
+    Abstract extension of feature for interactions between features.
+Branch
+    Implementation of `StructuralFeature` that resolves two features 
+    sequentially.
+Probability
+    Implementation of `StructuralFeature` that randomly resolves a feature 
+    with a certain probability.
+Duplicate
+    Implementation of `StructuralFeature` that sequentially resolves an 
+    integer number of deep-copies of a feature.
 '''
 
 import copy
