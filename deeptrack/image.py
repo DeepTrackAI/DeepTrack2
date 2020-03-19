@@ -14,7 +14,6 @@ Functions
 pad_image_to_fft(image: Image, axes = (0, 1))
     Pads the image with zeros to optimize the speed of Fast Fourier
     Transforms.
-
 '''
 
 import numpy as np
