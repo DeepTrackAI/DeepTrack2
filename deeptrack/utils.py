@@ -15,7 +15,6 @@ as_list(obj: any)
     Otherwise, wrap the input in a list.
 get_kwarg_names(function: Callable)
     Return the names of the keyword arguments the function accepts.
-
 '''
 
 import inspect
