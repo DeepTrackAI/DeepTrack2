@@ -209,7 +209,6 @@ class Feature(ABC):
         -------
         self
         '''
-        
         self.properties.update(**kwargs)
         return self
 
@@ -444,7 +443,7 @@ class Duplicate(StructuralFeature):
         super().__init__(
             *args,
             num_duplicates=num_duplicates, #py > 3.6 dicts are ordered by insert time.
-            features=lambda: [copy.deepcopy(feature).update() for _ in range(self.properties["num_duplicates"].current_value)],
+            features=lambda num_duplicates: [copy.deepcopy(feature) for _ in range(num_duplicates)],
             **kwargs)
 
 
@@ -454,3 +453,9 @@ class Duplicate(StructuralFeature):
         for feature in features:
             image = feature.resolve(image, **kwargs)
         return image
+
+    def update(self, **kwargs):
+        super().update(**kwargs)
+
+        for feature in self.properties["features"].current_value:
+            feature.update(**kwargs)
