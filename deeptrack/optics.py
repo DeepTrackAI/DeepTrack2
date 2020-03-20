@@ -497,11 +497,14 @@ def create_volume(list_of_scatterers,
 
         position = get_position(scatterer, mode="corner", return_z=True)
 
-        
-        scatterer_value = (scatterer.get_property("intensity", None) is not None or
-                           (scatterer.get_property("refractive_index", None) is not None and
-                            (scatterer.get_property("refractive_index") - refractive_index_medium)) or
-                           scatterer.get_property("value"))
+        if scatterer.get_property("intensity", None) is not None:
+            scatterer_value = scatterer.get_property("intensity")
+        elif scatterer.get_property("refractive_index", None) is not None:
+            scatterer_value = scatterer.get_property("refractive_index") - refractive_index_medium
+        else:
+            scatterer_value = scatterer.get_property("value")
+
+
 
         scatterer = scatterer * scatterer_value
 
