@@ -1,4 +1,22 @@
-''' Base class Feature and structural features
+'''Base class Feature and structural features
+
+Provides classes and tools for creating and interacting with features.
+
+Classes
+-------
+Feature
+    Base abstract class.
+StructuralFeature
+    Abstract extension of feature for interactions between features.
+Branch
+    Implementation of `StructuralFeature` that resolves two features 
+    sequentially.
+Probability
+    Implementation of `StructuralFeature` that randomly resolves a feature 
+    with a certain probability.
+Duplicate
+    Implementation of `StructuralFeature` that sequentially resolves an 
+    integer number of deep-copies of a feature.
 
 '''
 
@@ -25,7 +43,7 @@ class Feature(ABC):
     be additive, such as adding some Gaussian noise or a background
     illumination, or non-additive, such as introducing Poisson noise
     or performing a low-pass filter. This transformation is defined
-    y the method `get(image, **kwargs)`, which all implementations of
+    by the method `get(image, **kwargs)`, which all implementations of
     the class `Feature` need to define.
 
     Whenever a Feature is initiated, all keyword arguments passed to the
@@ -48,7 +66,7 @@ class Feature(ABC):
     ----------
     properties : dict
         A dict that contains all keyword arguments passed to the
-        constructor wrapped a Distributions. A sampled copy of this
+        constructor wrapped as Distributions. A sampled copy of this
         dict is sent as input to the get function, and is appended
         to the properties field of the output image.
     __list_merge_strategy__ : int
@@ -63,10 +81,7 @@ class Feature(ABC):
         called on the list as a whole (`__distributed__ = False`).
     __property_memorability__
         Controls whether to store the features properties to the `Image`. 
-        Values 1 or lower will be incldued by default.
-
-
-
+        Values 1 or lower will be included by default.
     '''
 
     __list_merge_strategy__ = MERGE_STRATEGY_OVERRIDE
@@ -91,7 +106,7 @@ class Feature(ABC):
         # hash_key is an inexpensive way to compare dicts of properties
         # The hash here is 4 31 bit integers, for a total of 124 bits.
         if "hash_key" not in properties:
-            properties["hash_key"] = Property(lambda: list(np.random.randint(2 ** 31, size=(4,))))
+            properties["hash_key"] = Property(lambda: list(np.random.randint(2**31, size=(4, ))))
 
         self.properties = PropertyDict(**properties)
 
@@ -138,6 +153,7 @@ class Feature(ABC):
         Image or List[Image]
             The resolved image
         '''
+        
         # Remove hash_key from globals.
         if "hash_key" in global_kwargs:
             global_kwargs.pop("hash_key")
@@ -203,7 +219,7 @@ class Feature(ABC):
              interval: float = None,
              **kwargs):
         ''' Visualizes the output of the feature
-        Resolved the feature and visualizes the result. If the output is an Image,
+        Resolves the feature and visualizes the result. If the output is an Image,
         show it using `pyplot.imshow`. If the output is a list, create an `Animation`.
         For notebooks, the animation is played inline using `to_jshtml()`. For scripts,
         the animation is played using the matplotlib backend.
@@ -307,17 +323,20 @@ class Feature(ABC):
 
     def sample(self, **kwargs) -> "Feature":
         # Sampling a feature should have no affect
+        
         return self
 
 
     def __add__(self, other: "Feature") -> "Feature":
         # Overrides add operator
+        
         return Branch(self, other)
 
     def __radd__(self, other) -> "Feature":
         # Add when left hand is not a feature
         # If left hand is falesly, return self
         # This allows operations such as sum(list_of_features)
+        
         if not other:
             return self
         else:
@@ -326,6 +345,7 @@ class Feature(ABC):
 
     def __mul__(self, other: float) -> "Feature":
         # Introduces a probablity of a feature to be resolved.
+        
         return Probability(self, other)
 
     __rmul__ = __mul__
@@ -333,6 +353,7 @@ class Feature(ABC):
 
     def __pow__(self, other) -> "Feature":
         # Duplicate the feature to resolve more items
+        
         return Duplicate(self, other)
 
 
@@ -342,13 +363,14 @@ class StructuralFeature(Feature):
     Feature with __property_verbosity__ = 2 to avoid adding it to the list
     of properties, and __distributed__ = False to pass the input as-is. 
     '''
+    
     __property_verbosity__ = 2
     __distributed__ = False
 
 
+
 class Branch(StructuralFeature):
     ''' Resolves to features sequentially
-
     Parameters
     ----------
     feature_1 : Feature
@@ -367,7 +389,6 @@ class Branch(StructuralFeature):
         return image
 
 
-
 class Probability(StructuralFeature):
     ''' Resolves a feature with a certain probability
 
@@ -378,7 +399,6 @@ class Probability(StructuralFeature):
     probability : float
         Probability to resolve
     '''
-
 
     def __init__(self, feature: Feature, probability: float, *args, **kwargs):
         super().__init__(
@@ -403,6 +423,7 @@ class Probability(StructuralFeature):
         return image
 
 
+
 class Duplicate(StructuralFeature):
     '''Resolves copies of a feature sequentially
     Creates `num_duplicates` copies of the feature and resolves
@@ -422,7 +443,7 @@ class Duplicate(StructuralFeature):
         super().__init__(
             *args,
             num_duplicates=num_duplicates, #py > 3.6 dicts are ordered by insert time.
-            features=lambda: [copy.deepcopy(feature).update() for _ in range(self.properties["num_duplicates"].current_value)],
+            features=lambda num_duplicates: [copy.deepcopy(feature) for _ in range(num_duplicates)],
             **kwargs)
 
 
@@ -432,3 +453,9 @@ class Duplicate(StructuralFeature):
         for feature in features:
             image = feature.resolve(image, **kwargs)
         return image
+
+    def update(self, **kwargs):
+        super().update(**kwargs)
+
+        for feature in self.properties["features"].current_value:
+            feature.update(**kwargs)

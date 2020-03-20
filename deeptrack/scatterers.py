@@ -1,7 +1,7 @@
-'''Features modelling objects interacting with the optical device.
+'''Implementations of Feature the model scattering objects.
 
-Implementations of `Feature` which adds 3-dimensional images to a list.
-
+Provides some basic implementations of scattering objects 
+that are frequently used.
 
 Classes
 --------
@@ -15,9 +15,7 @@ Sphere
     Generates 3-d spheres
 Ellipsoid
     Generates 3-d ellipsoids
-
 '''
-
 
 import numpy as np
 
@@ -29,15 +27,14 @@ from deeptrack.image import Image
 class Scatterer(Feature):
     '''Base abstract class for scatterers.
 
-    A scatterer defined by a 3-dimensional volume of pixels. Each pixel 
-    can be thought of as representing a occupancy factor. That is, how much
-    of that pixel does the scatterer occupy. This number is, however, not
-    necessarily limited to the [0, 1] range. It can be any number, and the
-    interpretation of this number is left to the optical device that images
-    the scatterer.
+    A scatterer is defined by a 3-dimensional volume of voxels. 
+    To each voxel corresponds an occupancy factor, i.e., how much
+    of that voxel does the scatterer occupy. However, this number is not
+    necessarily limited to the [0, 1] range. It can be any number, and its
+    interpretation is left to the optical device that images the scatterer.
 
     This abstract class implements the `_process_properties` method to convert
-    the position to pixel units, as well as the _process_and_get` method to 
+    the position to voxel units, as well as the `_process_and_get` method to 
     upsample the calculation and crop empty slices.
 
     Parameters
@@ -48,13 +45,13 @@ class Scatterer(Feature):
         camera plane.
     z : float
         The position in the direction normal to the
-        camera plane. Used if `position`
+        camera plane. Used if `position` is of length 2.
     value : float
         A default value of the characteristic of the particle. Used by
-        optics unless a more direct property is set: (eg. `refractive_index`
+        optics unless a more direct property is set (eg. `refractive_index`
         for `Brightfield` and `intensity` for `Fluorescence`).
     position_unit : "meter" or "pixel"
-        The unit of the provided position property
+        The unit of the provided position property.
 
     Other Parameters
     ----------------
@@ -100,22 +97,23 @@ class Scatterer(Feature):
                          upsample_axes=None,
                          crop_empty=True,
                          **kwargs):
-
         # Post processes the created object to handle upsampling,
         # as well as cropping empty slices.
 
-        # Calculate upsampled voxel_size
+        # Calculates upsampled voxel_size
         if upsample_axes is None:
                 upsample_axes = range(3)
+
+        voxel_size = np.array(voxel_size)
         for axis in upsample_axes:
             voxel_size[axis] /= upsample
 
-        # call parent _process_and_get
+        # calls parent _process_and_get
         new_image = super()._process_and_get(*args, voxel_size=voxel_size, upsample=upsample, **kwargs)
         new_image = new_image[0]
 
-        # Downsample the image along the axes it was upsampled
-        if upsample != 1:
+        # Downsamples the image along the axes it was upsampled
+        if upsample != 1 and upsample_axes:
             
             # Pad image to ensure it is divisible by upsample
             increase = np.array(new_image.shape)
@@ -124,18 +122,18 @@ class Scatterer(Feature):
             pad_width = [(0, inc) for inc in increase]
             new_image = np.pad(new_image, pad_width, mode='constant')
 
-            # Find reshape size for downsampling
+            # Finds reshape size for downsampling
             new_shape = []
             for axis in range(new_image.ndim):
                 if axis in upsample_axes:
-                    new_shape += [new_image.shape[axis] // upsample, upsample_axes]
+                    new_shape += [new_image.shape[axis] // upsample, upsample]
                 else:
                     new_shape += [new_image.shape[axis]]
 
-            # Downsample
-            new_image = np.reshape(new_image, new_shape).mean(axis=np.array(upsample_axes) * 2 + 1)
-
-        # Crop empty slices
+            # Downsamples
+            new_image = np.reshape(new_image, new_shape).mean(axis=tuple(np.array(upsample_axes, dtype=np.int32) * 2 + 1))
+            
+        # Crops empty slices
         if crop_empty:
             new_image = new_image[~np.all(new_image == 0, axis=(1, 2))]
             new_image = new_image[:, ~np.all(new_image == 0, axis=(0, 2))]
@@ -164,7 +162,6 @@ class PointParticle(Scatterer):
         A default value of the characteristic of the particle. Used by
         optics unless a more direct property is set: (eg. `refractive_index`
         for `Brightfield` and `intensity` for `Fluorescence`).
-
     '''
 
     def __init__(self, **kwargs):
@@ -181,11 +178,11 @@ class Ellipse(Scatterer):
 
     Parameters
     ----------
-    radius : float or array_like[float (, float)]
+    radius : float or array_like [float (, float)]
         Radius of the ellipse in meters. If only one value,
         assume circular.
     rotation : float
-        Angle of the ellipse in the camera plane in radians.
+        Orientation angle of the ellipse in the camera plane in radians.
     position : array_like[float, float (, float)]
         The position of the particle. Third index is optional, 
         and represents the position in the direction normal to the
@@ -199,7 +196,6 @@ class Ellipse(Scatterer):
         for `Brightfield` and `intensity` for `Fluorescence`).
     upsample : int
         Upsamples the calculations of the pixel occupancy fraction.
-
     '''
 
     def __init__(self,
@@ -214,10 +210,9 @@ class Ellipse(Scatterer):
 
         Ensures that the radius is an array of length 2. If the radius 
         is a single value, the particle is made circular
-
         '''
 
-        properties = super()._process_properties(self, properties)
+        properties = super()._process_properties(properties)
 
         # Ensure radius is of length 2
         radius = np.array(properties["radius"])
@@ -236,7 +231,7 @@ class Ellipse(Scatterer):
         
         # Create a grid to calculate on
         rad = radius[:2] / voxel_size[:2]
-        ceil = np.max(int(np.ceil(rad)))
+        ceil = int(np.max(np.ceil(rad)))
         X, Y = np.meshgrid(np.arange(-ceil, ceil), np.arange(-ceil, ceil))
 
         # Rotate the grid
@@ -273,7 +268,6 @@ class Sphere(Scatterer):
         for `Brightfield` and `intensity` for `Fluorescence`).
     upsample : int
         Upsamples the calculations of the pixel occupancy fraction.
-
     '''
 
     def __init__(self,
@@ -324,7 +318,6 @@ class Ellipsoid(Scatterer):
         for `Brightfield` and `intensity` for `Fluorescence`).
     upsample : int
         Upsamples the calculations of the pixel occupancy fraction.
-
     '''
 
     def __init__(self,
@@ -344,7 +337,6 @@ class Ellipsoid(Scatterer):
         If the radius are two values, the smallest value is appended as the third value
 
         The rotation vector is padded with zeros until it is of length 3
-
         '''
 
         # Ensure radius has three values

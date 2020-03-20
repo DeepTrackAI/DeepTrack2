@@ -1,3 +1,6 @@
+import sys
+sys.path.append("..") # Adds the module to path
+
 import unittest
 
 import deeptrack.utils as utils
@@ -42,7 +45,7 @@ class TestUtils(unittest.TestCase):
 
         def func3(key1, key2=2):
             pass    
-        self.assertEqual(utils.get_kwarg_names(func3), ['key1'])
+        self.assertEqual(utils.get_kwarg_names(func3), ['key1', 'key2'])
 
         def func4(key1, *argv, key2=2):
             pass    
