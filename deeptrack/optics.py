@@ -60,11 +60,7 @@ class Microscope(Feature):
             image = [image]
         
         for i in range(len(image)):
-            image[i] += imaged_sample
-            for prop in imaged_sample.properties:
-                if not any([prop["hash_key"] == prop2["hash_key"] for prop2 in image[i].properties]):
-                    image[i].properties.append(prop)
-
+            image[i].merge_properties_from(imaged_sample)
 
         return image
 
