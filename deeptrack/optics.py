@@ -1,19 +1,18 @@
-''' Imaging features through optical systems
+''' Features for optically imaging of samples
 
-Any feature can be viewed through an optical system. The current image
-will be regarded as a map of the complex field.
+Contains features which performs physical simulations of optical devices to
+create camera images of samples.
 
-Contains
---------
+Classes
+-------
+Microscope
+    Image a sample using an optical system.
 Optics
-    Base abstract class for optical devices.
-
-OpticsBranch
-    Special feature for imaging features.
-
-OpticalDevice
-    Implementation of Optics. Handles incoherent fields.
-
+    Abstract base optics class.
+Fluorescence
+    Optical device for fluorescenct imaging.
+Brightfield
+    Images coherently illuminated samples.
 '''
 
 import numpy as np
