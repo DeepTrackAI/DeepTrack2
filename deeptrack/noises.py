@@ -1,3 +1,17 @@
+''' Features for introducing noise to images
+
+Classes
+-------
+Noise
+    Base abstract noise class
+Offset, Add, Background
+    Adds a constant value to an image
+Gaussian
+    Adds IID Gaussian noise to an image
+Poisson
+    Adds Poisson-distributed noise to an image
+'''
+
 import numpy as np
 from deeptrack.features import Feature
 from deeptrack.image import Image
@@ -6,7 +20,7 @@ from deeptrack.image import Image
 
 
 class Noise(Feature):
-    '''Base class for the Noise object. 
+    '''Base abstract noise class
     '''
 
 
@@ -33,9 +47,9 @@ class Gaussian(Noise):
 
     Parameters
     ----------
-    mu
+    mu : float
         The mean of the distribution.
-    sigma
+    sigma : float
         The root of the variance of the distribution.
     '''
     def __init__(self, *args, mu, sigma, **kwargs):
@@ -50,11 +64,11 @@ class Gaussian(Noise):
 
 
 class Poisson(Noise):
-     '''Adds Poisson-distributed noise to an image
+    '''Adds Poisson-distributed noise to an image
 
     Parameters
     ----------
-    snr
+    snr : float
         Signal to noise ratio of the final image. The signal is determined
         by the peak value of the image.
     '''
