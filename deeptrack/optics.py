@@ -476,7 +476,7 @@ class IlluminationGradient(Feature):
     
     '''
     def __init__(self, gradient=(0, 0), constant=0, vmin=0, vmax=np.inf, **kwargs):
-        super.__init__(gradient=gradient, constant=constant, vmin=vmin, vmax=vmax, **kwargs)
+        super().__init__(gradient=gradient, constant=constant, vmin=vmin, vmax=vmax, **kwargs)
 
     def get(self, image, gradient, constant, vmin, vmax, **kwargs):
 
