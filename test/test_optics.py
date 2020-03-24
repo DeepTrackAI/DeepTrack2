@@ -10,7 +10,7 @@ from deeptrack.image import Image
 
 
 
-class TestUtils(unittest.TestCase):
+class TestOptics(unittest.TestCase):
     
     def test_Fluorescence(self):
         microscope = optics.Fluorescence(

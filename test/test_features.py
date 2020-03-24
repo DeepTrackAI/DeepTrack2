@@ -10,7 +10,7 @@ from deeptrack.image import Image
 
 
 
-class TestUtils(unittest.TestCase):
+class TestFeatures(unittest.TestCase):
 
     def test_Feature_1(self):
         class FeatureConcreteClass(features.Feature):

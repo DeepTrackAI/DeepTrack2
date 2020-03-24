@@ -11,7 +11,7 @@ from deeptrack.image import Image
 
 
 
-class TestUtils(unittest.TestCase):
+class TestScatterers(unittest.TestCase):
     
     def test_PointParticle(self):
         optics = Fluorescence(
