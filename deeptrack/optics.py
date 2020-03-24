@@ -1,10 +1,13 @@
 ''' Imaging features through optical systems
 
 Any feature can be viewed through an optical system. The current image
-will be regarded as a map of the complex field.
+is regarded as a map of the complex field.
 
 Contains
 --------
+Microscope
+    Image a sample using an optical system.
+
 Optics
     Base abstract class for optical devices.
 
@@ -14,14 +17,16 @@ OpticsBranch
 OpticalDevice
     Implementation of Optics. Handles incoherent fields.
 
+IlluminationGradient
+    Adds a gradient in the illumination
 '''
 
 import numpy as np
 from deeptrack.features import Feature, StructuralFeature
 from deeptrack.image import Image, pad_image_to_fft
-from deeptrack.utils import as_list
 
 from scipy.interpolate import RectBivariateSpline
+
 
 
 class Microscope(StructuralFeature):
@@ -72,11 +77,14 @@ class Microscope(StructuralFeature):
             image[i].merge_properties_from(imaged_sample)
         return image
 
+
+
 # OPTICAL SYSTEMS
 
 
+
 class Optics(Feature):
-    ''' Abstract base optics class
+    ''' Abstract base optics class.
 
     Provides structure and methods common for most optical devices.
 
@@ -138,6 +146,7 @@ class Optics(Feature):
             voxel_size=get_voxel_size,
             ** kwargs
         )
+
 
     def _pupil(self,
                shape,
@@ -202,6 +211,7 @@ class Optics(Feature):
 
         return pupil_functions
 
+
     def _pad_volume(self, volume, limits=None, padding=None, output_region=None, **kwargs):
         if limits is None:
             limits = np.zeros((3, 2))
@@ -233,8 +243,10 @@ class Optics(Feature):
 
         return new_volume, new_limits
 
+
     def __call__(self, sample, **kwargs):
         return Microscope(sample, self, **kwargs)
+
 
 
 class Fluorescence(Optics):
@@ -341,6 +353,7 @@ class Fluorescence(Optics):
         return output_image
 
 
+
 class Brightfield(Optics):
     '''Images coherently illuminated samples.
 
@@ -410,7 +423,7 @@ class Brightfield(Optics):
             z_limits[0], z_limits[1], num=padded_volume.shape[2], endpoint=False)
 
         zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
-        z_values = z_iterator[~zero_plane]
+        # z_values = z_iterator[~zero_plane]
 
         volume = pad_image_to_fft(padded_volume, axes=(0, 1))
 
@@ -459,6 +472,7 @@ class Brightfield(Optics):
         output_image.properties = illuminated_volume.properties
 
         return output_image
+
 
 
 class IlluminationGradient(Feature):
