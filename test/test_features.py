@@ -19,6 +19,7 @@ class TestUtils(unittest.TestCase):
                 image = np.ones((2, 3))
                 return image    
         feature = FeatureConcreteClass()
+        feature.update()
         output_image = feature.resolve()
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.size, 6)
@@ -30,6 +31,7 @@ class TestUtils(unittest.TestCase):
                 image = image + value_to_add
                 return image
         feature = FeatureAddValue(value_to_add=1)
+        feature.update()
         input_image = np.zeros((1, 1))
         output_image = feature.resolve(input_image)
         self.assertEqual(output_image, 1)
@@ -46,6 +48,7 @@ class TestUtils(unittest.TestCase):
                 image = np.ones((2, 3))
                 return image    
         feature = FeatureConcreteClass(dummy_property="foo")
+        feature.update()
         output_image = feature.resolve()
         self.assertListEqual(output_image.get_property("dummy_property", get_one=False), ["foo"])
 
@@ -58,6 +61,7 @@ class TestUtils(unittest.TestCase):
         feature1 = FeatureAddValue(value_to_add=1)
         feature2 = FeatureAddValue(value_to_add=2)
         feature = feature1 + feature2
+        feature.update()
         input_image = np.zeros((1, 1))
         output_image = feature.resolve(input_image)
         self.assertEqual(output_image, 3)
@@ -78,6 +82,7 @@ class TestUtils(unittest.TestCase):
         feature2 = FeatureMultiplyByValue(value_to_multiply=10)
         input_image = np.zeros((1, 1))
         feature12 = feature1 + feature2
+        feature12.update()
         output_image12 = feature12.resolve(input_image)
         self.assertEqual(output_image12, 10)
         feature21 = feature2 + feature1
@@ -95,6 +100,7 @@ class TestUtils(unittest.TestCase):
         feature1 = FeatureAppendImageOfShape(shape=(1, 1))
         feature2 = FeatureAppendImageOfShape(shape=(2, 2))
         feature12 = feature1 + feature2
+        feature12.update()
         output_image = feature12.resolve()
         self.assertIsInstance(output_image, list)
         self.assertIsInstance(output_image[0], Image)
@@ -110,9 +116,11 @@ class TestUtils(unittest.TestCase):
                 return image
         input_image = np.zeros((1, 1))
         feature0 = FeatureAddValue(value_to_add=1) * 0
+        feature0.update()
         output_image0 = feature0.resolve(input_image)
         self.assertEqual(output_image0, 0)
         feature1 = FeatureAddValue(value_to_add=1) * 1
+        feature1.update()
         output_image1 = feature1.resolve(input_image)
         self.assertEqual(output_image1, 1)
         feature05 = FeatureAddValue(value_to_add=1) * 0.5
@@ -127,9 +135,10 @@ class TestUtils(unittest.TestCase):
             def get(self, image, value_to_add=0, **kwargs):
                 image = image + value_to_add
                 return image
-        feature = FeatureAddValue(value_to_add=1)
+        feature = FeatureAddValue(value_to_add=1) ** 10
+        feature.update()
         input_image = np.zeros((1, 1))
-        output_image = (feature**10).resolve(input_image)
+        output_image = feature.resolve(input_image)
         self.assertEqual(output_image, 10)
     
 
@@ -139,6 +148,7 @@ class TestUtils(unittest.TestCase):
             def get(self, image, forgettable_property, **kwargs):
                 return image
         feature = FeatureWithForgettableProperties(forgettable_property=1)
+        feature.update()
         input_image = np.zeros((1, 1))
         output_image = feature.resolve(input_image)
         self.assertIsNone(output_image.get_property("forgettable_property", default=None))
@@ -152,6 +162,7 @@ class TestUtils(unittest.TestCase):
                 image = image + value_to_add
                 return image
         feature = FeatureAddValue(value_to_add=1)
+        feature.update()
         input_image = np.zeros((1, 1))
         output_image = feature.resolve(input_image, value_to_add=10)
         self.assertEqual(output_image, 10)
