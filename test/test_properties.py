@@ -9,7 +9,7 @@ import numpy as np
 
 
 
-class TestUtils(unittest.TestCase):
+class TestProperties(unittest.TestCase):
 
     def test_Property_constant(self):
         P = properties.Property(1)

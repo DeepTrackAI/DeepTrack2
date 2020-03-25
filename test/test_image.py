@@ -10,25 +10,23 @@ import numpy as np
 
 
 
-class Particle(Feature):
-
-    def get(self, image, position=None, **kwargs):
-        # Code for simulating a particle not included
-        return image    
-
-
-
-class TestUtils(unittest.TestCase):
+class TestImage(unittest.TestCase):
     
+    class Particle(Feature):
+    
+        def get(self, image, position=None, **kwargs):
+            # Code for simulating a particle not included
+            return image    
+
     def test_Image(self):
-        particle = Particle(position=(128, 128))
+        particle = self.Particle(position=(128, 128))
         input_image = image.Image(np.zeros((256, 256)))
         output_image = particle.resolve(input_image)
         self.assertIsInstance(output_image, image.Image)
         
         
     def test_Image_properties(self):
-        particle = Particle(position=(128, 128))
+        particle = self.Particle(position=(128, 128))
         input_image = image.Image(np.zeros((256, 256)))
         output_image = particle.resolve(input_image)
         properties = output_image.properties
@@ -39,7 +37,7 @@ class TestUtils(unittest.TestCase):
         
         
     def test_Image_get_property(self):
-        particle = Particle(position=(128, 128))
+        particle = self.Particle(position=(128, 128))
         input_image = image.Image(np.zeros((256, 256)))
         output_image = particle.resolve(input_image)
         
@@ -54,7 +52,7 @@ class TestUtils(unittest.TestCase):
 
 
     def test_Image_append(self):
-        particle = Particle(position=(128, 128))
+        particle = self.Particle(position=(128, 128))
         input_image = image.Image(np.zeros((256, 256)))
         output_image = particle.resolve(input_image)
         properties = output_image.properties
@@ -75,7 +73,7 @@ class TestUtils(unittest.TestCase):
 
         
     def test_Image_merge_properties_from(self):
-        particle = Particle(position=(128, 128))
+        particle = self.Particle(position=(128, 128))
         input_image = image.Image(np.zeros((256, 256)))
         output_image1 = particle.resolve(input_image)
         output_image2 = particle.resolve(input_image)
