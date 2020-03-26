@@ -7,35 +7,33 @@ Aberration
 GaussianApodization
     Introduces pupil apodization.
 Zernike
-    Introduces a Zernike phase aberration
+    Introduces a Zernike phase aberration.
 Piston
-    Zernike polynomial with n=0, m=0
+    Zernike polynomial with n=0, m=0.
 VerticalTilt
-    Zernike polynomial with n=1, m=-1
+    Zernike polynomial with n=1, m=-1.
 HorizontalTilt
-    Zernike polynomial with n=1, m=1
+    Zernike polynomial with n=1, m=1.
 ObliqueAstigmatism
-    Zernike polynomial with n=2, m=-2
+    Zernike polynomial with n=2, m=-2.
 Defocus
-    Zernike polynomial with n=2, m=0
+    Zernike polynomial with n=2, m=0.
 Astigmatism
-    Zernike polynomial with n=2, m=2
+    Zernike polynomial with n=2, m=2.
 ObliqueTrefoil
-    Zernike polynomial with n=3, m=-3
+    Zernike polynomial with n=3, m=-3.
 VerticalComa
-    Zernike polynomial with n=3, m=-1
+    Zernike polynomial with n=3, m=-1.
 HorizontalComa
-    Zernike polynomial with n=3, m=1
+    Zernike polynomial with n=3, m=1.
 Trefoil
-    Zernike polynomial with n=3, m=3
+    Zernike polynomial with n=3, m=3.
 SphericalAberration
-    Zernike polynomial with n=4, m=0
-
+    Zernike polynomial with n=4, m=0.
 '''
 
 import numpy as np
 from deeptrack.features import Feature
-from deeptrack.image import Image
 from deeptrack.utils import as_list
 
 
@@ -43,10 +41,9 @@ from deeptrack.utils import as_list
 class Aberration(Feature):
     ''' Base abstract class.
 
-    Ensures that the method `.get()` recevies rho and theta as optional
+    Ensures that the method `.get()` receives rho and theta as optional
     arguments, describing the polar coordinates of each pixel in the image
     scaled so that rho is 1 at the edge of the pupil.
-    
     '''
 
     __distributed__ = True
@@ -67,13 +64,17 @@ class Aberration(Feature):
             new_list += super()._process_and_get([image], rho=rho, theta=theta, **kwargs)
         return new_list
 
+
+
 # AMPLITUDE ABERRATIONS
+
+
 
 class GaussianApodization(Aberration):
     ''' Introduces pupil apodization.
 
     Decreases the amplitude of the pupil at high frequencies according
-    to a gaussian distribution.
+    to a Gaussian distribution.
 
     Parameters
     ----------
@@ -90,12 +91,16 @@ class GaussianApodization(Aberration):
     def get(self, pupil, sigma, rho, **kwargs):
         return pupil * np.exp(-(rho / sigma)**2)
 
+
+
 # PHASE ABERRATIONS
 
-class Zernike(Aberration):
-    ''' Introduces a Zernike phase aberration
 
-    Calculates the zernike polynomial deined by the number `n` and `m` at
+
+class Zernike(Aberration):
+    ''' Introduces a Zernike phase aberration.
+
+    Calculates the Zernike polynomial deined by the numbers `n` and `m` at
     each pixel in the pupil, multiplies it by `coefficient`, and adds the
     result to the phase of the pupil.
 
@@ -109,7 +114,6 @@ class Zernike(Aberration):
         The zernike polynomial numbers. 
     coefficient : float or list of floats
         The coefficient of the polynomial
-    
     '''
 
     def __init__(self, n, m, coefficient=1, **kwargs):
@@ -156,10 +160,14 @@ class Zernike(Aberration):
         
         return pupil
 
+
+
 # COMMON ABERRATIONS
 
+
+
 class Piston(Zernike):
-    ''' Zernike polynomial with n=0, m=0
+    ''' Zernike polynomial with n=0, m=0.
 
     Parameters
     ----------
@@ -169,8 +177,10 @@ class Piston(Zernike):
     def __init__(self, *args, coefficient=1, **kwargs):
         super().__init__(*args, n=0, m=0, coefficient=coefficient, **kwargs)
 
+
+
 class VerticalTilt(Zernike):
-    ''' Zernike polynomial with n=1, m=-1
+    ''' Zernike polynomial with n=1, m=-1.
     
     Parameters
     ----------
@@ -180,8 +190,10 @@ class VerticalTilt(Zernike):
     def __init__(self, *args, coefficient=1, **kwargs):
         super().__init__(*args, n=1, m=-1, coefficient=coefficient, **kwargs)
 
+
+
 class HorizontalTilt(Zernike):
-    ''' Zernike polynomial with n=1, m=1
+    ''' Zernike polynomial with n=1, m=1.
     
     Parameters
     ----------
@@ -191,8 +203,10 @@ class HorizontalTilt(Zernike):
     def __init__(self, *args, coefficient=1, **kwargs):
         super().__init__(*args, n=1, m=1, coefficient=coefficient, **kwargs)
 
+
+
 class ObliqueAstigmatism(Zernike):
-    ''' Zernike polynomial with n=2, m=-2
+    ''' Zernike polynomial with n=2, m=-2.
     
     Parameters
     ----------
@@ -202,8 +216,10 @@ class ObliqueAstigmatism(Zernike):
     def __init__(self, *args, coefficient=1, **kwargs):
         super().__init__(*args, n=2, m=-2, coefficient=coefficient, **kwargs)
 
+
+
 class Defocus(Zernike):
-    ''' Zernike polynomial with n=2, m=0
+    ''' Zernike polynomial with n=2, m=0.
     
     Parameters
     ----------
@@ -213,8 +229,10 @@ class Defocus(Zernike):
     def __init__(self, *args, coefficient=1, **kwargs):
         super().__init__(*args, n=2, m=0, coefficient=coefficient, **kwargs)
 
+
+
 class Astigmatism(Zernike):
-    ''' Zernike polynomial with n=2, m=2
+    ''' Zernike polynomial with n=2, m=2.
     
     Parameters
     ----------
@@ -224,8 +242,10 @@ class Astigmatism(Zernike):
     def __init__(self, *args, coefficient=1, **kwargs):
         super().__init__(*args, n=2, m=2, coefficient=coefficient, **kwargs)
 
+
+
 class ObliqueTrefoil(Zernike):
-    ''' Zernike polynomial with n=3, m=-3
+    ''' Zernike polynomial with n=3, m=-3.
     
     Parameters
     ----------
@@ -235,8 +255,10 @@ class ObliqueTrefoil(Zernike):
     def __init__(self, *args, coefficient=1, **kwargs):
         super().__init__(*args, n=3, m=-3, coefficient=coefficient, **kwargs)
 
+
+
 class VerticalComa(Zernike):
-    ''' Zernike polynomial with n=3, m=-1
+    ''' Zernike polynomial with n=3, m=-1.
     
     Parameters
     ----------
@@ -246,8 +268,10 @@ class VerticalComa(Zernike):
     def __init__(self, *args, coefficient=1, **kwargs):
         super().__init__(*args, n=3, m=-1, coefficient=coefficient, **kwargs)
 
+
+
 class HorizontalComa(Zernike):
-    ''' Zernike polynomial with n=3, m=1
+    ''' Zernike polynomial with n=3, m=1.
     
     Parameters
     ----------
@@ -257,8 +281,10 @@ class HorizontalComa(Zernike):
     def __init__(self, *args, coefficient=1, **kwargs):
         super().__init__(*args, n=3, m=1, coefficient=coefficient, **kwargs)
 
+
+
 class Trefoil(Zernike):
-    ''' Zernike polynomial with n=3, m=3
+    ''' Zernike polynomial with n=3, m=3.
     
     Parameters
     ----------
@@ -268,8 +294,10 @@ class Trefoil(Zernike):
     def __init__(self, *args, coefficient=1, **kwargs):
         super().__init__(*args, n=3, m=3, coefficient=coefficient, **kwargs)
 
+
+
 class SphericalAberration(Zernike):
-    ''' Zernike polynomial with n=4, m=0
+    ''' Zernike polynomial with n=4, m=0.
     
     Parameters
     ----------
@@ -278,7 +306,3 @@ class SphericalAberration(Zernike):
     '''
     def __init__(self, *args, coefficient=1, **kwargs):
         super().__init__(*args, n=4, m=0, coefficient=coefficient, **kwargs)
-
-
-
-
