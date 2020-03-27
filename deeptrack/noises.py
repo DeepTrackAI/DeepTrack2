@@ -1,15 +1,15 @@
-''' Features for introducing noise to images
+''' Features for introducing noise to images.
 
 Classes
 -------
 Noise
-    Base abstract noise class
+    Base abstract noise class.
 Offset, Add, Background
-    Adds a constant value to an image
+    Adds a constant value to an image.
 Gaussian
-    Adds IID Gaussian noise to an image
+    Adds IID Gaussian noise to an image.
 Poisson
-    Adds Poisson-distributed noise to an image
+    Adds Poisson-distributed noise to an image.
 '''
 
 import numpy as np
@@ -20,7 +20,7 @@ from deeptrack.image import Image
 
 
 class Noise(Feature):
-    '''Base abstract noise class
+    '''Base abstract noise class.
     '''
 
 
