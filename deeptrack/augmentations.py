@@ -145,13 +145,13 @@ class FlipLR(Augmentation):
 
 
     def get(self, image, number_of_updates, **kwargs):
-        if number_of_updates:
+        if number_of_updates % 2:
             image = np.fliplr(image)
         return image
 
 
     def update_properties(self, image, number_of_updates, **kwargs):
-        if number_of_updates: 
+        if number_of_updates % 2: 
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
@@ -172,13 +172,13 @@ class FlipUD(Augmentation):
 
 
     def get(self, image, number_of_updates=0, **kwargs):
-        if number_of_updates:
+        if number_of_updates % 2:
             image = np.flipud(image)
         return image
 
 
     def update_properties(self, image, number_of_updates, **kwargs):
-        if number_of_updates: 
+        if number_of_updates % 2: 
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
@@ -198,25 +198,15 @@ class FlipDiagonal(Augmentation):
 
 
     def get(self, image, number_of_updates, axes=(1, 0, 2), **kwargs):
-        if number_of_updates:
+        if number_of_updates % 2:
             image = np.transpose(image, axes=axes)
         return image
 
 
     def update_properties(self, image, number_of_updates, **kwargs):
-        if number_of_updates: 
+        if number_of_updates % 2: 
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
                     new_position = (position[1], position[0], *position[2:])
                     prop["position"] = new_position
-
-
-
-
-    
-
-        
-
-        
-    
