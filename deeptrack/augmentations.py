@@ -17,7 +17,6 @@ FlipUD
     Flips images up-down.
 FlipDiagonal
     Flips images diagonally.
-    
 '''
 
 from deeptrack.features import Feature
@@ -35,10 +34,10 @@ class Augmentation(Feature):
     `updates_per_reload` images, while calling their parent feature
     `load_size` times. They achieve this by resolving `load_size` results
     from the parent feature at once, and randomly drawing one of these 
-    results as input to the method `.get()`. The a new input is chosen
+    results as input to the method `.get()`. A new input is chosen
     every time `.update()` is called. Once `.update()` has been called
     `updated_per_reload` times, a new batch of `load_size` results are
-    resolved from the parent feature. 
+    resolved from the parent feature.
 
     The method `.get()` of implementations of this class may accept the
     property `number_of_updates` as an argument. This number represents
@@ -55,10 +54,9 @@ class Augmentation(Feature):
         Number of times `.update()` is called before resolving new results
         from the parent feature.
     update_properties : Callable or None
-        Function called on the output of the `.get()` method. Overrides
+        Function called on the output of the method `.get()`. Overrides
         the default behaviour, allowing full control over how to update
         the properties of the output to account for the augmentation.
-
     '''
 
     __distributed__ = False
@@ -137,7 +135,6 @@ class FlipLR(Augmentation):
     ''' Flips images left-right.
 
     Updates all properties called "position" to flip the second index.
-
     '''
 
     def __init__(self, *args, **kwargs):
@@ -164,7 +161,6 @@ class FlipUD(Augmentation):
     ''' Flips images up-down.
 
     Updates all properties called "position" by flipping the first index.
-
     '''
 
     def __init__(self, *args, **kwargs):
@@ -190,7 +186,6 @@ class FlipDiagonal(Augmentation):
     ''' Flips images along the main diagonal.
 
     Updates all properties called "position" by swapping the first and second index.
-
     '''
 
     def __init__(self, *args, **kwargs):
