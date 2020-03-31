@@ -1,3 +1,17 @@
+''' Features for introducing noise to images.
+
+Classes
+-------
+Noise
+    Base abstract noise class.
+Offset, Add, Background
+    Adds a constant value to an image.
+Gaussian
+    Adds IID Gaussian noise to an image.
+Poisson
+    Adds Poisson-distributed noise to an image.
+'''
+
 import numpy as np
 from deeptrack.features import Feature
 from deeptrack.image import Image
@@ -6,37 +20,42 @@ from deeptrack.image import Image
 
 
 class Noise(Feature):
-    '''Base class for the Noise object.
-
-    Creates an image of desired shape, as defined by the implementing class.
-
-    Basic operators are overloaded to easily allow it to be added to an image
-    without explicity generating a new image each time
+    '''Base abstract noise class.
     '''
 
 
 
-class Offset(Noise):
-    def get(self, image, offset=0, **kwargs):
+class Add(Noise):
+    ''' Adds a constant value to an image
+    Parameters
+    ----------
+    offset : float
+        The value to add to the image
+    '''
+    def __init__(self, offset, **kwargs):
+        super().__init__(offset=offset, **kwargs)
+
+    def get(self, image, offset, **kwargs):
         return image + offset
+# ALIASES
+Offset = Add
+Background = Add
 
 
-    
 class Gaussian(Noise):
-    '''Adds gaussian noise to image
-    Implementation of the Noise class to generate IID gaussian pixels.
+    '''Adds IID Gaussian noise to an image
 
     Parameters
     ----------
-    mu
+    mu : float
         The mean of the distribution.
-    sigma
+    sigma : float
         The root of the variance of the distribution.
     '''
-    def __init__(self, *args, mu=0, sigma=1, **kwargs):
+    def __init__(self, *args, mu, sigma, **kwargs):
         super().__init__(*args, mu=mu, sigma=sigma, **kwargs)
 
-    def get(self, image, mu=0, sigma=1, **kwargs):
+    def get(self, image, mu, sigma, **kwargs):
         mu = np.ones(image.shape) * mu
         sigma = np.ones(image.shape) * sigma
         noisy_image = image + np.random.normal(mu, sigma)
@@ -45,6 +64,14 @@ class Gaussian(Noise):
 
 
 class Poisson(Noise):
+    '''Adds Poisson-distributed noise to an image
+
+    Parameters
+    ----------
+    snr : float
+        Signal to noise ratio of the final image. The signal is determined
+        by the peak value of the image.
+    '''
     def get(self, image, snr=None, **kwargs):
         image[image < 0] = 0
         peak = np.max(image)
