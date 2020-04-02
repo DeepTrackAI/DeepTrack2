@@ -1,4 +1,4 @@
-''' Generators to resolve features.
+''' Generators to continusously resolve features.
 
 Classes
 -------
@@ -14,12 +14,12 @@ from deeptrack.features import Feature
 from deeptrack.image import Image
 
 
+
 class Generator(keras.utils.Sequence):
     '''Base class for a generator.
 
     Generators continously update and resolve features, and allow other
-    frameworks to interface the features.
-
+    frameworks to continuously access new features.
     '''
 
     def generate(self,
@@ -33,16 +33,15 @@ class Generator(keras.utils.Sequence):
         Parameters
         ----------
         feature : Feature
-            The feature to resolve images from
+            The feature to resolve images from.
         label_function : Callable[Image] -> array_like
-            Function that returns the label corresponding to an image
+            Function that returns the label corresponding to an image.
         batch_size : int
-            Number of images per batch
+            Number of images per batch.
         shuffle_batch : bool
-            If True, the batches are shuffled before outputting
+            If True, the batches are shuffled before outputting.
         ndim : int
             Expected number of dimensions of the output.
-
         '''
 
         get_one = self._get_from_map(feature)
