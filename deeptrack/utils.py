@@ -113,4 +113,3 @@ def get_kwarg_names(function: Callable) -> List[str]:
         return argspec.kwonlyargs or []
     else:
         return argspec.args or []
-

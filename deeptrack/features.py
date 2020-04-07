@@ -90,7 +90,7 @@ class Feature(ABC):
 
 
     def __init__(self, *args: dict, **kwargs):
-        
+        super(Feature, self).__init__()
         properties = getattr(self, "properties", {})
 
         # Create an iterable of kwargs and args
