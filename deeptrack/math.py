@@ -6,14 +6,13 @@ Clip
     Clip the input within a minimum and a maximum value.
 NormalizeMinMax
     Min-max image normalization.
-
 '''
 
 from deeptrack.features import Feature
 from deeptrack.image import Image
 import numpy as np
 
-# CLASSES
+
 
 class Clip(Feature):
     '''Clip the input within a minimum and a maximum value.
@@ -24,7 +23,6 @@ class Clip(Feature):
         Clip the input to be larger than this value.
     max : float
         Clip the input to be smaller than this value.
-
     '''
 
     def __init__(self, min=-np.inf, max=+np.inf, **kwargs):
@@ -46,10 +44,9 @@ class NormalizeMinMax(Feature):
     Parameters
     ----------
     min : float
-        The minimum of the transformation
+        The minimum of the transformation.
     max : float
-        The maximum of the transformation
-
+        The maximum of the transformation.
     '''
 
     def __init__(self, min=0, max=1, **kwargs):
