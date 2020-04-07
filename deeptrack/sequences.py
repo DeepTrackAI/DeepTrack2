@@ -3,7 +3,7 @@
 Classes
 -------
 Sequence
-    Resolves a feature-set as a sequence.
+    Resolves a feature as a sequence.
 
 Functions
 ---------
@@ -11,14 +11,13 @@ Sequential
     Converts a feature to be resolved as a sequence.
 '''
 
-
-import numpy as np
 from deeptrack.features import Feature
 from deeptrack.properties import SequentialProperty
 
 
+
 class Sequence(Feature):
-    ''' Resolves a feature-set as a sequence.
+    ''' Resolves a feature as a sequence.
 
     The input feature is resolved `sequence_length` times, with the kwarg
     arguments `sequene_length` and `sequence_step` passed to all properties
@@ -27,14 +26,14 @@ class Sequence(Feature):
     Parameters
     ----------
     feature : Feature
-        The feature to resolve as a sequence
+        The feature to resolve as a sequence.
     sequence_length : int
-        The number of times to resolve the feature
+        The number of times to resolve the feature.
 
     Attributes
     ----------
     feature : Feature
-        The feature to resolve as a sequence
+        The feature to resolve as a sequence.
     '''
 
     __distributed__ = False
@@ -64,7 +63,6 @@ class Sequence(Feature):
 
         return self
 
-        
 
 
 def Sequential(feature: Feature, **kwargs):
@@ -73,7 +71,7 @@ def Sequential(feature: Feature, **kwargs):
     Should be called on individual features, not combinations of features. All keyword
     arguments will be trated as sequential properties and will be passed to the parent feature.
 
-    If a property from thge keyword argument already exists on the feature, the existing property
+    If a property from the keyword argument already exists on the feature, the existing property
     will be used to initilize the passed property (that is, it will be used for the first timestep).
 
     Parameters
