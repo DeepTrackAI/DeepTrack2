@@ -1,17 +1,46 @@
-import numpy as np
+'''Features and tools for resolving sequences of images.
+
+Classes
+-------
+Sequence
+    Resolves a feature as a sequence.
+
+Functions
+---------
+Sequential
+    Converts a feature to be resolved as a sequence.
+'''
+
 from deeptrack.features import Feature
 from deeptrack.properties import SequentialProperty
-from deeptrack.image import Image
-from deeptrack.utils import as_list
+
 
 
 class Sequence(Feature):
+    ''' Resolves a feature as a sequence.
+
+    The input feature is resolved `sequence_length` times, with the kwarg
+    arguments `sequene_length` and `sequence_step` passed to all properties
+    of the feature set.
+
+    Parameters
+    ----------
+    feature : Feature
+        The feature to resolve as a sequence.
+    sequence_length : int
+        The number of times to resolve the feature.
+
+    Attributes
+    ----------
+    feature : Feature
+        The feature to resolve as a sequence.
+    '''
 
     __distributed__ = False
 
-    def __init__(self, feature, *args, sequence_length=1, **kwargs):
+    def __init__(self, feature: Feature, sequence_length: int = 1, **kwargs):
         self.feature = feature
-        super().__init__(*args, sequence_length=sequence_length, **kwargs)
+        super().__init__(sequence_length=sequence_length, **kwargs)
 
         # Require update
         self.update()
@@ -34,29 +63,34 @@ class Sequence(Feature):
 
         return self
 
-        
 
 
-def Sequential(feature, *args, **kwargs):
-    
-    properties = (kwargs, *args)
+def Sequential(feature: Feature, **kwargs):
+    '''Converts a feature to be resolved as a sequence.
 
-    for property_dict in properties:
-        for property_name, sampling_rule in property_dict.items():
+    Should be called on individual features, not combinations of features. All keyword
+    arguments will be trated as sequential properties and will be passed to the parent feature.
 
-            if property_name in feature.properties:
-                initializer = feature.properties[property_name].sampling_rule
-            else:
-                initializer = sampling_rule
-                
-            feature.properties[property_name] = SequentialProperty(sampling_rule, initializer=initializer)
+    If a property from the keyword argument already exists on the feature, the existing property
+    will be used to initilize the passed property (that is, it will be used for the first timestep).
+
+    Parameters
+    ----------
+    feature : Feature
+        Feature to make sequential.
+    kwargs
+        Keyword arguments to pass on as sequential properties of `feature`.
+
+    '''
+
+
+    for property_name, sampling_rule in kwargs.items():
+
+        if property_name in feature.properties:
+            initializer = feature.properties[property_name].sampling_rule
+        else:
+            initializer = sampling_rule
+            
+        feature.properties[property_name] = SequentialProperty(sampling_rule, initializer=initializer)
 
     return feature
-
-
-def BrownianMotion(feature, *args, **kwargs):
-
-    def update_position(previous_value=(0, 0, 0), dt=1/30, diffusion_constant=0):
-        return previous_value + diffusion_constant * np.random.randn(len(previous_value)) * dt
-
-    return Sequential(feature, *args, position=update_position, **kwargs)
