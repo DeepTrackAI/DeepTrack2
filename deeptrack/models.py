@@ -49,11 +49,10 @@ class ModelFeature(Feature, models.Model):
         super(ModelFeature, self).__init__(add_batch_dimension_on_resolve=add_batch_dimension_on_resolve, **kwargs)
         
         self.model = model
-        self.compile(loss=loss, optimizer=optimizer, metrics=metrics)
-
+        
         input_shape = self.model.layers[0].input_shape
         self.build(input_shape=input_shape)
-
+        self.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
     def call(self, inputs, **kwargs):
         return self.model(inputs, **kwargs)
@@ -205,7 +204,7 @@ class UNet(ModelFeature):
                  output_conv_layers_dimensions=(16, 16),
                  steps_per_pooling=1,
                  number_of_outputs=1,
-                 output_activation="sigmoid",
+                 output_activation=None,
                  loss=nd_mean_absolute_error,
                  layer_function=None,
                  **kwargs):
@@ -301,7 +300,7 @@ class RNN(ModelFeature):
                  dense_layers_dimensions=(32,),
                  rnn_layers_dimensions=(32,),
                  return_sequences=False,
-                 output_activation="sigmoid",
+                 output_activation=None,
                  number_of_outputs=3,
                  **kwargs):
 
