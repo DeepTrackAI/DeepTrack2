@@ -1,14 +1,34 @@
+''' Mathematical oprations and structures
+
+Classses
+--------
+Clip
+    Clip the input within a minimum and a maximum value.
+NormalizeMinMax
+    Min-max image normalization.
+'''
+
 from deeptrack.features import Feature
 from deeptrack.image import Image
 import numpy as np
 
 
 
-# CLASSES
-
 class Clip(Feature):
-    def __init__(self, *args, min=-np.inf, max=+np.inf, **kwargs):
-        super().__init__(*args, min=min, max=max, **kwargs)
+    '''Clip the input within a minimum and a maximum value.
+
+    Parameters
+    ----------
+    min : float
+        Clip the input to be larger than this value.
+    max : float
+        Clip the input to be smaller than this value.
+    '''
+
+    def __init__(self, min=-np.inf, max=+np.inf, **kwargs):
+        super().__init__(min=min, max=max, **kwargs)
+
+
 
     def get(self, image, min=None, max=None, **kwargs):
         np.clip(image, min, max, image)
@@ -17,38 +37,24 @@ class Clip(Feature):
 
     
 class NormalizeMinMax(Feature):
-    def __init__(self, *args, min=0, max=1, **kwargs):
-        super().__init__(*args, min=min, max=max, **kwargs)
+    '''Image normalization.
+    
+    Transforms the input to be between a minimum and a maximum value using a linear transformation.
+
+    Parameters
+    ----------
+    min : float
+        The minimum of the transformation.
+    max : float
+        The maximum of the transformation.
+    '''
+
+    def __init__(self, min=0, max=1, **kwargs):
+        super().__init__(min=min, max=max, **kwargs)
 
 
-    def get(self, image, min=None, max=None, **kwargs):
-        image = image / np.max(image) * (max - min)
+
+    def get(self, image, min, max, **kwargs):
+        image = image / (np.max(image) - np.min(image)) * (max - min)
         image = image - np.min(image) + min 
         return image
-
-
-
-class Concatenate(Feature):
-
-    __distributed__ = False
-
-    def __init__(self, *args, features=None, axis=-1):
-        super().__init__(*args, features=features, axis=axis)
-    
-    def get(self, image, features=None, axis=None):
-
-        image_list = [feature.resolve(image) for feature in features]
-
-        merged_image = Image(np.concatenate(image_list, axis=axis))
-        
-        image = Image(image)
-        num_properties = len(image.properties)
-        
-        merged_properties = image.properties
-
-        for im in image_list:
-            merged_properties += im.properties[num_properties:]
-
-        merged_image.properties = merged_properties
-
-        return merged_image
