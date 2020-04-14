@@ -12,7 +12,7 @@ from typing import List
 from tensorflow import keras
 from deeptrack.features import Feature
 from deeptrack.image import Image
-
+import threading
 
 
 class Generator(keras.utils.Sequence):
@@ -46,33 +46,34 @@ class Generator(keras.utils.Sequence):
 
         get_one = self._get_from_map(feature)
         while True:
-            batch = []
-            labels = []
-            # Yield batch_size results
-            for _ in range(batch_size):
-                image = next(get_one)
-                batch.append(image)
+            with threading.Lock():
+                batch = []
+                labels = []
+                # Yield batch_size results
+                for _ in range(batch_size):
+                    image = next(get_one)
+                    batch.append(image)
+                    if label_function:
+                        labels.append(label_function(image))
+
+                if shuffle_batch:
+                    self._shuffle(batch, labels)
+
+                batch = np.array(batch)
+                labels = np.array(labels)
+
+                # Console found batch_size with results
+                if batch.ndim > ndim:
+                    dims_to_remove = batch.ndim - ndim
+                    batch = np.reshape(batch, (-1, *batch.shape[dims_to_remove + 1:]))
+                    labels = np.reshape(labels, (-1, *labels.shape[dims_to_remove + 1:]))
+                elif batch.ndim < ndim:
+                    Warning("Incorrect number of dimensions. Found {0} with {1} dimensions, expected {2}.".format(batch.shape, batch.ndim, ndim))
+
                 if label_function:
-                    labels.append(label_function(image))
-
-            if shuffle_batch:
-                self._shuffle(batch, labels)
-
-            batch = np.array(batch)
-            labels = np.array(labels)
-
-            # Console found batch_size with results
-            if batch.ndim > ndim:
-                dims_to_remove = batch.ndim - ndim
-                batch = np.reshape(batch, (-1, *batch.shape[dims_to_remove + 1:]))
-                labels = np.reshape(labels, (-1, *labels.shape[dims_to_remove + 1:]))
-            elif batch.ndim < ndim:
-                Warning("Incorrect number of dimensions. Found {0} with {1} dimensions, expected {2}.".format(batch.shape, batch.ndim, ndim))
-
-            if label_function:
-                yield batch, labels
-            else:
-                yield batch
+                    yield batch, labels
+                else:
+                    yield batch
 
 
     def _get(self, features: Feature or List[Feature]) -> Image:
