@@ -117,7 +117,7 @@ class Feature(ABC):
         Abstract method that define how the feature transforms the input. The current
         value of all properties will be passed as keyword arguments.
 
-        Arguments
+        Parameters
         ---------
         image : Image or List[Image]
             The Image or list of images to transform
@@ -199,6 +199,7 @@ class Feature(ABC):
 
     def update(self, **kwargs) -> "Feature":
         '''Updates the state of all properties.
+
         Parameters
         ----------
         **kwargs
@@ -322,7 +323,7 @@ class Feature(ABC):
 
 
     def sample(self, **kwargs) -> "Feature":
-        # Sampling a feature should have no affect
+        '''Returns the feature'''
         
         return self
 
@@ -471,7 +472,7 @@ class Duplicate(StructuralFeature):
         ''' Resolves each feature in `features` sequentially
         '''
         for index in range(len(features)):
-            image = features[index].resolve(image, index=index, **kwargs)
+            image = features[index].resolve(image, **kwargs)
 
         return image
 
@@ -480,7 +481,7 @@ class Duplicate(StructuralFeature):
 
         features = self.properties["features"].current_value
         for index in range(len(features)):
-            features[index].update(index=Property(index), **kwargs)
+            features[index].update(**kwargs)
 
 
 
@@ -497,19 +498,19 @@ class ConditionalSetProperty(StructuralFeature):
         Properties to be used if `condition` is True
 
     '''
-
+    __distributed__ = False
     def __init__(self, feature: Feature, condition="is_label", **kwargs):
         super().__init__(feature=feature, condition=condition, **kwargs)
     
 
-    def get(self, feature, condition, **kwargs):
+    def get(self, image, feature, condition, **kwargs):
         if kwargs.get(condition, False):
-            feature.resolve(**kwargs)
+            return feature.resolve(image, **kwargs)
         else:
             for property_key in self.properties.keys():
-                kwargs.pop(property_key)
+                kwargs.pop(property_key, None)
             
-            feature.resolve(**kwargs)
+            return feature.resolve(image, **kwargs)
 
 
 
@@ -526,13 +527,41 @@ class ConditionalSetFeature(StructuralFeature):
         The name of the conditional property
 
     '''
-
-    def __init__(self, on_false: Feature, on_true: Feature, condition="is_label", **kwargs):
+    __distributed__ = False
+    def __init__(self, on_false: Feature = None, on_true: Feature = None,  condition="is_label", **kwargs):
         super().__init__(on_false=on_false, on_true=on_true, condition=condition, **kwargs)
     
 
-    def get(self, on_false, on_true, condition, **kwargs):
+    def get(self, image, *, on_false, on_true, condition, **kwargs):
         if kwargs.get(condition, False):
-            on_true.resolve(**kwargs)
+            if on_true:
+                return on_true.resolve(image, **kwargs)
+            else:
+                return image
         else:
-            on_false.resolve(**kwargs)
+            if on_false:
+                return on_false.resolve(image, **kwargs)
+            else:
+                return image
+
+
+
+class Label(Feature):
+    '''Outputs the properties of this features.
+
+    Parameters
+    ----------
+    output_shape : tuple of ints
+        Reshapes the oiutput to this shape
+    
+    '''
+    __distributed__ = False
+    def get(self, image, output_shape=None, hash_key=None, **kwargs):
+        result = []
+        for key, value in kwargs.items():
+            result.append(value)
+
+        if output_shape:
+            result = np.reshape(np.array(result), output_shape)
+
+        return np.array(result)

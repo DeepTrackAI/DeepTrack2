@@ -23,12 +23,12 @@ These may serve as a useful starting point from which to build a solution.
 The notebooks can be read in any order, but we provide a suggested order to introduce new concepts more naturally. 
 This order is as follows:
 
-1. [deeptrack_introduction_tutorial](tutorials/deeptrack_introduction_tutorial.ipynb)
-2. [tracking_particles_cnn_tutorial](tutorials/tracking_particle_cnn_tutorial.ipynb)
-3. [tracking_multiple_particles_unet_tutorial](tutorials/tracking_multiple_particles_unet_tutorial.ipynb)
-4. [characterizing_aberrations_tutorial](tutorials/characterizing_aberrations_tutorial.ipynb)
-5. [distinguishing_particles_in_brightfield_tutorial](tutorials/distinguishing_particles_in_brightfield_tutorial.ipynb)
-6. [tracking_video_tutorial](tutorials/tracking_video_tutorial.ipynb)
+1. [deeptrack_introduction_tutorial](tutorials/deeptrack_introduction_tutorial.ipynb) Gives an overview of how to use DeepTrack 2.0.
+2. [tracking_particle_cnn_tutorial](tutorials/tracking_particle_cnn_tutorial.ipynb) Demonstrates how to track a point particle with a convolutional neural network (CNN) using DeepTrack 2.0. 
+3. [tracking_multiple_particles_unet_tutorial](tutorials/tracking_multiple_particles_unet_tutorial.ipynb) Demonstrates how to track multiple particles using a U-net with DeepTrack 2.0.
+4. [characterizing_aberrations_tutorial](tutorials/characterizing_aberrations_tutorial.ipynb) Demonstrates add and characterize aberrations of an optical device.
+5. [distinguishing_particles_in_brightfield_tutorial](tutorials/distinguishing_particles_in_brightfield_tutorial.ipynb) Demonstrates how to use a U-net to track and distinguish particles of different sizes in brightfield microscopy.
+6. [analyzing_video_tutorial](tutorials/tracking_video_tutorial.ipynb) Demonstrates how to create videos and how to train a network to analyze them.
 
 ### Examples
 
@@ -45,3 +45,7 @@ This order is as follows:
 6. [image_example](examples/image_example.ipynb)
 7. [generators_example](examples/generators_example.ipynb)
 8. [models_example](examples/models_example.ipynb)
+10. [losses_example](examples/losses_example.ipynb)
+11. [utils_example](examples/utils_example.ipynb)
+12. [sequences_example](examples/sequences_example.ipynb)
+13. [math_example](examples/math_example.ipynb)
