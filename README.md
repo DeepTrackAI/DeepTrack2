@@ -49,3 +49,6 @@ This order is as follows:
 11. [utils_example](examples/utils_example.ipynb)
 12. [sequences_example](examples/sequences_example.ipynb)
 13. [math_example](examples/math_example.ipynb)
+
+## Funding
+This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511).
