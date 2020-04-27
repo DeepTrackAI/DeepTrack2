@@ -1,6 +1,6 @@
 # DeepTrack 2.0
 
-DeepTrack is comprehensive deep learning framework for digital microscopy. 
+DeepTrack is a comprehensive deep learning framework for digital microscopy. 
 We provide tools to create physical simulations of customizable optical systems, to generate and train models, and to analyze experimental data.
 
 ## Getting started
