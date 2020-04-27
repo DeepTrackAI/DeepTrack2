@@ -120,6 +120,9 @@ class Augmentation(Feature):
             preloaded_results.append(self.feature.resolve())
         return preloaded_results
 
+    def update_properties(*args, **kwargs):
+        pass
+
 
 
 class PreLoad(Augmentation):

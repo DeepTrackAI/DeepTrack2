@@ -41,6 +41,7 @@ class ModelFeature(Feature, models.Model):
     
     def __init__(self, 
                  model: models.Model, 
+                 *,
                  loss="mae", 
                  optimizer="adam", 
                  metrics=[],
@@ -85,7 +86,7 @@ class Convolutional(ModelFeature):
     dense_layers_dimensions : tuple of ints
         Number of units in each dense layer.
     number_of_outputs : int
-        Number of units in output layer.
+        Number of units in the output layer.
     output_activation : str or keras activation
         The activation function of the output.
     loss : str or keras loss function
@@ -258,7 +259,7 @@ class UNet(ModelFeature):
         model = models.Model(unet_input, layer)
         
         
-        super().__init__(model, **kwargs)
+        super().__init__(model, loss=loss, **kwargs)
 
 
 
