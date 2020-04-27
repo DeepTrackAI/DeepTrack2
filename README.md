@@ -50,5 +50,10 @@ This order is as follows:
 12. [sequences_example](examples/sequences_example.ipynb)
 13. [math_example](examples/math_example.ipynb)
 
+### Documentation
+
+The detailed documentation of DeepTrack 2.0 is available at the following link:
+**ADD LINK**
+
 ## Funding
 This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511).
