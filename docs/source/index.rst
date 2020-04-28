@@ -23,4 +23,6 @@ Documentation
    :caption: Documentation
    
    utils
+   properties
+   features
 
