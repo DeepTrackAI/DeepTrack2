@@ -1,7 +1,7 @@
 image
 =====
 
-.. automodule:: image
+.. automodule:: deeptrack.image
 
 Module classes
 --------------
