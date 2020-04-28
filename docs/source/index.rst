@@ -3,18 +3,36 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+
+
 Welcome to DeepTrack 2.0's documentation!
 =========================================
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Starting with deeptrack
 
+   installation
+   tutorials
 
+Documentation
+=============
 
-Indices and tables
-==================
+.. toctree::
+   :maxdepth: 4
+   :caption: Documentation
+   
+   aberrations
+   augmentations
+   features
+   generators
+   image
+   losses
+   models
+   noises
+   optics
+   properties
+   scatterers
+   sequences
+   utils
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

@@ -1,0 +1,648 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>features &mdash; DeepTrack 2.0 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="generators" href="generators.html" />
+    <link rel="prev" title="augmentations" href="augmentations.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DeepTrack 2.0
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Starting with deeptrack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and notebooks</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="aberrations.html">aberrations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="augmentations.html">augmentations</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes">Module classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#branch">Branch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conditionalsetfeature">ConditionalSetFeature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conditionalsetproperty">ConditionalSetProperty</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#duplicate">Duplicate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#feature">Feature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#label">Label</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#probability">Probability</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#structuralfeature">StructuralFeature</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="generators.html">generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses.html">losses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noises.html">noises</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optics.html">optics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html">properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scatterers.html">scatterers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequences.html">sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DeepTrack 2.0</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>features</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/features.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-features">
+<span id="features"></span><h1>features<a class="headerlink" href="#module-features" title="Permalink to this headline">¶</a></h1>
+<p>Base class Feature and structural features</p>
+<p>Provides classes and tools for creating and interacting with features.</p>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Feature</dt><dd><p>Base abstract class.</p>
+</dd>
+<dt>StructuralFeature</dt><dd><p>Abstract extension of feature for interactions between features.</p>
+</dd>
+<dt>Branch</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that resolves two features
+sequentially.</p>
+</dd>
+<dt>Probability</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that randomly resolves a feature
+with a certain probability.</p>
+</dd>
+<dt>Duplicate</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that sequentially resolves an
+integer number of deep-copies of a feature.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-classes">
+<h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="branch">
+<h3>Branch<a class="headerlink" href="#branch" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="features.Branch">
+<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">Branch</code><span class="sig-paren">(</span><em class="sig-param">feature_1: features.Feature</em>, <em class="sig-param">feature_2: features.Feature</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves to features sequentially
+:param feature_1:
+:type feature_1: Feature
+:param feature_2:
+:type feature_2: Feature</p>
+<dl class="method">
+<dt id="features.Branch.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">feature_1</em>, <em class="sig-param">feature_2</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Branch.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves <cite>feature_1</cite> and <cite>feature_2</cite> sequentially</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="conditionalsetfeature">
+<h3>ConditionalSetFeature<a class="headerlink" href="#conditionalsetfeature" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="features.ConditionalSetFeature">
+<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">ConditionalSetFeature</code><span class="sig-paren">(</span><em class="sig-param">on_false: features.Feature = None</em>, <em class="sig-param">on_true: features.Feature = None</em>, <em class="sig-param">condition='is_label'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.ConditionalSetFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conditionally resolves one of two features</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>on_false</strong> (<a class="reference internal" href="#features.Feature" title="features.Feature"><em>Feature</em></a>) – Feature to resolve if the conditional property is false</p></li>
+<li><p><strong>on_true</strong> (<a class="reference internal" href="#features.Feature" title="features.Feature"><em>Feature</em></a>) – Feature to resolve if the conditional property is true</p></li>
+<li><p><strong>condition</strong> (<em>str</em>) – The name of the conditional property</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="features.ConditionalSetFeature.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">*</em>, <em class="sig-param">on_false</em>, <em class="sig-param">on_true</em>, <em class="sig-param">condition</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.ConditionalSetFeature.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for altering an image
+Abstract method that define how the feature transforms the input. The current
+value of all properties will be passed as keyword arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
+<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
+arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The transformed image or list of images</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="conditionalsetproperty">
+<h3>ConditionalSetProperty<a class="headerlink" href="#conditionalsetproperty" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="features.ConditionalSetProperty">
+<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">ConditionalSetProperty</code><span class="sig-paren">(</span><em class="sig-param">feature: features.Feature</em>, <em class="sig-param">condition='is_label'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.ConditionalSetProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conditionally overrides the properties of child features</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature</strong> (<a class="reference internal" href="#features.Feature" title="features.Feature"><em>Feature</em></a>) – The child feature</p></li>
+<li><p><strong>condition</strong> (<em>str</em>) – The name of the conditional property</p></li>
+<li><p><strong>**kwargs</strong> – Properties to be used if <cite>condition</cite> is True</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="features.ConditionalSetProperty.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">feature</em>, <em class="sig-param">condition</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.ConditionalSetProperty.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for altering an image
+Abstract method that define how the feature transforms the input. The current
+value of all properties will be passed as keyword arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
+<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
+arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The transformed image or list of images</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="duplicate">
+<h3>Duplicate<a class="headerlink" href="#duplicate" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="features.Duplicate">
+<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">Duplicate</code><span class="sig-paren">(</span><em class="sig-param">feature: features.Feature</em>, <em class="sig-param">num_duplicates: int</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Duplicate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves copies of a feature sequentially
+Creates <cite>num_duplicates</cite> copies of the feature and resolves
+them sequentially</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature</strong> (<a class="reference internal" href="#features.Feature" title="features.Feature"><em>Feature</em></a>) – The feature to duplicate</p></li>
+<li><p><strong>num_duplicates</strong> (<em>int</em>) – The number of duplicates to create</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="features.Duplicate.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image, features: List[features.Feature], **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Duplicate.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves each feature in <cite>features</cite> sequentially</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="features.Duplicate.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Duplicate.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the state of all properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – Arguments that will be passed to the Property
+method <cite>update()</cite>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="feature">
+<h3>Feature<a class="headerlink" href="#feature" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="features.Feature">
+<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">Feature</code><span class="sig-paren">(</span><em class="sig-param">*args: dict</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base feature class.
+Features define the image generation process. All features operate
+on lists of images. Most features, such as noise, apply some
+tranformation to all images in the list. This transformation can
+be additive, such as adding some Gaussian noise or a background
+illumination, or non-additive, such as introducing Poisson noise
+or performing a low-pass filter. This transformation is defined
+by the method <cite>get(image, **kwargs)</cite>, which all implementations of
+the class <cite>Feature</cite> need to define.</p>
+<p>Whenever a Feature is initiated, all keyword arguments passed to the
+constructor will be wrapped as a Property, and stored in the
+<cite>properties</cite> field as a <cite>PropertyDict</cite>. When a Feature is resolved,
+the current value of each property is sent as input to the get method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> (<em>dict</em><em>, </em><em>optional</em>) – Dicts passed as nonkeyword arguments will be deconstructed to key-value
+pairs and included in the field <cite>properties</cite> in the same way as keyword
+arguments.</p></li>
+<li><p><strong>**kwargs</strong> – All Keyword arguments will be wrapped as instances of <code class="docutils literal notranslate"><span class="pre">Property</span></code> and
+included in the field <cite>properties</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="features.Feature.properties">
+<code class="sig-name descname">properties</code><a class="headerlink" href="#features.Feature.properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dict that contains all keyword arguments passed to the
+constructor wrapped as Distributions. A sampled copy of this
+dict is sent as input to the get function, and is appended
+to the properties field of the output image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="features.Feature.__list_merge_strategy__">
+<code class="sig-name descname">__list_merge_strategy__</code><a class="headerlink" href="#features.Feature.__list_merge_strategy__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controls how the output of <cite>.get(image, **kwargs)</cite> is merged with
+the input list. It can be <cite>MERGE_STRATEGY_OVERRIDE</cite> (0, default),
+where the input is replaced by the new list, or
+<cite>MERGE_STRATEGY_APPEND</cite> (1), where the new list is appended to the</p>
+<blockquote>
+<div><p>end of the input list.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="features.Feature.__distributed__">
+<code class="sig-name descname">__distributed__</code><a class="headerlink" href="#features.Feature.__distributed__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controls whether <cite>.get(image, **kwargs)</cite> is called on each element
+in the list separately (<cite>__distributed__ = True</cite>), or if it is
+called on the list as a whole (<cite>__distributed__ = False</cite>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="features.Feature.__property_memorability__">
+<code class="sig-name descname">__property_memorability__</code><a class="headerlink" href="#features.Feature.__property_memorability__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controls whether to store the features properties to the <cite>Image</cite>.
+Values 1 or lower will be included by default.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="features.Feature.get">
+<em class="property">abstract </em><code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image: deeptrack.image.Image</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; deeptrack.image.Image<a class="headerlink" href="#features.Feature.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for altering an image
+Abstract method that define how the feature transforms the input. The current
+value of all properties will be passed as keyword arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
+<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
+arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The transformed image or list of images</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="features.Feature.plot">
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param">input_image: deeptrack.image.Image = None</em>, <em class="sig-param">resolve_kwargs: dict = None</em>, <em class="sig-param">interval: float = None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Feature.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualizes the output of the feature
+Resolves the feature and visualizes the result. If the output is an Image,
+show it using <cite>pyplot.imshow</cite>. If the output is a list, create an <cite>Animation</cite>.
+For notebooks, the animation is played inline using <cite>to_jshtml()</cite>. For scripts,
+the animation is played using the matplotlib backend.</p>
+<p>Any parameters in kwargs will be passed to <cite>pyplot.imshow</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em><em>, </em><em>optional</em>) – Passed as argument to <cite>resolve</cite> call</p></li>
+<li><p><strong>resolve_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Passed as kwarg arguments to <cite>resolve</cite> call</p></li>
+<li><p><strong>interval</strong> (<em>float</em>) – The time between frames in animation in ms. Default 33.</p></li>
+<li><p><strong>kwargs</strong> – keyword arguments passed to the method pyplot.imshow()</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="features.Feature.resolve">
+<code class="sig-name descname">resolve</code><span class="sig-paren">(</span><em class="sig-param">image_list: deeptrack.image.Image = None</em>, <em class="sig-param">**global_kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Feature.resolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the image.
+Transforms the input image by calling the method <cite>get()</cite> with the
+correct inputs. The properties of the feature can be overruled by
+passing a different value as a keyword argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_list</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em><em>, </em><em>optional</em>) – The Image or list of images to be transformed.</p></li>
+<li><p><strong>**global_kwargs</strong> – Set of arguments that are applied globally. That is, every
+feature in the set of features required to resolve an image
+will receive these keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The resolved image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="features.Feature.sample">
+<code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; features.Feature<a class="headerlink" href="#features.Feature.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the feature</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="features.Feature.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; features.Feature<a class="headerlink" href="#features.Feature.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the state of all properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – Arguments that will be passed to the Property
+method <cite>update()</cite>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="label">
+<h3>Label<a class="headerlink" href="#label" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="features.Label">
+<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">Label</code><span class="sig-paren">(</span><em class="sig-param">*args: dict</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Label" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs the properties of this features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>output_shape</strong> (<em>tuple of ints</em>) – Reshapes the oiutput to this shape</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="features.Label.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">output_shape=None</em>, <em class="sig-param">hash_key=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Label.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for altering an image
+Abstract method that define how the feature transforms the input. The current
+value of all properties will be passed as keyword arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
+<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
+arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The transformed image or list of images</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="probability">
+<h3>Probability<a class="headerlink" href="#probability" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="features.Probability">
+<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">Probability</code><span class="sig-paren">(</span><em class="sig-param">feature: features.Feature</em>, <em class="sig-param">probability: float</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Probability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves a feature with a certain probability</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature</strong> (<a class="reference internal" href="#features.Feature" title="features.Feature"><em>Feature</em></a>) – Feature to resolve</p></li>
+<li><p><strong>probability</strong> (<em>float</em>) – Probability to resolve</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="features.Probability.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">feature: features.Feature</em>, <em class="sig-param">probability: float</em>, <em class="sig-param">random_number: float</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Probability.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves <cite>feature</cite> if <cite>random_number</cite> is less than <cite>probability</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="structuralfeature">
+<h3>StructuralFeature<a class="headerlink" href="#structuralfeature" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="features.StructuralFeature">
+<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">StructuralFeature</code><span class="sig-paren">(</span><em class="sig-param">*args: dict</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.StructuralFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the structure of a feature-set
+Feature with __property_verbosity__ = 2 to avoid adding it to the list
+of properties, and __distributed__ = False to pass the input as-is.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="generators.html" class="btn btn-neutral float-right" title="generators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="augmentations.html" class="btn btn-neutral float-left" title="augmentations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Benjamin Midtvedt
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

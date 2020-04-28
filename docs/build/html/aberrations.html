@@ -1,0 +1,529 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>aberrations &mdash; DeepTrack 2.0 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="augmentations" href="augmentations.html" />
+    <link rel="prev" title="Tutorials and notebooks" href="tutorials.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DeepTrack 2.0
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Starting with deeptrack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and notebooks</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">aberrations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes">Module classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#aberration">Aberration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#astigmatism">Astigmatism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#defocus">Defocus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gaussianapodization">GaussianApodization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#horizontalcoma">HorizontalComa</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#horizontaltilt">HorizontalTilt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#obliqueastigmatism">ObliqueAstigmatism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#obliquetrefoil">ObliqueTrefoil</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#piston">Piston</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sphericalaberration">SphericalAberration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#trefoil">Trefoil</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#verticalcoma">VerticalComa</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#verticaltilt">VerticalTilt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#zernike">Zernike</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="augmentations.html">augmentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generators.html">generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses.html">losses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noises.html">noises</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optics.html">optics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html">properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scatterers.html">scatterers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequences.html">sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DeepTrack 2.0</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>aberrations</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/aberrations.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-aberrations">
+<span id="aberrations"></span><h1>aberrations<a class="headerlink" href="#module-aberrations" title="Permalink to this headline">¶</a></h1>
+<p>Features that aberrate and modify pupil functions</p>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Aberration</dt><dd><p>Base abstract class</p>
+</dd>
+<dt>GaussianApodization</dt><dd><p>Introduces pupil apodization.</p>
+</dd>
+<dt>Zernike</dt><dd><p>Introduces a Zernike phase aberration.</p>
+</dd>
+<dt>Piston</dt><dd><p>Zernike polynomial with n=0, m=0.</p>
+</dd>
+<dt>VerticalTilt</dt><dd><p>Zernike polynomial with n=1, m=-1.</p>
+</dd>
+<dt>HorizontalTilt</dt><dd><p>Zernike polynomial with n=1, m=1.</p>
+</dd>
+<dt>ObliqueAstigmatism</dt><dd><p>Zernike polynomial with n=2, m=-2.</p>
+</dd>
+<dt>Defocus</dt><dd><p>Zernike polynomial with n=2, m=0.</p>
+</dd>
+<dt>Astigmatism</dt><dd><p>Zernike polynomial with n=2, m=2.</p>
+</dd>
+<dt>ObliqueTrefoil</dt><dd><p>Zernike polynomial with n=3, m=-3.</p>
+</dd>
+<dt>VerticalComa</dt><dd><p>Zernike polynomial with n=3, m=-1.</p>
+</dd>
+<dt>HorizontalComa</dt><dd><p>Zernike polynomial with n=3, m=1.</p>
+</dd>
+<dt>Trefoil</dt><dd><p>Zernike polynomial with n=3, m=3.</p>
+</dd>
+<dt>SphericalAberration</dt><dd><p>Zernike polynomial with n=4, m=0.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-classes">
+<h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="aberration">
+<h3>Aberration<a class="headerlink" href="#aberration" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.Aberration">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">Aberration</code><span class="sig-paren">(</span><em class="sig-param">*args: dict</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.Aberration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base abstract class.</p>
+<p>Ensures that the method <cite>.get()</cite> receives rho and theta as optional
+arguments, describing the polar coordinates of each pixel in the image
+scaled so that rho is 1 at the edge of the pupil.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="astigmatism">
+<h3>Astigmatism<a class="headerlink" href="#astigmatism" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.Astigmatism">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">Astigmatism</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.Astigmatism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=2, m=2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coefficient</strong> (<em>float</em>) – The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="defocus">
+<h3>Defocus<a class="headerlink" href="#defocus" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.Defocus">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">Defocus</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.Defocus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=2, m=0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coefficient</strong> (<em>float</em>) – The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="gaussianapodization">
+<h3>GaussianApodization<a class="headerlink" href="#gaussianapodization" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.GaussianApodization">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">GaussianApodization</code><span class="sig-paren">(</span><em class="sig-param">sigma</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.GaussianApodization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Introduces pupil apodization.</p>
+<p>Decreases the amplitude of the pupil at high frequencies according
+to a Gaussian distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sigma</strong> (<em>float</em>) – The standard deviation of the apodization. The edge of the pupil
+is at one deviation from the center.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="aberrations.GaussianApodization.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">pupil</em>, <em class="sig-param">sigma</em>, <em class="sig-param">rho</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.GaussianApodization.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for altering an image
+Abstract method that define how the feature transforms the input. The current
+value of all properties will be passed as keyword arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
+<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
+arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The transformed image or list of images</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="horizontalcoma">
+<h3>HorizontalComa<a class="headerlink" href="#horizontalcoma" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.HorizontalComa">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">HorizontalComa</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.HorizontalComa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=3, m=1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coefficient</strong> (<em>float</em>) – The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="horizontaltilt">
+<h3>HorizontalTilt<a class="headerlink" href="#horizontaltilt" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.HorizontalTilt">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">HorizontalTilt</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.HorizontalTilt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=1, m=1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coefficient</strong> (<em>float</em>) – The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="obliqueastigmatism">
+<h3>ObliqueAstigmatism<a class="headerlink" href="#obliqueastigmatism" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.ObliqueAstigmatism">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">ObliqueAstigmatism</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.ObliqueAstigmatism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=2, m=-2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coefficient</strong> (<em>float</em>) – The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="obliquetrefoil">
+<h3>ObliqueTrefoil<a class="headerlink" href="#obliquetrefoil" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.ObliqueTrefoil">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">ObliqueTrefoil</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.ObliqueTrefoil" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=3, m=-3.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coefficient</strong> (<em>float</em>) – The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="piston">
+<h3>Piston<a class="headerlink" href="#piston" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.Piston">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">Piston</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.Piston" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=0, m=0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coefficient</strong> (<em>float</em>) – The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="sphericalaberration">
+<h3>SphericalAberration<a class="headerlink" href="#sphericalaberration" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.SphericalAberration">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">SphericalAberration</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.SphericalAberration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=4, m=0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coefficient</strong> (<em>float</em>) – The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="trefoil">
+<h3>Trefoil<a class="headerlink" href="#trefoil" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.Trefoil">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">Trefoil</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.Trefoil" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=3, m=3.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coefficient</strong> (<em>float</em>) – The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="verticalcoma">
+<h3>VerticalComa<a class="headerlink" href="#verticalcoma" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.VerticalComa">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">VerticalComa</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.VerticalComa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=3, m=-1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coefficient</strong> (<em>float</em>) – The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="verticaltilt">
+<h3>VerticalTilt<a class="headerlink" href="#verticaltilt" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.VerticalTilt">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">VerticalTilt</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.VerticalTilt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=1, m=-1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>coefficient</strong> (<em>float</em>) – The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="zernike">
+<h3>Zernike<a class="headerlink" href="#zernike" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="aberrations.Zernike">
+<em class="property">class </em><code class="sig-prename descclassname">aberrations.</code><code class="sig-name descname">Zernike</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">m</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.Zernike" title="Permalink to this definition">¶</a></dt>
+<dd><p>Introduces a Zernike phase aberration.</p>
+<p>Calculates the Zernike polynomial deined by the numbers <cite>n</cite> and <cite>m</cite> at
+each pixel in the pupil, multiplies it by <cite>coefficient</cite>, and adds the
+result to the phase of the pupil.</p>
+<p>If <cite>n</cite>, <cite>m</cite> and <cite>coefficient</cite> are lists of equal lengths, sum the
+Zernike polynomials corresponding to each set of values in these lists
+before adding them to the phase.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>m</strong> (<em>n</em><em>,</em>) – The zernike polynomial numbers.</p></li>
+<li><p><strong>coefficient</strong> (<em>float</em><em> or </em><em>list of floats</em>) – The coefficient of the polynomial</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="aberrations.Zernike.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">pupil</em>, <em class="sig-param">rho</em>, <em class="sig-param">theta</em>, <em class="sig-param">n</em>, <em class="sig-param">m</em>, <em class="sig-param">coefficient</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#aberrations.Zernike.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for altering an image
+Abstract method that define how the feature transforms the input. The current
+value of all properties will be passed as keyword arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
+<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
+arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The transformed image or list of images</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="augmentations.html" class="btn btn-neutral float-right" title="augmentations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorials.html" class="btn btn-neutral float-left" title="Tutorials and notebooks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Benjamin Midtvedt
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
