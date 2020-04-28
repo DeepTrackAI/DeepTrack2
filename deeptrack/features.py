@@ -172,10 +172,15 @@ class Feature(ABC):
         # or to rescale properties.
         feature_input = self._process_properties(feature_input)
 
+        
+        # Set the seed from the hash_key. Ensures equal results
+        np.random.seed(feature_input["hash_key"][0])
+
         # _process_and_get calls the get function correctly according
         # to the __distributed__ attribute
         new_list = self._process_and_get(image_list, **feature_input)
- 
+
+        
         # Add feature_input to the image the class attribute __property_memorability__
         # is not larger than the passed property_verbosity keyword
         property_verbosity = global_kwargs.get("property_memorability", 1)

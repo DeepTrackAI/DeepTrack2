@@ -73,6 +73,7 @@ class Augmentation(Feature):
             # number of properties=0
             if number_of_updates == 0:
                 self.preloaded_results = self._load(load_size)
+
             return None
         
         def get_number_of_updates(updates_per_reload=1):
@@ -96,28 +97,45 @@ class Augmentation(Feature):
 
     def _process_and_get(self, *args, update_properties=None, index=0, **kwargs):
         # Loads a result from storage
-        image_list = self.preloaded_results[index]
-        if not isinstance(image_list, list):
-            image_list = [image_list]
+        image_list_of_lists = self.preloaded_results[index]
+        if not isinstance(image_list_of_lists, list):
+            image_list_of_lists = [image_list_of_lists]
         
+        new_list_of_lists = []
         # Calls get
-        new_image_list = [self.get(Image(image).merge_properties_from(image), **kwargs) for image in image_list]
-
-        # Updates properties
+        for image_list in image_list_of_lists:
+            if isinstance(image_list, list):
+                new_list_of_lists.append([
+                    [self.get(Image(image), **kwargs).merge_properties_from(image) for image in image_list]
+                ])
+            else: 
+                new_list_of_lists.append(
+                    self.get(Image(image_list), **kwargs).merge_properties_from(image_list)
+                )
+            
         if update_properties:
-            for image in new_image_list:
-                image.properties = [dict(prop) for prop in image.properties]
-                update_properties(image, **kwargs)
+            for image_list in new_list_of_lists:
+                if not isinstance(new_list_of_lists, list):
+                    image_list = [image_list]
+                for image in image_list:
+                    image.properties = [dict(prop) for prop in image.properties]
+                    update_properties(image, **kwargs)
 
-        return new_image_list
+        return new_list_of_lists
     
 
     def _load(self, load_size):
         # Resolves parent and stores result
         preloaded_results = []
         for _ in range(load_size):
-            self.feature.update()
-            preloaded_results.append(self.feature.resolve())
+            if isinstance(self.feature, list):  
+                [_feature.update() for _feature in self.feature]
+                list_of_results = [_feature.resolve(_augmentation_index=index) for index, _feature in enumerate(self.feature)]
+                preloaded_results.append(list_of_results)
+            else:
+                self.feature.update()
+                result = self.feature.resolve(_augmentation_index=0)
+                preloaded_results.append(result)
         return preloaded_results
 
     def update_properties(*args, **kwargs):
@@ -133,6 +151,45 @@ class PreLoad(Augmentation):
     def get(self, image, **kwargs):
         return image
 
+
+class Crop(Augmentation):
+    ''' Crops a regions of an image.
+
+    Parameters
+    ----------
+    feature : feature or list of features
+        Feature(s) to augment.
+    corner : tuple of ints or Callable[Image] or "random"
+        Top left corner of the cropped region. Can be a tuple of ints,
+
+    '''
+    def __init__(self, *args, corner="random", crop_size=(64, 64), **kwargs):
+        super().__init__(*args, corner=corner, crop_size=crop_size, **kwargs)
+    
+    def get(self, image, corner, crop_size, **kwargs):
+        if corner == "random":
+            slice_start = np.random.randint([0] * len(crop_size), np.array(image.shape[:len(crop_size)]) - crop_size)
+            
+        elif callable(corner):
+            slice_start = corner(image)
+
+        else:
+            slice_start = corner
+    
+        slices = tuple([slice(slice_start_i, slice_start_i + crop_size_i) for slice_start_i, crop_size_i in zip(slice_start, crop_size)])
+
+        cropped_image = image[slices]
+
+        for prop in cropped_image.properties:
+            if "position" in prop:
+                position = np.array(prop["position"])
+                try:
+                    position[0:2] -= corner[0:2]
+                    prop["position"] = position
+                except IndexError:
+                    pass
+        
+        return cropped_image
 
 class FlipLR(Augmentation):
     ''' Flips images left-right.
