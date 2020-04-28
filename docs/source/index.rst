@@ -28,4 +28,5 @@ Documentation
    scatterers
    optics
    augmentations
+   aberrations
 
