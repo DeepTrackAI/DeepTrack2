@@ -1,2 +1,7 @@
 tf-nightly
+numpy
+matplotlib
+scipy
+Sphinx==2.2.0
+sphinx-rtd-theme==0.4.3
 sphinxcontrib-napoleon

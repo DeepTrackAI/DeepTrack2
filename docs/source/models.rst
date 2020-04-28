@@ -9,42 +9,42 @@ Module classes
 Convolutional
 ^^^^^^^^^^^^^
 
-.. autoclass:: models.Convolutional
+.. autoclass:: deeptrack.models.Convolutional
    :members:
 
 ModelFeature
 ^^^^^^^^^^^^
 
-.. autoclass:: models.ModelFeature
+.. autoclass:: deeptrack.models.ModelFeature
    :members:
 
 RNN
 ^^^
 
-.. autoclass:: models.RNN
+.. autoclass:: deeptrack.models.RNN
    :members:
 
 UNet
 ^^^^
 
-.. autoclass:: models.UNet
+.. autoclass:: deeptrack.models.UNet
    :members:
 
 convolutional
 ^^^^^^^^^^^^^
 
-.. autoclass:: models.convolutional
+.. autoclass:: deeptrack.models.convolutional
    :members:
 
 rnn
 ^^^
 
-.. autoclass:: models.rnn
+.. autoclass:: deeptrack.models.rnn
    :members:
 
 unet
 ^^^^
 
-.. autoclass:: models.unet
+.. autoclass:: deeptrack.models.unet
    :members:
 

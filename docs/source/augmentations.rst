@@ -9,30 +9,30 @@ Module classes
 Augmentation
 ^^^^^^^^^^^^
 
-.. autoclass:: augmentations.Augmentation
+.. autoclass:: deeptrack.augmentations.Augmentation
    :members:
 
 FlipDiagonal
 ^^^^^^^^^^^^
 
-.. autoclass:: augmentations.FlipDiagonal
+.. autoclass:: deeptrack.augmentations.FlipDiagonal
    :members:
 
 FlipLR
 ^^^^^^
 
-.. autoclass:: augmentations.FlipLR
+.. autoclass:: deeptrack.augmentations.FlipLR
    :members:
 
 FlipUD
 ^^^^^^
 
-.. autoclass:: augmentations.FlipUD
+.. autoclass:: deeptrack.augmentations.FlipUD
    :members:
 
 PreLoad
 ^^^^^^^
 
-.. autoclass:: augmentations.PreLoad
+.. autoclass:: deeptrack.augmentations.PreLoad
    :members:
 

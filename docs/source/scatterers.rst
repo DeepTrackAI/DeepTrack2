@@ -9,30 +9,30 @@ Module classes
 Ellipse
 ^^^^^^^
 
-.. autoclass:: scatterers.Ellipse
+.. autoclass:: deeptrack.scatterers.Ellipse
    :members:
 
 Ellipsoid
 ^^^^^^^^^
 
-.. autoclass:: scatterers.Ellipsoid
+.. autoclass:: deeptrack.scatterers.Ellipsoid
    :members:
 
 PointParticle
 ^^^^^^^^^^^^^
 
-.. autoclass:: scatterers.PointParticle
+.. autoclass:: deeptrack.scatterers.PointParticle
    :members:
 
 Scatterer
 ^^^^^^^^^
 
-.. autoclass:: scatterers.Scatterer
+.. autoclass:: deeptrack.scatterers.Scatterer
    :members:
 
 Sphere
 ^^^^^^
 
-.. autoclass:: scatterers.Sphere
+.. autoclass:: deeptrack.scatterers.Sphere
    :members:
 
