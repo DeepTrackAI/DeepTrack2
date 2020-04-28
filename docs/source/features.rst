@@ -9,48 +9,48 @@ Module classes
 Branch
 ^^^^^^
 
-.. autoclass:: features.Branch
+.. autoclass:: deeptrack.features.Branch
    :members:
 
 ConditionalSetFeature
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: features.ConditionalSetFeature
+.. autoclass:: deeptrack.features.ConditionalSetFeature
    :members:
 
 ConditionalSetProperty
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: features.ConditionalSetProperty
+.. autoclass:: deeptrack.features.ConditionalSetProperty
    :members:
 
 Duplicate
 ^^^^^^^^^
 
-.. autoclass:: features.Duplicate
+.. autoclass:: deeptrack.features.Duplicate
    :members:
 
 Feature
 ^^^^^^^
 
-.. autoclass:: features.Feature
+.. autoclass:: deeptrack.features.Feature
    :members:
 
 Label
 ^^^^^
 
-.. autoclass:: features.Label
+.. autoclass:: deeptrack.features.Label
    :members:
 
 Probability
 ^^^^^^^^^^^
 
-.. autoclass:: features.Probability
+.. autoclass:: deeptrack.features.Probability
    :members:
 
 StructuralFeature
 ^^^^^^^^^^^^^^^^^
 
-.. autoclass:: features.StructuralFeature
+.. autoclass:: deeptrack.features.StructuralFeature
    :members:
 

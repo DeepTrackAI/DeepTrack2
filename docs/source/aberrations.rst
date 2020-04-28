@@ -9,84 +9,84 @@ Module classes
 Aberration
 ^^^^^^^^^^
 
-.. autoclass:: aberrations.Aberration
+.. autoclass:: deeptrack.aberrations.Aberration
    :members:
 
 Astigmatism
 ^^^^^^^^^^^
 
-.. autoclass:: aberrations.Astigmatism
+.. autoclass:: deeptrack.aberrations.Astigmatism
    :members:
 
 Defocus
 ^^^^^^^
 
-.. autoclass:: aberrations.Defocus
+.. autoclass:: deeptrack.aberrations.Defocus
    :members:
 
 GaussianApodization
 ^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.GaussianApodization
+.. autoclass:: deeptrack.aberrations.GaussianApodization
    :members:
 
 HorizontalComa
 ^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.HorizontalComa
+.. autoclass:: deeptrack.aberrations.HorizontalComa
    :members:
 
 HorizontalTilt
 ^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.HorizontalTilt
+.. autoclass:: deeptrack.aberrations.HorizontalTilt
    :members:
 
 ObliqueAstigmatism
 ^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.ObliqueAstigmatism
+.. autoclass:: deeptrack.aberrations.ObliqueAstigmatism
    :members:
 
 ObliqueTrefoil
 ^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.ObliqueTrefoil
+.. autoclass:: deeptrack.aberrations.ObliqueTrefoil
    :members:
 
 Piston
 ^^^^^^
 
-.. autoclass:: aberrations.Piston
+.. autoclass:: deeptrack.aberrations.Piston
    :members:
 
 SphericalAberration
 ^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.SphericalAberration
+.. autoclass:: deeptrack.aberrations.SphericalAberration
    :members:
 
 Trefoil
 ^^^^^^^
 
-.. autoclass:: aberrations.Trefoil
+.. autoclass:: deeptrack.aberrations.Trefoil
    :members:
 
 VerticalComa
 ^^^^^^^^^^^^
 
-.. autoclass:: aberrations.VerticalComa
+.. autoclass:: deeptrack.aberrations.VerticalComa
    :members:
 
 VerticalTilt
 ^^^^^^^^^^^^
 
-.. autoclass:: aberrations.VerticalTilt
+.. autoclass:: deeptrack.aberrations.VerticalTilt
    :members:
 
 Zernike
 ^^^^^^^
 
-.. autoclass:: aberrations.Zernike
+.. autoclass:: deeptrack.aberrations.Zernike
    :members:
 
