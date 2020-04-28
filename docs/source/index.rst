@@ -29,4 +29,6 @@ Documentation
    optics
    augmentations
    aberrations
+   models
+   losses
 
