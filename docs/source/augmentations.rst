@@ -1,7 +1,7 @@
 augmentations
 =============
 
-.. automodule:: augmentations
+.. automodule:: deeptrack.augmentations
 
 Module classes
 --------------

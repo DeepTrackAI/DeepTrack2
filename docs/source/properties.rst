@@ -1,7 +1,7 @@
 properties
 ==========
 
-.. automodule:: properties
+.. automodule:: deeptrack.properties
 
 Module classes
 --------------
