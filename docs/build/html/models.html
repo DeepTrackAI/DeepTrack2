@@ -1,0 +1,463 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>models &mdash; DeepTrack 2.0 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="noises" href="noises.html" />
+    <link rel="prev" title="losses" href="losses.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DeepTrack 2.0
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Starting with deeptrack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and notebooks</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="aberrations.html">aberrations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="augmentations.html">augmentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generators.html">generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses.html">losses</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes">Module classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#convolutional">Convolutional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#modelfeature">ModelFeature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rnn">RNN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#unet">UNet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">convolutional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">rnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">unet</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="noises.html">noises</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optics.html">optics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html">properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scatterers.html">scatterers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequences.html">sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DeepTrack 2.0</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>models</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/models.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-models">
+<span id="models"></span><h1>models<a class="headerlink" href="#module-models" title="Permalink to this headline">¶</a></h1>
+<p>Standard models for neural networks.</p>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>ModelFeature</dt><dd><p>Base model feature class.</p>
+</dd>
+<dt>Convolutional, convolutional</dt><dd><p>Creates and compiles a convolutional neural network.</p>
+</dd>
+<dt>UNet, unet</dt><dd><p>Creates and compiles a U-Net neural network.</p>
+</dd>
+<dt>RNN, rnn</dt><dd><p>Creates and compiles a recurrent neural network.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-classes">
+<h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="convolutional">
+<h3>Convolutional<a class="headerlink" href="#convolutional" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="models.Convolutional">
+<em class="property">class </em><code class="sig-prename descclassname">models.</code><code class="sig-name descname">Convolutional</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(51</em>, <em class="sig-param">51</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">dense_layers_dimensions=(32</em>, <em class="sig-param">32)</em>, <em class="sig-param">number_of_outputs=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#models.Convolutional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and compiles a convolutional neural network.</p>
+<p>A convolutional network with a dense top.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>tuple of ints</em>) – Size of the images to be analyzed.</p></li>
+<li><p><strong>conv_layers_dimensions</strong> (<em>tuple of ints</em>) – Number of convolutions in each convolutional layer.</p></li>
+<li><p><strong>dense_layers_dimensions</strong> (<em>tuple of ints</em>) – Number of units in each dense layer.</p></li>
+<li><p><strong>number_of_outputs</strong> (<em>int</em>) – Number of units in the output layer.</p></li>
+<li><p><strong>output_activation</strong> (<em>str</em><em> or </em><em>keras activation</em>) – The activation function of the output.</p></li>
+<li><p><strong>loss</strong> (<em>str</em><em> or </em><em>keras loss function</em>) – The loss function of the network.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Deep learning network</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>keras.models.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="modelfeature">
+<h3>ModelFeature<a class="headerlink" href="#modelfeature" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="models.ModelFeature">
+<em class="property">class </em><code class="sig-prename descclassname">models.</code><code class="sig-name descname">ModelFeature</code><span class="sig-paren">(</span><em class="sig-param">model: tensorflow.python.keras.engine.training.Model</em>, <em class="sig-param">*</em>, <em class="sig-param">loss='mae'</em>, <em class="sig-param">optimizer='adam'</em>, <em class="sig-param">metrics=[]</em>, <em class="sig-param">add_batch_dimension_on_resolve=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#models.ModelFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base model feature class.</p>
+<p>Extends both feature and keras Model. The class can be treated as either.
+When resolved, it calls the method <cite>predict</cite> on the input image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras.models.Model</em>) – The keras model to interface.</p></li>
+<li><p><strong>loss</strong> (<em>str</em><em> or </em><em>keras loss</em>) – The loss function of the model.</p></li>
+<li><p><strong>optimizer</strong> (<em>str</em><em> or </em><em>keras optimizer</em>) – The optimizer of the model.</p></li>
+<li><p><strong>add_batch_dimension_on_resolve</strong> (<em>bool</em>) – Whether to add a dimension before the first axis
+before calling predict.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="models.ModelFeature.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#models.ModelFeature.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls the model on new inputs.</p>
+<p>In this case <cite>call</cite> just reapplies
+all ops in the graph to the new inputs
+(e.g. build a new computational graph from the provided inputs).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> – A tensor or list of tensors.</p></li>
+<li><p><strong>training</strong> – Boolean or boolean scalar tensor, indicating whether to run
+the <cite>Network</cite> in training mode or inference mode.</p></li>
+<li><p><strong>mask</strong> – A mask or list of masks. A mask can be
+either a tensor or None (no mask).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A tensor if there is a single output, or
+a list of tensors if there are more than one outputs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.ModelFeature.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">add_batch_dimension_on_resolve</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#models.ModelFeature.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for altering an image
+Abstract method that define how the feature transforms the input. The current
+value of all properties will be passed as keyword arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
+<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
+arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The transformed image or list of images</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.ModelFeature.summary">
+<code class="sig-name descname">summary</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#models.ModelFeature.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints a string summary of the network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line_length</strong> – Total length of printed lines
+(e.g. set this to adapt the display to different
+terminal window sizes).</p></li>
+<li><p><strong>positions</strong> – Relative or absolute positions of log elements
+in each line. If not provided,
+defaults to <cite>[.33, .55, .67, 1.]</cite>.</p></li>
+<li><p><strong>print_fn</strong> – Print function to use. Defaults to <cite>print</cite>.
+It will be called on each line of the summary.
+You can set it to a custom function
+in order to capture the string summary.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if <cite>summary()</cite> is called before the model is built.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="rnn">
+<h3>RNN<a class="headerlink" href="#rnn" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="models.RNN">
+<em class="property">class </em><code class="sig-prename descclassname">models.</code><code class="sig-name descname">RNN</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(51</em>, <em class="sig-param">51</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">dense_layers_dimensions=(32</em>, <em class="sig-param">)</em>, <em class="sig-param">rnn_layers_dimensions=(32</em>, <em class="sig-param">)</em>, <em class="sig-param">return_sequences=False</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">number_of_outputs=3</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#models.RNN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and compiles a recurrent neural network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>tuple of ints</em>) – Size of the images to be analyzed.</p></li>
+<li><p><strong>conv_layers_dimensions</strong> (<em>tuple of ints</em>) – Number of convolutions in each convolutional layer during down-
+and upsampling.</p></li>
+<li><p><strong>dense_layers_dimensions</strong> (<em>tuple of ints</em>) – Number of units in each dense layer.</p></li>
+<li><p><strong>rnn_layers_dimensions</strong> (<em>tuple of ints</em>) – Number of units in each recurrent layer.</p></li>
+<li><p><strong>number_of_outputs</strong> (<em>int</em>) – Number of convolutions in output layer.</p></li>
+<li><p><strong>output_activation</strong> (<em>str</em><em> or </em><em>keras activation</em>) – The activation function of the output.</p></li>
+<li><p><strong>loss</strong> (<em>str</em><em> or </em><em>keras loss function</em>) – The loss function of the network.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Deep learning network.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>keras.models.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="unet">
+<h3>UNet<a class="headerlink" href="#unet" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="models.UNet">
+<em class="property">class </em><code class="sig-prename descclassname">models.</code><code class="sig-name descname">UNet</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(None</em>, <em class="sig-param">None</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">base_conv_layers_dimensions=(128</em>, <em class="sig-param">128)</em>, <em class="sig-param">output_conv_layers_dimensions=(16</em>, <em class="sig-param">16)</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">number_of_outputs=1</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">layer_function=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#models.UNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and compiles a U-Net.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>tuple of ints</em>) – Size of the images to be analyzed.</p></li>
+<li><p><strong>conv_layers_dimensions</strong> (<em>tuple of ints</em>) – Number of convolutions in each convolutional layer during down-
+and upsampling.</p></li>
+<li><p><strong>base_conv_layers_dimensions</strong> (<em>tuple of ints</em>) – Number of convolutions in each convolutional layer at the base
+of the unet, where the image is the most downsampled.</p></li>
+<li><p><strong>output_conv_layers_dimensions</strong> (<em>tuple of ints</em>) – Number of convolutions in each convolutional layer after the
+upsampling.</p></li>
+<li><p><strong>steps_per_pooling</strong> (<em>int</em>) – Number of convolutional layers between each pooling and upsampling
+step.</p></li>
+<li><p><strong>number_of_outputs</strong> (<em>int</em>) – Number of convolutions in output layer.</p></li>
+<li><p><strong>output_activation</strong> (<em>str</em><em> or </em><em>keras activation</em>) – The activation function of the output.</p></li>
+<li><p><strong>loss</strong> (<em>str</em><em> or </em><em>keras loss function</em>) – The loss function of the network.</p></li>
+<li><p><strong>layer_function</strong> (<em>Callable</em><em>[</em><em>int</em><em>] </em><em>-&gt; keras layer</em>) – Function that returns a convolutional layer with convolutions
+determined by the input argument. Can be use to futher customize the network.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Deep learning network.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>keras.models.Model</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="id1">
+<h3>convolutional<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="models.convolutional">
+<code class="sig-prename descclassname">models.</code><code class="sig-name descname">convolutional</code><a class="headerlink" href="#models.convolutional" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#models.Convolutional" title="models.Convolutional"><code class="xref py py-class docutils literal notranslate"><span class="pre">models.Convolutional</span></code></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="id2">
+<h3>rnn<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="models.rnn">
+<code class="sig-prename descclassname">models.</code><code class="sig-name descname">rnn</code><a class="headerlink" href="#models.rnn" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#models.RNN" title="models.RNN"><code class="xref py py-class docutils literal notranslate"><span class="pre">models.RNN</span></code></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="id3">
+<h3>unet<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="models.unet">
+<code class="sig-prename descclassname">models.</code><code class="sig-name descname">unet</code><a class="headerlink" href="#models.unet" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#models.UNet" title="models.UNet"><code class="xref py py-class docutils literal notranslate"><span class="pre">models.UNet</span></code></a></p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="noises.html" class="btn btn-neutral float-right" title="noises" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="losses.html" class="btn btn-neutral float-left" title="losses" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Benjamin Midtvedt
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

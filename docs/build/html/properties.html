@@ -1,0 +1,514 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>properties &mdash; DeepTrack 2.0 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="scatterers" href="scatterers.html" />
+    <link rel="prev" title="optics" href="optics.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DeepTrack 2.0
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Starting with deeptrack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and notebooks</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="aberrations.html">aberrations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="augmentations.html">augmentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generators.html">generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses.html">losses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noises.html">noises</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optics.html">optics</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">properties</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">CLASSES</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes">Module classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#property">Property</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#propertydict">PropertyDict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sequentialproperty">SequentialProperty</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scatterers.html">scatterers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequences.html">sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DeepTrack 2.0</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>properties</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/properties.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-properties">
+<span id="properties"></span><h1>properties<a class="headerlink" href="#module-properties" title="Permalink to this headline">¶</a></h1>
+<p>Tools to manage the properties of a feature</p>
+<div class="section" id="classes">
+<h2>CLASSES<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<p>Property
+The class <cite>Property</cite>, which represents the values of a property of a feature.
+A Property be:
+* A constant (initialization with, e.g., a number, a tuple)
+* A sequence of variables (initialization with, e.g., an iterator)
+* A random variable (initialization with, e.g., a function)</p>
+<p>SequentialProperty
+The class <cite>SequentialProperty</cite>, which extends <cite>Property</cite> to sample one value
+for each step in a sequence.</p>
+<p>PropertyDict
+The class <cite>PropertyDict</cite>, which is a dictionary with each element a Property.
+The class provides utility functions to update, sample, clear and retrieve
+properties.</p>
+</div>
+<div class="section" id="module-classes">
+<h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="property">
+<h3>Property<a class="headerlink" href="#property" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="properties.Property">
+<em class="property">class </em><code class="sig-prename descclassname">properties.</code><code class="sig-name descname">Property</code><span class="sig-paren">(</span><em class="sig-param">sampling_rule: any</em><span class="sig-paren">)</span><a class="headerlink" href="#properties.Property" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a property of a feature</p>
+<p>The class Property` wraps an input, which is treated
+internally as a sampling rule. This sampling rule is used
+to update the value of the property.
+The sampling rule can be, for example:
+* A constant (initialization with, e.g., a number, a tuple)
+* A sequence of variables (initialization with, e.g., a generator)
+* A discrete random variable (initialization with, e.g., a list, a dictionary)
+* A continuous random variable (initialization with, e.g., a function)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sampling_rule</strong> (<em>any</em>) – Defines the sampling rule to update the value of the feature property.
+See method <cite>sample()</cite> for how different sampling rules are sampled.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="properties.Property.sampling_rule">
+<code class="sig-name descname">sampling_rule</code><a class="headerlink" href="#properties.Property.sampling_rule" title="Permalink to this definition">¶</a></dt>
+<dd><p>The sampling rule to update the value of the feature property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="properties.Property.current_value">
+<code class="sig-name descname">current_value</code><a class="headerlink" href="#properties.Property.current_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>The current value obtained from the last call to the sampling rule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="properties.Property.has_updated_since_last_resolve">
+<code class="sig-name descname">has_updated_since_last_resolve</code><a class="headerlink" href="#properties.Property.has_updated_since_last_resolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the property has been updated since the last resolve.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="properties.Property.sample">
+<code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param">sampling_rule</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#properties.Property.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples the sampling rule</p>
+<p>Returns a sampled instance of the <cite>sampling_rule</cite> field.
+The logic behind the sampling depends on the type of
+<cite>sampling_rule</cite>. These are checked in the following order of
+priority:</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Any object with a callable <cite>sample()</cite> method has this</dt><dd><p>method called and returned.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>If the rule is a <code class="docutils literal notranslate"><span class="pre">dict</span></code>, sample each value and combine the</dt><dd><p>result into a new <code class="docutils literal notranslate"><span class="pre">dict</span></code> using the original keys.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>If the rule is a <code class="docutils literal notranslate"><span class="pre">list</span></code>, sample each element of the list and</dt><dd><p>combine the result into a ne <code class="docutils literal notranslate"><span class="pre">list</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><p>If the rule is an <code class="docutils literal notranslate"><span class="pre">iterable</span></code>, return the next output.</p></li>
+<li><dl class="simple">
+<dt>If the rule is callable, call it with its accepted arguments.</dt><dd><p>Example arguments can be the value of some other property.</p>
+</dd>
+</dl>
+</li>
+<li><p>If none of the above apply, return the rule itself.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sampling_rule</strong> (<em>any</em>) – The rule to sample values from.</p></li>
+<li><p><strong>**kwargs</strong> – Arguments that will be passed on to functions that accepts them.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A sampled instance of the <cite>sampling_rule</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="properties.Property.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; properties.Property<a class="headerlink" href="#properties.Property.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the current value</p>
+<p>The method <cite>update()</cite> sets the property <cite>current_value</cite>
+as the output of the method <cite>sample()</cite>. Will only update
+once per resolve.</p>
+<p>Any object that implements the method <cite>update()</cite> will have it called.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns itself.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#properties.Property" title="properties.Property">Property</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="propertydict">
+<h3>PropertyDict<a class="headerlink" href="#propertydict" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="properties.PropertyDict">
+<em class="property">class </em><code class="sig-prename descclassname">properties.</code><code class="sig-name descname">PropertyDict</code><a class="headerlink" href="#properties.PropertyDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary with Property elements</p>
+<p>A dictionary of properties. It provides utility functions to update,
+sample, reset and retrieve properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> (<em>*args</em><em>,</em>) – <p>Arguments used to initialize a dict</p>
+</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="properties.PropertyDict.current_value_dict">
+<code class="sig-name descname">current_value_dict</code><span class="sig-paren">(</span><em class="sig-param">is_resolving=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#properties.PropertyDict.current_value_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the current value of all properties as a dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A dictionary with the current value of all properties</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="properties.PropertyDict.sample">
+<code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#properties.PropertyDict.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples all properties</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A dictionary with each key-value pair the result of a
+<cite>sample()</cite> call on the property with the same key.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="properties.PropertyDict.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; properties.PropertyDict<a class="headerlink" href="#properties.PropertyDict.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates all properties</p>
+<p>Calls the method <cite>update()</cite> on each property in the dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns itself</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Properties</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="sequentialproperty">
+<h3>SequentialProperty<a class="headerlink" href="#sequentialproperty" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="properties.SequentialProperty">
+<em class="property">class </em><code class="sig-prename descclassname">properties.</code><code class="sig-name descname">SequentialProperty</code><span class="sig-paren">(</span><em class="sig-param">sampling_rule</em>, <em class="sig-param">initializer=None</em><span class="sig-paren">)</span><a class="headerlink" href="#properties.SequentialProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property that has multiple sequential values</p>
+<p>Extends standard <cite>Property</cite> to resolve one value for each step
+in a sequence of images. This is often used when creating movies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>initializer</strong> (<em>any</em>) – Sampling rule for the first step of the sequence.</p></li>
+<li><p><strong>sampling_rule</strong> (<em>any</em>) – Sampling rule for each step after the first.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="properties.SequentialProperty.initializer">
+<code class="sig-name descname">initializer</code><a class="headerlink" href="#properties.SequentialProperty.initializer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sampling rule for the first step of the sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="properties.SequentialProperty.sampling_rule">
+<code class="sig-name descname">sampling_rule</code><a class="headerlink" href="#properties.SequentialProperty.sampling_rule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sampling rule for each step after the first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="properties.SequentialProperty.has_updated_since_last_resolve">
+<code class="sig-name descname">has_updated_since_last_resolve</code><a class="headerlink" href="#properties.SequentialProperty.has_updated_since_last_resolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the property has been updated since the last resolve.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="properties.SequentialProperty.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">sequence_length=0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#properties.SequentialProperty.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates current_value</p>
+<p>For each step in the sequence, sample <cite>self.sampling_rule</cite>.
+<cite>self.initializer</cite> is used for the first step. These rules
+should output one value per step. Sampling rules
+that are functions can optionally accept the following keyword
+arguments:</p>
+<ul class="simple">
+<li><p>sequence_step : the current position in the sequence.</p></li>
+<li><p>sequence_length : the length of the sequence.</p></li>
+<li><p>previous_value : the value of the property at the previous
+step in the sequence.</p></li>
+<li><p>previous_values : the value of the property at all previous
+steps in the sequence.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sequence_length</strong> (<em>int</em><em>, </em><em>optional</em>) – length of the sequence</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns self</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="scatterers.html" class="btn btn-neutral float-right" title="scatterers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="optics.html" class="btn btn-neutral float-left" title="optics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Benjamin Midtvedt
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

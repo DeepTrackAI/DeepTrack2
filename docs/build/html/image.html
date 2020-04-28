@@ -1,0 +1,372 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>image &mdash; DeepTrack 2.0 2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="losses" href="losses.html" />
+    <link rel="prev" title="generators" href="generators.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DeepTrack 2.0
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Starting with deeptrack</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and notebooks</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="aberrations.html">aberrations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="augmentations.html">augmentations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generators.html">generators</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">image</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">CLASSES</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-classes">Module classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Image</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-functions">Module functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pad-image-to-fft">pad_image_to_fft</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="losses.html">losses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noises.html">noises</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optics.html">optics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html">properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scatterers.html">scatterers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequences.html">sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">utils</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DeepTrack 2.0</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>image</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/image.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-image">
+<span id="image"></span><h1>image<a class="headerlink" href="#module-image" title="Permalink to this headline">¶</a></h1>
+<p>Image class and relative functions</p>
+<p>Defines the Image class and functions that operate on it.</p>
+<div class="section" id="classes">
+<h2>CLASSES<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Image</dt><dd><p>Subclass of numpy <cite>ndarray</cite>. Has the additional attribute properties
+which contains the properties used to generate it as a <cite>list</cite> of
+<cite>dicts</cite>.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>pad_image_to_fft(image: Image, axes = (0, 1))</dt><dd><p>Pads the image with zeros to optimize the speed of Fast Fourier
+Transforms.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-classes">
+<h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Image<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="image.Image">
+<em class="property">class </em><code class="sig-prename descclassname">image.</code><code class="sig-name descname">Image</code><a class="headerlink" href="#image.Image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of numpy ndarray</p>
+<p>The class Image is used by features to resolve images and store
+the current values of the properties of each feature in the feature
+series. These properties are stored in the field <cite>properties</cite>
+as a list of dictionaries, in the same order as that in which
+the features have been evaluated.</p>
+<p>The field <cite>properties</cite> is used to store and extract information
+about how an image has been generated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_array</strong> (<em>array_like</em>) – An array_like object that is used to instantiate the ndarray.</p></li>
+<li><p><strong>properties</strong> (<em>list of dicts</em><em>, </em><em>optional</em>) – Optional parameter to set as the initial value for the field properties.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="image.Image.properties">
+<code class="sig-name descname">properties</code><a class="headerlink" href="#image.Image.properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of dictionaries of the current value of all properties of
+the features used to resolve the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="image.Image.append">
+<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param">property_dict: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#image.Image.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Appends a dictionary to the properties list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>property_dict</strong> (<em>dict</em>) – A dictionary to append to the property list. Most commonly
+the current values of the properties of a feature.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns itself.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#image.Image" title="image.Image">Image</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="image.Image.get_property">
+<code class="sig-name descname">get_property</code><span class="sig-paren">(</span><em class="sig-param">key: str</em>, <em class="sig-param">get_one: bool = True</em>, <em class="sig-param">default: any = None</em><span class="sig-paren">)</span> &#x2192; list<a class="headerlink" href="#image.Image.get_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a property.</p>
+<p>If the feature has the property defined by <cite>key</cite>, return
+its current_value. Otherwise, return <cite>default</cite>.
+If <cite>get_one</cite> is True, the first instance is returned;
+otherwise, all instances are returned as a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – The name of the property.</p></li>
+<li><p><strong>get_one</strong> (<em>optional</em>) – Whether to return all instances of that property or just the first.</p></li>
+<li><p><strong>default</strong> (<em>optional</em>) – What is returned if the property is not found.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The value of the property if found, else <cite>default</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="image.Image.merge_properties_from">
+<code class="sig-name descname">merge_properties_from</code><span class="sig-paren">(</span><em class="sig-param">other: image.Image</em><span class="sig-paren">)</span> &#x2192; image.Image<a class="headerlink" href="#image.Image.merge_properties_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge properties with those from another Image.</p>
+<p>Appends properties from another images such that no property is duplicated.
+Uniqueness of a dictionary of properties is determined from the
+property <cite>hash_key</cite>.</p>
+<p>Most functions involving two images should automatically output an image with
+merged properties. However, since each property is guaranteed to be unique,
+it is safe to manually call this function if there is any uncertainty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> – The Image to retrieve properties from.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-functions">
+<h2>Module functions<a class="headerlink" href="#module-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="pad-image-to-fft">
+<h3>pad_image_to_fft<a class="headerlink" href="#pad-image-to-fft" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="image.pad_image_to_fft">
+<code class="sig-prename descclassname">image.</code><code class="sig-name descname">pad_image_to_fft</code><span class="sig-paren">(</span><em class="sig-param">image: image.Image</em>, <em class="sig-param">axes=(0</em>, <em class="sig-param">1)</em><span class="sig-paren">)</span> &#x2192; image.Image<a class="headerlink" href="#image.pad_image_to_fft" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pads image to speed up fast fourier transforms.
+Pads image to speed up fast fourier transforms by adding 0s to the
+end of the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The image to pad</p></li>
+<li><p><strong>axes</strong> (<em>iterable of int</em><em>, </em><em>optional</em>) – The axes along which to pad.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="losses.html" class="btn btn-neutral float-right" title="losses" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="generators.html" class="btn btn-neutral float-left" title="generators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Benjamin Midtvedt
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
