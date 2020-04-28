@@ -32,7 +32,7 @@ for _, submodule in inspect.getmembers(module, lambda x: inspect.ismodule(x) and
     submodule_file = open(os.path.join(PATH_TO_SRC, submodule_name + ".rst"), "w")
    
 
-    submodule_file.write(submodule_name + "\n" + "=" * len(submodule_name) + "\n\n" + ".. automodule:: " + submodule.__name__ + "\n\n")
+    submodule_file.write(submodule_name + "\n" + "=" * len(submodule_name) + "\n\n" + ".. automodule:: " + submodule_path + "\n\n")
     submodule_file.flush()
 
     
