@@ -1,22 +1,20 @@
 '''Tools to manage the properties of a feature
 
-CLASSES
+Classes
 -------
 Property
-The class `Property`, which represents the values of a property of a feature.
-A Property be:
-* A constant (initialization with, e.g., a number, a tuple)
-* A sequence of variables (initialization with, e.g., an iterator)
-* A random variable (initialization with, e.g., a function)
-
+    The class `Property`, which represents the values of a property of a feature.
+    A Property be:
+    * A constant (initialization with, e.g., a number, a tuple)
+    * A sequence of variables (initialization with, e.g., an iterator)
+    * A random variable (initialization with, e.g., a function)
 SequentialProperty
-The class `SequentialProperty`, which extends `Property` to sample one value
-for each step in a sequence.
-
+    The class `SequentialProperty`, which extends `Property` to sample one value
+    for each step in a sequence.
 PropertyDict
-The class `PropertyDict`, which is a dictionary with each element a Property.
-The class provides utility functions to update, sample, clear and retrieve
-properties.
+    The class `PropertyDict`, which is a dictionary with each element a Property.
+    The class provides utility functions to update, sample, clear and retrieve
+    properties.
 '''
 
 import numpy as np
