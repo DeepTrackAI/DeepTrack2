@@ -8,6 +8,8 @@ PATH_TO_SRC = os.path.abspath("./source")
 
 # MODULE TO CONFIGURE
 import deeptrack
+from deeptrack import aberrations, augmentations, features, generators, image, losses, models, noises, optics, properties, scatterers, sequences, utils, math
+
 
 module = deeptrack
 

@@ -1,7 +1,7 @@
 sequences
 =========
 
-.. automodule:: sequences
+.. automodule:: deeptrack.sequences
 
 Module classes
 --------------
