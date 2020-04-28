@@ -7,6 +7,7 @@
    generators
    image
    losses
+   math
    models
    noises
    optics

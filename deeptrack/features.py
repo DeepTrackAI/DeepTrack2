@@ -74,7 +74,7 @@ class Feature(ABC):
         the input list. It can be `MERGE_STRATEGY_OVERRIDE` (0, default),
         where the input is replaced by the new list, or
         `MERGE_STRATEGY_APPEND` (1), where the new list is appended to the
-         end of the input list.
+        end of the input list.
     __distributed__ : bool
         Controls whether `.get(image, **kwargs)` is called on each element
         in the list separately (`__distributed__ = True`), or if it is
