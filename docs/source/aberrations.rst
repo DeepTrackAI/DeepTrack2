@@ -1,7 +1,7 @@
 aberrations
 ===========
 
-.. automodule:: aberrations
+.. automodule:: deeptrack.aberrations
 
 Module classes
 --------------
