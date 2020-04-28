@@ -25,4 +25,7 @@ Documentation
    utils
    properties
    features
+   scatterers
+   optics
+   augmentations
 
