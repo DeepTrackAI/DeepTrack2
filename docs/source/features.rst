@@ -1,7 +1,7 @@
 features
 ========
 
-.. automodule:: features
+.. automodule:: deeptrack.features
 
 Module classes
 --------------
