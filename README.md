@@ -52,8 +52,7 @@ This order is as follows:
 
 ### Documentation
 
-The detailed documentation of DeepTrack 2.0 is available at the following link:
-**ADD LINK**
+The detailed documentation of DeepTrack 2.0 is available at the following link: https://deeptrack-20.readthedocs.io/en/latest/
 
 ## Funding
 This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511).
