@@ -172,10 +172,15 @@ class Feature(ABC):
         # or to rescale properties.
         feature_input = self._process_properties(feature_input)
 
+        
+        # Set the seed from the hash_key. Ensures equal results
+        np.random.seed(feature_input["hash_key"][0])
+
         # _process_and_get calls the get function correctly according
         # to the __distributed__ attribute
         new_list = self._process_and_get(image_list, **feature_input)
- 
+
+        
         # Add feature_input to the image the class attribute __property_memorability__
         # is not larger than the passed property_verbosity keyword
         property_verbosity = global_kwargs.get("property_memorability", 1)
@@ -546,16 +551,49 @@ class ConditionalSetFeature(StructuralFeature):
 
 
 
+class Lambda(Feature):
+    ''' Calls a custom functions.
+
+    Note that the property `function` needs to be wrapped in an
+    outer layer function. The outer layer function can depend on
+    other properties, while the inner layer function accepts an
+    image as input.
+
+    Parameters
+    ----------
+    function : Callable[Image or list of Image]
+        Function that takes the current image as first input 
+    '''
+
+    def __init__(self, function, **kwargs):
+        super().__init__(function=function, **kwargs)
+    
+
+    def get(self, image, function, **kwargs):
+        return function(image)
+
+
+
 class Label(Feature):
     '''Outputs the properties of this features.
+
+    Can be used to extract properties in a feature set and combine them into 
+    a numpy array. 
 
     Parameters
     ----------
     output_shape : tuple of ints
-        Reshapes the oiutput to this shape
+        Reshapes the output to this shape
     
     '''
+
     __distributed__ = False
+
+
+    def __init__(self, output_shape=None, **kwargs):
+        super().__init__(output_shape=output_shape)
+
+    
     def get(self, image, output_shape=None, hash_key=None, **kwargs):
         result = []
         for key, value in kwargs.items():
@@ -565,3 +603,48 @@ class Label(Feature):
             result = np.reshape(np.array(result), output_shape)
 
         return np.array(result)
+
+
+class LoadImage(Feature):
+    '''Loads an image from disk.
+
+    Cycles through file-readers numpy, pillow and opencv2 to open the 
+    image file.
+
+    Parameters
+    ----------
+    path : str
+        Path to image to load
+    load_options : dict
+        Options passed to the file reader
+
+    Raises
+    ------
+    IOError
+        If no file reader could parse the file or the file doesn't exist.
+
+    '''
+
+    __distributed__ = False
+
+
+    def __init__(self, path, load_options={}, **kwargs):
+        super().__init__(path=path, load_options=load_options, **kwargs)
+
+
+    def get(self, *ign, path, load_options, **kwargs):
+        try:
+            return np.load(path, **load_options)
+        except (IOError, ValueError):
+            import PIL.Image
+            try:
+                return np.array(PIL.Image.open(path, **load_options))
+            except IOError:
+                import cv2
+                
+                image = np.array(cv2.imread(path, **load_options))
+                if image:
+                    return image
+
+                raise IOError("No filereader available for file {0}".format(path))
+

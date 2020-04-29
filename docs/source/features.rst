@@ -42,6 +42,18 @@ Label
 .. autoclass:: deeptrack.features.Label
    :members:
 
+Lambda
+^^^^^^
+
+.. autoclass:: deeptrack.features.Lambda
+   :members:
+
+LoadImage
+^^^^^^^^^
+
+.. autoclass:: deeptrack.features.LoadImage
+   :members:
+
 Probability
 ^^^^^^^^^^^
 

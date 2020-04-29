@@ -12,6 +12,12 @@ Augmentation
 .. autoclass:: deeptrack.augmentations.Augmentation
    :members:
 
+Crop
+^^^^
+
+.. autoclass:: deeptrack.augmentations.Crop
+   :members:
+
 FlipDiagonal
 ^^^^^^^^^^^^
 
