@@ -45,13 +45,13 @@ Label
 Lambda
 ^^^^^^
 
-.. autoclass:: features.Lambda
+.. autoclass:: deeptrack.features.Lambda
    :members:
 
 LoadImage
 ^^^^^^^^^
 
-.. autoclass:: features.LoadImage
+.. autoclass:: deeptrack.features.LoadImage
    :members:
 
 Probability

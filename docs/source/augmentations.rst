@@ -15,7 +15,7 @@ Augmentation
 Crop
 ^^^^
 
-.. autoclass:: augmentations.Crop
+.. autoclass:: deeptrack.augmentations.Crop
    :members:
 
 FlipDiagonal
