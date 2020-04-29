@@ -1,7 +1,7 @@
 generators
 ==========
 
-.. automodule:: generators
+.. automodule:: deeptrack.generators
 
 Module classes
 --------------

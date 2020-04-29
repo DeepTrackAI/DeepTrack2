@@ -1,7 +1,7 @@
 models
 ======
 
-.. automodule:: models
+.. automodule:: deeptrack.models
 
 Module classes
 --------------

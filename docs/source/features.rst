@@ -1,7 +1,7 @@
 features
 ========
 
-.. automodule:: features
+.. automodule:: deeptrack.features
 
 Module classes
 --------------
@@ -40,6 +40,18 @@ Label
 ^^^^^
 
 .. autoclass:: features.Label
+   :members:
+
+Lambda
+^^^^^^
+
+.. autoclass:: features.Lambda
+   :members:
+
+LoadImage
+^^^^^^^^^
+
+.. autoclass:: features.LoadImage
    :members:
 
 Probability

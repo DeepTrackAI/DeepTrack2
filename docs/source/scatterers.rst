@@ -1,7 +1,7 @@
 scatterers
 ==========
 
-.. automodule:: scatterers
+.. automodule:: deeptrack.scatterers
 
 Module classes
 --------------

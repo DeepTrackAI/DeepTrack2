@@ -1,7 +1,7 @@
 augmentations
 =============
 
-.. automodule:: augmentations
+.. automodule:: deeptrack.augmentations
 
 Module classes
 --------------
@@ -10,6 +10,12 @@ Augmentation
 ^^^^^^^^^^^^
 
 .. autoclass:: augmentations.Augmentation
+   :members:
+
+Crop
+^^^^
+
+.. autoclass:: augmentations.Crop
    :members:
 
 FlipDiagonal

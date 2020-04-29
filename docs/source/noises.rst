@@ -1,7 +1,7 @@
 noises
 ======
 
-.. automodule:: noises
+.. automodule:: deeptrack.noises
 
 Module classes
 --------------

@@ -9,6 +9,9 @@ PATH_TO_SRC = os.path.abspath("./source")
 # MODULE TO CONFIGURE
 import deeptrack
 
+# This line should be in __init__.py, but that breaks readthedocs build
+from deeptrack import aberrations, augmentations, features, generators, image, losses, math, models, noises, optics, properties, scatterers, sequences, utils
+
 module = deeptrack
 
 head_file = open(os.path.join(PATH_TO_SRC, module.__name__ + ".rst"), "w")

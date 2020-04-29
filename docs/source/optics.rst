@@ -1,7 +1,7 @@
 optics
 ======
 
-.. automodule:: optics
+.. automodule:: deeptrack.optics
 
 Module classes
 --------------

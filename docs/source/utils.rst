@@ -1,7 +1,7 @@
 utils
 =====
 
-.. automodule:: utils
+.. automodule:: deeptrack.utils
 
 Module functions
 ----------------
