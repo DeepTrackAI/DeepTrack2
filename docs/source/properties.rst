@@ -9,18 +9,18 @@ Module classes
 Property
 ^^^^^^^^
 
-.. autoclass:: properties.Property
+.. autoclass:: deeptrack.properties.Property
    :members:
 
 PropertyDict
 ^^^^^^^^^^^^
 
-.. autoclass:: properties.PropertyDict
+.. autoclass:: deeptrack.properties.PropertyDict
    :members:
 
 SequentialProperty
 ^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: properties.SequentialProperty
+.. autoclass:: deeptrack.properties.SequentialProperty
    :members:
 

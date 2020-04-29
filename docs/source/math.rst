@@ -9,12 +9,12 @@ Module classes
 Clip
 ^^^^
 
-.. autoclass:: math.Clip
+.. autoclass:: deeptrack.math.Clip
    :members:
 
 NormalizeMinMax
 ^^^^^^^^^^^^^^^
 
-.. autoclass:: math.NormalizeMinMax
+.. autoclass:: deeptrack.math.NormalizeMinMax
    :members:
 

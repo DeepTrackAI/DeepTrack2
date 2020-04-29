@@ -8,6 +8,8 @@ PATH_TO_SRC = os.path.abspath("./source")
 
 # MODULE TO CONFIGURE
 import deeptrack
+from deeptrack import aberrations, augmentations, features, generators, image, losses, models, noises, optics, properties, scatterers, sequences, utils, math
+
 
 # This line should be in __init__.py, but that breaks readthedocs build
 from deeptrack import aberrations, augmentations, features, generators, image, losses, math, models, noises, optics, properties, scatterers, sequences, utils
@@ -27,13 +29,15 @@ for _, submodule in inspect.getmembers(module, lambda x: inspect.ismodule(x) and
     
 
     submodule_name = submodule.__name__.split(".")[-1]
+    submodule_path = module.__name__ + "." + submodule_name
 
     head_file.write("   " + submodule_name + "\n")
     head_file.flush()
 
     submodule_file = open(os.path.join(PATH_TO_SRC, submodule_name + ".rst"), "w")
+   
 
-    submodule_file.write(submodule_name + "\n" + "=" * len(submodule_name) + "\n\n" + ".. automodule:: " + submodule.__name__ + "\n\n")
+    submodule_file.write(submodule_name + "\n" + "=" * len(submodule_name) + "\n\n" + ".. automodule:: " + submodule_path + "\n\n")
     submodule_file.flush()
 
     
@@ -45,7 +49,7 @@ for _, submodule in inspect.getmembers(module, lambda x: inspect.ismodule(x) and
         submodule_file.flush()
 
         for name, member in submodule_classes:
-            member_name = submodule_name + "." + name
+            member_name = submodule_path + "." + name
             submodule_file.write(name + "\n" + "^" * len(name) + "\n\n" + ".. autoclass:: " + member_name + "\n   :members:\n\n")
             submodule_file.flush()
 
@@ -59,7 +63,7 @@ for _, submodule in inspect.getmembers(module, lambda x: inspect.ismodule(x) and
         submodule_file.flush()
 
         for name, member in submodule_funcs:
-            member_name = submodule_name + "." + name
+            member_name = submodule_path + "." + name
             submodule_file.write(name + "\n" + "^" * len(name) + "\n\n" + ".. autofunction:: " + member_name + "\n\n")
             submodule_file.flush()
     

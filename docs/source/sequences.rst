@@ -9,7 +9,7 @@ Module classes
 Sequence
 ^^^^^^^^
 
-.. autoclass:: sequences.Sequence
+.. autoclass:: deeptrack.sequences.Sequence
    :members:
 
 Module functions
@@ -18,5 +18,5 @@ Module functions
 Sequential
 ^^^^^^^^^^
 
-.. autofunction:: sequences.Sequential
+.. autofunction:: deeptrack.sequences.Sequential
 

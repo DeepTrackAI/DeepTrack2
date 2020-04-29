@@ -9,36 +9,36 @@ Module classes
 Add
 ^^^
 
-.. autoclass:: noises.Add
+.. autoclass:: deeptrack.noises.Add
    :members:
 
 Background
 ^^^^^^^^^^
 
-.. autoclass:: noises.Background
+.. autoclass:: deeptrack.noises.Background
    :members:
 
 Gaussian
 ^^^^^^^^
 
-.. autoclass:: noises.Gaussian
+.. autoclass:: deeptrack.noises.Gaussian
    :members:
 
 Noise
 ^^^^^
 
-.. autoclass:: noises.Noise
+.. autoclass:: deeptrack.noises.Noise
    :members:
 
 Offset
 ^^^^^^
 
-.. autoclass:: noises.Offset
+.. autoclass:: deeptrack.noises.Offset
    :members:
 
 Poisson
 ^^^^^^^
 
-.. autoclass:: noises.Poisson
+.. autoclass:: deeptrack.noises.Poisson
    :members:
 

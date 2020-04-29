@@ -9,6 +9,6 @@ Module classes
 Generator
 ^^^^^^^^^
 
-.. autoclass:: generators.Generator
+.. autoclass:: deeptrack.generators.Generator
    :members:
 

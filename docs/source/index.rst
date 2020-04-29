@@ -22,17 +22,17 @@ Documentation
    :maxdepth: 4
    :caption: Documentation
    
-   aberrations
-   augmentations
-   features
-   generators
-   image
-   losses
-   models
-   noises
-   optics
-   properties
+   math
    scatterers
+   optics
+   noises
+   augmentations
+   aberrations
+   models
+   losses
    sequences
    utils
+   properties
+   features
+   image
 

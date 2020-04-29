@@ -9,7 +9,7 @@ Module classes
 Image
 ^^^^^
 
-.. autoclass:: image.Image
+.. autoclass:: deeptrack.image.Image
    :members:
 
 Module functions
@@ -18,5 +18,5 @@ Module functions
 pad_image_to_fft
 ^^^^^^^^^^^^^^^^
 
-.. autofunction:: image.pad_image_to_fft
+.. autofunction:: deeptrack.image.pad_image_to_fft
 
