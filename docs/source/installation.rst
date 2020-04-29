@@ -15,6 +15,9 @@ Dependencies:
 
 Optional dependencies:
    matplotlib
+   
    ffmpeg
+   
    pillow
+   
    opencv-python
