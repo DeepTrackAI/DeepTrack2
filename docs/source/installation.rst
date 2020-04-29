@@ -11,10 +11,10 @@ Installation
 To install, clone the folder 'deeptrack' to your project directory. The ability to install the package through pip is comming soon.
 
 Dependencies:
-* tensorflow (>=1.14)
+   tensorflow (>=1.14)
 
 Optional dependencies:
-* matplotlib
-* ffmpeg
-* pillow
-* opencv-python
+   matplotlib
+   ffmpeg
+   pillow
+   opencv-python
