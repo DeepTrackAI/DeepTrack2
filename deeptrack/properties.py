@@ -153,7 +153,7 @@ class Property:
             # If the ruleset is a dict, return a new dict with each
             # element being sampled from the original dict.
             out = {}
-            for key, val in self.sampling_rule.items():
+            for key, val in sampling_rule.items():
                 out[key] = self.sample(val, **kwargs)
             return out
 

@@ -628,11 +628,13 @@ class LoadImage(Feature):
     __distributed__ = False
 
 
-    def __init__(self, path, load_options={}, **kwargs):
+    def __init__(self, path, load_options=None, **kwargs):
         super().__init__(path=path, load_options=load_options, **kwargs)
 
 
     def get(self, *ign, path, load_options, **kwargs):
+        if load_options is None:
+            load_options = {}
         try:
             return np.load(path, **load_options)
         except (IOError, ValueError):

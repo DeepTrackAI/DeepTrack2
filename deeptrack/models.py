@@ -71,6 +71,64 @@ class ModelFeature(Feature, models.Model):
         return self.model.predict(image)
 
 
+class FullyConnected(ModelFeature):
+    """Creates and compiles a fully connected neural network.
+
+    A convolutional network with a dense top.
+
+    Parameters
+    ----------
+    input_shape : tuple of ints
+        Size of the images to be analyzed.
+    dense_layers_dimensions : tuple of ints
+        Number of units in each dense layer.
+    number_of_outputs : int
+        Number of units in the output layer.
+    output_activation : str or keras activation
+        The activation function of the output.
+    loss : str or keras loss function
+        The loss function of the network.
+
+    Returns
+    -------
+    keras.models.Model 
+        Deep learning network
+    """
+    
+    def __init__(self,
+                 input_shape,
+                 dense_layers_dimensions=(32, 32),
+                 number_of_outputs=3,
+                 output_activation=None,
+                 **kwargs):
+
+        ### INITIALIZE DEEP LEARNING NETWORK
+        network = models.Sequential()
+
+        # DENSE TOP
+        for dense_layer_number, dense_layer_dimension in zip(range(len(dense_layers_dimensions)), dense_layers_dimensions):
+
+            # add dense layer
+            dense_layer_name = 'dense_' + str(dense_layer_number + 1)
+            if dense_layer_number is 0:
+                dense_layer = layers.Dense(dense_layer_dimension, 
+                                        activation='sigmoid', 
+                                        name=dense_layer_name,
+                                        input_shape=input_shape)
+            else:
+                dense_layer = layers.Dense(dense_layer_dimension, 
+                                        activation='sigmoid', 
+                                        name=dense_layer_name)
+            network.add(dense_layer)
+
+        # OUTPUT LAYER
+
+        output_layer = layers.Dense(number_of_outputs, activation=output_activation, name='output')
+        network.add(output_layer)
+
+        
+        super().__init__(network, **kwargs)
+
 
 class Convolutional(ModelFeature):
     """Creates and compiles a convolutional neural network.
