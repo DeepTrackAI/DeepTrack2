@@ -88,9 +88,9 @@ class Augmentation(Feature):
         super().__init__(
             load_size=load_size, 
             updates_per_reload=updates_per_reload, 
-            index=lambda load_size: np.random.randint(load_size), 
+            index=kwargs.pop("index", False) or (lambda load_size: np.random.randint(load_size)), 
             number_of_updates=get_number_of_updates,
-            preloaded_results=get_preloaded_results,
+            preloaded_results=kwargs.pop("preloaded_results", False) or get_preloaded_results,
             update_properties=lambda: update_properties,
             **kwargs)
 
@@ -112,10 +112,11 @@ class Augmentation(Feature):
                 new_list_of_lists.append(
                     self.get(Image(image_list), **kwargs).merge_properties_from(image_list)
                 )
-            
         if update_properties:
+            if not isinstance(new_list_of_lists, list):
+                new_list_of_lists = [new_list_of_lists]
             for image_list in new_list_of_lists:
-                if not isinstance(new_list_of_lists, list):
+                if not isinstance(image_list, list):
                     image_list = [image_list]
                 for image in image_list:
                     image.properties = [dict(prop) for prop in image.properties]
@@ -150,7 +151,7 @@ class PreLoad(Augmentation):
 
     def get(self, image, **kwargs):
         return image
-
+    
 
 class Crop(Augmentation):
     ''' Crops a regions of an image.
@@ -212,7 +213,7 @@ class FlipLR(Augmentation):
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
-                    new_position = (position[0], image.shape[1] - position[1], *position[2:])
+                    new_position = (position[0], image.shape[1] - position[1] - 1, *position[2:])
                     prop["position"] = new_position
 
 
@@ -238,7 +239,7 @@ class FlipUD(Augmentation):
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
-                    new_position = (image.shape[0] - position[0], *position[1:])
+                    new_position = (image.shape[0] - position[0] - 1, *position[1:])
                     prop["position"] = new_position
 
 

@@ -649,4 +649,47 @@ class LoadImage(Feature):
                     return image
 
                 raise IOError("No filereader available for file {0}".format(path))
+    
 
+class IndexedStorage(Feature):
+    '''Stores images indexed by some property.
+
+    Increases performance by returning a stored image instead of resolving
+    parent feature if an image with similar properties has been resolved before.
+    The property `index` should be a function that converts dependent properties
+    to an identifying string.
+
+    Parameters
+    ----------
+    feature : Feature
+        Parent feature
+    index : function -> str or str
+        Index that correpsonds to the dependent properties
+    entries_per_index : str
+        Number of images to store per unique index
+    '''
+    
+    __distributed__ = False
+
+    def __init__(self, feature, index, entries_per_index=1, **kwargs):
+        self.feature = feature
+        self.entries_per_index = entries_per_index
+        self.storage = {}
+        super().__init__(index=index, **kwargs)
+    
+    def get(self, *ign, index, **kwargs):
+        if index not in self.storage:
+            self.storage[index] = []
+
+        storagelist = self.storage[index]
+        
+        if len(storagelist) < self.entries_per_index:
+            storagelist.append(self.feature.resolve(**kwargs))
+            self.storage[index] = storagelist
+            return storagelist[-1]
+        else:
+            return storagelist[np.random.randint(len(storagelist))]
+
+    def update(self, **kwargs):
+        self.feature.update(**kwargs)
+        super().update(**kwargs)

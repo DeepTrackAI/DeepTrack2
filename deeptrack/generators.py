@@ -26,8 +26,10 @@ class Generator(keras.utils.Sequence):
                  feature,
                  label_function=None,
                  batch_size=1,
+                 repeat_batch=1,
+                 ndim=4,
                  shuffle_batch=True,
-                 ndim=4):
+                 feature_kwargs={}):
         ''' Create generator instance.
         
         Parameters
@@ -38,13 +40,17 @@ class Generator(keras.utils.Sequence):
             Function that returns the label corresponding to an image.
         batch_size : int
             Number of images per batch.
+        repeat_batch : int
+            How many times to reuse the same batch before creating a new batch.
         shuffle_batch : bool
             If True, the batches are shuffled before outputting.
         ndim : int
             Expected number of dimensions of the output.
+        feature_kwargs : dict
+            Set of options to pass to the feature when resolving
         '''
 
-        get_one = self._get_from_map(feature)
+        get_one = self._get_from_map(feature, feature_kwargs)
         while True:
             with threading.Lock():
                 batch = []
@@ -69,22 +75,23 @@ class Generator(keras.utils.Sequence):
                     labels = np.reshape(labels, (-1, *labels.shape[dims_to_remove + 1:]))
                 elif batch.ndim < ndim:
                     Warning("Incorrect number of dimensions. Found {0} with {1} dimensions, expected {2}.".format(batch.shape, batch.ndim, ndim))
+                
+                for _ in range(repeat_batch):
+                    if label_function:
+                        yield batch, labels
+                    else:
+                        yield batch
 
-                if label_function:
-                    yield batch, labels
-                else:
-                    yield batch
 
-
-    def _get(self, features: Feature or List[Feature]) -> Image:
+    def _get(self, features: Feature or List[Feature], feature_kwargs) -> Image:
         # Updates and resolves a feature or list of features.
         if isinstance(features, List):
             for feature in features:
                 feature.update()
-            return [feature.resolve() for feature in reversed(features)]
+            return [feature.resolve(**feature_kwargs) for feature in reversed(features)]
         else:
             features.update()
-            return features.resolve()
+            return features.resolve(**feature_kwargs)
 
 
     def _shuffle(self, x, y):
@@ -96,7 +103,7 @@ class Generator(keras.utils.Sequence):
         random.shuffle(y)
 
 
-    def _get_from_map(self, features):
+    def _get_from_map(self, features, feature_kwargs):
         # Continuously yield the output of _get
         while True:
-            yield self._get(features)
+            yield self._get(features, feature_kwargs)

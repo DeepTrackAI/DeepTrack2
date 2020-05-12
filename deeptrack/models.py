@@ -18,8 +18,6 @@ from deeptrack.features import Feature
 from tensorflow.keras import models, layers, optimizers
 import numpy as np
 
-
-
 class ModelFeature(Feature, models.Model):
     '''Base model feature class.
 
@@ -143,6 +141,8 @@ class Convolutional(ModelFeature):
         Number of convolutions in each convolutional layer.
     dense_layers_dimensions : tuple of ints
         Number of units in each dense layer.
+    dropout : tuple of float
+        Adds a dropout between the convolutional layers
     number_of_outputs : int
         Number of units in the output layer.
     output_activation : str or keras activation
@@ -160,6 +160,7 @@ class Convolutional(ModelFeature):
                  input_shape=(51, 51, 1),
                  conv_layers_dimensions=(16, 32, 64, 128),
                  dense_layers_dimensions=(32, 32),
+                 dropout=(0.1,),
                  number_of_outputs=3,
                  output_activation=None,
                  **kwargs):
@@ -184,11 +185,16 @@ class Convolutional(ModelFeature):
                                         activation='relu',
                                         name=conv_layer_name)
             network.add(conv_layer)
+            
+            if dropout:
+                network.add(layers.SpatialDropout2D(dropout[0]))
+                dropout = dropout[1:]
 
             # add pooling layer
-            pooling_layer_name = 'pooling_' + str(conv_layer_number+1)
-            pooling_layer = layers.MaxPooling2D(2, 2, name=pooling_layer_name)
-            network.add(pooling_layer)
+            if conv_layer_number < len(conv_layers_dimensions) - 1:
+                pooling_layer_name = 'pooling_' + str(conv_layer_number+1)
+                pooling_layer = layers.MaxPooling2D(2, 2, name=pooling_layer_name)
+                network.add(pooling_layer)
 
         # FLATTENING
         flatten_layer_name = 'flatten'
@@ -212,7 +218,6 @@ class Convolutional(ModelFeature):
 
         
         super().__init__(network, **kwargs)
-
 
 
 # Alias for backwards compatability
