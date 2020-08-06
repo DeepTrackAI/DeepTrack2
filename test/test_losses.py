@@ -6,7 +6,7 @@ import unittest
 import deeptrack.losses as losses
 
 import numpy as np
-from tensorflow.keras import backend as K
+from keras import backend as K
 
 
 
@@ -16,7 +16,7 @@ class TestLosses(unittest.TestCase):
     falsely = K.constant(np.zeros((2, 2, 1)))
     
     def test_flatten(self):
-        from tensorflow.keras.losses import mse
+        from keras.losses import mse
         loss_function = losses.flatten(mse)
         loss = K.eval(loss_function(self.truthly, self.truthly))
         self.assertAlmostEqual(loss, 0, 3)

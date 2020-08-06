@@ -113,3 +113,29 @@ def get_kwarg_names(function: Callable) -> List[str]:
         return argspec.kwonlyargs or []
     else:
         return argspec.args or []
+
+
+def kwarg_has_default(function: Callable, argument: str) -> bool:
+    ''' Returns true if an argument has a default value.
+
+    Parameters
+    ----------
+    function : Callable
+        The function to check.
+    argument : str
+        Name of the argument
+
+    Returns
+    -------
+    bool
+
+    '''
+    args = get_kwarg_names(function)
+
+    if argument not in args:
+        return False
+    
+    defaults = inspect.getfullargspec(function).defaults or ()
+
+    return len(args) - args.index(argument) <= len(defaults)
+        

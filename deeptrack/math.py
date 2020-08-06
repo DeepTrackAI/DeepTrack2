@@ -12,7 +12,33 @@ from deeptrack.features import Feature
 from deeptrack.image import Image
 import numpy as np
 
+class Average(Feature):
+    ''' Average of input images
 
+    If `features` is not None, it instead resolves all features
+    in the list and averages the result.
+
+    Parameters
+    ----------
+    axis : int or tuple of ints
+        Axis along which to average
+    features : list of features, optional
+    '''
+    
+    __distributed__ = False
+
+    def __init__(self, features=None, axis=0, **kwargs):
+        super().__init__(axis=axis, features=features, **kwargs)
+    
+    def get(self, images, axis, features, **kwargs):
+        if features is not None:
+            images = [feature.resolve() for feature in features]
+        result = Image(np.mean(images, axis=axis))
+
+        for image in images:
+            result.merge_properties_from(image)
+        
+        return result
 
 class Clip(Feature):
     '''Clip the input within a minimum and a maximum value.
@@ -57,4 +83,5 @@ class NormalizeMinMax(Feature):
     def get(self, image, min, max, **kwargs):
         image = image / (np.max(image) - np.min(image)) * (max - min)
         image = image - np.min(image) + min 
+        image[np.isnan(image)] = 0
         return image

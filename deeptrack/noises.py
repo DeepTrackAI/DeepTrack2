@@ -52,13 +52,12 @@ class Gaussian(Noise):
     sigma : float
         The root of the variance of the distribution.
     '''
-    def __init__(self, *args, mu, sigma, **kwargs):
-        super().__init__(*args, mu=mu, sigma=sigma, **kwargs)
+    def __init__(self, mu=0, sigma=1, **kwargs):
+        super().__init__(mu=mu, sigma=sigma, **kwargs)
 
     def get(self, image, mu, sigma, **kwargs):
-        mu = np.ones(image.shape) * mu
-        sigma = np.ones(image.shape) * sigma
-        noisy_image = image + np.random.normal(mu, sigma)
+        
+        noisy_image = mu + image + np.random.randn(*image.shape) * sigma
         return noisy_image
 
 
@@ -71,11 +70,19 @@ class Poisson(Noise):
     snr : float
         Signal to noise ratio of the final image. The signal is determined
         by the peak value of the image.
+    background : float
+        Value to be be used as the background. This is used to calculate the 
+        signal of the image.
     '''
-    def get(self, image, snr=None, **kwargs):
+    def __init__(self, *args, snr=100, background=0, **kwargs):
+        super().__init__(*args, snr=snr, background=background, **kwargs)
+
+    def get(self, image, snr, background, **kwargs):
         image[image < 0] = 0
-        peak = np.max(image)
-        rescale = snr**2 / peak
+        
+        peak = np.abs(np.max(image) - background)
+        
+        rescale = snr**2 / peak**2
         noisy_image = Image(np.random.poisson(image * rescale) / rescale)
         noisy_image.properties = image.properties
         return noisy_image

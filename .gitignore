@@ -5,3 +5,4 @@ deeptrack-app/*
 build/*
 dist/*
 *.egg-info/
+*/datasets/*

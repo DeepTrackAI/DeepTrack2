@@ -18,7 +18,8 @@ PropertyDict
 '''
 
 import numpy as np
-from deeptrack.utils import isiterable, hasmethod, get_kwarg_names
+from deeptrack.utils import isiterable, hasmethod, get_kwarg_names, kwarg_has_default
+import deeptrack
 
 
 
@@ -53,7 +54,7 @@ class Property:
 
     def __init__(self, sampling_rule: any):
         self.sampling_rule = sampling_rule
-        self.has_updated_since_last_resolve = False
+        self.last_update_id = -1
     
 
     @property
@@ -98,12 +99,16 @@ class Property:
 
         '''
         
-        if self.has_updated_since_last_resolve:
+        provided_key = kwargs.get("_update_key", False) or deeptrack.features._SESSION_STRUCT["update_key"]
+
+        if self.last_update_id == provided_key:
             return self
+        
 
-        self.has_updated_since_last_resolve = True
+        
+        self.last_update_id = provided_key
 
-        if hasmethod(self.sampling_rule, "update"):
+        if hasmethod(self.sampling_rule, "update") and not isinstance(self.sampling_rule, dict):
             self.sampling_rule.update(**kwargs)
         
         self.current_value = self.sample(self.sampling_rule, **kwargs)
@@ -144,6 +149,10 @@ class Property:
 
         '''
 
+        if isinstance(sampling_rule, deeptrack.Feature):
+            sampling_rule.update(**kwargs)
+            return sampling_rule
+
         if hasmethod(sampling_rule, "sample"):
             # If the ruleset itself implements a sample method,
             # call it instead.
@@ -181,14 +190,20 @@ class Property:
                 if key in kwargs:
                     if isinstance(kwargs[key], Property):
                         # If it is a property, update it and pass the current value
-                        kwargs[key].update(**kwargs)
-                        
-                        if isinstance(kwargs[key], SequentialProperty):
-                            kwargs[key] = kwargs[key].current_value[kwargs["sequence_step"]]
+                        if not kwargs[key] is self:
+                            kwargs[key].update(**kwargs)
+                        if hasattr(kwargs[key], "current_value"): 
+                            if isinstance(kwargs[key], SequentialProperty) and "sequence_step" in kwargs:
+                                kwargs[key] = kwargs[key].current_value[kwargs["sequence_step"]]
+                            else:
+                                kwargs[key] = kwargs[key].current_value
                         else:
-                            kwargs[key] = kwargs[key].current_value
+                            kwargs[key] = None
 
                     function_input[key] = kwargs[key]
+
+                elif not kwarg_has_default(sampling_rule, key):
+                    function_input[key] = None
 
             return sampling_rule(**function_input)
             
@@ -222,7 +237,7 @@ class SequentialProperty(Property):
     '''
 
     def __init__(self, sampling_rule, initializer=None):
-
+        super().__init__(sampling_rule)
         if initializer is None:
             self.initializer = sampling_rule
         else:
@@ -259,26 +274,32 @@ class SequentialProperty(Property):
             returns self
         '''
 
-        if self.has_updated_since_last_resolve:
-            return self
+        provided_key = kwargs.get("_update_key", False) or deeptrack.features._SESSION_STRUCT["update_key"]
 
-        self.has_updated_since_last_resolve = True
+        if self.last_update_id == provided_key:
+            return self
+        
+        self.last_update_id = provided_key
 
         new_current_value = []
 
         for step in range(sequence_length):
             # Use initializer for first time step
-            ruleset = self.initializer if step == 0 else self.sampling_rule
+            ruleset = self.sampling_rule
             
             # Elements inserted here can be passed to property functions
             kwargs.update(
                 sequence_step=step,
                 sequence_length=sequence_length,
                 previous_values=new_current_value)
-            if step > 0:
+            if step == 0:
+                kwargs.update(previous_value=self.sample(self.initializer, **kwargs))
+            else:
                 kwargs.update(previous_value=new_current_value[-1])
-            
-            new_current_value.append(self.sample(ruleset, **kwargs))
+
+            next_value = self.sample(ruleset, **kwargs)
+
+            new_current_value.append(next_value)
 
         self.current_value = new_current_value
 
@@ -315,13 +336,13 @@ class PropertyDict(dict):
             # If the property is sequential, retrieve the value
             # of the current timestep
             if isinstance(property, SequentialProperty):
-                sequence_step = kwargs.get("sequence_step", 0)
-                property_value = property_value[sequence_step]
+
+                sequence_step = kwargs.get("sequence_step", None)
+                if not sequence_step is None:
+                    property_value = property_value[sequence_step]
 
             current_value_dict[key] = property_value
 
-            if is_resolving:
-                property.has_updated_since_last_resolve = False
 
         return current_value_dict
 
@@ -337,9 +358,15 @@ class PropertyDict(dict):
             Returns itself
 
         '''
-        kwargs.update(self)
-        for key, property in self.items():
-            property.update(**kwargs)
+        property_arguments = dict(self)
+        property_arguments.update(kwargs)
+        for key, prop in self.items():
+            if isinstance(property_arguments[key], Property):
+                prop.update(**property_arguments)
+            else:
+                prop.current_value = kwargs[key]
+                provided_key = kwargs.get("_update_key", False) or deeptrack.features._SESSION_STRUCT["update_key"]
+                prop.last_update_id = provided_key
 
         return self
 

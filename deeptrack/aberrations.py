@@ -1,4 +1,4 @@
-''' Features that aberrate and modify pupil functions
+''' Features that aberrate and modify pupil functions.
 
 Classes
 -------
@@ -54,7 +54,6 @@ class Aberration(Feature):
         for image in image_list:
             x = np.arange(image.shape[0]) - image.shape[0] / 2
             y = np.arange(image.shape[1]) - image.shape[1] / 2
-
             X, Y = np.meshgrid(x, y)
             rho = np.sqrt(X**2 + Y**2) 
             rho /= np.max(rho[image != 0])
@@ -69,7 +68,6 @@ class Aberration(Feature):
 # AMPLITUDE ABERRATIONS
 
 
-
 class GaussianApodization(Aberration):
     ''' Introduces pupil apodization.
 
@@ -81,15 +79,28 @@ class GaussianApodization(Aberration):
     sigma : float
         The standard deviation of the apodization. The edge of the pupil
         is at one deviation from the center.
+    offset : (float, float)
+        Offsets the center of the gaussian.
 
     '''
 
-    def __init__(self, sigma, **kwargs):
-        super().__init__(sigma=sigma, **kwargs)
+    def __init__(self, sigma=1, offset=(0, 0), **kwargs):
+        super().__init__(sigma=sigma, offset=offset, **kwargs)
 
 
-    def get(self, pupil, sigma, rho, **kwargs):
-        return pupil * np.exp(-(rho / sigma)**2)
+    def get(self, pupil, offset, sigma, rho, **kwargs):
+        if offset != (0, 0):
+            x = np.arange(pupil.shape[0]) - pupil.shape[0] / 2 - offset[0]
+            y = np.arange(pupil.shape[1]) - pupil.shape[1] / 2 - offset[1]
+            X, Y = np.meshgrid(x, y)
+            rho = np.sqrt(X**2 + Y**2) 
+            rho /= np.max(rho[pupil != 0])
+            rho[rho > 1] = np.inf
+
+
+        pupil = pupil * np.exp(-(rho / sigma)**2)
+        return pupil
+        
 
 
 
@@ -100,7 +111,7 @@ class GaussianApodization(Aberration):
 class Zernike(Aberration):
     ''' Introduces a Zernike phase aberration.
 
-    Calculates the Zernike polynomial deined by the numbers `n` and `m` at
+    Calculates the Zernike polynomial defined by the numbers `n` and `m` at
     each pixel in the pupil, multiplies it by `coefficient`, and adds the
     result to the phase of the pupil.
 

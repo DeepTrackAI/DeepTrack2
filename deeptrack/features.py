@@ -25,6 +25,7 @@ import copy
 from abc import ABC, abstractmethod
 from typing import List
 import numpy as np
+import time
 
 from deeptrack.image import Image
 from deeptrack.properties import Property, PropertyDict
@@ -33,6 +34,10 @@ from deeptrack.properties import Property, PropertyDict
 
 MERGE_STRATEGY_OVERRIDE = 0
 MERGE_STRATEGY_APPEND = 1
+
+_SESSION_STRUCT = {
+    "update_key": 0
+}
 
 
 class Feature(ABC):
@@ -172,9 +177,9 @@ class Feature(ABC):
         # or to rescale properties.
         feature_input = self._process_properties(feature_input)
 
-        
+                
         # Set the seed from the hash_key. Ensures equal results
-        np.random.seed(feature_input["hash_key"][0])
+        np.random.seed(int(feature_input["hash_key"][0]) * int(feature_input.get("sequence_step", 0) + 1) % int(2**32 - 1))
 
         # _process_and_get calls the get function correctly according
         # to the __distributed__ attribute
@@ -215,6 +220,17 @@ class Feature(ABC):
         -------
         self
         '''
+
+        # Sets a key for the update, so that each property can recognize
+        # if a request to update a property is part of a new update call,
+        # or a new one.
+
+        # NOTE: To allow multithreading, this could be made session specific
+        # which might be possible with python "with:" statement
+        if "_update_key" not in kwargs:
+            _SESSION_STRUCT["update_key"] += 1
+            kwargs["_update_key"] = _SESSION_STRUCT["update_key"]
+    
         self.properties.update(**kwargs)
         return self
 
@@ -263,6 +279,7 @@ class Feature(ABC):
             # Assume video
             fig = plt.figure()
             images = []
+            plt.axis("off")
             for image in output_image:
                 images.append([plt.imshow(image[:, :, 0], **kwargs)])
 
@@ -277,6 +294,7 @@ class Feature(ABC):
             try: 
                 get_ipython # Throws NameError if not in Notebook
                 display(HTML(anim.to_jshtml()))
+                return anim
 
             except NameError as e:
                 # Not in an notebook
@@ -396,7 +414,8 @@ class StructuralFeature(Feature):
 
 
 class Branch(StructuralFeature):
-    ''' Resolves to features sequentially
+    ''' Resolves two features sequentially. 
+    Passes the output of the first to the input of the second.
     Parameters
     ----------
     feature_1 : Feature
@@ -538,6 +557,7 @@ class ConditionalSetFeature(StructuralFeature):
     
 
     def get(self, image, *, on_false, on_true, condition, **kwargs):
+
         if kwargs.get(condition, False):
             if on_true:
                 return on_true.resolve(image, **kwargs)
@@ -552,7 +572,7 @@ class ConditionalSetFeature(StructuralFeature):
 
 
 class Lambda(Feature):
-    ''' Calls a custom functions.
+    ''' Calls a custom function on each image in the input.
 
     Note that the property `function` needs to be wrapped in an
     outer layer function. The outer layer function can depend on
@@ -561,7 +581,7 @@ class Lambda(Feature):
 
     Parameters
     ----------
-    function : Callable[Image or list of Image]
+    function : Callable[Image]
         Function that takes the current image as first input 
     '''
 
@@ -571,6 +591,65 @@ class Lambda(Feature):
 
     def get(self, image, function, **kwargs):
         return function(image)
+
+
+class Merge(Feature):
+    ''' Calls a custom function on the entire input.
+
+    Note that the property `function` needs to be wrapped in an
+    outer layer function. The outer layer function can depend on
+    other properties, while the inner layer function accepts an
+    image as input.
+
+    Parameters
+    ----------
+    function : Callable[list of Image]
+        Function that takes the current image as first input 
+    '''
+
+    __distributed__ = False
+
+    def __init__(self, function, **kwargs):
+        super().__init__(function=function, **kwargs)
+    
+
+    def get(self, list_of_images, function, **kwargs):
+        return function(list_of_images)
+
+
+class Dataset(Feature):
+    ''' Grabs data from a local set of data.
+
+    The first argument should be an iterator, function or constant, 
+    which provides access to a single sample from a dataset. If it returns
+    a tuple, the first element should be an array-like and the second a 
+    dictionary. The array-like will be returned as an image with the dictionary
+    added to the set of properties.
+
+    Parameters
+    ----------
+    data : tuple or array_like
+        Any property that returns a single image or a tuple of two objects, 
+        where the first is an array_like.
+    '''
+    __distributed__ = False
+        
+    def __init__(self, data, **kwargs):
+        super().__init__(data=data, **kwargs)
+
+    def get(self, *ignore, data, **kwargs):
+        return data
+
+    def _process_properties(self, properties):
+        data = properties["data"]
+
+        if isinstance(data, tuple):
+            properties["data"] = data[0]
+            if isinstance(data[1], dict):
+                properties.update(data[1])
+            else:
+                properties["label"] = data[1]
+        return properties
 
 
 
@@ -617,6 +696,8 @@ class LoadImage(Feature):
         Path to image to load
     load_options : dict
         Options passed to the file reader
+    as_list : bool
+        If True, the irst dimension will be converted to a list.
 
     Raises
     ------
@@ -628,27 +709,31 @@ class LoadImage(Feature):
     __distributed__ = False
 
 
-    def __init__(self, path, load_options=None, **kwargs):
-        super().__init__(path=path, load_options=load_options, **kwargs)
+    def __init__(self, path, load_options=None, as_list=False, **kwargs):
+        super().__init__(path=path, load_options=load_options, as_list=False, **kwargs)
 
 
-    def get(self, *ign, path, load_options, **kwargs):
+    def get(self, *ign, path, load_options,  **kwargs):
         if load_options is None:
             load_options = {}
         try:
             return np.load(path, **load_options)
         except (IOError, ValueError):
-            import PIL.Image
+            from skimage import io
             try:
-                return np.array(PIL.Image.open(path, **load_options))
+                return io.imread()
             except IOError:
-                import cv2
-                
-                image = np.array(cv2.imread(path, **load_options))
-                if image:
-                    return image
+                import PIL.Image
+                try:
+                    return np.array(PIL.Image.open(path, **load_options))
+                except IOError:
+                    import cv2
+                    
+                    image = np.array(cv2.imread(path, **load_options))
+                    if image:
+                        return image
 
-                raise IOError("No filereader available for file {0}".format(path))
+                    raise IOError("No filereader available for file {0}".format(path))
     
 
 class IndexedStorage(Feature):
@@ -693,3 +778,147 @@ class IndexedStorage(Feature):
     def update(self, **kwargs):
         self.feature.update(**kwargs)
         super().update(**kwargs)
+
+
+
+class SampleToMasks(Feature):
+    ''' Creates a mask from a list of images.
+
+    Calls `transformation_function` for each input image, and merges the outputs
+    to a single image with `number_of_masks` layers. Each input image needs to have 
+    a defined property `position` to place it within the image. If used with scatterers,
+    note that the scatterers need to be passed the property `voxel_size` to correctly
+    size the objects.
+
+    Parameters
+    ----------
+    transformation_function : function
+        Function that takes an image as input, and outputs another image with `number_of_masks`
+        layers.
+    number_of_masks : int
+        The number of masks to create.
+    output_region : (int, int, int, int)
+        Size and relative position of the mask. Should generally be the same as 
+        `optics.output_region`.
+    merge_method : str or function or list
+        How to merge the individual masks to a single image. If a list, the merge_metod 
+        is per mask. Can be
+            * "add": Adds the masks together.
+            * "overwrite": later masks overwrite earlier masks.
+            * "or": 1 if either any mask is non-zero at that pixel
+            * function: a function that accepts two images. The first is the current
+                    value of the output image where a new mask will be places, and
+                    the second is the mask to merge with the output image.
+    
+    '''
+    
+    def __init__(self, 
+                 transformation_function,
+                 number_of_masks=1,
+                 output_region=(0, 0, 128, 128), 
+                 merge_method="add",
+                 **kwargs):
+        super().__init__(transformation_function=transformation_function, 
+                         number_of_masks=number_of_masks, 
+                         output_region=output_region,
+                         merge_method=merge_method, 
+                         **kwargs)
+    
+    def get(self, image, transformation_function, **kwargs):        
+        return transformation_function(image)
+
+    def _process_and_get(self, *args, **kwargs):
+        list_of_labels = super()._process_and_get(*args, **kwargs)
+        output_region = kwargs["output_region"]
+        output = np.zeros((
+            output_region[2],
+            output_region[3],
+            kwargs["number_of_masks"]
+        ))
+
+        for label in list_of_labels:
+            assert label.ndim == 3, "Transformation function should return an "
+            p0 = np.round(_get_position(label) - output_region[0:2])
+            
+            if np.any(p0 > output.shape[0:2]) or np.any(p0 + label.shape[0:2] < 0):
+                continue
+
+            crop_x = int(-np.min([p0[0], 0]))
+            crop_y = int(-np.min([p0[1], 0]))
+            crop_x_end = int(label.shape[0] - np.max([p0[0] + label.shape[0] - output.shape[0], 0]))
+            crop_y_end = int(label.shape[1] - np.max([p0[1] + label.shape[1] - output.shape[1], 0]))
+
+            label = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
+
+            p0[0] = np.max([p0[0], 0])
+            p0[1] = np.max([p0[1], 0])
+
+            p0 = p0.astype(np.int)
+
+            output_slice = output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1]]
+
+            for label_index in range(kwargs["number_of_masks"]):
+
+                if isinstance(kwargs["merge_method"], list):
+                    merge = kwargs["merge_method"][label_index]
+                else:
+                    merge = kwargs["merge_method"]
+                
+                if merge == "add":
+                    output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1], label_index] += label[..., label_index]
+                    
+                elif merge == "overwrite":
+                    output_slice[label[..., label_index] != 0, label_index] = label[label[..., label_index] != 0, label_index]
+                    output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1], label_index] = output_slice[..., label_index]
+                    
+                elif merge == "or":
+                    output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1], label_index] = (output_slice[..., label_index] != 0) | (label[..., label_index] != 0)
+                
+                elif merge == "mul":
+                    output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1], label_index] *= label[..., label_index]
+
+                else:
+                    # No match, assume function
+                    output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1], label_index] = (
+                        merge(
+                            output_slice[..., label_index],
+                            label[..., label_index]
+                        )
+                    )
+        output = Image(output)
+        for label in list_of_labels:
+            output.merge_properties_from(label)
+        return output
+
+
+            
+def _get_position(image, mode="corner", return_z=False):
+    # Extracts the position of the upper left corner of a scatterer
+    num_outputs = 2 + return_z
+
+    if mode == "corner":
+        shift = (np.array(image.shape) - 1) / 2
+    else:
+        shift = np.zeros((num_outputs))
+
+    position = image.get_property("position")
+
+    if position is None:
+        return position
+
+    if len(position) == 3:
+        if return_z:
+            return position - shift
+        else:
+            return position[0:2] - shift[0:2]
+
+    elif len(position) == 2:
+        if return_z:
+            outp = np.array([position[0], position[1],
+                             image.get_property("z", default=0)]) - shift
+            return outp
+        else:
+            return position - shift[0:2]
+
+    return position
+

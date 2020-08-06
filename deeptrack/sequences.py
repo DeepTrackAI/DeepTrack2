@@ -46,7 +46,7 @@ class Sequence(Feature):
         self.update()
 
     def get(self, input_list, sequence_length=None, **kwargs):
-        return [self.feature.resolve(input_list,
+        return (input_list or []) + [self.feature.resolve(
                                 sequence_length=sequence_length, 
                                 sequence_step=sequence_step,
                                 **kwargs)
@@ -94,3 +94,4 @@ def Sequential(feature: Feature, **kwargs):
         feature.properties[property_name] = SequentialProperty(sampling_rule, initializer=initializer)
 
     return feature
+

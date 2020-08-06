@@ -1,4 +1,4 @@
-''' Loss unctions specialized for images and tracking tasks.
+''' Loss functions specialized for images and tracking tasks.
 
 Functions
 ---------
@@ -26,7 +26,7 @@ nd_mean_absolute_percentage_error
     Mean absolute percentage error with flattened inputs.
 '''
 
-from tensorflow import keras
+import keras
 
 losses = keras.losses
 K = keras.backend

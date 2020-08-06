@@ -17,10 +17,12 @@ Ellipsoid
     Generates 3-d ellipsoids
 '''
 
+from threading import Lock
 import numpy as np
-
+from scipy.special import jv as jn, spherical_jn as jv, h1vp, eval_legendre as leg, jvp
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
 from deeptrack.image import Image
+import deeptrack.image
 
 
 
@@ -67,10 +69,10 @@ class Scatterer(Feature):
 
 
     def __init__(self,
-                 position,
+                 position=(32, 32),
                  z=0.0,
                  value=1.0,
-                 position_unit="meter",
+                 position_unit="pixel",
                  upsample=1,
                  **kwargs):
         super().__init__(position=position,
@@ -83,10 +85,12 @@ class Scatterer(Feature):
 
     def _process_properties(self, properties: dict) -> dict:
         # Rescales the position property
-
+        
         if "position" in properties:
             if properties["position_unit"] == "meter":
-                properties["position"] = np.array(properties["position"]) / np.array(properties["voxel_size"])[:len(properties["position"])]
+                properties["position"] = np.array(properties["position"]) / np.array(properties["voxel_size"])[:len(properties["position"])] / properties.get("upscale", 1)
+                properties["z"] = np.array(properties["z"]) / np.array(properties["voxel_size"])[:len(properties["position"])] / properties.get("upscale", 1)
+
         return properties
 
 
@@ -165,12 +169,14 @@ class PointParticle(Scatterer):
     '''
 
     def __init__(self, **kwargs):
+        kwargs.pop("upsample", False)
+        kwargs.pop("upsample_axes", False)
         super().__init__(upsample=1, upsample_axes=(), **kwargs)
 
 
     def get(self, image, **kwargs):
+        return np.ones((1, 1, 1))
 
-        return np.ones((1, 1, 1)) * 1.0
 
 
 class Ellipse(Scatterer):
@@ -199,8 +205,8 @@ class Ellipse(Scatterer):
     '''
 
     def __init__(self,
-                radius,
-                rotation,
+                radius=1e-6,
+                rotation=0,
                 **kwargs):
         super().__init__(radius=radius, rotation=rotation, upsample_axes=(0, 1), **kwargs)
     
@@ -271,7 +277,7 @@ class Sphere(Scatterer):
     '''
 
     def __init__(self,
-                 radius,
+                 radius=1e-6,
                  **kwargs):
         super().__init__(radius=radius, **kwargs)
 
@@ -282,6 +288,7 @@ class Sphere(Scatterer):
             voxel_size,
             **kwargs):
 
+        
         # Create a grid to calculate on
         rad = radius / voxel_size
         rad_ceil = np.ceil(rad)
@@ -291,6 +298,7 @@ class Sphere(Scatterer):
         X, Y, Z = np.meshgrid((x / rad[0])**2, (y / rad[1])**2, (z / rad[2])**2)
 
         mask = (X + Y + Z <= 1) * 1.0
+
         return mask
 
 
@@ -321,7 +329,7 @@ class Ellipsoid(Scatterer):
     '''
 
     def __init__(self,
-                 radius,
+                 radius=1e-6,
                  rotation=0,
                  **kwargs):
         super().__init__(radius=radius, rotation=rotation, **kwargs)
@@ -380,6 +388,7 @@ class Ellipsoid(Scatterer):
             **kwargs):
 
         radius_in_pixels = radius / voxel_size
+        
         max_rad = np.max(radius) / voxel_size
         rad_ceil = np.ceil(max_rad)
 
@@ -397,4 +406,232 @@ class Ellipsoid(Scatterer):
         ZR = (-sin[1] * X) + cos[1] * sin[2] * Y + cos[1] * cos[2] * Z 
 
         mask = ((XR / radius_in_pixels[0])**2 + (YR / radius_in_pixels[1])**2 + (ZR / radius_in_pixels[2])**2 < 1) * 1.0
+        
         return mask
+
+class MieParticle(Scatterer):
+    ''' Scattered field by a Mie particle
+
+    Calculates the scattered field by a spherical particle in a homogenous medium,
+    as predicted by Mie theory. Note that the induced phase shift is calculated
+    in comparison to the `refractive_index_medium` property of the optical device.
+
+    Parameters
+    ----------
+    radius : float 
+        Radius of the mie particle in meter.
+    refractive_index : float
+        Refractive index of the particle
+    L : int or str
+        The number of terms used to evaluate the mie theory. If `"auto"`,
+        it determines the number of terms automatically.
+    position : array_like[float, float (, float)]
+        The position of the particle. Third index is optional, 
+        and represents the position in the direction normal to the
+        camera plane.
+    z : float
+        The position in the direction normal to the
+        camera plane. Used if `position` is of length 2.
+    value : float
+        A default value of the characteristic of the particle. Used by
+        optics unless a more direct property is set: (eg. `refractive_index`
+        for `Brightfield` and `intensity` for `Fluorescence`).
+    '''
+    def __init__(self, 
+                radius=1e-6, 
+                refractive_index=1.45, 
+                offset_z=lambda radius: max(radius * 2, 5e-6),
+                polarization_angle=0,
+                aperature_angle="auto",
+                L="auto", 
+                crop_empty=False, 
+                is_field=True,
+                **kwargs):
+        super().__init__(
+            radius=radius, 
+            refractive_index=refractive_index, 
+            L=L,
+            offset_z=offset_z,
+            polarization_angle=polarization_angle,
+            aperature_angle=aperature_angle,
+            crop_empty=crop_empty,
+            is_field=is_field,
+            **kwargs
+        )
+    def _process_properties(self, properties):
+        if properties["L"] == "auto":
+            v = 2 * np.pi * properties["radius"] / properties["wavelength"]
+            properties["L"] = int(np.ceil(v + 4 * (v ** (1 / 3)) + 2))
+        if properties["aperature_angle"] == "auto":
+            properties["aperature_angle"] = np.sqrt(1 - properties["NA"] ** 2 / properties["refractive_index_medium"] ** 2)
+        return properties
+        
+    
+    def get(self, 
+            image,
+            position,         
+            radius,
+            refractive_index, 
+            upscaled_output_region, 
+            voxel_size, 
+            padding,
+            wavelength,
+            refractive_index_medium,
+            NA,
+            L,
+            offset_z,
+            aperature_angle,
+            polarization_angle,
+            **kwargs):
+
+        xSize = padding[2] + upscaled_output_region[2] - upscaled_output_region[0] + padding[0]
+        ySize = padding[3] + upscaled_output_region[3] - upscaled_output_region[1] + padding[1]
+        arr = deeptrack.image.pad_image_to_fft(np.zeros((xSize, ySize)))
+        
+
+        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - position[1]
+        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - position[0]
+        X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1])
+
+        
+        ct_max = np.cos(aperature_angle)
+        field = _get_field(X, Y, offset_z, 2 * np.pi / wavelength, refractive_index, radius, L,
+                        refractive_index_medium, ct_max=ct_max, polarization_angle=polarization_angle)
+        
+        return np.expand_dims(field, axis=-1)
+            
+
+
+CACHE = {
+    "maxL": -1,
+    "minKR": None,
+    "maxKR": 0,
+    "resolution": 0.001,
+    "L": [],
+    "PI": {
+        "value":[],
+        "resolution": 0.001,
+        "min": -1,
+        "max": 1,
+    }
+}
+
+
+
+def B(k, n, a, l, nm=1.33):
+    ka = k * nm * a
+    kna = k * n * a
+    jka = jv(l, ka)
+    djka = jv(l, ka, True)
+    jkna = jv(l, kna)
+    djkna = jv(l, kna, True)
+    h = h1vp(l, ka, n=1)
+    return (2 * l + 1) * 1j ** l \
+            * (jka * djkna * n - jkna * djka * nm) \
+            / (jkna * h * nm - h * djkna * n)
+
+
+def ricbesj(l, x):
+    return np.sqrt(np.pi*x/2)*besselj(l+0.5,x)
+
+def dricbesj(l, x):
+    return 0.5*np.sqrt(np.pi/x/2)*besselj(l+0.5,x) + np.sqrt(np.pi*x/2)*dbesselj(l+0.5,x)
+
+def besselj(l, x):
+    return jn(l, x)
+
+def dbesselj(l, x):
+    return 0.5 * (besselj(l-1,x) - besselj(l+1, x))
+
+def ricbesh(l, x):
+    return np.sqrt(np.pi*x/2)*h1vp(l+0.5,x,False);
+
+def dricbesh(nu, z):
+    xi = 0.5*np.sqrt(np.pi/2/z)*h1vp(nu+0.5,z, False) \
+    + np.sqrt(np.pi*z/2)*h1vp(nu+0.5,z,True);
+    return xi
+
+def coeffs(k, n, a, L, nm=1.33):
+    AA = np.zeros((L + 1,)) * 1j
+    BB = np.zeros((L + 1,)) * 1j
+    m = n / nm
+    for l in range(1, L + 1):
+
+        Sx = ricbesj(l, k * a)
+        dSx = dricbesj(l, k * a)
+        
+        Smx = ricbesj(l, k * m * a)
+
+        dSmx = dricbesj(l, k * m * a)
+        xix = ricbesh(l, k * a)
+        dxix = dricbesh(l, k * a)
+        AA[l-1] = (m*Smx*dSx - Sx*dSmx) / (m*Smx*dxix - xix*dSmx)
+        BB[l-1] = (Smx*dSx - m*Sx*dSmx) / (Smx*dxix - m*xix*dSmx)
+    return AA, BB
+
+def h1vp_cached(L, hin):
+    hin_max = np.max(hin)
+    if hin_max > CACHE["maxKR"]:
+        calc_arr = np.arange(CACHE["maxKR"] + CACHE["resolution"], hin_max + CACHE["resolution"], CACHE["resolution"])
+        for l in range(CACHE["maxL"]):
+            CACHE["L"][l] = np.concatenate((CACHE["L"][l], h1vp(l, calc_arr)))
+        CACHE["maxKR"] = calc_arr[-1]
+        
+    if L > len(CACHE["L"]):
+        calc_arr = np.arange(0, CACHE["maxKR"] + CACHE["resolution"], CACHE["resolution"])
+        for l in range(len(CACHE["L"]), L):
+            CACHE["L"].append(h1vp(l, calc_arr))
+            
+        CACHE["maxL"] = L
+    
+    residx = ((hin // CACHE["resolution"])).astype(np.int)
+    c = CACHE["L"] 
+    out = [c[l][residx] for l in range(L)]
+    return out
+
+
+def _get_scattering_matrix(A, B, k, L):
+    theta = np.linspace(0, 2 *np.pi)
+
+
+def _get_angular_dependence(ct, L):
+    PI = np.zeros((L, *ct.shape))
+    TAU = np.zeros((L, *ct.shape))
+    
+    PI[0, :] = 1
+    PI[1, :] = 3*ct
+    TAU[0, :] = ct
+    TAU[1, :] = 6*ct*ct - 3
+    
+    for i in range(3, L+1):
+        
+        PI[i-1] = (2 * i - 1) / (i - 1) * ct * PI [i - 2] - i / (i - 1) * PI[i - 3]
+
+        TAU[i-1] = i * ct * PI[i - 1] - (i + 1) * PI[i - 2]
+    return PI, TAU
+
+
+def _get_field(X, Y, dz, k, n, a, L, nm=1.33, ct_max=1, polarization_angle=0):
+    k = k * nm
+    A, B = coeffs(k, n, a, L, nm)
+    
+
+    R2 = np.sqrt(X ** 2 + Y ** 2)
+    R3 = np.sqrt(R2 ** 2 + (dz) ** 2) 
+    ct = dz / R3
+    
+    PI, TAU = _get_angular_dependence(ct, L)
+    
+    E = [(2 * l + 1) / (l * (l + 1)) for l in range(1, L + 1)]
+
+    S1 = sum([E[l] * A[l] * TAU[l] + E[l] * B[l] * PI[l] for l in range(0, L)])
+    S2 = sum([E[l] * B[l] * TAU[l] + E[l] * A[l] * PI[l] for l in range(0, L)])
+    
+    ANGLE = np.arctan2(Y, X) + polarization_angle
+    COS = np.square(np.cos(ANGLE))
+    SIN = 1 - COS
+
+    field = (ct > ct_max) * -1j / (k * R3) * np.exp(1j * k * (R3 - dz)) * (S1 * COS + S2 * SIN)
+
+    return field
+
