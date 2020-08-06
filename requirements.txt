@@ -1,4 +1,5 @@
-tf-nightly
+tensorflow==2.2.0
+imgaug
 numpy
 matplotlib
 scipy
