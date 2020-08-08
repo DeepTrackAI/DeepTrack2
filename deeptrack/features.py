@@ -40,7 +40,7 @@ _SESSION_STRUCT = {
 }
 
 
-class Feature(ABC):
+class Feature:
     ''' Base feature class.
     Features define the image generation process. All features operate
     on lists of images. Most features, such as noise, apply some
@@ -116,7 +116,6 @@ class Feature(ABC):
         self.properties = PropertyDict(**properties)
 
 
-    @abstractmethod
     def get(self, image: Image or List[Image], **kwargs) -> Image or List[Image]:
         '''Method for altering an image
         Abstract method that define how the feature transforms the input. The current
@@ -160,8 +159,7 @@ class Feature(ABC):
         '''
         
         # Remove hash_key from globals.
-        if "hash_key" in global_kwargs:
-            global_kwargs.pop("hash_key")
+        global_kwargs.pop("hash_key", False)
 
         # Ensure that input is a list
         image_list = self._format_input(image_list, **global_kwargs)
@@ -171,12 +169,13 @@ class Feature(ABC):
         
         # Add global_kwargs to input arguments
         feature_input.update(global_kwargs)
+
+        
         
         # Call the _process_properties hook, default does nothing.
         # Can be used to ensure properties are formatted correctly
         # or to rescale properties.
         feature_input = self._process_properties(feature_input)
-
                 
         # Set the seed from the hash_key. Ensures equal results
         np.random.seed(int(feature_input["hash_key"][0]) * int(feature_input.get("sequence_step", 0) + 1) % int(2**32 - 1))
@@ -670,13 +669,14 @@ class Label(Feature):
 
 
     def __init__(self, output_shape=None, **kwargs):
-        super().__init__(output_shape=output_shape)
+        super().__init__(output_shape=output_shape, **kwargs)
 
     
     def get(self, image, output_shape=None, hash_key=None, **kwargs):
         result = []
-        for key, value in kwargs.items():
-            result.append(value)
+        for key in self.properties.keys():
+            if key in kwargs:
+                result.append(kwargs[key])
 
         if output_shape:
             result = np.reshape(np.array(result), output_shape)
@@ -721,7 +721,7 @@ class LoadImage(Feature):
         except (IOError, ValueError):
             from skimage import io
             try:
-                return io.imread()
+                return io.imread(path)
             except IOError:
                 import PIL.Image
                 try:
@@ -780,6 +780,14 @@ class IndexedStorage(Feature):
         super().update(**kwargs)
 
 
+class DummyFeature(Feature):
+    '''Feature that does nothing
+    
+    Can be used as a container for properties to separate the code logically.
+    '''
+    def get(self, image, **kwargs):
+        return image
+
 
 class SampleToMasks(Feature):
     ''' Creates a mask from a list of images.
@@ -837,54 +845,55 @@ class SampleToMasks(Feature):
         ))
 
         for label in list_of_labels:
-            assert label.ndim == 3, "Transformation function should return an "
-            p0 = np.round(_get_position(label) - output_region[0:2])
-            
-            if np.any(p0 > output.shape[0:2]) or np.any(p0 + label.shape[0:2] < 0):
-                continue
-
-            crop_x = int(-np.min([p0[0], 0]))
-            crop_y = int(-np.min([p0[1], 0]))
-            crop_x_end = int(label.shape[0] - np.max([p0[0] + label.shape[0] - output.shape[0], 0]))
-            crop_y_end = int(label.shape[1] - np.max([p0[1] + label.shape[1] - output.shape[1], 0]))
-
-            label = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
-
-            p0[0] = np.max([p0[0], 0])
-            p0[1] = np.max([p0[1], 0])
-
-            p0 = p0.astype(np.int)
-
-            output_slice = output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1]]
-
-            for label_index in range(kwargs["number_of_masks"]):
-
-                if isinstance(kwargs["merge_method"], list):
-                    merge = kwargs["merge_method"][label_index]
-                else:
-                    merge = kwargs["merge_method"]
+            positions = _get_position(label)
+            for position in positions:
+                p0 = np.round(position - output_region[0:2])
                 
-                if merge == "add":
-                    output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1], label_index] += label[..., label_index]
-                    
-                elif merge == "overwrite":
-                    output_slice[label[..., label_index] != 0, label_index] = label[label[..., label_index] != 0, label_index]
-                    output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1], label_index] = output_slice[..., label_index]
-                    
-                elif merge == "or":
-                    output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1], label_index] = (output_slice[..., label_index] != 0) | (label[..., label_index] != 0)
-                
-                elif merge == "mul":
-                    output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1], label_index] *= label[..., label_index]
+                if np.any(p0 > output.shape[0:2]) or np.any(p0 + label.shape[0:2] < 0):
+                    continue
 
-                else:
-                    # No match, assume function
-                    output[p0[0]:p0[0]+label.shape[0], p0[1]:p0[1]+label.shape[1], label_index] = (
-                        merge(
-                            output_slice[..., label_index],
-                            label[..., label_index]
+                crop_x = int(-np.min([p0[0], 0]))
+                crop_y = int(-np.min([p0[1], 0]))
+                crop_x_end = int(label.shape[0] - np.max([p0[0] + label.shape[0] - output.shape[0], 0]))
+                crop_y_end = int(label.shape[1] - np.max([p0[1] + label.shape[1] - output.shape[1], 0]))
+
+                labelarg = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
+
+                p0[0] = np.max([p0[0], 0])
+                p0[1] = np.max([p0[1], 0])
+
+                p0 = p0.astype(np.int)
+
+                output_slice = output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1]]
+
+                for label_index in range(kwargs["number_of_masks"]):
+
+                    if isinstance(kwargs["merge_method"], list):
+                        merge = kwargs["merge_method"][label_index]
+                    else:
+                        merge = kwargs["merge_method"]
+                    
+                    if merge == "add":
+                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] += label[..., label_index]
+                        
+                    elif merge == "overwrite":
+                        output_slice[labelarg[..., label_index] != 0, label_index] = labelarg[labelarg[..., label_index] != 0, label_index]
+                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] = output_slice[..., label_index]
+                        
+                    elif merge == "or":
+                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] = (output_slice[..., label_index] != 0) | (labelarg[..., label_index] != 0)
+                    
+                    elif merge == "mul":
+                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] *= labelarg[..., label_index]
+
+                    else:
+                        # No match, assume function
+                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] = (
+                            merge(
+                                output_slice[..., label_index],
+                                labelarg[..., label_index]
+                            )
                         )
-                    )
         output = Image(output)
         for label in list_of_labels:
             output.merge_properties_from(label)
@@ -894,31 +903,29 @@ class SampleToMasks(Feature):
             
 def _get_position(image, mode="corner", return_z=False):
     # Extracts the position of the upper left corner of a scatterer
-    num_outputs = 2 + return_z
-
+    
     if mode == "corner":
         shift = (np.array(image.shape) - 1) / 2
     else:
         shift = np.zeros((num_outputs))
 
-    position = image.get_property("position")
+    positions = image.get_property("position", False, [])
 
-    if position is None:
-        return position
+    positions_out = []
+    for position in positions:
+        if len(position) == 3:
+            if return_z:
+                return positions_out.append(position - shift)
+            else:
+                return positions_out.append(position[0:2] - shift[0:2])
 
-    if len(position) == 3:
-        if return_z:
-            return position - shift
-        else:
-            return position[0:2] - shift[0:2]
+        elif len(position) == 2:
+            if return_z:
+                outp = np.array([position[0], position[1],
+                                image.get_property("z", default=0)]) - shift
+                positions_out.append(outp)
+            else:
+                positions_out.append(position - shift[0:2])
 
-    elif len(position) == 2:
-        if return_z:
-            outp = np.array([position[0], position[1],
-                             image.get_property("z", default=0)]) - shift
-            return outp
-        else:
-            return position - shift[0:2]
-
-    return position
+    return positions_out
 
