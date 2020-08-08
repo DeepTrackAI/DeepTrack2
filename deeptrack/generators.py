@@ -16,7 +16,8 @@ from deeptrack.features import Feature
 from deeptrack.image import Image
 import threading
 import random
-import time 
+import time
+import itertools
 
 
 
@@ -171,7 +172,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         and the size of the training data as input.
     shuffle_batch : bool
         If True, the batches are shuffled before outputting.
-    feature_kwargs : dict
+    feature_kwargs : dict or list of dicts
         Set of options to pass to the feature when resolving
     '''
 
@@ -225,17 +226,16 @@ class ContinuousGenerator(keras.utils.Sequence):
                 time.sleep(0.5)
 
             self.on_epoch_end()
-        except KeyboardInterrupt:
+        except Exception as e:
             self.__exit__()
-            raise KeyboardInterrupt
+            raise e
 
         return self
     
     def __exit__(self, *args):
-        print(*args)
         self.exit_signal = True
         self.data_generation_thread.join()
-        return self
+        return False
 
     
 
@@ -302,7 +302,12 @@ class ContinuousGenerator(keras.utils.Sequence):
         if isinstance(features, List):
             for feature in features:
                 feature.update()
-            return [feature.resolve(**feature_kwargs) for feature in reversed(features)]
+            
+
+            if not isinstance(feature_kwargs, list):
+                feature_kwargs = itertools.cycle([feature_kwargs])
+                
+            return [feature.resolve(**kwargs) for feature, kwargs in zip(features, feature_kwargs)]
         else:
             features.update()
             return features.resolve(**feature_kwargs)
