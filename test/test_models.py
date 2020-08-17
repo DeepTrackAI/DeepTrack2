@@ -18,7 +18,7 @@ class TestModels(unittest.TestCase):
             output_activation="sigmoid",
             loss="mse"
         )
-        self.assertIsInstance(model, models.ModelFeature)
+        self.assertIsInstance(model, models.KerasModel)
 
 
     def test_UNet(self):
@@ -32,7 +32,7 @@ class TestModels(unittest.TestCase):
             output_activation="sigmoid",
             loss="mse"
         )
-        self.assertIsInstance(model, models.ModelFeature)
+        self.assertIsInstance(model, models.KerasModel)
 
 
     def test_RNN(self):
@@ -46,7 +46,7 @@ class TestModels(unittest.TestCase):
             output_activation="sigmoid",
             loss="mse"
         )
-        self.assertIsInstance(model, models.ModelFeature)
+        self.assertIsInstance(model, models.KerasModel)
 
 
 

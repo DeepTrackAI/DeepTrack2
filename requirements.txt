@@ -1,4 +1,5 @@
-tensorflow
+tensorflow>=2.2.0
+keras
 numpy
 matplotlib
 scipy

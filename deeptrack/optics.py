@@ -648,7 +648,15 @@ def _create_volume(list_of_scatterers,
         kernel = np.array([[0, 0, 0], [0, (1 - x_off) * (1 - y_off), (1 - x_off) * y_off], [0, x_off * (1 - y_off), x_off * y_off]])
 
         for z in range(scatterer.shape[2]):
-            splined_scatterer[:, :, z] = convolve(scatterer[:, :, z], kernel, mode="constant")
+            if splined_scatterer.dtype == np.complex:
+                splined_scatterer[:, :, z] = convolve(
+                                                np.real(scatterer[:, :, z]), 
+                                                kernel, mode="constant") + \
+                                             convolve(
+                                                np.imag(scatterer[:, :, z]), 
+                                                kernel, mode="constant") * 1j
+            else:
+                splined_scatterer[:, :, z] = convolve(scatterer[:, :, z], kernel, mode="constant")
 
         scatterer = splined_scatterer
         position = np.floor(position)

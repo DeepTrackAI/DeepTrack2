@@ -210,6 +210,20 @@ class Property:
         else:
             # Else, assume it's elementary.
             return sampling_rule
+    
+    def reset(self):
+        ''' Clear the internal state of the property
+
+        Only useful in rare instances where properties are used without them being
+        attached to any feature.
+
+        Returns
+        -------
+        self
+        '''
+        self.last_update_id = -1
+        return self
+
 
 
 class SequentialProperty(Property):
@@ -244,6 +258,8 @@ class SequentialProperty(Property):
             self.initializer = initializer
 
         self.sampling_rule = sampling_rule
+
+        # Deprecated
         self.has_updated_since_last_resolve = False
         
 
@@ -387,3 +403,17 @@ class PropertyDict(dict):
             sample_dict[key] = property.sample(**kwargs)
 
         return sample_dict
+
+    def reset(self):
+        ''' Clear the internal state of each property in the dict
+
+        Only useful in rare instances where properties are used without them being
+        attached to any feature.
+
+        Returns
+        -------
+        self
+        '''
+        for prop in self.values(): 
+            prop.reset()
+        return self
