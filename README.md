@@ -10,7 +10,7 @@ We provide tools to create physical simulations of customizable optical systems,
 To install, clone the folder 'deeptrack' to your project directory. The ability to install the package through pip is comming soon.
 
 Dependencies:
-- tensorflow (>=1.14)
+- tensorflow (>=2.2.0)
 
 Optional dependencies:
 - matplotlib
