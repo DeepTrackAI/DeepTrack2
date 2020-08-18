@@ -11,6 +11,7 @@ To install, clone the folder 'deeptrack' to your project directory. The ability 
 
 Dependencies:
 - tensorflow (>=2.2.0)
+- keras
 
 Optional dependencies:
 - matplotlib
