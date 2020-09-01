@@ -253,7 +253,6 @@ class Ellipse(Scatterer):
         return mask
 
 
-
 class Sphere(Scatterer):
     '''Generates a spherical scatterer
 

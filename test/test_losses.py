@@ -100,18 +100,6 @@ class TestLosses(unittest.TestCase):
         self.assertAlmostEqual(loss, 0, 3)
 
 
-    def test_nd_kullback_leibler_divergence(self):
-        loss_function = losses.nd_kullback_leibler_divergence
-        loss = K.eval(loss_function(self.truthly, self.truthly))
-        self.assertAlmostEqual(loss, 0, 3)
-        loss = K.eval(loss_function(self.truthly, self.falsely))
-        self.assertAlmostEqual(loss, 64.47238, 3)
-        loss = K.eval(loss_function(self.falsely, self.truthly))
-        self.assertAlmostEqual(loss, 0, 3)
-        loss = K.eval(loss_function(self.falsely, self.falsely))
-        self.assertAlmostEqual(loss, 0, 3)
-
-
     def test_nd_mean_absolute_percentage_error(self):
         loss_function = losses.nd_mean_absolute_percentage_error
         loss = K.eval(loss_function(self.truthly, self.truthly))

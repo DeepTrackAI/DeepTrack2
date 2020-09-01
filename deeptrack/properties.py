@@ -47,8 +47,10 @@ class Property:
         The sampling rule to update the value of the feature property.
     current_value : any
         The current value obtained from the last call to the sampling rule.
-    has_updated_since_last_resolve : bool
+    has_updated_since_last_resolve : deprecated, bool
         Whether the property has been updated since the last resolve.
+    dummy
+        Whether the property is used by the feature
 
     '''
 
@@ -98,7 +100,7 @@ class Property:
             Returns itself.
 
         '''
-        
+        old_key =  deeptrack.features._SESSION_STRUCT["update_key"]
         provided_key = kwargs.get("_update_key", False) or deeptrack.features._SESSION_STRUCT["update_key"]
 
         if self.last_update_id == provided_key:
@@ -108,9 +110,10 @@ class Property:
         
         self.last_update_id = provided_key
 
-        if hasmethod(self.sampling_rule, "update") and not isinstance(self.sampling_rule, dict):
-            self.sampling_rule.update(**kwargs)
+        # if hasmethod(self.sampling_rule, "update") and not isinstance(self.sampling_rule, dict):
+        #     self.sampling_rule.update(_update_key=provided_key)
         
+        kwargs["_update_key"] = provided_key
         self.current_value = self.sample(self.sampling_rule, **kwargs)
 
         return self
@@ -150,7 +153,8 @@ class Property:
         '''
 
         if isinstance(sampling_rule, deeptrack.Feature):
-            sampling_rule.update(**kwargs)
+            # Don't pass my properties to other feature (avoid name clash)
+            sampling_rule.update(_update_key=kwargs["_update_key"])
             return sampling_rule
 
         if hasmethod(sampling_rule, "sample"):
@@ -224,6 +228,30 @@ class Property:
         self.last_update_id = -1
         return self
 
+    # def __deepcopy__(self, memo):
+    #     from copy import deepcopy, copy
+
+        
+    #     # if id(self.sampling_rule) in memo:
+    #     #     obj = copy(self)
+    #     #     obj.sampling_rule = memo[id(self.sampling_rule)]
+    #     #     return obj
+
+    #     if self.dummy and isinstance(self.sampling_rule, deeptrack.Feature) and id(self.sampling_rule) not in memo:
+    #         return self
+
+    #     else:
+    #         if isinstance(self.sampling_rule, deeptrack.Feature):
+    #             b = 1+1
+    #             pass
+    #         oldc = self.__deepcopy__
+    #         self.__deepcopy__ = None
+    #         obj = deepcopy(self, memo)
+    #         obj.__deepcopy__ = oldc
+    #         return obj
+
+
+import copy
 
 
 class SequentialProperty(Property):
@@ -348,10 +376,12 @@ class PropertyDict(dict):
         for key, property in self.items():
             
             property_value = property.current_value
-
+            
+            
             # If the property is sequential, retrieve the value
             # of the current timestep
             if isinstance(property, SequentialProperty):
+                
 
                 sequence_step = kwargs.get("sequence_step", None)
                 if not sequence_step is None:
@@ -377,6 +407,7 @@ class PropertyDict(dict):
         property_arguments = dict(self)
         property_arguments.update(kwargs)
         for key, prop in self.items():
+
             if isinstance(property_arguments[key], Property):
                 prop.update(**property_arguments)
             else:

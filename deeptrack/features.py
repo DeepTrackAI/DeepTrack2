@@ -29,6 +29,7 @@ import time
 
 from deeptrack.image import Image
 from deeptrack.properties import Property, PropertyDict
+from deeptrack.utils import isiterable, hasmethod, get_kwarg_names, kwarg_has_default
 
 
 
@@ -104,6 +105,7 @@ class Feature:
         for property_dict in all_dicts:
             for key, value in property_dict.items():
                 if not isinstance(value, Property):
+                    
                     value = Property(value)
 
                 properties[key] = value
@@ -353,19 +355,17 @@ class Feature:
         # Allows easier access to properties, while guaranteeing they are updated correctly.
         # Should only every be used from the inside of a property function. 
         # Is not compatible with sequential properties.
-        try: 
-            return super().__getattr__(key)
-        except AttributeError:
-            try:
-                properties = self.__dict__["properties"]
-                if key in properties:
-                    properties.update()
-                    return properties[key].current_value
-                else:
-                    raise AttributeError
+        if "properties" in self.__dict__:
+            properties = self.__dict__["properties"]
 
-            except KeyError:
+            if key in properties:
+                properties.update()
+                return properties[key].current_value
+            else:
                 raise AttributeError
+        else:
+            raise AttributeError
+
         
 
 
@@ -487,7 +487,7 @@ class Duplicate(StructuralFeature):
         super().__init__(
             *args,
             num_duplicates=num_duplicates, #py > 3.6 dicts are ordered by insert time.
-            features=lambda num_duplicates: [copy.deepcopy(feature) for _ in range(num_duplicates)],
+            features=lambda num_duplicates, _update_key: [copy.deepcopy(self.feature) for _ in range(num_duplicates)],
             **kwargs)
 
 
@@ -500,12 +500,34 @@ class Duplicate(StructuralFeature):
         return image
 
     def update(self, **kwargs):
-        super().update(**kwargs)
 
+        super().update(**kwargs)
+        kwargs["_update_key"] = _SESSION_STRUCT["update_key"]
         features = self.properties["features"].current_value
         for index in range(len(features)):
             features[index].update(**kwargs)
+        return self
 
+    def __deepcopy__(self, memo):
+        # If this is getting deep-copied, we have
+        # nested copies, which needs to be handled 
+        # separately.
+
+        self.properties.update(_update_key=_SESSION_STRUCT["update_key"])
+        num_duplicates = self.num_duplicates
+        features = []
+        for idx in range(num_duplicates):
+            memo_copy = copy.copy(memo)
+            features.append(copy.deepcopy(self.feature, memo_copy))
+        self.properties["features"].current_value = features
+
+        out = copy.copy(self)
+        self.properties = copy.copy(self.properties)
+        for key, val in self.properties.items():
+            self.properties[key] = copy.copy(val)
+        return out
+
+        
 
 
 class ConditionalSetProperty(StructuralFeature):
@@ -778,7 +800,7 @@ class IndexedStorage(Feature):
     def update(self, **kwargs):
         self.feature.update(**kwargs)
         super().update(**kwargs)
-
+        return self
 
 class DummyFeature(Feature):
     '''Feature that does nothing
