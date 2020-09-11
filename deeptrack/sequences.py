@@ -92,6 +92,7 @@ def Sequential(feature: Feature, **kwargs):
             initializer = sampling_rule
             
         feature.properties[property_name] = SequentialProperty(sampling_rule, initializer=initializer)
+        feature.properties[property_name].parent = feature.properties
 
     return feature
 

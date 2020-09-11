@@ -26,6 +26,7 @@ from abc import ABC, abstractmethod
 from typing import List
 import numpy as np
 import time
+import threading
 
 from deeptrack.image import Image
 from deeptrack.properties import Property, PropertyDict
@@ -36,10 +37,14 @@ from deeptrack.utils import isiterable, hasmethod, get_kwarg_names, kwarg_has_de
 MERGE_STRATEGY_OVERRIDE = 0
 MERGE_STRATEGY_APPEND = 1
 
-_SESSION_STRUCT = {
-    "update_key": 0
-}
+# Global thread execution lock for update calls. 
+UPDATE_LOCK = threading.Lock()
 
+# Global update memoization. Ensures that the update is consistent
+UPDATE_MEMO = {
+    "user_arguments": {},
+    "memoization": {}
+}
 
 class Feature:
     ''' Base feature class.
@@ -214,26 +219,26 @@ class Feature:
         Parameters
         ----------
         **kwargs
-            Arguments that will be passed to the Property
-            method `update()`.
+            Arguments that will be set globally for the update call.
+            For example .update(value=10) will have all properties
+            and features that depend on "value" use 10 instead of what
+            they otherwise would.
 
         Returns
         -------
         self
         '''
 
-        # Sets a key for the update, so that each property can recognize
-        # if a request to update a property is part of a new update call,
-        # or a new one.
-
-        # NOTE: To allow multithreading, this could be made session specific
-        # which might be possible with python "with:" statement
-        if "_update_key" not in kwargs:
-            _SESSION_STRUCT["update_key"] += 1
-            kwargs["_update_key"] = _SESSION_STRUCT["update_key"]
+        # This should only be accessed by the user. Call _update directly instead
+        with UPDATE_LOCK:
+            UPDATE_MEMO["user_arguments"] = kwargs
+            UPDATE_MEMO["memoization"] = {}
+            self._update(**kwargs)
+            return self
     
+
+    def _update(self, **kwargs):
         self.properties.update(**kwargs)
-        return self
 
 
     def plot(self,
@@ -359,8 +364,7 @@ class Feature:
             properties = self.__dict__["properties"]
 
             if key in properties:
-                properties.update()
-                return properties[key].current_value
+                return properties[key]
             else:
                 raise AttributeError
         else:
@@ -487,7 +491,7 @@ class Duplicate(StructuralFeature):
         super().__init__(
             *args,
             num_duplicates=num_duplicates, #py > 3.6 dicts are ordered by insert time.
-            features=lambda num_duplicates, _update_key: [copy.deepcopy(self.feature) for _ in range(num_duplicates)],
+            features=lambda num_duplicates: [copy.deepcopy(self.feature) for _ in range(num_duplicates)],
             **kwargs)
 
 
@@ -499,26 +503,26 @@ class Duplicate(StructuralFeature):
 
         return image
 
-    def update(self, **kwargs):
+    def _update(self, **kwargs):
 
-        super().update(**kwargs)
-        kwargs["_update_key"] = _SESSION_STRUCT["update_key"]
+        super()._update(**kwargs)
         features = self.properties["features"].current_value
         for index in range(len(features)):
-            features[index].update(**kwargs)
+            features[index]._update(**kwargs)
         return self
 
     def __deepcopy__(self, memo):
         # If this is getting deep-copied, we have
         # nested copies, which needs to be handled 
         # separately.
-
-        self.properties.update(_update_key=_SESSION_STRUCT["update_key"])
-        num_duplicates = self.num_duplicates
+        
+        self.properties.update()
+        num_duplicates = self.num_duplicates.current_value
         features = []
         for idx in range(num_duplicates):
             memo_copy = copy.copy(memo)
-            features.append(copy.deepcopy(self.feature, memo_copy))
+            new_feature = copy.deepcopy(self.feature, memo_copy)
+            features.append(new_feature)
         self.properties["features"].current_value = features
 
         out = copy.copy(self)
@@ -561,6 +565,15 @@ class ConditionalSetProperty(StructuralFeature):
 
 class ConditionalSetFeature(StructuralFeature):
     ''' Conditionally resolves one of two features
+
+    Set condition to the value to listen to. Example,
+    if condition is "is_label", then conditiona can be toggled
+    by calling either
+
+    Feature.resolve(is_label=True) / Feature.resolve(is_label=False)
+    Feature.update(is_label=True) / Feature.update(is_label=False)
+
+    Note that both features will be updated in either case.
     
     Parameters
     ----------
@@ -574,23 +587,23 @@ class ConditionalSetFeature(StructuralFeature):
     '''
     __distributed__ = False
     def __init__(self, on_false: Feature = None, on_true: Feature = None,  condition="is_label", **kwargs):
-        super().__init__(on_false=on_false, on_true=on_true, condition=condition, **kwargs)
+        self.on_true = on_true
+        self.on_false = on_false
+        super().__init__(condition=condition, **kwargs)
     
 
-    def get(self, image, *, on_false, on_true, condition, **kwargs):
+    def get(self, image, *, condition, **kwargs):
 
         if kwargs.get(condition, False):
-            if on_true:
-                return on_true.resolve(image, **kwargs)
+            if self.on_true:
+                return self.on_true.resolve(image, **kwargs)
             else:
                 return image
         else:
-            if on_false:
-                return on_false.resolve(image, **kwargs)
+            if self.on_false:
+                return self.on_false.resolve(image, **kwargs)
             else:
                 return image
-
-
 
 class Lambda(Feature):
     ''' Calls a custom function on each image in the input.
@@ -758,49 +771,6 @@ class LoadImage(Feature):
                     raise IOError("No filereader available for file {0}".format(path))
     
 
-class IndexedStorage(Feature):
-    '''Stores images indexed by some property.
-
-    Increases performance by returning a stored image instead of resolving
-    parent feature if an image with similar properties has been resolved before.
-    The property `index` should be a function that converts dependent properties
-    to an identifying string.
-
-    Parameters
-    ----------
-    feature : Feature
-        Parent feature
-    index : function -> str or str
-        Index that correpsonds to the dependent properties
-    entries_per_index : str
-        Number of images to store per unique index
-    '''
-    
-    __distributed__ = False
-
-    def __init__(self, feature, index, entries_per_index=1, **kwargs):
-        self.feature = feature
-        self.entries_per_index = entries_per_index
-        self.storage = {}
-        super().__init__(index=index, **kwargs)
-    
-    def get(self, *ign, index, **kwargs):
-        if index not in self.storage:
-            self.storage[index] = []
-
-        storagelist = self.storage[index]
-        
-        if len(storagelist) < self.entries_per_index:
-            storagelist.append(self.feature.resolve(**kwargs))
-            self.storage[index] = storagelist
-            return storagelist[-1]
-        else:
-            return storagelist[np.random.randint(len(storagelist))]
-
-    def update(self, **kwargs):
-        self.feature.update(**kwargs)
-        super().update(**kwargs)
-        return self
 
 class DummyFeature(Feature):
     '''Feature that does nothing
@@ -809,6 +779,7 @@ class DummyFeature(Feature):
     '''
     def get(self, image, **kwargs):
         return image
+
 
 
 class SampleToMasks(Feature):
@@ -845,7 +816,7 @@ class SampleToMasks(Feature):
     def __init__(self, 
                  transformation_function,
                  number_of_masks=1,
-                 output_region=(0, 0, 128, 128), 
+                 output_region=None, 
                  merge_method="add",
                  **kwargs):
         super().__init__(transformation_function=transformation_function, 
@@ -857,8 +828,24 @@ class SampleToMasks(Feature):
     def get(self, image, transformation_function, **kwargs):        
         return transformation_function(image)
 
-    def _process_and_get(self, *args, **kwargs):
-        list_of_labels = super()._process_and_get(*args, **kwargs)
+    def _process_and_get(self, images, **kwargs):
+        if isinstance(images, list) and len(images) != 1:
+            list_of_labels = super()._process_and_get(images, **kwargs)
+        else:
+            if isinstance(images, list):
+                images = images[0]
+            list_of_labels = []
+            for prop in images.properties:
+
+                if "position" in prop:
+
+                    inp = Image(np.array(images))
+                    inp.append(prop)
+                    out = Image(self.get(inp, **kwargs))
+                    out.merge_properties_from(inp)
+                    list_of_labels.append(out)
+
+    
         output_region = kwargs["output_region"]
         output = np.zeros((
             output_region[2],
@@ -896,7 +883,7 @@ class SampleToMasks(Feature):
                         merge = kwargs["merge_method"]
                     
                     if merge == "add":
-                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] += label[..., label_index]
+                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] += labelarg[..., label_index]
                         
                     elif merge == "overwrite":
                         output_slice[labelarg[..., label_index] != 0, label_index] = labelarg[labelarg[..., label_index] != 0, label_index]

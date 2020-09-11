@@ -20,6 +20,7 @@ PropertyDict
 import numpy as np
 from deeptrack.utils import isiterable, hasmethod, get_kwarg_names, kwarg_has_default
 import deeptrack
+import copy
 
 
 
@@ -47,16 +48,12 @@ class Property:
         The sampling rule to update the value of the feature property.
     current_value : any
         The current value obtained from the last call to the sampling rule.
-    has_updated_since_last_resolve : deprecated, bool
-        Whether the property has been updated since the last resolve.
-    dummy
-        Whether the property is used by the feature
 
     '''
 
     def __init__(self, sampling_rule: any):
         self.sampling_rule = sampling_rule
-        self.last_update_id = -1
+        self.parent = None
     
 
     @property
@@ -80,8 +77,15 @@ class Property:
 
     @current_value.getter
     def current_value(self):
+        idx = 0
         if not hasattr(self, "_current_value"):
             self.update()
+        if not hasattr(self, "_current_value"):
+
+            # I have a bounty of 5 beers for anyone who can tell me why this is necessary.
+            # 10 if you get rid of it.
+            self._current_value = deeptrack.UPDATE_MEMO["memoization"][id(self)]
+            
         return self._current_value
 
 
@@ -100,21 +104,23 @@ class Property:
             Returns itself.
 
         '''
-        old_key =  deeptrack.features._SESSION_STRUCT["update_key"]
-        provided_key = kwargs.get("_update_key", False) or deeptrack.features._SESSION_STRUCT["update_key"]
+ 
+        # If currently updated through a call to feature and deeptrack.UPDATE_MEMO
+        my_id = id(self)
 
-        if self.last_update_id == provided_key:
+        # if my_id in deeptrack.UPDATE_MEMO["memoization"] and not hasattr(self, '_current_value'):
+        #     a = 1+1
+
+        if deeptrack.UPDATE_LOCK.locked() and my_id in deeptrack.UPDATE_MEMO["memoization"]:
             return self
         
+        if self.parent:
+            kwargs.update(self.parent)
 
-        
-        self.last_update_id = provided_key
+        kwargs.update(deeptrack.UPDATE_MEMO["user_arguments"])
+        self._current_value = self.sample(self.sampling_rule, **kwargs)
 
-        # if hasmethod(self.sampling_rule, "update") and not isinstance(self.sampling_rule, dict):
-        #     self.sampling_rule.update(_update_key=provided_key)
-        
-        kwargs["_update_key"] = provided_key
-        self.current_value = self.sample(self.sampling_rule, **kwargs)
+        deeptrack.UPDATE_MEMO["memoization"][my_id] = self._current_value
 
         return self
 
@@ -154,13 +160,8 @@ class Property:
 
         if isinstance(sampling_rule, deeptrack.Feature):
             # Don't pass my properties to other feature (avoid name clash)
-            sampling_rule.update(_update_key=kwargs["_update_key"])
+            sampling_rule._update()
             return sampling_rule
-
-        if hasmethod(sampling_rule, "sample"):
-            # If the ruleset itself implements a sample method,
-            # call it instead.
-            return sampling_rule.sample(**kwargs)
 
         elif isinstance(sampling_rule, dict):
             # If the ruleset is a dict, return a new dict with each
@@ -187,24 +188,28 @@ class Property:
         elif callable(sampling_rule):
             # If it's a function, extract the arguments it accepts.
             function_input = {}
-
+            
             # Get the kwarg arguments the function accepts
-            for key in get_kwarg_names(sampling_rule):
+            knames = get_kwarg_names(sampling_rule)
+            for i in range(len(knames)):
+                key = knames[i]
                 # If that name is among passed kwarg arguments
                 if key in kwargs:
                     if isinstance(kwargs[key], Property):
                         # If it is a property, update it and pass the current value
                         if not kwargs[key] is self:
-                            kwargs[key].update(**kwargs)
-                        if hasattr(kwargs[key], "current_value"): 
-                            if isinstance(kwargs[key], SequentialProperty) and "sequence_step" in kwargs:
-                                kwargs[key] = kwargs[key].current_value[kwargs["sequence_step"]]
+                            if kwargs[key].parent:
+                                kwargs[key].parent.update_item(kwargs[key], **kwargs)
                             else:
-                                kwargs[key] = kwargs[key].current_value
-                        else:
-                            kwargs[key] = None
+                                kwargs[key].update(**kwargs)
 
-                    function_input[key] = kwargs[key]
+                        if isinstance(kwargs[key], SequentialProperty) and "sequence_step" in kwargs:
+                            function_input[key] = kwargs[key].current_value[kwargs["sequence_step"]]
+                        else:
+                            function_input[key] = kwargs[key].current_value
+
+                    else:
+                        function_input[key] = kwargs[key]
 
                 elif not kwarg_has_default(sampling_rule, key):
                     function_input[key] = None
@@ -214,44 +219,19 @@ class Property:
         else:
             # Else, assume it's elementary.
             return sampling_rule
-    
-    def reset(self):
-        ''' Clear the internal state of the property
 
-        Only useful in rare instances where properties are used without them being
-        attached to any feature.
-
-        Returns
-        -------
-        self
-        '''
-        self.last_update_id = -1
-        return self
-
-    # def __deepcopy__(self, memo):
-    #     from copy import deepcopy, copy
-
-        
-    #     # if id(self.sampling_rule) in memo:
-    #     #     obj = copy(self)
-    #     #     obj.sampling_rule = memo[id(self.sampling_rule)]
-    #     #     return obj
-
-    #     if self.dummy and isinstance(self.sampling_rule, deeptrack.Feature) and id(self.sampling_rule) not in memo:
-    #         return self
-
-    #     else:
-    #         if isinstance(self.sampling_rule, deeptrack.Feature):
-    #             b = 1+1
-    #             pass
-    #         oldc = self.__deepcopy__
-    #         self.__deepcopy__ = None
-    #         obj = deepcopy(self, memo)
-    #         obj.__deepcopy__ = oldc
-    #         return obj
-
-
-import copy
+    def __deepcopy__(self, memo):
+        is_in = id(self) in deeptrack.UPDATE_MEMO["memoization"]
+        if is_in:
+            return self
+        else:
+            cls = self.__class__ # Extract the class of the object
+            result = cls.__new__(cls) # Create a new instance of the object based on extracted class
+            memo[id(self)] = result
+            for k, v in self.__dict__.items():
+                setattr(result, k, copy.deepcopy(v, memo)) # Copy over attributes by copying directly or in case of complex objects like lists for exaample calling the `__deepcopy()__` method defined by them. Thus recursively copying the whole tree of objects.
+            return result
+            
 
 
 class SequentialProperty(Property):
@@ -317,13 +297,11 @@ class SequentialProperty(Property):
         self
             returns self
         '''
-
-        provided_key = kwargs.get("_update_key", False) or deeptrack.features._SESSION_STRUCT["update_key"]
-
-        if self.last_update_id == provided_key:
+        my_id = id(self)
+        if deeptrack.UPDATE_LOCK.locked() and my_id in deeptrack.UPDATE_MEMO["memoization"]:
             return self
         
-        self.last_update_id = provided_key
+        kwargs.update(deeptrack.UPDATE_MEMO["user_arguments"])
 
         new_current_value = []
 
@@ -346,10 +324,12 @@ class SequentialProperty(Property):
             new_current_value.append(next_value)
 
         self.current_value = new_current_value
-
+        deeptrack.UPDATE_MEMO["memoization"][my_id] = new_current_value
         return self
 
-class PropertyDict(dict):
+import collections
+
+class PropertyDict(collections.OrderedDict):
     ''' Dictionary with Property elements
 
     A dictionary of properties. It provides utility functions to update, 
@@ -362,8 +342,14 @@ class PropertyDict(dict):
 
     '''
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for k, v in self.items():
+            if hasattr(v, 'parent') and not v.parent:
+                v.parent = self
 
-    def current_value_dict(self, is_resolving=False, **kwargs) -> dict:
+
+    def current_value_dict(self, **kwargs) -> dict:
         ''' Retrieves the current value of all properties as a dictionary
 
         Returns
@@ -381,8 +367,6 @@ class PropertyDict(dict):
             # If the property is sequential, retrieve the value
             # of the current timestep
             if isinstance(property, SequentialProperty):
-                
-
                 sequence_step = kwargs.get("sequence_step", None)
                 if not sequence_step is None:
                     property_value = property_value[sequence_step]
@@ -404,19 +388,36 @@ class PropertyDict(dict):
             Returns itself
 
         '''
-        property_arguments = dict(self)
+        property_arguments = collections.OrderedDict(self)
         property_arguments.update(kwargs)
         for key, prop in self.items():
-
             if isinstance(property_arguments[key], Property):
                 prop.update(**property_arguments)
             else:
                 prop.current_value = kwargs[key]
-                provided_key = kwargs.get("_update_key", False) or deeptrack.features._SESSION_STRUCT["update_key"]
-                prop.last_update_id = provided_key
 
         return self
 
+    def update_item(self, item: Property, **kwargs):
+        ''' Updates a single property.
+
+        Parameters
+        ----------
+        item: Property
+            The item to update.
+
+        Returns
+        -------
+        self
+        '''
+        property_arguments = collections.OrderedDict(self)
+        property_arguments.update(kwargs)
+        for key, prop in self.items():
+            if prop == item:
+                prop.update(**property_arguments)
+                break
+
+        return self
 
     def sample(self, **kwargs) -> dict:
         ''' Samples all properties
@@ -435,16 +436,6 @@ class PropertyDict(dict):
 
         return sample_dict
 
-    def reset(self):
-        ''' Clear the internal state of each property in the dict
-
-        Only useful in rare instances where properties are used without them being
-        attached to any feature.
-
-        Returns
-        -------
-        self
-        '''
-        for prop in self.values(): 
-            prop.reset()
-        return self
+    def __setitem__(self, key, item):
+        super().__setitem__(key, item)
+        item.parent = self
