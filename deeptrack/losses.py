@@ -26,7 +26,7 @@ nd_mean_absolute_percentage_error
     Mean absolute percentage error with flattened inputs.
 '''
 
-import keras
+import tensorflow.keras as keras
 
 losses = keras.losses
 K = keras.backend

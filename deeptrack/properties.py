@@ -74,6 +74,7 @@ class Property:
     @current_value.setter
     def current_value(self, updated_current_value):
         self._current_value = updated_current_value
+        deeptrack.UPDATE_MEMO["memoization"][id(self)] = self._current_value
 
     @current_value.getter
     def current_value(self):
@@ -84,7 +85,7 @@ class Property:
 
             # I have a bounty of 5 beers for anyone who can tell me why this is necessary.
             # 10 if you get rid of it.
-            self._current_value = deeptrack.UPDATE_MEMO["memoization"][id(self)]
+            self.current_value = deeptrack.UPDATE_MEMO["memoization"][id(self)]
             
         return self._current_value
 
@@ -118,9 +119,9 @@ class Property:
             kwargs.update(self.parent)
 
         kwargs.update(deeptrack.UPDATE_MEMO["user_arguments"])
-        self._current_value = self.sample(self.sampling_rule, **kwargs)
+        self.current_value = self.sample(self.sampling_rule, **kwargs)
 
-        deeptrack.UPDATE_MEMO["memoization"][my_id] = self._current_value
+        
 
         return self
 
@@ -390,11 +391,12 @@ class PropertyDict(collections.OrderedDict):
         '''
         property_arguments = collections.OrderedDict(self)
         property_arguments.update(kwargs)
+        property_arguments.update(deeptrack.UPDATE_MEMO["user_arguments"])
         for key, prop in self.items():
             if isinstance(property_arguments[key], Property):
                 prop.update(**property_arguments)
-            else:
-                prop.current_value = kwargs[key]
+            elif id(prop) not in deeptrack.UPDATE_MEMO["memoization"]:
+                prop.current_value = property_arguments[key]
 
         return self
 
@@ -435,7 +437,3 @@ class PropertyDict(collections.OrderedDict):
             sample_dict[key] = property.sample(**kwargs)
 
         return sample_dict
-
-    def __setitem__(self, key, item):
-        super().__setitem__(key, item)
-        item.parent = self

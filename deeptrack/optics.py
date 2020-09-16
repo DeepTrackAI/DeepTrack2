@@ -153,7 +153,7 @@ class Optics(Feature):
             output_region=output_region,
             upscaled_output_region=lambda output_region, upscale: [i * upscale for i in output_region],
             pupil=pupil,
-            voxel_size=get_voxel_size,
+            voxel_size=lambda resolution, magnification, upscale: get_voxel_size(resolution, magnification, upscale),
             **kwargs
         )
 

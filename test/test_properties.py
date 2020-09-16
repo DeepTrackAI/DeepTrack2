@@ -4,6 +4,7 @@ sys.path.append("..") # Adds the module to path
 import unittest
 
 import deeptrack.properties as properties
+import deeptrack as dt
 
 import numpy as np
 
@@ -14,24 +15,22 @@ class TestProperties(unittest.TestCase):
     def test_Property_constant(self):
         P = properties.Property(1)
         self.assertEqual(P.current_value, 1)
-        P.reset().update()
+        P.update()
         self.assertEqual(P.current_value, 1)
         
         
     def test_Property_iter(self):
         P = properties.Property(iter([1, 2, 3, 4, 5]))
         self.assertEqual(P.current_value, 1)
-        P.update() # it should not update
-        self.assertEqual(P.current_value, 1)
         for i in range(1, 5):
             self.assertEqual(P.current_value, i)
-            P.reset().update()
+            P.update()
     
     
     def test_Property_random(self):
         P = properties.Property(lambda: np.random.rand())
         for _ in range(100):
-            P.reset().update()
+            P.update()
             self.assertTrue(P.current_value >= 0 and P.current_value <= 1)
     
 
@@ -67,8 +66,14 @@ class TestProperties(unittest.TestCase):
         
         P2.update(sequence_length=5, step_length=P1)
         self.assertEqual(P2.current_value, [3, 6, 10, 15, 21])
-        
     
+    def test_UpdateFromParent(self):
+        optics = dt.Fluorescence()
+        sample = dt.DummyFeature(voxel_size=optics.voxel_size)
+        together = optics(sample)
+        together.update()
+        self.assertEqual(tuple(optics.voxel_size.current_value), tuple(sample.voxel_size.current_value))
+
     def test_PropertyDict(self):
         property_dict = properties.PropertyDict(
             P1=properties.Property(1),
@@ -84,7 +89,7 @@ class TestProperties(unittest.TestCase):
             self.assertEqual(current_value_dict['P1'], 1)
             self.assertEqual(current_value_dict['P2'], np.min((i, 5)))
             self.assertTrue(current_value_dict['P3'] >= 0 and current_value_dict['P3'] <= 1)            
-            property_dict.reset().update()
+            property_dict.update()
 
 
     

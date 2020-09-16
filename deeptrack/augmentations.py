@@ -25,7 +25,7 @@ import numpy as np
 from typing import Callable
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
-
+import warnings
 
 class Augmentation(Feature):
     '''Base abstract augmentation class.
@@ -47,8 +47,8 @@ class Augmentation(Feature):
 
     Parameters
     ----------
-    feature : Feature, optional
-        The parent feature. If None, the 
+    feature : Feature, optional, deprecated
+        DEPRECATED. The parent feature. If not passed, it acts like any other feature.
     load_size : int
         Number of results to resolve from the parent feature.
     updates_per_reload : int
@@ -67,15 +67,22 @@ class Augmentation(Feature):
                  updates_per_reload: int = 1, 
                  update_properties: Callable or None = None, 
                  **kwargs):
+
+        if feature is not None:
+            warnings.warn(
+                "Calling an augmentation with a feature is deprecated in a future release. Instead, just use the + operator.",
+                DeprecationWarning
+            )
+
+        if load_size is not 1:
+            warnings.warn(
+                "Using an augmentation with a load size other than one is no longer supported",
+                DeprecationWarning
+            )
+
+        
         self.feature = feature 
 
-        def get_preloaded_results(load_size, number_of_updates):
-            # Dummy property that loads results from the parent when
-            # number of properties=0
-            if number_of_updates == 0 and self.feature:
-                self.preloaded_results = self._load(load_size)
-
-            return None
         
         def get_number_of_updates(updates_per_reload=1):
             # Updates the number of updates. The very first update is not counted.
@@ -83,25 +90,39 @@ class Augmentation(Feature):
                 return 0
             return (self.properties["number_of_updates"].current_value + 1) % updates_per_reload
 
+        def tally():
+            idx = 0
+            while True:
+                yield idx
+                idx +=1
+
         if not update_properties:
             update_properties = self.update_properties
         
         super().__init__(
             load_size=load_size, 
+            update_tally=tally(),
             updates_per_reload=updates_per_reload, 
             index=kwargs.pop("index", False) or (lambda load_size: np.random.randint(load_size)), 
             number_of_updates=get_number_of_updates,
-            preloaded_results=kwargs.pop("preloaded_results", False) or get_preloaded_results,
             update_properties=lambda: update_properties,
             **kwargs)
 
 
-    def _process_and_get(self, *args, update_properties=None, index=0, **kwargs):
+    def _process_and_get(self, *args, update_properties=None, **kwargs):
+        
         # Loads a result from storage
-        if self.feature:
-            image_list_of_lists = self.preloaded_results[index]
-        else:
+        if self.feature and (not hasattr(self, 'cache') or kwargs["update_tally"] - self.last_update >= kwargs["updates_per_reload"]):
+            if isinstance(self.feature, list):
+                self.cache = [feature.resolve() for feature in self.feature]
+            else:
+                self.cache = self.feature.resolve()
+            self.last_update=kwargs["update_tally"]
+
+        if not self.feature:
             image_list_of_lists = args[0]
+        else:
+            image_list_of_lists = self.cache
 
         if not isinstance(image_list_of_lists, list):
             image_list_of_lists = [image_list_of_lists]
@@ -136,21 +157,14 @@ class Augmentation(Feature):
                     update_properties(image, **kwargs)
 
         return new_list_of_lists
-    
 
-    def _load(self, load_size):
-        # Resolves parent and stores result
-        preloaded_results = []
-        for _ in range(load_size):
-            if isinstance(self.feature, list):  
-                [_feature.update() for _feature in self.feature]
-                list_of_results = [_feature.resolve(_augmentation_index=index) for index, _feature in enumerate(self.feature)]
-                preloaded_results.append(list_of_results)
-            else:
-                self.feature.update()
-                result = self.feature.resolve(_augmentation_index=0)
-                preloaded_results.append(result)
-        return preloaded_results
+    def _update(self, **kwargs):
+        super()._update(**kwargs)
+        if self.feature and not self.number_of_updates.current_value:
+            if isinstance(self.feature, Feature):
+                self.feature._update(**kwargs)
+            elif isinstance(self.feature, list):
+                [feature._update(**kwargs) for feature in self.feature]
 
     def update_properties(*args, **kwargs):
         pass
