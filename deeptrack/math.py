@@ -12,6 +12,81 @@ from deeptrack.features import Feature
 from deeptrack.image import Image
 import numpy as np
 
+class Add(Feature):
+    '''Adds a value to the input.
+
+    Parameters
+    ----------
+    value : number
+        The value to add
+    '''
+
+    def __init__(self, value=0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image + value
+
+class Subtract(Feature):
+    '''Subtracts a value from the input.
+
+    Parameters
+    ----------
+    value : number
+        The value to subtract
+    '''
+
+    def __init__(self, value=0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image - value
+
+class Multiply(Feature):
+    '''Multiplies the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to multiply with.
+    '''
+
+    def __init__(self, value=0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image * value
+
+class Divide(Feature):
+    '''Divides the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to divide with.
+    '''
+
+    def __init__(self, value=0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image / value
+
+class Power(Feature):
+    '''Raises the input to a power.
+
+    Parameters
+    ----------
+    value : number
+        The power to raise with.
+    '''
+
+    def __init__(self, value=0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image ** value
+
 class Average(Feature):
     ''' Average of input images
 
