@@ -532,7 +532,7 @@ from deeptrack.losses import nd_mean_absolute_error
 from deeptrack.features import Feature
 from deeptrack.models import Model, KerasModel
 
-from keras import models, layers, optimizers
+from tensorflow.keras import models, layers, optimizers
 import numpy as np
 
 class cgan(Model):
@@ -635,7 +635,7 @@ class cgan(Model):
 
             print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f, %f, %f]" % (epoch,
                                                                         d_loss[0] / steps,
-                                                                        100*d_loss[1] / steps,
+                                                                        100 * d_loss[1] / steps,
                                                                         g_loss[0] / steps,
                                                                         g_loss[1] / steps,
                                                                         g_loss[2] / steps))
