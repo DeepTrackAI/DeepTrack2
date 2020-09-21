@@ -11,7 +11,7 @@ ContinuousGenerator
 import numpy as np
 
 from typing import List
-import keras
+import tensorflow.keras as keras
 from deeptrack.features import Feature
 from deeptrack.image import Image
 import threading
@@ -224,6 +224,8 @@ class ContinuousGenerator(keras.utils.Sequence):
                 if self.verbose > 0:
                     print("Generating {0} / {1} samples before starting training".format(len(self.data), self.min_data_size), end="\r")
                 time.sleep(0.5)
+            
+            print("Generating {0} / {1} samples before starting training".format(len(self.data), self.min_data_size))
 
             self.on_epoch_end()
         except Exception as e:
@@ -263,13 +265,13 @@ class ContinuousGenerator(keras.utils.Sequence):
 
         subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
         outputs = [np.array(a) for a in list(zip(*subset))]
-        outputs = (outputs[0], outputs[1:])
+        outputs = (outputs[0], *outputs[1:])
         return outputs
 
 
 
     def __len__(self):
-        return int(np.ceil(len(self.current_data) / self._batch_size))
+        return int((len(self.current_data) // self._batch_size))
 
 
 

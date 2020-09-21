@@ -169,6 +169,42 @@ class TestFeatures(unittest.TestCase):
         self.assertListEqual(output_image.get_property("value_to_add", get_one=False), [10])
         self.assertEqual(output_image.get_property("value_to_add", get_one=True), 10)
 
+    def test_nested_Duplicate(self):
+        for _ in range(10):
+            A = features.DummyFeature(
+                a=lambda: np.random.randint(100) * 1000,
+            )
+            B = features.DummyFeature(
+                a=A.a,
+                b=lambda a: a + np.random.randint(10) * 100,
+            )
+            C = features.DummyFeature(
+                b=B.b,
+                c=lambda b: b + np.random.randint(10) * 10,
+            )
+            D = features.DummyFeature(
+                c=C.c,
+                d=lambda c: c + np.random.randint(10) * 1,
+            )
+
+            for _ in range(10):
+                AB = (A + (B + (C + D) ** 2) ** 2 ) ** 6
+                output = AB.update().resolve(0)
+                al = output.get_property("a", get_one=False)[::3]
+                bl = output.get_property("b", get_one=False)[::3]
+                cl = output.get_property("c", get_one=False)[::2]
+                dl = output.get_property("d", get_one=False)[::1]
+
+                self.assertFalse(all(a == al[0] for a in al))
+                self.assertFalse(all(b == bl[0] for b in bl))
+                self.assertFalse(all(c == cl[0] for c in cl))
+                self.assertFalse(all(d == dl[0] for d in dl))
+                for ai, a in enumerate(al):
+                    for bi, b in list(enumerate(bl))[ai*2:(ai+1)*2]:
+                        self.assertTrue(0 <= b - a < 1000)
+                        for ci, c in list(enumerate(cl))[bi*2:(bi+1)*2]:
+                            self.assertTrue(0 <= c - b < 100)
+                            self.assertTrue(0 <= dl[ci] - c < 10)
 
 
 if __name__ == '__main__':

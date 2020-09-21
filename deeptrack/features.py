@@ -375,15 +375,24 @@ class Feature:
 
     def __add__(self, other: "Feature") -> "Feature":
         # Overrides add operator
-        
-        return Branch(self, other)
+        if isinstance(other, list) and all(isinstance(f) for f in other):
+            other = Combine(features=other)
+
+        if isinstance(other, Feature):
+            return Branch(self, other)
 
     def __radd__(self, other) -> "Feature":
         # Add when left hand is not a feature
         # If left hand is falesly, return self
         # This allows operations such as sum(list_of_features)
+        if isinstance(other, list) and all(isinstance(f) for f in other):
+            other = Combine(features=other)
+
         
-        if not other:
+
+        if isinstance(other, Feature):
+            return Branch(other, self)
+        elif not other:
             return self
         else:
             return NotImplemented
@@ -391,6 +400,8 @@ class Feature:
 
     def __mul__(self, other: float) -> "Feature":
         # Introduces a probablity of a feature to be resolved.
+        if isinstance(other, list) and all(isinstance(f) for f in other):
+            other = Combine(features=other)
         
         return Probability(self, other)
 
@@ -399,6 +410,8 @@ class Feature:
 
     def __pow__(self, other) -> "Feature":
         # Duplicate the feature to resolve more items
+        if isinstance(other, list) and all(isinstance(f) for f in other):
+            other = Combine(features=other)
         
         return Duplicate(self, other)
 
@@ -533,6 +546,24 @@ class Duplicate(StructuralFeature):
 
         
 
+class Combine(StructuralFeature):
+    ''' Combines multiple features into a single feature.
+
+    Resolves each feature in `features` and returns them as a list of features.
+    
+    Parameters
+    ----------
+    features : list of features
+        features to combine
+    
+    '''
+
+    __distribute__ = False
+    def __init__(self, features=[], **kwargs):
+        super().__init__(features=features, **kwargs)
+
+    def get(self, image_list, features, **kwargs):
+        return [feature.resolve(image_list, **kwargs) for feature in features]
 
 class ConditionalSetProperty(StructuralFeature):
     ''' Conditionally overrides the properties of child features
@@ -587,23 +618,23 @@ class ConditionalSetFeature(StructuralFeature):
     '''
     __distributed__ = False
     def __init__(self, on_false: Feature = None, on_true: Feature = None,  condition="is_label", **kwargs):
-        self.on_true = on_true
-        self.on_false = on_false
-        super().__init__(condition=condition, **kwargs)
+
+        super().__init__(on_true=on_true, on_false=on_false, condition=condition, **kwargs)
     
 
-    def get(self, image, *, condition, **kwargs):
+    def get(self, image, *, condition, on_true, on_false, **kwargs):
 
         if kwargs.get(condition, False):
-            if self.on_true:
-                return self.on_true.resolve(image, **kwargs)
+            if on_true:
+                return on_true.resolve(image, **kwargs)
             else:
                 return image
         else:
-            if self.on_false:
-                return self.on_false.resolve(image, **kwargs)
+            if on_false:
+                return on_false.resolve(image, **kwargs)
             else:
                 return image
+
 
 class Lambda(Feature):
     ''' Calls a custom function on each image in the input.
@@ -754,14 +785,14 @@ class LoadImage(Feature):
         try:
             return np.load(path, **load_options)
         except (IOError, ValueError):
-            from skimage import io
             try:
+                from skimage import io
                 return io.imread(path)
-            except IOError:
-                import PIL.Image
+            except (IOError, ImportError, AttributeError):
                 try:
+                    import PIL.Image
                     return np.array(PIL.Image.open(path, **load_options))
-                except IOError:
+                except (IOError, ImportError):
                     import cv2
                     
                     image = np.array(cv2.imread(path, **load_options))

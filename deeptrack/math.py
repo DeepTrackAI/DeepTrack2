@@ -12,6 +12,82 @@ from deeptrack.features import Feature
 from deeptrack.image import Image
 import numpy as np
 
+
+class Add(Feature):
+    '''Adds a value to the input.
+
+    Parameters
+    ----------
+    value : number
+        The value to add
+    '''
+
+    def __init__(self, value=0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image + value
+
+class Subtract(Feature):
+    '''Subtracts a value from the input.
+
+    Parameters
+    ----------
+    value : number
+        The value to subtract
+    '''
+
+    def __init__(self, value=0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image - value
+
+class Multiply(Feature):
+    '''Multiplies the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to multiply with.
+    '''
+
+    def __init__(self, value=0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image * value
+
+class Divide(Feature):
+    '''Divides the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to divide with.
+    '''
+
+    def __init__(self, value=0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image / value
+
+class Power(Feature):
+    '''Raises the input to a power.
+
+    Parameters
+    ----------
+    value : number
+        The power to raise with.
+    '''
+
+    def __init__(self, value=0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image ** value
+
 class Average(Feature):
     ''' Average of input images
 
@@ -298,6 +374,7 @@ class BilateralBlur(ImgAug):
 		super().__init__(d=d, sigma_color=sigma_color, sigma_space=sigma_space, **kwargs)
 
 
+
 class GaussianBlur(ImgAug):
 	'''Augmenter to blur images using gaussian kernels.
 
@@ -355,6 +432,7 @@ class GaussianBlur(ImgAug):
 	def __init__(self, sigma=(0.0, 3.0), **kwargs):
 		self.augmenter=iaa.GaussianBlur
 		super().__init__(sigma=sigma, **kwargs)
+
 
 
 class MeanShiftBlur(ImgAug):
@@ -431,6 +509,7 @@ class MeanShiftBlur(ImgAug):
 		super().__init__(spatial_radius=spatial_radius, color_radius=color_radius, **kwargs)
 
 
+
 class MedianBlur(ImgAug):
 	'''Blur an image by computing median values over neighbourhoods.
 
@@ -505,6 +584,7 @@ class MedianBlur(ImgAug):
 	def __init__(self, k=(1, 7), **kwargs):
 		self.augmenter=iaa.MedianBlur
 		super().__init__(k=k, **kwargs)
+
 
 
 class MotionBlur(ImgAug):

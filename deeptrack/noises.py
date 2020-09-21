@@ -4,7 +4,7 @@ Classes
 -------
 Noise
     Base abstract noise class.
-Offset, Add, Background
+Offset, Background
     Adds a constant value to an image.
 Gaussian
     Adds IID Gaussian noise to an image.
@@ -25,7 +25,7 @@ class Noise(Feature):
 
 
 
-class Add(Noise):
+class Background(Noise):
     ''' Adds a constant value to an image
     Parameters
     ----------
@@ -37,9 +37,9 @@ class Add(Noise):
 
     def get(self, image, offset, **kwargs):
         return image + offset
+        
 # ALIASES
-Offset = Add
-Background = Add
+Offset = Background
 
 
 class Gaussian(Noise):

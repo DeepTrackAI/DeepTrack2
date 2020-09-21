@@ -7,9 +7,8 @@ import deeptrack as dt
 
 # (dataset, folder name, model)
 _ID = {
-    'CellCounting': ("18Afk9Fwe4y3FVLPYd7fr4sfNIW59KEGR", "CellCounting"),
+    'CellCounting': ("18Afk9Fwe4y3FVLPYd7fr4sfNIW59KEGR", "CellCounting", "1SCfYpesI2KMasiZalIJ7lgGV3By8qe9v"),
     'MNIST': ('1UePQAYNp-ja9userMwTprIwGWjwCu3Tf', 'MNIST', '1w7uat5Vshve9OSaqvGo4EtLiqixHk2yy'),
-    'Malaria': ('1sO-HFASCo6hrz9Z0gPiHAGzlcY66NPhU', 'malaria'),
     'QuantumDots': ('1naaoxIaAU1F_rBaI-I1pB1K4Sp6pq_Jv', 'QuantumDots', '131H6xdyC5gyTMQcnzb1ozztBH2nelWLg'),
     'ParticleTracking': ('1eA9F_GjJbErkJu2TizE_CHjpqD6WePqy', 'ParticleTracking', '17sHytcOEmQaxkLJ7mPwX7KRKijOSEOAL'),
     'ParticleSizing': ('1FaygrzmEDnXjVe_W3yVfqNTM0Ir5jFkR', 'ParticleSizing', '1k3wf9c6BZd6HhdpOaOFd8p6m_c9FXdrk')
