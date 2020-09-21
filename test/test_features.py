@@ -201,10 +201,10 @@ class TestFeatures(unittest.TestCase):
                 self.assertFalse(all(d == dl[0] for d in dl))
                 for ai, a in enumerate(al):
                     for bi, b in list(enumerate(bl))[ai*2:(ai+1)*2]:
-                        self.assertTrue(0 <= b - a < 1000)
+                        self.assertIn(b - a, range(0, 1000))
                         for ci, c in list(enumerate(cl))[bi*2:(bi+1)*2]:
-                            self.assertTrue(0 <= c - b < 100)
-                            self.assertTrue(0 <= dl[ci] - c < 10)
+                            self.assertIn(c - b, range(0, 100))
+                            self.assertIn(dl[ci] - c,  range(0, 10))
 
 
 if __name__ == '__main__':

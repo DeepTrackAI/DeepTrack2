@@ -18,16 +18,7 @@ class TestNoises(unittest.TestCase):
         output_image = noise.resolve(input_image)
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (256, 256)) 
-        self.assertTrue(np.all(np.array(output_image) == 0.5))       
-
-
-    def test_Add(self):
-        noise = noises.Add(offset=0.5)
-        input_image = Image(np.zeros((256, 256)))
-        output_image = noise.resolve(input_image)
-        self.assertIsInstance(output_image, Image)
-        self.assertEqual(output_image.shape, (256, 256))        
-        self.assertTrue(np.all(np.array(output_image) == 0.5))       
+        self.assertTrue(np.all(np.array(output_image) == 0.5))
 
 
     def test_Background(self):
