@@ -12,6 +12,7 @@ from deeptrack.features import Feature
 from deeptrack.image import Image
 import numpy as np
 
+
 class Add(Feature):
     '''Adds a value to the input.
 
@@ -373,6 +374,7 @@ class BilateralBlur(ImgAug):
 		super().__init__(d=d, sigma_color=sigma_color, sigma_space=sigma_space, **kwargs)
 
 
+
 class GaussianBlur(ImgAug):
 	'''Augmenter to blur images using gaussian kernels.
 
@@ -430,6 +432,7 @@ class GaussianBlur(ImgAug):
 	def __init__(self, sigma=(0.0, 3.0), **kwargs):
 		self.augmenter=iaa.GaussianBlur
 		super().__init__(sigma=sigma, **kwargs)
+
 
 
 class MeanShiftBlur(ImgAug):
@@ -506,6 +509,7 @@ class MeanShiftBlur(ImgAug):
 		super().__init__(spatial_radius=spatial_radius, color_radius=color_radius, **kwargs)
 
 
+
 class MedianBlur(ImgAug):
 	'''Blur an image by computing median values over neighbourhoods.
 
@@ -580,6 +584,7 @@ class MedianBlur(ImgAug):
 	def __init__(self, k=(1, 7), **kwargs):
 		self.augmenter=iaa.MedianBlur
 		super().__init__(k=k, **kwargs)
+
 
 
 class MotionBlur(ImgAug):

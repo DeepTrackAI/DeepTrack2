@@ -76,6 +76,25 @@ class KerasModel(Model):
         return self.model.predict(image)
 
 
+def LoadModel(path, compile_from_file=False, custom_objects={}, **kwargs):
+    '''Loads a keras model from disk.
+
+    Parameters
+    ----------
+    path : str
+        Path to the keras model to load.
+    compile_from_file : bool
+        Whether to compile the model using the loss and optimizer in the saved model. If false,
+        it will be compiled from the arguments in kwargs (loss, optimizer and metrics).
+    custom_objects : dict
+        Dict of objects to use when loading the model. Needed to load a model with a custom loss,
+        optimizer or metric.
+    '''
+    model = models.load_model(path, compile=compile_from_file, custom_objects=custom_objects)
+    return KerasModel(model, compile=not compile_from_file, **kwargs)
+    
+
+
 
 def FullyConnected(input_shape,
                  dense_layers_dimensions=(32, 32),

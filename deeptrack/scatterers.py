@@ -266,7 +266,7 @@ class Sphere(Scatterer):
         camera plane.
     z : float
         The position in the direction normal to the
-        camera plane. Used if `position` is of length 2.
+        camera plane. Used if `position` is of length 2.    
     value : float
         A default value of the characteristic of the particle. Used by
         optics unless a more direct property is set: (eg. `refractive_index`
