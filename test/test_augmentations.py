@@ -1,5 +1,6 @@
 import sys
-sys.path.append("..") # Adds the module to path
+
+sys.path.append("..")  # Adds the module to path
 
 import unittest
 
@@ -9,18 +10,13 @@ from deeptrack.features import Feature
 import numpy as np
 
 
-
 class TestAugmentations(unittest.TestCase):
-    
     class DummyFeature(Feature):
         __distributed__ = False
-        def get(self, image, **kwargs):
-            output = np.array([
-                [[1], [2]], 
-                [[0], [0]]
-                ])
-            return output
 
+        def get(self, image, **kwargs):
+            output = np.array([[[1], [2]], [[0], [0]]])
+            return output
 
     def test_FlipLR(self):
         feature = self.DummyFeature()
@@ -30,8 +26,7 @@ class TestAugmentations(unittest.TestCase):
         augmented_feature.update()
         output_2 = augmented_feature.resolve()
         self.assertTrue(np.all(output_1 == np.array([[[1], [2]], [[0], [0]]])))
-        self.assertTrue(np.all(output_2 == np.array([[[2], [1]], [[0], [0]]])))        
-
+        self.assertTrue(np.all(output_2 == np.array([[[2], [1]], [[0], [0]]])))
 
     def test_FlipUD(self):
         feature = self.DummyFeature()
@@ -41,8 +36,7 @@ class TestAugmentations(unittest.TestCase):
         augmented_feature.update()
         output_2 = augmented_feature.resolve()
         self.assertTrue(np.all(output_1 == np.array([[[1], [2]], [[0], [0]]])))
-        self.assertTrue(np.all(output_2 == np.array([[[0], [0]], [[1], [2]]])))        
-
+        self.assertTrue(np.all(output_2 == np.array([[[0], [0]], [[1], [2]]])))
 
     def test_FlipDiagonal(self):
         feature = self.DummyFeature()
@@ -52,9 +46,8 @@ class TestAugmentations(unittest.TestCase):
         augmented_feature.update()
         output_2 = augmented_feature.resolve()
         self.assertTrue(np.all(output_1 == np.array([[[1], [2]], [[0], [0]]])))
-        self.assertTrue(np.all(output_2 == np.array([[[1], [0]], [[2], [0]]])))        
+        self.assertTrue(np.all(output_2 == np.array([[[1], [0]], [[2], [0]]])))
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

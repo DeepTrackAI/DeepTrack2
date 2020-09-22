@@ -1,14 +1,13 @@
 import sys
-sys.path.append("..") # Adds the module to path
+
+sys.path.append("..")  # Adds the module to path
 
 import unittest
 
 import deeptrack.models as models
 
 
-
 class TestModels(unittest.TestCase):
-
     def test_Convolutions(self):
         model = models.Convolutional(
             input_shape=(64, 64, 1),
@@ -16,10 +15,9 @@ class TestModels(unittest.TestCase):
             dense_layers_dimensions=(32, 32),
             number_of_outputs=3,
             output_activation="sigmoid",
-            loss="mse"
+            loss="mse",
         )
         self.assertIsInstance(model, models.KerasModel)
-
 
     def test_UNet(self):
         model = models.UNet(
@@ -30,10 +28,9 @@ class TestModels(unittest.TestCase):
             steps_per_pooling=1,
             number_of_outputs=1,
             output_activation="sigmoid",
-            loss="mse"
+            loss="mse",
         )
         self.assertIsInstance(model, models.KerasModel)
-
 
     def test_RNN(self):
         model = models.rnn(
@@ -44,11 +41,10 @@ class TestModels(unittest.TestCase):
             steps_per_pooling=1,
             number_of_outputs=1,
             output_activation="sigmoid",
-            loss="mse"
+            loss="mse",
         )
         self.assertIsInstance(model, models.KerasModel)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

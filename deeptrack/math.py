@@ -1,4 +1,4 @@
-''' Mathematical oprations and structures
+""" Mathematical oprations and structures
 
 Classses
 --------
@@ -6,7 +6,7 @@ Clip
     Clip the input within a minimum and a maximum value.
 NormalizeMinMax
     Min-max image normalization.
-'''
+"""
 
 from deeptrack.features import Feature
 from deeptrack.image import Image
@@ -14,13 +14,13 @@ import numpy as np
 
 
 class Add(Feature):
-    '''Adds a value to the input.
+    """Adds a value to the input.
 
     Parameters
     ----------
     value : number
         The value to add
-    '''
+    """
 
     def __init__(self, value=0, **kwargs):
         super().__init__(value=value, **kwargs)
@@ -28,14 +28,15 @@ class Add(Feature):
     def get(self, image, value, **kwargs):
         return image + value
 
+
 class Subtract(Feature):
-    '''Subtracts a value from the input.
+    """Subtracts a value from the input.
 
     Parameters
     ----------
     value : number
         The value to subtract
-    '''
+    """
 
     def __init__(self, value=0, **kwargs):
         super().__init__(value=value, **kwargs)
@@ -43,14 +44,15 @@ class Subtract(Feature):
     def get(self, image, value, **kwargs):
         return image - value
 
+
 class Multiply(Feature):
-    '''Multiplies the input with a value.
+    """Multiplies the input with a value.
 
     Parameters
     ----------
     value : number
         The value to multiply with.
-    '''
+    """
 
     def __init__(self, value=0, **kwargs):
         super().__init__(value=value, **kwargs)
@@ -58,14 +60,15 @@ class Multiply(Feature):
     def get(self, image, value, **kwargs):
         return image * value
 
+
 class Divide(Feature):
-    '''Divides the input with a value.
+    """Divides the input with a value.
 
     Parameters
     ----------
     value : number
         The value to divide with.
-    '''
+    """
 
     def __init__(self, value=0, **kwargs):
         super().__init__(value=value, **kwargs)
@@ -73,14 +76,15 @@ class Divide(Feature):
     def get(self, image, value, **kwargs):
         return image / value
 
+
 class Power(Feature):
-    '''Raises the input to a power.
+    """Raises the input to a power.
 
     Parameters
     ----------
     value : number
         The power to raise with.
-    '''
+    """
 
     def __init__(self, value=0, **kwargs):
         super().__init__(value=value, **kwargs)
@@ -88,8 +92,9 @@ class Power(Feature):
     def get(self, image, value, **kwargs):
         return image ** value
 
+
 class Average(Feature):
-    ''' Average of input images
+    """Average of input images
 
     If `features` is not None, it instead resolves all features
     in the list and averages the result.
@@ -99,13 +104,13 @@ class Average(Feature):
     axis : int or tuple of ints
         Axis along which to average
     features : list of features, optional
-    '''
-    
+    """
+
     __distributed__ = False
 
     def __init__(self, features=None, axis=0, **kwargs):
         super().__init__(axis=axis, features=features, **kwargs)
-    
+
     def get(self, images, axis, features, **kwargs):
         if features is not None:
             images = [feature.resolve() for feature in features]
@@ -113,11 +118,12 @@ class Average(Feature):
 
         for image in images:
             result.merge_properties_from(image)
-        
+
         return result
 
+
 class Clip(Feature):
-    '''Clip the input within a minimum and a maximum value.
+    """Clip the input within a minimum and a maximum value.
 
     Parameters
     ----------
@@ -125,22 +131,19 @@ class Clip(Feature):
         Clip the input to be larger than this value.
     max : float
         Clip the input to be smaller than this value.
-    '''
+    """
 
     def __init__(self, min=-np.inf, max=+np.inf, **kwargs):
         super().__init__(min=min, max=max, **kwargs)
 
-
-
     def get(self, image, min=None, max=None, **kwargs):
         np.clip(image, min, max, image)
-        return image 
+        return image
 
 
-    
 class NormalizeMinMax(Feature):
-    '''Image normalization.
-    
+    """Image normalization.
+
     Transforms the input to be between a minimum and a maximum value using a linear transformation.
 
     Parameters
@@ -149,16 +152,14 @@ class NormalizeMinMax(Feature):
         The minimum of the transformation.
     max : float
         The maximum of the transformation.
-    '''
+    """
 
     def __init__(self, min=0, max=1, **kwargs):
         super().__init__(min=min, max=max, **kwargs)
 
-
-
     def get(self, image, min, max, **kwargs):
         image = image / (np.max(image) - np.min(image)) * (max - min)
-        image = image - np.min(image) + min 
+        image = image - np.min(image) + min
         image[np.isnan(image)] = 0
         return image
 
@@ -170,8 +171,9 @@ import imgaug.augmenters as iaa
 # Please see https://github.com/aleju/imgaug/blob/master/imgaug/augmenters/blur.py
 # for source implementation
 
+
 class AverageBlur(ImgAug):
-	'''Blur an image by computing simple means over neighbourhoods.
+    """Blur an image by computing simple means over neighbourhoods.
 
     The padding behaviour around the image borders is cv2's
     ``BORDER_REFLECT_101``.
@@ -259,14 +261,15 @@ class AverageBlur(ImgAug):
     (per image) uniformly from the interval ``[5..7]`` and which's width is
     sampled (per image) uniformly from ``[1..3]``.
 
-    '''
-	def __init__(self, k=(1, 7), **kwargs):
-		self.augmenter=iaa.AverageBlur
-		super().__init__(k=k, **kwargs)
+    """
+
+    def __init__(self, k=(1, 7), **kwargs):
+        self.augmenter = iaa.AverageBlur
+        super().__init__(k=k, **kwargs)
 
 
 class BilateralBlur(ImgAug):
-	'''Blur/Denoise an image using a bilateral filter.
+    """Blur/Denoise an image using a bilateral filter.
 
     Bilateral filters blur homogenous and textured areas, while trying to
     preserve edges.
@@ -368,15 +371,19 @@ class BilateralBlur(ImgAug):
     uniformly from the interval ``[3, 10]`` and wide ranges for `sigma_color`
     and `sigma_space`.
 
-    '''
-	def __init__(self, d=(1, 9), sigma_color=(10, 250), sigma_space=(10, 250), **kwargs):
-		self.augmenter=iaa.BilateralBlur
-		super().__init__(d=d, sigma_color=sigma_color, sigma_space=sigma_space, **kwargs)
+    """
 
+    def __init__(
+        self, d=(1, 9), sigma_color=(10, 250), sigma_space=(10, 250), **kwargs
+    ):
+        self.augmenter = iaa.BilateralBlur
+        super().__init__(
+            d=d, sigma_color=sigma_color, sigma_space=sigma_space, **kwargs
+        )
 
 
 class GaussianBlur(ImgAug):
-	'''Augmenter to blur images using gaussian kernels.
+    """Augmenter to blur images using gaussian kernels.
 
     **Supported dtypes**:
 
@@ -428,15 +435,15 @@ class GaussianBlur(ImgAug):
     Blur images using a gaussian kernel with a random standard deviation
     sampled uniformly (per image) from the interval ``[0.0, 3.0]``.
 
-    '''
-	def __init__(self, sigma=(0.0, 3.0), **kwargs):
-		self.augmenter=iaa.GaussianBlur
-		super().__init__(sigma=sigma, **kwargs)
+    """
 
+    def __init__(self, sigma=(0.0, 3.0), **kwargs):
+        self.augmenter = iaa.GaussianBlur
+        super().__init__(sigma=sigma, **kwargs)
 
 
 class MeanShiftBlur(ImgAug):
-	'''Apply a pyramidic mean shift filter to each image.
+    """Apply a pyramidic mean shift filter to each image.
 
     See also :func:`blur_mean_shift_` for details.
 
@@ -503,15 +510,17 @@ class MeanShiftBlur(ImgAug):
 
     Create a mean shift blur augmenter.
 
-    '''
-	def __init__(self, spatial_radius=(5.0, 40.0), color_radius=(5.0, 40.0), **kwargs):
-		self.augmenter=iaa.MeanShiftBlur
-		super().__init__(spatial_radius=spatial_radius, color_radius=color_radius, **kwargs)
+    """
 
+    def __init__(self, spatial_radius=(5.0, 40.0), color_radius=(5.0, 40.0), **kwargs):
+        self.augmenter = iaa.MeanShiftBlur
+        super().__init__(
+            spatial_radius=spatial_radius, color_radius=color_radius, **kwargs
+        )
 
 
 class MedianBlur(ImgAug):
-	'''Blur an image by computing median values over neighbourhoods.
+    """Blur an image by computing median values over neighbourhoods.
 
     Median blurring can be used to remove small dirt from images.
     At larger kernel sizes, its effects have some similarity with Superpixels.
@@ -580,15 +589,15 @@ class MedianBlur(ImgAug):
     the interval ``[3..7]``. Only odd values will be sampled, i.e. ``3``
     or ``5`` or ``7``.
 
-    '''
-	def __init__(self, k=(1, 7), **kwargs):
-		self.augmenter=iaa.MedianBlur
-		super().__init__(k=k, **kwargs)
+    """
 
+    def __init__(self, k=(1, 7), **kwargs):
+        self.augmenter = iaa.MedianBlur
+        super().__init__(k=k, **kwargs)
 
 
 class MotionBlur(ImgAug):
-	'''Blur images in a way that fakes camera or object movements.
+    """Blur images in a way that fakes camera or object movements.
 
     **Supported dtypes**:
 
@@ -673,18 +682,13 @@ class MotionBlur(ImgAug):
     Apply motion blur with a kernel size of ``15x15`` pixels and a blur angle
     of either ``-45`` or ``45`` degrees (randomly picked per image).
 
-    '''
-	def __init__(self, k=(3, 7), angle=(0, 360), direction=(-1.0, 1.0), order=1, **kwargs):
-		self.augmenter=iaa.MotionBlur
-		super().__init__(k=k, angle=angle, direction=direction, order=order, **kwargs)
+    """
 
-
-
-
-
-
-
-
+    def __init__(
+        self, k=(3, 7), angle=(0, 360), direction=(-1.0, 1.0), order=1, **kwargs
+    ):
+        self.augmenter = iaa.MotionBlur
+        super().__init__(k=k, angle=angle, direction=direction, order=order, **kwargs)
 
 
 ## IMGAUG POOLING
@@ -693,7 +697,7 @@ class MotionBlur(ImgAug):
 
 
 class AveragePooling(ImgAug):
-	'''
+    """
     Apply average pooling to images.
 
     This augmenter pools images with kernel sizes ``H x W`` by averaging the
@@ -798,14 +802,15 @@ class AveragePooling(ImgAug):
     range ``[1..7]``. E.g. resulting kernel sizes could be ``3 x 7``
     or ``5 x 1``.
 
-    '''
-	def __init__(self, kernel_size=(1, 5), keep_size=True, **kwargs):
-		self.augmenter=iaa.AveragePooling
-		super().__init__(kernel_size=kernel_size, keep_size=keep_size, **kwargs)
+    """
+
+    def __init__(self, kernel_size=(1, 5), keep_size=True, **kwargs):
+        self.augmenter = iaa.AveragePooling
+        super().__init__(kernel_size=kernel_size, keep_size=keep_size, **kwargs)
 
 
 class MaxPooling(ImgAug):
-	'''
+    """
     Apply max pooling to images.
 
     This augmenter pools images with kernel sizes ``H x W`` by taking the
@@ -906,14 +911,15 @@ class MaxPooling(ImgAug):
     range ``[1..7]``. E.g. resulting kernel sizes could be ``3 x 7``
     or ``5 x 1``.
 
-    '''
-	def __init__(self, kernel_size=(1, 5), keep_size=True, **kwargs):
-		self.augmenter=iaa.MaxPooling
-		super().__init__(kernel_size=kernel_size, keep_size=keep_size, **kwargs)
+    """
+
+    def __init__(self, kernel_size=(1, 5), keep_size=True, **kwargs):
+        self.augmenter = iaa.MaxPooling
+        super().__init__(kernel_size=kernel_size, keep_size=keep_size, **kwargs)
 
 
 class MedianPooling(ImgAug):
-	'''
+    """
     Apply median pooling to images.
 
     This augmenter pools images with kernel sizes ``H x W`` by taking the
@@ -1014,14 +1020,15 @@ class MedianPooling(ImgAug):
     range ``[1..7]``. E.g. resulting kernel sizes could be ``3 x 7``
     or ``5 x 1``.
 
-    '''
-	def __init__(self, kernel_size=(1, 5), keep_size=True, **kwargs):
-		self.augmenter=iaa.MedianPooling
-		super().__init__(kernel_size=kernel_size, keep_size=keep_size, **kwargs)
+    """
+
+    def __init__(self, kernel_size=(1, 5), keep_size=True, **kwargs):
+        self.augmenter = iaa.MedianPooling
+        super().__init__(kernel_size=kernel_size, keep_size=keep_size, **kwargs)
 
 
 class MinPooling(ImgAug):
-	'''
+    """
     Apply minimum pooling to images.
 
     This augmenter pools images with kernel sizes ``H x W`` by taking the
@@ -1122,9 +1129,8 @@ class MinPooling(ImgAug):
     range ``[1..7]``. E.g. resulting kernel sizes could be ``3 x 7``
     or ``5 x 1``.
 
-    '''
-	def __init__(self, kernel_size=(1, 5), keep_size=True, **kwargs):
-		self.augmenter=iaa.MinPooling
-		super().__init__(kernel_size=kernel_size, keep_size=keep_size, **kwargs)
+    """
 
-
+    def __init__(self, kernel_size=(1, 5), keep_size=True, **kwargs):
+        self.augmenter = iaa.MinPooling
+        super().__init__(kernel_size=kernel_size, keep_size=keep_size, **kwargs)

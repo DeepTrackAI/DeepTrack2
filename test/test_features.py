@@ -1,5 +1,6 @@
 import sys
-sys.path.append("..") # Adds the module to path
+
+sys.path.append("..")  # Adds the module to path
 
 import unittest
 
@@ -9,55 +10,62 @@ import numpy as np
 from deeptrack.image import Image
 
 
-
 class TestFeatures(unittest.TestCase):
-
     def test_Feature_1(self):
         class FeatureConcreteClass(features.Feature):
             __distributed__ = False
+
             def get(self, *args, **kwargs):
                 image = np.ones((2, 3))
-                return image    
+                return image
+
         feature = FeatureConcreteClass()
         feature.update()
         output_image = feature.resolve()
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.size, 6)
-        
-    
+
     def test_Feature_2(self):
         class FeatureAddValue(features.Feature):
             def get(self, image, value_to_add=0, **kwargs):
                 image = image + value_to_add
                 return image
+
         feature = FeatureAddValue(value_to_add=1)
         feature.update()
         input_image = np.zeros((1, 1))
         output_image = feature.resolve(input_image)
         self.assertEqual(output_image, 1)
-        self.assertListEqual(output_image.get_property("value_to_add", get_one=False), [1])
+        self.assertListEqual(
+            output_image.get_property("value_to_add", get_one=False), [1]
+        )
         output_image = feature.resolve(output_image)
         self.assertEqual(output_image, 2)
-        self.assertListEqual(output_image.get_property("value_to_add", get_one=False), [1, 1])
-
+        self.assertListEqual(
+            output_image.get_property("value_to_add", get_one=False), [1, 1]
+        )
 
     def test_Feature_with_dummy_property(self):
         class FeatureConcreteClass(features.Feature):
             __distributed__ = False
+
             def get(self, *args, **kwargs):
                 image = np.ones((2, 3))
-                return image    
+                return image
+
         feature = FeatureConcreteClass(dummy_property="foo")
         feature.update()
         output_image = feature.resolve()
-        self.assertListEqual(output_image.get_property("dummy_property", get_one=False), ["foo"])
-
+        self.assertListEqual(
+            output_image.get_property("dummy_property", get_one=False), ["foo"]
+        )
 
     def test_Feature_plus_1(self):
         class FeatureAddValue(features.Feature):
             def get(self, image, value_to_add=0, **kwargs):
                 image = image + value_to_add
                 return image
+
         feature1 = FeatureAddValue(value_to_add=1)
         feature2 = FeatureAddValue(value_to_add=2)
         feature = feature1 + feature2
@@ -65,19 +73,22 @@ class TestFeatures(unittest.TestCase):
         input_image = np.zeros((1, 1))
         output_image = feature.resolve(input_image)
         self.assertEqual(output_image, 3)
-        self.assertListEqual(output_image.get_property("value_to_add", get_one=False), [1, 2])
+        self.assertListEqual(
+            output_image.get_property("value_to_add", get_one=False), [1, 2]
+        )
         self.assertEqual(output_image.get_property("value_to_add", get_one=True), 1)
-
 
     def test_Feature_plus_2(self):
         class FeatureAddValue(features.Feature):
             def get(self, image, value_to_add=0, **kwargs):
                 image = image + value_to_add
                 return image
+
         class FeatureMultiplyByValue(features.Feature):
             def get(self, image, value_to_multiply=0, **kwargs):
                 image = image * value_to_multiply
                 return image
+
         feature1 = FeatureAddValue(value_to_add=1)
         feature2 = FeatureMultiplyByValue(value_to_multiply=10)
         input_image = np.zeros((1, 1))
@@ -89,14 +100,15 @@ class TestFeatures(unittest.TestCase):
         output_image21 = feature21.resolve(input_image)
         self.assertEqual(output_image21, 1)
 
-
     def test_Feature_plus_3(self):
         class FeatureAppendImageOfShape(features.Feature):
             __distributed__ = False
             __list_merge_strategy__ = features.MERGE_STRATEGY_APPEND
+
             def get(self, *args, shape, **kwargs):
                 image = np.zeros(shape)
                 return image
+
         feature1 = FeatureAppendImageOfShape(shape=(1, 1))
         feature2 = FeatureAppendImageOfShape(shape=(2, 2))
         feature12 = feature1 + feature2
@@ -108,12 +120,12 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(output_image[0].shape, (1, 1))
         self.assertEqual(output_image[1].shape, (2, 2))
 
-
     def test_Feature_times_1(self):
         class FeatureAddValue(features.Feature):
             def get(self, image, value_to_add=0, **kwargs):
                 image = image + value_to_add
                 return image
+
         input_image = np.zeros((1, 1))
         feature0 = FeatureAddValue(value_to_add=1) * 0
         feature0.update()
@@ -129,44 +141,51 @@ class TestFeatures(unittest.TestCase):
             output_image05 = feature05.resolve(input_image)
             self.assertTrue(output_image05[0, 0] == 0 or output_image05[0, 0] == 1)
 
-
     def test_Feature_exp_1(self):
         class FeatureAddValue(features.Feature):
             def get(self, image, value_to_add=0, **kwargs):
                 image = image + value_to_add
                 return image
+
         feature = FeatureAddValue(value_to_add=1) ** 10
         feature.update()
         input_image = np.zeros((1, 1))
         output_image = feature.resolve(input_image)
         self.assertEqual(output_image, 10)
-    
 
     def test_Feature_property_memorability(self):
         class FeatureWithForgettableProperties(features.Feature):
             __property_memorability__ = 2
+
             def get(self, image, forgettable_property, **kwargs):
                 return image
+
         feature = FeatureWithForgettableProperties(forgettable_property=1)
         feature.update()
         input_image = np.zeros((1, 1))
         output_image = feature.resolve(input_image)
-        self.assertIsNone(output_image.get_property("forgettable_property", default=None))
+        self.assertIsNone(
+            output_image.get_property("forgettable_property", default=None)
+        )
         output_image = feature.resolve(input_image, property_memorability=2)
-        self.assertEqual(output_image.get_property("forgettable_property", default=None), 1)
+        self.assertEqual(
+            output_image.get_property("forgettable_property", default=None), 1
+        )
 
-    
     def test_Feature_with_overruled_property(self):
         class FeatureAddValue(features.Feature):
             def get(self, image, value_to_add=0, **kwargs):
                 image = image + value_to_add
                 return image
+
         feature = FeatureAddValue(value_to_add=1)
         feature.update()
         input_image = np.zeros((1, 1))
         output_image = feature.resolve(input_image, value_to_add=10)
         self.assertEqual(output_image, 10)
-        self.assertListEqual(output_image.get_property("value_to_add", get_one=False), [10])
+        self.assertListEqual(
+            output_image.get_property("value_to_add", get_one=False), [10]
+        )
         self.assertEqual(output_image.get_property("value_to_add", get_one=True), 10)
 
     def test_nested_Duplicate(self):
@@ -188,7 +207,7 @@ class TestFeatures(unittest.TestCase):
             )
 
             for _ in range(10):
-                AB = (A + (B + (C + D) ** 2) ** 2 ) ** 6
+                AB = (A + (B + (C + D) ** 2) ** 2) ** 6
                 output = AB.update().resolve(0)
                 al = output.get_property("a", get_one=False)[::3]
                 bl = output.get_property("b", get_one=False)[::3]
@@ -200,12 +219,12 @@ class TestFeatures(unittest.TestCase):
                 self.assertFalse(all(c == cl[0] for c in cl))
                 self.assertFalse(all(d == dl[0] for d in dl))
                 for ai, a in enumerate(al):
-                    for bi, b in list(enumerate(bl))[ai*2:(ai+1)*2]:
+                    for bi, b in list(enumerate(bl))[ai * 2 : (ai + 1) * 2]:
                         self.assertIn(b - a, range(0, 1000))
-                        for ci, c in list(enumerate(cl))[bi*2:(bi+1)*2]:
+                        for ci, c in list(enumerate(cl))[bi * 2 : (bi + 1) * 2]:
                             self.assertIn(c - b, range(0, 100))
-                            self.assertIn(dl[ci] - c,  range(0, 10))
+                            self.assertIn(dl[ci] - c, range(0, 10))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

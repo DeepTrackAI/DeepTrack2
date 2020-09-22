@@ -1,4 +1,4 @@
-''' Image class and relative functions
+""" Image class and relative functions
 
 Defines the Image class and functions that operate on it.
 
@@ -14,22 +14,21 @@ Functions
 pad_image_to_fft(image: Image, axes = (0, 1))
     Pads the image with zeros to optimize the speed of Fast Fourier
     Transforms.
-'''
+"""
 
 import numpy as np
 
 
-
 class Image(np.ndarray):
-    '''Subclass of numpy ndarray
+    """Subclass of numpy ndarray
 
-    The class Image is used by features to resolve images and store 
-    the current values of the properties of each feature in the feature 
-    series. These properties are stored in the field `properties` 
-    as a list of dictionaries, in the same order as that in which 
+    The class Image is used by features to resolve images and store
+    the current values of the properties of each feature in the feature
+    series. These properties are stored in the field `properties`
+    as a list of dictionaries, in the same order as that in which
     the features have been evaluated.
 
-    The field `properties` is used to store and extract information 
+    The field `properties` is used to store and extract information
     about how an image has been generated.
 
     Parameters
@@ -45,17 +44,16 @@ class Image(np.ndarray):
         List of dictionaries of the current value of all properties of
         the features used to resolve the image.
 
-    '''
+    """
 
     # Used by numpy to determine output type of u_funcs.
     # This ensures that the output will always be an Image
     __array_priority__ = 999
 
-
     def __new__(cls, input_array, properties=None):
         # Converts input to ndarray, and then to an Image
         # In particular, it creates the properties
-        
+
         image = np.array(input_array).view(cls)
         if properties is None:
             # If input_array has properties attribute, retrieve a copy of it
@@ -64,9 +62,8 @@ class Image(np.ndarray):
 
         return image
 
-
     def append(self, property_dict: dict):
-        ''' Appends a dictionary to the properties list.
+        """Appends a dictionary to the properties list.
 
         Parameters
         ----------
@@ -78,21 +75,19 @@ class Image(np.ndarray):
         -------
         Image
             Returns itself.
-        '''
-        
+        """
+
         self.properties.append(property_dict)
         return self
 
+    def get_property(
+        self, key: str, get_one: bool = True, default: any = None
+    ) -> list or any:
+        """Retrieve a property.
 
-    def get_property(self,
-                     key: str,
-                     get_one: bool = True,
-                     default: any = None) -> list or any:
-        '''Retrieve a property.
-        
         If the feature has the property defined by `key`, return
-        its current_value. Otherwise, return `default`. 
-        If `get_one` is True, the first instance is returned; 
+        its current_value. Otherwise, return `default`.
+        If `get_one` is True, the first instance is returned;
         otherwise, all instances are returned as a list.
 
         Parameters
@@ -109,7 +104,7 @@ class Image(np.ndarray):
         any
             The value of the property if found, else `default`.
 
-        '''
+        """
 
         if get_one:
             for prop in self.properties:
@@ -118,11 +113,9 @@ class Image(np.ndarray):
             return default
         else:
             return [prop[key] for prop in self.properties if key in prop] or default
-    
 
-    
     def merge_properties_from(self, other: "Image") -> "Image":
-        ''' Merge properties with those from another Image.
+        """Merge properties with those from another Image.
 
         Appends properties from another images such that no property is duplicated.
         Uniqueness of a dictionary of properties is determined from the
@@ -137,7 +130,7 @@ class Image(np.ndarray):
         other
             The Image to retrieve properties from.
 
-        '''
+        """
 
         for new_prop in other.properties:
 
@@ -150,8 +143,10 @@ class Image(np.ndarray):
             # Else, see if hash is unique
             for my_prop in self.properties:
 
-                if ("hash_key" in my_prop and
-                        my_prop["hash_key"] == new_prop["hash_key"]):
+                if (
+                    "hash_key" in my_prop
+                    and my_prop["hash_key"] == new_prop["hash_key"]
+                ):
 
                     # Key is not unique, don't add
                     should_append = False
@@ -162,10 +157,9 @@ class Image(np.ndarray):
 
         return self
 
-
     def __array_wrap__(self, image_after_function, context=None):
         # Called at end when a function is called on an image
-        # It might be that the information about properties is lost, 
+        # It might be that the information about properties is lost,
         # this method restores it.
         # This method also correctly concatenate the the properties of two images.
 
@@ -178,7 +172,7 @@ class Image(np.ndarray):
             # context is information about operation
 
             func, args, _ = context
-            input_args = args[:func.nin]
+            input_args = args[: func.nin]
 
             for arg in input_args:
 
@@ -187,10 +181,9 @@ class Image(np.ndarray):
 
         return image_with_restored_properties
 
-
     def __array_finalize__(self, image):
         # Called when an image is created
-        # It might be that the information about properties is lost, 
+        # It might be that the information about properties is lost,
         # this method restores it.
 
         if image is None:
@@ -204,15 +197,14 @@ class Image(np.ndarray):
             self.merge_properties_from(image)
 
 
-
 FASTEST_SIZES = [0]
 for n in range(1, 10):
-    FASTEST_SIZES += [2**a * 3**(n - a - 1) for a in range(n)]
+    FASTEST_SIZES += [2 ** a * 3 ** (n - a - 1) for a in range(n)]
 FASTEST_SIZES = np.sort(FASTEST_SIZES)
 
 
 def pad_image_to_fft(image: Image, axes=(0, 1)) -> Image:
-    ''' Pads image to speed up fast fourier transforms.
+    """Pads image to speed up fast fourier transforms.
     Pads image to speed up fast fourier transforms by adding 0s to the
     end of the image.
 
@@ -222,7 +214,7 @@ def pad_image_to_fft(image: Image, axes=(0, 1)) -> Image:
         The image to pad
     axes : iterable of int, optional
         The axes along which to pad.
-    '''
+    """
 
     def _closest(dim):
         # Returns the smallest value frin FASTEST_SIZES
@@ -238,5 +230,4 @@ def pad_image_to_fft(image: Image, axes=(0, 1)) -> Image:
     increase = np.array(new_shape) - image.shape
     pad_width = [(0, inc) for inc in increase]
 
-
-    return np.pad(image, pad_width, mode='constant')
+    return np.pad(image, pad_width, mode="constant")

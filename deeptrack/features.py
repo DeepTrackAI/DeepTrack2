@@ -1,4 +1,4 @@
-'''Base class Feature and structural features
+"""Base class Feature and structural features
 
 Provides classes and tools for creating and interacting with features.
 
@@ -18,7 +18,7 @@ Duplicate
     Implementation of `StructuralFeature` that sequentially resolves an 
     integer number of deep-copies of a feature.
 
-'''
+"""
 
 import copy
 
@@ -33,21 +33,18 @@ from deeptrack.properties import Property, PropertyDict
 from deeptrack.utils import isiterable, hasmethod, get_kwarg_names, kwarg_has_default
 
 
-
 MERGE_STRATEGY_OVERRIDE = 0
 MERGE_STRATEGY_APPEND = 1
 
-# Global thread execution lock for update calls. 
+# Global thread execution lock for update calls.
 UPDATE_LOCK = threading.Lock()
 
 # Global update memoization. Ensures that the update is consistent
-UPDATE_MEMO = {
-    "user_arguments": {},
-    "memoization": {}
-}
+UPDATE_MEMO = {"user_arguments": {}, "memoization": {}}
+
 
 class Feature:
-    ''' Base feature class.
+    """Base feature class.
     Features define the image generation process. All features operate
     on lists of images. Most features, such as noise, apply some
     tranformation to all images in the list. This transformation can
@@ -65,11 +62,11 @@ class Feature:
     Parameters
     ----------
     *args : dict, optional
-        Dicts passed as nonkeyword arguments will be deconstructed to key-value 
-        pairs and included in the field `properties` in the same way as keyword 
+        Dicts passed as nonkeyword arguments will be deconstructed to key-value
+        pairs and included in the field `properties` in the same way as keyword
         arguments.
     **kwargs
-        All Keyword arguments will be wrapped as instances of ``Property`` and 
+        All Keyword arguments will be wrapped as instances of ``Property`` and
         included in the field `properties`.
 
 
@@ -81,7 +78,7 @@ class Feature:
         dict is sent as input to the get function, and is appended
         to the properties field of the output image.
     __list_merge_strategy__ : int
-        Controls how the output of `.get(image, **kwargs)` is merged with 
+        Controls how the output of `.get(image, **kwargs)` is merged with
         the input list. It can be `MERGE_STRATEGY_OVERRIDE` (0, default),
         where the input is replaced by the new list, or
         `MERGE_STRATEGY_APPEND` (1), where the new list is appended to the
@@ -91,26 +88,25 @@ class Feature:
         in the list separately (`__distributed__ = True`), or if it is
         called on the list as a whole (`__distributed__ = False`).
     __property_memorability__
-        Controls whether to store the features properties to the `Image`. 
+        Controls whether to store the features properties to the `Image`.
         Values 1 or lower will be included by default.
-    '''
+    """
 
     __list_merge_strategy__ = MERGE_STRATEGY_OVERRIDE
     __distributed__ = True
     __property_memorability__ = 1
-
 
     def __init__(self, *args: dict, **kwargs):
         super(Feature, self).__init__()
         properties = getattr(self, "properties", {})
 
         # Create an iterable of kwargs and args
-        all_dicts = (kwargs, ) + args
+        all_dicts = (kwargs,) + args
 
         for property_dict in all_dicts:
             for key, value in property_dict.items():
                 if not isinstance(value, Property):
-                    
+
                     value = Property(value)
 
                 properties[key] = value
@@ -118,13 +114,14 @@ class Feature:
         # hash_key is an inexpensive way to compare dicts of properties
         # The hash here is 4 31 bit integers, for a total of 124 bits.
         if "hash_key" not in properties:
-            properties["hash_key"] = Property(lambda: list(np.random.randint(2**31, size=(4, ))))
+            properties["hash_key"] = Property(
+                lambda: list(np.random.randint(2 ** 31, size=(4,)))
+            )
 
         self.properties = PropertyDict(**properties)
 
-
     def get(self, image: Image or List[Image], **kwargs) -> Image or List[Image]:
-        '''Method for altering an image
+        """Method for altering an image
         Abstract method that define how the feature transforms the input. The current
         value of all properties will be passed as keyword arguments.
 
@@ -140,12 +137,10 @@ class Feature:
         -------
         Image or List[Image]
             The transformed image or list of images
-        '''
+        """
 
-    def resolve(self,
-                image_list: Image or List[Image] = None,
-                **global_kwargs):
-        ''' Creates the image.
+    def resolve(self, image_list: Image or List[Image] = None, **global_kwargs):
+        """Creates the image.
         Transforms the input image by calling the method `get()` with the
         correct inputs. The properties of the feature can be overruled by
         passing a different value as a keyword argument.
@@ -157,14 +152,14 @@ class Feature:
         **global_kwargs
             Set of arguments that are applied globally. That is, every
             feature in the set of features required to resolve an image
-            will receive these keyword arguments. 
+            will receive these keyword arguments.
 
         Returns
         -------
         Image or List[Image]
             The resolved image
-        '''
-        
+        """
+
         # Remove hash_key from globals.
         global_kwargs.pop("hash_key", False)
 
@@ -172,33 +167,36 @@ class Feature:
         image_list = self._format_input(image_list, **global_kwargs)
 
         # Get the input arguments to the method .get()
-        feature_input = self.properties.current_value_dict(is_resolving=True, **global_kwargs)
-        
+        feature_input = self.properties.current_value_dict(
+            is_resolving=True, **global_kwargs
+        )
+
         # Add global_kwargs to input arguments
         feature_input.update(global_kwargs)
 
-        
-        
         # Call the _process_properties hook, default does nothing.
         # Can be used to ensure properties are formatted correctly
         # or to rescale properties.
         feature_input = self._process_properties(feature_input)
-                
+
         # Set the seed from the hash_key. Ensures equal results
-        np.random.seed(int(feature_input["hash_key"][0]) * int(feature_input.get("sequence_step", 0) + 1) % int(2**32 - 1))
+        np.random.seed(
+            int(feature_input["hash_key"][0])
+            * int(feature_input.get("sequence_step", 0) + 1)
+            % int(2 ** 32 - 1)
+        )
 
         # _process_and_get calls the get function correctly according
         # to the __distributed__ attribute
         new_list = self._process_and_get(image_list, **feature_input)
 
-        
         # Add feature_input to the image the class attribute __property_memorability__
         # is not larger than the passed property_verbosity keyword
         property_verbosity = global_kwargs.get("property_memorability", 1)
         feature_input["name"] = type(self).__name__
         if self.__property_memorability__ <= property_verbosity:
             for image in new_list:
-                    image.append(feature_input)
+                image.append(feature_input)
 
         # Merge input and new_list
         if self.__list_merge_strategy__ == MERGE_STRATEGY_OVERRIDE:
@@ -212,9 +210,8 @@ class Feature:
         else:
             return image_list
 
-
     def update(self, **kwargs) -> "Feature":
-        '''Updates the state of all properties.
+        """Updates the state of all properties.
 
         Parameters
         ----------
@@ -227,7 +224,7 @@ class Feature:
         Returns
         -------
         self
-        '''
+        """
 
         # This should only be accessed by the user. Call _update directly instead
         with UPDATE_LOCK:
@@ -235,18 +232,18 @@ class Feature:
             UPDATE_MEMO["memoization"] = {}
             self._update(**kwargs)
             return self
-    
 
     def _update(self, **kwargs):
         self.properties.update(**kwargs)
 
-
-    def plot(self,
-             input_image: Image or List[Image] = None,
-             resolve_kwargs: dict = None,
-             interval: float = None,
-             **kwargs):
-        ''' Visualizes the output of the feature
+    def plot(
+        self,
+        input_image: Image or List[Image] = None,
+        resolve_kwargs: dict = None,
+        interval: float = None,
+        **kwargs
+    ):
+        """Visualizes the output of the feature
         Resolves the feature and visualizes the result. If the output is an Image,
         show it using `pyplot.imshow`. If the output is a list, create an `Animation`.
         For notebooks, the animation is played inline using `to_jshtml()`. For scripts,
@@ -264,8 +261,8 @@ class Feature:
             The time between frames in animation in ms. Default 33.
         kwargs
             keyword arguments passed to the method pyplot.imshow()
-        '''
-        
+        """
+
         import matplotlib.pyplot as plt
         import matplotlib.animation as animation
         from IPython.display import HTML, display
@@ -289,16 +286,16 @@ class Feature:
             for image in output_image:
                 images.append([plt.imshow(image[:, :, 0], **kwargs)])
 
-            interval = (interval
-                        or output_image[0].get_property("interval") 
-                        or (1 / 30 * 1000))
+            interval = (
+                interval or output_image[0].get_property("interval") or (1 / 30 * 1000)
+            )
 
+            anim = animation.ArtistAnimation(
+                fig, images, interval=interval, blit=True, repeat_delay=0
+            )
 
-            anim = animation.ArtistAnimation(fig, images, interval=interval, blit=True,
-                                    repeat_delay=0)
-
-            try: 
-                get_ipython # Throws NameError if not in Notebook
+            try:
+                get_ipython  # Throws NameError if not in Notebook
                 display(HTML(anim.to_jshtml()))
                 return anim
 
@@ -309,56 +306,64 @@ class Feature:
             except RuntimeError as e:
                 # In notebook, but animation failed
                 import ipywidgets as widgets
-                Warning("Javascript animation failed. This is a non-performant fallback.")
+
+                Warning(
+                    "Javascript animation failed. This is a non-performant fallback."
+                )
+
                 def plotter(frame=0):
                     plt.imshow(output_image[frame][:, :, 0], **kwargs)
                     plt.show()
 
-                return widgets.interact(plotter, frame=widgets.IntSlider(value=0, min=0, max=len(images)-1, step=1))
-
+                return widgets.interact(
+                    plotter,
+                    frame=widgets.IntSlider(
+                        value=0, min=0, max=len(images) - 1, step=1
+                    ),
+                )
 
     def _process_and_get(self, image_list, **feature_input) -> List[Image]:
         # Controls how the get function is called
-        
+
         if self.__distributed__:
             # Call get on each image in list, and merge properties from corresponding image
-            return [Image(self.get(image, **feature_input)).merge_properties_from(image) for image in image_list]
+            return [
+                Image(self.get(image, **feature_input)).merge_properties_from(image)
+                for image in image_list
+            ]
         else:
             # Call get on entire list.
             new_list = self.get(image_list, **feature_input)
-        
+
             if not isinstance(new_list, list):
                 new_list = [Image(new_list)]
-            
+
             return new_list
-        
 
     def _format_input(self, image_list, **kwargs) -> List[Image]:
         # Ensures the input is a list of Image.
-        
+
         if image_list is None:
             return []
 
         if not isinstance(image_list, list):
             image_list = [image_list]
-            
+
         return [Image(image) for image in image_list]
-            
 
     def _process_properties(self, propertydict) -> dict:
         # Optional hook for subclasses to preprocess input before calling
         # the method .get()
         return propertydict
 
-
     def sample(self, **kwargs) -> "Feature":
-        '''Returns the feature'''
-        
+        """Returns the feature"""
+
         return self
 
     def __getattr__(self, key):
         # Allows easier access to properties, while guaranteeing they are updated correctly.
-        # Should only every be used from the inside of a property function. 
+        # Should only every be used from the inside of a property function.
         # Is not compatible with sequential properties.
         if "properties" in self.__dict__:
             properties = self.__dict__["properties"]
@@ -369,9 +374,6 @@ class Feature:
                 raise AttributeError
         else:
             raise AttributeError
-
-        
-
 
     def __add__(self, other: "Feature") -> "Feature":
         # Overrides add operator
@@ -388,8 +390,6 @@ class Feature:
         if isinstance(other, list) and all(isinstance(f) for f in other):
             other = Combine(features=other)
 
-        
-
         if isinstance(other, Feature):
             return Branch(other, self)
         elif not other:
@@ -397,61 +397,54 @@ class Feature:
         else:
             return NotImplemented
 
-
     def __mul__(self, other: float) -> "Feature":
         # Introduces a probablity of a feature to be resolved.
         if isinstance(other, list) and all(isinstance(f) for f in other):
             other = Combine(features=other)
-        
+
         return Probability(self, other)
 
     __rmul__ = __mul__
-
 
     def __pow__(self, other) -> "Feature":
         # Duplicate the feature to resolve more items
         if isinstance(other, list) and all(isinstance(f) for f in other):
             other = Combine(features=other)
-        
+
         return Duplicate(self, other)
 
 
-
-
 class StructuralFeature(Feature):
-    ''' Provides the structure of a feature-set
+    """Provides the structure of a feature-set
     Feature with __property_verbosity__ = 2 to avoid adding it to the list
-    of properties, and __distributed__ = False to pass the input as-is. 
-    '''
-    
+    of properties, and __distributed__ = False to pass the input as-is.
+    """
+
     __property_verbosity__ = 2
     __distributed__ = False
 
 
-
 class Branch(StructuralFeature):
-    ''' Resolves two features sequentially. 
+    """Resolves two features sequentially.
     Passes the output of the first to the input of the second.
     Parameters
     ----------
     feature_1 : Feature
     feature_2 : Feature
-    '''
+    """
 
     def __init__(self, feature_1: Feature, feature_2: Feature, *args, **kwargs):
         super().__init__(*args, feature_1=feature_1, feature_2=feature_2, **kwargs)
 
-
     def get(self, image, feature_1, feature_2, **kwargs):
-        ''' Resolves `feature_1` and `feature_2` sequentially
-        '''
+        """Resolves `feature_1` and `feature_2` sequentially"""
         image = feature_1.resolve(image, **kwargs)
         image = feature_2.resolve(image, **kwargs)
         return image
 
 
 class Probability(StructuralFeature):
-    ''' Resolves a feature with a certain probability
+    """Resolves a feature with a certain probability
 
     Parameters
     ----------
@@ -459,7 +452,7 @@ class Probability(StructuralFeature):
         Feature to resolve
     probability : float
         Probability to resolve
-    '''
+    """
 
     def __init__(self, feature: Feature, probability: float, *args, **kwargs):
         super().__init__(
@@ -467,26 +460,26 @@ class Probability(StructuralFeature):
             feature=feature,
             probability=probability,
             random_number=np.random.rand,
-            **kwargs)
+            **kwargs
+        )
 
-
-    def get(self, 
-            image, 
-            feature: Feature,
-            probability: float,
-            random_number: float,
-            **kwargs):
-        ''' Resolves `feature` if `random_number` is less than `probability`
-        '''
+    def get(
+        self,
+        image,
+        feature: Feature,
+        probability: float,
+        random_number: float,
+        **kwargs
+    ):
+        """Resolves `feature` if `random_number` is less than `probability`"""
         if random_number < probability:
             image = feature.resolve(image, **kwargs)
 
         return image
 
 
-
 class Duplicate(StructuralFeature):
-    '''Resolves copies of a feature sequentially
+    """Resolves copies of a feature sequentially
     Creates `num_duplicates` copies of the feature and resolves
     them sequentially
 
@@ -496,21 +489,22 @@ class Duplicate(StructuralFeature):
         The feature to duplicate
     num_duplicates: int
         The number of duplicates to create
-    '''
+    """
 
     def __init__(self, feature: Feature, num_duplicates: int, *args, **kwargs):
 
         self.feature = feature
         super().__init__(
             *args,
-            num_duplicates=num_duplicates, #py > 3.6 dicts are ordered by insert time.
-            features=lambda num_duplicates: [copy.deepcopy(self.feature) for _ in range(num_duplicates)],
-            **kwargs)
-
+            num_duplicates=num_duplicates,  # py > 3.6 dicts are ordered by insert time.
+            features=lambda num_duplicates: [
+                copy.deepcopy(self.feature) for _ in range(num_duplicates)
+            ],
+            **kwargs
+        )
 
     def get(self, image, features: List[Feature], **kwargs):
-        ''' Resolves each feature in `features` sequentially
-        '''
+        """Resolves each feature in `features` sequentially"""
         for index in range(len(features)):
             image = features[index].resolve(image, **kwargs)
 
@@ -526,9 +520,9 @@ class Duplicate(StructuralFeature):
 
     def __deepcopy__(self, memo):
         # If this is getting deep-copied, we have
-        # nested copies, which needs to be handled 
+        # nested copies, which needs to be handled
         # separately.
-        
+
         self.properties.update()
         num_duplicates = self.num_duplicates.current_value
         features = []
@@ -544,30 +538,31 @@ class Duplicate(StructuralFeature):
             self.properties[key] = copy.copy(val)
         return out
 
-        
 
 class Combine(StructuralFeature):
-    ''' Combines multiple features into a single feature.
+    """Combines multiple features into a single feature.
 
     Resolves each feature in `features` and returns them as a list of features.
-    
+
     Parameters
     ----------
     features : list of features
         features to combine
-    
-    '''
+
+    """
 
     __distribute__ = False
+
     def __init__(self, features=[], **kwargs):
         super().__init__(features=features, **kwargs)
 
     def get(self, image_list, features, **kwargs):
         return [feature.resolve(image_list, **kwargs) for feature in features]
 
+
 class ConditionalSetProperty(StructuralFeature):
-    ''' Conditionally overrides the properties of child features
-    
+    """Conditionally overrides the properties of child features
+
     Parameters
     ----------
     feature : Feature
@@ -577,11 +572,12 @@ class ConditionalSetProperty(StructuralFeature):
     **kwargs
         Properties to be used if `condition` is True
 
-    '''
+    """
+
     __distributed__ = False
+
     def __init__(self, feature: Feature, condition="is_label", **kwargs):
         super().__init__(feature=feature, condition=condition, **kwargs)
-    
 
     def get(self, image, feature, condition, **kwargs):
         if kwargs.get(condition, False):
@@ -589,13 +585,12 @@ class ConditionalSetProperty(StructuralFeature):
         else:
             for property_key in self.properties.keys():
                 kwargs.pop(property_key, None)
-            
+
             return feature.resolve(image, **kwargs)
 
 
-
 class ConditionalSetFeature(StructuralFeature):
-    ''' Conditionally resolves one of two features
+    """Conditionally resolves one of two features
 
     Set condition to the value to listen to. Example,
     if condition is "is_label", then conditiona can be toggled
@@ -605,7 +600,7 @@ class ConditionalSetFeature(StructuralFeature):
     Feature.update(is_label=True) / Feature.update(is_label=False)
 
     Note that both features will be updated in either case.
-    
+
     Parameters
     ----------
     on_false : Feature
@@ -615,12 +610,21 @@ class ConditionalSetFeature(StructuralFeature):
     condition : str
         The name of the conditional property
 
-    '''
-    __distributed__ = False
-    def __init__(self, on_false: Feature = None, on_true: Feature = None,  condition="is_label", **kwargs):
+    """
 
-        super().__init__(on_true=on_true, on_false=on_false, condition=condition, **kwargs)
-    
+    __distributed__ = False
+
+    def __init__(
+        self,
+        on_false: Feature = None,
+        on_true: Feature = None,
+        condition="is_label",
+        **kwargs
+    ):
+
+        super().__init__(
+            on_true=on_true, on_false=on_false, condition=condition, **kwargs
+        )
 
     def get(self, image, *, condition, on_true, on_false, **kwargs):
 
@@ -637,7 +641,7 @@ class ConditionalSetFeature(StructuralFeature):
 
 
 class Lambda(Feature):
-    ''' Calls a custom function on each image in the input.
+    """Calls a custom function on each image in the input.
 
     Note that the property `function` needs to be wrapped in an
     outer layer function. The outer layer function can depend on
@@ -647,19 +651,18 @@ class Lambda(Feature):
     Parameters
     ----------
     function : Callable[Image]
-        Function that takes the current image as first input 
-    '''
+        Function that takes the current image as first input
+    """
 
     def __init__(self, function, **kwargs):
         super().__init__(function=function, **kwargs)
-    
 
     def get(self, image, function, **kwargs):
         return function(image)
 
 
 class Merge(Feature):
-    ''' Calls a custom function on the entire input.
+    """Calls a custom function on the entire input.
 
     Note that the property `function` needs to be wrapped in an
     outer layer function. The outer layer function can depend on
@@ -669,36 +672,36 @@ class Merge(Feature):
     Parameters
     ----------
     function : Callable[list of Image]
-        Function that takes the current image as first input 
-    '''
+        Function that takes the current image as first input
+    """
 
     __distributed__ = False
 
     def __init__(self, function, **kwargs):
         super().__init__(function=function, **kwargs)
-    
 
     def get(self, list_of_images, function, **kwargs):
         return function(list_of_images)
 
 
 class Dataset(Feature):
-    ''' Grabs data from a local set of data.
+    """Grabs data from a local set of data.
 
-    The first argument should be an iterator, function or constant, 
+    The first argument should be an iterator, function or constant,
     which provides access to a single sample from a dataset. If it returns
-    a tuple, the first element should be an array-like and the second a 
+    a tuple, the first element should be an array-like and the second a
     dictionary. The array-like will be returned as an image with the dictionary
     added to the set of properties.
 
     Parameters
     ----------
     data : tuple or array_like
-        Any property that returns a single image or a tuple of two objects, 
+        Any property that returns a single image or a tuple of two objects,
         where the first is an array_like.
-    '''
+    """
+
     __distributed__ = False
-        
+
     def __init__(self, data, **kwargs):
         super().__init__(data=data, **kwargs)
 
@@ -717,27 +720,24 @@ class Dataset(Feature):
         return properties
 
 
-
 class Label(Feature):
-    '''Outputs the properties of this features.
+    """Outputs the properties of this features.
 
-    Can be used to extract properties in a feature set and combine them into 
-    a numpy array. 
+    Can be used to extract properties in a feature set and combine them into
+    a numpy array.
 
     Parameters
     ----------
     output_shape : tuple of ints
         Reshapes the output to this shape
-    
-    '''
+
+    """
 
     __distributed__ = False
-
 
     def __init__(self, output_shape=None, **kwargs):
         super().__init__(output_shape=output_shape, **kwargs)
 
-    
     def get(self, image, output_shape=None, hash_key=None, **kwargs):
         result = []
         for key in self.properties.keys():
@@ -751,9 +751,9 @@ class Label(Feature):
 
 
 class LoadImage(Feature):
-    '''Loads an image from disk.
+    """Loads an image from disk.
 
-    Cycles through file-readers numpy, pillow and opencv2 to open the 
+    Cycles through file-readers numpy, pillow and opencv2 to open the
     image file.
 
     Parameters
@@ -770,16 +770,14 @@ class LoadImage(Feature):
     IOError
         If no file reader could parse the file or the file doesn't exist.
 
-    '''
+    """
 
     __distributed__ = False
-
 
     def __init__(self, path, load_options=None, as_list=False, **kwargs):
         super().__init__(path=path, load_options=load_options, as_list=False, **kwargs)
 
-
-    def get(self, *ign, path, load_options,  **kwargs):
+    def get(self, *ign, path, load_options, **kwargs):
         if load_options is None:
             load_options = {}
         try:
@@ -787,37 +785,38 @@ class LoadImage(Feature):
         except (IOError, ValueError):
             try:
                 from skimage import io
+
                 return io.imread(path)
             except (IOError, ImportError, AttributeError):
                 try:
                     import PIL.Image
+
                     return np.array(PIL.Image.open(path, **load_options))
                 except (IOError, ImportError):
                     import cv2
-                    
+
                     image = np.array(cv2.imread(path, **load_options))
                     if image:
                         return image
 
                     raise IOError("No filereader available for file {0}".format(path))
-    
 
 
 class DummyFeature(Feature):
-    '''Feature that does nothing
-    
+    """Feature that does nothing
+
     Can be used as a container for properties to separate the code logically.
-    '''
+    """
+
     def get(self, image, **kwargs):
         return image
 
 
-
 class SampleToMasks(Feature):
-    ''' Creates a mask from a list of images.
+    """Creates a mask from a list of images.
 
     Calls `transformation_function` for each input image, and merges the outputs
-    to a single image with `number_of_masks` layers. Each input image needs to have 
+    to a single image with `number_of_masks` layers. Each input image needs to have
     a defined property `position` to place it within the image. If used with scatterers,
     note that the scatterers need to be passed the property `voxel_size` to correctly
     size the objects.
@@ -830,10 +829,10 @@ class SampleToMasks(Feature):
     number_of_masks : int
         The number of masks to create.
     output_region : (int, int, int, int)
-        Size and relative position of the mask. Should generally be the same as 
+        Size and relative position of the mask. Should generally be the same as
         `optics.output_region`.
     merge_method : str or function or list
-        How to merge the individual masks to a single image. If a list, the merge_metod 
+        How to merge the individual masks to a single image. If a list, the merge_metod
         is per mask. Can be
             * "add": Adds the masks together.
             * "overwrite": later masks overwrite earlier masks.
@@ -841,22 +840,26 @@ class SampleToMasks(Feature):
             * function: a function that accepts two images. The first is the current
                     value of the output image where a new mask will be places, and
                     the second is the mask to merge with the output image.
-    
-    '''
-    
-    def __init__(self, 
-                 transformation_function,
-                 number_of_masks=1,
-                 output_region=None, 
-                 merge_method="add",
-                 **kwargs):
-        super().__init__(transformation_function=transformation_function, 
-                         number_of_masks=number_of_masks, 
-                         output_region=output_region,
-                         merge_method=merge_method, 
-                         **kwargs)
-    
-    def get(self, image, transformation_function, **kwargs):        
+
+    """
+
+    def __init__(
+        self,
+        transformation_function,
+        number_of_masks=1,
+        output_region=None,
+        merge_method="add",
+        **kwargs
+    ):
+        super().__init__(
+            transformation_function=transformation_function,
+            number_of_masks=number_of_masks,
+            output_region=output_region,
+            merge_method=merge_method,
+            **kwargs
+        )
+
+    def get(self, image, transformation_function, **kwargs):
         return transformation_function(image)
 
     def _process_and_get(self, images, **kwargs):
@@ -876,26 +879,29 @@ class SampleToMasks(Feature):
                     out.merge_properties_from(inp)
                     list_of_labels.append(out)
 
-    
         output_region = kwargs["output_region"]
-        output = np.zeros((
-            output_region[2],
-            output_region[3],
-            kwargs["number_of_masks"]
-        ))
+        output = np.zeros(
+            (output_region[2], output_region[3], kwargs["number_of_masks"])
+        )
 
         for label in list_of_labels:
             positions = _get_position(label)
             for position in positions:
                 p0 = np.round(position - output_region[0:2])
-                
+
                 if np.any(p0 > output.shape[0:2]) or np.any(p0 + label.shape[0:2] < 0):
                     continue
 
                 crop_x = int(-np.min([p0[0], 0]))
                 crop_y = int(-np.min([p0[1], 0]))
-                crop_x_end = int(label.shape[0] - np.max([p0[0] + label.shape[0] - output.shape[0], 0]))
-                crop_y_end = int(label.shape[1] - np.max([p0[1] + label.shape[1] - output.shape[1], 0]))
+                crop_x_end = int(
+                    label.shape[0]
+                    - np.max([p0[0] + label.shape[0] - output.shape[0], 0])
+                )
+                crop_y_end = int(
+                    label.shape[1]
+                    - np.max([p0[1] + label.shape[1] - output.shape[1], 0])
+                )
 
                 labelarg = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
 
@@ -904,7 +910,9 @@ class SampleToMasks(Feature):
 
                 p0 = p0.astype(np.int)
 
-                output_slice = output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1]]
+                output_slice = output[
+                    p0[0] : p0[0] + labelarg.shape[0], p0[1] : p0[1] + labelarg.shape[1]
+                ]
 
                 for label_index in range(kwargs["number_of_masks"]):
 
@@ -912,27 +920,48 @@ class SampleToMasks(Feature):
                         merge = kwargs["merge_method"][label_index]
                     else:
                         merge = kwargs["merge_method"]
-                    
+
                     if merge == "add":
-                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] += labelarg[..., label_index]
-                        
+                        output[
+                            p0[0] : p0[0] + labelarg.shape[0],
+                            p0[1] : p0[1] + labelarg.shape[1],
+                            label_index,
+                        ] += labelarg[..., label_index]
+
                     elif merge == "overwrite":
-                        output_slice[labelarg[..., label_index] != 0, label_index] = labelarg[labelarg[..., label_index] != 0, label_index]
-                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] = output_slice[..., label_index]
-                        
+                        output_slice[
+                            labelarg[..., label_index] != 0, label_index
+                        ] = labelarg[labelarg[..., label_index] != 0, label_index]
+                        output[
+                            p0[0] : p0[0] + labelarg.shape[0],
+                            p0[1] : p0[1] + labelarg.shape[1],
+                            label_index,
+                        ] = output_slice[..., label_index]
+
                     elif merge == "or":
-                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] = (output_slice[..., label_index] != 0) | (labelarg[..., label_index] != 0)
-                    
+                        output[
+                            p0[0] : p0[0] + labelarg.shape[0],
+                            p0[1] : p0[1] + labelarg.shape[1],
+                            label_index,
+                        ] = (output_slice[..., label_index] != 0) | (
+                            labelarg[..., label_index] != 0
+                        )
+
                     elif merge == "mul":
-                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] *= labelarg[..., label_index]
+                        output[
+                            p0[0] : p0[0] + labelarg.shape[0],
+                            p0[1] : p0[1] + labelarg.shape[1],
+                            label_index,
+                        ] *= labelarg[..., label_index]
 
                     else:
                         # No match, assume function
-                        output[p0[0]:p0[0]+labelarg.shape[0], p0[1]:p0[1]+labelarg.shape[1], label_index] = (
-                            merge(
-                                output_slice[..., label_index],
-                                labelarg[..., label_index]
-                            )
+                        output[
+                            p0[0] : p0[0] + labelarg.shape[0],
+                            p0[1] : p0[1] + labelarg.shape[1],
+                            label_index,
+                        ] = merge(
+                            output_slice[..., label_index], labelarg[..., label_index]
                         )
         output = Image(output)
         for label in list_of_labels:
@@ -940,10 +969,9 @@ class SampleToMasks(Feature):
         return output
 
 
-            
 def _get_position(image, mode="corner", return_z=False):
     # Extracts the position of the upper left corner of a scatterer
-    
+
     if mode == "corner":
         shift = (np.array(image.shape) - 1) / 2
     else:
@@ -961,11 +989,14 @@ def _get_position(image, mode="corner", return_z=False):
 
         elif len(position) == 2:
             if return_z:
-                outp = np.array([position[0], position[1],
-                                image.get_property("z", default=0)]) - shift
+                outp = (
+                    np.array(
+                        [position[0], position[1], image.get_property("z", default=0)]
+                    )
+                    - shift
+                )
                 positions_out.append(outp)
             else:
                 positions_out.append(position - shift[0:2])
 
     return positions_out
-

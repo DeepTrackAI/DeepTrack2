@@ -1,4 +1,4 @@
-''' Features that augment images
+""" Features that augment images
 
 Augmentations are features that can resolve more than one image without
 calling `.resolve()` on the parent feature. Specifically, they create
@@ -17,7 +17,7 @@ FlipUD
     Flips images up-down.
 FlipDiagonal
     Flips images diagonally.
-'''
+"""
 
 from deeptrack.features import Feature
 from deeptrack.image import Image
@@ -27,14 +27,15 @@ from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
 import warnings
 
+
 class Augmentation(Feature):
-    '''Base abstract augmentation class.
+    """Base abstract augmentation class.
 
     Augmentations are features that can resolve more than one image without
     calling `.resolve()` on the parent feature. Specifically, they create
     `updates_per_reload` images, while calling their parent feature
     `load_size` times. They achieve this by resolving `load_size` results
-    from the parent feature at once, and randomly drawing one of these 
+    from the parent feature at once, and randomly drawing one of these
     results as input to the method `.get()`. A new input is chosen
     every time `.update()` is called. Once `.update()` has been called
     `updated_per_reload` times, a new batch of `load_size` results are
@@ -58,66 +59,73 @@ class Augmentation(Feature):
         Function called on the output of the method `.get()`. Overrides
         the default behaviour, allowing full control over how to update
         the properties of the output to account for the augmentation.
-    '''
+    """
 
     __distributed__ = False
-    def __init__(self, 
-                 feature: Feature = None, 
-                 load_size: int = 1, 
-                 updates_per_reload: int = 1, 
-                 update_properties: Callable or None = None, 
-                 **kwargs):
+
+    def __init__(
+        self,
+        feature: Feature = None,
+        load_size: int = 1,
+        updates_per_reload: int = 1,
+        update_properties: Callable or None = None,
+        **kwargs
+    ):
 
         if feature is not None:
             warnings.warn(
                 "Calling an augmentation with a feature is deprecated in a future release. Instead, just use the + operator.",
-                DeprecationWarning
+                DeprecationWarning,
             )
 
         if load_size is not 1:
             warnings.warn(
                 "Using an augmentation with a load size other than one is no longer supported",
-                DeprecationWarning
+                DeprecationWarning,
             )
 
-        
-        self.feature = feature 
+        self.feature = feature
 
-        
         def get_number_of_updates(updates_per_reload=1):
             # Updates the number of updates. The very first update is not counted.
             if not hasattr(self.properties["number_of_updates"], "_current_value"):
                 return 0
-            return (self.properties["number_of_updates"].current_value + 1) % updates_per_reload
+            return (
+                self.properties["number_of_updates"].current_value + 1
+            ) % updates_per_reload
 
         def tally():
             idx = 0
             while True:
                 yield idx
-                idx +=1
+                idx += 1
 
         if not update_properties:
             update_properties = self.update_properties
-        
+
         super().__init__(
-            load_size=load_size, 
+            load_size=load_size,
             update_tally=tally(),
-            updates_per_reload=updates_per_reload, 
-            index=kwargs.pop("index", False) or (lambda load_size: np.random.randint(load_size)), 
+            updates_per_reload=updates_per_reload,
+            index=kwargs.pop("index", False)
+            or (lambda load_size: np.random.randint(load_size)),
             number_of_updates=get_number_of_updates,
             update_properties=lambda: update_properties,
-            **kwargs)
-
+            **kwargs
+        )
 
     def _process_and_get(self, *args, update_properties=None, **kwargs):
-        
+
         # Loads a result from storage
-        if self.feature and (not hasattr(self, 'cache') or kwargs["update_tally"] - self.last_update >= kwargs["updates_per_reload"]):
+        if self.feature and (
+            not hasattr(self, "cache")
+            or kwargs["update_tally"] - self.last_update >= kwargs["updates_per_reload"]
+        ):
             if isinstance(self.feature, list):
                 self.cache = [feature.resolve() for feature in self.feature]
             else:
                 self.cache = self.feature.resolve()
-            self.last_update=kwargs["update_tally"]
+            self.last_update = kwargs["update_tally"]
 
         if not self.feature:
             image_list_of_lists = args[0]
@@ -126,24 +134,33 @@ class Augmentation(Feature):
 
         if not isinstance(image_list_of_lists, list):
             image_list_of_lists = [image_list_of_lists]
-        
+
         new_list_of_lists = []
         # Calls get
 
         np.random.seed(kwargs["hash_key"][0])
-        
+
         for image_list in image_list_of_lists:
             if isinstance(self.feature, list):
                 # If multiple features, ensure consistent rng
                 np.random.seed(kwargs["hash_key"][0])
 
             if isinstance(image_list, list):
-                new_list_of_lists.append([
-                    [Image(self.get(Image(image), **kwargs)).merge_properties_from(image) for image in image_list]
-                ])
-            else: 
                 new_list_of_lists.append(
-                    Image(self.get(Image(image_list), **kwargs)).merge_properties_from(image_list)
+                    [
+                        [
+                            Image(
+                                self.get(Image(image), **kwargs)
+                            ).merge_properties_from(image)
+                            for image in image_list
+                        ]
+                    ]
+                )
+            else:
+                new_list_of_lists.append(
+                    Image(self.get(Image(image_list), **kwargs)).merge_properties_from(
+                        image_list
+                    )
                 )
 
         if update_properties:
@@ -170,9 +187,8 @@ class Augmentation(Feature):
         pass
 
 
-
 class PreLoad(Augmentation):
-    '''Simple storage with no augmentation.
+    """Simple storage with no augmentation.
 
     Parameters
     ----------
@@ -189,16 +205,15 @@ class PreLoad(Augmentation):
         Function called on the output of the method `.get()`. Overrides
         the default behaviour, allowing full control over how to update
         the properties of the output to account for the augmentation.
-    
-    '''
+
+    """
 
     def get(self, image, **kwargs):
         return image
 
 
-
 class Crop(Augmentation):
-    ''' Crops a regions of an image.
+    """Crops a regions of an image.
 
     Parameters
     ----------
@@ -207,23 +222,32 @@ class Crop(Augmentation):
     corner : tuple of ints or Callable[Image] or "random"
         Top left corner of the cropped region. Can be a tuple of ints,
 
-    '''
+    """
+
     def __init__(self, *args, corner="random", crop_size=(64, 64), **kwargs):
         super().__init__(*args, corner=corner, crop_size=crop_size, **kwargs)
-    
+
     def get(self, image, corner, crop_size, **kwargs):
         if corner == "random":
             # Ensure seed is consistent
-            slice_start = np.random.randint([0] * len(crop_size), np.array(image.shape[:len(crop_size)]) - crop_size)
-            
+            slice_start = np.random.randint(
+                [0] * len(crop_size),
+                np.array(image.shape[: len(crop_size)]) - crop_size,
+            )
+
         elif callable(corner):
             slice_start = corner(image)
 
         else:
             slice_start = corner
-    
-        slices = tuple([slice(slice_start_i, slice_start_i + crop_size_i) for slice_start_i, crop_size_i in zip(slice_start, crop_size)])
-        
+
+        slices = tuple(
+            [
+                slice(slice_start_i, slice_start_i + crop_size_i)
+                for slice_start_i, crop_size_i in zip(slice_start, crop_size)
+            ]
+        )
+
         cropped_image = image[slices]
 
         cropped_image.properties = [dict(prop) for prop in image.properties]
@@ -236,53 +260,53 @@ class Crop(Augmentation):
                     prop["position"] = position
                 except IndexError:
                     pass
-        
+
         return cropped_image
 
+
 class FlipLR(Augmentation):
-    ''' Flips images left-right.
+    """Flips images left-right.
 
     Updates all properties called "position" to flip the second index.
-    '''
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, load_size=1, updates_per_reload=2, **kwargs)
-
 
     def get(self, image, number_of_updates, **kwargs):
         if number_of_updates % 2:
             image = np.fliplr(image)
         return image
 
-
     def update_properties(self, image, number_of_updates, **kwargs):
-        if number_of_updates % 2: 
+        if number_of_updates % 2:
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
-                    new_position = (position[0], image.shape[1] - position[1] - 1, *position[2:])
+                    new_position = (
+                        position[0],
+                        image.shape[1] - position[1] - 1,
+                        *position[2:],
+                    )
                     prop["position"] = new_position
 
 
-
 class FlipUD(Augmentation):
-    ''' Flips images up-down.
+    """Flips images up-down.
 
     Updates all properties called "position" by flipping the first index.
-    '''
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, load_size=1, updates_per_reload=2, **kwargs)
-
 
     def get(self, image, number_of_updates=0, **kwargs):
         if number_of_updates % 2:
             image = np.flipud(image)
         return image
 
-
     def update_properties(self, image, number_of_updates, **kwargs):
-        if number_of_updates % 2: 
+        if number_of_updates % 2:
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
@@ -291,63 +315,62 @@ class FlipUD(Augmentation):
 
 
 class FlipDiagonal(Augmentation):
-    ''' Flips images along the main diagonal.
+    """Flips images along the main diagonal.
 
     Updates all properties called "position" by swapping the first and second index.
-    '''
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, load_size=1, updates_per_reload=2, **kwargs)
-
 
     def get(self, image, number_of_updates, axes=(1, 0, 2), **kwargs):
         if number_of_updates % 2:
             image = np.transpose(image, axes=axes)
         return image
 
-
     def update_properties(self, image, number_of_updates, **kwargs):
-        if number_of_updates % 2: 
+        if number_of_updates % 2:
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
                     new_position = (position[1], position[0], *position[2:])
                     prop["position"] = new_position
 
+
 from deeptrack.utils import get_kwarg_names
-import imgaug.augmenters as iaa 
-import imgaug.imgaug as ia 
+import imgaug.augmenters as iaa
+import imgaug.imgaug as ia
 import warnings
 
+
 class ImgAug(Augmentation):
-    ''' Interfaces imagaug augmentations.
-    '''
+    """Interfaces imagaug augmentations."""
 
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
-    
+
     def get(self, image, **kwargs):
         argument_names = get_kwarg_names(self.augmenter)
         class_options = {}
         for key in argument_names:
             if key in kwargs:
                 class_options[key] = kwargs[key]
-                
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
 
-            ia.seed(entropy=np.random.randint(2**31 - 1))
+            ia.seed(entropy=np.random.randint(2 ** 31 - 1))
             return self.augmenter(**class_options)(image=image)
-
 
 
 ## IMGAUG GEOMETRIC
 # Please see https://github.com/aleju/imgaug/blob/master/imgaug/augmenters/geometric.py
 # for source implementation
 
+
 class Affine(ImgAug):
-	'''
+    """
     Augmenter to apply affine transformations to images.
 
     This is mostly a wrapper around the corresponding classes and functions
@@ -809,14 +832,40 @@ class Affine(ImgAug):
     both the x- and y-axis. Use ``shear={"x": (-45, 45), "y": (-45, 45)}``
     to get independent samples per axis.
 
-    '''
-	def __init__(self, scale=None, translate_percent=None, translate_px=None, rotate=None, shear=None, order=1, cval=0, mode='constant', fit_output=False, backend='auto', **kwargs):
-		self.augmenter=iaa.Affine
-		super().__init__(scale=scale, translate_percent=translate_percent, translate_px=translate_px, rotate=rotate, shear=shear, order=order, cval=cval, mode=mode, fit_output=fit_output, backend=backend, **kwargs)
+    """
+
+    def __init__(
+        self,
+        scale=None,
+        translate_percent=None,
+        translate_px=None,
+        rotate=None,
+        shear=None,
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        **kwargs
+    ):
+        self.augmenter = iaa.Affine
+        super().__init__(
+            scale=scale,
+            translate_percent=translate_percent,
+            translate_px=translate_px,
+            rotate=rotate,
+            shear=shear,
+            order=order,
+            cval=cval,
+            mode=mode,
+            fit_output=fit_output,
+            backend=backend,
+            **kwargs
+        )
 
 
 class AffineCv2(ImgAug):
-	'''
+    """
     **Deprecated.** Augmenter to apply affine transformations to images using
     cv2 (i.e. opencv) backend.
 
@@ -1111,14 +1160,36 @@ class AffineCv2(ImgAug):
     ``replicate`` mode, which repeats the color of the spatially closest pixel
     of the corresponding image edge.
 
-    '''
-	def __init__(self, scale=1.0, translate_percent=None, translate_px=None, rotate=0.0, shear=0.0, order=1, cval=0, mode=0, **kwargs):
-		self.augmenter=iaa.AffineCv2
-		super().__init__(scale=scale, translate_percent=translate_percent, translate_px=translate_px, rotate=rotate, shear=shear, order=order, cval=cval, mode=mode, **kwargs)
+    """
+
+    def __init__(
+        self,
+        scale=1.0,
+        translate_percent=None,
+        translate_px=None,
+        rotate=0.0,
+        shear=0.0,
+        order=1,
+        cval=0,
+        mode=0,
+        **kwargs
+    ):
+        self.augmenter = iaa.AffineCv2
+        super().__init__(
+            scale=scale,
+            translate_percent=translate_percent,
+            translate_px=translate_px,
+            rotate=rotate,
+            shear=shear,
+            order=order,
+            cval=cval,
+            mode=mode,
+            **kwargs
+        )
 
 
 class ElasticTransformation(ImgAug):
-	'''
+    """
     Transform images by moving pixels locally around using displacement fields.
 
     The augmenter has the parameters ``alpha`` and ``sigma``. ``alpha``
@@ -1294,14 +1365,32 @@ class ElasticTransformation(ImgAug):
     from the interval ``[0.0, 70.0]`` (randomly picked per image) and
     with a smoothness of ``5.0``.
 
-    '''
-	def __init__(self, alpha=(0.0, 40.0), sigma=(4.0, 8.0), order=3, cval=0, mode='constant', polygon_recoverer='auto', **kwargs):
-		self.augmenter=iaa.ElasticTransformation
-		super().__init__(alpha=alpha, sigma=sigma, order=order, cval=cval, mode=mode, polygon_recoverer=polygon_recoverer, **kwargs)
+    """
+
+    def __init__(
+        self,
+        alpha=(0.0, 40.0),
+        sigma=(4.0, 8.0),
+        order=3,
+        cval=0,
+        mode="constant",
+        polygon_recoverer="auto",
+        **kwargs
+    ):
+        self.augmenter = iaa.ElasticTransformation
+        super().__init__(
+            alpha=alpha,
+            sigma=sigma,
+            order=order,
+            cval=cval,
+            mode=mode,
+            polygon_recoverer=polygon_recoverer,
+            **kwargs
+        )
 
 
 class Jigsaw(ImgAug):
-	'''Move cells within images similar to jigsaw patterns.
+    """Move cells within images similar to jigsaw patterns.
 
     .. note::
 
@@ -1405,14 +1494,23 @@ class Jigsaw(ImgAug):
     amount between ``1`` and ``5`` times (decided per image). Some images will
     be barely changed, some will be fairly distorted.
 
-    '''
-	def __init__(self, nb_rows=(3, 10), nb_cols=(3, 10), max_steps=1, allow_pad=True, **kwargs):
-		self.augmenter=iaa.Jigsaw
-		super().__init__(nb_rows=nb_rows, nb_cols=nb_cols, max_steps=max_steps, allow_pad=allow_pad, **kwargs)
+    """
+
+    def __init__(
+        self, nb_rows=(3, 10), nb_cols=(3, 10), max_steps=1, allow_pad=True, **kwargs
+    ):
+        self.augmenter = iaa.Jigsaw
+        super().__init__(
+            nb_rows=nb_rows,
+            nb_cols=nb_cols,
+            max_steps=max_steps,
+            allow_pad=allow_pad,
+            **kwargs
+        )
 
 
 class PerspectiveTransform(ImgAug):
-	'''
+    """
     Apply random four point perspective transformations to images.
 
     Each of the four points is placed on the image using a random distance from
@@ -1578,14 +1676,32 @@ class PerspectiveTransform(ImgAug):
     the input image size after augmentation. This will lead to smaller
     output images.
 
-    '''
-	def __init__(self, scale=(0.0, 0.06), cval=0, mode='constant', keep_size=True, fit_output=False, polygon_recoverer='auto', **kwargs):
-		self.augmenter=iaa.PerspectiveTransform
-		super().__init__(scale=scale, cval=cval, mode=mode, keep_size=keep_size, fit_output=fit_output, polygon_recoverer=polygon_recoverer, **kwargs)
+    """
+
+    def __init__(
+        self,
+        scale=(0.0, 0.06),
+        cval=0,
+        mode="constant",
+        keep_size=True,
+        fit_output=False,
+        polygon_recoverer="auto",
+        **kwargs
+    ):
+        self.augmenter = iaa.PerspectiveTransform
+        super().__init__(
+            scale=scale,
+            cval=cval,
+            mode=mode,
+            keep_size=keep_size,
+            fit_output=fit_output,
+            polygon_recoverer=polygon_recoverer,
+            **kwargs
+        )
 
 
 class PiecewiseAffine(ImgAug):
-	'''
+    """
     Apply affine transformations that differ between local neighbourhoods.
 
     This augmenter places a regular grid of points on an image and randomly
@@ -1723,14 +1839,36 @@ class PiecewiseAffine(ImgAug):
     Same as the previous example, but uses a denser grid of ``8x8`` points
     (default is ``4x4``). This can be useful for large images.
 
-    '''
-	def __init__(self, scale=(0.0, 0.04), nb_rows=(2, 4), nb_cols=(2, 4), order=1, cval=0, mode='constant', absolute_scale=False, polygon_recoverer=None, **kwargs):
-		self.augmenter=iaa.PiecewiseAffine
-		super().__init__(scale=scale, nb_rows=nb_rows, nb_cols=nb_cols, order=order, cval=cval, mode=mode, absolute_scale=absolute_scale, polygon_recoverer=polygon_recoverer, **kwargs)
+    """
+
+    def __init__(
+        self,
+        scale=(0.0, 0.04),
+        nb_rows=(2, 4),
+        nb_cols=(2, 4),
+        order=1,
+        cval=0,
+        mode="constant",
+        absolute_scale=False,
+        polygon_recoverer=None,
+        **kwargs
+    ):
+        self.augmenter = iaa.PiecewiseAffine
+        super().__init__(
+            scale=scale,
+            nb_rows=nb_rows,
+            nb_cols=nb_cols,
+            order=order,
+            cval=cval,
+            mode=mode,
+            absolute_scale=absolute_scale,
+            polygon_recoverer=polygon_recoverer,
+            **kwargs
+        )
 
 
 class Rot90(ImgAug):
-	'''
+    """
     Rotate images clockwise by multiples of 90 degrees.
 
     This could also be achieved using ``Affine``, but ``Rot90`` is
@@ -1829,14 +1967,15 @@ class Rot90(ImgAug):
     Does not resize to the original image size afterwards, i.e. each image's
     size may change.
 
-    '''
-	def __init__(self, k=1, keep_size=True, **kwargs):
-		self.augmenter=iaa.Rot90
-		super().__init__(k=k, keep_size=keep_size, **kwargs)
+    """
+
+    def __init__(self, k=1, keep_size=True, **kwargs):
+        self.augmenter = iaa.Rot90
+        super().__init__(k=k, keep_size=keep_size, **kwargs)
 
 
 class Rotate(ImgAug):
-	'''Apply affine rotation on the y-axis to input data.
+    """Apply affine rotation on the y-axis to input data.
 
     This is a wrapper around :class:`Affine`.
     It is the same as ``Affine(rotate=<value>)``.
@@ -1892,14 +2031,32 @@ class Rotate(ImgAug):
     Create an augmenter that rotates images by a random value between ``-45``
     and ``45`` degress.
 
-    '''
-	def __init__(self, rotate=(-30, 30), order=1, cval=0, mode='constant', fit_output=False, backend='auto', **kwargs):
-		self.augmenter=iaa.Rotate
-		super().__init__(rotate=rotate, order=order, cval=cval, mode=mode, fit_output=fit_output, backend=backend, **kwargs)
+    """
+
+    def __init__(
+        self,
+        rotate=(-30, 30),
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        **kwargs
+    ):
+        self.augmenter = iaa.Rotate
+        super().__init__(
+            rotate=rotate,
+            order=order,
+            cval=cval,
+            mode=mode,
+            fit_output=fit_output,
+            backend=backend,
+            **kwargs
+        )
 
 
 class ScaleX(ImgAug):
-	'''Apply affine scaling on the x-axis to input data.
+    """Apply affine scaling on the x-axis to input data.
 
     This is a wrapper around :class:`Affine`.
 
@@ -1957,14 +2114,32 @@ class ScaleX(ImgAug):
     and width), only the pixels within the image are remapped and potentially
     new ones are filled in.
 
-    '''
-	def __init__(self, scale=(0.5, 1.5), order=1, cval=0, mode='constant', fit_output=False, backend='auto', **kwargs):
-		self.augmenter=iaa.ScaleX
-		super().__init__(scale=scale, order=order, cval=cval, mode=mode, fit_output=fit_output, backend=backend, **kwargs)
+    """
+
+    def __init__(
+        self,
+        scale=(0.5, 1.5),
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        **kwargs
+    ):
+        self.augmenter = iaa.ScaleX
+        super().__init__(
+            scale=scale,
+            order=order,
+            cval=cval,
+            mode=mode,
+            fit_output=fit_output,
+            backend=backend,
+            **kwargs
+        )
 
 
 class ScaleY(ImgAug):
-	'''Apply affine scaling on the y-axis to input data.
+    """Apply affine scaling on the y-axis to input data.
 
     This is a wrapper around :class:`Affine`.
 
@@ -2022,14 +2197,32 @@ class ScaleY(ImgAug):
     and width), only the pixels within the image are remapped and potentially
     new ones are filled in.
 
-    '''
-	def __init__(self, scale=(0.5, 1.5), order=1, cval=0, mode='constant', fit_output=False, backend='auto', **kwargs):
-		self.augmenter=iaa.ScaleY
-		super().__init__(scale=scale, order=order, cval=cval, mode=mode, fit_output=fit_output, backend=backend, **kwargs)
+    """
+
+    def __init__(
+        self,
+        scale=(0.5, 1.5),
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        **kwargs
+    ):
+        self.augmenter = iaa.ScaleY
+        super().__init__(
+            scale=scale,
+            order=order,
+            cval=cval,
+            mode=mode,
+            fit_output=fit_output,
+            backend=backend,
+            **kwargs
+        )
 
 
 class ShearX(ImgAug):
-	'''Apply affine shear on the x-axis to input data.
+    """Apply affine shear on the x-axis to input data.
 
     This is a wrapper around :class:`Affine`.
 
@@ -2085,14 +2278,32 @@ class ShearX(ImgAug):
     Create an augmenter that shears images along the x-axis by random amounts
     between ``-20`` and ``20`` degrees.
 
-    '''
-	def __init__(self, shear=(-30, 30), order=1, cval=0, mode='constant', fit_output=False, backend='auto', **kwargs):
-		self.augmenter=iaa.ShearX
-		super().__init__(shear=shear, order=order, cval=cval, mode=mode, fit_output=fit_output, backend=backend, **kwargs)
+    """
+
+    def __init__(
+        self,
+        shear=(-30, 30),
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        **kwargs
+    ):
+        self.augmenter = iaa.ShearX
+        super().__init__(
+            shear=shear,
+            order=order,
+            cval=cval,
+            mode=mode,
+            fit_output=fit_output,
+            backend=backend,
+            **kwargs
+        )
 
 
 class ShearY(ImgAug):
-	'''Apply affine shear on the y-axis to input data.
+    """Apply affine shear on the y-axis to input data.
 
     This is a wrapper around :class:`Affine`.
 
@@ -2148,14 +2359,32 @@ class ShearY(ImgAug):
     Create an augmenter that shears images along the y-axis by random amounts
     between ``-20`` and ``20`` degrees.
 
-    '''
-	def __init__(self, shear=(-30, 30), order=1, cval=0, mode='constant', fit_output=False, backend='auto', **kwargs):
-		self.augmenter=iaa.ShearY
-		super().__init__(shear=shear, order=order, cval=cval, mode=mode, fit_output=fit_output, backend=backend, **kwargs)
+    """
+
+    def __init__(
+        self,
+        shear=(-30, 30),
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        **kwargs
+    ):
+        self.augmenter = iaa.ShearY
+        super().__init__(
+            shear=shear,
+            order=order,
+            cval=cval,
+            mode=mode,
+            fit_output=fit_output,
+            backend=backend,
+            **kwargs
+        )
 
 
 class TranslateX(ImgAug):
-	'''Apply affine translation on the x-axis to input data.
+    """Apply affine translation on the x-axis to input data.
 
     This is a wrapper around :class:`Affine`.
 
@@ -2222,14 +2451,34 @@ class TranslateX(ImgAug):
     Create an augmenter that translates images along the x-axis by
     ``-10%`` to ``10%`` (relative to the x-axis size).
 
-    '''
-	def __init__(self, percent=None, px=None, order=1, cval=0, mode='constant', fit_output=False, backend='auto', **kwargs):
-		self.augmenter=iaa.TranslateX
-		super().__init__(percent=percent, px=px, order=order, cval=cval, mode=mode, fit_output=fit_output, backend=backend, **kwargs)
+    """
+
+    def __init__(
+        self,
+        percent=None,
+        px=None,
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        **kwargs
+    ):
+        self.augmenter = iaa.TranslateX
+        super().__init__(
+            percent=percent,
+            px=px,
+            order=order,
+            cval=cval,
+            mode=mode,
+            fit_output=fit_output,
+            backend=backend,
+            **kwargs
+        )
 
 
 class TranslateY(ImgAug):
-	'''Apply affine translation on the y-axis to input data.
+    """Apply affine translation on the y-axis to input data.
 
     This is a wrapper around :class:`Affine`.
 
@@ -2296,14 +2545,34 @@ class TranslateY(ImgAug):
     Create an augmenter that translates images along the y-axis by
     ``-10%`` to ``10%`` (relative to the y-axis size).
 
-    '''
-	def __init__(self, percent=None, px=None, order=1, cval=0, mode='constant', fit_output=False, backend='auto', **kwargs):
-		self.augmenter=iaa.TranslateY
-		super().__init__(percent=percent, px=px, order=order, cval=cval, mode=mode, fit_output=fit_output, backend=backend, **kwargs)
+    """
+
+    def __init__(
+        self,
+        percent=None,
+        px=None,
+        order=1,
+        cval=0,
+        mode="constant",
+        fit_output=False,
+        backend="auto",
+        **kwargs
+    ):
+        self.augmenter = iaa.TranslateY
+        super().__init__(
+            percent=percent,
+            px=px,
+            order=order,
+            cval=cval,
+            mode=mode,
+            fit_output=fit_output,
+            backend=backend,
+            **kwargs
+        )
 
 
 class WithPolarWarping(ImgAug):
-	'''Augmenter that applies other augmenters in a polar-transformed space.
+    """Augmenter that applies other augmenters in a polar-transformed space.
 
     This augmenter first transforms an image into a polar representation,
     then applies its child augmenter, then transforms back to cartesian
@@ -2424,14 +2693,15 @@ class WithPolarWarping(ImgAug):
     Apply average pooling in polar representation. This leads to circular
     bins.
 
-    '''
-	def __init__(self, children, **kwargs):
-		self.augmenter=iaa.WithPolarWarping
-		super().__init__(children=children, **kwargs)
+    """
+
+    def __init__(self, children, **kwargs):
+        self.augmenter = iaa.WithPolarWarping
+        super().__init__(children=children, **kwargs)
 
 
 class CenterCropToAspectRatio(ImgAug):
-	'''Crop images equally on all sides until they reach an aspect ratio.
+    """Crop images equally on all sides until they reach an aspect ratio.
 
     This is the same as :class:`~imgaug.augmenters.size.CropToAspectRatio`, but
     uses ``position="center"`` by default, which spreads the crop amounts
@@ -2478,14 +2748,15 @@ class CenterCropToAspectRatio(ImgAug):
     The rows to be cropped will be spread *equally* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, aspect_ratio, **kwargs):
-		self.augmenter=iaa.CenterCropToAspectRatio
-		super().__init__(aspect_ratio=aspect_ratio, **kwargs)
+    """
+
+    def __init__(self, aspect_ratio, **kwargs):
+        self.augmenter = iaa.CenterCropToAspectRatio
+        super().__init__(aspect_ratio=aspect_ratio, **kwargs)
 
 
 class CenterCropToFixedSize(ImgAug):
-	'''Take a crop from the center of each image.
+    """Take a crop from the center of each image.
 
     This is an alias for :class:`~imgaug.augmenters.size.CropToFixedSize` with
     ``position="center"``.
@@ -2536,14 +2807,15 @@ class CenterCropToFixedSize(ImgAug):
     Create an augmenter that takes ``20x10`` sized crops from the center of
     images.
 
-    '''
-	def __init__(self, width, height, **kwargs):
-		self.augmenter=iaa.CenterCropToFixedSize
-		super().__init__(width=width, height=height, **kwargs)
+    """
+
+    def __init__(self, width, height, **kwargs):
+        self.augmenter = iaa.CenterCropToFixedSize
+        super().__init__(width=width, height=height, **kwargs)
 
 
 class CenterCropToMultiplesOf(ImgAug):
-	'''Crop images equally on all sides until H/W are multiples of given values.
+    """Crop images equally on all sides until H/W are multiples of given values.
 
     This is the same as :class:`~imgaug.augmenters.size.CropToMultiplesOf`,
     but uses ``position="center"`` by default, which spreads the crop amounts
@@ -2593,14 +2865,17 @@ class CenterCropToMultiplesOf(ImgAug):
     The rows to be cropped will be spread *equally* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, width_multiple, height_multiple, **kwargs):
-		self.augmenter=iaa.CenterCropToMultiplesOf
-		super().__init__(width_multiple=width_multiple, height_multiple=height_multiple, **kwargs)
+    """
+
+    def __init__(self, width_multiple, height_multiple, **kwargs):
+        self.augmenter = iaa.CenterCropToMultiplesOf
+        super().__init__(
+            width_multiple=width_multiple, height_multiple=height_multiple, **kwargs
+        )
 
 
 class CenterCropToPowersOf(ImgAug):
-	'''Crop images equally on all sides until H/W is a power of a base.
+    """Crop images equally on all sides until H/W is a power of a base.
 
     This is the same as :class:`~imgaug.augmenters.size.CropToPowersOf`, but
     uses ``position="center"`` by default, which spreads the crop amounts
@@ -2650,14 +2925,15 @@ class CenterCropToPowersOf(ImgAug):
     The rows to be cropped will be spread *equally* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, width_base, height_base, **kwargs):
-		self.augmenter=iaa.CenterCropToPowersOf
-		super().__init__(width_base=width_base, height_base=height_base, **kwargs)
+    """
+
+    def __init__(self, width_base, height_base, **kwargs):
+        self.augmenter = iaa.CenterCropToPowersOf
+        super().__init__(width_base=width_base, height_base=height_base, **kwargs)
 
 
 class CenterCropToSquare(ImgAug):
-	'''Crop images equally on all sides until their height/width are identical.
+    """Crop images equally on all sides until their height/width are identical.
 
     In contrast to :class:`~imgaug.augmenters.size.CropToSquare`, this
     augmenter always tries to spread the columns/rows to remove equally over
@@ -2707,14 +2983,15 @@ class CenterCropToSquare(ImgAug):
     The rows to be cropped will be spread *equally* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, **kwargs):
-		self.augmenter=iaa.CenterCropToSquare
-		super().__init__(**kwargs)
+    """
+
+    def __init__(self, **kwargs):
+        self.augmenter = iaa.CenterCropToSquare
+        super().__init__(**kwargs)
 
 
 class CenterPadToAspectRatio(ImgAug):
-	'''Pad images equally on all sides until H/W matches an aspect ratio.
+    """Pad images equally on all sides until H/W matches an aspect ratio.
 
     This is the same as :class:`~imgaug.augmenters.size.PadToAspectRatio`, but
     uses ``position="center"`` by default, which spreads the pad amounts
@@ -2759,14 +3036,17 @@ class CenterPadToAspectRatio(ImgAug):
     The rows to be padded will be spread *equally* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, aspect_ratio, pad_mode='constant', pad_cval=0, **kwargs):
-		self.augmenter=iaa.CenterPadToAspectRatio
-		super().__init__(aspect_ratio=aspect_ratio, pad_mode=pad_mode, pad_cval=pad_cval, **kwargs)
+    """
+
+    def __init__(self, aspect_ratio, pad_mode="constant", pad_cval=0, **kwargs):
+        self.augmenter = iaa.CenterPadToAspectRatio
+        super().__init__(
+            aspect_ratio=aspect_ratio, pad_mode=pad_mode, pad_cval=pad_cval, **kwargs
+        )
 
 
 class CenterPadToFixedSize(ImgAug):
-	'''Pad images equally on all sides up to given minimum heights/widths.
+    """Pad images equally on all sides up to given minimum heights/widths.
 
     This is an alias for :class:`~imgaug.augmenters.size.PadToFixedSize`
     with ``position="center"``. It spreads the pad amounts equally over
@@ -2819,14 +3099,17 @@ class CenterPadToFixedSize(ImgAug):
     rows added *equally* on the top and bottom (analogous for the padded
     columns).
 
-    '''
-	def __init__(self, width, height, pad_mode='constant', pad_cval=0, **kwargs):
-		self.augmenter=iaa.CenterPadToFixedSize
-		super().__init__(width=width, height=height, pad_mode=pad_mode, pad_cval=pad_cval, **kwargs)
+    """
+
+    def __init__(self, width, height, pad_mode="constant", pad_cval=0, **kwargs):
+        self.augmenter = iaa.CenterPadToFixedSize
+        super().__init__(
+            width=width, height=height, pad_mode=pad_mode, pad_cval=pad_cval, **kwargs
+        )
 
 
 class CenterPadToMultiplesOf(ImgAug):
-	'''Pad images equally on all sides until H/W are multiples of given values.
+    """Pad images equally on all sides until H/W are multiples of given values.
 
     This is the same as :class:`~imgaug.augmenters.size.PadToMultiplesOf`, but
     uses ``position="center"`` by default, which spreads the pad amounts
@@ -2882,14 +3165,23 @@ class CenterPadToMultiplesOf(ImgAug):
     The rows to be padded will be spread *equally* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, width_multiple, height_multiple, pad_mode='constant', pad_cval=0, **kwargs):
-		self.augmenter=iaa.CenterPadToMultiplesOf
-		super().__init__(width_multiple=width_multiple, height_multiple=height_multiple, pad_mode=pad_mode, pad_cval=pad_cval, **kwargs)
+    """
+
+    def __init__(
+        self, width_multiple, height_multiple, pad_mode="constant", pad_cval=0, **kwargs
+    ):
+        self.augmenter = iaa.CenterPadToMultiplesOf
+        super().__init__(
+            width_multiple=width_multiple,
+            height_multiple=height_multiple,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
+            **kwargs
+        )
 
 
 class CenterPadToPowersOf(ImgAug):
-	'''Pad images equally on all sides until H/W is a power of a base.
+    """Pad images equally on all sides until H/W is a power of a base.
 
     This is the same as :class:`~imgaug.augmenters.size.PadToPowersOf`, but uses
     ``position="center"`` by default, which spreads the pad amounts equally
@@ -2944,14 +3236,23 @@ class CenterPadToPowersOf(ImgAug):
     The rows to be padded will be spread *equally* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, width_base, height_base, pad_mode='constant', pad_cval=0, **kwargs):
-		self.augmenter=iaa.CenterPadToPowersOf
-		super().__init__(width_base=width_base, height_base=height_base, pad_mode=pad_mode, pad_cval=pad_cval, **kwargs)
+    """
+
+    def __init__(
+        self, width_base, height_base, pad_mode="constant", pad_cval=0, **kwargs
+    ):
+        self.augmenter = iaa.CenterPadToPowersOf
+        super().__init__(
+            width_base=width_base,
+            height_base=height_base,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
+            **kwargs
+        )
 
 
 class CenterPadToSquare(ImgAug):
-	'''Pad images equally on all sides until their height & width are identical.
+    """Pad images equally on all sides until their height & width are identical.
 
     This is the same as :class:`~imgaug.augmenters.size.PadToSquare`, but uses
     ``position="center"`` by default, which spreads the pad amounts equally
@@ -2993,14 +3294,15 @@ class CenterPadToSquare(ImgAug):
     The rows to be padded will be spread *equally* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, pad_mode='constant', pad_cval=0, **kwargs):
-		self.augmenter=iaa.CenterPadToSquare
-		super().__init__(pad_mode=pad_mode, pad_cval=pad_cval, **kwargs)
+    """
+
+    def __init__(self, pad_mode="constant", pad_cval=0, **kwargs):
+        self.augmenter = iaa.CenterPadToSquare
+        super().__init__(pad_mode=pad_mode, pad_cval=pad_cval, **kwargs)
 
 
 class Crop(ImgAug):
-	'''Crop images, i.e. remove columns/rows of pixels at the sides of images.
+    """Crop images, i.e. remove columns/rows of pixels at the sides of images.
 
     This augmenter allows to extract smaller-sized subimages from given
     full-sized input images. The number of pixels to cut off may be defined
@@ -3146,14 +3448,23 @@ class Crop(ImgAug):
     Crops each side by either ``5%`` or ``10%``. The values are sampled
     once per side and image.
 
-    '''
-	def __init__(self, px=None, percent=None, keep_size=True, sample_independently=True, **kwargs):
-		self.augmenter=iaa.Crop
-		super().__init__(px=px, percent=percent, keep_size=keep_size, sample_independently=sample_independently, **kwargs)
+    """
+
+    def __init__(
+        self, px=None, percent=None, keep_size=True, sample_independently=True, **kwargs
+    ):
+        self.augmenter = iaa.Crop
+        super().__init__(
+            px=px,
+            percent=percent,
+            keep_size=keep_size,
+            sample_independently=sample_independently,
+            **kwargs
+        )
 
 
 class CropAndPad(ImgAug):
-	'''Crop/pad images by pixel amounts or fractions of image sizes.
+    """Crop/pad images by pixel amounts or fractions of image sizes.
 
     Cropping removes pixels at the sides (i.e. extracts a subimage from
     a given full image). Padding adds pixels to the sides (e.g. black pixels).
@@ -3388,14 +3699,32 @@ class CropAndPad(ImgAug):
     ``[-10..10]``. Then either crop (negative sample) or pad (positive sample)
     the side by ``v`` pixels.
 
-    '''
-	def __init__(self, px=None, percent=None, pad_mode='constant', pad_cval=0, keep_size=True, sample_independently=True, **kwargs):
-		self.augmenter=iaa.CropAndPad
-		super().__init__(px=px, percent=percent, pad_mode=pad_mode, pad_cval=pad_cval, keep_size=keep_size, sample_independently=sample_independently, **kwargs)
+    """
+
+    def __init__(
+        self,
+        px=None,
+        percent=None,
+        pad_mode="constant",
+        pad_cval=0,
+        keep_size=True,
+        sample_independently=True,
+        **kwargs
+    ):
+        self.augmenter = iaa.CropAndPad
+        super().__init__(
+            px=px,
+            percent=percent,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
+            keep_size=keep_size,
+            sample_independently=sample_independently,
+            **kwargs
+        )
 
 
 class CropToAspectRatio(ImgAug):
-	'''Crop images until their width/height matches an aspect ratio.
+    """Crop images until their width/height matches an aspect ratio.
 
     This augmenter removes either rows or columns until the image reaches
     the desired aspect ratio given in ``width / height``. The cropping
@@ -3446,14 +3775,15 @@ class CropToAspectRatio(ImgAug):
     The rows to be cropped will be spread *randomly* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, aspect_ratio, position='uniform', **kwargs):
-		self.augmenter=iaa.CropToAspectRatio
-		super().__init__(aspect_ratio=aspect_ratio, position=position, **kwargs)
+    """
+
+    def __init__(self, aspect_ratio, position="uniform", **kwargs):
+        self.augmenter = iaa.CropToAspectRatio
+        super().__init__(aspect_ratio=aspect_ratio, position=position, **kwargs)
 
 
 class CropToFixedSize(ImgAug):
-	'''Crop images down to a predefined maximum width and/or height.
+    """Crop images down to a predefined maximum width and/or height.
 
     If images are already at the maximum width/height or are smaller, they
     will not be cropped. Note that this also means that images will not be
@@ -3573,14 +3903,15 @@ class CropToFixedSize(ImgAug):
     Analogously, crop images larger than ``100x100`` until they reach
     ``100x100``. The output images therefore have a fixed size of ``100x100``.
 
-    '''
-	def __init__(self, width, height, position='uniform', **kwargs):
-		self.augmenter=iaa.CropToFixedSize
-		super().__init__(width=width, height=height, position=position, **kwargs)
+    """
+
+    def __init__(self, width, height, position="uniform", **kwargs):
+        self.augmenter = iaa.CropToFixedSize
+        super().__init__(width=width, height=height, position=position, **kwargs)
 
 
 class CropToMultiplesOf(ImgAug):
-	'''Crop images down until their height/width is a multiple of a value.
+    """Crop images down until their height/width is a multiple of a value.
 
     .. note::
 
@@ -3638,14 +3969,20 @@ class CropToMultiplesOf(ImgAug):
     The rows to be cropped will be spread *randomly* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, width_multiple, height_multiple, position='uniform', **kwargs):
-		self.augmenter=iaa.CropToMultiplesOf
-		super().__init__(width_multiple=width_multiple, height_multiple=height_multiple, position=position, **kwargs)
+    """
+
+    def __init__(self, width_multiple, height_multiple, position="uniform", **kwargs):
+        self.augmenter = iaa.CropToMultiplesOf
+        super().__init__(
+            width_multiple=width_multiple,
+            height_multiple=height_multiple,
+            position=position,
+            **kwargs
+        )
 
 
 class CropToPowersOf(ImgAug):
-	'''Crop images until their height/width is a power of a base.
+    """Crop images until their height/width is a power of a base.
 
     This augmenter removes pixels from an axis with size ``S`` leading to the
     new size ``S'`` until ``S' = B^E`` is fulfilled, where ``B`` is a
@@ -3710,14 +4047,17 @@ class CropToPowersOf(ImgAug):
     The rows to be cropped will be spread *randomly* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, width_base, height_base, position='uniform', **kwargs):
-		self.augmenter=iaa.CropToPowersOf
-		super().__init__(width_base=width_base, height_base=height_base, position=position, **kwargs)
+    """
+
+    def __init__(self, width_base, height_base, position="uniform", **kwargs):
+        self.augmenter = iaa.CropToPowersOf
+        super().__init__(
+            width_base=width_base, height_base=height_base, position=position, **kwargs
+        )
 
 
 class CropToSquare(ImgAug):
-	'''Crop images until their width and height are identical.
+    """Crop images until their width and height are identical.
 
     This is identical to :class:`~imgaug.augmenters.size.CropToAspectRatio`
     with ``aspect_ratio=1.0``.
@@ -3762,14 +4102,15 @@ class CropToSquare(ImgAug):
     The rows to be cropped will be spread *randomly* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, position='uniform', **kwargs):
-		self.augmenter=iaa.CropToSquare
-		super().__init__(position=position, **kwargs)
+    """
+
+    def __init__(self, position="uniform", **kwargs):
+        self.augmenter = iaa.CropToSquare
+        super().__init__(position=position, **kwargs)
 
 
 class KeepSizeByResize(ImgAug):
-	'''Resize images back to their input sizes after applying child augmenters.
+    """Resize images back to their input sizes after applying child augmenters.
 
     Combining this with e.g. a cropping augmenter as the child will lead to
     images being resized back to the input size after the crop operation was
@@ -3873,14 +4214,28 @@ class KeepSizeByResize(ImgAug):
     used for the corresponding image. Segmentation maps are not resized and
     will therefore remain at their size after cropping.
 
-    '''
-	def __init__(self, children, interpolation='cubic', interpolation_heatmaps='SAME_AS_IMAGES', interpolation_segmaps='nearest', **kwargs):
-		self.augmenter=iaa.KeepSizeByResize
-		super().__init__(children=children, interpolation=interpolation, interpolation_heatmaps=interpolation_heatmaps, interpolation_segmaps=interpolation_segmaps, **kwargs)
+    """
+
+    def __init__(
+        self,
+        children,
+        interpolation="cubic",
+        interpolation_heatmaps="SAME_AS_IMAGES",
+        interpolation_segmaps="nearest",
+        **kwargs
+    ):
+        self.augmenter = iaa.KeepSizeByResize
+        super().__init__(
+            children=children,
+            interpolation=interpolation,
+            interpolation_heatmaps=interpolation_heatmaps,
+            interpolation_segmaps=interpolation_segmaps,
+            **kwargs
+        )
 
 
 class Pad(ImgAug):
-	'''Pad images, i.e. adds columns/rows of pixels to them.
+    """Pad images, i.e. adds columns/rows of pixels to them.
 
     **Supported dtypes**:
 
@@ -4073,14 +4428,32 @@ class Pad(ImgAug):
     Pads each side by either ``5%`` or ``10%``. The values are sampled
     once per side and image.
 
-    '''
-	def __init__(self, px=None, percent=None, pad_mode='constant', pad_cval=0, keep_size=True, sample_independently=True, **kwargs):
-		self.augmenter=iaa.Pad
-		super().__init__(px=px, percent=percent, pad_mode=pad_mode, pad_cval=pad_cval, keep_size=keep_size, sample_independently=sample_independently, **kwargs)
+    """
+
+    def __init__(
+        self,
+        px=None,
+        percent=None,
+        pad_mode="constant",
+        pad_cval=0,
+        keep_size=True,
+        sample_independently=True,
+        **kwargs
+    ):
+        self.augmenter = iaa.Pad
+        super().__init__(
+            px=px,
+            percent=percent,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
+            keep_size=keep_size,
+            sample_independently=sample_independently,
+            **kwargs
+        )
 
 
 class PadToAspectRatio(ImgAug):
-	'''Pad images until their width/height matches an aspect ratio.
+    """Pad images until their width/height matches an aspect ratio.
 
     This augmenter adds either rows or columns until the image reaches
     the desired aspect ratio given in ``width / height``.
@@ -4134,14 +4507,28 @@ class PadToAspectRatio(ImgAug):
     The rows to be padded will be spread *randomly* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, aspect_ratio, pad_mode='constant', pad_cval=0, position='uniform', **kwargs):
-		self.augmenter=iaa.PadToAspectRatio
-		super().__init__(aspect_ratio=aspect_ratio, pad_mode=pad_mode, pad_cval=pad_cval, position=position, **kwargs)
+    """
+
+    def __init__(
+        self,
+        aspect_ratio,
+        pad_mode="constant",
+        pad_cval=0,
+        position="uniform",
+        **kwargs
+    ):
+        self.augmenter = iaa.PadToAspectRatio
+        super().__init__(
+            aspect_ratio=aspect_ratio,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
+            position=position,
+            **kwargs
+        )
 
 
 class PadToFixedSize(ImgAug):
-	'''Pad images to a predefined minimum width and/or height.
+    """Pad images to a predefined minimum width and/or height.
 
     If images are already at the minimum width/height or are larger, they will
     not be padded. Note that this also means that images will not be cropped if
@@ -4266,14 +4653,30 @@ class PadToFixedSize(ImgAug):
     Analogously, crop images larger than ``100x100`` until they reach
     ``100x100``. The output images therefore have a fixed size of ``100x100``.
 
-    '''
-	def __init__(self, width, height, pad_mode='constant', pad_cval=0, position='uniform', **kwargs):
-		self.augmenter=iaa.PadToFixedSize
-		super().__init__(width=width, height=height, pad_mode=pad_mode, pad_cval=pad_cval, position=position, **kwargs)
+    """
+
+    def __init__(
+        self,
+        width,
+        height,
+        pad_mode="constant",
+        pad_cval=0,
+        position="uniform",
+        **kwargs
+    ):
+        self.augmenter = iaa.PadToFixedSize
+        super().__init__(
+            width=width,
+            height=height,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
+            position=position,
+            **kwargs
+        )
 
 
 class PadToMultiplesOf(ImgAug):
-	'''Pad images until their height/width is a multiple of a value.
+    """Pad images until their height/width is a multiple of a value.
 
     Added in 0.4.0.
 
@@ -4330,14 +4733,30 @@ class PadToMultiplesOf(ImgAug):
     The rows to be padded will be spread *randomly* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, width_multiple, height_multiple, pad_mode='constant', pad_cval=0, position='uniform', **kwargs):
-		self.augmenter=iaa.PadToMultiplesOf
-		super().__init__(width_multiple=width_multiple, height_multiple=height_multiple, pad_mode=pad_mode, pad_cval=pad_cval, position=position, **kwargs)
+    """
+
+    def __init__(
+        self,
+        width_multiple,
+        height_multiple,
+        pad_mode="constant",
+        pad_cval=0,
+        position="uniform",
+        **kwargs
+    ):
+        self.augmenter = iaa.PadToMultiplesOf
+        super().__init__(
+            width_multiple=width_multiple,
+            height_multiple=height_multiple,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
+            position=position,
+            **kwargs
+        )
 
 
 class PadToPowersOf(ImgAug):
-	'''Pad images until their height/width is a power of a base.
+    """Pad images until their height/width is a power of a base.
 
     This augmenter adds pixels to an axis with size ``S`` leading to the
     new size ``S'`` until ``S' = B^E`` is fulfilled, where ``B`` is a
@@ -4401,14 +4820,30 @@ class PadToPowersOf(ImgAug):
     The rows to be padded will be spread *randomly* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, width_base, height_base, pad_mode='constant', pad_cval=0, position='uniform', **kwargs):
-		self.augmenter=iaa.PadToPowersOf
-		super().__init__(width_base=width_base, height_base=height_base, pad_mode=pad_mode, pad_cval=pad_cval, position=position, **kwargs)
+    """
+
+    def __init__(
+        self,
+        width_base,
+        height_base,
+        pad_mode="constant",
+        pad_cval=0,
+        position="uniform",
+        **kwargs
+    ):
+        self.augmenter = iaa.PadToPowersOf
+        super().__init__(
+            width_base=width_base,
+            height_base=height_base,
+            pad_mode=pad_mode,
+            pad_cval=pad_cval,
+            position=position,
+            **kwargs
+        )
 
 
 class PadToSquare(ImgAug):
-	'''Pad images until their height and width are identical.
+    """Pad images until their height and width are identical.
 
     This augmenter is identical to
     :class:`~imgaug.augmenters.size.PadToAspectRatio` with ``aspect_ratio=1.0``.
@@ -4457,14 +4892,17 @@ class PadToSquare(ImgAug):
     The rows to be padded will be spread *randomly* over the top and bottom
     sides (analogous for the left/right sides).
 
-    '''
-	def __init__(self, pad_mode='constant', pad_cval=0, position='uniform', **kwargs):
-		self.augmenter=iaa.PadToSquare
-		super().__init__(pad_mode=pad_mode, pad_cval=pad_cval, position=position, **kwargs)
+    """
+
+    def __init__(self, pad_mode="constant", pad_cval=0, position="uniform", **kwargs):
+        self.augmenter = iaa.PadToSquare
+        super().__init__(
+            pad_mode=pad_mode, pad_cval=pad_cval, position=position, **kwargs
+        )
 
 
 class Resize(ImgAug):
-	'''Augmenter that resizes images to specified heights and widths.
+    """Augmenter that resizes images to specified heights and widths.
 
     **Supported dtypes**:
 
@@ -4599,9 +5037,8 @@ class Resize(ImgAug):
     Resize all images to ``32x32`` pixels. Randomly use either ``linear``
     or ``cubic`` interpolation.
 
-    '''
-	def __init__(self, size, interpolation='cubic', **kwargs):
-		self.augmenter=iaa.Resize
-		super().__init__(size=size, interpolation=interpolation, **kwargs)
+    """
 
-
+    def __init__(self, size, interpolation="cubic", **kwargs):
+        self.augmenter = iaa.Resize
+        super().__init__(size=size, interpolation=interpolation, **kwargs)

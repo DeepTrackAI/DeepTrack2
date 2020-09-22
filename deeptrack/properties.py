@@ -1,4 +1,4 @@
-'''Tools to manage the properties of a feature
+"""Tools to manage the properties of a feature
 
 Classes
 -------
@@ -15,7 +15,7 @@ PropertyDict
     The class `PropertyDict`, which is a dictionary with each element a Property.
     The class provides utility functions to update, sample, clear and retrieve
     properties.
-'''
+"""
 
 import numpy as np
 from deeptrack.utils import isiterable, hasmethod, get_kwarg_names, kwarg_has_default
@@ -23,9 +23,8 @@ import deeptrack
 import copy
 
 
-
 class Property:
-    '''Represents a property of a feature
+    """Represents a property of a feature
 
     The class Property` wraps an input, which is treated
     internally as a sampling rule. This sampling rule is used
@@ -49,16 +48,15 @@ class Property:
     current_value : any
         The current value obtained from the last call to the sampling rule.
 
-    '''
+    """
 
     def __init__(self, sampling_rule: any):
         self.sampling_rule = sampling_rule
         self.parent = None
-    
 
     @property
     def current_value(self):
-        '''Current value of the property of the feature
+        """Current value of the property of the feature
 
         `current_value` is the result of the latest `update()` call.
         Note that any randomization only occurs when the method `update()` is called
@@ -67,7 +65,7 @@ class Property:
         The method getter calls the method `update()` if `current_value`
         has not been set yet.
 
-        '''
+        """
 
         self._current_value
 
@@ -87,12 +85,11 @@ class Property:
             # I have a bounty of 5 beers for anyone who can tell me why this is necessary.
             # 10 if you get rid of it.
             self.current_value = deeptrack.UPDATE_MEMO["memoization"][id(self)]
-            
+
         return self._current_value
 
-
-    def update(self, **kwargs) -> 'Property':
-        '''Updates the current value
+    def update(self, **kwargs) -> "Property":
+        """Updates the current value
 
         The method `update()` sets the property `current_value`
         as the output of the method `sample()`. Will only update
@@ -105,30 +102,30 @@ class Property:
         Property
             Returns itself.
 
-        '''
- 
+        """
+
         # If currently updated through a call to feature and deeptrack.UPDATE_MEMO
         my_id = id(self)
 
         # if my_id in deeptrack.UPDATE_MEMO["memoization"] and not hasattr(self, '_current_value'):
         #     a = 1+1
 
-        if deeptrack.UPDATE_LOCK.locked() and my_id in deeptrack.UPDATE_MEMO["memoization"]:
+        if (
+            deeptrack.UPDATE_LOCK.locked()
+            and my_id in deeptrack.UPDATE_MEMO["memoization"]
+        ):
             return self
-        
+
         if self.parent:
             kwargs.update(self.parent)
 
         kwargs.update(deeptrack.UPDATE_MEMO["user_arguments"])
         self.current_value = self.sample(self.sampling_rule, **kwargs)
 
-        
-
         return self
 
-
     def sample(self, sampling_rule, **kwargs):
-        '''Samples the sampling rule
+        """Samples the sampling rule
 
         Returns a sampled instance of the `sampling_rule` field.
         The logic behind the sampling depends on the type of
@@ -137,7 +134,7 @@ class Property:
 
         1. Any object with a callable `sample()` method has this
             method called and returned.
-        2. If the rule is a ``dict``, sample each value and combine the 
+        2. If the rule is a ``dict``, sample each value and combine the
             result into a new ``dict`` using the original keys.
         3. If the rule is a ``list``, sample each element of the list and
             combine the result into a ne ``list``.
@@ -145,7 +142,7 @@ class Property:
         5. If the rule is callable, call it with its accepted arguments.
             Example arguments can be the value of some other property.
         6. If none of the above apply, return the rule itself.
-        
+
         Parameters
         ----------
         sampling_rule : any
@@ -158,7 +155,7 @@ class Property:
         any
             A sampled instance of the `sampling_rule`.
 
-        '''
+        """
 
         if isinstance(sampling_rule, deeptrack.Feature):
             # Don't pass my properties to other feature (avoid name clash)
@@ -186,11 +183,11 @@ class Property:
                 return next(sampling_rule)
             except StopIteration:
                 return self.current_value
-  
+
         elif callable(sampling_rule):
             # If it's a function, extract the arguments it accepts.
             function_input = {}
-            
+
             # Get the kwarg arguments the function accepts
             knames = get_kwarg_names(sampling_rule)
             for i in range(len(knames)):
@@ -205,8 +202,13 @@ class Property:
                             else:
                                 kwargs[key].update(**kwargs)
 
-                        if isinstance(kwargs[key], SequentialProperty) and "sequence_step" in kwargs:
-                            function_input[key] = kwargs[key].current_value[kwargs["sequence_step"]]
+                        if (
+                            isinstance(kwargs[key], SequentialProperty)
+                            and "sequence_step" in kwargs
+                        ):
+                            function_input[key] = kwargs[key].current_value[
+                                kwargs["sequence_step"]
+                            ]
                         else:
                             function_input[key] = kwargs[key].current_value
 
@@ -217,7 +219,7 @@ class Property:
                     function_input[key] = None
 
             return sampling_rule(**function_input)
-            
+
         else:
             # Else, assume it's elementary.
             return sampling_rule
@@ -227,38 +229,41 @@ class Property:
         if is_in:
             return self
         else:
-            cls = self.__class__ # Extract the class of the object
-            result = cls.__new__(cls) # Create a new instance of the object based on extracted class
+            cls = self.__class__  # Extract the class of the object
+            result = cls.__new__(
+                cls
+            )  # Create a new instance of the object based on extracted class
             memo[id(self)] = result
             for k, v in self.__dict__.items():
-                setattr(result, k, copy.deepcopy(v, memo)) # Copy over attributes by copying directly or in case of complex objects like lists for exaample calling the `__deepcopy()__` method defined by them. Thus recursively copying the whole tree of objects.
+                setattr(
+                    result, k, copy.deepcopy(v, memo)
+                )  # Copy over attributes by copying directly or in case of complex objects like lists for exaample calling the `__deepcopy()__` method defined by them. Thus recursively copying the whole tree of objects.
             return result
-            
 
 
 class SequentialProperty(Property):
-    ''' Property that has multiple sequential values
+    """Property that has multiple sequential values
 
-        Extends standard `Property` to resolve one value for each step
-        in a sequence of images. This is often used when creating movies.
+    Extends standard `Property` to resolve one value for each step
+    in a sequence of images. This is often used when creating movies.
 
-        Parameters
-        ----------
-        initializer : any
-            Sampling rule for the first step of the sequence.
-        sampling_rule : any
-            Sampling rule for each step after the first.
-        
-        Attributes
-        ----------
-        initializer : any
-            Sampling rule for the first step of the sequence.
-        sampling_rule : any
-            Sampling rule for each step after the first.
-        has_updated_since_last_resolve : bool
-            Whether the property has been updated since the last resolve.
+    Parameters
+    ----------
+    initializer : any
+        Sampling rule for the first step of the sequence.
+    sampling_rule : any
+        Sampling rule for each step after the first.
 
-    '''
+    Attributes
+    ----------
+    initializer : any
+        Sampling rule for the first step of the sequence.
+    sampling_rule : any
+        Sampling rule for each step after the first.
+    has_updated_since_last_resolve : bool
+        Whether the property has been updated since the last resolve.
+
+    """
 
     def __init__(self, sampling_rule, initializer=None):
         super().__init__(sampling_rule)
@@ -271,17 +276,16 @@ class SequentialProperty(Property):
 
         # Deprecated
         self.has_updated_since_last_resolve = False
-        
 
     def update(self, sequence_length=0, **kwargs):
-        '''Updates current_value
+        """Updates current_value
 
         For each step in the sequence, sample `self.sampling_rule`.
         `self.initializer` is used for the first step. These rules
         should output one value per step. Sampling rules
         that are functions can optionally accept the following keyword
         arguments:
-        
+
         * sequence_step : the current position in the sequence.
         * sequence_length : the length of the sequence.
         * previous_value : the value of the property at the previous
@@ -293,16 +297,19 @@ class SequentialProperty(Property):
         ----------
         sequence_length : int, optional
             length of the sequence
-        
+
         Returns
         -------
         self
             returns self
-        '''
+        """
         my_id = id(self)
-        if deeptrack.UPDATE_LOCK.locked() and my_id in deeptrack.UPDATE_MEMO["memoization"]:
+        if (
+            deeptrack.UPDATE_LOCK.locked()
+            and my_id in deeptrack.UPDATE_MEMO["memoization"]
+        ):
             return self
-        
+
         kwargs.update(deeptrack.UPDATE_MEMO["user_arguments"])
 
         new_current_value = []
@@ -310,12 +317,13 @@ class SequentialProperty(Property):
         for step in range(sequence_length):
             # Use initializer for first time step
             ruleset = self.sampling_rule
-            
+
             # Elements inserted here can be passed to property functions
             kwargs.update(
                 sequence_step=step,
                 sequence_length=sequence_length,
-                previous_values=new_current_value)
+                previous_values=new_current_value,
+            )
             if step == 0:
                 kwargs.update(previous_value=self.sample(self.initializer, **kwargs))
             else:
@@ -329,12 +337,14 @@ class SequentialProperty(Property):
         deeptrack.UPDATE_MEMO["memoization"][my_id] = new_current_value
         return self
 
+
 import collections
 
-class PropertyDict(collections.OrderedDict):
-    ''' Dictionary with Property elements
 
-    A dictionary of properties. It provides utility functions to update, 
+class PropertyDict(collections.OrderedDict):
+    """Dictionary with Property elements
+
+    A dictionary of properties. It provides utility functions to update,
     sample, reset and retrieve properties.
 
     Parameters
@@ -342,30 +352,28 @@ class PropertyDict(collections.OrderedDict):
     *args, **kwargs
         Arguments used to initialize a dict
 
-    '''
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for k, v in self.items():
-            if hasattr(v, 'parent') and not v.parent:
+            if hasattr(v, "parent") and not v.parent:
                 v.parent = self
 
-
     def current_value_dict(self, **kwargs) -> dict:
-        ''' Retrieves the current value of all properties as a dictionary
+        """Retrieves the current value of all properties as a dictionary
 
         Returns
         -------
         dict
             A dictionary with the current value of all properties
 
-        '''
+        """
         current_value_dict = {}
         for key, property in self.items():
-            
+
             property_value = property.current_value
-            
-            
+
             # If the property is sequential, retrieve the value
             # of the current timestep
             if isinstance(property, SequentialProperty):
@@ -375,12 +383,10 @@ class PropertyDict(collections.OrderedDict):
 
             current_value_dict[key] = property_value
 
-
         return current_value_dict
 
-
-    def update(self, **kwargs) -> 'PropertyDict':
-        ''' Updates all properties
+    def update(self, **kwargs) -> "PropertyDict":
+        """Updates all properties
 
         Calls the method `update()` on each property in the dictionary.
 
@@ -389,7 +395,7 @@ class PropertyDict(collections.OrderedDict):
         Properties
             Returns itself
 
-        '''
+        """
         property_arguments = collections.OrderedDict(self)
         property_arguments.update(kwargs)
         property_arguments.update(deeptrack.UPDATE_MEMO["user_arguments"])
@@ -402,7 +408,7 @@ class PropertyDict(collections.OrderedDict):
         return self
 
     def update_item(self, item: Property, **kwargs):
-        ''' Updates a single property.
+        """Updates a single property.
 
         Parameters
         ----------
@@ -412,7 +418,7 @@ class PropertyDict(collections.OrderedDict):
         Returns
         -------
         self
-        '''
+        """
         property_arguments = collections.OrderedDict(self)
         property_arguments.update(kwargs)
         for key, prop in self.items():
@@ -423,7 +429,7 @@ class PropertyDict(collections.OrderedDict):
         return self
 
     def sample(self, **kwargs) -> dict:
-        ''' Samples all properties
+        """Samples all properties
 
         Returns
         -------
@@ -431,7 +437,7 @@ class PropertyDict(collections.OrderedDict):
             A dictionary with each key-value pair the result of a
             `sample()` call on the property with the same key.
 
-        '''
+        """
 
         sample_dict = {}
         for key, property in self.items():
