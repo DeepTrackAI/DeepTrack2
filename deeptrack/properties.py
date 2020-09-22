@@ -74,7 +74,8 @@ class Property:
     @current_value.setter
     def current_value(self, updated_current_value):
         self._current_value = updated_current_value
-        deeptrack.UPDATE_MEMO["memoization"][id(self)] = self._current_value
+        if id(self) not in deeptrack.UPDATE_MEMO["memoization"]:
+            deeptrack.UPDATE_MEMO["memoization"][id(self)] = self._current_value
 
     @current_value.getter
     def current_value(self):
