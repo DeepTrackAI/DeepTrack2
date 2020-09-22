@@ -225,6 +225,61 @@ class TestFeatures(unittest.TestCase):
                             self.assertIn(c - b, range(0, 100))
                             self.assertIn(dl[ci] - c, range(0, 10))
 
+    def test_LambdaDependence(self):
+        A = features.DummyFeature(a=1, b=2, c=3)
+
+        B = features.DummyFeature(
+            key="a",
+            prop=lambda key: A.a if key == "a" else (A.b if key == "b" else A.c),
+        )
+
+        B.update()
+        self.assertEqual(B.prop.current_value, 1)
+        B.update(key="a")
+        self.assertEqual(B.prop.current_value, 1)
+        B.update(key="b")
+        self.assertEqual(B.prop.current_value, 2)
+        B.update(key="c")
+        self.assertEqual(B.prop.current_value, 3)
+
+    def test_LambdaDependenceTwice(self):
+        A = features.DummyFeature(a=1, b=2, c=3)
+
+        B = features.DummyFeature(
+            key="a",
+            prop=lambda key: A.a if key == "a" else (A.b if key == "b" else A.c),
+            prop2=lambda prop: prop * 2,
+        )
+
+        B.update()
+        self.assertEqual(B.prop2.current_value, 2)
+        B.update(key="a")
+        self.assertEqual(B.prop2.current_value, 2)
+        B.update(key="b")
+        self.assertEqual(B.prop2.current_value, 4)
+        B.update(key="c")
+        self.assertEqual(B.prop2.current_value, 6)
+
+    def test_LambdaDependenceOtherFeature(self):
+        A = features.DummyFeature(a=1, b=2, c=3)
+
+        B = features.DummyFeature(
+            key="a",
+            prop=lambda key: A.a if key == "a" else (A.b if key == "b" else A.c),
+            prop2=lambda prop: prop * 2,
+        )
+
+        C = features.DummyFeature(B_prop=B.prop2, prop=lambda B_prop: B_prop * 2)
+
+        C.update()
+        self.assertEqual(C.prop.current_value, 4)
+        C.update(key="a")
+        self.assertEqual(C.prop.current_value, 4)
+        C.update(key="b")
+        self.assertEqual(C.prop.current_value, 8)
+        C.update(key="c")
+        self.assertEqual(C.prop.current_value, 12)
+
 
 if __name__ == "__main__":
     unittest.main()

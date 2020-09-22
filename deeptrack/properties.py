@@ -73,18 +73,16 @@ class Property:
     def current_value(self, updated_current_value):
         self._current_value = updated_current_value
         if id(self) not in deeptrack.UPDATE_MEMO["memoization"]:
-            deeptrack.UPDATE_MEMO["memoization"][id(self)] = self._current_value
+            # Some values work, some don't. self, updated_current_value and self._current_value work
+            # Best guess is an error in the gc reference counter causing it to dereference
+            # But then again, I don't think it should be the same reference anyway
+            deeptrack.UPDATE_MEMO["memoization"][id(self)] = updated_current_value
 
     @current_value.getter
     def current_value(self):
-        idx = 0
+
         if not hasattr(self, "_current_value"):
             self.update()
-        if not hasattr(self, "_current_value"):
-
-            # I have a bounty of 5 beers for anyone who can tell me why this is necessary.
-            # 10 if you get rid of it.
-            self.current_value = deeptrack.UPDATE_MEMO["memoization"][id(self)]
 
         return self._current_value
 
@@ -162,6 +160,10 @@ class Property:
             sampling_rule._update()
             return sampling_rule
 
+        if isinstance(sampling_rule, Property):
+            sampling_rule.parent.update_item(sampling_rule)
+            return sampling_rule.current_value
+
         elif isinstance(sampling_rule, dict):
             # If the ruleset is a dict, return a new dict with each
             # element being sampled from the original dict.
@@ -198,7 +200,7 @@ class Property:
                         # If it is a property, update it and pass the current value
                         if not kwargs[key] is self:
                             if kwargs[key].parent:
-                                kwargs[key].parent.update_item(kwargs[key], **kwargs)
+                                kwargs[key].parent.update_item(kwargs[key])
                             else:
                                 kwargs[key].update(**kwargs)
 
@@ -218,8 +220,10 @@ class Property:
                 elif not kwarg_has_default(sampling_rule, key):
                     function_input[key] = None
 
-            return sampling_rule(**function_input)
-
+            new_value = sampling_rule(**function_input)
+            while isinstance(new_value, Property):
+                new_value = self.sample(new_value, **kwargs)
+            return new_value
         else:
             # Else, assume it's elementary.
             return sampling_rule
