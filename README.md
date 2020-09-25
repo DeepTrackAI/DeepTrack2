@@ -1,4 +1,7 @@
-# DeepTrack 2.0
+<p align="center">
+  <img width="480" height="300" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/master/assets/logo.png?raw=true>
+</p>
+
 
 DeepTrack is a comprehensive deep learning framework for digital microscopy. 
 We provide tools to create physical simulations of customizable optical systems, to generate and train neural network models, and to analyze experimental data.
