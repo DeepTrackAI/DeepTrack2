@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="480" height="300" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/master/assets/logo.png?raw=true>
+  <img width="450" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/master/assets/logo.png?raw=true>
 </p>
 
 
