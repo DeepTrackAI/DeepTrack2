@@ -250,9 +250,8 @@ class ContinuousGenerator(keras.utils.Sequence):
             )
 
             self.on_epoch_end()
-        except Exception as e:
+        except (KeyboardInterrupt, Exception):
             self.__exit__()
-            raise e
 
         return self
 
