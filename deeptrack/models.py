@@ -14,9 +14,10 @@ RNN, rnn
 
 from deeptrack.losses import nd_mean_absolute_error
 from deeptrack.features import Feature
-
+from deeptrack.layers import as_block
 from tensorflow.keras import models, layers, optimizers
 import numpy as np
+import warnings
 
 
 def _compile(
@@ -80,6 +81,9 @@ class KerasModel(Model):
 
         return self.model.predict(image)
 
+    def __call__(self, *args, **kwargs):
+        return self.model(*args, **kwargs)
+
 
 def LoadModel(path, compile_from_file=False, custom_objects={}, **kwargs):
     """Loads a keras model from disk.
@@ -108,6 +112,7 @@ def FullyConnected(
     flatten_input=True,
     number_of_outputs=3,
     output_activation=None,
+    dense_block="dense",
     **kwargs
 ):
     """Creates and compiles a fully connected neural network.
@@ -126,6 +131,7 @@ def FullyConnected(
         Number of units in the output layer.
     output_activation : str or keras activation
         The activation function of the output.
+    dense_block
     loss : str or keras loss function
         The loss function of the network.
 
@@ -135,82 +141,52 @@ def FullyConnected(
         Deep learning network
     """
 
+    dense_block = as_block(dense_block)
+
     ### INITIALIZE DEEP LEARNING NETWORK
-    network = models.Sequential()
+    input_layer = layers.Input(shape=input_shape)
+
+    layer = input_layer
     if flatten_input:
-        network.add(layers.Flatten(input_shape=input_shape))
+        layer = layers.Flatten()(layer)
 
     # DENSE TOP
     for dense_layer_number, dense_layer_dimension in zip(
         range(len(dense_layers_dimensions)), dense_layers_dimensions
     ):
 
-        # add dense layer
-        dense_layer_name = "dense_" + str(dense_layer_number + 1)
         if dense_layer_number is 0 and not flatten_input:
-            dense_layer = layers.Dense(
-                dense_layer_dimension,
-                activation="tanh",
-                name=dense_layer_name,
-                input_shape=input_shape,
-            )
+            layer = dense_block(dense_layer_dimension, input_shape=input_shape)(layer)
         else:
-            dense_layer = layers.Dense(
-                dense_layer_dimension, activation="tanh", name=dense_layer_name
-            )
-        network.add(dense_layer)
+            layer = dense_block(dense_layer_dimension)(layer)
 
         if dropout:
-            network.add(layers.Dropout(dropout[0]))
+            layer = layers.Dropout(dropout[0])(layer)
             dropout = dropout[1:]
 
     # OUTPUT LAYER
 
-    output_layer = layers.Dense(
-        number_of_outputs, activation=output_activation, name="output"
-    )
-    network.add(output_layer)
+    output_layer = layers.Dense(number_of_outputs, activation=output_activation)(layer)
 
-    return KerasModel(network, **kwargs)
+    model = models.Model(input_layer, output_layer)
 
-
-# Default convolutional blocks for Convolutional
-convolution_block = lambda dimensions: layers.Conv2D(
-    dimensions, kernel_size=3, activation="relu", padding="same"
-)
-
-
-def pooling_block(*args):
-    def call(layer):
-        layer = layers.MaxPooling2D(2, 2)(layer)
-        return layer
-
-    return call
-
-
-dense_activation = lambda input_layer: layers.ReLU()(input_layer)
-
-# Store the default layers in a dictionary
-default_layer_functions_convolutional = {
-    "convolution_block": convolution_block,
-    "pooling_function": pooling_block,
-    "dense_activation": dense_activation,
-}
+    return KerasModel(model, **kwargs)
 
 
 def Convolutional(
     input_shape=(51, 51, 1),
-    aux_input_shape=None,
     conv_layers_dimensions=(16, 32, 64, 128),
     dense_layers_dimensions=(32, 32),
     steps_per_pooling=1,
     dropout=(),
+    dense_top=True,
     number_of_outputs=3,
     output_activation=None,
     output_kernel_size=3,
     loss=nd_mean_absolute_error,
-    layer_functions={},
-    compile=True,
+    convolution_block="convolutional",
+    pooling_block="pooling",
+    dense_block="dense",
     **kwargs
 ):
     """Creates and compiles a convolutional neural network.
@@ -241,17 +217,17 @@ def Convolutional(
     """
 
     # Update layer functions
-    _layer_functions = default_layer_functions_convolutional.copy()
-    _layer_functions.update(layer_functions)
-    layer_functions = _layer_functions
+    dense_block = as_block(dense_block)
+    convolution_block = as_block(convolution_block)
+    pooling_block = as_block(pooling_block)
 
     ### INITIALIZE DEEP LEARNING NETWORK
-    network_input = layers.Input(input_shape)
 
-    try:
-        auxiliary_input = layers.Input(aux_input_shape)
-        inputs = layers.Concatenate(axis=-1)([network_input, auxiliary_input])
-    except:
+    if isinstance(input_shape, list):
+        inputs = [layers.Input(shape for shape in input_shape)]
+        inputs = layers.Concatenate(axis=-1)(inputs)
+    else:
+        network_input = layers.Input(input_shape)
         inputs = network_input
 
     layer = inputs
@@ -260,46 +236,26 @@ def Convolutional(
     for conv_layer_dimension in conv_layers_dimensions:
 
         for _ in range(steps_per_pooling):
-            layer = layer_functions["convolution_block"](conv_layer_dimension)(layer)
+            layer = convolution_block(conv_layer_dimension)(layer)
 
         if dropout:
             layer = layers.SpatialDropout2D(dropout[0])(layer)
             dropout = dropout[1:]
 
         # add pooling layer
-        layer = layer_functions["pooling_function"](conv_layer_dimension)(layer)
+        layer = pooling_block(conv_layer_dimension)(layer)
 
     # DENSE TOP
-    for dense_layer_number, dense_layer_dimension in zip(
-        range(len(dense_layers_dimensions)), dense_layers_dimensions
-    ):
 
-        try:
-            if dense_layer_number == 0:
-                # flattening
-                flatten_layer_name = "flatten"
-                layer = layers.Flatten(name=flatten_layer_name)(layer)
+    if dense_top:
+        layer = layers.Flatten()(layer)
+        for dense_layer_dimension in dense_layers_dimensions:
+            layer = layers.Dense(dense_layer_dimension)(layer)
+        output_layer = layers.Dense(number_of_outputs, activation=output_activation)(
+            layer
+        )
+    else:
 
-                # add dense layer
-                dense_layer_name = "dense_" + str(dense_layer_number + 1)
-                layer = layers.Dense(dense_layer_dimension, name=dense_layer_name)(
-                    layer
-                )
-                layer = layer_functions["dense_activation"](layer)
-
-            else:
-                # add dense layer
-                dense_layer_name = "dense_" + str(dense_layer_number + 1)
-                layer = layers.Dense(dense_layer_dimension, name=dense_layer_name)(
-                    layer
-                )
-                layer = layer_functions["dense_activation"](layer)
-
-        except Exception as e:
-            print(e)
-
-    # OUTPUT LAYER
-    if not len(dense_layers_dimensions):
         output_layer = layers.Conv2D(
             number_of_outputs,
             kernel_size=output_kernel_size,
@@ -307,46 +263,14 @@ def Convolutional(
             padding="same",
             name="output",
         )(layer)
-    else:
-        output_layer = layers.Dense(
-            number_of_outputs, activation=output_activation, name="output"
-        )(layer)
 
-    try:
-        model = models.Model([network_input, auxiliary_input], output_layer)
-    except:
-        model = models.Model(network_input, output_layer)
+    model = models.Model(inputs, output_layer)
 
-    if compile:
-        model = KerasModel(model, loss=loss, **kwargs)
-
-    return model
+    return KerasModel(model, loss=loss, **kwargs)
 
 
 # Alias for backwards compatability
 convolutional = Convolutional
-
-
-# Default layer blocks for UNet
-convolution_block = lambda dimensions: layers.Conv2D(
-    dimensions, kernel_size=3, activation="relu", padding="same"
-)
-
-
-pooling_block = lambda dimensions: layers.MaxPooling2D(2, 2)
-
-deconvolution_block = lambda dimensions: layers.Conv2DTranspose(
-    dimensions, kernel_size=2, strides=2
-)
-
-# Store the default layers in a dictionary
-default_layer_functions_unet = {
-    "encoder_convolution_block": convolution_block,
-    "bottleneck_convolution_block": convolution_block,
-    "decoder_convolution_block": convolution_block,
-    "pooling_function": pooling_block,
-    "upsampling_function": deconvolution_block,
-}
 
 
 def UNet(
@@ -360,8 +284,12 @@ def UNet(
     output_kernel_size=3,
     output_activation=None,
     loss=nd_mean_absolute_error,
-    layer_functions={},
-    compile=True,
+    encoder_convolution_block="convolutional",
+    base_convolution_block="convolutional",
+    decoder_convolution_block="convolutional",
+    output_convolution_block="convolutional",
+    pooling_block="pooling",
+    upsampling_block="deconvolutional",
     **kwargs
 ):
 
@@ -398,9 +326,13 @@ def UNet(
     """
 
     # Update layer functions
-    _layer_functions = dict(default_layer_functions_unet)
-    _layer_functions.update(layer_functions)
-    layer_functions = _layer_functions
+
+    encoder_convolution_block = as_block(encoder_convolution_block)
+    base_convolution_block = as_block(base_convolution_block)
+    output_convolution_block = as_block(output_convolution_block)
+    decoder_convolution_block = as_block(decoder_convolution_block)
+    pooling_block = as_block(pooling_block)
+    upsampling_block = as_block(upsampling_block)
 
     unet_input = layers.Input(input_shape)
 
@@ -411,41 +343,33 @@ def UNet(
     # Downsampling path
     for conv_layer_dimension in conv_layers_dimensions:
         for _ in range(steps_per_pooling):
-            layer = layer_functions["encoder_convolution_block"](conv_layer_dimension)(
-                layer
-            )
+            layer = encoder_convolution_block(conv_layer_dimension)(layer)
         concat_layers.append(layer)
 
         if dropout:
             layer = layers.SpatialDropout2D(dropout[0])(layer)
             dropout = dropout[1:]
 
-        layer = layer_functions["pooling_function"](conv_layer_dimension)(layer)
+        layer = pooling_block(conv_layer_dimension)(layer)
 
     # Bottleneck path
     for conv_layer_dimension in base_conv_layers_dimensions:
-        layer = layer_functions["bottleneck_convolution_block"](conv_layer_dimension)(
-            layer
-        )
+        layer = base_convolution_block(conv_layer_dimension)(layer)
 
     # Upsampling path
     for conv_layer_dimension, concat_layer in zip(
         reversed(conv_layers_dimensions), reversed(concat_layers)
     ):
 
-        layer = layer_functions["upsampling_function"](conv_layer_dimension)(layer)
+        layer = upsampling_block(conv_layer_dimension)(layer)
         layer = layers.Concatenate(axis=-1)([layer, concat_layer])
 
         for _ in range(steps_per_pooling):
-            layer = layer_functions["decoder_convolution_block"](conv_layer_dimension)(
-                layer
-            )
+            layer = decoder_convolution_block(conv_layer_dimension)(layer)
 
     # Output step
     for conv_layer_dimension in output_conv_layers_dimensions:
-        layer = layer_functions["decoder_convolution_block"](conv_layer_dimension)(
-            layer
-        )
+        layer = output_convolution_block(conv_layer_dimension)(layer)
 
     output_layer = layers.Conv2D(
         number_of_outputs,
@@ -456,10 +380,7 @@ def UNet(
 
     model = models.Model(unet_input, output_layer)
 
-    if compile:
-        model = KerasModel(model, loss=loss, **kwargs)
-
-    return model
+    return KerasModel(model, loss=loss, **kwargs)
 
 
 # Alias for backwards compatability
@@ -584,13 +505,6 @@ def RNN(
 # Alias for backwards compatability
 rnn = RNN
 
-from deeptrack.losses import nd_mean_absolute_error
-from deeptrack.features import Feature
-from deeptrack.models import Model, KerasModel
-
-from tensorflow.keras import models, layers, optimizers
-import numpy as np
-
 
 class cgan(Model):
     def __init__(
@@ -640,8 +554,13 @@ class cgan(Model):
 
         super().__init__(self.generator, **kwargs)
 
-    def fit(self, data_generator, epochs, steps_per_epoch=None):
-
+    def fit(self, data_generator, epochs, steps_per_epoch=None, **kwargs):
+        for key in kwargs.keys():
+            warnings.warn(
+                "{0} not implemented for cgan. Does not affect the execution.".format(
+                    key
+                )
+            )
         for epoch in range(epochs):
             if not steps_per_epoch:
                 try:

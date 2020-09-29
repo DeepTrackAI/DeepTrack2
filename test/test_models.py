@@ -5,9 +5,23 @@ sys.path.append("..")  # Adds the module to path
 import unittest
 
 import deeptrack.models as models
+import numpy as np
 
 
 class TestModels(unittest.TestCase):
+    def test_FullyConnected(self):
+        model = models.FullyConnected(
+            input_shape=(64, 2),
+            dense_layers_dimensions=(32, 32),
+            number_of_outputs=3,
+            output_activation="sigmoid",
+            loss="mse",
+            flatten_input=True,
+        )
+        self.assertIsInstance(model, models.KerasModel)
+
+        model.predict(np.zeros((1, 64, 2)))
+
     def test_Convolutions(self):
         model = models.Convolutional(
             input_shape=(64, 64, 1),
@@ -18,6 +32,8 @@ class TestModels(unittest.TestCase):
             loss="mse",
         )
         self.assertIsInstance(model, models.KerasModel)
+
+        model.predict(np.zeros((1, 64, 64, 1)))
 
     def test_UNet(self):
         model = models.UNet(
@@ -32,6 +48,8 @@ class TestModels(unittest.TestCase):
         )
         self.assertIsInstance(model, models.KerasModel)
 
+        model.predict(np.zeros((1, 64, 64, 1)))
+
     def test_RNN(self):
         model = models.rnn(
             input_shape=(None, 64, 64, 1),
@@ -44,6 +62,8 @@ class TestModels(unittest.TestCase):
             loss="mse",
         )
         self.assertIsInstance(model, models.KerasModel)
+
+        model.predict(np.zeros((1, 1, 64, 64, 1)))
 
 
 if __name__ == "__main__":
