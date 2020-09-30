@@ -250,7 +250,7 @@ def Convolutional(
     if dense_top:
         layer = layers.Flatten()(layer)
         for dense_layer_dimension in dense_layers_dimensions:
-            layer = layers.Dense(dense_layer_dimension)(layer)
+            layer = dense_block(dense_layer_dimension)(layer)
         output_layer = layers.Dense(number_of_outputs, activation=output_activation)(
             layer
         )
