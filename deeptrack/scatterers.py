@@ -75,6 +75,7 @@ class Scatterer(Feature):
         upsample=1,
         **kwargs
     ):
+        self._processed_properties = False
         super().__init__(
             position=position,
             z=z,
@@ -86,7 +87,7 @@ class Scatterer(Feature):
 
     def _process_properties(self, properties: dict) -> dict:
         # Rescales the position property
-
+        self._processed_properties = True
         if "position" in properties:
             if properties["position_unit"] == "meter":
                 properties["position"] = (
@@ -107,6 +108,12 @@ class Scatterer(Feature):
     ):
         # Post processes the created object to handle upsampling,
         # as well as cropping empty slices.
+        if not self._processed_properties:
+            import warnings
+
+            warnings.warn(
+                "Overridden _process_properties method does not call super. This is likely to result in errors if used with Optics.upscale != 1."
+            )
 
         # Calculates upsampled voxel_size
         if upsample_axes is None:
@@ -405,8 +412,25 @@ class Ellipsoid(Scatterer):
         return mask
 
 
-class MieParticle(Scatterer):
-    """Scattered field by a Mie particle
+class MieScatterer(Scatterer):
+    def __init__(self, **kwargs):
+        kwargs.pop("is_field", None)
+        kwargs.pop("crop_empty", None)
+        super().__init__(is_field=True, crop_empty=False, **kwargs)
+
+
+# class MieBisphere(MieScatterer):
+#     def __init__(self, refractive_index=1.45, distance=2e-6, radius=1e-6, **kwargs):
+#         super().__init__(
+#             refractive_index=refractive_index,
+#             distance=distance,
+#             radius=radius,
+#             **kwargs
+#         )
+
+
+class MieSphere(MieScatterer):
+    """Scattered field by a sphere
 
     Calculates the scattered field by a spherical particle in a homogenous medium,
     as predicted by Mie theory. Note that the induced phase shift is calculated
@@ -443,7 +467,6 @@ class MieParticle(Scatterer):
         aperature_angle="auto",
         L="auto",
         crop_empty=False,
-        is_field=True,
         **kwargs
     ):
         super().__init__(
@@ -454,11 +477,13 @@ class MieParticle(Scatterer):
             polarization_angle=polarization_angle,
             aperature_angle=aperature_angle,
             crop_empty=crop_empty,
-            is_field=is_field,
             **kwargs
         )
 
     def _process_properties(self, properties):
+
+        properties = super()._process_properties(properties)
+
         if properties["L"] == "auto":
             v = 2 * np.pi * properties["radius"] / properties["wavelength"]
             properties["L"] = int(np.ceil(v + 4 * (v ** (1 / 3)) + 2))
@@ -479,11 +504,11 @@ class MieParticle(Scatterer):
         padding,
         wavelength,
         refractive_index_medium,
-        NA,
         L,
         offset_z,
         aperature_angle,
         polarization_angle,
+        upscale=1,
         **kwargs
     ):
 
@@ -501,8 +526,14 @@ class MieParticle(Scatterer):
         )
         arr = deeptrack.image.pad_image_to_fft(np.zeros((xSize, ySize)))
 
-        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - position[1]
-        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - position[0]
+        x = (
+            np.arange(-padding[0], arr.shape[0] - padding[0])
+            - (position[1] + 0.5) * upscale
+        )
+        y = (
+            np.arange(-padding[1], arr.shape[1] - padding[1])
+            - (position[0] + 0.5) * upscale
+        )
         X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1])
 
         ct_max = np.cos(aperature_angle)
