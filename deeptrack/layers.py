@@ -34,17 +34,23 @@ def _as_activation(x):
 
 def _single_layer_call(x, layer, instance_norm, activation):
     y = layer(x)
+
     if instance_norm:
         if not isinstance(instance_norm, dict):
             instance_norm = {}
-
         y = InstanceNormalization(**instance_norm)(y)
-    y = _as_activation(activation)(y)
+
+    if activation:
+        y = _as_activation(activation)(y)
+
     return y
 
 
 def _instance_norm(x, filters):
-    return x or (callable(x) and x(filters))
+    if callable(x):
+        return x(filters)
+    else:
+        return x
 
 
 def ConvolutionalBlock(
@@ -84,7 +90,9 @@ def ConvolutionalBlock(
             strides=strides,
             **kwargs_inner
         )
-        return lambda x: _single_layer_call(x, layer, instance_norm, activation)
+        return lambda x: _single_layer_call(
+            x, layer, _instance_norm(instance_norm, filters), activation
+        )
 
     return Layer
 
@@ -107,7 +115,9 @@ def DenseBlock(activation="tanh", instance_norm=False, **kwargs):
     def Layer(filters, **kwargs_inner):
         kwargs_inner.update(kwargs)
         layer = layers.Dense(filters, **kwargs_inner)
-        return lambda x: _single_layer_call(x, layer, instance_norm, activation)
+        return lambda x: _single_layer_call(
+            x, layer, _instance_norm(instance_norm, filters), activation
+        )
 
     return Layer
 
@@ -116,7 +126,7 @@ def PoolingBlock(
     pool_size=(2, 2),
     activation=None,
     padding="same",
-    strides=1,
+    strides=2,
     instance_norm=False,
     **kwargs
 ):
@@ -145,7 +155,9 @@ def PoolingBlock(
         layer = layers.MaxPool2D(
             pool_size=pool_size, padding=padding, strides=strides, **kwargs_inner
         )
-        return lambda x: _single_layer_call(x, layer, instance_norm, activation)
+        return lambda x: _single_layer_call(
+            x, layer, _instance_norm(instance_norm, filters), activation
+        )
 
     return Layer
 
@@ -153,8 +165,8 @@ def PoolingBlock(
 def DeconvolutionalBlock(
     kernel_size=(2, 2),
     activation=None,
-    padding="same",
-    strides=1,
+    padding="valid",
+    strides=2,
     instance_norm=False,
     **kwargs
 ):
@@ -187,7 +199,9 @@ def DeconvolutionalBlock(
             strides=strides,
             **kwargs_inner
         )
-        return lambda x: _single_layer_call(x, layer, instance_norm, activation)
+        return lambda x: _single_layer_call(
+            x, layer, _instance_norm(instance_norm, filters), activation
+        )
 
     return Layer
 
@@ -197,6 +211,9 @@ def StaticUpsampleBlock(
     activation=None,
     interpolation="bilinear",
     instance_norm=False,
+    kernel_size=(1, 1),
+    strides=1,
+    padding="same",
     **kwargs
 ):
     """A single no-trainable 2d deconvolutional layer.
@@ -217,12 +234,25 @@ def StaticUpsampleBlock(
         Other keras.layers.Conv2DTranspose arguments
     """
 
-    def Layer(filters=None, **kwargs_inner):
+    def Layer(filters, **kwargs_inner):
         kwargs_inner.update(kwargs)
         layer = layers.UpSampling2D(
             size=size, interpolation=interpolation, **kwargs_inner
         )
-        return lambda x: _single_layer_call(x, layer, instance_norm, activation)
+        conv = layers.Conv2D(
+            filters,
+            kernel_size=kernel_size,
+            strides=strides,
+            padding=padding,
+        )
+
+        def call(x):
+            y = layer(x)
+            return _single_layer_call(
+                y, conv, _instance_norm(instance_norm, filters), activation
+            )
+
+        return call
 
     return Layer
 
@@ -260,13 +290,19 @@ def ResidualBlock(
         )
 
         conv2 = layers.Conv2D(
-            filters, kernel_size=kernel_size, strides=1, padding="same"
+            filters, kernel_size=kernel_size, strides=strides, padding="same"
         )
 
         def call(x):
-            y = _single_layer_call(x, conv, instance_norm, activation)
-            y = _single_layer_call(y, conv2, instance_norm, activation)
+            y = _single_layer_call(
+                x, conv, _instance_norm(instance_norm, filters), activation
+            )
+            y = _single_layer_call(
+                y, conv2, _instance_norm(instance_norm, filters), None
+            )
             y = layers.Add()([identity(x), y])
+            if activation:
+                y = _as_activation(activation)(y)
             return y
 
         return call
@@ -294,7 +330,9 @@ def Identity(activation=None, instance_norm=False, **kwargs):
 
     def Layer(filters, **kwargs_inner):
         layer = layers.Layer(**kwargs_inner)
-        return lambda x: _single_layer_call(x, layer, instance_norm, activation)
+        return lambda x: _single_layer_call(
+            x, layer, _instance_norm(instance_norm, filters), activation
+        )
 
     return Layer
 
