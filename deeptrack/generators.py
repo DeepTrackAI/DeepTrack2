@@ -182,6 +182,8 @@ class ContinuousGenerator(keras.utils.Sequence):
         If True, the batches are shuffled before outputting.
     feature_kwargs : dict or list of dicts
         Set of options to pass to the feature when resolving
+    ndim : int
+        Number of dimensions of each batch (including the batch dimension).
     """
 
     def __init__(
@@ -195,9 +197,15 @@ class ContinuousGenerator(keras.utils.Sequence):
         shuffle_batch=True,
         feature_kwargs={},
         verbose=1,
+        ndim=4,
     ):
+
         if min_data_size is None:
-            min_data_size = min(batch_size * 10, max_data_size)
+            min_data_size = min(batch_size * 10, max_data_size - 1)
+
+        assert (
+            min_data_size < max_data_size
+        ), "max_data_size needs to be larger than min_data_size"
 
         self.min_data_size = min_data_size
         self.max_data_size = max_data_size
@@ -208,6 +216,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         self.batch_size = batch_size
         self.shuffle_batch = shuffle_batch
         self.feature_kwargs = feature_kwargs
+        self.ndim = ndim
 
         self.lock = threading.Lock()
         self.data = []
@@ -250,8 +259,9 @@ class ContinuousGenerator(keras.utils.Sequence):
             )
 
             self.on_epoch_end()
-        except (KeyboardInterrupt, Exception):
+        except (KeyboardInterrupt, Exception) as e:
             self.__exit__()
+            raise e
 
         return self
 
@@ -278,6 +288,7 @@ class ContinuousGenerator(keras.utils.Sequence):
             self._batch_size = self.batch_size
 
     def __getitem__(self, idx):
+
         batch_size = self._batch_size
 
         subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
@@ -286,7 +297,11 @@ class ContinuousGenerator(keras.utils.Sequence):
         return outputs
 
     def __len__(self):
-        return int((len(self.current_data) // self._batch_size))
+        l = int((len(self.current_data) // self._batch_size))
+        assert (
+            l > 0
+        ), "There needs to be at least batch_size number of datapoints. Try increasing min_data_size."
+        return l
 
     def _continuous_get_training_data(self):
         index = 0
@@ -299,7 +314,7 @@ class ContinuousGenerator(keras.utils.Sequence):
 
             if self.label_function:
                 new_label = self.label_function(new_image)
-                if isinstance(new_label, np.ndarray):
+                if isinstance(new_label, (np.ndarray, float, int)):
                     new_label = (new_label,)
 
             if self.batch_function:
