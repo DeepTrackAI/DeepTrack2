@@ -1,5 +1,4 @@
-tensorflow==2.2.0
-imgaug
+tensorflow>=2.0.1
 numpy
 matplotlib
 scipy
