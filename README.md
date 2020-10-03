@@ -324,6 +324,7 @@ add_one_or_two = dt.Add(value=np.random.randint(1, 3))
 undo_add = dt.Subtract(
     **add_one_or_two.properties
 )
+```
 
 ## Tutorials
 
