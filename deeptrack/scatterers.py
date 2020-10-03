@@ -342,6 +342,8 @@ class Ellipsoid(Scatterer):
         The rotation vector is padded with zeros until it is of length 3
         """
 
+        propertydict = super()._process_properties(propertydict)
+
         # Ensure radius has three values
         radius = np.array(propertydict["radius"])
         if radius.ndim == 0:

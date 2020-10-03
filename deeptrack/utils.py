@@ -137,3 +137,27 @@ def kwarg_has_default(function: Callable, argument: str) -> bool:
     defaults = inspect.getfullargspec(function).defaults or ()
 
     return len(args) - args.index(argument) <= len(defaults)
+
+
+def safe_call(function, **kwargs):
+    """Calls a function, using keyword arguments from a dictionary of arguments.
+
+    If the function does not accept one of the argument provided, it will not be passed. Does not support
+    non-keyword arguments.
+
+    Parameters
+    ----------
+    function : Callable
+        The function to call
+    kwargs
+        Key-value pairs to draw input arguments from.
+    """
+
+    keys = get_kwarg_names(function)
+
+    input_arguments = {}
+    for key in keys:
+        if key in kwargs:
+            input_arguments[key] = kwargs[key]
+
+    return function(**input_arguments)

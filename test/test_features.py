@@ -189,7 +189,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(output_image.get_property("value_to_add", get_one=True), 10)
 
     def test_nested_Duplicate(self):
-        for _ in range(10):
+        for _ in range(5):
             A = features.DummyFeature(
                 a=lambda: np.random.randint(100) * 1000,
             )
@@ -206,7 +206,7 @@ class TestFeatures(unittest.TestCase):
                 d=lambda c: c + np.random.randint(10) * 1,
             )
 
-            for _ in range(10):
+            for _ in range(5):
                 AB = (A + (B + (C + D) ** 2) ** 2) ** 6
                 output = AB.update().resolve(0)
                 al = output.get_property("a", get_one=False)[::3]

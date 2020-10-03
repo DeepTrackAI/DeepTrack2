@@ -85,26 +85,3 @@ class Poisson(Noise):
         noisy_image = Image(np.random.poisson(image * rescale) / rescale)
         noisy_image.properties = image.properties
         return noisy_image
-
-
-## IMGAUG IMGCORRUPTLIKE
-# Currently unavailable until there's a better way to implement constricted datatypes (only uint8)
-# Please see https://github.com/aleju/imgaug/blob/master/imgaug/augmenters/imgcorruptlike.py
-# for source implementation
-
-# import imgaug.augmenters as iaa
-# import deeptrack as dt
-# import inspect
-
-# def init_method(self, **kwargs):
-#     dt.ImgAug.__init__(self, **kwargs)
-
-# augs = inspect.getmembers(iaa.blur, lambda x: inspect.isclass(x))
-
-# for augname, aug in augs:
-
-#     print(augname, aug.__module__)
-
-#     globals()[augname] = type(augname, (aug, dt.ImgAug), {
-#         "augmenter": aug,
-#         "__init__": init_method})

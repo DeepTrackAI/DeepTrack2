@@ -59,7 +59,7 @@ class TestModels(unittest.TestCase):
     def test_NoneActivation(self):
         block = layers.Identity(activation=None)
         model = makeMinimalModel(block(1), shape=(2, 2, 1))
-        self.assertIsInstance(model.layers[2], k_layers.Layer)
+        self.assertEqual(len(model.layers), 2)
 
     def test_InstanceNorm(self):
         block = layers.Identity(instance_norm=True)
