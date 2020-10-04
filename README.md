@@ -40,27 +40,18 @@ Additionally, we have seven more case studies which are less documented, but giv
 1. [MNIST](paper-examples/1-MNIST.ipynb) classifies handwritted digits.
 2. [single particle tracking](paper-examples/2-single_particle_tracking.ipynb) tracks experimentally captured videos of a single particle. 
 3. [single particle sizing](paper-examples/3-particle_sizing.ipynb) extracts the radius and refractive index of particles.
-4. [characterizing_aberrations_tutorial](paper-examples/4-multi-mulecule-tracking.ipynb) detects quantum dots in a low SNR image.
-5. [distinguishing_particles_in_brightfield_tutorial](paper-examples/5-inline_holography_3d_tracking.ipynb) tracks particles in three dimensions.
-6. [analyzing_video_tutorial](paper-examples/6-cell_counting.ipynb) counts the number of cells in fluorescence images.
-7. [analyzing_video_tutorial](paper-examples/7-GAN_image_generation.ipynb) uses a GAN to create cell image from masks.
+4. [multi-particle tracking](paper-examples/4-multi-mulecule-tracking.ipynb) detects quantum dots in a low SNR image.
+5. [3-dimensional tracking](paper-examples/5-inline_holography_3d_tracking.ipynb) tracks particles in three dimensions.
+6. [cell counting](paper-examples/6-cell_counting.ipynb) counts the number of cells in fluorescence images.
+7. [GAN image generation](paper-examples/7-GAN_image_generation.ipynb) uses a GAN to create cell image from masks.
 
 ### Video Tutorials
 
+[TBA]
+
 ### In-depth dives
 
-## Tutorials
-
-The folder 'tutorials' contains notebooks with common applications. 
-These may serve as a useful starting point from which to build a solution. 
-The notebooks can be read in any order, but we provide a suggested order to introduce new concepts more naturally. 
-This order is as follows:
-
-
-
-## Examples
-
-The examples folder contains notebooks which explains the different modules in more detail. Also these can be read in any order, but we provide a recommended order where more fundamental topics are introduced early.
+The examples folder contains notebooks which explains the different modules in more detail. These can be read in any order, but we provide a recommended order where more fundamental topics are introduced early.
 This order is as follows:
 
 1. [features_example](examples/features_example.ipynb)
