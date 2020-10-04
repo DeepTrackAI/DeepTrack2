@@ -1,44 +1,43 @@
 noises
 ======
 
-.. automodule:: noises
+.. automodule:: deeptrack.noises
 
 Module classes
 --------------
 
-Add
-^^^
-
-.. autoclass:: noises.Add
-   :members:
-
 Background
 ^^^^^^^^^^
 
-.. autoclass:: noises.Background
+.. autoclass:: deeptrack.noises.Background
    :members:
+   :exclude-members: get
 
 Gaussian
 ^^^^^^^^
 
-.. autoclass:: noises.Gaussian
+.. autoclass:: deeptrack.noises.Gaussian
    :members:
+   :exclude-members: get
 
 Noise
 ^^^^^
 
-.. autoclass:: noises.Noise
+.. autoclass:: deeptrack.noises.Noise
    :members:
+   :exclude-members: get
 
 Offset
 ^^^^^^
 
-.. autoclass:: noises.Offset
+.. autoclass:: deeptrack.noises.Offset
    :members:
+   :exclude-members: get
 
 Poisson
 ^^^^^^^
 
-.. autoclass:: noises.Poisson
+.. autoclass:: deeptrack.noises.Poisson
    :members:
+   :exclude-members: get
 

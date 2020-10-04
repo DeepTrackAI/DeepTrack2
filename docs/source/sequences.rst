@@ -11,6 +11,7 @@ Sequence
 
 .. autoclass:: deeptrack.sequences.Sequence
    :members:
+   :exclude-members: get
 
 Module functions
 ----------------

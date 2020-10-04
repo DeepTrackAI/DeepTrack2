@@ -11,6 +11,7 @@ Image
 
 .. autoclass:: deeptrack.image.Image
    :members:
+   :exclude-members: get
 
 Module functions
 ----------------

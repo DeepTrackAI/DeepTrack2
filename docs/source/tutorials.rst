@@ -1,9 +1,9 @@
 Tutorials and notebooks
 =======================
 
-DeepTrack Basics
-----------------
 
+.. toctree::
+    :maxdepth: 3
 
-Advanced DeepTrack
-------------------
+    basics
+    advanced

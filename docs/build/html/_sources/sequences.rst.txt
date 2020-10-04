@@ -1,7 +1,7 @@
 sequences
 =========
 
-.. automodule:: sequences
+.. automodule:: deeptrack.sequences
 
 Module classes
 --------------
@@ -9,8 +9,9 @@ Module classes
 Sequence
 ^^^^^^^^
 
-.. autoclass:: sequences.Sequence
+.. autoclass:: deeptrack.sequences.Sequence
    :members:
+   :exclude-members: get
 
 Module functions
 ----------------
@@ -18,5 +19,5 @@ Module functions
 Sequential
 ^^^^^^^^^^
 
-.. autofunction:: sequences.Sequential
+.. autofunction:: deeptrack.sequences.Sequential
 

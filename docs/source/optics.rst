@@ -11,41 +11,33 @@ Brightfield
 
 .. autoclass:: deeptrack.optics.Brightfield
    :members:
+   :exclude-members: get
 
 Fluorescence
 ^^^^^^^^^^^^
 
 .. autoclass:: deeptrack.optics.Fluorescence
    :members:
+   :exclude-members: get
 
 IlluminationGradient
 ^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: deeptrack.optics.IlluminationGradient
    :members:
+   :exclude-members: get
 
 Microscope
 ^^^^^^^^^^
 
 .. autoclass:: deeptrack.optics.Microscope
    :members:
+   :exclude-members: get
 
 Optics
 ^^^^^^
 
 .. autoclass:: deeptrack.optics.Optics
    :members:
-
-Module functions
-----------------
-
-_create_volume
-^^^^^^^^^^^^^^
-
-.. autofunction:: deeptrack.optics._create_volume
-
-_get_position
-^^^^^^^^^^^^^
-
-.. autofunction:: deeptrack.optics._get_position
+   :exclude-members: get
 

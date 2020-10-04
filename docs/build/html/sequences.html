@@ -1,183 +1,263 @@
 
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>sequences &mdash; DeepTrack 2.0 2.0 documentation</title>
-  
 
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sequences &#8212; DeepTrack 2.0 2.0 documentation</title>
     
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
+  <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
 
     
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+      
+  <link rel="stylesheet"
+    href="_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.30270b6e4c972e43c488.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="utils" href="utils.html" />
-    <link rel="prev" title="scatterers" href="scatterers.html" /> 
-</head>
-
-<body class="wy-body-for-nav">
-
-   
-  <div class="wy-grid-for-nav">
+    <link rel="prev" title="scatterers" href="scatterers.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
 
-          
-            <a href="index.html" class="icon icon-home"> DeepTrack 2.0
-          
+    
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
 
-          
-          </a>
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="installation.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="deeptrack.html">Documentation</a>
+        </li>
+        
+        
+      </ul>
 
-          
-            
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Starting with deeptrack</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and notebooks</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Documentation</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="aberrations.html">aberrations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="augmentations.html">augmentations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generators.html">generators</a></li>
-<li class="toctree-l1"><a class="reference internal" href="image.html">image</a></li>
-<li class="toctree-l1"><a class="reference internal" href="losses.html">losses</a></li>
-<li class="toctree-l1"><a class="reference internal" href="models.html">models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noises.html">noises</a></li>
-<li class="toctree-l1"><a class="reference internal" href="optics.html">optics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="properties.html">properties</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scatterers.html">scatterers</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">sequences</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-classes">Module classes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#sequence">Sequence</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-functions">Module functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#sequential">Sequential</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+
+      <ul class="navbar-nav">
         
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">DeepTrack 2.0</a>
         
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>sequences</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/sequences.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
-  </ul>
-
-  
-  <hr/>
+      </ul>
+    </div>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-            
-  <div class="section" id="module-sequences">
-<span id="sequences"></span><h1>sequences<a class="headerlink" href="#module-sequences" title="Permalink to this headline">¶</a></h1>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar">
+
+<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+
+
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+  <div class="bd-toc-item active">
+  
+
+  <ul class="nav bd-sidenav">
+      
+      
+      
+      
+      
+      
+        
+          
+              <li class="">
+                  <a href="aberrations.html">aberrations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="augmentations.html">augmentations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="features.html">features</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="generators.html">generators</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="image.html">image</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="layers.html">layers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="losses.html">losses</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="math.html">math</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="models.html">models</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="noises.html">noises</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="optics.html">optics</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="properties.html">properties</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="scatterers.html">scatterers</a>
+              </li>
+          
+        
+          
+              <li class="active">
+                  <a href="">sequences</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="utils.html">utils</a>
+              </li>
+          
+        
+      
+      
+    </ul>
+
+</nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#classes" class="nav-link">Classes</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#functions" class="nav-link">Functions</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#module-classes" class="nav-link">Module classes</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#sequence" class="nav-link">Sequence</a>
+        </li>
+    
+            </ul>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#module-functions" class="nav-link">Module functions</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#sequential" class="nav-link">Sequential</a>
+        </li>
+    
+            </ul>
+        </li>
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.sequences">
+<span id="sequences"></span><h1>sequences<a class="headerlink" href="#module-deeptrack.sequences" title="Permalink to this headline">¶</a></h1>
 <p>Features and tools for resolving sequences of images.</p>
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
@@ -197,69 +277,68 @@
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="sequence">
 <h3>Sequence<a class="headerlink" href="#sequence" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="sequences.Sequence">
-<em class="property">class </em><code class="sig-prename descclassname">sequences.</code><code class="sig-name descname">Sequence</code><span class="sig-paren">(</span><em class="sig-param">feature: deeptrack.features.Feature</em>, <em class="sig-param">sequence_length: int = 1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#sequences.Sequence" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.sequences.Sequence">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.sequences.</code><code class="sig-name descname">Sequence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="n">sequence_length</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.sequences.Sequence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resolves a feature as a sequence.</p>
 <p>The input feature is resolved <cite>sequence_length</cite> times, with the kwarg
 arguments <cite>sequene_length</cite> and <cite>sequence_step</cite> passed to all properties
 of the feature set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>feature</strong> (<a class="reference internal" href="features.html#features.Feature" title="features.Feature"><em>Feature</em></a>) – The feature to resolve as a sequence.</p></li>
-<li><p><strong>sequence_length</strong> (<em>int</em>) – The number of times to resolve the feature.</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>The feature to resolve as a sequence.</p>
+</dd>
+<dt><strong>sequence_length</strong><span class="classifier">int</span></dt><dd><p>The number of times to resolve the feature.</p>
 </dd>
 </dl>
-<dl class="attribute">
-<dt id="sequences.Sequence.feature">
-<code class="sig-name descname">feature</code><a class="headerlink" href="#sequences.Sequence.feature" title="Permalink to this definition">¶</a></dt>
-<dd><p>The feature to resolve as a sequence.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="features.html#features.Feature" title="features.Feature">Feature</a></p>
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>The feature to resolve as a sequence.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sequences.Sequence.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">input_list</em>, <em class="sig-param">sequence_length=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#sequences.Sequence.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sequences.Sequence.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#sequences.Sequence.update" title="Permalink to this definition">¶</a></dt>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#deeptrack.sequences.Sequence.update" title="deeptrack.sequences.Sequence.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code></a>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="deeptrack.sequences.Sequence.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.sequences.Sequence.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Updates the state of all properties.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>**kwargs</strong> – Arguments that will be passed to the Property
-method <cite>update()</cite>.</p>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>**kwargs</strong></dt><dd><p>Arguments that will be set globally for the update call.
+For example .update(value=10) will have all properties
+and features that depend on “value” use 10 instead of what
+they otherwise would.</p>
+</dd>
+</dl>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>self</p>
+<dd class="field-even"><dl class="simple">
+<dt>self</dt><dd></dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -272,9 +351,9 @@ method <cite>update()</cite>.</p>
 <h2>Module functions<a class="headerlink" href="#module-functions" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="sequential">
 <h3>Sequential<a class="headerlink" href="#sequential" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="sequences.Sequential">
-<code class="sig-prename descclassname">sequences.</code><code class="sig-name descname">Sequential</code><span class="sig-paren">(</span><em class="sig-param">feature: deeptrack.features.Feature</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#sequences.Sequential" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt id="deeptrack.sequences.Sequential">
+<code class="sig-prename descclassname">deeptrack.sequences.</code><code class="sig-name descname">Sequential</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.sequences.Sequential" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts a feature to be resolved as a sequence.</p>
 <p>Should be called on individual features, not combinations of features. All keyword
 arguments will be trated as sequential properties and will be passed to the parent feature.</p>
@@ -282,10 +361,12 @@ arguments will be trated as sequential properties and will be passed to the pare
 will be used to initilize the passed property (that is, it will be used for the first timestep).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>feature</strong> (<a class="reference internal" href="features.html#features.Feature" title="features.Feature"><em>Feature</em></a>) – Feature to make sequential.</p></li>
-<li><p><strong>kwargs</strong> – Keyword arguments to pass on as sequential properties of <cite>feature</cite>.</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>Feature to make sequential.</p>
+</dd>
+<dt><strong>kwargs</strong></dt><dd><p>Keyword arguments to pass on as sequential properties of <cite>feature</cite>.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -295,52 +376,33 @@ will be used to initilize the passed property (that is, it will be used for the 
 </div>
 
 
-           </div>
-           
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="utils.html" class="btn btn-neutral float-right" title="utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="scatterers.html" class="btn btn-neutral float-left" title="scatterers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="scatterers.html" title="previous page">scatterers</a>
+    <a class='right-next' id="next-link" href="utils.html" title="next page">utils</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
     </div>
-  
 
-  <hr/>
+    
+  <script src="_static/js/index.30270b6e4c972e43c488.js"></script>
 
-  <div role="contentinfo">
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
     <p>
-        &copy; Copyright 2020, Benjamin Midtvedt
-
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
 </footer>
-
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
-    
-   
-
-</body>
+  </body>
 </html>

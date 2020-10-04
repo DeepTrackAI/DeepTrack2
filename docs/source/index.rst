@@ -4,7 +4,6 @@
    contain the root `toctree` directive.
 
 
-
 Welcome to DeepTrack 2.0's documentation!
 =========================================
 
@@ -14,25 +13,5 @@ Welcome to DeepTrack 2.0's documentation!
 
    installation
    tutorials
-
-Documentation
-=============
-
-.. toctree::
-   :maxdepth: 4
-   :caption: Documentation
-   
-   math
-   scatterers
-   optics
-   noises
-   augmentations
-   aberrations
-   models
-   losses
-   sequences
-   utils
-   properties
-   features
-   image
+   deeptrack
 

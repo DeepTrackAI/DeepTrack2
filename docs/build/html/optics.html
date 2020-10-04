@@ -1,187 +1,265 @@
 
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>optics &mdash; DeepTrack 2.0 2.0 documentation</title>
-  
 
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>optics &#8212; DeepTrack 2.0 2.0 documentation</title>
     
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
+  <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
 
     
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+      
+  <link rel="stylesheet"
+    href="_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.30270b6e4c972e43c488.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="properties" href="properties.html" />
-    <link rel="prev" title="noises" href="noises.html" /> 
-</head>
-
-<body class="wy-body-for-nav">
-
-   
-  <div class="wy-grid-for-nav">
+    <link rel="prev" title="noises" href="noises.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
 
-          
-            <a href="index.html" class="icon icon-home"> DeepTrack 2.0
-          
+    
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
 
-          
-          </a>
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="installation.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="deeptrack.html">Documentation</a>
+        </li>
+        
+        
+      </ul>
 
-          
-            
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Starting with deeptrack</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and notebooks</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Documentation</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="aberrations.html">aberrations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="augmentations.html">augmentations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generators.html">generators</a></li>
-<li class="toctree-l1"><a class="reference internal" href="image.html">image</a></li>
-<li class="toctree-l1"><a class="reference internal" href="losses.html">losses</a></li>
-<li class="toctree-l1"><a class="reference internal" href="models.html">models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noises.html">noises</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">optics</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-classes">Module classes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#brightfield">Brightfield</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#fluorescence">Fluorescence</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#illuminationgradient">IlluminationGradient</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#microscope">Microscope</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id1">Optics</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-functions">Module functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#create-volume">_create_volume</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#get-position">_get_position</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="properties.html">properties</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scatterers.html">scatterers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sequences.html">sequences</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+
+      <ul class="navbar-nav">
         
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">DeepTrack 2.0</a>
         
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>optics</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/optics.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
-  </ul>
-
-  
-  <hr/>
+      </ul>
+    </div>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-            
-  <div class="section" id="module-optics">
-<span id="optics"></span><h1>optics<a class="headerlink" href="#module-optics" title="Permalink to this headline">¶</a></h1>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar">
+
+<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+
+
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+  <div class="bd-toc-item active">
+  
+
+  <ul class="nav bd-sidenav">
+      
+      
+      
+      
+      
+      
+        
+          
+              <li class="">
+                  <a href="aberrations.html">aberrations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="augmentations.html">augmentations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="features.html">features</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="generators.html">generators</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="image.html">image</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="layers.html">layers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="losses.html">losses</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="math.html">math</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="models.html">models</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="noises.html">noises</a>
+              </li>
+          
+        
+          
+              <li class="active">
+                  <a href="">optics</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="properties.html">properties</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="scatterers.html">scatterers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="sequences.html">sequences</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="utils.html">utils</a>
+              </li>
+          
+        
+      
+      
+    </ul>
+
+</nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#classes" class="nav-link">Classes</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#module-classes" class="nav-link">Module classes</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#brightfield" class="nav-link">Brightfield</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#fluorescence" class="nav-link">Fluorescence</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#illuminationgradient" class="nav-link">IlluminationGradient</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#microscope" class="nav-link">Microscope</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#id1" class="nav-link">Optics</a>
+        </li>
+    
+            </ul>
+        </li>
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.optics">
+<span id="optics"></span><h1>optics<a class="headerlink" href="#module-deeptrack.optics" title="Permalink to this headline">¶</a></h1>
 <p>Features for optically imaging of samples</p>
 <p>Contains features which performs physical simulations of optical devices to
 create camera images of samples.</p>
@@ -202,9 +280,9 @@ create camera images of samples.</p>
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="brightfield">
 <h3>Brightfield<a class="headerlink" href="#brightfield" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="optics.Brightfield">
-<em class="property">class </em><code class="sig-prename descclassname">optics.</code><code class="sig-name descname">Brightfield</code><span class="sig-paren">(</span><em class="sig-param">NA=0.7</em>, <em class="sig-param">wavelength=6.6e-07</em>, <em class="sig-param">magnification=1</em>, <em class="sig-param">resolution=(1e-06</em>, <em class="sig-param">1e-06</em>, <em class="sig-param">1e-06)</em>, <em class="sig-param">refractive_index_medium=1.33</em>, <em class="sig-param">upscale=2</em>, <em class="sig-param">padding=(10</em>, <em class="sig-param">10</em>, <em class="sig-param">10</em>, <em class="sig-param">10)</em>, <em class="sig-param">output_region=(None</em>, <em class="sig-param">None</em>, <em class="sig-param">None</em>, <em class="sig-param">None)</em>, <em class="sig-param">pupil: deeptrack.features.Feature = None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#optics.Brightfield" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.optics.Brightfield">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Brightfield</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">NA</span><span class="o">=</span><span class="default_value">0.7</span></em>, <em class="sig-param"><span class="n">wavelength</span><span class="o">=</span><span class="default_value">6.6e-07</span></em>, <em class="sig-param"><span class="n">magnification</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">1e-06, 1e-06, 1e-06</span></em>, <em class="sig-param"><span class="n">refractive_index_medium</span><span class="o">=</span><span class="default_value">1.33</span></em>, <em class="sig-param"><span class="n">upscale</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">padding</span><span class="o">=</span><span class="default_value">10, 10, 10, 10</span></em>, <em class="sig-param"><span class="n">output_region</span><span class="o">=</span><span class="default_value">0, 0, 128, 128</span></em>, <em class="sig-param"><span class="n">pupil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Brightfield" title="Permalink to this definition">¶</a></dt>
 <dd><p>Images coherently illuminated samples.</p>
 <p>Images samples by creating a discretized volume, where each pixel
 represents the effective refractive index of that pixel. Light is
@@ -213,249 +291,301 @@ light in the fourier space, followed by a refractive index correction
 in the real space.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>illumination</strong> (<a class="reference internal" href="features.html#features.Feature" title="features.Feature"><em>Feature</em></a>) – Feature-set resolving the complex field entering the sample. Default
-is a field with all values 1.</p></li>
-<li><p><strong>NA</strong> (<em>float</em>) – The NA of the limiting aperature.</p></li>
-<li><p><strong>wavelength</strong> (<em>float</em>) – The wavelength of the scattered light in meters.</p></li>
-<li><p><strong>magnification</strong> (<em>float</em>) – The magnification of the optical system.</p></li>
-<li><p><strong>resolution</strong> (<em>array_like</em><em>[</em><em>float</em><em> (</em><em>, </em><em>float</em><em>, </em><em>float</em><em>)</em><em>]</em>) – The distance between pixels in the camera. A third value can be
-included to define the resolution in the z-direction.</p></li>
-<li><p><strong>refractive_index_medium</strong> (<em>float</em>) – The refractive index of the medium.</p></li>
-<li><p><strong>upscale</strong> (<em>int</em>) – Upscales the pupil function for a more accurate result.</p></li>
-<li><p><strong>padding</strong> (<em>array_like</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – Pads the sample volume with zeros to avoid edge effects.</p></li>
-<li><p><strong>output_region</strong> (<em>array_like</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – The region of the image to output (x,y,width,height). Default
-None returns entire image.</p></li>
-<li><p><strong>pupil</strong> (<a class="reference internal" href="features.html#features.Feature" title="features.Feature"><em>Feature</em></a>) – A feature-set resolving the pupil function at focus. The feature-set
-receive an unaberrated pupil as input.</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>illumination</strong><span class="classifier">Feature</span></dt><dd><p>Feature-set resolving the complex field entering the sample. Default
+is a field with all values 1.</p>
+</dd>
+<dt><strong>NA</strong><span class="classifier">float</span></dt><dd><p>The NA of the limiting aperature.</p>
+</dd>
+<dt><strong>wavelength</strong><span class="classifier">float</span></dt><dd><p>The wavelength of the scattered light in meters.</p>
+</dd>
+<dt><strong>magnification</strong><span class="classifier">float</span></dt><dd><p>The magnification of the optical system.</p>
+</dd>
+<dt><strong>resolution</strong><span class="classifier">array_like[float (, float, float)]</span></dt><dd><p>The distance between pixels in the camera. A third value can be
+included to define the resolution in the z-direction.</p>
+</dd>
+<dt><strong>refractive_index_medium</strong><span class="classifier">float</span></dt><dd><p>The refractive index of the medium.</p>
+</dd>
+<dt><strong>upscale</strong><span class="classifier">int</span></dt><dd><p>Upscales the pupil function for a more accurate result.</p>
+</dd>
+<dt><strong>padding</strong><span class="classifier">array_like[int, int, int, int]</span></dt><dd><p>Pads the sample volume with zeros to avoid edge effects.</p>
+</dd>
+<dt><strong>output_region</strong><span class="classifier">array_like[int, int, int, int]</span></dt><dd><p>The region of the image to output (x,y,width,height). Default
+None returns entire image.</p>
+</dd>
+<dt><strong>pupil</strong><span class="classifier">Feature</span></dt><dd><p>A feature-set resolving the pupil function at focus. The feature-set
+receive an unaberrated pupil as input.</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="optics.Brightfield.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">illuminated_volume</em>, <em class="sig-param">limits</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#optics.Brightfield.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convolves the image with a pupil function</p>
-</dd></dl>
-
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(sample, **kwargs)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="fluorescence">
 <h3>Fluorescence<a class="headerlink" href="#fluorescence" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="optics.Fluorescence">
-<em class="property">class </em><code class="sig-prename descclassname">optics.</code><code class="sig-name descname">Fluorescence</code><span class="sig-paren">(</span><em class="sig-param">NA=0.7</em>, <em class="sig-param">wavelength=6.6e-07</em>, <em class="sig-param">magnification=1</em>, <em class="sig-param">resolution=(1e-06</em>, <em class="sig-param">1e-06</em>, <em class="sig-param">1e-06)</em>, <em class="sig-param">refractive_index_medium=1.33</em>, <em class="sig-param">upscale=2</em>, <em class="sig-param">padding=(10</em>, <em class="sig-param">10</em>, <em class="sig-param">10</em>, <em class="sig-param">10)</em>, <em class="sig-param">output_region=(None</em>, <em class="sig-param">None</em>, <em class="sig-param">None</em>, <em class="sig-param">None)</em>, <em class="sig-param">pupil: deeptrack.features.Feature = None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#optics.Fluorescence" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.optics.Fluorescence">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Fluorescence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">NA</span><span class="o">=</span><span class="default_value">0.7</span></em>, <em class="sig-param"><span class="n">wavelength</span><span class="o">=</span><span class="default_value">6.6e-07</span></em>, <em class="sig-param"><span class="n">magnification</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">1e-06, 1e-06, 1e-06</span></em>, <em class="sig-param"><span class="n">refractive_index_medium</span><span class="o">=</span><span class="default_value">1.33</span></em>, <em class="sig-param"><span class="n">upscale</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">padding</span><span class="o">=</span><span class="default_value">10, 10, 10, 10</span></em>, <em class="sig-param"><span class="n">output_region</span><span class="o">=</span><span class="default_value">0, 0, 128, 128</span></em>, <em class="sig-param"><span class="n">pupil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Fluorescence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Optical device for fluorescenct imaging</p>
 <p>Images samples by creating a discretized volume, where each pixel
 represents the intensity of the light emitted by fluorophores in
 the the voxel.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>NA</strong> (<em>float</em>) – The NA of the limiting aperature.</p></li>
-<li><p><strong>wavelength</strong> (<em>float</em>) – The wavelength of the scattered light in meters.</p></li>
-<li><p><strong>magnification</strong> (<em>float</em>) – The magnification of the optical system.</p></li>
-<li><p><strong>resolution</strong> (<em>array_like</em><em>[</em><em>float</em><em> (</em><em>, </em><em>float</em><em>, </em><em>float</em><em>)</em><em>]</em>) – The distance between pixels in the camera. A third value can be
-included to define the resolution in the z-direction.</p></li>
-<li><p><strong>refractive_index_medium</strong> (<em>float</em>) – The refractive index of the medium.</p></li>
-<li><p><strong>upscale</strong> (<em>int</em>) – Upscales the pupil function for a more accurate result.</p></li>
-<li><p><strong>padding</strong> (<em>array_like</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – Pads the sample volume with zeros to avoid edge effects.</p></li>
-<li><p><strong>output_region</strong> (<em>array_like</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – The region of the image to output (x,y,width,height). Default
-None returns entire image.</p></li>
-<li><p><strong>pupil</strong> (<a class="reference internal" href="features.html#features.Feature" title="features.Feature"><em>Feature</em></a>) – A feature-set resolving the pupil function at focus. The feature-set
-receive an unaberrated pupil as input.</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>NA</strong><span class="classifier">float</span></dt><dd><p>The NA of the limiting aperature.</p>
+</dd>
+<dt><strong>wavelength</strong><span class="classifier">float</span></dt><dd><p>The wavelength of the scattered light in meters.</p>
+</dd>
+<dt><strong>magnification</strong><span class="classifier">float</span></dt><dd><p>The magnification of the optical system.</p>
+</dd>
+<dt><strong>resolution</strong><span class="classifier">array_like[float (, float, float)]</span></dt><dd><p>The distance between pixels in the camera. A third value can be
+included to define the resolution in the z-direction.</p>
+</dd>
+<dt><strong>refractive_index_medium</strong><span class="classifier">float</span></dt><dd><p>The refractive index of the medium.</p>
+</dd>
+<dt><strong>upscale</strong><span class="classifier">int</span></dt><dd><p>Upscales the pupil function for a more accurate result.</p>
+</dd>
+<dt><strong>padding</strong><span class="classifier">array_like[int, int, int, int]</span></dt><dd><p>Pads the sample volume with zeros to avoid edge effects.</p>
+</dd>
+<dt><strong>output_region</strong><span class="classifier">array_like[int, int, int, int]</span></dt><dd><p>The region of the image to output (x,y,width,height). Default
+None returns entire image.</p>
+</dd>
+<dt><strong>pupil</strong><span class="classifier">Feature</span></dt><dd><p>A feature-set resolving the pupil function at focus. The feature-set
+receive an unaberrated pupil as input.</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="optics.Fluorescence.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">illuminated_volume</em>, <em class="sig-param">limits</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#optics.Fluorescence.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convolves the image with a pupil function</p>
-</dd></dl>
-
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(sample, **kwargs)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="illuminationgradient">
 <h3>IlluminationGradient<a class="headerlink" href="#illuminationgradient" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="optics.IlluminationGradient">
-<em class="property">class </em><code class="sig-prename descclassname">optics.</code><code class="sig-name descname">IlluminationGradient</code><span class="sig-paren">(</span><em class="sig-param">gradient=(0</em>, <em class="sig-param">0)</em>, <em class="sig-param">constant=0</em>, <em class="sig-param">vmin=0</em>, <em class="sig-param">vmax=inf</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#optics.IlluminationGradient" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.optics.IlluminationGradient">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">IlluminationGradient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gradient</span><span class="o">=</span><span class="default_value">0, 0</span></em>, <em class="sig-param"><span class="n">constant</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">vmin</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">inf</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.IlluminationGradient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a gradient in the illumination</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>gradient</strong> (<em>array_like</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em>) – Gradient of the plane to add to the amplitude of the field in pixels.</p></li>
-<li><p><strong>constant</strong> (<em>float</em>) – Constant value to add to the amplitude of the field.</p></li>
-<li><p><strong>vmin</strong> (<em>float</em>) – clips the amplitude of the field to be at least this value</p></li>
-<li><p><strong>vmax</strong> (<em>float</em>) – clips the amplitude of the field to be at most this value</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>gradient</strong><span class="classifier">array_like[float, float]</span></dt><dd><p>Gradient of the plane to add to the amplitude of the field in pixels.</p>
+</dd>
+<dt><strong>constant</strong><span class="classifier">float</span></dt><dd><p>Constant value to add to the amplitude of the field.</p>
+</dd>
+<dt><strong>vmin</strong><span class="classifier">float</span></dt><dd><p>clips the amplitude of the field to be at least this value</p>
+</dd>
+<dt><strong>vmax</strong><span class="classifier">float</span></dt><dd><p>clips the amplitude of the field to be at most this value</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="optics.IlluminationGradient.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">gradient</em>, <em class="sig-param">constant</em>, <em class="sig-param">vmin</em>, <em class="sig-param">vmax</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#optics.IlluminationGradient.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
-</dd></dl>
-
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="microscope">
 <h3>Microscope<a class="headerlink" href="#microscope" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="optics.Microscope">
-<em class="property">class </em><code class="sig-prename descclassname">optics.</code><code class="sig-name descname">Microscope</code><span class="sig-paren">(</span><em class="sig-param">sample: deeptrack.features.Feature</em>, <em class="sig-param">objective: deeptrack.features.Feature</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#optics.Microscope" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.optics.Microscope">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Microscope</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sample</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="n">objective</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Microscope" title="Permalink to this definition">¶</a></dt>
 <dd><p>Image a sample using an optical system.</p>
 <p>Wraps a feature-set defining a sample and a feature-set defining the optics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sample</strong> (<a class="reference internal" href="features.html#features.Feature" title="features.Feature"><em>Feature</em></a>) – A feature-set resolving a list of images describing the sample to be imaged</p></li>
-<li><p><strong>objective</strong> (<a class="reference internal" href="features.html#features.Feature" title="features.Feature"><em>Feature</em></a>) – A feature-set defining the optical device that images the sample</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sample</strong><span class="classifier">Feature</span></dt><dd><p>A feature-set resolving a list of images describing the sample to be imaged</p>
+</dd>
+<dt><strong>objective</strong><span class="classifier">Feature</span></dt><dd><p>A feature-set defining the optical device that images the sample</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="optics.Microscope.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">sample</em>, <em class="sig-param">objective</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#optics.Microscope.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
-</dd></dl>
-
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="id1">
 <h3>Optics<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="optics.Optics">
-<em class="property">class </em><code class="sig-prename descclassname">optics.</code><code class="sig-name descname">Optics</code><span class="sig-paren">(</span><em class="sig-param">NA=0.7</em>, <em class="sig-param">wavelength=6.6e-07</em>, <em class="sig-param">magnification=1</em>, <em class="sig-param">resolution=(1e-06</em>, <em class="sig-param">1e-06</em>, <em class="sig-param">1e-06)</em>, <em class="sig-param">refractive_index_medium=1.33</em>, <em class="sig-param">upscale=2</em>, <em class="sig-param">padding=(10</em>, <em class="sig-param">10</em>, <em class="sig-param">10</em>, <em class="sig-param">10)</em>, <em class="sig-param">output_region=(None</em>, <em class="sig-param">None</em>, <em class="sig-param">None</em>, <em class="sig-param">None)</em>, <em class="sig-param">pupil: deeptrack.features.Feature = None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#optics.Optics" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.optics.Optics">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Optics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">NA</span><span class="o">=</span><span class="default_value">0.7</span></em>, <em class="sig-param"><span class="n">wavelength</span><span class="o">=</span><span class="default_value">6.6e-07</span></em>, <em class="sig-param"><span class="n">magnification</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">1e-06, 1e-06, 1e-06</span></em>, <em class="sig-param"><span class="n">refractive_index_medium</span><span class="o">=</span><span class="default_value">1.33</span></em>, <em class="sig-param"><span class="n">upscale</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">padding</span><span class="o">=</span><span class="default_value">10, 10, 10, 10</span></em>, <em class="sig-param"><span class="n">output_region</span><span class="o">=</span><span class="default_value">0, 0, 128, 128</span></em>, <em class="sig-param"><span class="n">pupil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Optics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract base optics class.</p>
 <p>Provides structure and methods common for most optical devices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>NA</strong> (<em>float</em>) – The NA of the limiting aperature.</p></li>
-<li><p><strong>wavelength</strong> (<em>float</em>) – The wavelength of the scattered light in meters.</p></li>
-<li><p><strong>magnification</strong> (<em>float</em>) – The magnification of the optical system.</p></li>
-<li><p><strong>resolution</strong> (<em>array_like</em><em>[</em><em>float</em><em> (</em><em>, </em><em>float</em><em>, </em><em>float</em><em>)</em><em>]</em>) – The distance between pixels in the camera. A third value can be
-included to define the resolution in the z-direction.</p></li>
-<li><p><strong>refractive_index_medium</strong> (<em>float</em>) – The refractive index of the medium.</p></li>
-<li><p><strong>upscale</strong> (<em>int</em>) – Upscales the pupil function for a more accurate result.</p></li>
-<li><p><strong>padding</strong> (<em>array_like</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – Pads the sample volume with zeros to avoid edge effects.</p></li>
-<li><p><strong>output_region</strong> (<em>array_like</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – The region of the image to output (x,y,width,height). Default
-None returns entire image.</p></li>
-<li><p><strong>pupil</strong> (<a class="reference internal" href="features.html#features.Feature" title="features.Feature"><em>Feature</em></a>) – A feature-set resolving the pupil function at focus. The feature-set
-receive an unaberrated pupil as input.</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>NA</strong><span class="classifier">float</span></dt><dd><p>The NA of the limiting aperature.</p>
+</dd>
+<dt><strong>wavelength</strong><span class="classifier">float</span></dt><dd><p>The wavelength of the scattered light in meters.</p>
+</dd>
+<dt><strong>magnification</strong><span class="classifier">float</span></dt><dd><p>The magnification of the optical system.</p>
+</dd>
+<dt><strong>resolution</strong><span class="classifier">array_like[float (, float, float)]</span></dt><dd><p>The distance between pixels in the camera. A third value can be
+included to define the resolution in the z-direction.</p>
+</dd>
+<dt><strong>refractive_index_medium</strong><span class="classifier">float</span></dt><dd><p>The refractive index of the medium.</p>
+</dd>
+<dt><strong>upscale</strong><span class="classifier">int</span></dt><dd><p>Upscales the pupil function for a more accurate result.</p>
+</dd>
+<dt><strong>padding</strong><span class="classifier">array_like[int, int, int, int]</span></dt><dd><p>Pads the sample volume with zeros to avoid edge effects.</p>
+</dd>
+<dt><strong>output_region</strong><span class="classifier">array_like[int, int, int, int]</span></dt><dd><p>The region of the image to output (x,y,width,height). Default
+None returns entire image.</p>
+</dd>
+<dt><strong>pupil</strong><span class="classifier">Feature</span></dt><dd><p>A feature-set resolving the pupil function at focus. The feature-set
+receive an unaberrated pupil as input.</p>
 </dd>
 </dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(sample, **kwargs)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 </div>
-<div class="section" id="module-functions">
-<h2>Module functions<a class="headerlink" href="#module-functions" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="create-volume">
-<h3>_create_volume<a class="headerlink" href="#create-volume" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="optics._create_volume">
-<code class="sig-prename descclassname">optics.</code><code class="sig-name descname">_create_volume</code><span class="sig-paren">(</span><em class="sig-param">list_of_scatterers</em>, <em class="sig-param">pad=(0</em>, <em class="sig-param">0</em>, <em class="sig-param">0</em>, <em class="sig-param">0)</em>, <em class="sig-param">output_region=(None</em>, <em class="sig-param">None</em>, <em class="sig-param">None</em>, <em class="sig-param">None)</em>, <em class="sig-param">refractive_index_medium=1.33</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#optics._create_volume" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-<div class="section" id="get-position">
-<h3>_get_position<a class="headerlink" href="#get-position" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="optics._get_position">
-<code class="sig-prename descclassname">optics.</code><code class="sig-name descname">_get_position</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">mode='center'</em>, <em class="sig-param">return_z=False</em><span class="sig-paren">)</span><a class="headerlink" href="#optics._get_position" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
-</div>
 </div>
 
 
-           </div>
-           
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="properties.html" class="btn btn-neutral float-right" title="properties" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="noises.html" class="btn btn-neutral float-left" title="noises" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="noises.html" title="previous page">noises</a>
+    <a class='right-next' id="next-link" href="properties.html" title="next page">properties</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
     </div>
-  
 
-  <hr/>
+    
+  <script src="_static/js/index.30270b6e4c972e43c488.js"></script>
 
-  <div role="contentinfo">
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
     <p>
-        &copy; Copyright 2020, Benjamin Midtvedt
-
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
 </footer>
-
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
-    
-   
-
-</body>
+  </body>
 </html>

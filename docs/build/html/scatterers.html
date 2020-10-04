@@ -1,184 +1,317 @@
 
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>scatterers &mdash; DeepTrack 2.0 2.0 documentation</title>
-  
 
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>scatterers &#8212; DeepTrack 2.0 2.0 documentation</title>
     
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
+  <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
 
     
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+      
+  <link rel="stylesheet"
+    href="_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.30270b6e4c972e43c488.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="sequences" href="sequences.html" />
-    <link rel="prev" title="properties" href="properties.html" /> 
-</head>
-
-<body class="wy-body-for-nav">
-
-   
-  <div class="wy-grid-for-nav">
+    <link rel="prev" title="properties" href="properties.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
 
-          
-            <a href="index.html" class="icon icon-home"> DeepTrack 2.0
-          
+    
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
 
-          
-          </a>
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="installation.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="deeptrack.html">Documentation</a>
+        </li>
+        
+        
+      </ul>
 
-          
-            
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Starting with deeptrack</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and notebooks</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Documentation</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="aberrations.html">aberrations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="augmentations.html">augmentations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generators.html">generators</a></li>
-<li class="toctree-l1"><a class="reference internal" href="image.html">image</a></li>
-<li class="toctree-l1"><a class="reference internal" href="losses.html">losses</a></li>
-<li class="toctree-l1"><a class="reference internal" href="models.html">models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noises.html">noises</a></li>
-<li class="toctree-l1"><a class="reference internal" href="optics.html">optics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="properties.html">properties</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">scatterers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-classes">Module classes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ellipse">Ellipse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ellipsoid">Ellipsoid</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pointparticle">PointParticle</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#scatterer">Scatterer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sphere">Sphere</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="sequences.html">sequences</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+
+      <ul class="navbar-nav">
         
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">DeepTrack 2.0</a>
         
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>scatterers</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/scatterers.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
-  </ul>
-
-  
-  <hr/>
+      </ul>
+    </div>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-            
-  <div class="section" id="module-scatterers">
-<span id="scatterers"></span><h1>scatterers<a class="headerlink" href="#module-scatterers" title="Permalink to this headline">¶</a></h1>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar">
+
+<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+
+
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+  <div class="bd-toc-item active">
+  
+
+  <ul class="nav bd-sidenav">
+      
+      
+      
+      
+      
+      
+        
+          
+              <li class="">
+                  <a href="aberrations.html">aberrations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="augmentations.html">augmentations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="features.html">features</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="generators.html">generators</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="image.html">image</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="layers.html">layers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="losses.html">losses</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="math.html">math</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="models.html">models</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="noises.html">noises</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="optics.html">optics</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="properties.html">properties</a>
+              </li>
+          
+        
+          
+              <li class="active">
+                  <a href="">scatterers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="sequences.html">sequences</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="utils.html">utils</a>
+              </li>
+          
+        
+      
+      
+    </ul>
+
+</nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#classes" class="nav-link">Classes</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#module-classes" class="nav-link">Module classes</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#ellipse" class="nav-link">Ellipse</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#ellipsoid" class="nav-link">Ellipsoid</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#miescatterer" class="nav-link">MieScatterer</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#miesphere" class="nav-link">MieSphere</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#pointparticle" class="nav-link">PointParticle</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#scatterer" class="nav-link">Scatterer</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#sphere" class="nav-link">Sphere</a>
+        </li>
+    
+            </ul>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#module-functions" class="nav-link">Module functions</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#b" class="nav-link">B</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#besselj" class="nav-link">besselj</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#coeffs" class="nav-link">coeffs</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#dbesselj" class="nav-link">dbesselj</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#dricbesh" class="nav-link">dricbesh</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#dricbesj" class="nav-link">dricbesj</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#h1vp-cached" class="nav-link">h1vp_cached</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#ricbesh" class="nav-link">ricbesh</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#ricbesj" class="nav-link">ricbesj</a>
+        </li>
+    
+            </ul>
+        </li>
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.scatterers">
+<span id="scatterers"></span><h1>scatterers<a class="headerlink" href="#module-deeptrack.scatterers" title="Permalink to this headline">¶</a></h1>
 <p>Implementations of Feature the model scattering objects.</p>
-<p>Provides some basic implementations of scattering objects
+<p>Provides some basic implementations of scattering objects 
 that are frequently used.</p>
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
@@ -199,157 +332,252 @@ that are frequently used.</p>
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="ellipse">
 <h3>Ellipse<a class="headerlink" href="#ellipse" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="scatterers.Ellipse">
-<em class="property">class </em><code class="sig-prename descclassname">scatterers.</code><code class="sig-name descname">Ellipse</code><span class="sig-paren">(</span><em class="sig-param">radius</em>, <em class="sig-param">rotation</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scatterers.Ellipse" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.scatterers.Ellipse">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Ellipse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">rotation</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Ellipse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates an elliptical disk scatterer</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>radius</strong> (<em>float</em><em> or </em><em>array_like</em><em> [</em><em>float</em><em> (</em><em>, </em><em>float</em><em>)</em><em>]</em>) – Radius of the ellipse in meters. If only one value,
-assume circular.</p></li>
-<li><p><strong>rotation</strong> (<em>float</em>) – Orientation angle of the ellipse in the camera plane in radians.</p></li>
-<li><p><strong>position</strong> (<em>array_like</em><em>[</em><em>float</em><em>, </em><em>float</em><em> (</em><em>, </em><em>float</em><em>)</em><em>]</em>) – The position of the particle. Third index is optional,
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius</strong><span class="classifier">float or array_like [float (, float)]</span></dt><dd><p>Radius of the ellipse in meters. If only one value,
+assume circular.</p>
+</dd>
+<dt><strong>rotation</strong><span class="classifier">float</span></dt><dd><p>Orientation angle of the ellipse in the camera plane in radians.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
 and represents the position in the direction normal to the
-camera plane.</p></li>
-<li><p><strong>z</strong> (<em>float</em>) – The position in the direction normal to the
-camera plane. Used if <cite>position</cite> is of length 2.</p></li>
-<li><p><strong>value</strong> (<em>float</em>) – A default value of the characteristic of the particle. Used by
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
 optics unless a more direct property is set: (eg. <cite>refractive_index</cite>
-for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p></li>
-<li><p><strong>upsample</strong> (<em>int</em>) – Upsamples the calculations of the pixel occupancy fraction.</p></li>
-</ul>
+for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
+</dd>
+<dt><strong>upsample</strong><span class="classifier">int</span></dt><dd><p>Upsamples the calculations of the pixel occupancy fraction.</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="scatterers.Ellipse.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">*ignore</em>, <em class="sig-param">radius</em>, <em class="sig-param">rotation</em>, <em class="sig-param">voxel_size</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scatterers.Ellipse.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
-</dd></dl>
-
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="ellipsoid">
 <h3>Ellipsoid<a class="headerlink" href="#ellipsoid" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="scatterers.Ellipsoid">
-<em class="property">class </em><code class="sig-prename descclassname">scatterers.</code><code class="sig-name descname">Ellipsoid</code><span class="sig-paren">(</span><em class="sig-param">radius</em>, <em class="sig-param">rotation=0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scatterers.Ellipsoid" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.scatterers.Ellipsoid">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Ellipsoid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">rotation</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Ellipsoid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates an ellipsoidal scatterer</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>radius</strong> (<em>float</em><em> or </em><em>array_like</em><em>[</em><em>float</em><em> (</em><em>, </em><em>float</em><em>, </em><em>float</em><em>)</em><em>]</em>) – Radius of the ellipsoid in meters. If only one value,
-assume spherical.</p></li>
-<li><p><strong>rotation</strong> (<em>float</em>) – Rotation of the ellipsoid in about the x, y and z axis.</p></li>
-<li><p><strong>position</strong> (<em>array_like</em><em>[</em><em>float</em><em>, </em><em>float</em><em> (</em><em>, </em><em>float</em><em>)</em><em>]</em>) – The position of the particle. Third index is optional,
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius</strong><span class="classifier">float or array_like[float (, float, float)]</span></dt><dd><p>Radius of the ellipsoid in meters. If only one value,
+assume spherical.</p>
+</dd>
+<dt><strong>rotation</strong><span class="classifier">float</span></dt><dd><p>Rotation of the ellipsoid in about the x, y and z axis.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
 and represents the position in the direction normal to the
-camera plane.</p></li>
-<li><p><strong>z</strong> (<em>float</em>) – The position in the direction normal to the
-camera plane. Used if <cite>position</cite> is of length 2.</p></li>
-<li><p><strong>value</strong> (<em>float</em>) – A default value of the characteristic of the particle. Used by
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
 optics unless a more direct property is set: (eg. <cite>refractive_index</cite>
-for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p></li>
-<li><p><strong>upsample</strong> (<em>int</em>) – Upsamples the calculations of the pixel occupancy fraction.</p></li>
-</ul>
+for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
+</dd>
+<dt><strong>upsample</strong><span class="classifier">int</span></dt><dd><p>Upsamples the calculations of the pixel occupancy fraction.</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="scatterers.Ellipsoid.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">radius</em>, <em class="sig-param">rotation</em>, <em class="sig-param">voxel_size</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scatterers.Ellipsoid.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
+</div>
+<div class="section" id="miescatterer">
+<h3>MieScatterer<a class="headerlink" href="#miescatterer" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.scatterers.MieScatterer">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieScatterer</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieScatterer" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="miesphere">
+<h3>MieSphere<a class="headerlink" href="#miesphere" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.scatterers.MieSphere">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieSphere</code><span class="sig-paren">(</span><em class="sig-param">radius=1e-06</em>, <em class="sig-param">refractive_index=1.45</em>, <em class="sig-param">offset_z=&lt;function MieSphere.&lt;lambda&gt;&gt;</em>, <em class="sig-param">polarization_angle=0</em>, <em class="sig-param">aperature_angle='auto'</em>, <em class="sig-param">L='auto'</em>, <em class="sig-param">crop_empty=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieSphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scattered field by a sphere</p>
+<p>Calculates the scattered field by a spherical particle in a homogenous medium,
+as predicted by Mie theory. Note that the induced phase shift is calculated
+in comparison to the <cite>refractive_index_medium</cite> property of the optical device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius</strong><span class="classifier">float</span></dt><dd><p>Radius of the mie particle in meter.</p>
+</dd>
+<dt><strong>refractive_index</strong><span class="classifier">float</span></dt><dd><p>Refractive index of the particle</p>
+</dd>
+<dt><strong>L</strong><span class="classifier">int or str</span></dt><dd><p>The number of terms used to evaluate the mie theory. If <cite>“auto”</cite>,
+it determines the number of terms automatically.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
+and represents the position in the direction normal to the
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
+optics unless a more direct property is set: (eg. <cite>refractive_index</cite>
+for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="pointparticle">
 <h3>PointParticle<a class="headerlink" href="#pointparticle" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="scatterers.PointParticle">
-<em class="property">class </em><code class="sig-prename descclassname">scatterers.</code><code class="sig-name descname">PointParticle</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scatterers.PointParticle" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.scatterers.PointParticle">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">PointParticle</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.PointParticle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a point particle</p>
 <p>A point particle is approximated by the size of a pixel. For subpixel
 positioning, the position is interpolated linearly.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>position</strong> (<em>array_like of length 2</em><em> or </em><em>3</em>) – The position of the  particle. Third index is optional,
+<dd class="field-odd"><dl class="simple">
+<dt><strong>position</strong><span class="classifier">array_like of length 2 or 3</span></dt><dd><p>The position of the  particle. Third index is optional,
 and represents the position in the direction normal to the
-camera plane.</p></li>
-<li><p><strong>z</strong> (<em>float</em>) – The position in the direction normal to the
-camera plane. Used if <cite>position</cite> is of length 2.</p></li>
-<li><p><strong>value</strong> (<em>float</em>) – A default value of the characteristic of the particle. Used by
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
 optics unless a more direct property is set: (eg. <cite>refractive_index</cite>
-for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p></li>
-</ul>
+for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="scatterers.PointParticle.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scatterers.PointParticle.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
-</dd></dl>
-
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="scatterer">
 <h3>Scatterer<a class="headerlink" href="#scatterer" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="scatterers.Scatterer">
-<em class="property">class </em><code class="sig-prename descclassname">scatterers.</code><code class="sig-name descname">Scatterer</code><span class="sig-paren">(</span><em class="sig-param">position</em>, <em class="sig-param">z=0.0</em>, <em class="sig-param">value=1.0</em>, <em class="sig-param">position_unit='meter'</em>, <em class="sig-param">upsample=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scatterers.Scatterer" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.scatterers.Scatterer">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Scatterer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">position</span><span class="o">=</span><span class="default_value">32, 32</span></em>, <em class="sig-param"><span class="n">z</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">value</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">position_unit</span><span class="o">=</span><span class="default_value">'pixel'</span></em>, <em class="sig-param"><span class="n">upsample</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Scatterer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base abstract class for scatterers.</p>
 <p>A scatterer is defined by a 3-dimensional volume of voxels.
 To each voxel corresponds an occupancy factor, i.e., how much
@@ -361,127 +589,213 @@ the position to voxel units, as well as the <cite>_process_and_get</cite> method
 upsample the calculation and crop empty slices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>position</strong> (<em>array_like of length 2</em><em> or </em><em>3</em>) – The position of the  particle. Third index is optional,
+<dd class="field-odd"><dl class="simple">
+<dt><strong>position</strong><span class="classifier">array_like of length 2 or 3</span></dt><dd><p>The position of the  particle. Third index is optional,
 and represents the position in the direction normal to the
-camera plane.</p></li>
-<li><p><strong>z</strong> (<em>float</em>) – The position in the direction normal to the
-camera plane. Used if <cite>position</cite> is of length 2.</p></li>
-<li><p><strong>value</strong> (<em>float</em>) – A default value of the characteristic of the particle. Used by
-optics unless a more direct property is set (eg. <cite>refractive_index</cite>
-for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p></li>
-<li><p><strong>position_unit</strong> (<em>&quot;meter&quot;</em><em> or </em><em>&quot;pixel&quot;</em>) – The unit of the provided position property.</p></li>
-</ul>
+camera plane.</p>
 </dd>
-<dt class="field-even">Other Parameters</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>upsample_axes</strong> (<em>tuple of ints</em>) – Sets the axes along which the calculation is upsampled (default is None,
-which implies all axes are upsampled).</p></li>
-<li><p><strong>crop_zeros</strong> (<em>bool</em>) – Whether to remove slices in which all elements are zero.</p></li>
-</ul>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
+optics unless a more direct property is set (eg. <cite>refractive_index</cite>
+for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
+</dd>
+<dt><strong>position_unit</strong><span class="classifier">“meter” or “pixel”</span></dt><dd><p>The unit of the provided position property.</p>
 </dd>
 </dl>
+</dd>
+<dt class="field-even">Other Parameters</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>upsample_axes</strong><span class="classifier">tuple of ints</span></dt><dd><p>Sets the axes along which the calculation is upsampled (default is None,
+which implies all axes are upsampled).</p>
+</dd>
+<dt><strong>crop_zeros</strong><span class="classifier">bool</span></dt><dd><p>Whether to remove slices in which all elements are zero.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="sphere">
 <h3>Sphere<a class="headerlink" href="#sphere" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="scatterers.Sphere">
-<em class="property">class </em><code class="sig-prename descclassname">scatterers.</code><code class="sig-name descname">Sphere</code><span class="sig-paren">(</span><em class="sig-param">radius</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scatterers.Sphere" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.scatterers.Sphere">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Sphere</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Sphere" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a spherical scatterer</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>radius</strong> (<em>float</em>) – Radius of the sphere in meters.</p></li>
-<li><p><strong>position</strong> (<em>array_like</em><em>[</em><em>float</em><em>, </em><em>float</em><em> (</em><em>, </em><em>float</em><em>)</em><em>]</em>) – The position of the particle. Third index is optional,
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius</strong><span class="classifier">float</span></dt><dd><p>Radius of the sphere in meters.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
 and represents the position in the direction normal to the
-camera plane.</p></li>
-<li><p><strong>z</strong> (<em>float</em>) – The position in the direction normal to the
-camera plane. Used if <cite>position</cite> is of length 2.</p></li>
-<li><p><strong>value</strong> (<em>float</em>) – A default value of the characteristic of the particle. Used by
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
 optics unless a more direct property is set: (eg. <cite>refractive_index</cite>
-for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p></li>
-<li><p><strong>upsample</strong> (<em>int</em>) – Upsamples the calculations of the pixel occupancy fraction.</p></li>
-</ul>
+for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
+</dd>
+<dt><strong>upsample</strong><span class="classifier">int</span></dt><dd><p>Upsamples the calculations of the pixel occupancy fraction.</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="scatterers.Sphere.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">radius</em>, <em class="sig-param">voxel_size</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#scatterers.Sphere.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-</dd></dl>
+</div>
+</div>
+<div class="section" id="module-functions">
+<h2>Module functions<a class="headerlink" href="#module-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="b">
+<h3>B<a class="headerlink" href="#b" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.scatterers.B">
+<code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">B</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">k</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">nm</span><span class="o">=</span><span class="default_value">1.33</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.B" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="besselj">
+<h3>besselj<a class="headerlink" href="#besselj" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.scatterers.besselj">
+<code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">besselj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.besselj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="coeffs">
+<h3>coeffs<a class="headerlink" href="#coeffs" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.scatterers.coeffs">
+<code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">coeffs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">k</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">L</span></em>, <em class="sig-param"><span class="n">nm</span><span class="o">=</span><span class="default_value">1.33</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.coeffs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="dbesselj">
+<h3>dbesselj<a class="headerlink" href="#dbesselj" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.scatterers.dbesselj">
+<code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">dbesselj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.dbesselj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="dricbesh">
+<h3>dricbesh<a class="headerlink" href="#dricbesh" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.scatterers.dricbesh">
+<code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">dricbesh</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nu</span></em>, <em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.dricbesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="dricbesj">
+<h3>dricbesj<a class="headerlink" href="#dricbesj" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.scatterers.dricbesj">
+<code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">dricbesj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.dricbesj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="h1vp-cached">
+<h3>h1vp_cached<a class="headerlink" href="#h1vp-cached" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.scatterers.h1vp_cached">
+<code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">h1vp_cached</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">L</span></em>, <em class="sig-param"><span class="n">hin</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.h1vp_cached" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="ricbesh">
+<h3>ricbesh<a class="headerlink" href="#ricbesh" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.scatterers.ricbesh">
+<code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">ricbesh</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.ricbesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="ricbesj">
+<h3>ricbesj<a class="headerlink" href="#ricbesj" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.scatterers.ricbesj">
+<code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">ricbesj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.ricbesj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 </div>
 </div>
 
 
-           </div>
-           
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="sequences.html" class="btn btn-neutral float-right" title="sequences" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="properties.html" class="btn btn-neutral float-left" title="properties" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="properties.html" title="previous page">properties</a>
+    <a class='right-next' id="next-link" href="sequences.html" title="next page">sequences</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
     </div>
-  
 
-  <hr/>
+    
+  <script src="_static/js/index.30270b6e4c972e43c488.js"></script>
 
-  <div role="contentinfo">
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
     <p>
-        &copy; Copyright 2020, Benjamin Midtvedt
-
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
 </footer>
-
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
-    
-   
-
-</body>
+  </body>
 </html>

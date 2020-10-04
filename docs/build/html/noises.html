@@ -1,190 +1,272 @@
 
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>noises &mdash; DeepTrack 2.0 2.0 documentation</title>
-  
 
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>noises &#8212; DeepTrack 2.0 2.0 documentation</title>
     
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
+  <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
 
     
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+      
+  <link rel="stylesheet"
+    href="_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.30270b6e4c972e43c488.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="optics" href="optics.html" />
-    <link rel="prev" title="models" href="models.html" /> 
-</head>
-
-<body class="wy-body-for-nav">
-
-   
-  <div class="wy-grid-for-nav">
+    <link rel="prev" title="models" href="models.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
 
-          
-            <a href="index.html" class="icon icon-home"> DeepTrack 2.0
-          
+    
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
 
-          
-          </a>
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="installation.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="deeptrack.html">Documentation</a>
+        </li>
+        
+        
+      </ul>
 
-          
-            
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Starting with deeptrack</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and notebooks</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Documentation</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="aberrations.html">aberrations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="augmentations.html">augmentations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generators.html">generators</a></li>
-<li class="toctree-l1"><a class="reference internal" href="image.html">image</a></li>
-<li class="toctree-l1"><a class="reference internal" href="losses.html">losses</a></li>
-<li class="toctree-l1"><a class="reference internal" href="models.html">models</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">noises</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-classes">Module classes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#add">Add</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#background">Background</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#gaussian">Gaussian</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#noise">Noise</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#offset">Offset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#poisson">Poisson</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="optics.html">optics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="properties.html">properties</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scatterers.html">scatterers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sequences.html">sequences</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+
+      <ul class="navbar-nav">
         
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">DeepTrack 2.0</a>
         
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>noises</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/noises.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
-  </ul>
-
-  
-  <hr/>
+      </ul>
+    </div>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-            
-  <div class="section" id="module-noises">
-<span id="noises"></span><h1>noises<a class="headerlink" href="#module-noises" title="Permalink to this headline">¶</a></h1>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar">
+
+<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+
+
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+  <div class="bd-toc-item active">
+  
+
+  <ul class="nav bd-sidenav">
+      
+      
+      
+      
+      
+      
+        
+          
+              <li class="">
+                  <a href="aberrations.html">aberrations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="augmentations.html">augmentations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="features.html">features</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="generators.html">generators</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="image.html">image</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="layers.html">layers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="losses.html">losses</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="math.html">math</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="models.html">models</a>
+              </li>
+          
+        
+          
+              <li class="active">
+                  <a href="">noises</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="optics.html">optics</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="properties.html">properties</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="scatterers.html">scatterers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="sequences.html">sequences</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="utils.html">utils</a>
+              </li>
+          
+        
+      
+      
+    </ul>
+
+</nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#classes" class="nav-link">Classes</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#module-classes" class="nav-link">Module classes</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#background" class="nav-link">Background</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#gaussian" class="nav-link">Gaussian</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#noise" class="nav-link">Noise</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#offset" class="nav-link">Offset</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#poisson" class="nav-link">Poisson</a>
+        </li>
+    
+            </ul>
+        </li>
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.noises">
+<span id="noises"></span><h1>noises<a class="headerlink" href="#module-deeptrack.noises" title="Permalink to this headline">¶</a></h1>
 <p>Features for introducing noise to images.</p>
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
 <dt>Noise</dt><dd><p>Base abstract noise class.</p>
 </dd>
-<dt>Offset, Add, Background</dt><dd><p>Adds a constant value to an image.</p>
+<dt>Offset, Background</dt><dd><p>Adds a constant value to an image.</p>
 </dd>
 <dt>Gaussian</dt><dd><p>Adds IID Gaussian noise to an image.</p>
 </dd>
@@ -194,195 +276,194 @@
 </div>
 <div class="section" id="module-classes">
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="add">
-<h3>Add<a class="headerlink" href="#add" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="noises.Add">
-<em class="property">class </em><code class="sig-prename descclassname">noises.</code><code class="sig-name descname">Add</code><span class="sig-paren">(</span><em class="sig-param">offset</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#noises.Add" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a constant value to an image
-:param offset: The value to add to the image
-:type offset: float</p>
-<dl class="method">
-<dt id="noises.Add.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">offset</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#noises.Add.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</div>
 <div class="section" id="background">
 <h3>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h3>
-<dl class="attribute">
-<dt id="noises.Background">
-<code class="sig-prename descclassname">noises.</code><code class="sig-name descname">Background</code><a class="headerlink" href="#noises.Background" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#noises.Add" title="noises.Add"><code class="xref py py-class docutils literal notranslate"><span class="pre">noises.Add</span></code></a></p>
+<dl class="py class">
+<dt id="deeptrack.noises.Background">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.noises.</code><code class="sig-name descname">Background</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">offset</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.noises.Background" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a constant value to an image
+Parameters
+———-
+offset : float</p>
+<blockquote>
+<div><p>The value to add to the image</p>
+</div></blockquote>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="gaussian">
 <h3>Gaussian<a class="headerlink" href="#gaussian" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="noises.Gaussian">
-<em class="property">class </em><code class="sig-prename descclassname">noises.</code><code class="sig-name descname">Gaussian</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">mu</em>, <em class="sig-param">sigma</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#noises.Gaussian" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.noises.Gaussian">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.noises.</code><code class="sig-name descname">Gaussian</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mu</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.noises.Gaussian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds IID Gaussian noise to an image</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>mu</strong> (<em>float</em>) – The mean of the distribution.</p></li>
-<li><p><strong>sigma</strong> (<em>float</em>) – The root of the variance of the distribution.</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mu</strong><span class="classifier">float</span></dt><dd><p>The mean of the distribution.</p>
+</dd>
+<dt><strong>sigma</strong><span class="classifier">float</span></dt><dd><p>The root of the variance of the distribution.</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="noises.Gaussian.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">mu</em>, <em class="sig-param">sigma</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#noises.Gaussian.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
-</dd></dl>
-
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="noise">
 <h3>Noise<a class="headerlink" href="#noise" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="noises.Noise">
-<em class="property">class </em><code class="sig-prename descclassname">noises.</code><code class="sig-name descname">Noise</code><span class="sig-paren">(</span><em class="sig-param">*args: dict</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#noises.Noise" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.noises.Noise">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.noises.</code><code class="sig-name descname">Noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.noises.Noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base abstract noise class.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="offset">
 <h3>Offset<a class="headerlink" href="#offset" title="Permalink to this headline">¶</a></h3>
-<dl class="attribute">
-<dt id="noises.Offset">
-<code class="sig-prename descclassname">noises.</code><code class="sig-name descname">Offset</code><a class="headerlink" href="#noises.Offset" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#noises.Add" title="noises.Add"><code class="xref py py-class docutils literal notranslate"><span class="pre">noises.Add</span></code></a></p>
+<dl class="py attribute">
+<dt id="deeptrack.noises.Offset">
+<code class="sig-prename descclassname">deeptrack.noises.</code><code class="sig-name descname">Offset</code><a class="headerlink" href="#deeptrack.noises.Offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#deeptrack.noises.Background" title="deeptrack.noises.Background"><code class="xref py py-class docutils literal notranslate"><span class="pre">deeptrack.noises.Background</span></code></a></p>
 </dd></dl>
 
 </div>
 <div class="section" id="poisson">
 <h3>Poisson<a class="headerlink" href="#poisson" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="noises.Poisson">
-<em class="property">class </em><code class="sig-prename descclassname">noises.</code><code class="sig-name descname">Poisson</code><span class="sig-paren">(</span><em class="sig-param">*args: dict</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#noises.Poisson" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.noises.Poisson">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.noises.</code><code class="sig-name descname">Poisson</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">snr</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">background</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.noises.Poisson" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds Poisson-distributed noise to an image</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>snr</strong> (<em>float</em>) – Signal to noise ratio of the final image. The signal is determined
+<dd class="field-odd"><dl class="simple">
+<dt><strong>snr</strong><span class="classifier">float</span></dt><dd><p>Signal to noise ratio of the final image. The signal is determined
 by the peak value of the image.</p>
 </dd>
-</dl>
-<dl class="method">
-<dt id="noises.Poisson.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">snr=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#noises.Poisson.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
+<dt><strong>background</strong><span class="classifier">float</span></dt><dd><p>Value to be be used as the background. This is used to calculate the
+signal of the image.</p>
 </dd>
 </dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-</dd></dl>
-
 </div>
 </div>
 </div>
 
 
-           </div>
-           
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="optics.html" class="btn btn-neutral float-right" title="optics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="models.html" class="btn btn-neutral float-left" title="models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="models.html" title="previous page">models</a>
+    <a class='right-next' id="next-link" href="optics.html" title="next page">optics</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
     </div>
-  
 
-  <hr/>
+    
+  <script src="_static/js/index.30270b6e4c972e43c488.js"></script>
 
-  <div role="contentinfo">
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
     <p>
-        &copy; Copyright 2020, Benjamin Midtvedt
-
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
 </footer>
-
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
-    
-   
-
-</body>
+  </body>
 </html>

@@ -1,185 +1,305 @@
 
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>features &mdash; DeepTrack 2.0 2.0 documentation</title>
-  
 
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>features &#8212; DeepTrack 2.0 2.0 documentation</title>
     
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
+  <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
 
     
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+      
+  <link rel="stylesheet"
+    href="_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.30270b6e4c972e43c488.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="generators" href="generators.html" />
-    <link rel="prev" title="augmentations" href="augmentations.html" /> 
-</head>
-
-<body class="wy-body-for-nav">
-
-   
-  <div class="wy-grid-for-nav">
+    <link rel="prev" title="augmentations" href="augmentations.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
 
-          
-            <a href="index.html" class="icon icon-home"> DeepTrack 2.0
-          
+    
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
 
-          
-          </a>
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="installation.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="deeptrack.html">Documentation</a>
+        </li>
+        
+        
+      </ul>
 
-          
-            
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Starting with deeptrack</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials and notebooks</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Documentation</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="aberrations.html">aberrations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="augmentations.html">augmentations</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">features</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-classes">Module classes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#branch">Branch</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#conditionalsetfeature">ConditionalSetFeature</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#conditionalsetproperty">ConditionalSetProperty</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#duplicate">Duplicate</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#feature">Feature</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#label">Label</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#probability">Probability</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#structuralfeature">StructuralFeature</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="generators.html">generators</a></li>
-<li class="toctree-l1"><a class="reference internal" href="image.html">image</a></li>
-<li class="toctree-l1"><a class="reference internal" href="losses.html">losses</a></li>
-<li class="toctree-l1"><a class="reference internal" href="models.html">models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="noises.html">noises</a></li>
-<li class="toctree-l1"><a class="reference internal" href="optics.html">optics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="properties.html">properties</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scatterers.html">scatterers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sequences.html">sequences</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" aria-label="top navigation">
+
+      <ul class="navbar-nav">
         
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">DeepTrack 2.0</a>
         
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>features</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/features.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
-  </ul>
-
-  
-  <hr/>
+      </ul>
+    </div>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-            
-  <div class="section" id="module-features">
-<span id="features"></span><h1>features<a class="headerlink" href="#module-features" title="Permalink to this headline">¶</a></h1>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar">
+
+<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+
+
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+  <div class="bd-toc-item active">
+  
+
+  <ul class="nav bd-sidenav">
+      
+      
+      
+      
+      
+      
+        
+          
+              <li class="">
+                  <a href="aberrations.html">aberrations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="augmentations.html">augmentations</a>
+              </li>
+          
+        
+          
+              <li class="active">
+                  <a href="">features</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="generators.html">generators</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="image.html">image</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="layers.html">layers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="losses.html">losses</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="math.html">math</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="models.html">models</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="noises.html">noises</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="optics.html">optics</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="properties.html">properties</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="scatterers.html">scatterers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="sequences.html">sequences</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="utils.html">utils</a>
+              </li>
+          
+        
+      
+      
+    </ul>
+
+</nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#classes" class="nav-link">Classes</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#module-classes" class="nav-link">Module classes</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#branch" class="nav-link">Branch</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#combine" class="nav-link">Combine</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#conditionalsetfeature" class="nav-link">ConditionalSetFeature</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#conditionalsetproperty" class="nav-link">ConditionalSetProperty</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#dataset" class="nav-link">Dataset</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#dummyfeature" class="nav-link">DummyFeature</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#duplicate" class="nav-link">Duplicate</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#feature" class="nav-link">Feature</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#label" class="nav-link">Label</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#lambda" class="nav-link">Lambda</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#loadimage" class="nav-link">LoadImage</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#merge" class="nav-link">Merge</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#probability" class="nav-link">Probability</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#sampletomasks" class="nav-link">SampleToMasks</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#structuralfeature" class="nav-link">StructuralFeature</a>
+        </li>
+    
+            </ul>
+        </li>
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.features">
+<span id="features"></span><h1>features<a class="headerlink" href="#module-deeptrack.features" title="Permalink to this headline">¶</a></h1>
 <p>Base class Feature and structural features</p>
 <p>Provides classes and tools for creating and interacting with features.</p>
 <div class="section" id="classes">
@@ -189,13 +309,13 @@
 </dd>
 <dt>StructuralFeature</dt><dd><p>Abstract extension of feature for interactions between features.</p>
 </dd>
-<dt>Branch</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that resolves two features
+<dt>Branch</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that resolves two features 
 sequentially.</p>
 </dd>
-<dt>Probability</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that randomly resolves a feature
+<dt>Probability</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that randomly resolves a feature 
 with a certain probability.</p>
 </dd>
-<dt>Duplicate</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that sequentially resolves an
+<dt>Duplicate</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that sequentially resolves an 
 integer number of deep-copies of a feature.</p>
 </dd>
 </dl>
@@ -204,153 +324,290 @@ integer number of deep-copies of a feature.</p>
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="branch">
 <h3>Branch<a class="headerlink" href="#branch" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="features.Branch">
-<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">Branch</code><span class="sig-paren">(</span><em class="sig-param">feature_1: features.Feature</em>, <em class="sig-param">feature_2: features.Feature</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Branch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resolves to features sequentially
-:param feature_1:
-:type feature_1: Feature
-:param feature_2:
-:type feature_2: Feature</p>
-<dl class="method">
-<dt id="features.Branch.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">feature_1</em>, <em class="sig-param">feature_2</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Branch.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resolves <cite>feature_1</cite> and <cite>feature_2</cite> sequentially</p>
+<dl class="py class">
+<dt id="deeptrack.features.Branch">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">Branch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature_1</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="n">feature_2</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves two features sequentially.
+Passes the output of the first to the input of the second.
+Parameters
+———-
+feature_1 : Feature
+feature_2 : Feature</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
+</div>
+<div class="section" id="combine">
+<h3>Combine<a class="headerlink" href="#combine" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.features.Combine">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">Combine</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">features</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Combine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combines multiple features into a single feature.</p>
+<p>Resolves each feature in <cite>features</cite> and returns them as a list of features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>features</strong><span class="classifier">list of features</span></dt><dd><p>features to combine</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="conditionalsetfeature">
 <h3>ConditionalSetFeature<a class="headerlink" href="#conditionalsetfeature" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="features.ConditionalSetFeature">
-<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">ConditionalSetFeature</code><span class="sig-paren">(</span><em class="sig-param">on_false: features.Feature = None</em>, <em class="sig-param">on_true: features.Feature = None</em>, <em class="sig-param">condition='is_label'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.ConditionalSetFeature" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.features.ConditionalSetFeature">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">ConditionalSetFeature</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">on_false</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">on_true</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">condition</span><span class="o">=</span><span class="default_value">'is_label'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.ConditionalSetFeature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conditionally resolves one of two features</p>
+<p>Set condition to the value to listen to. Example,
+if condition is “is_label”, then conditiona can be toggled
+by calling either</p>
+<p>Feature.resolve(is_label=True) / Feature.resolve(is_label=False)
+Feature.update(is_label=True) / Feature.update(is_label=False)</p>
+<p>Note that both features will be updated in either case.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>on_false</strong> (<a class="reference internal" href="#features.Feature" title="features.Feature"><em>Feature</em></a>) – Feature to resolve if the conditional property is false</p></li>
-<li><p><strong>on_true</strong> (<a class="reference internal" href="#features.Feature" title="features.Feature"><em>Feature</em></a>) – Feature to resolve if the conditional property is true</p></li>
-<li><p><strong>condition</strong> (<em>str</em>) – The name of the conditional property</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>on_false</strong><span class="classifier">Feature</span></dt><dd><p>Feature to resolve if the conditional property is false</p>
+</dd>
+<dt><strong>on_true</strong><span class="classifier">Feature</span></dt><dd><p>Feature to resolve if the conditional property is true</p>
+</dd>
+<dt><strong>condition</strong><span class="classifier">str</span></dt><dd><p>The name of the conditional property</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="features.ConditionalSetFeature.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">*</em>, <em class="sig-param">on_false</em>, <em class="sig-param">on_true</em>, <em class="sig-param">condition</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.ConditionalSetFeature.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
-</dd></dl>
-
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="conditionalsetproperty">
 <h3>ConditionalSetProperty<a class="headerlink" href="#conditionalsetproperty" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="features.ConditionalSetProperty">
-<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">ConditionalSetProperty</code><span class="sig-paren">(</span><em class="sig-param">feature: features.Feature</em>, <em class="sig-param">condition='is_label'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.ConditionalSetProperty" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.features.ConditionalSetProperty">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">ConditionalSetProperty</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="n">condition</span><span class="o">=</span><span class="default_value">'is_label'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.ConditionalSetProperty" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conditionally overrides the properties of child features</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>feature</strong> (<a class="reference internal" href="#features.Feature" title="features.Feature"><em>Feature</em></a>) – The child feature</p></li>
-<li><p><strong>condition</strong> (<em>str</em>) – The name of the conditional property</p></li>
-<li><p><strong>**kwargs</strong> – Properties to be used if <cite>condition</cite> is True</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>The child feature</p>
+</dd>
+<dt><strong>condition</strong><span class="classifier">str</span></dt><dd><p>The name of the conditional property</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Properties to be used if <cite>condition</cite> is True</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="features.ConditionalSetProperty.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">feature</em>, <em class="sig-param">condition</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.ConditionalSetProperty.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
+</div>
+<div class="section" id="dataset">
+<h3>Dataset<a class="headerlink" href="#dataset" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.features.Dataset">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">Dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Grabs data from a local set of data.</p>
+<p>The first argument should be an iterator, function or constant,
+which provides access to a single sample from a dataset. If it returns
+a tuple, the first element should be an array-like and the second a
+dictionary. The array-like will be returned as an image with the dictionary
+added to the set of properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data</strong><span class="classifier">tuple or array_like</span></dt><dd><p>Any property that returns a single image or a tuple of two objects,
+where the first is an array_like.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="dummyfeature">
+<h3>DummyFeature<a class="headerlink" href="#dummyfeature" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.features.DummyFeature">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">DummyFeature</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.DummyFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Feature that does nothing</p>
+<p>Can be used as a container for properties to separate the code logically.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="duplicate">
 <h3>Duplicate<a class="headerlink" href="#duplicate" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="features.Duplicate">
-<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">Duplicate</code><span class="sig-paren">(</span><em class="sig-param">feature: features.Feature</em>, <em class="sig-param">num_duplicates: int</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Duplicate" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.features.Duplicate">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">Duplicate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="n">num_duplicates</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Duplicate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resolves copies of a feature sequentially
 Creates <cite>num_duplicates</cite> copies of the feature and resolves
 them sequentially</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>feature</strong> (<a class="reference internal" href="#features.Feature" title="features.Feature"><em>Feature</em></a>) – The feature to duplicate</p></li>
-<li><p><strong>num_duplicates</strong> (<em>int</em>) – The number of duplicates to create</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature: Feature</strong></dt><dd><p>The feature to duplicate</p>
+</dd>
+<dt><strong>num_duplicates: int</strong></dt><dd><p>The number of duplicates to create</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="features.Duplicate.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image, features: List[features.Feature], **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Duplicate.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resolves each feature in <cite>features</cite> sequentially</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="features.Duplicate.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Duplicate.update" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates the state of all properties.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>**kwargs</strong> – Arguments that will be passed to the Property
-method <cite>update()</cite>.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>self</p>
 </dd>
 </dl>
-</dd></dl>
-
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="feature">
 <h3>Feature<a class="headerlink" href="#feature" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="features.Feature">
-<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">Feature</code><span class="sig-paren">(</span><em class="sig-param">*args: dict</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Feature" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.features.Feature">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">Feature</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Feature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base feature class.
 Features define the image generation process. All features operate
 on lists of images. Most features, such as noise, apply some
@@ -366,155 +623,136 @@ constructor will be wrapped as a Property, and stored in the
 the current value of each property is sent as input to the get method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>*args</strong> (<em>dict</em><em>, </em><em>optional</em>) – Dicts passed as nonkeyword arguments will be deconstructed to key-value
+<dd class="field-odd"><dl class="simple">
+<dt><strong>*args</strong><span class="classifier">dict, optional</span></dt><dd><p>Dicts passed as nonkeyword arguments will be deconstructed to key-value
 pairs and included in the field <cite>properties</cite> in the same way as keyword
-arguments.</p></li>
-<li><p><strong>**kwargs</strong> – All Keyword arguments will be wrapped as instances of <code class="docutils literal notranslate"><span class="pre">Property</span></code> and
-included in the field <cite>properties</cite>.</p></li>
-</ul>
+arguments.</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>All Keyword arguments will be wrapped as instances of <code class="docutils literal notranslate"><span class="pre">Property</span></code> and
+included in the field <cite>properties</cite>.</p>
 </dd>
 </dl>
-<dl class="attribute">
-<dt id="features.Feature.properties">
-<code class="sig-name descname">properties</code><a class="headerlink" href="#features.Feature.properties" title="Permalink to this definition">¶</a></dt>
-<dd><p>A dict that contains all keyword arguments passed to the
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>properties</strong><span class="classifier">dict</span></dt><dd><p>A dict that contains all keyword arguments passed to the
 constructor wrapped as Distributions. A sampled copy of this
 dict is sent as input to the get function, and is appended
 to the properties field of the output image.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>dict</p>
 </dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="features.Feature.__list_merge_strategy__">
-<code class="sig-name descname">__list_merge_strategy__</code><a class="headerlink" href="#features.Feature.__list_merge_strategy__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Controls how the output of <cite>.get(image, **kwargs)</cite> is merged with
+<dt><strong>__list_merge_strategy__</strong><span class="classifier">int</span></dt><dd><p>Controls how the output of <cite>.get(image, **kwargs)</cite> is merged with
 the input list. It can be <cite>MERGE_STRATEGY_OVERRIDE</cite> (0, default),
 where the input is replaced by the new list, or
-<cite>MERGE_STRATEGY_APPEND</cite> (1), where the new list is appended to the</p>
-<blockquote>
-<div><p>end of the input list.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
+<cite>MERGE_STRATEGY_APPEND</cite> (1), where the new list is appended to the
+end of the input list.</p>
 </dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="features.Feature.__distributed__">
-<code class="sig-name descname">__distributed__</code><a class="headerlink" href="#features.Feature.__distributed__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Controls whether <cite>.get(image, **kwargs)</cite> is called on each element
+<dt><strong>__distributed__</strong><span class="classifier">bool</span></dt><dd><p>Controls whether <cite>.get(image, **kwargs)</cite> is called on each element
 in the list separately (<cite>__distributed__ = True</cite>), or if it is
 called on the list as a whole (<cite>__distributed__ = False</cite>).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
 </dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="features.Feature.__property_memorability__">
-<code class="sig-name descname">__property_memorability__</code><a class="headerlink" href="#features.Feature.__property_memorability__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Controls whether to store the features properties to the <cite>Image</cite>.
+<dt><strong>__property_memorability__</strong></dt><dd><p>Controls whether to store the features properties to the <cite>Image</cite>.
 Values 1 or lower will be included by default.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="features.Feature.get">
-<em class="property">abstract </em><code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image: deeptrack.image.Image</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; deeptrack.image.Image<a class="headerlink" href="#features.Feature.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="features.Feature.plot">
-<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param">input_image: deeptrack.image.Image = None</em>, <em class="sig-param">resolve_kwargs: dict = None</em>, <em class="sig-param">interval: float = None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Feature.plot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visualizes the output of the feature
-Resolves the feature and visualizes the result. If the output is an Image,
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#deeptrack.features.Feature.plot" title="deeptrack.features.Feature.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#deeptrack.features.Feature.resolve" title="deeptrack.features.Feature.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#deeptrack.features.Feature.sample" title="deeptrack.features.Feature.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#deeptrack.features.Feature.update" title="deeptrack.features.Feature.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code></a>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="deeptrack.features.Feature.plot">
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_image</span><span class="p">:</span> <span class="n"><a class="reference internal" href="image.html#deeptrack.image.Image" title="deeptrack.image.Image">deeptrack.image.Image</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resolve_kwargs</span><span class="p">:</span> <span class="n">dict</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">interval</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Feature.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualizes the output of the feature.</p>
+<p>Resolves the feature and visualizes the result. If the output is an Image,
 show it using <cite>pyplot.imshow</cite>. If the output is a list, create an <cite>Animation</cite>.
 For notebooks, the animation is played inline using <cite>to_jshtml()</cite>. For scripts,
 the animation is played using the matplotlib backend.</p>
 <p>Any parameters in kwargs will be passed to <cite>pyplot.imshow</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>input_image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em><em>, </em><em>optional</em>) – Passed as argument to <cite>resolve</cite> call</p></li>
-<li><p><strong>resolve_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Passed as kwarg arguments to <cite>resolve</cite> call</p></li>
-<li><p><strong>interval</strong> (<em>float</em>) – The time between frames in animation in ms. Default 33.</p></li>
-<li><p><strong>kwargs</strong> – keyword arguments passed to the method pyplot.imshow()</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_image</strong><span class="classifier">Image or List[Image], optional</span></dt><dd><p>Passed as argument to <cite>resolve</cite> call</p>
+</dd>
+<dt><strong>resolve_kwargs</strong><span class="classifier">dict, optional</span></dt><dd><p>Passed as kwarg arguments to <cite>resolve</cite> call</p>
+</dd>
+<dt><strong>interval</strong><span class="classifier">float</span></dt><dd><p>The time between frames in animation in ms. Default 33.</p>
+</dd>
+<dt><strong>kwargs</strong></dt><dd><p>keyword arguments passed to the method pyplot.imshow()</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="features.Feature.resolve">
-<code class="sig-name descname">resolve</code><span class="sig-paren">(</span><em class="sig-param">image_list: deeptrack.image.Image = None</em>, <em class="sig-param">**global_kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Feature.resolve" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt id="deeptrack.features.Feature.resolve">
+<code class="sig-name descname">resolve</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_list</span><span class="p">:</span> <span class="n"><a class="reference internal" href="image.html#deeptrack.image.Image" title="deeptrack.image.Image">deeptrack.image.Image</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">global_kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Feature.resolve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates the image.
 Transforms the input image by calling the method <cite>get()</cite> with the
 correct inputs. The properties of the feature can be overruled by
 passing a different value as a keyword argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image_list</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em><em>, </em><em>optional</em>) – The Image or list of images to be transformed.</p></li>
-<li><p><strong>**global_kwargs</strong> – Set of arguments that are applied globally. That is, every
+<dd class="field-odd"><dl class="simple">
+<dt><strong>image_list</strong><span class="classifier">Image or List[Image], optional</span></dt><dd><p>The Image or list of images to be transformed.</p>
+</dd>
+<dt><strong>**global_kwargs</strong></dt><dd><p>Set of arguments that are applied globally. That is, every
 feature in the set of features required to resolve an image
-will receive these keyword arguments.</p></li>
-</ul>
+will receive these keyword arguments.</p>
+</dd>
+</dl>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The resolved image</p>
+<dd class="field-even"><dl class="simple">
+<dt>Image or List[Image]</dt><dd><p>The resolved image</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
+</dl>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="features.Feature.sample">
-<code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; features.Feature<a class="headerlink" href="#features.Feature.sample" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt id="deeptrack.features.Feature.sample">
+<code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a><a class="headerlink" href="#deeptrack.features.Feature.sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the feature</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="features.Feature.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; features.Feature<a class="headerlink" href="#features.Feature.update" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt id="deeptrack.features.Feature.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a><a class="headerlink" href="#deeptrack.features.Feature.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Updates the state of all properties.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>**kwargs</strong> – Arguments that will be passed to the Property
-method <cite>update()</cite>.</p>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>**kwargs</strong></dt><dd><p>Arguments that will be set globally for the update call.
+For example .update(value=10) will have all properties
+and features that depend on “value” use 10 instead of what
+they otherwise would.</p>
+</dd>
+</dl>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>self</p>
+<dd class="field-even"><dl class="simple">
+<dt>self</dt><dd></dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -524,72 +762,318 @@ method <cite>update()</cite>.</p>
 </div>
 <div class="section" id="label">
 <h3>Label<a class="headerlink" href="#label" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="features.Label">
-<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">Label</code><span class="sig-paren">(</span><em class="sig-param">*args: dict</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Label" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.features.Label">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">Label</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_shape</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Label" title="Permalink to this definition">¶</a></dt>
 <dd><p>Outputs the properties of this features.</p>
+<p>Can be used to extract properties in a feature set and combine them into
+a numpy array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>output_shape</strong> (<em>tuple of ints</em>) – Reshapes the oiutput to this shape</p>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>output_shape</strong><span class="classifier">tuple of ints</span></dt><dd><p>Reshapes the output to this shape</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="features.Label.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">output_shape=None</em>, <em class="sig-param">hash_key=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Label.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method for altering an image
-Abstract method that define how the feature transforms the input. The current
-value of all properties will be passed as keyword arguments.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> (<a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em> or </em><em>List</em><em>[</em><a class="reference internal" href="image.html#image.Image" title="image.Image"><em>Image</em></a><em>]</em>) – The Image or list of images to transform</p></li>
-<li><p><strong>**kwargs</strong> – The current value of all properties in <cite>properties</cite> as well as any global
-arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The transformed image or list of images</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a> or List[<a class="reference internal" href="image.html#image.Image" title="image.Image">Image</a>]</p>
 </dd>
 </dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
+</div>
+<div class="section" id="lambda">
+<h3>Lambda<a class="headerlink" href="#lambda" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.features.Lambda">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">Lambda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Lambda" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls a custom function on each image in the input.</p>
+<p>Note that the property <cite>function</cite> needs to be wrapped in an
+outer layer function. The outer layer function can depend on
+other properties, while the inner layer function accepts an
+image as input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>function</strong><span class="classifier">Callable[Image]</span></dt><dd><p>Function that takes the current image as first input</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="loadimage">
+<h3>LoadImage<a class="headerlink" href="#loadimage" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.features.LoadImage">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">LoadImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">load_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">as_list</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ndim</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">to_grayscale</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">get_one_random</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.LoadImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads an image from disk.</p>
+<p>Cycles through file-readers numpy, pillow and opencv2 to open the
+image file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>path</strong><span class="classifier">str</span></dt><dd><p>Path to image to load</p>
+</dd>
+<dt><strong>load_options</strong><span class="classifier">dict</span></dt><dd><p>Options passed to the file reader</p>
+</dd>
+<dt><strong>as_list</strong><span class="classifier">bool</span></dt><dd><p>If True, the irst dimension will be converted to a list.</p>
+</dd>
+<dt><strong>ndim</strong><span class="classifier">int</span></dt><dd><p>Adds dimensions until it is at least ndim</p>
+</dd>
+<dt><strong>to_grayscale</strong><span class="classifier">bool</span></dt><dd><p>Whether to convert the image to grayscale</p>
+</dd>
+<dt><strong>get_one_random</strong><span class="classifier">bool</span></dt><dd><p>Extracts a single image from a stack. Only used if as_list is true.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt>IOError</dt><dd><p>If no file reader could parse the file or the file doesn’t exist.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="merge">
+<h3>Merge<a class="headerlink" href="#merge" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.features.Merge">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">Merge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls a custom function on the entire input.</p>
+<p>Note that the property <cite>function</cite> needs to be wrapped in an
+outer layer function. The outer layer function can depend on
+other properties, while the inner layer function accepts an
+image as input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>function</strong><span class="classifier">Callable[list of Image]</span></dt><dd><p>Function that takes the current image as first input</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="probability">
 <h3>Probability<a class="headerlink" href="#probability" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="features.Probability">
-<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">Probability</code><span class="sig-paren">(</span><em class="sig-param">feature: features.Feature</em>, <em class="sig-param">probability: float</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Probability" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.features.Probability">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">Probability</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="n">probability</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Probability" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resolves a feature with a certain probability</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>feature</strong> (<a class="reference internal" href="#features.Feature" title="features.Feature"><em>Feature</em></a>) – Feature to resolve</p></li>
-<li><p><strong>probability</strong> (<em>float</em>) – Probability to resolve</p></li>
-</ul>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>Feature to resolve</p>
+</dd>
+<dt><strong>probability</strong><span class="classifier">float</span></dt><dd><p>Probability to resolve</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="features.Probability.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">feature: features.Feature</em>, <em class="sig-param">probability: float</em>, <em class="sig-param">random_number: float</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.Probability.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resolves <cite>feature</cite> if <cite>random_number</cite> is less than <cite>probability</cite></p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
+</div>
+<div class="section" id="sampletomasks">
+<h3>SampleToMasks<a class="headerlink" href="#sampletomasks" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.features.SampleToMasks">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">SampleToMasks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">transformation_function</span></em>, <em class="sig-param"><span class="n">number_of_masks</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">output_region</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">merge_method</span><span class="o">=</span><span class="default_value">'add'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.SampleToMasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a mask from a list of images.</p>
+<p>Calls <cite>transformation_function</cite> for each input image, and merges the outputs
+to a single image with <cite>number_of_masks</cite> layers. Each input image needs to have
+a defined property <cite>position</cite> to place it within the image. If used with scatterers,
+note that the scatterers need to be passed the property <cite>voxel_size</cite> to correctly
+size the objects.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>transformation_function</strong><span class="classifier">function</span></dt><dd><p>Function that takes an image as input, and outputs another image with <cite>number_of_masks</cite>
+layers.</p>
+</dd>
+<dt><strong>number_of_masks</strong><span class="classifier">int</span></dt><dd><p>The number of masks to create.</p>
+</dd>
+<dt><strong>output_region</strong><span class="classifier">(int, int, int, int)</span></dt><dd><p>Size and relative position of the mask. Should generally be the same as
+<cite>optics.output_region</cite>.</p>
+</dd>
+<dt><strong>merge_method</strong><span class="classifier">str or function or list</span></dt><dd><p>How to merge the individual masks to a single image. If a list, the merge_metod
+is per mask. Can be</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“add”: Adds the masks together.</p></li>
+<li><p>“overwrite”: later masks overwrite earlier masks.</p></li>
+<li><p>“or”: 1 if either any mask is non-zero at that pixel</p></li>
+<li><dl class="simple">
+<dt>function: a function that accepts two images. The first is the current</dt><dd><p>value of the output image where a new mask will be places, and
+the second is the mask to merge with the output image.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="structuralfeature">
 <h3>StructuralFeature<a class="headerlink" href="#structuralfeature" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="features.StructuralFeature">
-<em class="property">class </em><code class="sig-prename descclassname">features.</code><code class="sig-name descname">StructuralFeature</code><span class="sig-paren">(</span><em class="sig-param">*args: dict</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#features.StructuralFeature" title="Permalink to this definition">¶</a></dt>
+<dl class="py class">
+<dt id="deeptrack.features.StructuralFeature">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">StructuralFeature</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.StructuralFeature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Provides the structure of a feature-set
 Feature with __property_verbosity__ = 2 to avoid adding it to the list
 of properties, and __distributed__ = False to pass the input as-is.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -597,52 +1081,33 @@ of properties, and __distributed__ = False to pass the input as-is.</p>
 </div>
 
 
-           </div>
-           
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="generators.html" class="btn btn-neutral float-right" title="generators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="augmentations.html" class="btn btn-neutral float-left" title="augmentations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="augmentations.html" title="previous page">augmentations</a>
+    <a class='right-next' id="next-link" href="generators.html" title="next page">generators</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
     </div>
-  
 
-  <hr/>
+    
+  <script src="_static/js/index.30270b6e4c972e43c488.js"></script>
 
-  <div role="contentinfo">
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
     <p>
-        &copy; Copyright 2020, Benjamin Midtvedt
-
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
 </footer>
-
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
-    
-   
-
-</body>
+  </body>
 </html>

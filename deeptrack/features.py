@@ -243,7 +243,8 @@ class Feature:
         interval: float = None,
         **kwargs
     ):
-        """Visualizes the output of the feature
+        """Visualizes the output of the feature.
+
         Resolves the feature and visualizes the result. If the output is an Image,
         show it using `pyplot.imshow`. If the output is a list, create an `Animation`.
         For notebooks, the animation is played inline using `to_jshtml()`. For scripts,

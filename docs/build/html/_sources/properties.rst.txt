@@ -1,7 +1,7 @@
 properties
 ==========
 
-.. automodule:: properties
+.. automodule:: deeptrack.properties
 
 Module classes
 --------------
@@ -9,18 +9,21 @@ Module classes
 Property
 ^^^^^^^^
 
-.. autoclass:: properties.Property
+.. autoclass:: deeptrack.properties.Property
    :members:
+   :exclude-members: get
 
 PropertyDict
 ^^^^^^^^^^^^
 
-.. autoclass:: properties.PropertyDict
+.. autoclass:: deeptrack.properties.PropertyDict
    :members:
+   :exclude-members: get
 
 SequentialProperty
 ^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: properties.SequentialProperty
+.. autoclass:: deeptrack.properties.SequentialProperty
    :members:
+   :exclude-members: get
 

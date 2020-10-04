@@ -26,3 +26,13 @@ isiterable
 
 .. autofunction:: deeptrack.utils.isiterable
 
+kwarg_has_default
+^^^^^^^^^^^^^^^^^
+
+.. autofunction:: deeptrack.utils.kwarg_has_default
+
+safe_call
+^^^^^^^^^
+
+.. autofunction:: deeptrack.utils.safe_call
+

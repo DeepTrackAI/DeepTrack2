@@ -6,45 +6,67 @@ models
 Module classes
 --------------
 
+KerasModel
+^^^^^^^^^^
+
+.. autoclass:: deeptrack.models.KerasModel
+   :members:
+   :exclude-members: get
+
+Model
+^^^^^
+
+.. autoclass:: deeptrack.models.Model
+   :members:
+   :exclude-members: get
+
+cgan
+^^^^
+
+.. autoclass:: deeptrack.models.cgan
+   :members:
+   :exclude-members: get
+
+Module functions
+----------------
+
 Convolutional
 ^^^^^^^^^^^^^
 
-.. autoclass:: deeptrack.models.Convolutional
-   :members:
+.. autofunction:: deeptrack.models.Convolutional
 
-ModelFeature
-^^^^^^^^^^^^
+FullyConnected
+^^^^^^^^^^^^^^
 
-.. autoclass:: deeptrack.models.ModelFeature
-   :members:
+.. autofunction:: deeptrack.models.FullyConnected
+
+LoadModel
+^^^^^^^^^
+
+.. autofunction:: deeptrack.models.LoadModel
 
 RNN
 ^^^
 
-.. autoclass:: deeptrack.models.RNN
-   :members:
+.. autofunction:: deeptrack.models.RNN
 
 UNet
 ^^^^
 
-.. autoclass:: deeptrack.models.UNet
-   :members:
+.. autofunction:: deeptrack.models.UNet
 
 convolutional
 ^^^^^^^^^^^^^
 
-.. autoclass:: deeptrack.models.convolutional
-   :members:
+.. autofunction:: deeptrack.models.convolutional
 
 rnn
 ^^^
 
-.. autoclass:: deeptrack.models.rnn
-   :members:
+.. autofunction:: deeptrack.models.rnn
 
 unet
 ^^^^
 
-.. autoclass:: deeptrack.models.unet
-   :members:
+.. autofunction:: deeptrack.models.unet
 

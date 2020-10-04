@@ -1,7 +1,7 @@
 aberrations
 ===========
 
-.. automodule:: aberrations
+.. automodule:: deeptrack.aberrations
 
 Module classes
 --------------
@@ -9,84 +9,98 @@ Module classes
 Aberration
 ^^^^^^^^^^
 
-.. autoclass:: aberrations.Aberration
+.. autoclass:: deeptrack.aberrations.Aberration
    :members:
+   :exclude-members: get
 
 Astigmatism
 ^^^^^^^^^^^
 
-.. autoclass:: aberrations.Astigmatism
+.. autoclass:: deeptrack.aberrations.Astigmatism
    :members:
+   :exclude-members: get
 
 Defocus
 ^^^^^^^
 
-.. autoclass:: aberrations.Defocus
+.. autoclass:: deeptrack.aberrations.Defocus
    :members:
+   :exclude-members: get
 
 GaussianApodization
 ^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.GaussianApodization
+.. autoclass:: deeptrack.aberrations.GaussianApodization
    :members:
+   :exclude-members: get
 
 HorizontalComa
 ^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.HorizontalComa
+.. autoclass:: deeptrack.aberrations.HorizontalComa
    :members:
+   :exclude-members: get
 
 HorizontalTilt
 ^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.HorizontalTilt
+.. autoclass:: deeptrack.aberrations.HorizontalTilt
    :members:
+   :exclude-members: get
 
 ObliqueAstigmatism
 ^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.ObliqueAstigmatism
+.. autoclass:: deeptrack.aberrations.ObliqueAstigmatism
    :members:
+   :exclude-members: get
 
 ObliqueTrefoil
 ^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.ObliqueTrefoil
+.. autoclass:: deeptrack.aberrations.ObliqueTrefoil
    :members:
+   :exclude-members: get
 
 Piston
 ^^^^^^
 
-.. autoclass:: aberrations.Piston
+.. autoclass:: deeptrack.aberrations.Piston
    :members:
+   :exclude-members: get
 
 SphericalAberration
 ^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: aberrations.SphericalAberration
+.. autoclass:: deeptrack.aberrations.SphericalAberration
    :members:
+   :exclude-members: get
 
 Trefoil
 ^^^^^^^
 
-.. autoclass:: aberrations.Trefoil
+.. autoclass:: deeptrack.aberrations.Trefoil
    :members:
+   :exclude-members: get
 
 VerticalComa
 ^^^^^^^^^^^^
 
-.. autoclass:: aberrations.VerticalComa
+.. autoclass:: deeptrack.aberrations.VerticalComa
    :members:
+   :exclude-members: get
 
 VerticalTilt
 ^^^^^^^^^^^^
 
-.. autoclass:: aberrations.VerticalTilt
+.. autoclass:: deeptrack.aberrations.VerticalTilt
    :members:
+   :exclude-members: get
 
 Zernike
 ^^^^^^^
 
-.. autoclass:: aberrations.Zernike
+.. autoclass:: deeptrack.aberrations.Zernike
    :members:
+   :exclude-members: get
 

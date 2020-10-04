@@ -1,11 +1,16 @@
+Documentation
+=============
+
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
+   :caption: Documentation
    
    aberrations
    augmentations
    features
    generators
    image
+   layers
    losses
    math
    models
