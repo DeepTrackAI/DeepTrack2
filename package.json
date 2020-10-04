@@ -1,0 +1,6 @@
+{
+    "scripts": {
+        "publish": "py setup.py sdist bdist_wheel && py -m twine upload --repository pypi dist/*",
+        "make-docs-windows": "cd _src && make html && Xcopy /Y /I /E .\\build\\html ..\\docs && type nul > ../docs/.nojekyll"
+    }
+}

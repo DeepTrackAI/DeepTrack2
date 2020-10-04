@@ -1,0 +1,734 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>models &#8212; DeepTrack 2.0 2.0 documentation</title>
+    
+  <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.30270b6e4c972e43c488.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="noises" href="noises.html" />
+    <link rel="prev" title="math" href="math.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="installation.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="deeptrack.html">Documentation</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar">
+
+<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+
+
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+  <div class="bd-toc-item active">
+  
+
+  <ul class="nav bd-sidenav">
+      
+      
+      
+      
+      
+      
+        
+          
+              <li class="">
+                  <a href="aberrations.html">aberrations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="augmentations.html">augmentations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="features.html">features</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="generators.html">generators</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="image.html">image</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="layers.html">layers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="losses.html">losses</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="math.html">math</a>
+              </li>
+          
+        
+          
+              <li class="active">
+                  <a href="">models</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="noises.html">noises</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="optics.html">optics</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="properties.html">properties</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="scatterers.html">scatterers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="sequences.html">sequences</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="utils.html">utils</a>
+              </li>
+          
+        
+      
+      
+    </ul>
+
+</nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#classes" class="nav-link">Classes</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#module-classes" class="nav-link">Module classes</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#kerasmodel" class="nav-link">KerasModel</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#model" class="nav-link">Model</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#cgan" class="nav-link">cgan</a>
+        </li>
+    
+            </ul>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#module-functions" class="nav-link">Module functions</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#convolutional" class="nav-link">Convolutional</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#fullyconnected" class="nav-link">FullyConnected</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#loadmodel" class="nav-link">LoadModel</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#rnn" class="nav-link">RNN</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#unet" class="nav-link">UNet</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#id1" class="nav-link">convolutional</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#id2" class="nav-link">rnn</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#id3" class="nav-link">unet</a>
+        </li>
+    
+            </ul>
+        </li>
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.models">
+<span id="models"></span><h1>models<a class="headerlink" href="#module-deeptrack.models" title="Permalink to this headline">¶</a></h1>
+<p>Standard models for neural networks.</p>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>ModelFeature </dt><dd><p>Base model feature class.</p>
+</dd>
+<dt>Convolutional, convolutional</dt><dd><p>Creates and compiles a convolutional neural network.</p>
+</dd>
+<dt>UNet, unet</dt><dd><p>Creates and compiles a U-Net neural network.</p>
+</dd>
+<dt>RNN, rnn</dt><dd><p>Creates and compiles a recurrent neural network.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-classes">
+<h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="kerasmodel">
+<h3>KerasModel<a class="headerlink" href="#kerasmodel" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.models.KerasModel">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">KerasModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">loss</span><span class="o">=</span><span class="default_value">'mae'</span></em>, <em class="sig-param"><span class="n">optimizer</span><span class="o">=</span><span class="default_value">'adam'</span></em>, <em class="sig-param"><span class="n">metrics</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">compile</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">add_batch_dimension_on_resolve</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.KerasModel" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(*args, **kwargs)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="model">
+<h3>Model<a class="headerlink" href="#model" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.models.Model">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="cgan">
+<h3>cgan<a class="headerlink" href="#cgan" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.models.cgan">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">cgan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">generator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">discriminator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">discriminator_loss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">discriminator_optimizer</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">discriminator_metrics</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">assemble_loss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">assemble_optimizer</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">assemble_loss_weights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.cgan" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-functions">
+<h2>Module functions<a class="headerlink" href="#module-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="convolutional">
+<h3>Convolutional<a class="headerlink" href="#convolutional" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.models.Convolutional">
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">Convolutional</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(51</em>, <em class="sig-param">51</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">dense_layers_dimensions=(32</em>, <em class="sig-param">32)</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">dense_top=True</em>, <em class="sig-param">number_of_outputs=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">dense_block='dense'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.Convolutional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and compiles a convolutional neural network.
+A convolutional network with a dense top.
+Parameters
+———-
+input_shape : tuple of ints</p>
+<blockquote>
+<div><p>Size of the images to be analyzed.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>conv_layers_dimensions<span class="classifier">tuple of ints</span></dt><dd><p>Number of convolutions in each convolutional layer.</p>
+</dd>
+<dt>dense_layers_dimensions<span class="classifier">tuple of ints</span></dt><dd><p>Number of units in each dense layer.</p>
+</dd>
+<dt>dropout<span class="classifier">tuple of float</span></dt><dd><p>Adds a dropout between the convolutional layers</p>
+</dd>
+<dt>number_of_outputs<span class="classifier">int</span></dt><dd><p>Number of units in the output layer.</p>
+</dd>
+<dt>output_activation<span class="classifier">str or keras activation</span></dt><dd><p>The activation function of the output.</p>
+</dd>
+<dt>loss<span class="classifier">str or keras loss function</span></dt><dd><p>The loss function of the network.</p>
+</dd>
+<dt>layer_function<span class="classifier">Callable[int] -&gt; keras layer</span></dt><dd><p>Function that returns a convolutional layer with convolutions
+determined by the input argument. Can be use to futher customize the network.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>keras.models.Model</dt><dd><p>Deep learning network</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="fullyconnected">
+<h3>FullyConnected<a class="headerlink" href="#fullyconnected" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.models.FullyConnected">
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">FullyConnected</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_shape</span></em>, <em class="sig-param"><span class="n">dense_layers_dimensions</span><span class="o">=</span><span class="default_value">32, 32</span></em>, <em class="sig-param"><span class="n">dropout</span><span class="o">=</span><span class="default_value">()</span></em>, <em class="sig-param"><span class="n">flatten_input</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">number_of_outputs</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">output_activation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dense_block</span><span class="o">=</span><span class="default_value">'dense'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.FullyConnected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and compiles a fully connected neural network.</p>
+<p>A convolutional network with a dense top.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_shape</strong><span class="classifier">tuple of ints</span></dt><dd><p>Size of the images to be analyzed.</p>
+</dd>
+<dt><strong>dense_layers_dimensions</strong><span class="classifier">tuple of ints</span></dt><dd><p>Number of units in each dense layer.</p>
+</dd>
+<dt><strong>flatten_input</strong><span class="classifier">bool</span></dt><dd><p>Whether to add a flattening layer to the input</p>
+</dd>
+<dt><strong>number_of_outputs</strong><span class="classifier">int</span></dt><dd><p>Number of units in the output layer.</p>
+</dd>
+<dt><strong>output_activation</strong><span class="classifier">str or keras activation</span></dt><dd><p>The activation function of the output.</p>
+</dd>
+<dt><strong>dense_block</strong></dt><dd></dd>
+<dt><strong>loss</strong><span class="classifier">str or keras loss function</span></dt><dd><p>The loss function of the network.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>keras.models.Model</dt><dd><p>Deep learning network</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="loadmodel">
+<h3>LoadModel<a class="headerlink" href="#loadmodel" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.models.LoadModel">
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">LoadModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">compile_from_file</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">custom_objects</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.LoadModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a keras model from disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>path</strong><span class="classifier">str</span></dt><dd><p>Path to the keras model to load.</p>
+</dd>
+<dt><strong>compile_from_file</strong><span class="classifier">bool</span></dt><dd><p>Whether to compile the model using the loss and optimizer in the saved model. If false,
+it will be compiled from the arguments in kwargs (loss, optimizer and metrics).</p>
+</dd>
+<dt><strong>custom_objects</strong><span class="classifier">dict</span></dt><dd><p>Dict of objects to use when loading the model. Needed to load a model with a custom loss,
+optimizer or metric.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="rnn">
+<h3>RNN<a class="headerlink" href="#rnn" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.models.RNN">
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">RNN</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_shape</span><span class="o">=</span><span class="default_value">51, 51, 1</span></em>, <em class="sig-param"><span class="n">conv_layers_dimensions</span><span class="o">=</span><span class="default_value">16, 32, 64, 128</span></em>, <em class="sig-param"><span class="n">dense_layers_dimensions</span><span class="o">=</span><span class="default_value">32</span></em>, <em class="sig-param"><span class="n">rnn_layers_dimensions</span><span class="o">=</span><span class="default_value">32</span></em>, <em class="sig-param"><span class="n">return_sequences</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">output_activation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">number_of_outputs</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.RNN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and compiles a recurrent neural network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_shape</strong><span class="classifier">tuple of ints</span></dt><dd><p>Size of the images to be analyzed.</p>
+</dd>
+<dt><strong>conv_layers_dimensions</strong><span class="classifier">tuple of ints</span></dt><dd><p>Number of convolutions in each convolutional layer during down-
+and upsampling.</p>
+</dd>
+<dt><strong>dense_layers_dimensions</strong><span class="classifier">tuple of ints</span></dt><dd><p>Number of units in each dense layer.</p>
+</dd>
+<dt><strong>rnn_layers_dimensions</strong><span class="classifier">tuple of ints</span></dt><dd><p>Number of units in each recurrent layer.</p>
+</dd>
+<dt><strong>number_of_outputs</strong><span class="classifier">int</span></dt><dd><p>Number of convolutions in output layer.</p>
+</dd>
+<dt><strong>output_activation</strong><span class="classifier">str or keras activation</span></dt><dd><p>The activation function of the output.</p>
+</dd>
+<dt><strong>loss</strong><span class="classifier">str or keras loss function</span></dt><dd><p>The loss function of the network.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>keras.models.Model</dt><dd><p>Deep learning network.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="unet">
+<h3>UNet<a class="headerlink" href="#unet" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.models.UNet">
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">UNet</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(None</em>, <em class="sig-param">None</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">base_conv_layers_dimensions=(128</em>, <em class="sig-param">128)</em>, <em class="sig-param">output_conv_layers_dimensions=(16</em>, <em class="sig-param">16)</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">number_of_outputs=1</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">encoder_convolution_block='convolutional'</em>, <em class="sig-param">base_convolution_block='convolutional'</em>, <em class="sig-param">decoder_convolution_block='convolutional'</em>, <em class="sig-param">output_convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">upsampling_block='deconvolutional'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.UNet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and compiles a U-Net.
+Parameters
+———-
+input_shape : tuple of ints</p>
+<blockquote>
+<div><p>Size of the images to be analyzed.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>conv_layers_dimensions<span class="classifier">tuple of ints</span></dt><dd><p>Number of convolutions in each convolutional layer during down-
+and upsampling.</p>
+</dd>
+<dt>base_conv_layers_dimensions<span class="classifier">tuple of ints</span></dt><dd><p>Number of convolutions in each convolutional layer at the base
+of the unet, where the image is the most downsampled.</p>
+</dd>
+<dt>output_conv_layers_dimensions<span class="classifier">tuple of ints</span></dt><dd><p>Number of convolutions in each convolutional layer after the
+upsampling.</p>
+</dd>
+<dt>steps_per_pooling<span class="classifier">int</span></dt><dd><p>Number of convolutional layers between each pooling and upsampling
+step.</p>
+</dd>
+<dt>number_of_outputs<span class="classifier">int</span></dt><dd><p>Number of convolutions in output layer.</p>
+</dd>
+<dt>output_activation<span class="classifier">str or keras activation</span></dt><dd><p>The activation function of the output.</p>
+</dd>
+<dt>loss<span class="classifier">str or keras loss function</span></dt><dd><p>The loss function of the network.</p>
+</dd>
+<dt>layer_function<span class="classifier">Callable[int] -&gt; keras layer</span></dt><dd><p>Function that returns a convolutional layer with convolutions
+determined by the input argument. Can be use to futher customize the network.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>keras.models.Model</dt><dd><p>Deep learning network.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="id1">
+<h3>convolutional<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.models.convolutional">
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">convolutional</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(51</em>, <em class="sig-param">51</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">dense_layers_dimensions=(32</em>, <em class="sig-param">32)</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">dense_top=True</em>, <em class="sig-param">number_of_outputs=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">dense_block='dense'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.convolutional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and compiles a convolutional neural network.
+A convolutional network with a dense top.
+Parameters
+———-
+input_shape : tuple of ints</p>
+<blockquote>
+<div><p>Size of the images to be analyzed.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>conv_layers_dimensions<span class="classifier">tuple of ints</span></dt><dd><p>Number of convolutions in each convolutional layer.</p>
+</dd>
+<dt>dense_layers_dimensions<span class="classifier">tuple of ints</span></dt><dd><p>Number of units in each dense layer.</p>
+</dd>
+<dt>dropout<span class="classifier">tuple of float</span></dt><dd><p>Adds a dropout between the convolutional layers</p>
+</dd>
+<dt>number_of_outputs<span class="classifier">int</span></dt><dd><p>Number of units in the output layer.</p>
+</dd>
+<dt>output_activation<span class="classifier">str or keras activation</span></dt><dd><p>The activation function of the output.</p>
+</dd>
+<dt>loss<span class="classifier">str or keras loss function</span></dt><dd><p>The loss function of the network.</p>
+</dd>
+<dt>layer_function<span class="classifier">Callable[int] -&gt; keras layer</span></dt><dd><p>Function that returns a convolutional layer with convolutions
+determined by the input argument. Can be use to futher customize the network.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>keras.models.Model</dt><dd><p>Deep learning network</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="id2">
+<h3>rnn<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.models.rnn">
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">rnn</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_shape</span><span class="o">=</span><span class="default_value">51, 51, 1</span></em>, <em class="sig-param"><span class="n">conv_layers_dimensions</span><span class="o">=</span><span class="default_value">16, 32, 64, 128</span></em>, <em class="sig-param"><span class="n">dense_layers_dimensions</span><span class="o">=</span><span class="default_value">32</span></em>, <em class="sig-param"><span class="n">rnn_layers_dimensions</span><span class="o">=</span><span class="default_value">32</span></em>, <em class="sig-param"><span class="n">return_sequences</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">output_activation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">number_of_outputs</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.rnn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and compiles a recurrent neural network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_shape</strong><span class="classifier">tuple of ints</span></dt><dd><p>Size of the images to be analyzed.</p>
+</dd>
+<dt><strong>conv_layers_dimensions</strong><span class="classifier">tuple of ints</span></dt><dd><p>Number of convolutions in each convolutional layer during down-
+and upsampling.</p>
+</dd>
+<dt><strong>dense_layers_dimensions</strong><span class="classifier">tuple of ints</span></dt><dd><p>Number of units in each dense layer.</p>
+</dd>
+<dt><strong>rnn_layers_dimensions</strong><span class="classifier">tuple of ints</span></dt><dd><p>Number of units in each recurrent layer.</p>
+</dd>
+<dt><strong>number_of_outputs</strong><span class="classifier">int</span></dt><dd><p>Number of convolutions in output layer.</p>
+</dd>
+<dt><strong>output_activation</strong><span class="classifier">str or keras activation</span></dt><dd><p>The activation function of the output.</p>
+</dd>
+<dt><strong>loss</strong><span class="classifier">str or keras loss function</span></dt><dd><p>The loss function of the network.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>keras.models.Model</dt><dd><p>Deep learning network.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="id3">
+<h3>unet<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="deeptrack.models.unet">
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">unet</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(None</em>, <em class="sig-param">None</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">base_conv_layers_dimensions=(128</em>, <em class="sig-param">128)</em>, <em class="sig-param">output_conv_layers_dimensions=(16</em>, <em class="sig-param">16)</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">number_of_outputs=1</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">encoder_convolution_block='convolutional'</em>, <em class="sig-param">base_convolution_block='convolutional'</em>, <em class="sig-param">decoder_convolution_block='convolutional'</em>, <em class="sig-param">output_convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">upsampling_block='deconvolutional'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.unet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and compiles a U-Net.
+Parameters
+———-
+input_shape : tuple of ints</p>
+<blockquote>
+<div><p>Size of the images to be analyzed.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>conv_layers_dimensions<span class="classifier">tuple of ints</span></dt><dd><p>Number of convolutions in each convolutional layer during down-
+and upsampling.</p>
+</dd>
+<dt>base_conv_layers_dimensions<span class="classifier">tuple of ints</span></dt><dd><p>Number of convolutions in each convolutional layer at the base
+of the unet, where the image is the most downsampled.</p>
+</dd>
+<dt>output_conv_layers_dimensions<span class="classifier">tuple of ints</span></dt><dd><p>Number of convolutions in each convolutional layer after the
+upsampling.</p>
+</dd>
+<dt>steps_per_pooling<span class="classifier">int</span></dt><dd><p>Number of convolutional layers between each pooling and upsampling
+step.</p>
+</dd>
+<dt>number_of_outputs<span class="classifier">int</span></dt><dd><p>Number of convolutions in output layer.</p>
+</dd>
+<dt>output_activation<span class="classifier">str or keras activation</span></dt><dd><p>The activation function of the output.</p>
+</dd>
+<dt>loss<span class="classifier">str or keras loss function</span></dt><dd><p>The loss function of the network.</p>
+</dd>
+<dt>layer_function<span class="classifier">Callable[int] -&gt; keras layer</span></dt><dd><p>Function that returns a convolutional layer with convolutions
+determined by the input argument. Can be use to futher customize the network.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>keras.models.Model</dt><dd><p>Deep learning network.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="math.html" title="previous page">math</a>
+    <a class='right-next' id="next-link" href="noises.html" title="next page">noises</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.30270b6e4c972e43c488.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
