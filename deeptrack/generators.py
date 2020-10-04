@@ -183,7 +183,7 @@ class ContinuousGenerator(keras.utils.Sequence):
     feature_kwargs : dict or list of dicts
         Set of options to pass to the feature when resolving
     ndim : int
-        Number of dimensions of each batch (including the batch dimension).
+        Number of dimensions of each batch (excluding the batch dimension).
     """
 
     def __init__(
@@ -196,8 +196,9 @@ class ContinuousGenerator(keras.utils.Sequence):
         batch_size=32,
         shuffle_batch=True,
         feature_kwargs={},
+        update_kwargs={},
         verbose=1,
-        ndim=4,
+        ndim=3,
     ):
 
         if min_data_size is None:
@@ -216,6 +217,10 @@ class ContinuousGenerator(keras.utils.Sequence):
         self.batch_size = batch_size
         self.shuffle_batch = shuffle_batch
         self.feature_kwargs = feature_kwargs
+        self.update_kwargs = update_kwargs
+        if not isinstance(self.update_kwargs, list):
+            self.update_kwargs = itertools.cycle([update_kwargs])
+
         self.ndim = ndim
 
         self.lock = threading.Lock()
@@ -313,24 +318,29 @@ class ContinuousGenerator(keras.utils.Sequence):
             new_image = self._get(self.feature, self.feature_kwargs)
 
             if self.label_function:
-                new_label = self.label_function(new_image)
-                if isinstance(new_label, (np.ndarray, float, int)):
-                    new_label = (new_label,)
+                new_label = Image(self.label_function(new_image))
 
             if self.batch_function:
-                new_image = self.batch_function(new_image)
-            if len(self.data) >= self.max_data_size:
-                self.data[index % self.max_data_size] = (new_image,) + tuple(new_label)
-            else:
-                self.data.append((new_image,) + tuple(new_label))
+                new_image = Image(self.batch_function(new_image))
 
-            index += 1
+            if new_image.ndim < self.ndim:
+                new_image = [new_image]
+                new_label = [new_label]
+
+            for new_image_i, new_label_i in zip(new_image, new_label):
+                if len(self.data) >= self.max_data_size:
+                    self.data[index % self.max_data_size] = (new_image_i, new_label_i)
+                else:
+                    self.data.append((new_image_i, new_label_i))
+
+                index += 1
 
     def _get(self, features: Feature or List[Feature], feature_kwargs) -> Image:
         # Updates and resolves a feature or list of features.
-        if isinstance(features, List):
-            for feature in features:
-                feature.update()
+        if isinstance(features, list):
+
+            for feature, update_kw in zip(features, self.update_kwargs):
+                feature.update(**update_kw)
 
             if not isinstance(feature_kwargs, list):
                 feature_kwargs = itertools.cycle([feature_kwargs])

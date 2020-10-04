@@ -338,6 +338,7 @@ class Feature:
             if not isinstance(new_list, list):
                 new_list = [Image(new_list)]
 
+            new_list = [Image(image) for image in new_list]
             return new_list
 
     def _format_input(self, image_list, **kwargs) -> List[Image]:
@@ -764,6 +765,12 @@ class LoadImage(Feature):
         Options passed to the file reader
     as_list : bool
         If True, the irst dimension will be converted to a list.
+    ndim : int
+        Adds dimensions until it is at least ndim
+    to_grayscale : bool
+        Whether to convert the image to grayscale
+    get_one_random : bool
+        Extracts a single image from a stack. Only used if as_list is true.
 
     Raises
     ------
@@ -774,32 +781,82 @@ class LoadImage(Feature):
 
     __distributed__ = False
 
-    def __init__(self, path, load_options=None, as_list=False, **kwargs):
-        super().__init__(path=path, load_options=load_options, as_list=False, **kwargs)
+    def __init__(
+        self,
+        path,
+        load_options=None,
+        as_list=False,
+        ndim=None,
+        to_grayscale=False,
+        get_one_random=False,
+        **kwargs
+    ):
+        super().__init__(
+            path=path,
+            load_options=load_options,
+            as_list=as_list,
+            ndim=ndim,
+            to_grayscale=to_grayscale,
+            get_one_random=get_one_random,
+            **kwargs
+        )
 
-    def get(self, *ign, path, load_options, **kwargs):
+    def get(
+        self,
+        *ign,
+        path,
+        load_options,
+        ndim,
+        to_grayscale,
+        as_list,
+        get_one_random,
+        **kwargs
+    ):
         if load_options is None:
             load_options = {}
         try:
-            return np.load(path, **load_options)
+            image = np.load(path, **load_options)
         except (IOError, ValueError):
             try:
                 from skimage import io
 
-                return io.imread(path)
+                image = io.imread(path)
             except (IOError, ImportError, AttributeError):
                 try:
                     import PIL.Image
 
-                    return np.array(PIL.Image.open(path, **load_options))
+                    omage = np.array(PIL.Image.open(path, **load_options))
                 except (IOError, ImportError):
                     import cv2
 
                     image = np.array(cv2.imread(path, **load_options))
-                    if image:
-                        return image
+                    if not image:
+                        raise IOError(
+                            "No filereader available for file {0}".format(path)
+                        )
 
-                    raise IOError("No filereader available for file {0}".format(path))
+        image = np.squeeze(image)
+
+        if to_grayscale:
+            try:
+                import skimage
+
+                skimage.color.rgb2gray(image)
+            except ValueError:
+                import warnings
+
+                warnings.warn("Non-rgb image, ignoring to_grayscale")
+
+        if ndim and image.ndim < ndim:
+            image = np.expand_dims(image, axis=-1)
+
+        elif as_list:
+            if get_one_random:
+                image = image[np.random.randint(len(image))]
+            else:
+                image = list(image)
+
+        return image
 
 
 class DummyFeature(Feature):
