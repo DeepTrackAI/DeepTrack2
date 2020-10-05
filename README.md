@@ -33,7 +33,7 @@ To see DeepTrack in action, we provide six well documented tutorial notebooks th
 3. [tracking_multiple_particles_unet_tutorial](tutorials/tracking_multiple_particles_unet_tutorial.ipynb) demonstrates how to track multiple particles using a U-net.
 4. [characterizing_aberrations_tutorial](tutorials/characterizing_aberrations_tutorial.ipynb) demonstrates how to add and characterize aberrations of an optical device.
 5. [distinguishing_particles_in_brightfield_tutorial](tutorials/distinguishing_particles_in_brightfield_tutorial.ipynb) demonstrates how to use a U-net to track and distinguish particles of different sizes in brightfield microscopy.
-6. [analyzing_video_tutorial](tutorials/tracking_video_tutorial.ipynb) demonstrates how to create videos and how to train a neural network to analyze them.
+6. [analyzing_video_tutorial](tutorials/analyzing_video_tutorial.ipynb) demonstrates how to create videos and how to train a neural network to analyze them.
 
 Additionally, we have seven more case studies which are less documented, but gives additional insight in how to use DeepTrack with real datasets
 
