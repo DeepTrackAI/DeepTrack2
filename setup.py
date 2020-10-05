@@ -12,7 +12,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/softmatterlab/DeepTrack-2.0/",
-    install_requires=["tensorflow>=2.0.1", "numpy", "scipy"],
+    install_requires=["tensorflow>=2.0.1", "tensorflow_addons", "numpy", "scipy"],
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
