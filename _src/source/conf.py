@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 
 # -- Project information -----------------------------------------------------
 
-project = "DeepTrack 2.0"
+project = "DeepTrack"
 copyright = "2020, Benjamin Midtvedt"
 author = "Benjamin Midtvedt"
 

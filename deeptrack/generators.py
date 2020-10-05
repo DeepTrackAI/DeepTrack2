@@ -183,7 +183,7 @@ class ContinuousGenerator(keras.utils.Sequence):
     feature_kwargs : dict or list of dicts
         Set of options to pass to the feature when resolving
     ndim : int
-        Number of dimensions of each batch (excluding the batch dimension).
+        Number of dimensions of each batch (including the batch dimension).
     """
 
     def __init__(
@@ -198,7 +198,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         feature_kwargs={},
         update_kwargs={},
         verbose=1,
-        ndim=3,
+        ndim=4,
     ):
 
         if min_data_size is None:
