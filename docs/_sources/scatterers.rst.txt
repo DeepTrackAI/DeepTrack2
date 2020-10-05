@@ -10,6 +10,7 @@ Ellipse
 ^^^^^^^
 
 .. autoclass:: deeptrack.scatterers.Ellipse
+   :members:
    :exclude-members: get
 
 Ellipsoid

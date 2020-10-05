@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>generators &#8212; DeepTrack 2.0 2.0 documentation</title>
+    <title>generators &#8212; DeepTrack 2.0 documentation</title>
     
   <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
 
@@ -64,8 +64,64 @@
             <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
         </li>
         
+        <li class="nav-item ">
+            <a class="nav-link" href="aberrations.html">aberrations</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="augmentations.html">augmentations</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="features.html">features</a>
+        </li>
+        
         <li class="nav-item active">
-            <a class="nav-link" href="deeptrack.html">Documentation</a>
+            <a class="nav-link" href="">generators</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="image.html">image</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="layers.html">layers</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="losses.html">losses</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="math.html">math</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="models.html">models</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="noises.html">noises</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="optics.html">optics</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="properties.html">properties</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="scatterers.html">scatterers</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="sequences.html">sequences</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="utils.html">utils</a>
         </li>
         
         
@@ -106,97 +162,35 @@
       
       
       
+      
+      
+      
+      
+      
+      
         
-          
-              <li class="">
-                  <a href="aberrations.html">aberrations</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="augmentations.html">augmentations</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="features.html">features</a>
-              </li>
-          
-        
-          
-              <li class="active">
-                  <a href="">generators</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="image.html">image</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="layers.html">layers</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="losses.html">losses</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="math.html">math</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="models.html">models</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="noises.html">noises</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="optics.html">optics</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="properties.html">properties</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="scatterers.html">scatterers</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="sequences.html">sequences</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="utils.html">utils</a>
-              </li>
-          
-        
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
       
       
     </ul>
@@ -264,7 +258,7 @@
 <h3>ContinuousGenerator<a class="headerlink" href="#continuousgenerator" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="deeptrack.generators.ContinuousGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.generators.</code><code class="sig-name descname">ContinuousGenerator</code><span class="sig-paren">(</span><em class="sig-param">feature</em>, <em class="sig-param">label_function=None</em>, <em class="sig-param">batch_function=&lt;function ContinuousGenerator.&lt;lambda&gt;&gt;</em>, <em class="sig-param">min_data_size=None</em>, <em class="sig-param">max_data_size=inf</em>, <em class="sig-param">batch_size=32</em>, <em class="sig-param">shuffle_batch=True</em>, <em class="sig-param">feature_kwargs={}</em>, <em class="sig-param">update_kwargs={}</em>, <em class="sig-param">verbose=1</em>, <em class="sig-param">ndim=3</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.generators.ContinuousGenerator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.generators.</code><code class="sig-name descname">ContinuousGenerator</code><span class="sig-paren">(</span><em class="sig-param">feature</em>, <em class="sig-param">label_function=None</em>, <em class="sig-param">batch_function=&lt;function ContinuousGenerator.&lt;lambda&gt;&gt;</em>, <em class="sig-param">min_data_size=None</em>, <em class="sig-param">max_data_size=inf</em>, <em class="sig-param">batch_size=32</em>, <em class="sig-param">shuffle_batch=True</em>, <em class="sig-param">feature_kwargs={}</em>, <em class="sig-param">update_kwargs={}</em>, <em class="sig-param">verbose=1</em>, <em class="sig-param">ndim=4</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.generators.ContinuousGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generator that asynchronously expands the dataset.</p>
 <p>Generator that aims to speed up the training of networks by striking a
 balance between the generalization gained by generating new images
@@ -293,7 +287,7 @@ and the size of the training data as input.</p>
 </dd>
 <dt><strong>feature_kwargs</strong><span class="classifier">dict or list of dicts</span></dt><dd><p>Set of options to pass to the feature when resolving</p>
 </dd>
-<dt><strong>ndim</strong><span class="classifier">int</span></dt><dd><p>Number of dimensions of each batch (excluding the batch dimension).</p>
+<dt><strong>ndim</strong><span class="classifier">int</span></dt><dd><p>Number of dimensions of each batch (including the batch dimension).</p>
 </dd>
 </dl>
 </dd>
