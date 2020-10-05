@@ -47,7 +47,9 @@ from deeptrack import (
 module = deeptrack
 
 head_file = open(os.path.join(PATH_TO_SRC, module.__name__ + ".rst"), "w")
-head_file.write(".. toctree::\n   :maxdepth: 4\n   :caption: Documentation\n   \n")
+head_file.write(
+    "Documentation\n=============\n\n.. toctree::\n   :maxdepth: 4\n   :caption: Documentation\n   \n"
+)
 head_file.flush()
 
 
