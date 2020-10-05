@@ -2,8 +2,7 @@ Documentation
 =============
 
 .. toctree::
-   :maxdepth: 4
-   :caption: Documentation
+   :maxdepth: 1
    
    aberrations
    augmentations
