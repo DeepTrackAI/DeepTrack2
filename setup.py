@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="deeptrack",  # Replace with your own username
-    version="0.5.6",
+    version="0.5.7",
     author="Benjamin Midtvedt",
     author_email="benjamin.midtvedt@physics.gu.se",
     description="A deep learning oriented microscopy image simulation package",

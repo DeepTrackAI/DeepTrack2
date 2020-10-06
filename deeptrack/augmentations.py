@@ -388,6 +388,7 @@ class Affine(Augmentation):
             image.ndim == 2 or image.ndim == 3
         ), "Affine only supports 2-dimensional or 3-dimension inputs."
 
+        print(image.ndim)
         dx, dy = translate
         fx, fy = scale
 
@@ -415,14 +416,17 @@ class Affine(Augmentation):
 
         # Call affine_transform
         if image.ndim == 2:
-            utils.safe_call(
+            new_image = utils.safe_call(
                 ndimage.affine_transform,
                 input=image,
-                output=image,
                 matrix=mapping,
                 offset=d,
                 **kwargs
             )
+
+            new_image = Image(new_image)
+            new_image.merge_properties_from(image)
+            image = new_image
 
         elif image.ndim == 3:
             for z in range(shape[-1]):
