@@ -1,4 +1,5 @@
 tensorflow>=2.0.1
+tensorflow_addons
 numpy
 matplotlib
 scipy
