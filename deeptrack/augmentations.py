@@ -388,7 +388,6 @@ class Affine(Augmentation):
             image.ndim == 2 or image.ndim == 3
         ), "Affine only supports 2-dimensional or 3-dimension inputs."
 
-        print(image.ndim)
         dx, dy = translate
         fx, fy = scale
 
