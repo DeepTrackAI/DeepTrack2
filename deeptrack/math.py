@@ -236,7 +236,7 @@ class MedianBlur(Blur):
 
 ## POOLING
 
-import skimage
+import skimage.measure
 
 
 class Pool(Feature):
@@ -257,7 +257,7 @@ class Pool(Feature):
         Additional parameters sent to the pooling function.
     """
 
-    def __init__(self, pooling_function, ksize=2, **kwargs):
+    def __init__(self, pooling_function, ksize=3, **kwargs):
         self.pooling = pooling_function
         super().__init__(ksize=ksize, **kwargs)
 
@@ -288,7 +288,7 @@ class AveragePooling(Pool):
     """
 
     def __init__(self, ksize=3, **kwargs):
-        super().__init__(ksize=ksize, **kwargs)
+        super().__init__(np.mean, ksize=ksize, **kwargs)
 
 
 ### OPENCV2 blur

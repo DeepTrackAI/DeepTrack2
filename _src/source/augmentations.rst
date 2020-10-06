@@ -62,6 +62,13 @@ FlipUD
    :members:
    :exclude-members: get
 
+Pad
+^^^
+
+.. autoclass:: deeptrack.augmentations.Pad
+   :members:
+   :exclude-members: get
+
 PreLoad
 ^^^^^^^
 
