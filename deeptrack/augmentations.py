@@ -561,7 +561,6 @@ class ElasticTransformation(Augmentation):
         grids = list(np.meshgrid(*ranges))
 
         for grid, delta in zip(grids, deltas):
-            print(grid.shape, delta.shape)
             dDim = np.transpose(grid) + delta
             coordinates.append(np.reshape(dDim, (-1, 1)))
 
