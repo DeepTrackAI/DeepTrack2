@@ -139,7 +139,7 @@ def kwarg_has_default(function: Callable, argument: str) -> bool:
     return len(args) - args.index(argument) <= len(defaults)
 
 
-def safe_call(function, **kwargs):
+def safe_call(function, positional_args=[], **kwargs):
     """Calls a function, using keyword arguments from a dictionary of arguments.
 
     If the function does not accept one of the argument provided, it will not be passed. Does not support
@@ -160,4 +160,4 @@ def safe_call(function, **kwargs):
         if key in kwargs:
             input_arguments[key] = kwargs[key]
 
-    return function(**input_arguments)
+    return function(*positional_args, **input_arguments)

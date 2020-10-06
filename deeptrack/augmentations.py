@@ -561,7 +561,8 @@ class ElasticTransformation(Augmentation):
         grids = list(np.meshgrid(*ranges))
 
         for grid, delta in zip(grids, deltas):
-            dDim = grid + delta
+            print(grid.shape, delta.shape)
+            dDim = np.transpose(grid) + delta
             coordinates.append(np.reshape(dDim, (-1, 1)))
 
         if ignore_last_dim:
@@ -698,6 +699,7 @@ class CropToMultiplesOf(Crop):
                 if mul is not None and mul is not -1:
                     new_shape[idx] = int((dim // mul) * mul)
                 idx += 1
+
             return new_shape
 
         super().__init__(
@@ -709,5 +711,34 @@ class CropToMultiplesOf(Crop):
         )
 
 
-# TODO: add padding
+class Pad(Augmentation):
+    """Pads the image.
+
+    Arguments match this of numpy.pad, save for pad_width, which is called px,
+    and is defined as (left, right, up, down, before_axis_3, after_axis_3, ...)
+
+    Parameters
+    ----------
+    px : int or list of int
+        amount to pad in each direction
+
+    """
+
+    def __init__(self, px=(0, 0, 0, 0), mode="constant", cval=0, **kwargs):
+        super().__init__(px=px, mode=mode, cval=cval, **kwargs)
+
+    def get(self, image, px, **kwargs):
+
+        padding = []
+        if isinstance(px, int):
+            padding = [(px, px)] * image.ndom
+        for idx in range(0, len(px), 2):
+            padding.append((px[idx], px[idx + 1]))
+
+        while len(padding) < image.ndim:
+            padding.append((0, 0))
+
+        return utils.safe_call(np.pad, positional_args=(image, padding), **kwargs)
+
+
 # TODO: add resizing by rescaling
