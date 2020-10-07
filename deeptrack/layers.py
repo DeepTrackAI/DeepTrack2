@@ -8,7 +8,7 @@ from tensorflow.keras.initializers import RandomNormal
 
 try:
     from tensorflow_addons.layers import InstanceNormalization
-except ImportError:
+except:
     import warnings
 
     InstanceNormalization = layers.Layer()
