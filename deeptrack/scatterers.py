@@ -528,14 +528,8 @@ class MieSphere(MieScatterer):
         )
         arr = deeptrack.image.pad_image_to_fft(np.zeros((xSize, ySize)))
 
-        x = (
-            np.arange(-padding[0], arr.shape[0] - padding[0])
-            - (position[1] + 0.5) * upscale
-        )
-        y = (
-            np.arange(-padding[1], arr.shape[1] - padding[1])
-            - (position[0] + 0.5) * upscale
-        )
+        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[1]) * upscale
+        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[0]) * upscale
         X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1])
 
         ct_max = np.cos(aperature_angle)
