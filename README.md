@@ -37,7 +37,7 @@ To see DeepTrack in action, we provide six well documented tutorial notebooks th
 
 Additionally, we have seven more case studies which are less documented, but gives additional insight in how to use DeepTrack with real datasets
 
-1. [MNIST](paper-examples/1-MNIST.ipynb) classifies handwritted digits.
+1. [MNIST](https://colab.research.google.com/drive/1dRehGzf9DNpz7Jo2dw4U6vSyE4STZgpF?usp=sharing) classifies handwritted digits.
 2. [single particle tracking](paper-examples/2-single_particle_tracking.ipynb) tracks experimentally captured videos of a single particle. (Requires opencv-python compiled with ffmpeg to open and read a video.)
 3. [single particle sizing](paper-examples/3-particle_sizing.ipynb) extracts the radius and refractive index of particles.
 4. [multi-particle tracking](paper-examples/4-multi-mulecule-tracking.ipynb) detects quantum dots in a low SNR image.
