@@ -561,7 +561,7 @@ class ElasticTransformation(Augmentation):
         grids = list(np.meshgrid(*ranges))
 
         for grid, delta in zip(grids, deltas):
-            dDim = np.transpose(grid) + delta
+            dDim = np.transpose(grid, axes=(1, 0) + tuple(range(2, grid.ndim))) + delta
             coordinates.append(np.reshape(dDim, (-1, 1)))
 
         if ignore_last_dim:

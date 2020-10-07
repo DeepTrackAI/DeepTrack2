@@ -4,7 +4,18 @@
 import tensorflow
 from tensorflow.keras import layers, activations
 from tensorflow.keras.initializers import RandomNormal
-from tensorflow_addons.layers import InstanceNormalization
+
+
+try:
+    from tensorflow_addons.layers import InstanceNormalization
+except ImportError:
+    import warnings
+
+    InstanceNormalization = layers.Layer()
+    warnings.warn(
+        "DeepTrack not installed with tensorflow addons. Instance normalization will not work. Consider upgrading to tensorflow >= 2.0.",
+        ImportWarning,
+    )
 
 
 def as_block(x):

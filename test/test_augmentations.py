@@ -73,10 +73,11 @@ class TestAugmentations(unittest.TestCase):
 
             dist = np.sum(np.abs(np.array(image.get_property("position")) - pmax))
 
-            self.assertLess(dist, 2)
+            self.assertLess(dist, 3)
 
     def test_ElasticTransformation(self):
-        im = np.zeros((10, 10, 2))
+        # 3D input
+        im = np.zeros((10, 8, 2))
         transformer = augmentations.ElasticTransformation(
             alpha=20,
             sigma=2,
@@ -100,6 +101,18 @@ class TestAugmentations(unittest.TestCase):
             AssertionError,
             lambda: np.testing.assert_allclose(out_3[:, :, 0], out_3[:, :, 1]),
         )
+
+        # 2D input
+        im = np.zeros((10, 8))
+        transformer = augmentations.ElasticTransformation(
+            alpha=20,
+            sigma=2,
+            ignore_last_dim=False,
+            order=1,
+            mode="reflect",
+        )
+
+        out_1 = transformer.update().resolve(im)
 
     def test_Crop(self):
         image = np.ones((10, 10, 10))
