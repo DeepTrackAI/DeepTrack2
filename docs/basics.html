@@ -199,15 +199,16 @@
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">22</span>
 </pre></div>
 </div>
-<p>Here we have two features, <cite>add_one</cite>, which adds one to the input, and <cite>multiply_two</cite> which multiplies the input with two. We chain these features, which creates a single feature which first adds 1 to the input, and then multiplies it with two. Resolving this feature on the input 10 gives (10 + 2) * 2 = 22.</p>
+<p>Here we have two features, <cite>add_one</cite>, which adds one to the input, and <cite>multiply_two</cite> which multiplies the input with two. We chain these features, which creates a single feature which first adds 1 to the input,
+and then multiplies it with two. Resolving this feature on the input 10 gives (10 + 1) * 2 = 22.</p>
 </div>
 <div class="section" id="executing-a-feature-multiple-times">
 <h2>Executing a feature multiple times<a class="headerlink" href="#executing-a-feature-multiple-times" title="Permalink to this headline">¶</a></h2>
 <p>You will often find that you want to execute a single feature several times in a row. This is achieved using the ** operator. The integer on the right determines how many times to execute the feature on the left.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">add_and_multiply</span> <span class="o">=</span> <span class="n">add_one</span> <span class="o">**</span> <span class="mi">5</span>
+<span class="n">add_one_five_times</span> <span class="o">=</span> <span class="n">add_one</span> <span class="o">**</span> <span class="mi">5</span>
 
-<span class="n">add_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">add_one_five_times</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">15</span>
 </pre></div>
 </div>
@@ -222,7 +223,7 @@
 </pre></div>
 </div>
 <p>However, this is not very exciting. let’s do something more interesting:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_zero_or_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_zero_or_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
 <span class="n">add_zero_or_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">10</span>
 </pre></div>
