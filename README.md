@@ -37,13 +37,13 @@ To see DeepTrack in action, we provide six well documented tutorial notebooks th
 
 Additionally, we have seven more case studies which are less documented, but gives additional insight in how to use DeepTrack with real datasets
 
-1. [MNIST](paper-examples/1-MNIST.ipynb) classifies handwritted digits.
-2. [single particle tracking](paper-examples/2-single_particle_tracking.ipynb) tracks experimentally captured videos of a single particle. (Requires opencv-python compiled with ffmpeg to open and read a video.)
-3. [single particle sizing](paper-examples/3-particle_sizing.ipynb) extracts the radius and refractive index of particles.
-4. [multi-particle tracking](paper-examples/4-multi-mulecule-tracking.ipynb) detects quantum dots in a low SNR image.
-5. [3-dimensional tracking](paper-examples/5-inline_holography_3d_tracking.ipynb) tracks particles in three dimensions.
-6. [cell counting](paper-examples/6-cell_counting.ipynb) counts the number of cells in fluorescence images.
-7. [GAN image generation](paper-examples/7-GAN_image_generation.ipynb) uses a GAN to create cell image from masks.
+1. [![](https://colab.research.google.com/assets/colab-badge.svg) MNIST](https://colab.research.google.com/drive/1dRehGzf9DNpz7Jo2dw4U6vSyE4STZgpF?usp=sharing) classifies handwritted digits.
+2. [![](https://colab.research.google.com/assets/colab-badge.svg) single particle tracking](https://colab.research.google.com/drive/1rh46w8TuJDF0mnvLpo6dlWkLiLr7MmQ9?usp=sharing) tracks experimentally captured videos of a single particle. (Requires opencv-python compiled with ffmpeg to open and read a video.)
+3. [![](https://colab.research.google.com/assets/colab-badge.svg) single particle sizing](https://colab.research.google.com/drive/1U12f3m3oLKCGp-BAERGrwjMhEZdkWvT5?usp=sharing) extracts the radius and refractive index of particles.
+4. [![](https://colab.research.google.com/assets/colab-badge.svg) multi-particle tracking](https://colab.research.google.com/drive/1TpNZ6ytoDXSZvGDFAFWrSjNs4SXGZmBw?usp=sharing) detects quantum dots in a low SNR image.
+5. [![](https://colab.research.google.com/assets/colab-badge.svg) 3-dimensional tracking](https://colab.research.google.com/drive/1QJXPxsVeDt1ZW1685D5VANsME69s3mqi?usp=sharing) tracks particles in three dimensions.
+6. [![](https://colab.research.google.com/assets/colab-badge.svg) cell counting](https://colab.research.google.com/drive/1C2Gn1Ym8etycOYW9yfDB_WiKlEeyvLtp?usp=sharing) counts the number of cells in fluorescence images.
+7. [![](https://colab.research.google.com/assets/colab-badge.svg) GAN image generation](https://colab.research.google.com/drive/1rfFbeE-qkg3PxHBEa_r7Q9wXq0vdueEC?usp=sharing) uses a GAN to create cell image from masks.
 
 ### Video Tutorials
 
