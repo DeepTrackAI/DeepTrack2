@@ -442,6 +442,8 @@ class MieScatterer(Scatterer):
 class MieSphere(MieScatterer):
     """Scattered field by a sphere
 
+    Should be calculated on at least a 64 by 64 grid. Use padding in the optics if necessary
+
     Calculates the scattered field by a spherical particle in a homogenous medium,
     as predicted by Mie theory. Note that the induced phase shift is calculated
     in comparison to the `refractive_index_medium` property of the optical device.
@@ -472,7 +474,7 @@ class MieSphere(MieScatterer):
         self,
         radius=1e-6,
         refractive_index=1.45,
-        offset_z=lambda radius: max(radius * 2, 5e-6),
+        offset_z="auto",
         polarization_angle=0,
         aperature_angle="auto",
         L="auto",
@@ -500,6 +502,13 @@ class MieSphere(MieScatterer):
         if properties["aperature_angle"] == "auto":
             properties["aperature_angle"] = np.sqrt(
                 1 - properties["NA"] ** 2 / properties["refractive_index_medium"] ** 2
+            )
+        if properties["offset_z"] == "auto":
+            properties["offset_z"] = (
+                32
+                * min(properties["voxel_size"][:2])
+                / np.sin(properties["aperature_angle"])
+                * properties["upscale"]
             )
         return properties
 
@@ -539,7 +548,7 @@ class MieSphere(MieScatterer):
         # Evluation grid
         x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[1]) * upscale
         y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[0]) * upscale
-        X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1])
+        X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
 
         R2 = np.sqrt(X ** 2 + Y ** 2)
         R3 = np.sqrt(R2 ** 2 + (offset_z) ** 2)

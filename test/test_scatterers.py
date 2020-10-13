@@ -97,17 +97,20 @@ class TestScatterers(unittest.TestCase):
             NA=0.7,
             wavelength=680e-9,
             resolution=1e-6,
-            magnification=5,
-            output_region=(0, 0, 64, 64),
-            padding=(128, 128, 128, 128),
+            magnification=1,
+            output_region=(0, 0, 64, 128),
+            padding=(10, 10, 10, 10),
             return_field=True,
-            upscale=2,
+            upscale=4,
         )
-        scatterer = scatterers.MieSphere(radius=1e-6, refractive_index=1.45 + 0.1j)
+
+        scatterer = scatterers.MieSphere(
+            radius=0.5e-6, refractive_index=1.45 + 0.1j, aperature_angle=0.1
+        )
 
         imaged_scatterer_1 = optics_1(scatterer)
 
-        image_1 = imaged_scatterer_1.resolve()
+        imaged_scatterer_1.resolve()
 
 
 if __name__ == "__main__":
