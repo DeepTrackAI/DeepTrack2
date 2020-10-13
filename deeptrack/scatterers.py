@@ -565,7 +565,7 @@ class MieSphere(MieScatterer):
 
         field = (
             (ct > ct_max)
-            * -1j
+            * 1j
             / (k * R3)
             * np.exp(1j * k * (R3 - offset_z))
             * (S1 * COS2 + S2 * SIN2)
