@@ -95,6 +95,12 @@ class Microscope(StructuralFeature):
             image[i].merge_properties_from(imaged_sample)
         return image
 
+    def _update(self, **kwargs):
+        self.properties["sample"].update(
+            **{**kwargs, **self.objective.update(**kwargs).current_value.properties}
+        )
+        super()._update(**kwargs)
+
 
 # OPTICAL SYSTEMS
 
