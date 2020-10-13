@@ -19,7 +19,9 @@ Ellipsoid
 
 from threading import Lock
 import numpy as np
-from scipy.special import jv as jn, spherical_jn as jv, h1vp, eval_legendre as leg, jvp
+
+# from scipy.special import jv as jn, spherical_jn as jv, h1vp, eval_legendre as leg, jvp
+import deeptrack.backend as D
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
 from deeptrack.image import Image
 import deeptrack.image
@@ -528,179 +530,45 @@ class MieSphere(MieScatterer):
         )
         arr = deeptrack.image.pad_image_to_fft(np.zeros((xSize, ySize)))
 
+        # Evluation grid
         x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[1]) * upscale
         y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[0]) * upscale
         X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1])
 
+        R2 = np.sqrt(X ** 2 + Y ** 2)
+        R3 = np.sqrt(R2 ** 2 + (offset_z) ** 2)
+        ct = offset_z / R3
+
+        ANGLE = np.arctan2(Y, X) + polarization_angle
+        COS2 = np.square(np.cos(ANGLE))
+        SIN2 = 1 - COS2
+
         ct_max = np.cos(aperature_angle)
-        field = _get_field(
-            X,
-            Y,
-            offset_z,
-            2 * np.pi / wavelength,
-            refractive_index,
-            radius,
-            L,
-            refractive_index_medium,
-            ct_max=ct_max,
-            polarization_angle=polarization_angle,
+
+        # Wave vector
+        k = 2 * np.pi / wavelength * refractive_index_medium
+
+        # Coeffs
+        A, B = D.mie_coefficients(
+            k, refractive_index / refractive_index_medium, radius, L
+        )
+
+        # Harmonics
+        PI, TAU = D.mie_harmonics(ct, L)
+
+        # Normalization factor
+        E = [(2 * l + 1) / (l * (l + 1)) for l in range(1, L + 1)]
+
+        # Scattering terms
+        S1 = sum([E[l] * A[l] * TAU[l] + E[l] * B[l] * PI[l] for l in range(0, L)])
+        S2 = sum([E[l] * B[l] * TAU[l] + E[l] * A[l] * PI[l] for l in range(0, L)])
+
+        field = (
+            (ct > ct_max)
+            * -1j
+            / (k * R3)
+            * np.exp(1j * k * (R3 - offset_z))
+            * (S1 * COS2 + S2 * SIN2)
         )
 
         return np.expand_dims(field, axis=-1)
-
-
-CACHE = {
-    "maxL": -1,
-    "minKR": None,
-    "maxKR": 0,
-    "resolution": 0.001,
-    "L": [],
-    "PI": {
-        "value": [],
-        "resolution": 0.001,
-        "min": -1,
-        "max": 1,
-    },
-}
-
-
-def B(k, n, a, l, nm=1.33):
-    ka = k * nm * a
-    kna = k * n * a
-    jka = jv(l, ka)
-    djka = jv(l, ka, True)
-    jkna = jv(l, kna)
-    djkna = jv(l, kna, True)
-    h = h1vp(l, ka, n=1)
-    return (
-        (2 * l + 1)
-        * 1j ** l
-        * (jka * djkna * n - jkna * djka * nm)
-        / (jkna * h * nm - h * djkna * n)
-    )
-
-
-def ricbesj(l, x):
-    return np.sqrt(np.pi * x / 2) * besselj(l + 0.5, x)
-
-
-def dricbesj(l, x):
-    return 0.5 * np.sqrt(np.pi / x / 2) * besselj(l + 0.5, x) + np.sqrt(
-        np.pi * x / 2
-    ) * dbesselj(l + 0.5, x)
-
-
-def besselj(l, x):
-    return jn(l, x)
-
-
-def dbesselj(l, x):
-    return 0.5 * (besselj(l - 1, x) - besselj(l + 1, x))
-
-
-def ricbesh(l, x):
-    return np.sqrt(np.pi * x / 2) * h1vp(l + 0.5, x, False)
-
-
-def dricbesh(nu, z):
-    xi = 0.5 * np.sqrt(np.pi / 2 / z) * h1vp(nu + 0.5, z, False) + np.sqrt(
-        np.pi * z / 2
-    ) * h1vp(nu + 0.5, z, True)
-    return xi
-
-
-def coeffs(k, n, a, L, nm=1.33):
-    AA = np.zeros((L + 1,)) * 1j
-    BB = np.zeros((L + 1,)) * 1j
-    m = n / nm
-    for l in range(1, L + 1):
-
-        Sx = ricbesj(l, k * a)
-        dSx = dricbesj(l, k * a)
-
-        Smx = ricbesj(l, k * m * a)
-
-        dSmx = dricbesj(l, k * m * a)
-        xix = ricbesh(l, k * a)
-        dxix = dricbesh(l, k * a)
-        AA[l - 1] = (m * Smx * dSx - Sx * dSmx) / (m * Smx * dxix - xix * dSmx)
-        BB[l - 1] = (Smx * dSx - m * Sx * dSmx) / (Smx * dxix - m * xix * dSmx)
-    return AA, BB
-
-
-def h1vp_cached(L, hin):
-    hin_max = np.max(hin)
-    if hin_max > CACHE["maxKR"]:
-        calc_arr = np.arange(
-            CACHE["maxKR"] + CACHE["resolution"],
-            hin_max + CACHE["resolution"],
-            CACHE["resolution"],
-        )
-        for l in range(CACHE["maxL"]):
-            CACHE["L"][l] = np.concatenate((CACHE["L"][l], h1vp(l, calc_arr)))
-        CACHE["maxKR"] = calc_arr[-1]
-
-    if L > len(CACHE["L"]):
-        calc_arr = np.arange(
-            0, CACHE["maxKR"] + CACHE["resolution"], CACHE["resolution"]
-        )
-        for l in range(len(CACHE["L"]), L):
-            CACHE["L"].append(h1vp(l, calc_arr))
-
-        CACHE["maxL"] = L
-
-    residx = ((hin // CACHE["resolution"])).astype(np.int)
-    c = CACHE["L"]
-    out = [c[l][residx] for l in range(L)]
-    return out
-
-
-def _get_scattering_matrix(A, B, k, L):
-    theta = np.linspace(0, 2 * np.pi)
-
-
-def _get_angular_dependence(ct, L):
-    PI = np.zeros((L, *ct.shape))
-    TAU = np.zeros((L, *ct.shape))
-
-    PI[0, :] = 1
-    PI[1, :] = 3 * ct
-    TAU[0, :] = ct
-    TAU[1, :] = 6 * ct * ct - 3
-
-    for i in range(3, L + 1):
-
-        PI[i - 1] = (2 * i - 1) / (i - 1) * ct * PI[i - 2] - i / (i - 1) * PI[i - 3]
-
-        TAU[i - 1] = i * ct * PI[i - 1] - (i + 1) * PI[i - 2]
-    return PI, TAU
-
-
-def _get_field(X, Y, dz, k, n, a, L, nm=1.33, ct_max=1, polarization_angle=0):
-    k = k * nm
-    A, B = coeffs(k, n, a, L, nm)
-
-    R2 = np.sqrt(X ** 2 + Y ** 2)
-    R3 = np.sqrt(R2 ** 2 + (dz) ** 2)
-    ct = dz / R3
-
-    PI, TAU = _get_angular_dependence(ct, L)
-
-    E = [(2 * l + 1) / (l * (l + 1)) for l in range(1, L + 1)]
-
-    S1 = sum([E[l] * A[l] * TAU[l] + E[l] * B[l] * PI[l] for l in range(0, L)])
-    S2 = sum([E[l] * B[l] * TAU[l] + E[l] * A[l] * PI[l] for l in range(0, L)])
-
-    ANGLE = np.arctan2(Y, X) + polarization_angle
-    COS = np.square(np.cos(ANGLE))
-    SIN = 1 - COS
-
-    field = (
-        (ct > ct_max)
-        * -1j
-        / (k * R3)
-        * np.exp(1j * k * (R3 - dz))
-        * (S1 * COS + S2 * SIN)
-    )
-
-    return field
