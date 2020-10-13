@@ -156,8 +156,8 @@ class Property:
         """
 
         if isinstance(sampling_rule, deeptrack.Feature):
-            # Don't pass my properties to other feature (avoid name clash)
-            sampling_rule._update()
+            # I am worried passing kwargs may lead to name clash
+            sampling_rule._update(**kwargs)
             return sampling_rule
 
         if isinstance(sampling_rule, Property):

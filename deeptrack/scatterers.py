@@ -17,6 +17,7 @@ Ellipsoid
     Generates 3-d ellipsoids
 """
 
+
 from threading import Lock
 import numpy as np
 
@@ -423,37 +424,29 @@ class Ellipsoid(Scatterer):
 
 
 class MieScatterer(Scatterer):
-    def __init__(self, **kwargs):
-        kwargs.pop("is_field", None)
-        kwargs.pop("crop_empty", None)
-        super().__init__(is_field=True, crop_empty=False, **kwargs)
+    """Base implementation of a Mie particle.
 
-
-# class MieBisphere(MieScatterer):
-#     def __init__(self, refractive_index=1.45, distance=2e-6, radius=1e-6, **kwargs):
-#         super().__init__(
-#             refractive_index=refractive_index,
-#             distance=distance,
-#             radius=radius,
-#             **kwargs
-#         )
-
-
-class MieSphere(MieScatterer):
-    """Scattered field by a sphere
-
-    Should be calculated on at least a 64 by 64 grid. Use padding in the optics if necessary
-
-    Calculates the scattered field by a spherical particle in a homogenous medium,
-    as predicted by Mie theory. Note that the induced phase shift is calculated
-    in comparison to the `refractive_index_medium` property of the optical device.
+    New Mie-theory scatterers can be implemented by extending this class, and passing
+    a function that calculates the coefficients of the harmonics up to order `L`. To be
+    precise, the feature expects a wrapper function that takes the current values of the
+    properties, as well as a inner function that takes an integer as the only parameter,
+    and calculates the coefficients up to that integer. The return format is expected to
+    be a tuple with two values, corresponding to `an` and `bn`. See
+    `deeptrack.backend.mie_coefficients` for an example.
 
     Parameters
     ----------
-    radius : float
-        Radius of the mie particle in meter.
-    refractive_index : float
-        Refractive index of the particle
+    coefficients : Callable[int] -> Tuple[ndarray, ndarray]
+        Function that returns the harmonics coefficients.
+    offset_z : "auto" or float
+        Distance from the particle in the z direction the field is evaluated. If "auto",
+        this is calculated from the pixel size and `collection_angle`
+    collection_angle : "auto" or float
+        The maximum collection angle in radians. If "auto", this
+        is calculated from the objective NA (which is true if the objective is the limiting
+        aperature).
+    polarization_angle : float
+        Angle of the polarization of the incoming light relative to the x-axis.
     L : int or str
         The number of terms used to evaluate the mie theory. If `"auto"`,
         it determines the number of terms automatically.
@@ -464,31 +457,28 @@ class MieSphere(MieScatterer):
     z : float
         The position in the direction normal to the
         camera plane. Used if `position` is of length 2.
-    value : float
-        A default value of the characteristic of the particle. Used by
-        optics unless a more direct property is set: (eg. `refractive_index`
-        for `Brightfield` and `intensity` for `Fluorescence`).
     """
 
     def __init__(
         self,
-        radius=1e-6,
-        refractive_index=1.45,
+        coefficients,
         offset_z="auto",
         polarization_angle=0,
-        aperature_angle="auto",
+        collection_angle="auto",
         L="auto",
-        crop_empty=False,
         **kwargs
     ):
+        kwargs.pop("is_field", None)
+        kwargs.pop("crop_empty", None)
+
         super().__init__(
-            radius=radius,
-            refractive_index=refractive_index,
+            is_field=True,
+            crop_empty=False,
             L=L,
             offset_z=offset_z,
             polarization_angle=polarization_angle,
-            aperature_angle=aperature_angle,
-            crop_empty=crop_empty,
+            collection_angle=collection_angle,
+            coefficients=coefficients,
             **kwargs
         )
 
@@ -497,17 +487,20 @@ class MieSphere(MieScatterer):
         properties = super()._process_properties(properties)
 
         if properties["L"] == "auto":
-            v = 2 * np.pi * properties["radius"] / properties["wavelength"]
-            properties["L"] = int(np.ceil(v + 4 * (v ** (1 / 3)) + 2))
-        if properties["aperature_angle"] == "auto":
-            properties["aperature_angle"] = np.sqrt(
+            try:
+                v = 2 * np.pi * np.max(properties["radius"]) / properties["wavelength"]
+                properties["L"] = int(np.ceil(v + 4 * (v ** (1 / 3)) + 2))
+            except (ValueError, TypeError):
+                pass
+        if properties["collection_angle"] == "auto":
+            properties["collection_angle"] = np.sqrt(
                 1 - properties["NA"] ** 2 / properties["refractive_index_medium"] ** 2
             )
         if properties["offset_z"] == "auto":
             properties["offset_z"] = (
                 32
                 * min(properties["voxel_size"][:2])
-                / np.sin(properties["aperature_angle"])
+                / np.sin(properties["collection_angle"])
                 * properties["upscale"]
             )
         return properties
@@ -516,8 +509,6 @@ class MieSphere(MieScatterer):
         self,
         image,
         position,
-        radius,
-        refractive_index,
         upscaled_output_region,
         voxel_size,
         padding,
@@ -525,8 +516,9 @@ class MieSphere(MieScatterer):
         refractive_index_medium,
         L,
         offset_z,
-        aperature_angle,
+        collection_angle,
         polarization_angle,
+        coefficients,
         upscale=1,
         **kwargs
     ):
@@ -558,17 +550,14 @@ class MieSphere(MieScatterer):
         COS2 = np.square(np.cos(ANGLE))
         SIN2 = 1 - COS2
 
-        ct_max = np.cos(aperature_angle)
+        ct_max = np.cos(collection_angle)
 
         # Wave vector
         k = 2 * np.pi / wavelength * refractive_index_medium
 
-        # Coeffs
-        A, B = D.mie_coefficients(
-            k, refractive_index / refractive_index_medium, radius, L
-        )
-
         # Harmonics
+
+        A, B = coefficients(L)
         PI, TAU = D.mie_harmonics(ct, L)
 
         # Normalization factor
@@ -587,3 +576,145 @@ class MieSphere(MieScatterer):
         )
 
         return np.expand_dims(field, axis=-1)
+
+
+class MieSphere(MieScatterer):
+    """Scattered field by a sphere
+
+    Should be calculated on at least a 64 by 64 grid. Use padding in the optics if necessary
+
+    Calculates the scattered field by a spherical particle in a homogenous medium,
+    as predicted by Mie theory. Note that the induced phase shift is calculated
+    in comparison to the `refractive_index_medium` property of the optical device.
+
+    Parameters
+    ----------
+    radius : float
+        Radius of the mie particle in meter.
+    refractive_index : float
+        Refractive index of the particle
+    L : int or str
+        The number of terms used to evaluate the mie theory. If `"auto"`,
+        it determines the number of terms automatically.
+    position : array_like[float, float (, float)]
+        The position of the particle. Third index is optional,
+        and represents the position in the direction normal to the
+        camera plane.
+    z : float
+        The position in the direction normal to the
+        camera plane. Used if `position` is of length 2.
+    offset_z : "auto" or float
+        Distance from the particle in the z direction the field is evaluated. If "auto",
+        this is calculated from the pixel size and `collection_angle`
+    collection_angle : "auto" or float
+        The maximum collection angle in radians. If "auto", this
+        is calculated from the objective NA (which is true if the objective is the limiting
+        aperature).
+    polarization_angle : float
+        Angle of the polarization of the incoming light relative to the x-axis.
+    """
+
+    def __init__(
+        self,
+        radius=1e-6,
+        refractive_index=1.45,
+        offset_z="auto",
+        polarization_angle=0,
+        collection_angle="auto",
+        L="auto",
+        **kwargs
+    ):
+        def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
+            def inner(L):
+                return D.mie_coefficients(
+                    refractive_index / refractive_index_medium,
+                    radius * 2 * np.pi / wavelength * refractive_index_medium,
+                    L,
+                )
+
+            return inner
+
+        super().__init__(
+            coefficients=coeffs,
+            radius=radius,
+            refractive_index=refractive_index,
+            L=L,
+            offset_z=offset_z,
+            polarization_angle=polarization_angle,
+            collection_angle=collection_angle,
+            **kwargs
+        )
+
+
+class MieStratifiedSphere(MieScatterer):
+    """Scattered field by a stratified sphere
+
+    A stratified sphere is a sphere with several concentric shells of uniform refractive index.
+
+    Should be calculated on at least a 64 by 64 grid. Use padding in the optics if necessary
+
+    Calculates the scattered field by in a homogenous medium, as predicted by Mie theory.
+    Note that the induced phase shift is calculated in comparison to the
+    `refractive_index_medium` property of the optical device.
+
+    Parameters
+    ----------
+    radius : float
+        The radius of each cell in increasing order.
+    refractive_index : float
+        Refractive index of each cell in the same order as `radius`
+    L : int or str
+        The number of terms used to evaluate the mie theory. If `"auto"`,
+        it determines the number of terms automatically.
+    position : array_like[float, float (, float)]
+        The position of the particle. Third index is optional,
+        and represents the position in the direction normal to the
+        camera plane.
+    z : float
+        The position in the direction normal to the
+        camera plane. Used if `position` is of length 2.
+    offset_z : "auto" or float
+        Distance from the particle in the z direction the field is evaluated. If "auto",
+        this is calculated from the pixel size and `collection_angle`
+    collection_angle : "auto" or float
+        The maximum collection angle in radians. If "auto", this
+        is calculated from the objective NA (which is true if the objective is the limiting
+        aperature).
+    polarization_angle : float
+        Angle of the polarization of the incoming light relative to the x-axis.
+    """
+
+    def __init__(
+        self,
+        radius=1e-6,
+        refractive_index=1.45,
+        offset_z="auto",
+        polarization_angle=0,
+        collection_angle="auto",
+        L="auto",
+        **kwargs
+    ):
+        def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
+            assert np.all(
+                radius[1:] >= radius[:-1]
+            ), "Radius of the shells of a stratified sphere should be monotonically increasing"
+
+            def inner(L):
+                return D.stratified_mie_coefficients(
+                    np.array(refractive_index) / refractive_index_medium,
+                    np.array(radius) * 2 * np.pi / wavelength * refractive_index_medium,
+                    L,
+                )
+
+            return inner
+
+        super().__init__(
+            coefficients=coeffs,
+            radius=radius,
+            refractive_index=refractive_index,
+            L=L,
+            offset_z=offset_z,
+            polarization_angle=polarization_angle,
+            collection_angle=collection_angle,
+            **kwargs
+        )

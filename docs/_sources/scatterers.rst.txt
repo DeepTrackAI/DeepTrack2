@@ -34,6 +34,13 @@ MieSphere
    :members:
    :exclude-members: get
 
+MieStratifiedSphere
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: deeptrack.scatterers.MieStratifiedSphere
+   :members:
+   :exclude-members: get
+
 PointParticle
 ^^^^^^^^^^^^^
 

@@ -245,6 +245,10 @@
         </li>
     
         <li class="nav-item toc-entry toc-h3">
+            <a href="#miestratifiedsphere" class="nav-link">MieStratifiedSphere</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
             <a href="#pointparticle" class="nav-link">PointParticle</a>
         </li>
     
@@ -406,8 +410,43 @@ for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</
 <h3>MieScatterer<a class="headerlink" href="#miescatterer" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="deeptrack.scatterers.MieScatterer">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieScatterer</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieScatterer" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieScatterer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coefficients</span></em>, <em class="sig-param"><span class="n">offset_z</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">polarization_angle</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">collection_angle</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">L</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieScatterer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base implementation of a Mie particle.</p>
+<p>New Mie-theory scatterers can be implemented by extending this class, and passing
+a function that calculates the coefficients of the harmonics up to order <cite>L</cite>. To be
+precise, the feature expects a wrapper function that takes the current values of the
+properties, as well as a inner function that takes an integer as the only parameter,
+and calculates the coefficients up to that integer. The return format is expected to
+be a tuple with two values, corresponding to <cite>an</cite> and <cite>bn</cite>. See
+<cite>deeptrack.backend.mie_coefficients</cite> for an example.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficients</strong><span class="classifier">Callable[int] -&gt; Tuple[ndarray, ndarray]</span></dt><dd><p>Function that returns the harmonics coefficients.</p>
+</dd>
+<dt><strong>offset_z</strong><span class="classifier">“auto” or float</span></dt><dd><p>Distance from the particle in the z direction the field is evaluated. If “auto”,
+this is calculated from the pixel size and <cite>collection_angle</cite></p>
+</dd>
+<dt><strong>collection_angle</strong><span class="classifier">“auto” or float</span></dt><dd><p>The maximum collection angle in radians. If “auto”, this
+is calculated from the objective NA (which is true if the objective is the limiting
+aperature).</p>
+</dd>
+<dt><strong>polarization_angle</strong><span class="classifier">float</span></dt><dd><p>Angle of the polarization of the incoming light relative to the x-axis.</p>
+</dd>
+<dt><strong>L</strong><span class="classifier">int or str</span></dt><dd><p>The number of terms used to evaluate the mie theory. If <cite>“auto”</cite>,
+it determines the number of terms automatically.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
+and represents the position in the direction normal to the
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
 <col style="width: 10%" />
@@ -435,8 +474,9 @@ for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</
 <h3>MieSphere<a class="headerlink" href="#miesphere" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="deeptrack.scatterers.MieSphere">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieSphere</code><span class="sig-paren">(</span><em class="sig-param">radius=1e-06</em>, <em class="sig-param">refractive_index=1.45</em>, <em class="sig-param">offset_z=&lt;function MieSphere.&lt;lambda&gt;&gt;</em>, <em class="sig-param">polarization_angle=0</em>, <em class="sig-param">aperature_angle='auto'</em>, <em class="sig-param">L='auto'</em>, <em class="sig-param">crop_empty=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieSphere" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieSphere</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">refractive_index</span><span class="o">=</span><span class="default_value">1.45</span></em>, <em class="sig-param"><span class="n">offset_z</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">polarization_angle</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">collection_angle</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">L</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieSphere" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scattered field by a sphere</p>
+<p>Should be calculated on at least a 64 by 64 grid. Use padding in the optics if necessary</p>
 <p>Calculates the scattered field by a spherical particle in a homogenous medium,
 as predicted by Mie theory. Note that the induced phase shift is calculated
 in comparison to the <cite>refractive_index_medium</cite> property of the optical device.</p>
@@ -457,9 +497,78 @@ camera plane.</p>
 <dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
 camera plane. Used if <cite>position</cite> is of length 2.</p>
 </dd>
-<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
-optics unless a more direct property is set: (eg. <cite>refractive_index</cite>
-for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
+<dt><strong>offset_z</strong><span class="classifier">“auto” or float</span></dt><dd><p>Distance from the particle in the z direction the field is evaluated. If “auto”,
+this is calculated from the pixel size and <cite>collection_angle</cite></p>
+</dd>
+<dt><strong>collection_angle</strong><span class="classifier">“auto” or float</span></dt><dd><p>The maximum collection angle in radians. If “auto”, this
+is calculated from the objective NA (which is true if the objective is the limiting
+aperature).</p>
+</dd>
+<dt><strong>polarization_angle</strong><span class="classifier">float</span></dt><dd><p>Angle of the polarization of the incoming light relative to the x-axis.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="miestratifiedsphere">
+<h3>MieStratifiedSphere<a class="headerlink" href="#miestratifiedsphere" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.scatterers.MieStratifiedSphere">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieStratifiedSphere</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">refractive_index</span><span class="o">=</span><span class="default_value">1.45</span></em>, <em class="sig-param"><span class="n">offset_z</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">polarization_angle</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">collection_angle</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">L</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieStratifiedSphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scattered field by a stratified sphere</p>
+<p>A stratified sphere is a sphere with several concentric shells of uniform refractive index.</p>
+<p>Should be calculated on at least a 64 by 64 grid. Use padding in the optics if necessary</p>
+<p>Calculates the scattered field by in a homogenous medium, as predicted by Mie theory.
+Note that the induced phase shift is calculated in comparison to the
+<cite>refractive_index_medium</cite> property of the optical device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius</strong><span class="classifier">float</span></dt><dd><p>The radius of each cell in increasing order.</p>
+</dd>
+<dt><strong>refractive_index</strong><span class="classifier">float</span></dt><dd><p>Refractive index of each cell in the same order as <cite>radius</cite></p>
+</dd>
+<dt><strong>L</strong><span class="classifier">int or str</span></dt><dd><p>The number of terms used to evaluate the mie theory. If <cite>“auto”</cite>,
+it determines the number of terms automatically.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
+and represents the position in the direction normal to the
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>offset_z</strong><span class="classifier">“auto” or float</span></dt><dd><p>Distance from the particle in the z direction the field is evaluated. If “auto”,
+this is calculated from the pixel size and <cite>collection_angle</cite></p>
+</dd>
+<dt><strong>collection_angle</strong><span class="classifier">“auto” or float</span></dt><dd><p>The maximum collection angle in radians. If “auto”, this
+is calculated from the objective NA (which is true if the objective is the limiting
+aperature).</p>
+</dd>
+<dt><strong>polarization_angle</strong><span class="classifier">float</span></dt><dd><p>Angle of the polarization of the incoming light relative to the x-axis.</p>
 </dd>
 </dl>
 </dd>

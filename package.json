@@ -3,6 +3,6 @@
         "publish": "py setup.py sdist bdist_wheel && py -m twine upload --repository pypi dist/*",
         "make-docs-windows": "cd _src && make html && Xcopy /Y /I /E .\\build\\html ..\\docs && type nul > ../docs/.nojekyll",
         "full-make-docs-windows": "cd _src && py .\\autodoc_dt.py && make html && Xcopy /Y /I /E .\\build\\html ..\\docs && type nul > ../docs/.nojekyll",
-        "test": "cd ./test/ && py ./test.py"
+        "test": "py ./test/test.py"
     }
 }
