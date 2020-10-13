@@ -4,7 +4,7 @@ scatterers
 .. automodule:: deeptrack.scatterers
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 Ellipse
 ^^^^^^^
@@ -54,52 +54,4 @@ Sphere
 .. autoclass:: deeptrack.scatterers.Sphere
    :members:
    :exclude-members: get
-
-Module functions
-----------------
-
-B
-^
-
-.. autofunction:: deeptrack.scatterers.B
-
-besselj
-^^^^^^^
-
-.. autofunction:: deeptrack.scatterers.besselj
-
-coeffs
-^^^^^^
-
-.. autofunction:: deeptrack.scatterers.coeffs
-
-dbesselj
-^^^^^^^^
-
-.. autofunction:: deeptrack.scatterers.dbesselj
-
-dricbesh
-^^^^^^^^
-
-.. autofunction:: deeptrack.scatterers.dricbesh
-
-dricbesj
-^^^^^^^^
-
-.. autofunction:: deeptrack.scatterers.dricbesj
-
-h1vp_cached
-^^^^^^^^^^^
-
-.. autofunction:: deeptrack.scatterers.h1vp_cached
-
-ricbesh
-^^^^^^^
-
-.. autofunction:: deeptrack.scatterers.ricbesh
-
-ricbesj
-^^^^^^^
-
-.. autofunction:: deeptrack.scatterers.ricbesj
 

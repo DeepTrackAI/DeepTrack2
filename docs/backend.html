@@ -1,0 +1,546 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>backend &#8212; DeepTrack 2.0 documentation</title>
+    
+  <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.30270b6e4c972e43c488.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="aberrations" href="aberrations.html" />
+    <link rel="prev" title="Documentation" href="deeptrack.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="installation.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="deeptrack.html">Documentation</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar">
+
+<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+
+
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+  <div class="bd-toc-item active">
+  
+
+  <ul class="nav bd-sidenav">
+      
+      
+      
+      
+      
+      
+        
+          
+              <li class="active">
+                  <a href="">backend</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="aberrations.html">aberrations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="augmentations.html">augmentations</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="features.html">features</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="generators.html">generators</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="image.html">image</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="layers.html">layers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="losses.html">losses</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="math.html">math</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="models.html">models</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="noises.html">noises</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="optics.html">optics</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="properties.html">properties</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="scatterers.html">scatterers</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="sequences.html">sequences</a>
+              </li>
+          
+        
+          
+              <li class="">
+                  <a href="utils.html">utils</a>
+              </li>
+          
+        
+      
+      
+    </ul>
+
+</nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#mie" class="nav-link">mie</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#module-functions" class="nav-link">Module functions</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h4">
+            <a href="#mie-coefficients" class="nav-link">mie_coefficients</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h4">
+            <a href="#mie-harmonics" class="nav-link">mie_harmonics</a>
+        </li>
+    
+            </ul>
+        </li>
+    
+            </ul>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#polynomials" class="nav-link">polynomials</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#id3" class="nav-link">Module functions</a><ul class="nav section-nav flex-column">
+                
+        <li class="nav-item toc-entry toc-h4">
+            <a href="#besselj" class="nav-link">besselj</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h4">
+            <a href="#dbesselj" class="nav-link">dbesselj</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h4">
+            <a href="#dricbesh" class="nav-link">dricbesh</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h4">
+            <a href="#dricbesj" class="nav-link">dricbesj</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h4">
+            <a href="#ricbesh" class="nav-link">ricbesh</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h4">
+            <a href="#ricbesj" class="nav-link">ricbesj</a>
+        </li>
+    
+            </ul>
+        </li>
+    
+            </ul>
+        </li>
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.backend">
+<span id="backend"></span><h1>backend<a class="headerlink" href="#module-deeptrack.backend" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="mie">
+<h2>mie<a class="headerlink" href="#mie" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-functions">
+<h3>Module functions<a class="headerlink" href="#module-functions" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="mie-coefficients">
+<h4>mie_coefficients<a class="headerlink" href="#mie-coefficients" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt id="deeptrack.backend.mie_coefficients">
+<code class="sig-prename descclassname">deeptrack.backend.</code><code class="sig-name descname">mie_coefficients</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">k</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">m</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">a</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">L</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>numpy.ndarray<span class="p">]</span><a class="headerlink" href="#deeptrack.backend.mie_coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the coefficients of the spherical harmonics.</p>
+<p>Calculates the terms up to (and including) order L using riccati-bessel polynomials.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>k</strong><span class="classifier">float</span></dt><dd><p>The wave-vector in the medium</p>
+</dd>
+<dt><strong>m</strong><span class="classifier">float or complex float</span></dt><dd><p>The relative refractive index of the particle n_particle / n_medium</p>
+</dd>
+<dt><strong>a</strong><span class="classifier">float</span></dt><dd><p>The radius of the particle (&gt; 0)</p>
+</dd>
+<dt><strong>L</strong><span class="classifier">int</span></dt><dd><p>The order</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>ndarray, ndarray :</dt><dd><p>Tuple of ndarrays, containing coefficient terms up to but not including order L.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="mie-harmonics">
+<h4>mie_harmonics<a class="headerlink" href="#mie-harmonics" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt id="deeptrack.backend.mie_harmonics">
+<code class="sig-prename descclassname">deeptrack.backend.</code><code class="sig-name descname">mie_harmonics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">numpy.ndarray</span></em>, <em class="sig-param"><span class="n">L</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>numpy.ndarray<span class="p">]</span><a class="headerlink" href="#deeptrack.backend.mie_harmonics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the spherical harmonics of the mie field.</p>
+<p>The harmonics are calculated up to order L using the iterative method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">ndarray</span></dt><dd><p>The cosine of the angle defined by the line passing through origo parallel
+to the propagation direction and the evaluation point, with the corner at origo.</p>
+</dd>
+<dt><strong>L</strong><span class="classifier">int</span></dt><dd><p>The order up to which to evaluate the harmonics. The L:th</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>ndarray, ndarray</dt><dd><p>Tuple of ndarray of shape (L, <a href="#id1"><span class="problematic" id="id2">*</span></a>x.shape)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<div class="section" id="polynomials">
+<h2>polynomials<a class="headerlink" href="#polynomials" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h3>Module functions<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="besselj">
+<h4>besselj<a class="headerlink" href="#besselj" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt id="deeptrack.backend.besselj">
+<code class="sig-prename descclassname">deeptrack.backend.</code><code class="sig-name descname">besselj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.backend.besselj" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Bessel polynomial of the first kind.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>l</strong><span class="classifier">int, float</span></dt><dd><p>Polynomial order</p>
+</dd>
+<dt><strong>x</strong><span class="classifier">number, ndarray</span></dt><dd><p>The point(s) the polynomial is evaluated at</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>float, ndarray</dt><dd><p>The polynomial evaluated at x</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="dbesselj">
+<h4>dbesselj<a class="headerlink" href="#dbesselj" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt id="deeptrack.backend.dbesselj">
+<code class="sig-prename descclassname">deeptrack.backend.</code><code class="sig-name descname">dbesselj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.backend.dbesselj" title="Permalink to this definition">¶</a></dt>
+<dd><p>The first derivative of the Bessel polynomial of the first kind.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>l</strong><span class="classifier">int, float</span></dt><dd><p>Polynomial order</p>
+</dd>
+<dt><strong>x</strong><span class="classifier">number, ndarray</span></dt><dd><p>The point(s) the polynomial is evaluated at</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>float, ndarray</dt><dd><p>The polynomial evaluated at x</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="dricbesh">
+<h4>dricbesh<a class="headerlink" href="#dricbesh" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt id="deeptrack.backend.dricbesh">
+<code class="sig-prename descclassname">deeptrack.backend.</code><code class="sig-name descname">dricbesh</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.backend.dricbesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The first derivative of the Riccati-Bessel polynomial of the third kind.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>l</strong><span class="classifier">int, float</span></dt><dd><p>Polynomial order</p>
+</dd>
+<dt><strong>x</strong><span class="classifier">number, ndarray</span></dt><dd><p>The point(s) the polynomial is evaluated at</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>float, ndarray</dt><dd><p>The polynomial evaluated at x</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="dricbesj">
+<h4>dricbesj<a class="headerlink" href="#dricbesj" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt id="deeptrack.backend.dricbesj">
+<code class="sig-prename descclassname">deeptrack.backend.</code><code class="sig-name descname">dricbesj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.backend.dricbesj" title="Permalink to this definition">¶</a></dt>
+<dd><p>The first derivative of the Riccati-Bessel polynomial of the first kind.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>l</strong><span class="classifier">int, float</span></dt><dd><p>Polynomial order</p>
+</dd>
+<dt><strong>x</strong><span class="classifier">number, ndarray</span></dt><dd><p>The point(s) the polynomial is evaluated at</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>float, ndarray</dt><dd><p>The polynomial evaluated at x</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="ricbesh">
+<h4>ricbesh<a class="headerlink" href="#ricbesh" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt id="deeptrack.backend.ricbesh">
+<code class="sig-prename descclassname">deeptrack.backend.</code><code class="sig-name descname">ricbesh</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.backend.ricbesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Riccati-Bessel polynomial of the third kind.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>l</strong><span class="classifier">int, float</span></dt><dd><p>Polynomial order</p>
+</dd>
+<dt><strong>x</strong><span class="classifier">number, ndarray</span></dt><dd><p>The point(s) the polynomial is evaluated at</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>float, ndarray</dt><dd><p>The polynomial evaluated at x</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="ricbesj">
+<h4>ricbesj<a class="headerlink" href="#ricbesj" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt id="deeptrack.backend.ricbesj">
+<code class="sig-prename descclassname">deeptrack.backend.</code><code class="sig-name descname">ricbesj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.backend.ricbesj" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Riccati-Bessel polynomial of the first kind.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>l</strong><span class="classifier">int, float</span></dt><dd><p>Polynomial order</p>
+</dd>
+<dt><strong>x</strong><span class="classifier">number, ndarray</span></dt><dd><p>The point(s) the polynomial is evaluated at</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>float, ndarray</dt><dd><p>The polynomial evaluated at x</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="deeptrack.html" title="previous page">Documentation</a>
+    <a class='right-next' id="next-link" href="aberrations.html" title="next page">aberrations</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.30270b6e4c972e43c488.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

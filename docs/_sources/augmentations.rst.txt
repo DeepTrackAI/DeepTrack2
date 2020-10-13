@@ -4,7 +4,7 @@ augmentations
 .. automodule:: deeptrack.augmentations
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 Affine
 ^^^^^^

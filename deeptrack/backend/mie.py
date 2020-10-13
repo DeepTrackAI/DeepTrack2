@@ -1,3 +1,6 @@
+""" Perform Mie-specific calculations
+"""
+
 import numpy as np
 
 from typing import Tuple

@@ -4,7 +4,7 @@ aberrations
 .. automodule:: deeptrack.aberrations
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 Aberration
 ^^^^^^^^^^

@@ -4,7 +4,7 @@ generators
 .. automodule:: deeptrack.generators
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 ContinuousGenerator
 ^^^^^^^^^^^^^^^^^^^

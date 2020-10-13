@@ -4,6 +4,7 @@ Documentation
 .. toctree::
    :maxdepth: 1
    
+   backend
    aberrations
    augmentations
    features

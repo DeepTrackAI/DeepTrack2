@@ -4,7 +4,7 @@ models
 .. automodule:: deeptrack.models
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 KerasModel
 ^^^^^^^^^^
@@ -28,7 +28,7 @@ cgan
    :exclude-members: get
 
 Module functions
-----------------
+<<<<<<<<<<<<<<<<
 
 Convolutional
 ^^^^^^^^^^^^^
