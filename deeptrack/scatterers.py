@@ -131,6 +131,12 @@ class Scatterer(Feature):
         )
         new_image = new_image[0]
 
+        if new_image.size == 0:
+            warnings.warn(
+                "Scatterer created that is smaller than a pixel. This may yield inconsistent results. Consider using upsample on the scatterer, or upscale on the optics.",
+                Warning,
+            )
+
         # Downsamples the image along the axes it was upsampled
         if upsample != 1 and upsample_axes:
 
