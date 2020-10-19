@@ -73,5 +73,11 @@ This order is as follows:
 
 The detailed documentation of DeepTrack 2.0 is available at the following link: https://softmatterlab.github.io/DeepTrack-2.0/deeptrack.html
 
+## Cite us!
+
+If you use DeepTrack 2.0 in your project, please cite us here:
+
+https://arxiv.org/abs/2010.08260
+
 ## Funding
 This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511).
