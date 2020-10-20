@@ -190,6 +190,11 @@ class Feature:
         # to the __distributed__ attribute
         new_list = self._process_and_get(image_list, **feature_input)
 
+        # If tuple, assume return additional properties
+        if isinstance(new_list, tuple):
+            feature_input = {**feature_input, **new_list[1]}
+            new_list = new_list[0]
+
         # Add feature_input to the image the class attribute __property_memorability__
         # is not larger than the passed property_verbosity keyword
         property_verbosity = global_kwargs.get("property_memorability", 1)

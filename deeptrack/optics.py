@@ -178,6 +178,12 @@ class Optics(Feature):
             **kwargs
         )
 
+    def _process_and_get(self, image, **kwargs):
+        output = super()._process_and_get(image, **kwargs)
+        pupil = self._pupil(output[-1].shape[:2], defocus=[0], **kwargs)[0]
+
+        return output, {"pupil_at_focus": pupil}
+
     def _pupil(
         self,
         shape,
