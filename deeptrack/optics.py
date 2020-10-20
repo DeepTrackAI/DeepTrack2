@@ -140,7 +140,7 @@ class Optics(Feature):
         self,
         NA=0.7,
         wavelength=0.66e-6,
-        magnification=1,
+        magnification=10,
         resolution=(1e-6, 1e-6, 1e-6),
         refractive_index_medium=1.33,
         upscale=1,
