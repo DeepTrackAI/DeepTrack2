@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="450" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/master/assets/logo.png?raw=true>
+  <img width="350" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/master/assets/logo.png?raw=true>
 </p>
 
 
@@ -69,6 +69,14 @@ This order is as follows:
 12. [sequences_example](examples/sequences_example.ipynb)
 13. [math_example](examples/math_example.ipynb)
 
+## Graphical user interface
+
+DeepTrack 2.0 provides a completely stand-alone  [graphical  user  interface](https://github.com/BenjaminMidtvedt/DeepTrack-app.git),  which  delivers  all  the power of DeepTrack without requiring programming knowledge.
+
+<p align="center">
+  <img width="800" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/master/assets/graphical_interface.png?raw=true>
+</p>
+
 ## Documentation
 
 The detailed documentation of DeepTrack 2.0 is available at the following link: https://softmatterlab.github.io/DeepTrack-2.0/deeptrack.html
@@ -77,7 +85,13 @@ The detailed documentation of DeepTrack 2.0 is available at the following link: 
 
 If you use DeepTrack 2.0 in your project, please cite us here:
 
-https://arxiv.org/abs/2010.08260
+Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. "Quantitative Digital Microscopy with Deep Learning." [arXiv:2010.08260](https://arxiv.org/abs/2010.08260)
+
+See also:
+
+Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "Digital video microscopy enhanced by deep learning." Optica 6.4 (2019): 506-513. [10.1364/OPTICA.6.000506](https://doi.org/10.1364/OPTICA.6.000506)
+
+Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "DeepTrack." https://github.com/softmatterlab/DeepTrack.git (2019).
 
 ## Funding
 This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511).
