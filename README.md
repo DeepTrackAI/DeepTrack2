@@ -73,9 +73,7 @@ This order is as follows:
 
 DeepTrack 2.0 provides a completely stand-alone  [graphical  user  interface](https://github.com/BenjaminMidtvedt/DeepTrack-app.git),  which  delivers  all  the power of DeepTrack without requiring programming knowledge.
 
-<p align="center">
-  <img width="800" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/master/assets/graphical_interface.png?raw=true>
-</p>
+[![InterfaceDemo](https://i.imgur.com/lTy2vhz.gif)](https://i.imgur.com/lTy2vhz.gif)
 
 ## Documentation
 
