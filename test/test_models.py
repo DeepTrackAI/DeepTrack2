@@ -22,11 +22,38 @@ class TestModels(unittest.TestCase):
 
         model.predict(np.zeros((1, 64, 2)))
 
-    def test_Convolutions(self):
+    def test_Convolutions_with_single_input(self):
         model = models.Convolutional(
             input_shape=(64, 64, 1),
             conv_layers_dimensions=(16, 32, 64, 128),
             dense_layers_dimensions=(32, 32),
+            number_of_outputs=3,
+            output_activation="sigmoid",
+            loss="mse",
+        )
+        self.assertIsInstance(model, models.KerasModel)
+
+        model.predict(np.zeros((1, 64, 64, 1)))
+
+    def test_Convolutions_with_multiple_inputs(self):
+        model = models.Convolutional(
+            input_shape=[(64, 64, 1), (64, 64, 2)],
+            conv_layers_dimensions=(16, 32, 64, 128),
+            dense_layers_dimensions=(32, 32),
+            number_of_outputs=3,
+            output_activation="sigmoid",
+            loss="mse",
+        )
+        self.assertIsInstance(model, models.KerasModel)
+
+        model.predict([np.zeros((1, 64, 64, 1)), np.zeros((1, 64, 64, 2))])
+
+    def test_Convolutions_with_no_dense_top(self):
+        model = models.Convolutional(
+            input_shape=(64, 64, 1),
+            conv_layers_dimensions=(16, 32, 64, 128),
+            dense_layers_dimensions=(32, 32),
+            dense_top=False,
             number_of_outputs=3,
             output_activation="sigmoid",
             loss="mse",
