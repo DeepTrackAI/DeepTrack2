@@ -224,8 +224,8 @@ def Convolutional(
     ### INITIALIZE DEEP LEARNING NETWORK
 
     if isinstance(input_shape, list):
-        inputs = [layers.Input(shape for shape in input_shape)]
-        inputs = layers.Concatenate(axis=-1)(inputs)
+        network_input = [layers.Input(shape) for shape in input_shape]
+        inputs = layers.Concatenate(axis=-1)(network_input)
     else:
         network_input = layers.Input(input_shape)
         inputs = network_input
@@ -264,7 +264,7 @@ def Convolutional(
             name="output",
         )(layer)
 
-    model = models.Model(inputs, output_layer)
+    model = models.Model(network_input, output_layer)
 
     return KerasModel(model, loss=loss, **kwargs)
 
