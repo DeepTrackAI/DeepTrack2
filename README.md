@@ -51,6 +51,8 @@ DeepTrack 2.0 introduction tutorial video: https://www.youtube.com/watch?v=hyfax
 DeepTrack 2.0 single particle tracking tutorial video: https://www.youtube.com/watch?v=6Cntik6AfBI&t=1s  
 DeepTrack 2.0 multiple particle tracking tutorial video: https://www.youtube.com/watch?v=wFV2VqzpeZs  
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/wFV2VqzpeZs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 ### In-depth dives
 
 The examples folder contains notebooks which explains the different modules in more detail. These can be read in any order, but we provide a recommended order where more fundamental topics are introduced early.
