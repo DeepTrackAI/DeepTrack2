@@ -49,7 +49,12 @@ Additionally, we have seven more case studies which are less documented, but giv
 
 DeepTrack 2.0 introduction tutorial video: https://www.youtube.com/watch?v=hyfaxF8q6VE&t=16s  
 DeepTrack 2.0 single particle tracking tutorial video: https://www.youtube.com/watch?v=6Cntik6AfBI&t=1s  
-DeepTrack 2.0 multiple particle tracking tutorial video: https://www.youtube.com/watch?v=wFV2VqzpeZs  
+
+
+DeepTrack 2.0 multiple particle tracking tutorial video:   
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=wFV2VqzpeZs
+" target="_blank"><img src="http://img.youtube.com/vi/wFV2VqzpeZs/0.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
 
 
 
