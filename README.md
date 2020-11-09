@@ -47,7 +47,7 @@ Additionally, we have seven more case studies which are less documented, but giv
 
 ### Video Tutorials
 
-[TBA]
+DeepTrack introduction tutorial: https://www.youtube.com/watch?v=hyfaxF8q6VE&t=16s
 
 ### In-depth dives
 
