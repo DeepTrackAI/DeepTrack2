@@ -51,7 +51,13 @@ DeepTrack 2.0 introduction tutorial video: https://www.youtube.com/watch?v=hyfax
 DeepTrack 2.0 single particle tracking tutorial video: https://www.youtube.com/watch?v=6Cntik6AfBI&t=1s  
 DeepTrack 2.0 multiple particle tracking tutorial video: https://www.youtube.com/watch?v=wFV2VqzpeZs  
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/wFV2VqzpeZs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<object width="425" height="350">
+  <param name="movie" value="https://www.youtube.com/embed/wFV2VqzpeZs" />
+  <param name="wmode" value="transparent" />
+  <embed src="http://www.youtube.com/user/wwwLoveWatercom?v=BTRN1YETpyg"
+         type="application/x-shockwave-flash"
+         wmode="transparent" width="425" height="350" />
+</object>
 
 ### In-depth dives
 
