@@ -361,10 +361,12 @@ they otherwise would.</p>
 <dt id="deeptrack.sequences.Sequential">
 <code class="sig-prename descclassname">deeptrack.sequences.</code><code class="sig-name descname">Sequential</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.sequences.Sequential" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts a feature to be resolved as a sequence.</p>
-<p>Should be called on individual features, not combinations of features. All keyword
-arguments will be trated as sequential properties and will be passed to the parent feature.</p>
-<p>If a property from the keyword argument already exists on the feature, the existing property
-will be used to initilize the passed property (that is, it will be used for the first timestep).</p>
+<p>Should be called on individual features, not combinations of features. All
+keyword arguments will be trated as sequential properties and will be
+passed to the parent feature.</p>
+<p>If a property from the keyword argument already exists on the feature, the
+existing property will be used to initilize the passed property (that is,
+it will be used for the first timestep).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">

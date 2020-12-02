@@ -69,6 +69,13 @@ Pad
    :members:
    :exclude-members: get
 
+PadToMultiplesOf
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: deeptrack.augmentations.PadToMultiplesOf
+   :members:
+   :exclude-members: get
+
 PreLoad
 ^^^^^^^
 

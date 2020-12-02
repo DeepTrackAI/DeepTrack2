@@ -267,15 +267,15 @@
         </li>
     
         <li class="nav-item toc-entry toc-h3">
-            <a href="#id1" class="nav-link">convolutional</a>
+            <a href="#id3" class="nav-link">convolutional</a>
         </li>
     
         <li class="nav-item toc-entry toc-h3">
-            <a href="#id2" class="nav-link">rnn</a>
+            <a href="#id4" class="nav-link">rnn</a>
         </li>
     
         <li class="nav-item toc-entry toc-h3">
-            <a href="#id3" class="nav-link">unet</a>
+            <a href="#id5" class="nav-link">unet</a>
         </li>
     
             </ul>
@@ -300,7 +300,7 @@
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt>ModelFeature </dt><dd><p>Base model feature class.</p>
+<dt>ModelFeature</dt><dd><p>Base model feature class.</p>
 </dd>
 <dt>Convolutional, convolutional</dt><dd><p>Creates and compiles a convolutional neural network.</p>
 </dd>
@@ -377,39 +377,290 @@
 <h3>cgan<a class="headerlink" href="#cgan" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="deeptrack.models.cgan">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">cgan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">generator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">discriminator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">discriminator_loss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">discriminator_optimizer</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">discriminator_metrics</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">assemble_loss</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">assemble_optimizer</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">assemble_loss_weights</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.cgan" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">cgan</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.cgan" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">activity_regularizer</span></code></dt><dd><p>Optional regularizer function for the output of this layer.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">distribute_strategy</span></code></dt><dd><p>The <cite>tf.distribute.Strategy</cite> this model was created under.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">dtype</span></code></dt><dd><p>Dtype used by the weights of the layer, set in the constructor.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">dynamic</span></code></dt><dd><p>Whether the layer is dynamic (eager-only); set in the constructor.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">inbound_nodes</span></code></dt><dd><p>Deprecated, do NOT use! Only for compatibility with external Keras.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">input</span></code></dt><dd><p>Retrieves the input tensor(s) of a layer.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">input_mask</span></code></dt><dd><p>Retrieves the input mask tensor(s) of a layer.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">input_shape</span></code></dt><dd><p>Retrieves the input shape(s) of a layer.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">input_spec</span></code></dt><dd><p><cite>InputSpec</cite> instance(s) describing the input format for this layer.</p>
+</dd>
+<dt><strong>layers</strong></dt><dd></dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">losses</span></code></dt><dd><p>List of losses added using the <cite>add_loss()</cite> API.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics</span></code></dt><dd><p>Returns the model’s metrics added using <cite>compile</cite>, <cite>add_metric</cite> APIs.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics_names</span></code></dt><dd><p>Returns the model’s display labels for all outputs.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></dt><dd><p>Name of the layer (string), set in the constructor.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">name_scope</span></code></dt><dd><p>Returns a <cite>tf.name_scope</cite> instance for this class.</p>
+</dd>
+<dt><strong>non_trainable_variables</strong></dt><dd></dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">non_trainable_weights</span></code></dt><dd><p>List of all non-trainable weights tracked by this layer.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">outbound_nodes</span></code></dt><dd><p>Deprecated, do NOT use! Only for compatibility with external Keras.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">output</span></code></dt><dd><p>Retrieves the output tensor(s) of a layer.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_mask</span></code></dt><dd><p>Retrieves the output mask tensor(s) of a layer.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_shape</span></code></dt><dd><p>Retrieves the output shape(s) of a layer.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_eagerly</span></code></dt><dd><p>Settable attribute indicating whether the model should run eagerly.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">state_updates</span></code></dt><dd><p>Deprecated, do NOT use! (deprecated)</p>
+</dd>
+<dt><strong>stateful</strong></dt><dd></dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">submodules</span></code></dt><dd><p>Sequence of all sub-modules.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">supports_masking</span></code></dt><dd><p>Whether this layer supports computing a mask using <cite>compute_mask</cite>.</p>
+</dd>
+<dt><strong>trainable</strong></dt><dd></dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">trainable_variables</span></code></dt><dd><p>Sequence of trainable variables owned by this module and its submodules.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">trainable_weights</span></code></dt><dd><p>List of all trainable weights tracked by this layer.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">updates</span></code></dt><dd><p>DEPRECATED FUNCTION</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">variables</span></code></dt><dd><p>Returns the list of all layer variables/weights.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">weights</span></code></dt><dd><p>Returns the list of all layer variables/weights.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
-<td><p>Visualizes the output of the feature.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(*args, **kwargs)</p></td>
+<td><p>Wraps <cite>call</cite>, applying pre- and post-processing steps.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_loss</span></code>(losses, **kwargs)</p></td>
+<td><p>Add loss tensor(s), potentially dependent on layer inputs.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_metric</span></code>(value[, name])</p></td>
+<td><p>Adds metric tensor to the layer.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
-<td><p>Updates the state of all properties.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_update</span></code>(updates[, inputs])</p></td>
+<td><p>Add update op(s), potentially dependent on layer inputs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_variable</span></code>(*args, **kwargs)</p></td>
+<td><p>Deprecated, do NOT use! Alias for <cite>add_weight</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_weight</span></code>([name, shape, dtype, …])</p></td>
+<td><p>Adds a new variable to the layer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply</span></code>(inputs, *args, **kwargs)</p></td>
+<td><p>Deprecated, do NOT use! (deprecated)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">build</span></code>(input_shape)</p></td>
+<td><p>Builds the model based on input shapes received.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#deeptrack.models.cgan.call" title="deeptrack.models.cgan.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Calls the model on new inputs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">compile</span></code>([optimizer, loss, metrics, …])</p></td>
+<td><p>Configures the model for training.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_mask</span></code>(inputs[, mask])</p></td>
+<td><p>Computes an output mask tensor.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_output_shape</span></code>(input_shape)</p></td>
+<td><p>Computes the output shape of the layer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_output_signature</span></code>(input_signature)</p></td>
+<td><p>Compute the output tensor signature of the layer based on the inputs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">count_params</span></code>()</p></td>
+<td><p>Count the total number of scalars composing the weights.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate</span></code>([x, y, batch_size, verbose, …])</p></td>
+<td><p>Returns the loss value &amp; metrics values for the model in test mode.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_generator</span></code>(generator[, steps, …])</p></td>
+<td><p>Evaluates the model on a data generator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code>([x, y, batch_size, epochs, verbose, …])</p></td>
+<td><p>Trains the model for a fixed number of epochs (iterations on a dataset).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_generator</span></code>(generator[, steps_per_epoch, …])</p></td>
+<td><p>Fits the model on data yielded batch-by-batch by a Python generator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_config</span></code>(config[, custom_objects])</p></td>
+<td><p>Creates a layer from its config.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_config</span></code>()</p></td>
+<td><p>Returns the config of the layer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_input_at</span></code>(node_index)</p></td>
+<td><p>Retrieves the input tensor(s) of a layer at a given node.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_input_mask_at</span></code>(node_index)</p></td>
+<td><p>Retrieves the input mask tensor(s) of a layer at a given node.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_input_shape_at</span></code>(node_index)</p></td>
+<td><p>Retrieves the input shape(s) of a layer at a given node.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_layer</span></code>([name, index])</p></td>
+<td><p>Retrieves a layer based on either its name (unique) or index.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_losses_for</span></code>(inputs)</p></td>
+<td><p>Deprecated, do NOT use! (deprecated)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_output_at</span></code>(node_index)</p></td>
+<td><p>Retrieves the output tensor(s) of a layer at a given node.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_output_mask_at</span></code>(node_index)</p></td>
+<td><p>Retrieves the output mask tensor(s) of a layer at a given node.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_output_shape_at</span></code>(node_index)</p></td>
+<td><p>Retrieves the output shape(s) of a layer at a given node.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_updates_for</span></code>(inputs)</p></td>
+<td><p>Deprecated, do NOT use! (deprecated)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_weights</span></code>()</p></td>
+<td><p>Retrieves the weights of the model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_weights</span></code>(filepath[, by_name, …])</p></td>
+<td><p>Loads all layer weights, either from a TensorFlow or an HDF5 weight file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_predict_function</span></code>()</p></td>
+<td><p>Creates a function that executes one step of inference.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_test_function</span></code>()</p></td>
+<td><p>Creates a function that executes one step of evaluation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_train_function</span></code>()</p></td>
+<td><p>Creates a function that executes one step of training.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code>(x[, batch_size, verbose, steps, …])</p></td>
+<td><p>Generates output predictions for the input samples.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_generator</span></code>(generator[, steps, …])</p></td>
+<td><p>Generates predictions for the input samples from a data generator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_on_batch</span></code>(x)</p></td>
+<td><p>Returns predictions for a single batch of samples.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict_step</span></code>(data)</p></td>
+<td><p>The logic for one inference step.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_metrics</span></code>()</p></td>
+<td><p>Resets the state of all the metrics in the model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code>(filepath[, overwrite, …])</p></td>
+<td><p>Saves the model to Tensorflow SavedModel or a single HDF5 file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_weights</span></code>(filepath[, overwrite, …])</p></td>
+<td><p>Saves all layer weights.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_weights</span></code>(weights)</p></td>
+<td><p>Sets the weights of the layer, from Numpy arrays.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code>([line_length, positions, print_fn])</p></td>
+<td><p>Prints a string summary of the network.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_on_batch</span></code>(x[, y, sample_weight, …])</p></td>
+<td><p>Test the model on a single batch of samples.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_step</span></code>(data)</p></td>
+<td><p>The logic for one evaluation step.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_json</span></code>(**kwargs)</p></td>
+<td><p>Returns a JSON string containing the network configuration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_yaml</span></code>(**kwargs)</p></td>
+<td><p>Returns a yaml string containing the network configuration.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train_on_batch</span></code>(x[, y, sample_weight, …])</p></td>
+<td><p>Runs a single gradient update on a single batch of data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#deeptrack.models.cgan.train_step" title="deeptrack.models.cgan.train_step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">train_step</span></code></a>(data)</p></td>
+<td><p>The logic for one training step.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_name_scope</span></code>(method)</p></td>
+<td><p>Decorator to automatically enter the module name scope.</p></td>
 </tr>
 </tbody>
 </table>
 <table class="table">
 <colgroup>
-<col style="width: 41%" />
-<col style="width: 59%" />
+<col style="width: 62%" />
+<col style="width: 38%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<tr class="row-odd"><td><p><strong>reset_states</strong></p></td>
 <td></td>
 </tr>
 </tbody>
 </table>
+<dl class="py method">
+<dt id="deeptrack.models.cgan.call">
+<code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.cgan.call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls the model on new inputs.</p>
+<p>In this case <cite>call</cite> just reapplies
+all ops in the graph to the new inputs
+(e.g. build a new computational graph from the provided inputs).</p>
+<dl>
+<dt>Arguments:</dt><dd><p>inputs: A tensor or list of tensors.
+training: Boolean or boolean scalar tensor, indicating whether to run</p>
+<blockquote>
+<div><p>the <cite>Network</cite> in training mode or inference mode.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>mask: A mask or list of masks. A mask can be</dt><dd><p>either a tensor or None (no mask).</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>A tensor if there is a single output, or
+a list of tensors if there are more than one outputs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="deeptrack.models.cgan.train_step">
+<code class="sig-name descname">train_step</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.cgan.train_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>The logic for one training step.</p>
+<p>This method can be overridden to support custom training logic.
+This method is called by <cite>Model.make_train_function</cite>.</p>
+<p>This method should contain the mathemetical logic for one step of training.
+This typically includes the forward pass, loss calculation, backpropagation,
+and metric updates.</p>
+<p>Configuration details for <em>how</em> this logic is run (e.g. <cite>tf.function</cite> and
+<cite>tf.distribute.Strategy</cite> settings), should be left to
+<cite>Model.make_train_function</cite>, which can also be overridden.</p>
+<dl class="simple">
+<dt>Arguments:</dt><dd><p>data: A nested structure of <a href="#id1"><span class="problematic" id="id2">`</span></a>Tensor`s.</p>
+</dd>
+<dt>Returns:</dt><dd><p>A <cite>dict</cite> containing values that will be passed to
+<cite>tf.keras.callbacks.CallbackList.on_train_batch_end</cite>. Typically, the
+values of the <cite>Model</cite>’s metrics are returned. Example:
+<cite>{‘loss’: 0.2, ‘accuracy’: 0.7}</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -420,7 +671,7 @@
 <h3>Convolutional<a class="headerlink" href="#convolutional" title="Permalink to this headline">¶</a></h3>
 <dl class="py function">
 <dt id="deeptrack.models.Convolutional">
-<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">Convolutional</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(51</em>, <em class="sig-param">51</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">dense_layers_dimensions=(32</em>, <em class="sig-param">32)</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">dense_top=True</em>, <em class="sig-param">number_of_outputs=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">dense_block='dense'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.Convolutional" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">Convolutional</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(51</em>, <em class="sig-param">51</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">dense_layers_dimensions=(32</em>, <em class="sig-param">32)</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">dense_top=True</em>, <em class="sig-param">number_of_outputs=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">input_layer=None</em>, <em class="sig-param">convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">dense_block='dense'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.Convolutional" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates and compiles a convolutional neural network.
 A convolutional network with a dense top.
 Parameters
@@ -551,7 +802,7 @@ and upsampling.</p>
 <h3>UNet<a class="headerlink" href="#unet" title="Permalink to this headline">¶</a></h3>
 <dl class="py function">
 <dt id="deeptrack.models.UNet">
-<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">UNet</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(None</em>, <em class="sig-param">None</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">base_conv_layers_dimensions=(128</em>, <em class="sig-param">128)</em>, <em class="sig-param">output_conv_layers_dimensions=(16</em>, <em class="sig-param">16)</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">number_of_outputs=1</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">encoder_convolution_block='convolutional'</em>, <em class="sig-param">base_convolution_block='convolutional'</em>, <em class="sig-param">decoder_convolution_block='convolutional'</em>, <em class="sig-param">output_convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">upsampling_block='deconvolutional'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.UNet" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">UNet</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(None</em>, <em class="sig-param">None</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">base_conv_layers_dimensions=(128</em>, <em class="sig-param">128)</em>, <em class="sig-param">output_conv_layers_dimensions=(16</em>, <em class="sig-param">16)</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">number_of_outputs=1</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">input_layer=None</em>, <em class="sig-param">encoder_convolution_block='convolutional'</em>, <em class="sig-param">base_convolution_block='convolutional'</em>, <em class="sig-param">decoder_convolution_block='convolutional'</em>, <em class="sig-param">output_convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">upsampling_block='deconvolutional'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.UNet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates and compiles a U-Net.
 Parameters
 ———-
@@ -589,11 +840,11 @@ determined by the input argument. Can be use to futher customize the network.</p
 </dd></dl>
 
 </div>
-<div class="section" id="id1">
-<h3>convolutional<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id3">
+<h3>convolutional<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <dl class="py function">
 <dt id="deeptrack.models.convolutional">
-<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">convolutional</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(51</em>, <em class="sig-param">51</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">dense_layers_dimensions=(32</em>, <em class="sig-param">32)</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">dense_top=True</em>, <em class="sig-param">number_of_outputs=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">dense_block='dense'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.convolutional" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">convolutional</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(51</em>, <em class="sig-param">51</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">dense_layers_dimensions=(32</em>, <em class="sig-param">32)</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">dense_top=True</em>, <em class="sig-param">number_of_outputs=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">input_layer=None</em>, <em class="sig-param">convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">dense_block='dense'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.convolutional" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates and compiles a convolutional neural network.
 A convolutional network with a dense top.
 Parameters
@@ -626,8 +877,8 @@ determined by the input argument. Can be use to futher customize the network.</p
 </dd></dl>
 
 </div>
-<div class="section" id="id2">
-<h3>rnn<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>rnn<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <dl class="py function">
 <dt id="deeptrack.models.rnn">
 <code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">rnn</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_shape</span><span class="o">=</span><span class="default_value">51, 51, 1</span></em>, <em class="sig-param"><span class="n">conv_layers_dimensions</span><span class="o">=</span><span class="default_value">16, 32, 64, 128</span></em>, <em class="sig-param"><span class="n">dense_layers_dimensions</span><span class="o">=</span><span class="default_value">32</span></em>, <em class="sig-param"><span class="n">rnn_layers_dimensions</span><span class="o">=</span><span class="default_value">32</span></em>, <em class="sig-param"><span class="n">return_sequences</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">output_activation</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">number_of_outputs</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.rnn" title="Permalink to this definition">¶</a></dt>
@@ -662,11 +913,11 @@ and upsampling.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="id3">
-<h3>unet<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h3>unet<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <dl class="py function">
 <dt id="deeptrack.models.unet">
-<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">unet</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(None</em>, <em class="sig-param">None</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">base_conv_layers_dimensions=(128</em>, <em class="sig-param">128)</em>, <em class="sig-param">output_conv_layers_dimensions=(16</em>, <em class="sig-param">16)</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">number_of_outputs=1</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">encoder_convolution_block='convolutional'</em>, <em class="sig-param">base_convolution_block='convolutional'</em>, <em class="sig-param">decoder_convolution_block='convolutional'</em>, <em class="sig-param">output_convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">upsampling_block='deconvolutional'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.unet" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">deeptrack.models.</code><code class="sig-name descname">unet</code><span class="sig-paren">(</span><em class="sig-param">input_shape=(None</em>, <em class="sig-param">None</em>, <em class="sig-param">1)</em>, <em class="sig-param">conv_layers_dimensions=(16</em>, <em class="sig-param">32</em>, <em class="sig-param">64</em>, <em class="sig-param">128)</em>, <em class="sig-param">base_conv_layers_dimensions=(128</em>, <em class="sig-param">128)</em>, <em class="sig-param">output_conv_layers_dimensions=(16</em>, <em class="sig-param">16)</em>, <em class="sig-param">dropout=()</em>, <em class="sig-param">steps_per_pooling=1</em>, <em class="sig-param">number_of_outputs=1</em>, <em class="sig-param">output_kernel_size=3</em>, <em class="sig-param">output_activation=None</em>, <em class="sig-param">loss=&lt;function flatten.&lt;locals&gt;.wrapper&gt;</em>, <em class="sig-param">input_layer=None</em>, <em class="sig-param">encoder_convolution_block='convolutional'</em>, <em class="sig-param">base_convolution_block='convolutional'</em>, <em class="sig-param">decoder_convolution_block='convolutional'</em>, <em class="sig-param">output_convolution_block='convolutional'</em>, <em class="sig-param">pooling_block='pooling'</em>, <em class="sig-param">upsampling_block='deconvolutional'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.models.unet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates and compiles a U-Net.
 Parameters
 ———-
