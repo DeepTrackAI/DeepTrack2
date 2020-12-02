@@ -265,6 +265,10 @@
         </li>
     
         <li class="nav-item toc-entry toc-h3">
+            <a href="#padtomultiplesof" class="nav-link">PadToMultiplesOf</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
             <a href="#preload" class="nav-link">PreLoad</a>
         </li>
     
@@ -800,6 +804,57 @@ and is defined as (left, right, up, down, before_axis_3, after_axis_3, …)</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>px</strong><span class="classifier">int or list of int</span></dt><dd><p>amount to pad in each direction</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="padtomultiplesof">
+<h3>PadToMultiplesOf<a class="headerlink" href="#padtomultiplesof" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.augmentations.PadToMultiplesOf">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">PadToMultiplesOf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">multiple</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.PadToMultiplesOf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pad images until their height/width is a multiple of a value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>multiple</strong><span class="classifier">int or tuple of (int or None)</span></dt><dd><p>Images will be padded until their width is a multiple of
+this value. If a tuple, it is assumed to be a multiple per axis.
+A value of None or -1 indicates to skip that axis.</p>
 </dd>
 </dl>
 </dd>

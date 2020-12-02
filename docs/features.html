@@ -229,6 +229,22 @@
             <a href="#module-classes" class="nav-link">Module classes</a><ul class="nav section-nav flex-column">
                 
         <li class="nav-item toc-entry toc-h3">
+            <a href="#astype" class="nav-link">AsType</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#bind" class="nav-link">Bind</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#bindresolve" class="nav-link">BindResolve</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
+            <a href="#bindupdate" class="nav-link">BindUpdate</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h3">
             <a href="#branch" class="nav-link">Branch</a>
         </li>
     
@@ -315,19 +331,151 @@
 </dd>
 <dt>StructuralFeature</dt><dd><p>Abstract extension of feature for interactions between features.</p>
 </dd>
-<dt>Branch</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that resolves two features 
+<dt>Branch</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that resolves two features
 sequentially.</p>
 </dd>
-<dt>Probability</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that randomly resolves a feature 
+<dt>Probability</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that randomly resolves a feature
 with a certain probability.</p>
 </dd>
-<dt>Duplicate</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that sequentially resolves an 
+<dt>Duplicate</dt><dd><p>Implementation of <cite>StructuralFeature</cite> that sequentially resolves an
 integer number of deep-copies of a feature.</p>
 </dd>
 </dl>
 </div>
 <div class="section" id="module-classes">
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="astype">
+<h3>AsType<a class="headerlink" href="#astype" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.features.AsType">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">AsType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">'float64'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.AsType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the data type of images</p>
+<p>Accepts same types as numpy arrays. Common types include</p>
+<p><cite>float64, int32, uint16, int16, uint8, int8</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dtype</strong><span class="classifier">str</span></dt><dd><p>dtype string. Same as numpy dtype.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="bind">
+<h3>Bind<a class="headerlink" href="#bind" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.features.Bind">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">Bind</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.Bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binds a feature with property arguments.</p>
+<p>When the feature is resolved, the kwarg arguments are passed
+to the child feature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>The child feature</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Properties to send to child</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="bindresolve">
+<h3>BindResolve<a class="headerlink" href="#bindresolve" title="Permalink to this headline">¶</a></h3>
+<dl class="py attribute">
+<dt id="deeptrack.features.BindResolve">
+<code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">BindResolve</code><a class="headerlink" href="#deeptrack.features.BindResolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#deeptrack.features.Bind" title="deeptrack.features.Bind"><code class="xref py py-class docutils literal notranslate"><span class="pre">deeptrack.features.Bind</span></code></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="bindupdate">
+<h3>BindUpdate<a class="headerlink" href="#bindupdate" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="deeptrack.features.BindUpdate">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.features.</code><code class="sig-name descname">BindUpdate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.features.BindUpdate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binds a feature with certain arguments.</p>
+<p>When the feature is updated, the child feature</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>The child feature</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Properties to send to child</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 <div class="section" id="branch">
 <h3>Branch<a class="headerlink" href="#branch" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">

@@ -9,28 +9,26 @@ Feature
 StructuralFeature
     Abstract extension of feature for interactions between features.
 Branch
-    Implementation of `StructuralFeature` that resolves two features 
+    Implementation of `StructuralFeature` that resolves two features
     sequentially.
 Probability
-    Implementation of `StructuralFeature` that randomly resolves a feature 
+    Implementation of `StructuralFeature` that randomly resolves a feature
     with a certain probability.
 Duplicate
-    Implementation of `StructuralFeature` that sequentially resolves an 
+    Implementation of `StructuralFeature` that sequentially resolves an
     integer number of deep-copies of a feature.
 
 """
 
 import copy
+import enum
 
-from abc import ABC, abstractmethod
 from typing import List
 import numpy as np
-import time
 import threading
 
-from deeptrack.image import Image
-from deeptrack.properties import Property, PropertyDict
-from deeptrack.utils import isiterable, hasmethod, get_kwarg_names, kwarg_has_default
+from .image import Image
+from .properties import Property, PropertyDict
 
 
 MERGE_STRATEGY_OVERRIDE = 0
@@ -200,8 +198,12 @@ class Feature:
         property_verbosity = global_kwargs.get("property_memorability", 1)
         feature_input["name"] = type(self).__name__
         if self.__property_memorability__ <= property_verbosity:
-            for image in new_list:
-                image.append(feature_input)
+            for index, image in enumerate(new_list):
+                if isinstance(image, tuple):
+                    image[0].append({**feature_input, **image[1]})
+                    new_list[index] = image[0]
+                else:
+                    image.append(feature_input)
 
         # Merge input and new_list
         if self.__list_merge_strategy__ == MERGE_STRATEGY_OVERRIDE:
@@ -305,11 +307,11 @@ class Feature:
                 display(HTML(anim.to_jshtml()))
                 return anim
 
-            except NameError as e:
+            except NameError:
                 # Not in an notebook
                 plt.show()
 
-            except RuntimeError as e:
+            except RuntimeError:
                 # In notebook, but animation failed
                 import ipywidgets as widgets
 
@@ -333,18 +335,27 @@ class Feature:
 
         if self.__distributed__:
             # Call get on each image in list, and merge properties from corresponding image
-            return [
-                Image(self.get(image, **feature_input)).merge_properties_from(image)
-                for image in image_list
-            ]
+
+            results = []
+
+            for image in image_list:
+                output = self.get(image, **feature_input)
+                if not isinstance(output, Image):
+                    output = Image(output)
+                results.append(output)
+
+            return results
+
         else:
             # Call get on entire list.
             new_list = self.get(image_list, **feature_input)
 
             if not isinstance(new_list, list):
-                new_list = [Image(new_list)]
+                new_list = [new_list]
 
-            new_list = [Image(image) for image in new_list]
+            for idx, image in enumerate(new_list):
+                if not isinstance(image, Image):
+                    new_list[idx] = Image(image)
             return new_list
 
     def _format_input(self, image_list, **kwargs) -> List[Image]:
@@ -565,6 +576,61 @@ class Combine(StructuralFeature):
 
     def get(self, image_list, features, **kwargs):
         return [feature.resolve(image_list, **kwargs) for feature in features]
+
+
+class Bind(StructuralFeature):
+    """Binds a feature with property arguments.
+
+    When the feature is resolved, the kwarg arguments are passed
+    to the child feature.
+
+    Parameters
+    ----------
+    feature : Feature
+        The child feature
+    **kwargs
+        Properties to send to child
+
+    """
+
+    __distributed__ = False
+
+    def __init__(self, feature: Feature, **kwargs):
+        super().__init__(feature=feature, **kwargs)
+
+    def get(self, image, feature, **kwargs):
+        return feature.resolve(image, **kwargs)
+
+
+BindResolve = Bind
+
+
+class BindUpdate(StructuralFeature):
+    """Binds a feature with certain arguments.
+
+    When the feature is updated, the child feature
+
+    Parameters
+    ----------
+    feature : Feature
+        The child feature
+    **kwargs
+        Properties to send to child
+
+    """
+
+    __distributed__ = False
+
+    def __init__(self, feature: Feature, **kwargs):
+        self.feature = feature
+        super().__init__(**kwargs)
+
+    def _update(self, **kwargs):
+        super()._update(**kwargs)
+        self.feature._update(**{**kwargs, **self.properties})
+
+    def get(self, image, **kwargs):
+        return self.feature.resolve(image, **kwargs)
 
 
 class ConditionalSetProperty(StructuralFeature):
@@ -818,30 +884,32 @@ class LoadImage(Feature):
         get_one_random,
         **kwargs
     ):
+        if not isinstance(path, List):
+            path = [path]
         if load_options is None:
             load_options = {}
         try:
-            image = np.load(path, **load_options)
+            image = [np.load(file, **load_options) for file in path]
         except (IOError, ValueError):
             try:
                 from skimage import io
 
-                image = io.imread(path)
+                image = [io.imread(file) for file in path]
             except (IOError, ImportError, AttributeError):
                 try:
                     import PIL.Image
 
-                    omage = np.array(PIL.Image.open(path, **load_options))
+                    image = [PIL.Image.open(file, **load_options) for file in path]
                 except (IOError, ImportError):
                     import cv2
 
-                    image = np.array(cv2.imread(path, **load_options))
+                    image = [cv2.imread(file, **load_options) for file in path]
                     if not image:
                         raise IOError(
                             "No filereader available for file {0}".format(path)
                         )
 
-        image = np.squeeze(image)
+        image = np.stack(image, axis=-1)
 
         if to_grayscale:
             try:
@@ -974,7 +1042,8 @@ class SampleToMasks(Feature):
                 p0 = p0.astype(np.int)
 
                 output_slice = output[
-                    p0[0] : p0[0] + labelarg.shape[0], p0[1] : p0[1] + labelarg.shape[1]
+                    p0[0] : p0[0] + labelarg.shape[0],
+                    p0[1] : p0[1] + labelarg.shape[1],
                 ]
 
                 for label_index in range(kwargs["number_of_masks"]):
@@ -1024,7 +1093,8 @@ class SampleToMasks(Feature):
                             p0[1] : p0[1] + labelarg.shape[1],
                             label_index,
                         ] = merge(
-                            output_slice[..., label_index], labelarg[..., label_index]
+                            output_slice[..., label_index],
+                            labelarg[..., label_index],
                         )
         output = Image(output)
         for label in list_of_labels:
@@ -1038,7 +1108,7 @@ def _get_position(image, mode="corner", return_z=False):
     if mode == "corner":
         shift = (np.array(image.shape) - 1) / 2
     else:
-        shift = np.zeros((num_outputs))
+        shift = np.zeros((3 if return_z else 2))
 
     positions = image.get_property("position", False, [])
 
@@ -1054,7 +1124,11 @@ def _get_position(image, mode="corner", return_z=False):
             if return_z:
                 outp = (
                     np.array(
-                        [position[0], position[1], image.get_property("z", default=0)]
+                        [
+                            position[0],
+                            position[1],
+                            image.get_property("z", default=0),
+                        ]
                     )
                     - shift
                 )
@@ -1063,3 +1137,23 @@ def _get_position(image, mode="corner", return_z=False):
                 positions_out.append(position - shift[0:2])
 
     return positions_out
+
+
+class AsType(Feature):
+    """Converts the data type of images
+
+    Accepts same types as numpy arrays. Common types include
+
+    `float64, int32, uint16, int16, uint8, int8`
+
+    Parameters
+    ----------
+    dtype : str
+        dtype string. Same as numpy dtype.
+    """
+
+    def __init__(self, dtype="float64", **kwargs):
+        super().__init__(dtype=dtype, **kwargs)
+
+    def get(self, image, dtype, **kwargs):
+        return image.astype(dtype)

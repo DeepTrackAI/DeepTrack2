@@ -1,17 +1,16 @@
 """ Standardized layers implemented in keras.
 """
 
-import tensorflow
-from tensorflow.keras import layers, activations
-from tensorflow.keras.initializers import RandomNormal
+
+from tensorflow.keras import layers
 
 
 try:
     from tensorflow_addons.layers import InstanceNormalization
-except:
+except Exception:
     import warnings
 
-    InstanceNormalization = layers.Layer()
+    InstanceNormalization = layers.Layer
     warnings.warn(
         "DeepTrack not installed with tensorflow addons. Instance normalization will not work. Consider upgrading to tensorflow >= 2.0.",
         ImportWarning,
@@ -37,10 +36,12 @@ def as_block(x):
 def _as_activation(x):
     if x is None:
         return layers.Layer()
-    if isinstance(x, layers.Layer):
+    elif isinstance(x, str):
+        return layers.Activation(x)
+    elif isinstance(x, layers.Layer):
         return x
     else:
-        return layers.Activation(x)
+        return layers.Layers(x)
 
 
 def _single_layer_call(x, layer, instance_norm, activation):
@@ -225,6 +226,7 @@ def StaticUpsampleBlock(
     kernel_size=(1, 1),
     strides=1,
     padding="same",
+    with_conv=True,
     **kwargs
 ):
     """A single no-trainable 2d deconvolutional layer.
@@ -247,21 +249,24 @@ def StaticUpsampleBlock(
 
     def Layer(filters, **kwargs_inner):
         kwargs_inner.update(kwargs)
-        layer = layers.UpSampling2D(
-            size=size, interpolation=interpolation, **kwargs_inner
-        )
+        layer = layers.UpSampling2D(size=size, interpolation=interpolation)
+
         conv = layers.Conv2D(
             filters,
             kernel_size=kernel_size,
             strides=strides,
             padding=padding,
+            **kwargs_inner
         )
 
         def call(x):
             y = layer(x)
-            return _single_layer_call(
-                y, conv, _instance_norm(instance_norm, filters), activation
-            )
+            if with_conv:
+                return _single_layer_call(
+                    y, conv, _instance_norm(instance_norm, filters), activation
+                )
+            else:
+                return layer(x)
 
         return call
 

@@ -13,8 +13,8 @@ Poisson
 """
 
 import numpy as np
-from deeptrack.features import Feature
-from deeptrack.image import Image
+from .features import Feature
+from .image import Image
 
 
 class Noise(Feature):

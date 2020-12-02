@@ -12,8 +12,8 @@ import numpy as np
 
 from typing import List
 import tensorflow.keras as keras
-from deeptrack.features import Feature
-from deeptrack.image import Image
+from .features import Feature
+from .image import Image
 import threading
 import random
 import time
@@ -107,10 +107,12 @@ class Generator(keras.utils.Sequence):
                     if sub_batch.ndim > ndim:
                         dims_to_remove = sub_batch.ndim - ndim
                         sub_batch = np.reshape(
-                            sub_batch, (-1, *sub_batch.shape[dims_to_remove + 1 :])
+                            sub_batch,
+                            (-1, *sub_batch.shape[dims_to_remove + 1 :]),
                         )
                         sub_labels = np.reshape(
-                            sub_labels, (-1, *sub_labels.shape[dims_to_remove + 1 :])
+                            sub_labels,
+                            (-1, *sub_labels.shape[dims_to_remove + 1 :]),
                         )
 
                     elif sub_batch.ndim < ndim:
@@ -302,11 +304,11 @@ class ContinuousGenerator(keras.utils.Sequence):
         return outputs
 
     def __len__(self):
-        l = int((len(self.current_data) // self._batch_size))
+        steps = int((len(self.current_data) // self._batch_size))
         assert (
-            l > 0
+            steps > 0
         ), "There needs to be at least batch_size number of datapoints. Try increasing min_data_size."
-        return l
+        return steps
 
     def _continuous_get_training_data(self):
         index = 0
@@ -317,11 +319,11 @@ class ContinuousGenerator(keras.utils.Sequence):
 
             new_image = self._get(self.feature, self.feature_kwargs)
 
-            if self.label_function:
-                new_label = Image(self.label_function(new_image))
+            # if self.label_function:
+            new_label = self.label_function(new_image)
 
             if self.batch_function:
-                new_image = Image(self.batch_function(new_image))
+                new_image = self.batch_function(new_image)
 
             if new_image.ndim < self.ndim:
                 new_image = [new_image]
@@ -329,7 +331,10 @@ class ContinuousGenerator(keras.utils.Sequence):
 
             for new_image_i, new_label_i in zip(new_image, new_label):
                 if len(self.data) >= self.max_data_size:
-                    self.data[index % self.max_data_size] = (new_image_i, new_label_i)
+                    self.data[index % self.max_data_size] = (
+                        new_image_i,
+                        new_label_i,
+                    )
                 else:
                     self.data.append((new_image_i, new_label_i))
 
