@@ -11,8 +11,8 @@ Sequential
     Converts a feature to be resolved as a sequence.
 """
 
-from deeptrack.features import Feature
-from deeptrack.properties import SequentialProperty
+from .features import Feature
+from .properties import SequentialProperty
 
 
 class Sequence(Feature):
@@ -67,11 +67,13 @@ class Sequence(Feature):
 def Sequential(feature: Feature, **kwargs):
     """Converts a feature to be resolved as a sequence.
 
-    Should be called on individual features, not combinations of features. All keyword
-    arguments will be trated as sequential properties and will be passed to the parent feature.
+    Should be called on individual features, not combinations of features. All
+    keyword arguments will be trated as sequential properties and will be
+    passed to the parent feature.
 
-    If a property from the keyword argument already exists on the feature, the existing property
-    will be used to initilize the passed property (that is, it will be used for the first timestep).
+    If a property from the keyword argument already exists on the feature, the
+    existing property will be used to initilize the passed property (that is,
+    it will be used for the first timestep).
 
     Parameters
     ----------

@@ -2,7 +2,7 @@
 
 Classes
 -------
-ModelFeature 
+ModelFeature
     Base model feature class.
 Convolutional, convolutional
     Creates and compiles a convolutional neural network.
@@ -12,12 +12,13 @@ RNN, rnn
     Creates and compiles a recurrent neural network.
 """
 
-from deeptrack.losses import nd_mean_absolute_error
-from deeptrack.features import Feature
-from deeptrack.layers import as_block
-from tensorflow.keras import models, layers, optimizers
+import tensorflow
+from .losses import nd_mean_absolute_error
+from .features import Feature
+from .layers import as_block
+from tensorflow.keras import models, layers, backend as K
+import tensorflow as tf
 import numpy as np
-import warnings
 
 
 def _compile(
@@ -143,7 +144,7 @@ def FullyConnected(
 
     dense_block = as_block(dense_block)
 
-    ### INITIALIZE DEEP LEARNING NETWORK
+    # INITIALIZE DEEP LEARNING NETWORK
     input_layer = layers.Input(shape=input_shape)
 
     layer = input_layer
@@ -155,7 +156,7 @@ def FullyConnected(
         range(len(dense_layers_dimensions)), dense_layers_dimensions
     ):
 
-        if dense_layer_number is 0 and not flatten_input:
+        if dense_layer_number == 0 and not flatten_input:
             layer = dense_block(dense_layer_dimension, input_shape=input_shape)(layer)
         else:
             layer = dense_block(dense_layer_dimension)(layer)
@@ -184,6 +185,7 @@ def Convolutional(
     output_activation=None,
     output_kernel_size=3,
     loss=nd_mean_absolute_error,
+    input_layer=None,
     convolution_block="convolutional",
     pooling_block="pooling",
     dense_block="dense",
@@ -231,6 +233,9 @@ def Convolutional(
         inputs = network_input
 
     layer = inputs
+
+    if input_layer:
+        layer = input_layer(layer)
 
     ### CONVOLUTIONAL BASIS
     for conv_layer_dimension in conv_layers_dimensions:
@@ -284,6 +289,7 @@ def UNet(
     output_kernel_size=3,
     output_activation=None,
     loss=nd_mean_absolute_error,
+    input_layer=None,
     encoder_convolution_block="convolutional",
     base_convolution_block="convolutional",
     decoder_convolution_block="convolutional",
@@ -339,6 +345,9 @@ def UNet(
     concat_layers = []
 
     layer = unet_input
+
+    if input_layer:
+        layer = input_layer(layer)
 
     # Downsampling path
     for conv_layer_dimension in conv_layers_dimensions:
@@ -423,10 +432,10 @@ def RNN(
         Deep learning network.
     """
 
-    ### INITIALIZE DEEP LEARNING NETWORK
+    # INITIALIZE DEEP LEARNING NETWORK
     network = models.Sequential()
 
-    ### CONVOLUTIONAL BASIS
+    # CONVOLUTIONAL BASIS
     for conv_layer_number, conv_layer_dimension in zip(
         range(len(conv_layers_dimensions)), conv_layers_dimensions
     ):
@@ -506,7 +515,7 @@ def RNN(
 rnn = RNN
 
 
-class cgan(Model):
+class cgan(tf.keras.Model):
     def __init__(
         self,
         generator=None,
@@ -517,8 +526,10 @@ class cgan(Model):
         assemble_loss=None,
         assemble_optimizer=None,
         assemble_loss_weights=None,
+        metrics=[],
         **kwargs
     ):
+        super().__init__()
 
         # Build and compile the discriminator
         self.discriminator = discriminator
@@ -545,79 +556,73 @@ class cgan(Model):
 
         # The assembled model (stacked generator and discriminator)
         # Trains the generator to fool the discriminator
-        self.assemble = models.Model(self.model_input, [validity, img])
+        self.assemble = tf.keras.models.Model(self.model_input, [validity, img])
+
+        self.num_losses = len(assemble_loss)
+
         self.assemble.compile(
             loss=assemble_loss,
             optimizer=assemble_optimizer,
             loss_weights=assemble_loss_weights,
+            metrics=metrics,
+        )
+        self._metrics = [tf.metrics.get(m) for m in metrics]
+
+    def train_step(self, data):
+
+        # Compute data and labels
+        batch_x, batch_y = data
+        gen_imgs = self.generator(batch_x)
+
+        # Train the discriminator
+        with tf.GradientTape() as tape:
+            # Train in two steps
+            disc_pred_1 = self.discriminator([batch_y, batch_x])
+            disc_pred_2 = self.discriminator([gen_imgs, batch_x])
+            shape = tf.shape(disc_pred_1)
+            valid, fake = tf.ones(shape), tf.zeros(shape)
+            d_loss = (
+                self.discriminator.compiled_loss(disc_pred_1, valid)
+                + self.discriminator.compiled_loss(disc_pred_2, fake)
+            ) / 2
+
+        # Compute gradient and apply gradient
+        grads = tape.gradient(d_loss, self.discriminator.trainable_weights)
+        self.discriminator.optimizer.apply_gradients(
+            zip(grads, self.discriminator.trainable_weights)
         )
 
-        super().__init__(self.generator, **kwargs)
+        # Train the assembly
 
-    def fit(self, data_generator, epochs, steps_per_epoch=None, **kwargs):
-        for key in kwargs.keys():
-            warnings.warn(
-                "{0} not implemented for cgan. Does not affect the execution.".format(
-                    key
-                )
+        with tf.GradientTape() as tape:
+            assemble_output = self.assemble(batch_x)
+
+            generated_image_copies = [assemble_output[1]] * (self.num_losses - 1)
+
+            batch_y_copies = [batch_y] * (self.num_losses - 1)
+
+            g_loss = self.assemble.compiled_loss(
+                [assemble_output[0], *generated_image_copies],
+                [valid, *batch_y_copies],
             )
-        for epoch in range(epochs):
-            if not steps_per_epoch:
-                try:
-                    steps = len(data_generator)
-                except:
-                    steps = 1
-            else:
-                steps = steps_per_epoch
 
-            d_loss = 0
-            g_loss = 0
+        # Compute gradient and apply gradient
+        grads = tape.gradient(g_loss, self.assemble.trainable_weights)
+        self.assemble.optimizer.apply_gradients(
+            zip(grads, self.assemble.trainable_weights)
+        )
 
-            for step in range(steps):
-                # update data
-                try:
-                    data, labels = next(data_generator)
-                except:
-                    data, labels = data_generator[step]
+        # Update the metrics
+        self.compiled_metrics.update_state(assemble_output[1], batch_y)
 
-                # Grab disriminator labels
-                shape = (data.shape[0], *self.discriminator.output.shape[1:])
-                valid, fake = np.ones(shape), np.zeros(shape)
+        # Define output
+        loss = {
+            "d_loss": d_loss,
+            "g_loss": g_loss,
+            **{m.name: m.result() for m in self.metrics},
+        }
 
-                # ---------------------
-                #  Train Discriminator
-                # ---------------------
+        return loss
 
-                # Generate a batch of new images
-                gen_imgs = self.generator(data)
-
-                # Train the discriminator
-                d_loss_real = self.discriminator.train_on_batch([labels, data], valid)
-                d_loss_fake = self.discriminator.train_on_batch([gen_imgs, data], fake)
-                d_loss += 0.5 * np.add(d_loss_real, d_loss_fake)
-
-                # ---------------------
-                #  Train Generator
-                # ---------------------
-
-                # Train the generator (to have the discriminator label samples as valid)
-                g_loss += np.array(self.assemble.train_on_batch(data, [valid, labels]))
-
-                # Plot the progress
-
-            try:
-                data_generator.on_epoch_end()
-            except:
-                pass
-
-            print(
-                "%d [D loss: %f, acc.: %.2f%%] [G loss: %f, %f, %f]"
-                % (
-                    epoch,
-                    d_loss[0] / steps,
-                    100 * d_loss[1] / steps,
-                    g_loss[0] / steps,
-                    g_loss[1] / steps,
-                    g_loss[2] / steps,
-                )
-            )
+    def call(self, *args, **kwargs):
+        return self.generator.call(*args, **kwargs)

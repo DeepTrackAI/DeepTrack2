@@ -8,9 +8,13 @@ NormalizeMinMax
     Min-max image normalization.
 """
 
-from deeptrack.features import Feature
-from deeptrack.image import Image
+from .features import Feature
+from .image import Image
+from . import utils
 import numpy as np
+import skimage
+import skimage.measure
+import scipy.ndimage as ndimage
 
 
 class Add(Feature):
@@ -164,16 +168,10 @@ class NormalizeMinMax(Feature):
         return image
 
 
-import deeptrack.utils as utils
-import skimage
-
-import scipy.ndimage as ndimage
-
-
 class Blur(Feature):
     def __init__(self, filter_function, mode="reflect", **kwargs):
         self.filter = filter_function
-        super().__init__(borderType=borderType, **kwargs)
+        super().__init__(borderType=mode, **kwargs)
 
     def get(self, image, **kwargs):
         kwargs.pop("input", False)
@@ -203,7 +201,7 @@ class AverageBlur(Blur):
 
         weights = np.ones(ksize) / np.prod(ksize)
 
-        return safe_call(ndimage, input=input, weights=weights, **kwargs)
+        return utils.safe_call(ndimage, input=input, weights=weights, **kwargs)
 
 
 class GaussianBlur(Blur):
@@ -231,12 +229,10 @@ class MedianBlur(Blur):
     """
 
     def __init__(self, ksize=3, **kwargs):
-        super().__init__(ndimage.median_filter, k=k, **kwargs)
+        super().__init__(ndimage.median_filter, k=ksize, **kwargs)
 
 
-## POOLING
-
-import skimage.measure
+# POOLING
 
 
 class Pool(Feature):
@@ -291,7 +287,7 @@ class AveragePooling(Pool):
         super().__init__(np.mean, ksize=ksize, **kwargs)
 
 
-### OPENCV2 blur
+# OPENCV2 blur
 
 try:
     import cv2

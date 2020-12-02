@@ -19,12 +19,16 @@ FlipDiagonal
     Flips images diagonally.
 """
 
-from deeptrack.features import Feature
-from deeptrack.image import Image
+from .features import Feature
+from .image import Image
+from . import utils
+
 import numpy as np
-from typing import Callable
+import scipy.ndimage as ndimage
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
+
+from typing import Callable
 import warnings
 
 
@@ -72,7 +76,7 @@ class Augmentation(Feature):
         **kwargs
     ):
 
-        if load_size is not 1:
+        if load_size != 1:
             warnings.warn(
                 "Using an augmentation with a load size other than one is no longer supported",
                 DeprecationWarning,
@@ -115,6 +119,7 @@ class Augmentation(Feature):
             not hasattr(self, "cache")
             or kwargs["update_tally"] - self.last_update >= kwargs["updates_per_reload"]
         ):
+
             if isinstance(self.feature, list):
                 self.cache = [feature.resolve() for feature in self.feature]
             else:
@@ -151,11 +156,15 @@ class Augmentation(Feature):
                     ]
                 )
             else:
-                new_list_of_lists.append(
-                    Image(self.get(Image(image_list), **kwargs)).merge_properties_from(
-                        image_list
-                    )
-                )
+                # DANGEROUS
+                # if not isinstance(image_list, Image):
+                image_list = Image(image_list)
+
+                output = self.get(image_list, **kwargs)
+
+                if not isinstance(output, Image):
+                    output = Image(output)
+                new_list_of_lists.append(output.merge_properties_from(image_list))
 
         if update_properties:
             if not isinstance(new_list_of_lists, list):
@@ -252,7 +261,10 @@ class FlipUD(Augmentation):
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
-                    new_position = (image.shape[0] - position[0] - 1, *position[1:])
+                    new_position = (
+                        image.shape[0] - position[0] - 1,
+                        *position[1:],
+                    )
                     prop["position"] = new_position
 
 
@@ -277,13 +289,6 @@ class FlipDiagonal(Augmentation):
                     position = prop["position"]
                     new_position = (position[1], position[0], *position[2:])
                     prop["position"] = new_position
-
-
-from deeptrack.utils import get_kwarg_names
-import warnings
-
-import scipy.ndimage as ndimage
-import deeptrack.utils as utils
 
 
 class Affine(Augmentation):
@@ -386,7 +391,9 @@ class Affine(Augmentation):
 
         assert (
             image.ndim == 2 or image.ndim == 3
-        ), "Affine only supports 2-dimensional or 3-dimension inputs."
+        ), "Affine only supports 2-dimensional or 3-dimension inputs, got {0}".format(
+            image.ndim
+        )
 
         dx, dy = translate
         fx, fy = scale
@@ -551,7 +558,10 @@ class ElasticTransformation(Augmentation):
         for dim in shape:
             deltas.append(
                 gaussian_filter(
-                    (np.random.rand(*shape) * 2 - 1), sigma, mode="constant", cval=0
+                    (np.random.rand(*shape) * 2 - 1),
+                    sigma,
+                    mode="constant",
+                    cval=0,
                 )
                 * alpha
             )
@@ -619,6 +629,8 @@ class Crop(Augmentation):
         if isinstance(crop, int):
             crop = (crop,) * image.ndim
 
+        crop = [c if c is not None else image.shape[i] for i, c in enumerate(crop)]
+
         # Get amount to crop from image
         if crop_mode == "retain":
             crop_amount = np.array(image.shape) - np.array(crop)
@@ -631,12 +643,9 @@ class Crop(Augmentation):
         crop_amount = np.amax((np.array(crop_amount), [0] * image.ndim), axis=0)
         crop_amount = np.amin((np.array(image.shape) - 1, crop_amount), axis=0)
         # Get corner of crop
-        if corner == "random":
+        if isinstance(corner, str) and corner == "random":
             # Ensure seed is consistent
-            slice_start = np.random.randint(
-                [0] * crop_amount.size,
-                crop_amount + 1,
-            )
+            slice_start = [np.random.randint(m + 1) for m in crop_amount]
         elif callable(corner):
             slice_start = corner(image)
         else:
@@ -654,6 +663,7 @@ class Crop(Augmentation):
                 for slice_start_i, slice_end_i in zip(slice_start, slice_end)
             ]
         )
+
         cropped_image = image[slices]
 
         # Update positions
@@ -729,15 +739,74 @@ class Pad(Augmentation):
     def get(self, image, px, **kwargs):
 
         padding = []
-        if isinstance(px, int):
+        if callable(px):
+            px = px(image)
+        elif isinstance(px, int):
             padding = [(px, px)] * image.ndom
+
         for idx in range(0, len(px), 2):
             padding.append((px[idx], px[idx + 1]))
 
         while len(padding) < image.ndim:
             padding.append((0, 0))
 
-        return utils.safe_call(np.pad, positional_args=(image, padding), **kwargs)
+        return (
+            utils.safe_call(np.pad, positional_args=(image, padding), **kwargs),
+            padding,
+        )
+
+    def _process_and_get(self, images, **kwargs):
+        results = [self.get(image, **kwargs) for image in images]
+        for idx, result in enumerate(results):
+            if isinstance(result, tuple):
+                shape = result[0].shape
+                padding = result[1]
+                de_pad = tuple(
+                    slice(p[0], shape[dim] - p[1]) for dim, p in enumerate(padding)
+                )
+                results[idx] = (
+                    Image(result[0]).merge_properties_from(images[idx]),
+                    {"undo_padding": de_pad},
+                )
+            else:
+                Image(results[idx]).merge_properties_from(images[idx])
+        return results
+
+
+class PadToMultiplesOf(Pad):
+    """Pad images until their height/width is a multiple of a value.
+
+    Parameters
+    ----------
+    multiple : int or tuple of (int or None)
+        Images will be padded until their width is a multiple of
+        this value. If a tuple, it is assumed to be a multiple per axis.
+        A value of None or -1 indicates to skip that axis.
+
+    """
+
+    def __init__(self, multiple=1, **kwargs):
+        def amount_to_pad(image):
+            shape = image.shape
+            multiple = self.multiple.current_value
+
+            if not isinstance(multiple, (list, tuple, np.ndarray)):
+                multiple = (multiple,) * image.ndim
+            new_shape = [0] * (image.ndim * 2)
+            idx = 0
+            for dim, mul in zip(shape, multiple):
+                if mul is not None and mul is not -1:
+                    to_add = -dim % mul
+                    to_add_first = to_add // 2
+                    to_add_after = to_add - to_add_first
+                    new_shape[idx * 2] = to_add_first
+                    new_shape[idx * 2 + 1] = to_add_after
+
+                idx += 1
+
+            return new_shape
+
+        super().__init__(multiple=multiple, px=lambda: amount_to_pad, **kwargs)
 
 
 # TODO: add resizing by rescaling

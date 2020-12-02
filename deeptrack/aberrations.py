@@ -33,8 +33,8 @@ SphericalAberration
 """
 
 import numpy as np
-from deeptrack.features import Feature
-from deeptrack.utils import as_list
+from .features import Feature
+from .utils import as_list
 
 
 class Aberration(Feature):
