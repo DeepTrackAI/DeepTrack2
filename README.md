@@ -57,18 +57,15 @@ DeepTrack 2.0 single particle tracking tutorial video: https://youtu.be/6Cntik6A
 " target="_blank"><img src="https://img.youtube.com/vi/6Cntik6AfBI/maxresdefault.jpg" 
 alt="Tutorial" width="384" height="216" border="10" /></a>
 
-
 DeepTrack 2.0 multiple particle tracking tutorial video: https://youtu.be/wFV2VqzpeZs  
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=wFV2VqzpeZs
 " target="_blank"><img src="https://img.youtube.com/vi/wFV2VqzpeZs/maxresdefault.jpg" 
 alt="Tutorial" width="384" height="216" border="10" /></a>
 
-
-DeepTrack 2.0 Synthetic data generation tutorial video: https://youtu.be/8g44Yks7cis  
+DeepTrack 2.0 GAN image generation tutorial video: https://youtu.be/8g44Yks7cis  
 <a href="https://www.youtube.com/watch?feature=player_embedded&v=8g44Yks7cis
-" target="_blank"><img src="https://img.youtube.com/vi/wFV2VqzpeZs/maxresdefault.jpg" 
+" target="_blank"><img src="https://img.youtube.com/vi/8g44Yks7cis/mqdefault.jpg" 
 alt="Tutorial" width="384" height="216" border="10" /></a>
-
 
 ### In-depth dives
 
