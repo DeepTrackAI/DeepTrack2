@@ -1,13 +1,13 @@
 import sys
 
-sys.path.append(".")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.losses as losses
+from .. import losses
 
 import numpy as np
-from keras import backend as K
+from tensorflow.keras import backend as K
 
 
 class TestLosses(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestLosses(unittest.TestCase):
     falsely = K.constant(np.zeros((2, 2, 1)))
 
     def test_flatten(self):
-        from keras.losses import mse
+        from tensorflow.keras.losses import mse
 
         loss_function = losses.flatten(mse)
         loss = K.eval(loss_function(self.truthly, self.truthly))

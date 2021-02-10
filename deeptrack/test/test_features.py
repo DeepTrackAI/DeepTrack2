@@ -1,13 +1,13 @@
 import sys
 
-sys.path.append(".")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.features as features
+from .. import features, Image
 
 import numpy as np
-from deeptrack.image import Image
+
 
 
 class TestFeatures(unittest.TestCase):

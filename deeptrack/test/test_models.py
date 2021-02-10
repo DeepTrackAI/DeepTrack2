@@ -1,10 +1,10 @@
 import sys
 
-sys.path.append(".")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.models as models
+from .. import models
 import numpy as np
 
 

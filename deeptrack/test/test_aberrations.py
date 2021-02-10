@@ -1,14 +1,14 @@
 import sys
 
-sys.path.append(".")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.aberrations as aberrations
+from .. import aberrations
 
-from deeptrack.scatterers import PointParticle
-from deeptrack.optics import Fluorescence
-from deeptrack.image import Image
+from ..scatterers import PointParticle
+from ..optics import Fluorescence
+from ..image import Image
 
 
 class TestAberrations(unittest.TestCase):

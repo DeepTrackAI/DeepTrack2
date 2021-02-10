@@ -1,13 +1,12 @@
 import sys
 
-sys.path.append(".")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.generators as generators
-
-from deeptrack.optics import Fluorescence
-from deeptrack.scatterers import PointParticle
+from .. import generators
+from ..optics import Fluorescence
+from ..scatterers import PointParticle
 import numpy as np
 
 
