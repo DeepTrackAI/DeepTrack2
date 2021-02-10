@@ -500,9 +500,10 @@ class MieScatterer(Scatterer):
             except (ValueError, TypeError):
                 pass
         if properties["collection_angle"] == "auto":
-            properties["collection_angle"] = np.sqrt(
-                1 - properties["NA"] ** 2 / properties["refractive_index_medium"] ** 2
+            properties["collection_angle"] = np.arcsin(
+                properties["NA"] / properties["refractive_index_medium"]
             )
+
         if properties["offset_z"] == "auto":
             properties["offset_z"] = (
                 32
