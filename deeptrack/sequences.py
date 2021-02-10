@@ -42,7 +42,7 @@ class Sequence(Feature):
         super().__init__(sequence_length=sequence_length, **kwargs)
 
         # Require update
-        self.update()
+        # self.update()
 
     def get(self, input_list, sequence_length=None, **kwargs):
         return (input_list or []) + [
@@ -52,14 +52,14 @@ class Sequence(Feature):
             for sequence_step in range(sequence_length)
         ]
 
-    def update(self, **kwargs):
-        super().update(**kwargs)
+    def _update(self, **kwargs):
+        super()._update(**kwargs)
 
         sequence_length = self.properties["sequence_length"].current_value
         if "sequence_length" not in kwargs:
             kwargs["sequence_length"] = sequence_length
 
-        self.feature.update(**kwargs)
+        self.feature._update(**kwargs)
 
         return self
 
