@@ -325,6 +325,7 @@ class ContinuousGenerator(keras.utils.Sequence):
             if self.batch_function:
                 new_image = self.batch_function(new_image)
 
+            new_image = np.array(new_image)
             if new_image.ndim < self.ndim:
                 new_image = [new_image]
                 new_label = [new_label]
