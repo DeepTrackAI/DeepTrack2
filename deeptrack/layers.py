@@ -28,7 +28,8 @@ def as_block(x):
                 + ", ".join(_string_to_block.keys())
             )
     if isinstance(x, layers.Layer) or not callable(x):
-        raise TypeError("Layer block should be a function that returns a keras Layer.")
+        raise TypeError(
+            "Layer block should be a function that returns a keras Layer.")
     else:
         return x
 
@@ -41,7 +42,7 @@ def _as_activation(x):
     elif isinstance(x, layers.Layer):
         return x
     else:
-        return layers.Layers(x)
+        return layers.Layer(x)
 
 
 def _single_layer_call(x, layer, instance_norm, activation):
