@@ -342,6 +342,8 @@ class Feature:
                 output = self.get(image, **feature_input)
                 if not isinstance(output, Image):
                     output = Image(output)
+
+                output.merge_properties_from(image)
                 results.append(output)
 
             return results
