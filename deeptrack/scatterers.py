@@ -545,8 +545,8 @@ class MieScatterer(Scatterer):
         arr = image.pad_image_to_fft(np.zeros((xSize, ySize)))
 
         # Evluation grid
-        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[0]) * upscale
-        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[1]) * upscale
+        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[1]) * upscale
+        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[0]) * upscale
         X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
 
         R2 = np.sqrt(X ** 2 + Y ** 2)
