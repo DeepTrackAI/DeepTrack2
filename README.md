@@ -74,7 +74,7 @@ alt="Tutorial" width="384" height="216" border="10" /></a>
 
 DeepTrack 2.0 multiple particle tracking in 3D tutorial video: https://youtu.be/fzD1QIEIJ04  
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=fzD1QIEIJ04
-" target="_blank"><img src="https://img.youtube.com/vi/fzD1QIEIJ04/maxresdefault.jpg" 
+" target="_blank"><img src="https://img.youtube.com/vi/fzD1QIEIJ04/mqdefault.jpg" 
 alt="Tutorial" width="384" height="216" border="10" /></a>
 
 DeepTrack 2.0 cell counting tutorial video: https://youtu.be/C6hu_IYoWtI  
