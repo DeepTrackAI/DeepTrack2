@@ -53,7 +53,7 @@ DeepTrack 2.0 introduction tutorial video: https://youtu.be/hyfaxF8q6VE
 alt="Tutorial" width="384" height="216" border="10" /></a>
 
 DeepTrack 2.0 recognizing handwritten digits tutorial video: https://youtu.be/QD9JUXyLJpc  
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=hyfaxF8q6VE
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=QD9JUXyLJpc
 " target="_blank"><img src="https://img.youtube.com/vi/QD9JUXyLJpc/maxresdefault.jpg" 
 alt="Tutorial" width="384" height="216" border="10" /></a>
 
