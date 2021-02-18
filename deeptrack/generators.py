@@ -441,11 +441,7 @@ class CappedContinuousGenerator(ContinuousGenerator):
     def on_epoch_end(self):
 
         while len(self.data) < self.min_data_size:
-            print(
-                "Awaiting dataset to reach minimum size...".format(
-                    len(self.data), self.min_data_size
-                )
-            )
+            print("Awaiting dataset to reach minimum size...")
             time.sleep(0.1)
 
         return super().on_epoch_end()
