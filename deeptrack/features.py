@@ -21,7 +21,6 @@ Duplicate
 """
 
 import copy
-import enum
 
 from typing import List
 import numpy as np
