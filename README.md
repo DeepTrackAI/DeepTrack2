@@ -52,14 +52,34 @@ DeepTrack 2.0 introduction tutorial video: https://youtu.be/hyfaxF8q6VE
 " target="_blank"><img src="https://img.youtube.com/vi/hyfaxF8q6VE/maxresdefault.jpg" 
 alt="Tutorial" width="384" height="216" border="10" /></a>
 
+DeepTrack 2.0 recognizing handwritten digits tutorial video: https://youtu.be/QD9JUXyLJpc  
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=QD9JUXyLJpc
+" target="_blank"><img src="https://img.youtube.com/vi/QD9JUXyLJpc/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
 DeepTrack 2.0 single particle tracking tutorial video: https://youtu.be/6Cntik6AfBI   
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=6Cntik6AfBI
 " target="_blank"><img src="https://img.youtube.com/vi/6Cntik6AfBI/maxresdefault.jpg" 
 alt="Tutorial" width="384" height="216" border="10" /></a>
 
+DeepTrack 2.0 single-particle characterization tutorial video: https://youtu.be/ia2H1QO1cHg   
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=ia2H1QO1cHg
+" target="_blank"><img src="https://img.youtube.com/vi/ia2H1QO1cHg/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
 DeepTrack 2.0 multiple particle tracking tutorial video: https://youtu.be/wFV2VqzpeZs  
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=wFV2VqzpeZs
 " target="_blank"><img src="https://img.youtube.com/vi/wFV2VqzpeZs/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 multiple particle tracking in 3D tutorial video: https://youtu.be/fzD1QIEIJ04  
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=fzD1QIEIJ04
+" target="_blank"><img src="https://img.youtube.com/vi/fzD1QIEIJ04/mqdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 cell counting tutorial video: https://youtu.be/C6hu_IYoWtI  
+<a href="https://www.youtube.com/watch?feature=player_embedded&v=C6hu_IYoWtI
+" target="_blank"><img src="https://img.youtube.com/vi/C6hu_IYoWtI/mqdefault.jpg" 
 alt="Tutorial" width="384" height="216" border="10" /></a>
 
 DeepTrack 2.0 GAN image generation tutorial video: https://youtu.be/8g44Yks7cis  
