@@ -201,6 +201,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         update_kwargs={},
         verbose=1,
         ndim=4,
+        max_sample_exposure=np.inf,
     ):
 
         if min_data_size is None:
@@ -331,15 +332,21 @@ class ContinuousGenerator(keras.utils.Sequence):
                 new_label = [new_label]
 
             for new_image_i, new_label_i in zip(new_image, new_label):
+                datapoint = self.construct_datapoint(new_image_i, new_label_i)
                 if len(self.data) >= self.max_data_size:
-                    self.data[index % self.max_data_size] = (
-                        new_image_i,
-                        new_label_i,
-                    )
+                    self.data[index % self.max_data_size] = datapoint
                 else:
-                    self.data.append((new_image_i, new_label_i))
+                    self.data.append(datapoint)
 
                 index += 1
+
+            self.cleanup()
+
+    def construct_datapoint(self, image, label):
+        return (image, label)
+
+    def cleanup(self):
+        pass
 
     def _get(self, features: Feature or List[Feature], feature_kwargs) -> Image:
         # Updates and resolves a feature or list of features.
@@ -358,3 +365,87 @@ class ContinuousGenerator(keras.utils.Sequence):
         else:
             features.update()
             return features.resolve(**feature_kwargs)
+
+
+class CappedContinuousGenerator(ContinuousGenerator):
+
+    """Generator that asynchronously expands the dataset.
+
+    Generator that aims to speed up the training of networks by striking a
+    balance between the generalization gained by generating new images
+    and the speed gained from reusing images. The generator will continuously
+    create new training data during training, until `max_data_size` is reached,
+    at which point the oldest data point is replaced.
+
+    Unlike the `ContinuousGenerator`, this generator will purge any data that
+    has been seen more than `max_sample_exposure` times.
+
+    The generator is expected to be used with the python "with" statement, which
+    ensures that the generator worker is consumed correctly.
+
+    Parameters
+    ----------
+    feature : Feature
+        The feature to resolve images from.
+    label_function : Callable[Image or list of Image] -> array_like
+        Function that returns the label corresponding to a feature output.
+    batch_function : Callable[Image or list of Image] -> array_like, optional
+        Function that returns the training data corresponding a feature output.
+    min_data_size : int
+        Minimum size of the training data before training starts
+    max_data_set : int
+        Maximum size of the training data before old data is replaced.
+    max_sample_exposure : int
+        Any sample that has been seen for more than `max_sample_exposure` will be removed from the dataset
+    batch_size : int or Callable[int, int] -> int
+        Number of images per batch. A function is expected to accept the current epoch
+        and the size of the training data as input.
+    shuffle_batch : bool
+        If True, the batches are shuffled before outputting.
+    feature_kwargs : dict or list of dicts
+        Set of options to pass to the feature when resolving
+    ndim : int
+        Number of dimensions of each batch (including the batch dimension).
+    max_sample_exposure : int
+        Any sample that has been seen for more than `max_sample_exposure` will be removed from the dataset
+    """
+
+    def __init__(self, *args, max_sample_exposure=np.inf, **kwargs):
+        self.max_sample_exposure = max_sample_exposure
+        super().__init__(*args, **kwargs)
+
+    def __exit__(self, *args):
+        self.exit_signal = True
+        self.data_generation_thread.join()
+        return False
+
+    def __getitem__(self, idx):
+
+        # TODO: Use parent method
+        batch_size = self._batch_size
+        subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
+        for a in subset:
+            a[-1] += 1
+        outputs = [np.array(a) for a in list(zip(*subset))]
+        outputs = (outputs[0], *outputs[1:])
+        return outputs
+
+    def construct_datapoint(self, image, label):
+        return [image, label, 0]
+
+    def cleanup(self):
+        self.data = [
+            sample for sample in self.data if sample[-1] < self.max_sample_exposure
+        ]
+
+    def on_epoch_end(self):
+
+        while len(self.data) < self.min_data_size:
+            print(
+                "Awaiting dataset to reach minimum size...".format(
+                    len(self.data), self.min_data_size
+                )
+            )
+            time.sleep(0.1)
+
+        return super().on_epoch_end()
