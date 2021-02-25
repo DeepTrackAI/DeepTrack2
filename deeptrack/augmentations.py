@@ -22,6 +22,7 @@ FlipDiagonal
 from .features import Feature
 from .image import Image
 from . import utils
+from .types import ArrayLike, PropertyLike
 
 import numpy as np
 import scipy.ndimage as ndimage
@@ -70,8 +71,8 @@ class Augmentation(Feature):
     def __init__(
         self,
         feature: Feature = None,
-        load_size: int = 1,
-        updates_per_reload: int = 1,
+        load_size: PropertyLike[int] = 1,
+        updates_per_reload: PropertyLike[int] = 1,
         update_properties: Callable or None = None,
         **kwargs
     ):
@@ -341,14 +342,14 @@ class Affine(Augmentation):
 
     def __init__(
         self,
-        scale=1,
-        translate=None,
-        translate_px=0,
-        rotate=0,
-        shear=0,
-        order=1,
-        cval=0,
-        mode="reflect",
+        scale: PropertyLike[float or ArrayLike[float]] = 1,
+        translate: PropertyLike[float or ArrayLike[float] or None] = None,
+        translate_px: PropertyLike[float or ArrayLike[float]] = 0,
+        rotate: PropertyLike[float or ArrayLike[float]] = 0,
+        shear: PropertyLike[float or ArrayLike[float]] = 0,
+        order: PropertyLike[int] = 1,
+        cval: PropertyLike[float] = 0,
+        mode: PropertyLike[str] = "reflect",
         **kwargs
     ):
         if translate is None:
@@ -526,12 +527,12 @@ class ElasticTransformation(Augmentation):
 
     def __init__(
         self,
-        alpha=20,
-        sigma=2,
-        ignore_last_dim=True,
-        order=3,
-        cval=0,
-        mode="constant",
+        alpha: PropertyLike[float] = 20,
+        sigma: PropertyLike[float] = 2,
+        ignore_last_dim: PropertyLike[bool] = True,
+        order: PropertyLike[int] = 3,
+        cval: PropertyLike[float] = 0,
+        mode: PropertyLike[str] = "constant",
         **kwargs
     ):
         super().__init__(
@@ -617,7 +618,12 @@ class Crop(Augmentation):
     """
 
     def __init__(
-        self, *args, crop=(64, 64), crop_mode="retain", corner="random", **kwargs
+        self,
+        *args,
+        crop: PropertyLike[int or ArrayLike[int]] = (64, 64),
+        crop_mode: PropertyLike[str] = "retain",
+        corner: PropertyLike[str] = "random",
+        **kwargs
     ):
         super().__init__(*args, crop=crop, crop_mode=crop_mode, corner=corner, **kwargs)
 
@@ -692,7 +698,12 @@ class CropToMultiplesOf(Crop):
 
     """
 
-    def __init__(self, multiple=1, corner="random", **kwargs):
+    def __init__(
+        self,
+        multiple: PropertyLike[int or ArrayLike[int] or None] = 1,
+        corner: PropertyLike[str] = "random",
+        **kwargs
+    ):
         kwargs.pop("crop", False)
         kwargs.pop("crop_mode", False)
 
@@ -705,7 +716,7 @@ class CropToMultiplesOf(Crop):
             new_shape = list(shape)
             idx = 0
             for dim, mul in zip(shape, multiple):
-                if mul is not None and mul is not -1:
+                if mul is not None and mul != -1:
                     new_shape[idx] = int((dim // mul) * mul)
                 idx += 1
 
@@ -733,7 +744,13 @@ class Pad(Augmentation):
 
     """
 
-    def __init__(self, px=(0, 0, 0, 0), mode="constant", cval=0, **kwargs):
+    def __init__(
+        self,
+        px: PropertyLike[int or ArrayLike[int]] = (0, 0, 0, 0),
+        mode: PropertyLike[str] = "constant",
+        cval: PropertyLike[float] = 0,
+        **kwargs
+    ):
         super().__init__(px=px, mode=mode, cval=cval, **kwargs)
 
     def get(self, image, px, **kwargs):
@@ -785,7 +802,7 @@ class PadToMultiplesOf(Pad):
 
     """
 
-    def __init__(self, multiple=1, **kwargs):
+    def __init__(self, multiple: PropertyLike[int or None] = 1, **kwargs):
         def amount_to_pad(image):
             shape = image.shape
             multiple = self.multiple.current_value
@@ -795,7 +812,7 @@ class PadToMultiplesOf(Pad):
             new_shape = [0] * (image.ndim * 2)
             idx = 0
             for dim, mul in zip(shape, multiple):
-                if mul is not None and mul is not -1:
+                if mul is not None and mul != -1:
                     to_add = -dim % mul
                     to_add_first = to_add // 2
                     to_add_after = to_add - to_add_first
