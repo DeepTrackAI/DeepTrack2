@@ -18,12 +18,14 @@ Ellipsoid
 """
 
 
+from typing import Callable, Tuple
 import numpy as np
 
 from . import backend as D
 from .features import Feature, MERGE_STRATEGY_APPEND
 from .image import Image
 from . import image
+from .types import PropertyLike, ArrayLike
 import warnings
 
 
@@ -70,11 +72,11 @@ class Scatterer(Feature):
 
     def __init__(
         self,
-        position=(32, 32),
-        z=0.0,
-        value=1.0,
-        position_unit="pixel",
-        upsample=1,
+        position: PropertyLike[ArrayLike[float]] = (32, 32),
+        z: PropertyLike[float] = 0.0,
+        value: PropertyLike[float] = 1.0,
+        position_unit: PropertyLike[str] = "pixel",
+        upsample: PropertyLike[int] = 1,
         **kwargs
     ):
         self._processed_properties = False
@@ -228,7 +230,12 @@ class Ellipse(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
-    def __init__(self, radius=1e-6, rotation=0, **kwargs):
+    def __init__(
+        self,
+        radius: PropertyLike[float] = 1e-6,
+        rotation: PropertyLike[float] = 0,
+        **kwargs
+    ):
         super().__init__(
             radius=radius, rotation=rotation, upsample_axes=(0, 1), **kwargs
         )
@@ -296,7 +303,7 @@ class Sphere(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
-    def __init__(self, radius=1e-6, **kwargs):
+    def __init__(self, radius: PropertyLike[float] = 1e-6, **kwargs):
         super().__init__(radius=radius, **kwargs)
 
     def get(self, image, radius, voxel_size, **kwargs):
@@ -339,7 +346,12 @@ class Ellipsoid(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
-    def __init__(self, radius=1e-6, rotation=0, **kwargs):
+    def __init__(
+        self,
+        radius: PropertyLike[float] = 1e-6,
+        rotation: PropertyLike[float] = 0,
+        **kwargs
+    ):
         super().__init__(radius=radius, rotation=rotation, **kwargs)
 
     def _process_properties(self, propertydict):
@@ -468,11 +480,11 @@ class MieScatterer(Scatterer):
 
     def __init__(
         self,
-        coefficients,
-        offset_z="auto",
-        polarization_angle=0,
-        collection_angle="auto",
-        L="auto",
+        coefficients: Callable[..., Callable[[int], Tuple[ArrayLike, ArrayLike]]],
+        offset_z: PropertyLike[str] = "auto",
+        polarization_angle: PropertyLike[float] = 0,
+        collection_angle: PropertyLike[str] = "auto",
+        L: PropertyLike[str] = "auto",
         **kwargs
     ):
         kwargs.pop("is_field", None)
@@ -627,12 +639,8 @@ class MieSphere(MieScatterer):
 
     def __init__(
         self,
-        radius=1e-6,
-        refractive_index=1.45,
-        offset_z="auto",
-        polarization_angle=0,
-        collection_angle="auto",
-        L="auto",
+        radius: PropertyLike[float] = 1e-6,
+        refractive_index: PropertyLike[float] = 1.45,
         **kwargs
     ):
         def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
@@ -649,10 +657,6 @@ class MieSphere(MieScatterer):
             coefficients=coeffs,
             radius=radius,
             refractive_index=refractive_index,
-            L=L,
-            offset_z=offset_z,
-            polarization_angle=polarization_angle,
-            collection_angle=collection_angle,
             **kwargs
         )
 
@@ -672,9 +676,9 @@ class MieStratifiedSphere(MieScatterer):
 
     Parameters
     ----------
-    radius : float
+    radius : list of float
         The radius of each cell in increasing order.
-    refractive_index : float
+    refractive_index : list of float
         Refractive index of each cell in the same order as `radius`
     L : int or str
         The number of terms used to evaluate the mie theory. If `"auto"`,
@@ -700,12 +704,8 @@ class MieStratifiedSphere(MieScatterer):
 
     def __init__(
         self,
-        radius=1e-6,
-        refractive_index=1.45,
-        offset_z="auto",
-        polarization_angle=0,
-        collection_angle="auto",
-        L="auto",
+        radius: PropertyLike[ArrayLike[float]] = [1e-6],
+        refractive_index: PropertyLike[ArrayLike[float]] = [1.45],
         **kwargs
     ):
         def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
@@ -726,9 +726,5 @@ class MieStratifiedSphere(MieScatterer):
             coefficients=coeffs,
             radius=radius,
             refractive_index=refractive_index,
-            L=L,
-            offset_z=offset_z,
-            polarization_angle=polarization_angle,
-            collection_angle=collection_angle,
             **kwargs
         )

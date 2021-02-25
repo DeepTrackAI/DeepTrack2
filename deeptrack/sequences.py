@@ -13,6 +13,7 @@ Sequential
 
 from .features import Feature
 from .properties import SequentialProperty
+from .types import PropertyLike
 
 
 class Sequence(Feature):
@@ -37,7 +38,9 @@ class Sequence(Feature):
 
     __distributed__ = False
 
-    def __init__(self, feature: Feature, sequence_length: int = 1, **kwargs):
+    def __init__(
+        self, feature: Feature, sequence_length: PropertyLike[int] = 1, **kwargs
+    ):
         self.feature = feature
         super().__init__(sequence_length=sequence_length, **kwargs)
 

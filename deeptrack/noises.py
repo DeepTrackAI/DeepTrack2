@@ -15,6 +15,7 @@ Poisson
 import numpy as np
 from .features import Feature
 from .image import Image
+from .types import PropertyLike
 
 
 class Noise(Feature):
@@ -29,7 +30,7 @@ class Background(Noise):
         The value to add to the image
     """
 
-    def __init__(self, offset, **kwargs):
+    def __init__(self, offset: PropertyLike[float], **kwargs):
         super().__init__(offset=offset, **kwargs)
 
     def get(self, image, offset, **kwargs):
@@ -51,7 +52,9 @@ class Gaussian(Noise):
         The root of the variance of the distribution.
     """
 
-    def __init__(self, mu=0, sigma=1, **kwargs):
+    def __init__(
+        self, mu: PropertyLike[float] = 0, sigma: PropertyLike[float] = 1, **kwargs
+    ):
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
     def get(self, image, mu, sigma, **kwargs):
@@ -73,7 +76,13 @@ class Poisson(Noise):
         signal of the image.
     """
 
-    def __init__(self, *args, snr=100, background=0, **kwargs):
+    def __init__(
+        self,
+        *args,
+        snr: PropertyLike[float] = 100,
+        background: PropertyLike[float] = 0,
+        **kwargs
+    ):
         super().__init__(*args, snr=snr, background=background, **kwargs)
 
     def get(self, image, snr, background, **kwargs):

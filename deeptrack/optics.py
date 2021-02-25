@@ -18,6 +18,7 @@ Brightfield
 import numpy as np
 from .features import Feature, StructuralFeature
 from .image import Image, pad_image_to_fft
+from .types import ArrayLike, PropertyLike
 
 from scipy.ndimage import convolve
 
@@ -146,14 +147,14 @@ class Optics(Feature):
 
     def __init__(
         self,
-        NA=0.7,
-        wavelength=0.66e-6,
-        magnification=10,
-        resolution=(1e-6, 1e-6, 1e-6),
-        refractive_index_medium=1.33,
-        upscale=1,
-        padding=(10, 10, 10, 10),
-        output_region=(0, 0, 128, 128),
+        NA: PropertyLike[float] = 0.7,
+        wavelength: PropertyLike[float] = 0.66e-6,
+        magnification: PropertyLike[float] = 10,
+        resolution: PropertyLike[float or ArrayLike[float]] = (1e-6, 1e-6, 1e-6),
+        refractive_index_medium: PropertyLike[float] = 1.33,
+        upscale: PropertyLike[float] = 1,
+        padding: PropertyLike[ArrayLike[int]] = (10, 10, 10, 10),
+        output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
         pupil: Feature = None,
         **kwargs
     ):
@@ -651,7 +652,14 @@ class IlluminationGradient(Feature):
 
     """
 
-    def __init__(self, gradient=(0, 0), constant=0, vmin=0, vmax=np.inf, **kwargs):
+    def __init__(
+        self,
+        gradient: PropertyLike[ArrayLike[float]] = (0, 0),
+        constant: PropertyLike[float] = 0,
+        vmin: PropertyLike[float] = 0,
+        vmax: PropertyLike[float] = np.inf,
+        **kwargs
+    ):
         super().__init__(
             gradient=gradient, constant=constant, vmin=vmin, vmax=vmax, **kwargs
         )
