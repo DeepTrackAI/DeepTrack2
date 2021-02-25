@@ -32,7 +32,10 @@ SphericalAberration
     Zernike polynomial with n=4, m=0.
 """
 
+from typing import List, Tuple
+
 import numpy as np
+from .types import PropertyLike
 from .features import Feature
 from .utils import as_list
 
@@ -53,7 +56,7 @@ class Aberration(Feature):
         for image in image_list:
             x = np.arange(image.shape[0]) - image.shape[0] / 2
             y = np.arange(image.shape[1]) - image.shape[1] / 2
-            X, Y = np.meshgrid(x, y)
+            X, Y = np.meshgrid(y, x)
             rho = np.sqrt(X ** 2 + Y ** 2)
             rho /= np.max(rho[image != 0])
             theta = np.arctan2(Y, X)
@@ -83,7 +86,12 @@ class GaussianApodization(Aberration):
 
     """
 
-    def __init__(self, sigma=1, offset=(0, 0), **kwargs):
+    def __init__(
+        self,
+        sigma: PropertyLike[float] = 1,
+        offset: PropertyLike[Tuple[int, int]] = (0, 0),
+        **kwargs
+    ):
         super().__init__(sigma=sigma, offset=offset, **kwargs)
 
     def get(self, pupil, offset, sigma, rho, **kwargs):
@@ -121,7 +129,13 @@ class Zernike(Aberration):
         The coefficient of the polynomial
     """
 
-    def __init__(self, n, m, coefficient=1, **kwargs):
+    def __init__(
+        self,
+        n: PropertyLike[int or List[int]],
+        m: PropertyLike[int or List[int]],
+        coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
+    ):
         super().__init__(n=n, m=m, coefficient=coefficient, **kwargs)
 
     def get(self, pupil, rho, theta, n, m, coefficient, **kwargs):
@@ -186,7 +200,9 @@ class Piston(Zernike):
         The coefficient of the polynomial
     """
 
-    def __init__(self, *args, coefficient=1, **kwargs):
+    def __init__(
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+    ):
         super().__init__(*args, n=0, m=0, coefficient=coefficient, **kwargs)
 
 
@@ -199,7 +215,9 @@ class VerticalTilt(Zernike):
         The coefficient of the polynomial
     """
 
-    def __init__(self, *args, coefficient=1, **kwargs):
+    def __init__(
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+    ):
         super().__init__(*args, n=1, m=-1, coefficient=coefficient, **kwargs)
 
 
@@ -212,7 +230,9 @@ class HorizontalTilt(Zernike):
         The coefficient of the polynomial
     """
 
-    def __init__(self, *args, coefficient=1, **kwargs):
+    def __init__(
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+    ):
         super().__init__(*args, n=1, m=1, coefficient=coefficient, **kwargs)
 
 
@@ -225,7 +245,9 @@ class ObliqueAstigmatism(Zernike):
         The coefficient of the polynomial
     """
 
-    def __init__(self, *args, coefficient=1, **kwargs):
+    def __init__(
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+    ):
         super().__init__(*args, n=2, m=-2, coefficient=coefficient, **kwargs)
 
 
@@ -238,7 +260,9 @@ class Defocus(Zernike):
         The coefficient of the polynomial
     """
 
-    def __init__(self, *args, coefficient=1, **kwargs):
+    def __init__(
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+    ):
         super().__init__(*args, n=2, m=0, coefficient=coefficient, **kwargs)
 
 
@@ -251,7 +275,9 @@ class Astigmatism(Zernike):
         The coefficient of the polynomial
     """
 
-    def __init__(self, *args, coefficient=1, **kwargs):
+    def __init__(
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+    ):
         super().__init__(*args, n=2, m=2, coefficient=coefficient, **kwargs)
 
 
@@ -264,7 +290,9 @@ class ObliqueTrefoil(Zernike):
         The coefficient of the polynomial
     """
 
-    def __init__(self, *args, coefficient=1, **kwargs):
+    def __init__(
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+    ):
         super().__init__(*args, n=3, m=-3, coefficient=coefficient, **kwargs)
 
 
@@ -277,7 +305,9 @@ class VerticalComa(Zernike):
         The coefficient of the polynomial
     """
 
-    def __init__(self, *args, coefficient=1, **kwargs):
+    def __init__(
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+    ):
         super().__init__(*args, n=3, m=-1, coefficient=coefficient, **kwargs)
 
 
@@ -290,7 +320,9 @@ class HorizontalComa(Zernike):
         The coefficient of the polynomial
     """
 
-    def __init__(self, *args, coefficient=1, **kwargs):
+    def __init__(
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+    ):
         super().__init__(*args, n=3, m=1, coefficient=coefficient, **kwargs)
 
 
@@ -303,7 +335,9 @@ class Trefoil(Zernike):
         The coefficient of the polynomial
     """
 
-    def __init__(self, *args, coefficient=1, **kwargs):
+    def __init__(
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+    ):
         super().__init__(*args, n=3, m=3, coefficient=coefficient, **kwargs)
 
 
@@ -316,5 +350,7 @@ class SphericalAberration(Zernike):
         The coefficient of the polynomial
     """
 
-    def __init__(self, *args, coefficient=1, **kwargs):
+    def __init__(
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+    ):
         super().__init__(*args, n=4, m=0, coefficient=coefficient, **kwargs)
