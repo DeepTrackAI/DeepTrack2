@@ -24,10 +24,18 @@ from .utils import (
     kwarg_has_default,
 )
 
+import typing
+
+
 from . import features
 
 import copy
 import collections
+
+
+# Property type declaration
+T = typing.TypeVar("T")
+PropertyLike = typing.Union[T, typing.Callable[..., T]]
 
 
 class Property:
