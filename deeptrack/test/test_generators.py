@@ -106,9 +106,9 @@ class TestGenerators(unittest.TestCase):
             for _ in range(10):
                 generator.on_epoch_end()
                 for idx in range(len(generator)):
-                    generator[idx]
+                    a = generator[idx]
 
-                [self.assertLess(d[-1], 6) for d in generator.data]
+                [self.assertLess(d[-1], 8) for d in generator.data]
 
 
 if __name__ == "__main__":
