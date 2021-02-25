@@ -414,11 +414,6 @@ class CappedContinuousGenerator(ContinuousGenerator):
         self.max_sample_exposure = max_sample_exposure
         super().__init__(*args, **kwargs)
 
-    def __exit__(self, *args):
-        self.exit_signal = True
-        self.data_generation_thread.join()
-        return False
-
     def __getitem__(self, idx):
 
         # TODO: Use parent method
@@ -441,7 +436,7 @@ class CappedContinuousGenerator(ContinuousGenerator):
     def on_epoch_end(self):
 
         while len(self.data) < self.min_data_size:
-            print("Awaiting dataset to reach minimum size...")
+            print("Awaiting dataset to reach minimum size...", end="\r")
             time.sleep(0.1)
 
         return super().on_epoch_end()
