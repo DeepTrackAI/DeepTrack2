@@ -8,9 +8,11 @@ NormalizeMinMax
     Min-max image normalization.
 """
 
+from typing import Callable, List
 from .features import Feature
 from .image import Image
 from . import utils
+from .types import PropertyLike
 import numpy as np
 import skimage
 import skimage.measure
@@ -26,7 +28,7 @@ class Add(Feature):
         The value to add
     """
 
-    def __init__(self, value=0, **kwargs):
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
         super().__init__(value=value, **kwargs)
 
     def get(self, image, value, **kwargs):
@@ -42,7 +44,7 @@ class Subtract(Feature):
         The value to subtract
     """
 
-    def __init__(self, value=0, **kwargs):
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
         super().__init__(value=value, **kwargs)
 
     def get(self, image, value, **kwargs):
@@ -58,7 +60,7 @@ class Multiply(Feature):
         The value to multiply with.
     """
 
-    def __init__(self, value=0, **kwargs):
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
         super().__init__(value=value, **kwargs)
 
     def get(self, image, value, **kwargs):
@@ -74,7 +76,7 @@ class Divide(Feature):
         The value to divide with.
     """
 
-    def __init__(self, value=0, **kwargs):
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
         super().__init__(value=value, **kwargs)
 
     def get(self, image, value, **kwargs):
@@ -90,7 +92,7 @@ class Power(Feature):
         The power to raise with.
     """
 
-    def __init__(self, value=0, **kwargs):
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
         super().__init__(value=value, **kwargs)
 
     def get(self, image, value, **kwargs):
@@ -112,7 +114,12 @@ class Average(Feature):
 
     __distributed__ = False
 
-    def __init__(self, features=None, axis=0, **kwargs):
+    def __init__(
+        self,
+        features=PropertyLike[List[Feature] or None],
+        axis: PropertyLike[int] = 0,
+        **kwargs
+    ):
         super().__init__(axis=axis, features=features, **kwargs)
 
     def get(self, images, axis, features, **kwargs):
@@ -137,7 +144,12 @@ class Clip(Feature):
         Clip the input to be smaller than this value.
     """
 
-    def __init__(self, min=-np.inf, max=+np.inf, **kwargs):
+    def __init__(
+        self,
+        min: PropertyLike[float] = -np.inf,
+        max: PropertyLike[float] = +np.inf,
+        **kwargs
+    ):
         super().__init__(min=min, max=max, **kwargs)
 
     def get(self, image, min=None, max=None, **kwargs):
@@ -158,7 +170,9 @@ class NormalizeMinMax(Feature):
         The maximum of the transformation.
     """
 
-    def __init__(self, min=0, max=1, **kwargs):
+    def __init__(
+        self, min: PropertyLike[float] = 0, max: PropertyLike[float] = 1, **kwargs
+    ):
         super().__init__(min=min, max=max, **kwargs)
 
     def get(self, image, min, max, **kwargs):
@@ -169,7 +183,9 @@ class NormalizeMinMax(Feature):
 
 
 class Blur(Feature):
-    def __init__(self, filter_function, mode="reflect", **kwargs):
+    def __init__(
+        self, filter_function: Callable, mode: PropertyLike[str] = "reflect", **kwargs
+    ):
         self.filter = filter_function
         super().__init__(borderType=mode, **kwargs)
 
@@ -189,7 +205,7 @@ class AverageBlur(Blur):
         Kernel size to use.
     """
 
-    def __init__(self, ksize=3, **kwargs):
+    def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
         super().__init__(None, ksize=ksize, **kwargs)
 
     def get(self, input, ksize, **kwargs):
@@ -214,7 +230,7 @@ class GaussianBlur(Blur):
 
     """
 
-    def __init__(self, sigma=2, **kwargs):
+    def __init__(self, sigma: PropertyLike[float] = 2, **kwargs):
         super().__init__(ndimage.gaussian_filter, sigma=sigma, **kwargs)
 
 
@@ -228,7 +244,7 @@ class MedianBlur(Blur):
 
     """
 
-    def __init__(self, ksize=3, **kwargs):
+    def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
         super().__init__(ndimage.median_filter, k=ksize, **kwargs)
 
 
@@ -253,7 +269,9 @@ class Pool(Feature):
         Additional parameters sent to the pooling function.
     """
 
-    def __init__(self, pooling_function, ksize=3, **kwargs):
+    def __init__(
+        self, pooling_function: Callable, ksize: PropertyLike[int] = 3, **kwargs
+    ):
         self.pooling = pooling_function
         super().__init__(ksize=ksize, **kwargs)
 
@@ -283,7 +301,7 @@ class AveragePooling(Pool):
         Additional parameters sent to the pooling function.
     """
 
-    def __init__(self, ksize=3, **kwargs):
+    def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
         super().__init__(np.mean, ksize=ksize, **kwargs)
 
 
@@ -314,7 +332,9 @@ class BlurCV2(Feature):
 
         return super(BlurCV2, cls).__new__(*args, **kwargs)
 
-    def __init__(self, filter_function, mode="refelct", **kwargs):
+    def __init__(
+        self, filter_function: Callable, mode: PropertyLike[str] = "refelct", **kwargs
+    ):
         self.filter = filter_function
         borderType = _map_mode_to_cv2_borderType[mode]
         super().__init__(borderType=borderType, **kwargs)
@@ -352,7 +372,13 @@ class BilateralBlur(Blur):
 
     """
 
-    def __init__(self, d=3, sigma_color=50, sigma_space=50, **kwargs):
+    def __init__(
+        self,
+        d: PropertyLike[int] = 3,
+        sigma_color: PropertyLike[float] = 50,
+        sigma_space: PropertyLike[float] = 50,
+        **kwargs
+    ):
         super().__init__(
             cv2.bilateralFilter,
             d=d,
