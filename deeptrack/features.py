@@ -22,12 +22,13 @@ Duplicate
 
 import copy
 
-from typing import List
+from typing import Any, Callable, Iterator, List, Tuple
 import numpy as np
 import threading
 
 from .image import Image
 from .properties import Property, PropertyDict
+from .types import PropertyLike, ArrayLike
 
 
 MERGE_STRATEGY_OVERRIDE = 0
@@ -473,7 +474,9 @@ class Probability(StructuralFeature):
         Probability to resolve
     """
 
-    def __init__(self, feature: Feature, probability: float, *args, **kwargs):
+    def __init__(
+        self, feature: Feature, probability: PropertyLike[float], *args, **kwargs
+    ):
         super().__init__(
             *args,
             feature=feature,
@@ -510,7 +513,9 @@ class Duplicate(StructuralFeature):
         The number of duplicates to create
     """
 
-    def __init__(self, feature: Feature, num_duplicates: int, *args, **kwargs):
+    def __init__(
+        self, feature: Feature, num_duplicates: PropertyLike[int], *args, **kwargs
+    ):
 
         self.feature = feature
         super().__init__(
@@ -572,7 +577,7 @@ class Combine(StructuralFeature):
 
     __distribute__ = False
 
-    def __init__(self, features=[], **kwargs):
+    def __init__(self, features=List[Feature], **kwargs):
         super().__init__(features=features, **kwargs)
 
     def get(self, image_list, features, **kwargs):
@@ -650,7 +655,7 @@ class ConditionalSetProperty(StructuralFeature):
 
     __distributed__ = False
 
-    def __init__(self, feature: Feature, condition="is_label", **kwargs):
+    def __init__(self, feature: Feature, condition=PropertyLike[str], **kwargs):
         super().__init__(feature=feature, condition=condition, **kwargs)
 
     def get(self, image, feature, condition, **kwargs):
@@ -692,7 +697,7 @@ class ConditionalSetFeature(StructuralFeature):
         self,
         on_false: Feature = None,
         on_true: Feature = None,
-        condition="is_label",
+        condition: PropertyLike[str] = "is_label",
         **kwargs
     ):
 
@@ -728,7 +733,7 @@ class Lambda(Feature):
         Function that takes the current image as first input
     """
 
-    def __init__(self, function, **kwargs):
+    def __init__(self, function: Callable[..., Callable[[Image], Image]], **kwargs):
         super().__init__(function=function, **kwargs)
 
     def get(self, image, function, **kwargs):
@@ -751,7 +756,11 @@ class Merge(Feature):
 
     __distributed__ = False
 
-    def __init__(self, function, **kwargs):
+    def __init__(
+        self,
+        function: Callable[..., Callable[[List[Image]], Image or List[Image]]],
+        **kwargs
+    ):
         super().__init__(function=function, **kwargs)
 
     def get(self, list_of_images, function, **kwargs):
@@ -776,7 +785,9 @@ class Dataset(Feature):
 
     __distributed__ = False
 
-    def __init__(self, data, **kwargs):
+    def __init__(
+        self, data: Iterator or PropertyLike[float or ArrayLike[float]], **kwargs
+    ):
         super().__init__(data=data, **kwargs)
 
     def get(self, *ignore, data, **kwargs):
@@ -809,7 +820,7 @@ class Label(Feature):
 
     __distributed__ = False
 
-    def __init__(self, output_shape=None, **kwargs):
+    def __init__(self, output_shape: PropertyLike[int] = None, **kwargs):
         super().__init__(output_shape=output_shape, **kwargs)
 
     def get(self, image, output_shape=None, hash_key=None, **kwargs):
@@ -856,12 +867,12 @@ class LoadImage(Feature):
 
     def __init__(
         self,
-        path,
-        load_options=None,
-        as_list=False,
-        ndim=None,
-        to_grayscale=False,
-        get_one_random=False,
+        path: PropertyLike[str or List[str]],
+        load_options: PropertyLike[dict] = None,
+        as_list: PropertyLike[bool] = False,
+        ndim: PropertyLike[int] = None,
+        to_grayscale: PropertyLike[bool] = False,
+        get_one_random: PropertyLike[bool] = False,
         **kwargs
     ):
         super().__init__(
@@ -977,10 +988,10 @@ class SampleToMasks(Feature):
 
     def __init__(
         self,
-        transformation_function,
-        number_of_masks=1,
-        output_region=None,
-        merge_method="add",
+        transformation_function: Callable[..., Callable[[Image], Image]],
+        number_of_masks: PropertyLike[int] = 1,
+        output_region: PropertyLike[ArrayLike[int]] = None,
+        merge_method: PropertyLike[str] = "add",
         **kwargs
     ):
         super().__init__(
@@ -1153,7 +1164,7 @@ class AsType(Feature):
         dtype string. Same as numpy dtype.
     """
 
-    def __init__(self, dtype="float64", **kwargs):
+    def __init__(self, dtype: PropertyLike[Any] = "float64", **kwargs):
         super().__init__(dtype=dtype, **kwargs)
 
     def get(self, image, dtype, **kwargs):
