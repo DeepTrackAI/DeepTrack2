@@ -37,7 +37,7 @@ class TestAberrations(unittest.TestCase):
             resolution=1e-6,
             magnification=10,
             wavelength=530e-9,
-            output_region=(0, 0, 64, 64),
+            output_region=(0, 0, 64, 48),
             padding=(64, 64, 64, 64),
             aberration=aberrations.Piston(coefficient=1),
         )
@@ -45,7 +45,7 @@ class TestAberrations(unittest.TestCase):
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
             self.assertIsInstance(im, Image)
-            self.assertEqual(im.shape, (64, 64, 1))
+            self.assertEqual(im.shape, (64, 48, 1))
 
     def testVerticalTilt(self):
         aberrated_optics = Fluorescence(
