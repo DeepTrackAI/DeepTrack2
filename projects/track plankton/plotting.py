@@ -4,6 +4,11 @@ import numpy as np
 from deeptrack.features import LoadImage
 from utils import Normalize_image
 
+def plot_image(image):
+    plt.figure(figsize=(11, 11))
+    image.update()
+    image.plot(cmap="gray")
+
 def plot_label(label_function, image):
     resolved_image = image.resolve()
     labels = label_function(resolved_image)
@@ -21,6 +26,15 @@ def plot_im_stack(im_stack):
         plt.subplot(num_imgs,1,i+1)
         plt.imshow(im_stack[0,:,:,i], cmap='gray')
         
+        
+def plot_batch(train_images):
+    num_imgs = train_images.shape[-1]
+    plt.figure(figsize=(7, 7*num_imgs))
+    
+    for i in range(train_images.shape[-1]):
+        plt.subplot(num_imgs,1,i+1)
+        plt.imshow(train_images[:,:,i], cmap='gray')
+
         
 def plot_and_save_track(no_of_frames = 10,
                plankton_track = None,
@@ -49,17 +63,17 @@ def plot_and_save_track(no_of_frames = 10,
 
         if show_plankton_track:
             for key in plankton_track:
-                ax.plot(2*plankton_track[key].positions[np.max(i-5,0):i, 1],2*plankton_track[key].positions[np.max(i-5,0):i, 0], c=color_plankton_track,linewidth=1)
+                ax.plot(2*plankton_track[key].positions[max(i-5,0):i+1, 1],2*plankton_track[key].positions[max(i-5,0):i+1, 0], c=color_plankton_track,linewidth=1)
                 ax.scatter(2*plankton_track[key].positions[i,1], 2*plankton_track[key].positions[i,0], s=100, marker='.', facecolor='none', edgecolors=color_plankton_track)
 
         if show_plankton_dont_track:    
             for key in plankton_dont_track:
-                ax.plot(2*plankton_dont_track[key].positions[np.max(i-5,0):i, 1],2*plankton_dont_track[key].positions[np.max(i-5,0):i, 0], c=color_plankton_dont_track, linewidth=1)
+                ax.plot(2*plankton_dont_track[key].positions[max(i-5,0):i+1, 1],2*plankton_dont_track[key].positions[max(i-5,0):i+1, 0], c=color_plankton_dont_track, linewidth=1)
                 ax.scatter(2*plankton_dont_track[key].positions[i,1], 2*plankton_dont_track[key].positions[i,0], s=100, marker='.', facecolor='none', edgecolors=color_plankton_dont_track)
 
         if show_specific_plankton:
             for num in specific_plankton:
-                ax.plot(2*plankton_track['plankton%d' % num].positions[np.max(i-5,0):i, 1],2*plankton_track['plankton%d' % num].positions[np.max(i-5,0):i, 0], c=color_specific_plankton, linewidth=1)
+                ax.plot(2*plankton_track['plankton%d' % num].positions[max(i-5,0):i+1, 1],2*plankton_track['plankton%d' % num].positions[max(i-5,0):i+1, 0], c=color_specific_plankton, linewidth=1)
                 ax.scatter(2*plankton_track['plankton%d' % num].positions[i,1], 2*plankton_track['plankton%d' % num].positions[i,0], s=100, marker='.', facecolor='none', edgecolors=color_specific_plankton)
 
         im1 = Normalize_image(np.asarray(LoadImage(folder_path +'\\' + list_paths[j]).resolve()))
@@ -83,3 +97,12 @@ def plot_and_save_track(no_of_frames = 10,
             plt.close(fig)
         else:
             plt.show()
+            
+            
+def plot_prediction(model=None, im_stack=None, **kwargs):
+    predictions = model.predict(im_stack)
+    num_imgs = predictions.shape[-1]
+    plt.figure(figsize=(7, 7*num_imgs))
+    for i in range(num_imgs):
+        plt.subplot(num_imgs,1,i+1)
+        plt.imshow(predictions[0,:,:,i], cmap='gray')

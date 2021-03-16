@@ -8,6 +8,9 @@ import numpy as np
 from utils import Normalize_image, RemoveRunningMean
 import cv2
 import os
+from deeptrack.sequences import Sequence, Sequential
+from deeptrack.properties import SequentialProperty
+
 
 def stationary_spherical_plankton(im_size_height, im_size_width, radius, label=0):
     plankton = Sphere(
@@ -22,16 +25,16 @@ def stationary_spherical_plankton(im_size_height, im_size_width, radius, label=0
     return plankton
     
 
-def moving_spherical_plankton(im_size_height, im_size_width, radius, label=0, speed=1):
+def moving_spherical_plankton(im_size_height, im_size_width, radius, label=0, diffusion_constant_coeff=1):
     plankton = Sphere(
     position_unit="pixel",          # Units of position (default meter)
     position=lambda: np.random.rand(2) * np.array([im_size_height, im_size_width]),
     z= lambda:  -1.5 + np.random.rand() * 0.5,
-    radius=lambda: ((20e-6) + np.random.rand() * (3.0e-6)) * radius, # Dimensions of the principal axes of the ellipsoid
+    radius=lambda: ((radius) + np.random.rand() * 0.5 * radius), # Dimensions of the principal axes of the ellipsoid
     refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
     upsample=4,                      # Amount the resolution is upsampled for accuracy
     particle_type = 0,
-    diffusion_constant=lambda: (1 + np.random.rand() * 9) * 2e-14 * speed,
+    diffusion_constant=lambda: (1 + np.random.rand() * 9) * 2e-14 * diffusion_constant_coeff,
     alpha=lambda: np.random.rand() * np.pi * 2, # yaw, rotatin about z-axis
     beta=lambda: -np.random.rand() * np.pi * 2, # pitch, rotation about y-axis
     phi=lambda: np.random.rand() * 2 * np.pi, # initial angle
@@ -41,7 +44,7 @@ def moving_spherical_plankton(im_size_height, im_size_width, radius, label=0, sp
     return plankton
 
 
-def get_position_plankton(sequence_step, previous_value, diffusion_constant, 
+def get_position_moving_plankton(sequence_step, previous_value, diffusion_constant, 
                           alpha, beta, phi, phi_dot, helix_radius, dt=1/7):
     Rz = np.array([[np.cos(alpha), -np.sin(alpha), 0],[np.sin(alpha), np.cos(alpha), 0],[0 ,0 ,1]])
     Ry = np.array([[np.cos(beta), 0, np.sin(beta)],[0, 1, 0],[-np.sin(beta), 0, np.cos(beta)]])
@@ -53,6 +56,11 @@ def get_position_plankton(sequence_step, previous_value, diffusion_constant,
     translation = np.sqrt(diffusion_constant * dt) * 1e7
     position_helix = position_tilted_circle + translation * orientation
     return previous_value + position_helix[0:2]
+
+
+def get_position_stationary_plankton(previous_value):
+    return previous_value
+
 
 def plankton_brightfield(im_size_height, im_size_width, gradient_amp):
     spectrum = np.linspace(400e-9, 700e-9, 3)
@@ -73,8 +81,9 @@ def plankton_brightfield(im_size_height, im_size_width, gradient_amp):
     return brightfield_microscope
 
 def create_sample(*arg):
-    sample = 0
-    for i in range(0, len(arg), 2):
+    no_of_plankton = lambda: np.random.randint(int(arg[1]*0.66), int(arg[1]*1.33))
+    sample = arg[0]**no_of_plankton
+    for i in range(2, len(arg), 2):
         no_of_plankton = lambda: np.random.randint(int(arg[i+1]*0.66), int(arg[i+1]*1.33))
         sample += arg[i]**no_of_plankton
     return sample
@@ -90,10 +99,16 @@ def create_image(noise_amp, sample, microscope, norm_min, norm_max):
     
     return image
 
-def plot_image(image):
-    plt.figure(figsize=(11, 11))
-    image.update()
-    image.plot(cmap="gray")
+def create_sequence(noise_amp, sample, microscope, norm_min, norm_max):
+    noise = Poisson(snr=lambda: (60 + np.random.rand() * 30) * 1/(max(0.01,noise_amp)))
+    augmented_image = sum([brightfield_microscope_one_wavelegth(sample) 
+                                        for brightfield_microscope_one_wavelegth 
+                                        in microscope])
+
+    sequence = augmented_image + noise + NormalizeMinMax(min=norm_min, max=norm_max) + Clip(min=0, max=1) #+ BlurCV2()
+    
+    return sequence
+
 
 def get_target_sequence(sequence_of_particles):
     label = np.zeros((*np.asarray(sequence_of_particles).shape[1:3], 4))
@@ -139,8 +154,6 @@ def batch_function0(image):
     return np.squeeze(image)
 
 
-
-
 def batch_function1(imaged_particle_sequence):
     images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
     train_images = np.zeros((images.shape[0],images.shape[1],images.shape[2]-1))
@@ -171,3 +184,38 @@ def batch_function3(imaged_particle_sequence):
     return train_images
 
 
+def create_custom_batch_function(imaged_particle_sequence, 
+                                 outputs=[ "diff", "diff", "img", "img", "img"], 
+                                 output_numbers = [[0,1], [1,2], 0, 1, 2],
+                                 function_img=[lambda img: 1*img],
+                                 function_diff=[lambda img: 1*img], 
+                                 **kwargs):
+    
+    def custom_batch_function(imaged_particle_sequence, **kwargs):
+        images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
+        train_images = np.zeros((images.shape[0],images.shape[1], len(outputs)))
+
+        for count, (img_type, num) in enumerate(zip(outputs, output_numbers)):
+            if img_type == "img":
+                img = images[:,:,num]
+
+                for i in range(len(function_img)):
+                    img = function_img[i](img)
+
+                train_images[:,:,count] = img
+
+
+            if img_type == "diff":
+                diff = images[:,:,num[1]] - images[:,:,num[0]]
+                for i in range(len(function_diff)):
+                    diff = function_diff[i](diff)
+
+                train_images[:,:,count] = diff
+
+        return train_images
+    
+    return custom_batch_function
+
+
+def test_function():
+    print(7)

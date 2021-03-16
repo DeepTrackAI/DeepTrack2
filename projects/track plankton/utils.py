@@ -43,9 +43,10 @@ def get_mean_image(folder_path, im_size_width, im_size_height):
 
 
 
-def get_image_stack(
-        *args, outputs = None, output_numbers=None, folder_path=None, 
-        frame_im0=None, im_size_width=None, im_size_height=None, **kwargs):
+def get_image_stack(*args, outputs = None, output_numbers=None, folder_path=None, 
+                    frame_im0=None, im_size_width=None, im_size_height=None, 
+                    function_img=[lambda img: 1*img], function_diff=[lambda img: 1*img], 
+                    **kwargs):
     list_paths = os.listdir(folder_path)
     im_stack = np.zeros((1, im_size_height, im_size_width, len(outputs)))
     for count, (img_type, num) in enumerate(zip(outputs, output_numbers)):
@@ -53,34 +54,22 @@ def get_image_stack(
             img = cv2.imread(folder_path +'\\' + list_paths[frame_im0 + num], 0)
             img = cv2.resize(img, dsize=(im_size_width, im_size_height), interpolation=cv2.INTER_AREA)
             
-            if "remove_mean" in args:
-                mean_img = kwargs["mean_image"]
-                img = Normalize_image(img) - mean_img
-            
-            if "remove_running_mean" in args:
-                running_mean_img = RemoveRunningMean(folder_path, kwargs["tot_no_of_frames"], frame_im0 + num,
-                                                     im_size_width, im_size_height)
-                img = Normalize_image(img) - running_mean_img
+            for i in range(len(function_img)):
+                    img = function_img[i](img)
                 
-            if "exp" in args: 
-                img = np.exp(Normalize_image(img))
-                
-            im_stack[0, :, :, count] = Normalize_image(img)
+            im_stack[0, :, :, count] = img
             
-        if img_type =="diff":
+        if img_type == "diff":
             img0 = Normalize_image(cv2.imread(folder_path +'\\' + list_paths[frame_im0 + num[0]], 0))
             img1 = Normalize_image(cv2.imread(folder_path +'\\' + list_paths[frame_im0 + num[1]], 0))
             diff = img1-img0
             
             diff = cv2.resize(diff, dsize=(im_size_width, im_size_height), interpolation=cv2.INTER_AREA)
+            
+            for i in range(len(function_diff)):
+                    diff = function_diff[i](diff)
+            
             im_stack[0, :, :, count] = diff
-            
-            if "normalize_diff" in args:
-                im_stack[0, :, :, count] = Normalize_image(diff)
-                
-            if "abs_diff" in args:
-                im_stack[0, :, :, count] = np.abs(diff)
-            
 
     return im_stack
 
@@ -89,8 +78,10 @@ def get_image_stack(
 
 def get_blob_center(label,array):
     x, y = np.where(array==label)
-    x_center = np.sum(x)/len(x)
-    y_center = np.sum(y)/len(y)
+    if len(x)==0:
+        return np.nan, np.nan
+    x_center = np.sum(x)/(len(x))
+    y_center = np.sum(y)/(len(y))
     
     return x_center, y_center
 
@@ -132,7 +123,7 @@ class Plankton:
     def add_position(self, position, timestep):
         self.positions[timestep,:] = position
          
-    def get_latest_position(self, timestep, threshold):
+    def get_latest_position(self, timestep=0, threshold=10, **kwargs):
         latest_position = [np.nan, np.nan]
         for i in range(self.number_of_timesteps - timestep, min(threshold + self.number_of_timesteps - timestep, self.number_of_timesteps+1)):
             if np.isfinite(self.positions[-i,0]):
@@ -169,23 +160,24 @@ def Update_list_of_plankton(list_of_plankton=None, positions=None, max_dist=10,
         print('No positions recieved for this time step', timestep)
         return list_of_plankton
     
+    if type(positions)==tuple:
+        positions = np.reshape(positions, (-1, 2))
+        
+        
     no_of_plankton = len(list_of_plankton)
     no_of_positions = len(positions)
     plankton_positions = np.zeros([no_of_plankton, 2])
     
     for value, key in enumerate(list_of_plankton):
         plankton_positions[value,:] = list_of_plankton[key].get_latest_position(timestep = timestep, threshold = threshold)
-
-    
-    if extrapolate == True and timestep > 1:
-        plankton_positions = Extrapolate_positions(plankton_positions)
+      
         
-    if len(positions.shape)==1:
-        positions = np.reshape(positions, (-1, 2))
-        no_of_positions = len(positions)
-    
+    if extrapolate == True and timestep > 1:
+        plankton_positions = Extrapolate_positions(list_of_plankton=list_of_plankton, timestep=timestep, threshold=threshold)
+        
+      
     distances = cdist(positions, plankton_positions)
-    
+
     for i in range(no_of_positions):
         if np.nanmin(distances[i,:]) > max_dist:
             position = positions[i,:]
@@ -225,21 +217,23 @@ def Interpolate_gaps_in_plankton_positions(list_of_plankton=None, **kwargs):
 
 
 
-def Extrapolate_positions(list_of_plankton=None, **kwargs):
-    no_of_timesteps = len(list_of_plankton[list(list_of_plankton.keys())[0]].positions)
-    for key in list_of_plankton:
-        for j in range(1,no_of_timesteps):
-            if np.isnan(list_of_plankton[key].positions[j,0]) and np.any(
-                np.isnan([list_of_plankton[key].positions[j-1,0], 
-                          list_of_plankton[key].positions[j-2,1]]))==False:
+def Extrapolate_positions(list_of_plankton=None, timestep=2, **kwargs):
+    no_of_plankton = len(list_of_plankton)
+    plankton_positions = np.zeros([no_of_plankton, 2])
+    for value, key in enumerate(list_of_plankton):
+        plankton_positions[value,:] = list_of_plankton[key].get_latest_position(timestep=timestep, **kwargs)
+    for value, key in enumerate(list_of_plankton):
+        if np.isnan(list_of_plankton[key].positions[timestep,0]) and np.any(
+            np.isnan([list_of_plankton[key].positions[timestep-1,0], 
+                      list_of_plankton[key].positions[timestep-2,1]]))==False:
+            
+            plankton_positions[value,0] = (2 * list_of_plankton[key].positions[timestep-1,0] 
+                                              - list_of_plankton[key].positions[timestep-2,0])
+            
+            plankton_positions[value,1] = (2 * list_of_plankton[key].positions[timestep-1,1] 
+                                              - list_of_plankton[key].positions[timestep-2,1])
                 
-                list_of_plankton[key].positions[j,0] = (2 * list_of_plankton[key].positions[j-1,0] 
-                                                                     - list_of_plankton[key].positions[j-2,0])
-                
-                list_of_plankton[key].positions[j,1] = (2 * list_of_plankton[key].positions[j-1,1] 
-                                                                     - list_of_plankton[key].positions[j-2,1])
-                
-    return list_of_plankton
+    return plankton_positions
 
 
 
@@ -265,8 +259,8 @@ def assign_positions_to_planktons(positions, **kwargs):
 
     for i in range(1,no_of_timesteps):
         list_of_plankton = Update_list_of_plankton(list_of_plankton = list_of_plankton, 
-                                                   positions = positions[i], max_dist=10, 
-                                                   timestep=i, threshold = 10, extrapolate=False)
+                                                   positions = positions[i], 
+                                                   timestep=i, **kwargs)
     return list_of_plankton
 
 
