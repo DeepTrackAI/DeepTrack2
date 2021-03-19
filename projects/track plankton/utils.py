@@ -43,14 +43,14 @@ def get_mean_image(folder_path, im_size_width, im_size_height):
 
 
 
-def get_image_stack(*args, outputs = None, output_numbers=None, folder_path=None, 
+def get_image_stack(*args, outputs = None, folder_path=None, 
                     frame_im0=None, im_size_width=None, im_size_height=None, 
                     function_img=[lambda img: 1*img], function_diff=[lambda img: 1*img], 
                     **kwargs):
     list_paths = os.listdir(folder_path)
     im_stack = np.zeros((1, im_size_height, im_size_width, len(outputs)))
-    for count, (img_type, num) in enumerate(zip(outputs, output_numbers)):
-        if img_type == "img":
+    for count, num in enumerate(outputs):
+        if type(num) == int:
             img = cv2.imread(folder_path +'\\' + list_paths[frame_im0 + num], 0)
             img = cv2.resize(img, dsize=(im_size_width, im_size_height), interpolation=cv2.INTER_AREA)
             
@@ -59,7 +59,7 @@ def get_image_stack(*args, outputs = None, output_numbers=None, folder_path=None
                 
             im_stack[0, :, :, count] = img
             
-        if img_type == "diff":
+        if type(num) == list:
             img0 = Normalize_image(cv2.imread(folder_path +'\\' + list_paths[frame_im0 + num[0]], 0))
             img1 = Normalize_image(cv2.imread(folder_path +'\\' + list_paths[frame_im0 + num[1]], 0))
             diff = img1-img0

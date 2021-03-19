@@ -185,8 +185,7 @@ def batch_function3(imaged_particle_sequence):
 
 
 def create_custom_batch_function(imaged_particle_sequence, 
-                                 outputs=[ "diff", "diff", "img", "img", "img"], 
-                                 output_numbers = [[0,1], [1,2], 0, 1, 2],
+                                 outputs = [[0,1], [1,2], 0, 1, 2],
                                  function_img=[lambda img: 1*img],
                                  function_diff=[lambda img: 1*img], 
                                  **kwargs):
@@ -195,8 +194,8 @@ def create_custom_batch_function(imaged_particle_sequence,
         images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
         train_images = np.zeros((images.shape[0],images.shape[1], len(outputs)))
 
-        for count, (img_type, num) in enumerate(zip(outputs, output_numbers)):
-            if img_type == "img":
+        for count, num in enumerate(outputs):
+            if type(num) == int:
                 img = images[:,:,num]
 
                 for i in range(len(function_img)):
@@ -205,7 +204,7 @@ def create_custom_batch_function(imaged_particle_sequence,
                 train_images[:,:,count] = img
 
 
-            if img_type == "diff":
+            if type(num) == list:
                 diff = images[:,:,num[1]] - images[:,:,num[0]]
                 for i in range(len(function_diff)):
                     diff = function_diff[i](diff)
@@ -218,4 +217,4 @@ def create_custom_batch_function(imaged_particle_sequence,
 
 
 def test_function():
-    print(7)
+    print(8)
