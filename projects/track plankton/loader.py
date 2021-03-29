@@ -1,4 +1,4 @@
-from deeptrack.scatterers import Sphere
+from deeptrack.scatterers import Sphere, Ellipsoid
 from deeptrack.optics import Brightfield, IlluminationGradient
 from deeptrack.noises import Poisson
 from deeptrack.math import NormalizeMinMax, Clip
@@ -23,7 +23,7 @@ def stationary_spherical_plankton(im_size_height, im_size_width, radius, label=0
     particle_type = -1 + label
     )
     return plankton
-    
+
 
 def moving_spherical_plankton(im_size_height, im_size_width, radius, label=0, diffusion_constant_coeff=1):
     plankton = Sphere(
@@ -31,6 +31,39 @@ def moving_spherical_plankton(im_size_height, im_size_width, radius, label=0, di
     position=lambda: np.random.rand(2) * np.array([im_size_height, im_size_width]),
     z= lambda:  -1.5 + np.random.rand() * 0.5,
     radius=lambda: ((radius) + np.random.rand() * 0.5 * radius), # Dimensions of the principal axes of the ellipsoid
+    refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
+    upsample=4,                      # Amount the resolution is upsampled for accuracy
+    particle_type = 0,
+    diffusion_constant=lambda: (1 + np.random.rand() * 9) * 2e-14 * diffusion_constant_coeff,
+    alpha=lambda: np.random.rand() * np.pi * 2, # yaw, rotatin about z-axis
+    beta=lambda: -np.random.rand() * np.pi * 2, # pitch, rotation about y-axis
+    phi=lambda: np.random.rand() * 2 * np.pi, # initial angle
+    helix_radius=lambda: (1+np.random.rand()) * 1, # unit: "pixels"
+    phi_dot=lambda: (1+np.random.rand()) * np.pi # angular velocity
+    )
+    return plankton
+
+def stationary_ellipsoid_plankton(im_size_height, im_size_width, radius=(1.5e-7, 9e-7, 1.5e-7), label=0):
+    plankton = Ellipsoid(
+    position_unit="pixel",          # Units of position (default meter)
+    position=lambda: np.random.rand(2) * np.array([im_size_height, im_size_width]),
+    z= lambda:  -1.0 + np.random.rand() * 0.5,
+    radius=lambda: (radius + np.random.rand(3) * (1e-6) * radius), # Dimensions of the principal axes of the ellipsoid
+    rotation=lambda: np.pi * np.random.rand(),
+    refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
+    upsample=4,                      # Amount the resolution is upsampled for accuracy
+    particle_type = -1 + label
+    )
+    return plankton
+    
+
+def moving_ellipsoid_plankton(im_size_height, im_size_width, radius=(1.5e-7, 9e-7, 1.5e-7), label=0, diffusion_constant_coeff=1):
+    plankton = Ellipsoid(
+    position_unit="pixel",          # Units of position (default meter)
+    position=lambda: np.random.rand(2) * np.array([im_size_height, im_size_width]),
+    z= lambda:  -1.5 + np.random.rand() * 0.5,
+    radius=lambda: (radius + np.random.rand(3) * (1e-6) * radius), # Dimensions of the principal axes of the ellipsoid
+    rotation=lambda: np.pi * np.random.rand(),
     refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
     upsample=4,                      # Amount the resolution is upsampled for accuracy
     particle_type = 0,
@@ -95,7 +128,7 @@ def create_image(noise_amp, sample, microscope, norm_min, norm_max):
                                         in microscope])
     augmented_image = FlipUD(FlipLR(incoherently_illuminated_sample))
 
-    image = augmented_image + noise + NormalizeMinMax(min=norm_min, max=norm_max) + Clip(min=0, max=1) #+ BlurCV2()
+    image = augmented_image + noise + NormalizeMinMax(min=norm_min, max=norm_max) + Clip(min=0, max=1)
     
     return image
 
@@ -185,13 +218,16 @@ def batch_function3(imaged_particle_sequence):
 
 
 def create_custom_batch_function(imaged_particle_sequence, 
-                                 outputs = [[0,1], [1,2], 0, 1, 2],
+                                 outputs=[[0,1], [1,2], 0, 1, 2],
                                  function_img=[lambda img: 1*img],
                                  function_diff=[lambda img: 1*img], 
                                  **kwargs):
     
     def custom_batch_function(imaged_particle_sequence, **kwargs):
-        images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
+        if len(np.asarray(imaged_particle_sequence).shape) == 4:
+            images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
+        else: 
+            images = imaged_particle_sequence
         train_images = np.zeros((images.shape[0],images.shape[1], len(outputs)))
 
         for count, num in enumerate(outputs):
@@ -217,4 +253,4 @@ def create_custom_batch_function(imaged_particle_sequence,
 
 
 def test_function():
-    print(8)
+    print(7)

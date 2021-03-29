@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os  
 import numpy as np
 from deeptrack.features import LoadImage
-from utils import Normalize_image
+from utils import Normalize_image, get_net_distance, get_total_distance
 
 def plot_image(image):
     plt.figure(figsize=(11, 11))
@@ -35,26 +35,55 @@ def plot_batch(train_images):
         plt.subplot(num_imgs,1,i+1)
         plt.imshow(train_images[:,:,i], cmap='gray')
 
-        
-def plot_and_save_track(no_of_frames = 10,
-               plankton_track = None,
-               plankton_dont_track = None,
-               folder_path = None,
-               frame_im0 = 0,
-               save_images = False,
-               show_plankton_track = True,
-               show_plankton_dont_track = True,
-               show_specific_plankton = None,
-               show_numbers_track = True,
-               show_numbers_dont_track = True,
-               show_numbers_specific_plankton = True,
-               specific_plankton = None,
-               color_plankton_track = 'b',
-               color_plankton_dont_track = 'r',
-               color_specific_plankton = 'g',
-               save_path = None,
-               frame_name = 'track',
-               file_type = '.jpg',
+
+def plot_prediction(model=None, im_stack=None, **kwargs):
+    predictions = model.predict(im_stack)
+    num_imgs = predictions.shape[-1]
+    plt.figure(figsize=(7, 7*num_imgs))
+    for i in range(num_imgs):
+        plt.subplot(num_imgs,1,i+1)
+        plt.imshow(predictions[0,:,:,i], cmap='gray')
+
+
+def plot_net_vs_gross_distance(list_of_plankton=None, show_numbers=True, **kwargs):
+    net_distances = get_net_distance(list_of_plankton)
+    total_distances = get_total_distance(list_of_plankton)
+    plt.figure(figsize=(8,8))
+    plt.axis([0, max(total_distances)*1.1, 0, max(net_distances)*1.1])
+    plt.scatter(total_distances, net_distances, **kwargs)
+    plt.xlabel('total distance')
+    plt.ylabel('net distance')
+    if show_numbers:
+        for i, key in enumerate(list_of_plankton):
+            plt.annotate(key.replace('plankton',''), (total_distances[i]-max(total_distances)*0.036, 
+                                                      net_distances[i]))
+
+
+
+
+
+def plot_and_save_track(no_of_frames=10,
+               plankton_track=None,
+               plankton_dont_track=None,
+               folder_path=None,
+               frame_im0=0,
+               save_images=False,
+               show_plankton_track=True,
+               show_plankton_dont_track=True,
+               show_specific_plankton=None,
+               show_numbers_track=True,
+               show_numbers_dont_track=True,
+               show_numbers_specific_plankton=True,
+               specific_plankton=None,
+               color_plankton_track='b',
+               color_plankton_dont_track='r',
+               color_specific_plankton='g',
+               x_axis_label='pixels',
+               y_axis_label='pixels',
+               pixel_length_ratio=1,
+               save_path=None,
+               frame_name='track',
+               file_type='.jpg',
                **kwargs):
 
     list_paths = os.listdir(folder_path)
@@ -90,19 +119,20 @@ def plot_and_save_track(no_of_frames = 10,
         if show_numbers_specific_plankton:
             for num in specific_plankton:
                 ax.annotate(num, (2*plankton_track['plankton%d' % num].positions[i,1]-27, 2*plankton_track['plankton%d' % num].positions[i,0]-10), color=color_specific_plankton, fontsize=10)
-
+        
+        locs, labels = plt.xticks()
+        labels = [int(float(item)*pixel_length_ratio) for item in locs]
+        plt.xticks(locs[1:-1], labels[1:-1])
+        plt.xlabel(x_axis_label)
+        plt.xlabel(y_axis_label)
+        
+        
         plt.title('Planktons')
         if save_images: 
             plt.savefig(save_path + '\\' + frame_name + '%d' % j + file_type)
             plt.close(fig)
         else:
+            
             plt.show()
             
             
-def plot_prediction(model=None, im_stack=None, **kwargs):
-    predictions = model.predict(im_stack)
-    num_imgs = predictions.shape[-1]
-    plt.figure(figsize=(7, 7*num_imgs))
-    for i in range(num_imgs):
-        plt.subplot(num_imgs,1,i+1)
-        plt.imshow(predictions[0,:,:,i], cmap='gray')

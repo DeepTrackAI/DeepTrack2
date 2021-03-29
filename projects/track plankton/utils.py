@@ -4,6 +4,9 @@ from deeptrack.features import LoadImage
 import cv2
 from scipy.ndimage import label
 from scipy.spatial.distance import cdist
+import pandas as pd
+import openpyxl
+import glob
 
 
 def Normalize_image(image, min_value=0, max_value=1):
@@ -43,7 +46,7 @@ def get_mean_image(folder_path, im_size_width, im_size_height):
 
 
 
-def get_image_stack(*args, outputs = None, folder_path=None, 
+def get_image_stack(*args, outputs=None, folder_path=None, 
                     frame_im0=None, im_size_width=None, im_size_height=None, 
                     function_img=[lambda img: 1*img], function_diff=[lambda img: 1*img], 
                     **kwargs):
@@ -88,6 +91,7 @@ def get_blob_center(label,array):
 
 def get_blob_centers(prediction, value_threshold):
     prediction[prediction < value_threshold]=0
+    prediction[prediction >= value_threshold]=1
     labeled_array, num_features = label(prediction, structure = [[1,1,1],
                                                                  [1,1,1],
                                                                  [1,1,1]])
@@ -125,7 +129,7 @@ class Plankton:
          
     def get_latest_position(self, timestep=0, threshold=10, **kwargs):
         latest_position = [np.nan, np.nan]
-        for i in range(self.number_of_timesteps - timestep, min(threshold + self.number_of_timesteps - timestep, self.number_of_timesteps+1)):
+        for i in range(self.number_of_timesteps - timestep + 1, min(threshold + self.number_of_timesteps - timestep, self.number_of_timesteps+1)):
             if np.isfinite(self.positions[-i,0]):
                 latest_position = self.positions[-i,:]
                 break
@@ -265,7 +269,7 @@ def assign_positions_to_planktons(positions, **kwargs):
 
 
 def split_plankton(percentage_threshold=0.5, list_of_plankton=None, **kwargs):
-    no_of_timesteps = len(list_of_plankton[list(list_of_plankton.keys())[0]].positions)
+    no_of_timesteps = list_of_plankton[list(list_of_plankton.keys())[0]].number_of_timesteps
     min_positions = int(percentage_threshold*no_of_timesteps)
     plankton_track = {}
     for key in list_of_plankton:
@@ -280,6 +284,79 @@ def split_plankton(percentage_threshold=0.5, list_of_plankton=None, **kwargs):
             plankton_dont_track[key] = list_of_plankton[key]
     return plankton_track, plankton_dont_track
 
+
+def get_net_distance(list_of_plankton=None, use_3D_dist=False):
+    no_of_timesteps = list_of_plankton[list(list_of_plankton.keys())[0]].number_of_timesteps
+    net_distances = np.zeros([len(list_of_plankton),1])
+    for index, key in enumerate(list_of_plankton):
+        latest_position = list_of_plankton[key].get_latest_position(timestep=no_of_timesteps, threshold=no_of_timesteps)
+        for i in range(no_of_timesteps):
+            if not np.isnan(list_of_plankton[key].positions[i][0]):
+                net_distances[index] = np.linalg.norm((latest_position - list_of_plankton[key].positions[i]).astype('float'))
+                break
+    if use_3D_dist:
+        net_distances = net_distances * np.sqrt(3/2)
+    return net_distances
+
+
+def get_total_distance(list_of_plankton=None, use_3D_dist=False):
+    no_of_timesteps = list_of_plankton[list(list_of_plankton.keys())[0]].number_of_timesteps
+    total_distances = np.zeros([len(list_of_plankton),1])
+    for index, key in enumerate(list_of_plankton):
+        temp_distance = 0
+        for i in range(no_of_timesteps-1):
+            if not np.isnan(list_of_plankton[key].positions[i][0]) and not np.isnan(list_of_plankton[key].positions[i+1][0]):
+                temp_distance += np.linalg.norm((list_of_plankton[key].positions[i+1] - list_of_plankton[key].positions[i]).astype('float'))
+                
+        total_distances[index] = temp_distance
+    if use_3D_dist:
+        total_distances = total_distances * np.sqrt(3/2)
+    return total_distances
+
+
+
+def save_positions(list_of_plankton, save_path=None, file_format='.xlsx', pixel_length_ratio=1):
+    shape_position = np.shape(list_of_plankton[list(list_of_plankton.keys())[0]].positions.astype('float64'))
+
+    positions_array = np.zeros((shape_position[0], len(list_of_plankton)*2))
+    
+    header = [None]*len(list_of_plankton)*2
+    
+    for i, key in enumerate(list_of_plankton):
+        positions_array[:,2*i:2*(i+1)] = list_of_plankton[key].positions.astype('float64')
+        header[2*i]=key + ' x-position'
+        header[2*i+1]=key + ' y-position'
+    
+    
+    
+    df = pd.DataFrame(positions_array*pixel_length_ratio)
+        
+    filepath = save_path + file_format
+    if file_format == '.xlsx':
+        df.to_excel(filepath, header=header)
+    
+    if file_format == '.csv':
+        df.to_csv(filepath, header=header)
+
+
+
+def Make_video(frame_im0=0, folder_path=None, save_path=None, fps=7, no_of_frames=3):
+
+    list_paths = os.listdir(folder_path)
+    img_array = []
+    for i in range(frame_im0, no_of_frames):
+    
+        img = cv2.imread(folder_path + '\\' + list_paths[i])
+
+        height, width, layers = img.shape
+        size = (width,height)
+        img_array.append(img)
+
+    out = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'DIVX'), fps, size)
+
+    for i in range(len(img_array)):
+        out.write(img_array[i])
+    out.release()
 
 
 
