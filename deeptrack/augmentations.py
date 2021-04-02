@@ -606,9 +606,10 @@ class Crop(Augmentation):
         Number of pixels to remove or retain (depending in `crop_mode`)
         If a tuple or list, it is assumed to be per axis.
         Can also be a function that returns any of the other types.
-    crop_mode : str {"remove", "retain"}
+    crop_mode : str {"retain", "remove"}
         How the `crop` argument is interpreted. If "remove", then
-        crop
+        `crop` denotes the amount to crop from the edges. If "retain", 
+        `crop` denotes the size of the output.
     corner : tuple of ints or Callable[Image]->tuple of ints or "random"
         Top left corner of the cropped region. Can be a tuple of ints,
         a function that returns a tuple of ints or the string random.
