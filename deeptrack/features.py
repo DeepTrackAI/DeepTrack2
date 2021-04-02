@@ -22,7 +22,7 @@ Duplicate
 
 import copy
 
-from typing import Any, Callable, Iterator, List, Tuple
+from typing import Any, Callable, Iterable, Iterator, List, Tuple
 import numpy as np
 import threading
 
@@ -433,6 +433,14 @@ class Feature:
 
         return Duplicate(self, other)
 
+    def __getitem__(self, slices) -> "Feature":
+        # Allows direct slicing of the data.
+        if not isinstance(slices, tuple):
+            slices = (slices, )
+
+        slices = list(slices)
+
+        return self + Slice(slices)
 
 class StructuralFeature(Feature):
     """Provides the structure of a feature-set
@@ -577,12 +585,70 @@ class Combine(StructuralFeature):
 
     __distribute__ = False
 
-    def __init__(self, features=List[Feature], **kwargs):
+    def __init__(self, features:List[Feature], **kwargs):
         super().__init__(features=features, **kwargs)
 
     def get(self, image_list, features, **kwargs):
         return [feature.resolve(image_list, **kwargs) for feature in features]
 
+
+class Slice(Feature):
+    ''' Array indexing for each Image in list.
+
+    Note, this feature is rarely needed to be used directly. Instead,
+    you can do normal array indexing on a feature directly. For example::
+
+       feature = dt.DummyFeature()
+       sliced_feature = feature[
+           lambda: 0 : lambda: 1,
+           1:2,
+           lambda: slice(None, None, -2)
+       ]
+       sliced_feature.resolve(np.arange(27).reshape((3, 3, 3)))
+
+    In the example above, `lambda` is used to demonstrate different ways 
+    to interact with the slices. In this case, the `lambda` keyword is
+    redundant.
+
+    Using `Slice` directly can be required in some cases, however. For example if 
+    dependencies between properties are required. In this case, one can replicate
+    the previous example as follows::
+
+       feature = dt.DummyFeature()
+       sliced_feature = feature + dt.Slice(
+           slices=lambda dim1, dim2: (dim1, dim2),
+           dim1=slice(lambda: 0, lambda: 1, 1),
+           dim2=slice(1, 2, None),
+           dim3=lambda: slice(None, None, -2)
+       )
+       sliced_feature.resolve(np.arange(27).reshape((3, 3, 3)))
+    
+    Parameters
+    ----------
+    slices : iterable of int, slice or ellipsis
+        The indexing of each dimension in order.
+    '''
+
+    def __init__(self, 
+        slices:PropertyLike[
+            Iterable[
+                PropertyLike[int] or 
+                PropertyLike[slice] or 
+                PropertyLike[ellipsis]
+            ]
+        ], **kwargs):
+        super().__init__(slices=slices, **kwargs)
+
+    def get(self, image, slices, **kwargs):
+
+        try:
+            slices = tuple(slices)
+        except ValueError:
+            pass
+
+        return image[slices]
+
+        
 
 class Bind(StructuralFeature):
     """Binds a feature with property arguments.
@@ -967,22 +1033,22 @@ class SampleToMasks(Feature):
     Parameters
     ----------
     transformation_function : function
-        Function that takes an image as input, and outputs another image with `number_of_masks`
-        layers.
+       Function that takes an image as input, and outputs another image with `number_of_masks`
+       layers.
     number_of_masks : int
-        The number of masks to create.
+       The number of masks to create.
     output_region : (int, int, int, int)
-        Size and relative position of the mask. Should generally be the same as
-        `optics.output_region`.
+       Size and relative position of the mask. Should generally be the same as
+       `optics.output_region`.
     merge_method : str or function or list
-        How to merge the individual masks to a single image. If a list, the merge_metod
-        is per mask. Can be
-            * "add": Adds the masks together.
-            * "overwrite": later masks overwrite earlier masks.
-            * "or": 1 if either any mask is non-zero at that pixel
-            * function: a function that accepts two images. The first is the current
-                    value of the output image where a new mask will be places, and
-                    the second is the mask to merge with the output image.
+       How to merge the individual masks to a single image. If a list, the merge_metod
+       is per mask. Can be
+          * "add": Adds the masks together.
+          * "overwrite": later masks overwrite earlier masks.
+          * "or": 1 if either any mask is non-zero at that pixel
+          * function: a function that accepts two images. The first is the current
+            value of the output image where a new mask will be places, and
+            the second is the mask to merge with the output image.
 
     """
 
@@ -1169,3 +1235,5 @@ class AsType(Feature):
 
     def get(self, image, dtype, **kwargs):
         return image.astype(dtype)
+
+

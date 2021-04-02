@@ -195,6 +195,12 @@ class Property:
                 return next(sampling_rule)
             except StopIteration:
                 return self.current_value
+        elif isinstance(sampling_rule, slice):
+            return slice(
+                self.sample(sampling_rule.start, **kwargs),
+                self.sample(sampling_rule.stop, **kwargs),
+                self.sample(sampling_rule.step, **kwargs)
+            )
 
         elif callable(sampling_rule):
             # If it's a function, extract the arguments it accepts.
