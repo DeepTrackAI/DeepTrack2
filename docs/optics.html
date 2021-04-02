@@ -1,13 +1,13 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>optics &#8212; DeepTrack 2.0 documentation</title>
     
-  <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
 
     
   <link rel="stylesheet"
@@ -19,22 +19,18 @@
 
     
       
-  <link rel="stylesheet"
-    href="_static/vendor/open-sans_all/1.44.1/index.css">
-  <link rel="stylesheet"
-    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
 
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-  <link rel="preload" as="script" href="_static/js/index.30270b6e4c972e43c488.js">
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
 
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="properties" href="properties.html" />
@@ -44,39 +40,44 @@
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
-<div class="container-xl">
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
 
     
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
 
+    
     <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
       <ul id="navbar-main-elements" class="navbar-nav mr-auto">
-        
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="installation.html">Getting started</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
-        </li>
-        
-        <li class="nav-item active">
-            <a class="nav-link" href="deeptrack.html">Documentation</a>
-        </li>
-        
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
         
       </ul>
 
-
-      
-
-      <ul class="navbar-nav">
-        
-        
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
       </ul>
     </div>
 </div>
@@ -86,129 +87,110 @@
     <div class="container-xl">
       <div class="row">
           
-          <div class="col-12 col-md-3 bd-sidebar">
-
-<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form>
-
-
 <nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-
   <div class="bd-toc-item active">
-  
-
-  <ul class="nav bd-sidenav">
-      
-      
-      
-      
-      
-      
-        
-          
-              <li class="">
-                  <a href="backend.html">backend</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="aberrations.html">aberrations</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="augmentations.html">augmentations</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="features.html">features</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="generators.html">generators</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="image.html">image</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="layers.html">layers</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="losses.html">losses</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="math.html">math</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="models.html">models</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="noises.html">noises</a>
-              </li>
-          
-        
-          
-              <li class="active">
-                  <a href="">optics</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="properties.html">properties</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="scatterers.html">scatterers</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="sequences.html">sequences</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="utils.html">utils</a>
-              </li>
-          
-        
-      
-      
-    </ul>
-
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2">
+  <a class="reference internal" href="backend.html">
+   backend
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="aberrations.html">
+   aberrations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="augmentations.html">
+   augmentations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="features.html">
+   features
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="generators.html">
+   generators
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="image.html">
+   image
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="layers.html">
+   layers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="losses.html">
+   losses
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="math.html">
+   math
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="models.html">
+   models
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="noises.html">
+   noises
+  </a>
+ </li>
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   optics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="properties.html">
+   properties
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="scatterers.html">
+   scatterers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="sequences.html">
+   sequences
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="test.html">
+   test
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="types.html">
+   types
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="utils.html">
+   utils
+  </a>
+ </li>
+</ul>
+  </div>
 </nav>
-          </div>
+            </div>
+            
           
 
           
@@ -219,39 +201,46 @@
 </div>
 
 <nav id="bd-toc-nav">
-    <ul class="nav section-nav flex-column">
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#classes" class="nav-link">Classes</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#module-classes" class="nav-link">Module classes</a><ul class="nav section-nav flex-column">
-                
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#brightfield" class="nav-link">Brightfield</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#fluorescence" class="nav-link">Fluorescence</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#illuminationgradient" class="nav-link">IlluminationGradient</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#microscope" class="nav-link">Microscope</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#id1" class="nav-link">Optics</a>
-        </li>
-    
-            </ul>
-        </li>
-    
-    </ul>
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#classes">
+   Classes
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-classes">
+   Module classes
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#brightfield">
+     Brightfield
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#fluorescence">
+     Fluorescence
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#illuminationgradient">
+     IlluminationGradient
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#microscope">
+     Microscope
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id1">
+     Optics
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
 </nav>
 
 
@@ -259,6 +248,9 @@
           </div>
           
 
+          
+          
+            
           
           <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
@@ -286,9 +278,9 @@ create camera images of samples.</p>
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="brightfield">
 <h3>Brightfield<a class="headerlink" href="#brightfield" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.optics.Brightfield">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Brightfield</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">NA</span><span class="o">=</span><span class="default_value">0.7</span></em>, <em class="sig-param"><span class="n">wavelength</span><span class="o">=</span><span class="default_value">6.6e-07</span></em>, <em class="sig-param"><span class="n">magnification</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">1e-06, 1e-06, 1e-06</span></em>, <em class="sig-param"><span class="n">refractive_index_medium</span><span class="o">=</span><span class="default_value">1.33</span></em>, <em class="sig-param"><span class="n">upscale</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">padding</span><span class="o">=</span><span class="default_value">10, 10, 10, 10</span></em>, <em class="sig-param"><span class="n">output_region</span><span class="o">=</span><span class="default_value">0, 0, 128, 128</span></em>, <em class="sig-param"><span class="n">pupil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Brightfield" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Brightfield</code><span class="sig-paren">(</span><em class="sig-param">NA=0.7</em>, <em class="sig-param">wavelength=6.6e-07</em>, <em class="sig-param">magnification=10</em>, <em class="sig-param">resolution=(1e-06</em>, <em class="sig-param">1e-06</em>, <em class="sig-param">1e-06)</em>, <em class="sig-param">refractive_index_medium=1.33</em>, <em class="sig-param">upscale=1</em>, <em class="sig-param">padding=(10</em>, <em class="sig-param">10</em>, <em class="sig-param">10</em>, <em class="sig-param">10)</em>, <em class="sig-param">output_region=(0</em>, <em class="sig-param">0</em>, <em class="sig-param">128</em>, <em class="sig-param">128)</em>, <em class="sig-param">pupil=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Brightfield" title="Permalink to this definition">¶</a></dt>
 <dd><p>Images coherently illuminated samples.</p>
 <p>Images samples by creating a discretized volume, where each pixel
 represents the effective refractive index of that pixel. Light is
@@ -354,9 +346,9 @@ receive an unaberrated pupil as input.</p>
 </div>
 <div class="section" id="fluorescence">
 <h3>Fluorescence<a class="headerlink" href="#fluorescence" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.optics.Fluorescence">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Fluorescence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">NA</span><span class="o">=</span><span class="default_value">0.7</span></em>, <em class="sig-param"><span class="n">wavelength</span><span class="o">=</span><span class="default_value">6.6e-07</span></em>, <em class="sig-param"><span class="n">magnification</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">1e-06, 1e-06, 1e-06</span></em>, <em class="sig-param"><span class="n">refractive_index_medium</span><span class="o">=</span><span class="default_value">1.33</span></em>, <em class="sig-param"><span class="n">upscale</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">padding</span><span class="o">=</span><span class="default_value">10, 10, 10, 10</span></em>, <em class="sig-param"><span class="n">output_region</span><span class="o">=</span><span class="default_value">0, 0, 128, 128</span></em>, <em class="sig-param"><span class="n">pupil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Fluorescence" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Fluorescence</code><span class="sig-paren">(</span><em class="sig-param">NA=0.7</em>, <em class="sig-param">wavelength=6.6e-07</em>, <em class="sig-param">magnification=10</em>, <em class="sig-param">resolution=(1e-06</em>, <em class="sig-param">1e-06</em>, <em class="sig-param">1e-06)</em>, <em class="sig-param">refractive_index_medium=1.33</em>, <em class="sig-param">upscale=1</em>, <em class="sig-param">padding=(10</em>, <em class="sig-param">10</em>, <em class="sig-param">10</em>, <em class="sig-param">10)</em>, <em class="sig-param">output_region=(0</em>, <em class="sig-param">0</em>, <em class="sig-param">128</em>, <em class="sig-param">128)</em>, <em class="sig-param">pupil=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Fluorescence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Optical device for fluorescenct imaging</p>
 <p>Images samples by creating a discretized volume, where each pixel
 represents the intensity of the light emitted by fluorophores in
@@ -417,9 +409,9 @@ receive an unaberrated pupil as input.</p>
 </div>
 <div class="section" id="illuminationgradient">
 <h3>IlluminationGradient<a class="headerlink" href="#illuminationgradient" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.optics.IlluminationGradient">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">IlluminationGradient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gradient</span><span class="o">=</span><span class="default_value">0, 0</span></em>, <em class="sig-param"><span class="n">constant</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">vmin</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">inf</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.IlluminationGradient" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">IlluminationGradient</code><span class="sig-paren">(</span><em class="sig-param">gradient=(0</em>, <em class="sig-param">0)</em>, <em class="sig-param">constant=0</em>, <em class="sig-param">vmin=0</em>, <em class="sig-param">vmax=inf</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.IlluminationGradient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a gradient in the illumination</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -461,9 +453,9 @@ receive an unaberrated pupil as input.</p>
 </div>
 <div class="section" id="microscope">
 <h3>Microscope<a class="headerlink" href="#microscope" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.optics.Microscope">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Microscope</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sample</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="n">objective</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Microscope" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Microscope</code><span class="sig-paren">(</span><em class="sig-param">sample</em>, <em class="sig-param">objective</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Microscope" title="Permalink to this definition">¶</a></dt>
 <dd><p>Image a sample using an optical system.</p>
 <p>Wraps a feature-set defining a sample and a feature-set defining the optics.</p>
 <dl class="field-list simple">
@@ -502,9 +494,9 @@ receive an unaberrated pupil as input.</p>
 </div>
 <div class="section" id="id1">
 <h3>Optics<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.optics.Optics">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Optics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">NA</span><span class="o">=</span><span class="default_value">0.7</span></em>, <em class="sig-param"><span class="n">wavelength</span><span class="o">=</span><span class="default_value">6.6e-07</span></em>, <em class="sig-param"><span class="n">magnification</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">resolution</span><span class="o">=</span><span class="default_value">1e-06, 1e-06, 1e-06</span></em>, <em class="sig-param"><span class="n">refractive_index_medium</span><span class="o">=</span><span class="default_value">1.33</span></em>, <em class="sig-param"><span class="n">upscale</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">padding</span><span class="o">=</span><span class="default_value">10, 10, 10, 10</span></em>, <em class="sig-param"><span class="n">output_region</span><span class="o">=</span><span class="default_value">0, 0, 128, 128</span></em>, <em class="sig-param"><span class="n">pupil</span><span class="p">:</span> <span class="n"><a class="reference internal" href="features.html#deeptrack.features.Feature" title="deeptrack.features.Feature">deeptrack.features.Feature</a></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Optics" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.optics.</code><code class="sig-name descname">Optics</code><span class="sig-paren">(</span><em class="sig-param">NA=0.7</em>, <em class="sig-param">wavelength=6.6e-07</em>, <em class="sig-param">magnification=10</em>, <em class="sig-param">resolution=(1e-06</em>, <em class="sig-param">1e-06</em>, <em class="sig-param">1e-06)</em>, <em class="sig-param">refractive_index_medium=1.33</em>, <em class="sig-param">upscale=1</em>, <em class="sig-param">padding=(10</em>, <em class="sig-param">10</em>, <em class="sig-param">10</em>, <em class="sig-param">10)</em>, <em class="sig-param">output_region=(0</em>, <em class="sig-param">0</em>, <em class="sig-param">128</em>, <em class="sig-param">128)</em>, <em class="sig-param">pupil=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.optics.Optics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract base optics class.</p>
 <p>Provides structure and methods common for most optical devices.</p>
 <dl class="field-list simple">
@@ -582,14 +574,14 @@ receive an unaberrated pupil as input.</p>
     </div>
 
     
-  <script src="_static/js/index.30270b6e4c972e43c488.js"></script>
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
 
 
     <footer class="footer mt-5 mt-md-0">
   <div class="container">
     <p>
           &copy; Copyright 2020, Benjamin Midtvedt.<br/>
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>

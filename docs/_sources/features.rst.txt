@@ -132,6 +132,13 @@ SampleToMasks
    :members:
    :exclude-members: get
 
+Slice
+^^^^^
+
+.. autoclass:: deeptrack.features.Slice
+   :members:
+   :exclude-members: get
+
 StructuralFeature
 ^^^^^^^^^^^^^^^^^
 

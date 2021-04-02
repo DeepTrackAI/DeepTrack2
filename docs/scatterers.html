@@ -1,13 +1,13 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>scatterers &#8212; DeepTrack 2.0 documentation</title>
     
-  <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
 
     
   <link rel="stylesheet"
@@ -19,22 +19,18 @@
 
     
       
-  <link rel="stylesheet"
-    href="_static/vendor/open-sans_all/1.44.1/index.css">
-  <link rel="stylesheet"
-    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
 
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-  <link rel="preload" as="script" href="_static/js/index.30270b6e4c972e43c488.js">
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
 
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="sequences" href="sequences.html" />
@@ -44,39 +40,44 @@
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
-<div class="container-xl">
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
 
     
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
 
+    
     <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
       <ul id="navbar-main-elements" class="navbar-nav mr-auto">
-        
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="installation.html">Getting started</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
-        </li>
-        
-        <li class="nav-item active">
-            <a class="nav-link" href="deeptrack.html">Documentation</a>
-        </li>
-        
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
         
       </ul>
 
-
-      
-
-      <ul class="navbar-nav">
-        
-        
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
       </ul>
     </div>
 </div>
@@ -86,129 +87,110 @@
     <div class="container-xl">
       <div class="row">
           
-          <div class="col-12 col-md-3 bd-sidebar">
-
-<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form>
-
-
 <nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-
   <div class="bd-toc-item active">
-  
-
-  <ul class="nav bd-sidenav">
-      
-      
-      
-      
-      
-      
-        
-          
-              <li class="">
-                  <a href="backend.html">backend</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="aberrations.html">aberrations</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="augmentations.html">augmentations</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="features.html">features</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="generators.html">generators</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="image.html">image</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="layers.html">layers</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="losses.html">losses</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="math.html">math</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="models.html">models</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="noises.html">noises</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="optics.html">optics</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="properties.html">properties</a>
-              </li>
-          
-        
-          
-              <li class="active">
-                  <a href="">scatterers</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="sequences.html">sequences</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="utils.html">utils</a>
-              </li>
-          
-        
-      
-      
-    </ul>
-
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2">
+  <a class="reference internal" href="backend.html">
+   backend
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="aberrations.html">
+   aberrations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="augmentations.html">
+   augmentations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="features.html">
+   features
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="generators.html">
+   generators
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="image.html">
+   image
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="layers.html">
+   layers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="losses.html">
+   losses
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="math.html">
+   math
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="models.html">
+   models
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="noises.html">
+   noises
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="optics.html">
+   optics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="properties.html">
+   properties
+  </a>
+ </li>
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   scatterers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="sequences.html">
+   sequences
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="test.html">
+   test
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="types.html">
+   types
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="utils.html">
+   utils
+  </a>
+ </li>
+</ul>
+  </div>
 </nav>
-          </div>
+            </div>
+            
           
 
           
@@ -219,51 +201,61 @@
 </div>
 
 <nav id="bd-toc-nav">
-    <ul class="nav section-nav flex-column">
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#classes" class="nav-link">Classes</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#module-classes" class="nav-link">Module classes</a><ul class="nav section-nav flex-column">
-                
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#ellipse" class="nav-link">Ellipse</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#ellipsoid" class="nav-link">Ellipsoid</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#miescatterer" class="nav-link">MieScatterer</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#miesphere" class="nav-link">MieSphere</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#miestratifiedsphere" class="nav-link">MieStratifiedSphere</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#pointparticle" class="nav-link">PointParticle</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#scatterer" class="nav-link">Scatterer</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#sphere" class="nav-link">Sphere</a>
-        </li>
-    
-            </ul>
-        </li>
-    
-    </ul>
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#classes">
+   Classes
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-classes">
+   Module classes
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#ellipse">
+     Ellipse
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#ellipsoid">
+     Ellipsoid
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#miescatterer">
+     MieScatterer
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#miesphere">
+     MieSphere
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#miestratifiedsphere">
+     MieStratifiedSphere
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#pointparticle">
+     PointParticle
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#scatterer">
+     Scatterer
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#sphere">
+     Sphere
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
 </nav>
 
 
@@ -271,6 +263,9 @@
           </div>
           
 
+          
+          
+            
           
           <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
@@ -300,9 +295,9 @@ that are frequently used.</p>
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="ellipse">
 <h3>Ellipse<a class="headerlink" href="#ellipse" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.scatterers.Ellipse">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Ellipse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">rotation</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Ellipse" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Ellipse</code><span class="sig-paren">(</span><em class="sig-param">radius=1e-06</em>, <em class="sig-param">rotation=0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Ellipse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates an elliptical disk scatterer</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -354,9 +349,9 @@ for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</
 </div>
 <div class="section" id="ellipsoid">
 <h3>Ellipsoid<a class="headerlink" href="#ellipsoid" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.scatterers.Ellipsoid">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Ellipsoid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">rotation</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Ellipsoid" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Ellipsoid</code><span class="sig-paren">(</span><em class="sig-param">radius=1e-06</em>, <em class="sig-param">rotation=0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Ellipsoid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates an ellipsoidal scatterer</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -408,9 +403,9 @@ for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</
 </div>
 <div class="section" id="miescatterer">
 <h3>MieScatterer<a class="headerlink" href="#miescatterer" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.scatterers.MieScatterer">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieScatterer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coefficients</span></em>, <em class="sig-param"><span class="n">offset_z</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">polarization_angle</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">collection_angle</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">L</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieScatterer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieScatterer</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">offset_z='auto'</em>, <em class="sig-param">polarization_angle=0</em>, <em class="sig-param">collection_angle='auto'</em>, <em class="sig-param">L='auto'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieScatterer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base implementation of a Mie particle.</p>
 <p>New Mie-theory scatterers can be implemented by extending this class, and
 passing a function that calculates the coefficients of the harmonics up to
@@ -475,9 +470,9 @@ camera plane. Used if <cite>position</cite> is of length 2.</p>
 </div>
 <div class="section" id="miesphere">
 <h3>MieSphere<a class="headerlink" href="#miesphere" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.scatterers.MieSphere">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieSphere</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">refractive_index</span><span class="o">=</span><span class="default_value">1.45</span></em>, <em class="sig-param"><span class="n">offset_z</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">polarization_angle</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">collection_angle</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">L</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieSphere" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieSphere</code><span class="sig-paren">(</span><em class="sig-param">radius=1e-06</em>, <em class="sig-param">refractive_index=1.45</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieSphere" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scattered field by a sphere</p>
 <p>Should be calculated on at least a 64 by 64 grid. Use padding in the
 optics if necessary.</p>
@@ -541,9 +536,9 @@ is the limiting aperature).</p>
 </div>
 <div class="section" id="miestratifiedsphere">
 <h3>MieStratifiedSphere<a class="headerlink" href="#miestratifiedsphere" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.scatterers.MieStratifiedSphere">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieStratifiedSphere</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">refractive_index</span><span class="o">=</span><span class="default_value">1.45</span></em>, <em class="sig-param"><span class="n">offset_z</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">polarization_angle</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">collection_angle</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">L</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieStratifiedSphere" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieStratifiedSphere</code><span class="sig-paren">(</span><em class="sig-param">radius=[1e-06], refractive_index=[1.45], **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieStratifiedSphere" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scattered field by a stratified sphere</p>
 <p>A stratified sphere is a sphere with several concentric shells of uniform
 refractive index.</p>
@@ -555,9 +550,9 @@ to the <cite>refractive_index_medium</cite> property of the optical device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>radius</strong><span class="classifier">float</span></dt><dd><p>The radius of each cell in increasing order.</p>
+<dt><strong>radius</strong><span class="classifier">list of float</span></dt><dd><p>The radius of each cell in increasing order.</p>
 </dd>
-<dt><strong>refractive_index</strong><span class="classifier">float</span></dt><dd><p>Refractive index of each cell in the same order as <cite>radius</cite></p>
+<dt><strong>refractive_index</strong><span class="classifier">list of float</span></dt><dd><p>Refractive index of each cell in the same order as <cite>radius</cite></p>
 </dd>
 <dt><strong>L</strong><span class="classifier">int or str</span></dt><dd><p>The number of terms used to evaluate the mie theory. If <cite>“auto”</cite>,
 it determines the number of terms automatically.</p>
@@ -608,9 +603,9 @@ is the limiting aperature).</p>
 </div>
 <div class="section" id="pointparticle">
 <h3>PointParticle<a class="headerlink" href="#pointparticle" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.scatterers.PointParticle">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">PointParticle</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.PointParticle" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">PointParticle</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.PointParticle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a point particle</p>
 <p>A point particle is approximated by the size of a pixel. For subpixel
 positioning, the position is interpolated linearly.</p>
@@ -657,9 +652,9 @@ for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</
 </div>
 <div class="section" id="scatterer">
 <h3>Scatterer<a class="headerlink" href="#scatterer" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.scatterers.Scatterer">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Scatterer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">position</span><span class="o">=</span><span class="default_value">32, 32</span></em>, <em class="sig-param"><span class="n">z</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">value</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">position_unit</span><span class="o">=</span><span class="default_value">'pixel'</span></em>, <em class="sig-param"><span class="n">upsample</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Scatterer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Scatterer</code><span class="sig-paren">(</span><em class="sig-param">position=(32</em>, <em class="sig-param">32)</em>, <em class="sig-param">z=0.0</em>, <em class="sig-param">value=1.0</em>, <em class="sig-param">position_unit='pixel'</em>, <em class="sig-param">upsample=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Scatterer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base abstract class for scatterers.</p>
 <p>A scatterer is defined by a 3-dimensional volume of voxels.
 To each voxel corresponds an occupancy factor, i.e., how much
@@ -723,9 +718,9 @@ None, which implies all axes are upsampled).</p>
 </div>
 <div class="section" id="sphere">
 <h3>Sphere<a class="headerlink" href="#sphere" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.scatterers.Sphere">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Sphere</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Sphere" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Sphere</code><span class="sig-paren">(</span><em class="sig-param">radius=1e-06</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Sphere" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a spherical scatterer</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -793,14 +788,14 @@ for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</
     </div>
 
     
-  <script src="_static/js/index.30270b6e4c972e43c488.js"></script>
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
 
 
     <footer class="footer mt-5 mt-md-0">
   <div class="container">
     <p>
           &copy; Copyright 2020, Benjamin Midtvedt.<br/>
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>
