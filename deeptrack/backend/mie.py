@@ -4,7 +4,7 @@
 import numpy as np
 
 from typing import Tuple
-from deeptrack.backend import (
+from . import (
     ricbesh,
     ricbesy,
     ricbesj,
