@@ -1,8 +1,8 @@
-tensorflow>=2.0.1
-tensorflow_addons
+tensorflow
 numpy
 matplotlib
 scipy
 Sphinx==2.2.0
 pydata-sphinx-theme
 numpydoc
+scikit-image
