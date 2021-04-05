@@ -115,9 +115,6 @@ class Property:
         # If currently updated through a call to feature and deeptrack.UPDATE_MEMO
         my_id = id(self)
 
-        # if my_id in deeptrack.UPDATE_MEMO["memoization"] and not hasattr(self, '_current_value'):
-        #     a = 1+1
-
         if (
             features.UPDATE_LOCK.locked()
             and my_id in features.UPDATE_MEMO["memoization"]
