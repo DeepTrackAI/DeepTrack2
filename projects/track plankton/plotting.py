@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os  
 import numpy as np
 from deeptrack.features import LoadImage
-from utils import Normalize_image, get_net_distance, get_total_distance
+from utils import Normalize_image, get_mean_net_and_gross_distance
 
 def plot_image(image):
     plt.figure(figsize=(11, 11))
@@ -45,18 +45,13 @@ def plot_prediction(model=None, im_stack=None, **kwargs):
         plt.imshow(predictions[0,:,:,i], cmap='gray')
 
 
-def plot_net_vs_gross_distance(list_of_plankton=None, show_numbers=True, **kwargs):
-    net_distances = get_net_distance(list_of_plankton)
-    total_distances = get_total_distance(list_of_plankton)
+def plot_net_vs_gross_distance(list_of_plankton=None, **kwargs):
+    net_distances, gross_distances = get_mean_net_and_gross_distance(list_of_plankton)
     plt.figure(figsize=(8,8))
-    plt.axis([0, max(total_distances)*1.1, 0, max(net_distances)*1.1])
-    plt.scatter(total_distances, net_distances, **kwargs)
-    plt.xlabel('total distance')
+    plt.axis([0, max(gross_distances[gross_distances!=0])*1.1, 0, max(net_distances[net_distances!=0])*1.1])
+    plt.plot(gross_distances[gross_distances!=0], net_distances[net_distances!=0], **kwargs)
+    plt.xlabel('gross distance')
     plt.ylabel('net distance')
-    if show_numbers:
-        for i, key in enumerate(list_of_plankton):
-            plt.annotate(key.replace('plankton',''), (total_distances[i]-max(total_distances)*0.036, 
-                                                      net_distances[i]))
 
 
 

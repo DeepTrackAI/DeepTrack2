@@ -9,7 +9,7 @@ import openpyxl
 import glob
 
 
-def Normalize_image(image, min_value=0, max_value=1):
+def Normalize_image(image, min_value=0, max_value=1, **kwargs):
     min_im = np.min(image)
     max_im = np.max(image)
     image = image/(max_im-min_im) * (max_value - min_value)
@@ -48,17 +48,17 @@ def get_mean_image(folder_path, im_size_width, im_size_height):
 
 def get_image_stack(*args, outputs=None, folder_path=None, 
                     frame_im0=None, im_size_width=None, im_size_height=None, 
-                    function_img=[lambda img: 1*img], function_diff=[lambda img: 1*img], 
-                    **kwargs):
+                    im_resize_width=None, im_resize_height=None, function_img=[lambda img: 1*img], 
+                    function_diff=[lambda img: 1*img], **kwargs):
     list_paths = os.listdir(folder_path)
     im_stack = np.zeros((1, im_size_height, im_size_width, len(outputs)))
     for count, num in enumerate(outputs):
         if type(num) == int:
             img = cv2.imread(folder_path +'\\' + list_paths[frame_im0 + num], 0)
-            img = cv2.resize(img, dsize=(im_size_width, im_size_height), interpolation=cv2.INTER_AREA)
+            img = cv2.resize(img, dsize=(im_resize_width, im_resize_height), interpolation=cv2.INTER_AREA)
             
             for i in range(len(function_img)):
-                    img = function_img[i](img)
+                    img = function_img[i](img, **kwargs)
                 
             im_stack[0, :, :, count] = img
             
@@ -67,10 +67,10 @@ def get_image_stack(*args, outputs=None, folder_path=None,
             img1 = Normalize_image(cv2.imread(folder_path +'\\' + list_paths[frame_im0 + num[1]], 0))
             diff = img1-img0
             
-            diff = cv2.resize(diff, dsize=(im_size_width, im_size_height), interpolation=cv2.INTER_AREA)
+            diff = cv2.resize(diff, dsize=(im_resize_width, im_resize_height), interpolation=cv2.INTER_AREA)
             
             for i in range(len(function_diff)):
-                    diff = function_diff[i](diff)
+                    diff = function_diff[i](diff, **kwargs)
             
             im_stack[0, :, :, count] = diff
 
@@ -285,33 +285,48 @@ def split_plankton(percentage_threshold=0.5, list_of_plankton=None, **kwargs):
     return plankton_track, plankton_dont_track
 
 
-def get_net_distance(list_of_plankton=None, use_3D_dist=False):
+def get_mean_net_and_gross_distance(list_of_plankton=None, use_3D_dist=False):
     no_of_timesteps = list_of_plankton[list(list_of_plankton.keys())[0]].number_of_timesteps
-    net_distances = np.zeros([len(list_of_plankton),1])
+    no_of_plankton = len(list_of_plankton)
+    mean_net_distances = np.zeros([no_of_timesteps,1])
+    mean_gross_distances = np.zeros([no_of_timesteps,1])
+
+    positions = np.zeros((no_of_timesteps, 2*no_of_plankton))
     for index, key in enumerate(list_of_plankton):
-        latest_position = list_of_plankton[key].get_latest_position(timestep=no_of_timesteps, threshold=no_of_timesteps)
-        for i in range(no_of_timesteps):
-            if not np.isnan(list_of_plankton[key].positions[i][0]):
-                net_distances[index] = np.linalg.norm((latest_position - list_of_plankton[key].positions[i]).astype('float'))
+        positions[:,2*index:2*(index+1)] = list_of_plankton[key].positions
+        
+    for i in range(no_of_plankton):
+        counter = 0
+        for j in range(no_of_timesteps):
+            if np.isnan(positions[j,i*2]):
+                counter+=1
+            else:
                 break
-    if use_3D_dist:
-        net_distances = net_distances * np.sqrt(3/2)
-    return net_distances
-
-
-def get_total_distance(list_of_plankton=None, use_3D_dist=False):
-    no_of_timesteps = list_of_plankton[list(list_of_plankton.keys())[0]].number_of_timesteps
-    total_distances = np.zeros([len(list_of_plankton),1])
-    for index, key in enumerate(list_of_plankton):
-        temp_distance = 0
-        for i in range(no_of_timesteps-1):
-            if not np.isnan(list_of_plankton[key].positions[i][0]) and not np.isnan(list_of_plankton[key].positions[i+1][0]):
-                temp_distance += np.linalg.norm((list_of_plankton[key].positions[i+1] - list_of_plankton[key].positions[i]).astype('float'))
+        positions[:,2*i:2*(i+1)] = np.roll(positions[:,2*i:2*(i+1)], -counter, axis=0)
+        
+        
+    for i in range(no_of_timesteps-1):
+        counter=0
+        for j in range(no_of_plankton):
+            if not np.isnan(positions[i+1,2*j]):
+                counter+=1
+                mean_net_distances[i] += np.linalg.norm(positions[i+1,2*j:2*(j+1)]-positions[0,2*j:2*(j+1)])
                 
-        total_distances[index] = temp_distance
+                for k in range(0,i+1):
+                    if np.isnan(positions[k+1,2*j]):
+                        break
+                    mean_gross_distances[i] += np.linalg.norm(positions[k+1,2*j:2*(j+1)]-positions[k,2*j:2*(j+1)])
+        if counter==0:
+            
+            break
+        
+        mean_net_distances[i] /= counter
+        mean_gross_distances[i] /= counter
+        
     if use_3D_dist:
-        total_distances = total_distances * np.sqrt(3/2)
-    return total_distances
+        mean_net_distances = mean_net_distances * np.sqrt(3/2)
+        mean_gross_distances = mean_gross_distances * np.sqrt(3/2)
+    return mean_net_distances, mean_gross_distances
 
 
 
@@ -358,7 +373,25 @@ def Make_video(frame_im0=0, folder_path=None, save_path=None, fps=7, no_of_frame
         out.write(img_array[i])
     out.release()
 
+def crop_and_append_image(image=None, x_delete_list=[0,1], y_delete_list=[0,1], mult_of=16, **kwargs):
+    
+    rows0, cols0 = image.shape
+    
+    
+    for i in range(int(len(x_delete_list)/2)):
+        rows, cols = image.shape
+        start = int(x_delete_list[2*i]-cols0+cols)
+        stop = int(x_delete_list[2*i+1]-cols0+cols)
+        image = np.delete(image, slice(start, stop), 1)
 
+    for i in range(int(len(y_delete_list)/2)):
+        rows, cols = image.shape
+        start = int(y_delete_list[2*i]-rows0+rows)
+        stop = int(y_delete_list[2*i+1]-rows0+rows)
+        image = np.delete(image, slice(start, stop), 0)
+    rows, cols = image.shape
+    
+    return image[0:int(rows/mult_of)*mult_of, 0:int(cols/mult_of)*mult_of]
 
 
 

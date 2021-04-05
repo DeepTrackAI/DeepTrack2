@@ -142,27 +142,6 @@ def create_sequence(noise_amp, sample, microscope, norm_min, norm_max):
     
     return sequence
 
-
-def get_target_sequence(sequence_of_particles):
-    label = np.zeros((*np.asarray(sequence_of_particles).shape[1:3], 4))
-    
-    X, Y = np.meshgrid(
-        np.arange(0, np.asarray(sequence_of_particles).shape[2]), 
-        np.arange(0, np.asarray(sequence_of_particles).shape[1])
-    )
-    indices = np.asarray(sequence_of_particles).shape[0]
-    for i in range(indices):
-        for property in sequence_of_particles[i].properties:
-            if "position" in property:
-                position = property["position"]
-                distance_map = (X - position[1])**2 + (Y - position[0])**2
-
-                label[distance_map < 3, (property["particle_type"] + 1) * (i+1)] = 1
-    label[..., 0] = 1 - np.max(label[..., 1:], axis=-1)
-    
-    return label
-
-
 def get_target_image(image_of_particles):
     no_of_types = 1
     for property in image_of_particles.properties:
@@ -182,6 +161,49 @@ def get_target_image(image_of_particles):
     label[..., 0] = 1 - np.max(label[..., 1:], axis=-1)
     
     return label
+
+def get_target_sequence(sequence_of_particles):
+    no_of_types = 1
+    for property in sequence_of_particles[0].properties:
+        if "particle_type" in property:
+            no_of_types = max(property['particle_type'], no_of_types)
+    if no_of_types==1:
+        indices = np.asarray(sequence_of_particles).shape[0]
+        label = np.zeros((*np.asarray(sequence_of_particles).shape[1:3], indices + 1))
+        
+        X, Y = np.meshgrid(
+            np.arange(0, np.asarray(sequence_of_particles).shape[2]), 
+            np.arange(0, np.asarray(sequence_of_particles).shape[1])
+        )
+        for i in range(indices):
+            for property in sequence_of_particles[i].properties:
+                if "position" in property:
+                    position = property["position"]
+                    distance_map = (X - position[1])**2 + (Y - position[0])**2
+    
+                    label[distance_map < 3, (property["particle_type"] + 1) * (i+1)] = 1
+        label[..., 0] = 1 - np.max(label[..., 1:], axis=-1)
+    else:
+        indices = np.asarray(sequence_of_particles).shape[0]
+        label = np.zeros((*np.asarray(sequence_of_particles).shape[1:3], no_of_types + 1))
+        
+        X, Y = np.meshgrid(
+            np.arange(0, np.asarray(sequence_of_particles).shape[2]), 
+            np.arange(0, np.asarray(sequence_of_particles).shape[1])
+        )
+        segmentation_image = int(indices/2)
+        
+        for property in sequence_of_particles[segmentation_image].properties:
+            if "position" in property:
+                position = property["position"]
+                distance_map = (X - position[1])**2 + (Y - position[0])**2
+
+                label[distance_map < 3, (property["particle_type"] + 1) * (i+1)] = 1
+        label[..., 0] = 1 - np.max(label[..., 1:], axis=-1)
+        
+    return label
+
+
 
 def batch_function0(image):
     return np.squeeze(image)
