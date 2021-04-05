@@ -634,7 +634,7 @@ class Slice(Feature):
             Iterable[
                 PropertyLike[int] or 
                 PropertyLike[slice] or 
-                PropertyLike[ellipsis]
+                PropertyLike[Ellipsis]
             ]
         ], **kwargs):
         super().__init__(slices=slices, **kwargs)
