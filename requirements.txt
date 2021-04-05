@@ -1,5 +1,4 @@
 tensorflow
-tensorflow_addons
 numpy
 matplotlib
 scipy
