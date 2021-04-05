@@ -40,7 +40,8 @@ Features can be chained using the + operator. If two features are chained, the o
     >>> 22
 
 
-Here we have two features, `add_one`, which adds one to the input, and `multiply_two` which multiplies the input with two. We chain these features, which creates a single feature which first adds 1 to the input, and then multiplies it with two. Resolving this feature on the input 10 gives (10 + 2) * 2 = 22.
+Here we have two features, `add_one`, which adds one to the input, and `multiply_two` which multiplies the input with two. We chain these features, which creates a single feature which first adds 1 to the input, 
+and then multiplies it with two. Resolving this feature on the input 10 gives (10 + 1) * 2 = 22.
 
 Executing a feature multiple times
 ----------------------------------
@@ -51,9 +52,9 @@ You will often find that you want to execute a single feature several times in a
 .. code-block:: python
 
     add_one = dt.Add(1)
-    add_and_multiply = add_one ** 5
+    add_one_five_times = add_one ** 5
 
-    add_one.resolve(10)
+    add_one_five_times.resolve(10)
     >>> 15
 
 Here, the `add_one` feature is executed five times. Resolving this feature on the input 10 gives 10 + 1 + 1 + 1 + 1 + 1 = 15
@@ -74,7 +75,7 @@ However, this is not very exciting. let's do something more interesting:
 
 .. code-block:: python
 
-    add_zero_or_one = dt.Add(lambda: np.random.randint(2)
+    add_zero_or_one = dt.Add(lambda: np.random.randint(2))
     add_zero_or_one.resolve(10)
     >>> 10
 

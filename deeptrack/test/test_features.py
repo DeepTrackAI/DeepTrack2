@@ -1,13 +1,13 @@
 import sys
 
-sys.path.append("..")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.features as features
+from .. import features, Image
 
 import numpy as np
-from deeptrack.image import Image
+
 
 
 class TestFeatures(unittest.TestCase):
@@ -280,6 +280,87 @@ class TestFeatures(unittest.TestCase):
         C.update(key="c")
         self.assertEqual(C.prop.current_value, 12)
 
+    def test_SliceConstant(self):
+
+        input = np.arange(9).reshape((3, 3))
+
+        A = features.DummyFeature()
+
+        A0 = A[0]
+        A1 = A[1]
+        A22 = A[2, 2]
+        A12 = A[1, lambda: -1]
+        
+        a0 = A0.resolve(input)
+        a1 = A1.resolve(input)
+        a22 = A22.resolve(input)
+        a12 = A12.resolve(input)
+
+
+        self.assertEqual(a0.tolist(), input[0].tolist())
+        self.assertEqual(a1.tolist(), input[1].tolist())
+        self.assertEqual(a22, input[2, 2])
+        self.assertEqual(a12, input[1, -1])
+
+    def test_SliceColon(self):
+
+        input = np.arange(16).reshape((4, 4))
+
+        A = features.DummyFeature()
+
+        A0 = A[0, :1]
+        A1 = A[
+            1,
+            lambda: 0:
+            lambda: 4:
+            lambda: 2 
+        ]
+        A2 = A[lambda: slice(0, 4, 1), 2]
+        A3 = A[lambda: 0 :
+               lambda: 2, 
+               :]
+        
+        a0 = A0.resolve(input)
+        a1 = A1.resolve(input)
+        a2 = A2.resolve(input)
+        a3 = A3.resolve(input)
+
+
+        self.assertEqual(a0.tolist(), input[0, :1].tolist())
+        self.assertEqual(a1.tolist(), input[1, 0:4:2].tolist())
+        self.assertEqual(a2.tolist(), input[:, 2].tolist())
+        self.assertEqual(a3.tolist(), input[0:2, :].tolist())
+
+    def test_SliceEllipse(self):
+
+        input = np.arange(16).reshape((4, 4))
+
+        A = features.DummyFeature()
+
+        A0 = A[..., :1]
+        A1 = A[
+            ...,
+            lambda: 0:
+            lambda: 4:
+            lambda: 2 
+        ]
+        A2 = A[lambda: slice(0, 4, 1), ...]
+        A3 = A[lambda: 0 :
+               lambda: 2, 
+               lambda: ...]
+        
+        a0 = A0.resolve(input)
+        a1 = A1.resolve(input)
+        a2 = A2.resolve(input)
+        a3 = A3.resolve(input)
+
+
+        self.assertEqual(a0.tolist(), input[..., :1].tolist())
+        self.assertEqual(a1.tolist(), input[..., 0:4:2].tolist())
+        self.assertEqual(a2.tolist(), input[:, ...].tolist())
+        self.assertEqual(a3.tolist(), input[0:2, ...].tolist())
+    
+    
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,7 +4,7 @@ noises
 .. automodule:: deeptrack.noises
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 Background
 ^^^^^^^^^^

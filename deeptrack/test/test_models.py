@@ -1,10 +1,10 @@
 import sys
 
-sys.path.append("..")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.models as models
+from .. import models
 import numpy as np
 
 
@@ -22,11 +22,38 @@ class TestModels(unittest.TestCase):
 
         model.predict(np.zeros((1, 64, 2)))
 
-    def test_Convolutions(self):
+    def test_Convolutions_with_single_input(self):
         model = models.Convolutional(
             input_shape=(64, 64, 1),
-            conv_layers_dimensions=(16, 32, 64, 128),
+            conv_layers_dimensions=(16, 32, 64),
             dense_layers_dimensions=(32, 32),
+            number_of_outputs=3,
+            output_activation="sigmoid",
+            loss="mse",
+        )
+        self.assertIsInstance(model, models.KerasModel)
+
+        model.predict(np.zeros((1, 64, 64, 1)))
+
+    def test_Convolutions_with_multiple_inputs(self):
+        model = models.Convolutional(
+            input_shape=[(64, 64, 1), (64, 64, 2)],
+            conv_layers_dimensions=(16, 32, 64),
+            dense_layers_dimensions=(32, 32),
+            number_of_outputs=3,
+            output_activation="sigmoid",
+            loss="mse",
+        )
+        self.assertIsInstance(model, models.KerasModel)
+
+        model.predict([np.zeros((1, 64, 64, 1)), np.zeros((1, 64, 64, 2))])
+
+    def test_Convolutions_with_no_dense_top(self):
+        model = models.Convolutional(
+            input_shape=(64, 64, 1),
+            conv_layers_dimensions=(16, 32, 64),
+            dense_layers_dimensions=(32, 32),
+            dense_top=False,
             number_of_outputs=3,
             output_activation="sigmoid",
             loss="mse",
@@ -38,7 +65,7 @@ class TestModels(unittest.TestCase):
     def test_UNet(self):
         model = models.UNet(
             input_shape=(64, 64, 1),
-            conv_layers_dimensions=(16, 32, 64, 128),
+            conv_layers_dimensions=(16, 32, 64),
             base_conv_layers_dimensions=(256, 256),
             output_conv_layers_dimensions=(32, 32),
             steps_per_pooling=1,

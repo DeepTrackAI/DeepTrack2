@@ -1,13 +1,13 @@
 import sys
 
-sys.path.append("..")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.sequences as sequences
+from .. import sequences
 
-from deeptrack.optics import Fluorescence
-from deeptrack.scatterers import Ellipse
+from ..optics import Fluorescence
+from ..scatterers import Ellipse
 import numpy as np
 
 
@@ -38,7 +38,7 @@ class TestSequences(unittest.TestCase):
             imaged_rotating_ellipse, sequence_length=50
         )
         self.assertIsInstance(imaged_rotating_ellipse_sequence, sequences.Sequence)
-
+        
 
 if __name__ == "__main__":
     unittest.main()

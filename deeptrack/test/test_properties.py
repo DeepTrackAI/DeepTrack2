@@ -1,11 +1,10 @@
 import sys
 
-sys.path.append("..")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.properties as properties
-import deeptrack as dt
+from .. import properties, features, optics
 
 import numpy as np
 
@@ -60,13 +59,13 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(P2.current_value, [3, 6, 10, 15, 21])
 
     def test_UpdateFromParent(self):
-        optics = dt.Fluorescence()
-        sample = dt.DummyFeature(voxel_size=optics.voxel_size)
-        together = optics(sample)
+        opt = optics.Fluorescence()
+        sample = features.DummyFeature(voxel_size=opt.voxel_size)
+        together = opt(sample)
         together.update()
         self.assertEqual(
-            tuple(optics.voxel_size.current_value),
-            tuple(sample.voxel_size.current_value),
+            tuple(opt.voxel_size.current_value),
+            tuple(opt.voxel_size.current_value),
         )
 
     def test_PropertyDict(self):

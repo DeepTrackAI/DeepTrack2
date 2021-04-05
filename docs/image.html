@@ -1,13 +1,13 @@
 
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>image &#8212; DeepTrack 2.0 documentation</title>
     
-  <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
 
     
   <link rel="stylesheet"
@@ -19,22 +19,18 @@
 
     
       
-  <link rel="stylesheet"
-    href="_static/vendor/open-sans_all/1.44.1/index.css">
-  <link rel="stylesheet"
-    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
 
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-  <link rel="preload" as="script" href="_static/js/index.30270b6e4c972e43c488.js">
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
 
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="layers" href="layers.html" />
@@ -44,39 +40,44 @@
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
-<div class="container-xl">
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
 
     
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
 
+    
     <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
       <ul id="navbar-main-elements" class="navbar-nav mr-auto">
-        
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="installation.html">Getting started</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
-        </li>
-        
-        <li class="nav-item active">
-            <a class="nav-link" href="deeptrack.html">Documentation</a>
-        </li>
-        
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
         
       </ul>
 
-
-      
-
-      <ul class="navbar-nav">
-        
-        
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
       </ul>
     </div>
 </div>
@@ -86,123 +87,110 @@
     <div class="container-xl">
       <div class="row">
           
-          <div class="col-12 col-md-3 bd-sidebar">
-
-<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form>
-
-
 <nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-
   <div class="bd-toc-item active">
-  
-
-  <ul class="nav bd-sidenav">
-      
-      
-      
-      
-      
-      
-        
-          
-              <li class="">
-                  <a href="aberrations.html">aberrations</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="augmentations.html">augmentations</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="features.html">features</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="generators.html">generators</a>
-              </li>
-          
-        
-          
-              <li class="active">
-                  <a href="">image</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="layers.html">layers</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="losses.html">losses</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="math.html">math</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="models.html">models</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="noises.html">noises</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="optics.html">optics</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="properties.html">properties</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="scatterers.html">scatterers</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="sequences.html">sequences</a>
-              </li>
-          
-        
-          
-              <li class="">
-                  <a href="utils.html">utils</a>
-              </li>
-          
-        
-      
-      
-    </ul>
-
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2">
+  <a class="reference internal" href="backend.html">
+   backend
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="aberrations.html">
+   aberrations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="augmentations.html">
+   augmentations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="features.html">
+   features
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="generators.html">
+   generators
+  </a>
+ </li>
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   image
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="layers.html">
+   layers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="losses.html">
+   losses
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="math.html">
+   math
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="models.html">
+   models
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="noises.html">
+   noises
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="optics.html">
+   optics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="properties.html">
+   properties
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="scatterers.html">
+   scatterers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="sequences.html">
+   sequences
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="test.html">
+   test
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="types.html">
+   types
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="utils.html">
+   utils
+  </a>
+ </li>
+</ul>
+  </div>
 </nav>
-          </div>
+            </div>
+            
           
 
           
@@ -213,37 +201,43 @@
 </div>
 
 <nav id="bd-toc-nav">
-    <ul class="nav section-nav flex-column">
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#classes" class="nav-link">CLASSES</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#functions" class="nav-link">Functions</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#module-classes" class="nav-link">Module classes</a><ul class="nav section-nav flex-column">
-                
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#id1" class="nav-link">Image</a>
-        </li>
-    
-            </ul>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#module-functions" class="nav-link">Module functions</a><ul class="nav section-nav flex-column">
-                
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#pad-image-to-fft" class="nav-link">pad_image_to_fft</a>
-        </li>
-    
-            </ul>
-        </li>
-    
-    </ul>
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#classes">
+   CLASSES
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#functions">
+   Functions
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-classes">
+   Module classes
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id1">
+     Image
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-functions">
+   Module functions
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#pad-image-to-fft">
+     pad_image_to_fft
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
 </nav>
 
 
@@ -251,6 +245,9 @@
           </div>
           
 
+          
+          
+            
           
           <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
@@ -281,9 +278,9 @@ Transforms.</p>
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id1">
 <h3>Image<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<dl class="py class">
+<dl class="class">
 <dt id="deeptrack.image.Image">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.image.</code><code class="sig-name descname">Image</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_array</span></em>, <em class="sig-param"><span class="n">properties</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.image.Image" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.image.</code><code class="sig-name descname">Image</code><a class="headerlink" href="#deeptrack.image.Image" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of numpy ndarray</p>
 <p>The class Image is used by features to resolve images and store
 the current values of the properties of each feature in the feature
@@ -479,7 +476,7 @@ the features used to resolve the image.</p>
 <td><p>Return the array as an <code class="docutils literal notranslate"><span class="pre">a.ndim</span></code>-levels deep nested list of Python scalars.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tostring</span></code>([order])</p></td>
-<td><p>Construct Python bytes containing the raw data bytes in the array.</p></td>
+<td><p>A compatibility alias for <cite>tobytes</cite>, with exactly the same behavior.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">trace</span></code>([offset, axis1, axis2, dtype, out])</p></td>
 <td><p>Return the sum along diagonals of the array.</p></td>
@@ -490,14 +487,14 @@ the features used to resolve the image.</p>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code>([axis, dtype, out, ddof, keepdims])</p></td>
 <td><p>Returns the variance of the array elements, along given axis.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">view</span></code>([dtype, type])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">view</span></code>([dtype][, type])</p></td>
 <td><p>New view of array with the same data.</p></td>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
+<dl class="method">
 <dt id="deeptrack.image.Image.append">
-<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">property_dict</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.image.Image.append" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param">property_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.image.Image.append" title="Permalink to this definition">¶</a></dt>
 <dd><p>Appends a dictionary to the properties list.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -516,9 +513,9 @@ the current values of the properties of a feature.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="deeptrack.image.Image.get_property">
-<code class="sig-name descname">get_property</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">get_one</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">default</span><span class="p">:</span> <span class="n">any</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; list<a class="headerlink" href="#deeptrack.image.Image.get_property" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_property</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">get_one=True</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.image.Image.get_property" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve a property.</p>
 <p>If the feature has the property defined by <cite>key</cite>, return
 its current_value. Otherwise, return <cite>default</cite>.
@@ -544,9 +541,9 @@ otherwise, all instances are returned as a list.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="deeptrack.image.Image.merge_properties_from">
-<code class="sig-name descname">merge_properties_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#deeptrack.image.Image" title="deeptrack.image.Image">deeptrack.image.Image</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#deeptrack.image.Image" title="deeptrack.image.Image">deeptrack.image.Image</a><a class="headerlink" href="#deeptrack.image.Image.merge_properties_from" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">merge_properties_from</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.image.Image.merge_properties_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merge properties with those from another Image.</p>
 <p>Appends properties from another images such that no property is duplicated.
 Uniqueness of a dictionary of properties is determined from the
@@ -572,9 +569,9 @@ it is safe to manually call this function if there is any uncertainty.</p>
 <h2>Module functions<a class="headerlink" href="#module-functions" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="pad-image-to-fft">
 <h3>pad_image_to_fft<a class="headerlink" href="#pad-image-to-fft" title="Permalink to this headline">¶</a></h3>
-<dl class="py function">
+<dl class="function">
 <dt id="deeptrack.image.pad_image_to_fft">
-<code class="sig-prename descclassname">deeptrack.image.</code><code class="sig-name descname">pad_image_to_fft</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#deeptrack.image.Image" title="deeptrack.image.Image">deeptrack.image.Image</a></span></em>, <em class="sig-param"><span class="n">axes</span><span class="o">=</span><span class="default_value">0, 1</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#deeptrack.image.Image" title="deeptrack.image.Image">deeptrack.image.Image</a><a class="headerlink" href="#deeptrack.image.pad_image_to_fft" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">deeptrack.image.</code><code class="sig-name descname">pad_image_to_fft</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">axes=(0</em>, <em class="sig-param">1)</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.image.pad_image_to_fft" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pads image to speed up fast fourier transforms.
 Pads image to speed up fast fourier transforms by adding 0s to the
 end of the image.</p>
@@ -612,14 +609,14 @@ end of the image.</p>
     </div>
 
     
-  <script src="_static/js/index.30270b6e4c972e43c488.js"></script>
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
 
 
     <footer class="footer mt-5 mt-md-0">
   <div class="container">
     <p>
           &copy; Copyright 2020, Benjamin Midtvedt.<br/>
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>

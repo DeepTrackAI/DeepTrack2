@@ -4,7 +4,7 @@ image
 .. automodule:: deeptrack.image
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 Image
 ^^^^^
@@ -14,7 +14,7 @@ Image
    :exclude-members: get
 
 Module functions
-----------------
+<<<<<<<<<<<<<<<<
 
 pad_image_to_fft
 ^^^^^^^^^^^^^^^^

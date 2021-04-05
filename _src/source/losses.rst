@@ -4,7 +4,7 @@ losses
 .. automodule:: deeptrack.losses
 
 Module functions
-----------------
+<<<<<<<<<<<<<<<<
 
 deeptrack_loss_function
 ^^^^^^^^^^^^^^^^^^^^^^^

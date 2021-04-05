@@ -1,10 +1,10 @@
 import sys
 
-sys.path.append("..")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.utils as utils
+from .. import utils
 
 
 class TestUtils(unittest.TestCase):

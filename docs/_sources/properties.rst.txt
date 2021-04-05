@@ -4,7 +4,7 @@ properties
 .. automodule:: deeptrack.properties
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 Property
 ^^^^^^^^

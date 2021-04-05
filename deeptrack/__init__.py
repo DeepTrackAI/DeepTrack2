@@ -7,4 +7,5 @@ from .optics import *
 from .scatterers import *
 from .sequences import *
 
-from . import image, losses, generators, models, utils, layers
+
+from . import image, losses, generators, models, utils, layers, backend, test

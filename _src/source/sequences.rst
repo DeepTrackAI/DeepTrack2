@@ -4,7 +4,7 @@ sequences
 .. automodule:: deeptrack.sequences
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 Sequence
 ^^^^^^^^
@@ -14,7 +14,7 @@ Sequence
    :exclude-members: get
 
 Module functions
-----------------
+<<<<<<<<<<<<<<<<
 
 Sequential
 ^^^^^^^^^^

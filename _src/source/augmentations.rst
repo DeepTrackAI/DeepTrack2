@@ -4,7 +4,7 @@ augmentations
 .. automodule:: deeptrack.augmentations
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 Affine
 ^^^^^^
@@ -66,6 +66,13 @@ Pad
 ^^^
 
 .. autoclass:: deeptrack.augmentations.Pad
+   :members:
+   :exclude-members: get
+
+PadToMultiplesOf
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: deeptrack.augmentations.PadToMultiplesOf
    :members:
    :exclude-members: get
 

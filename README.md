@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="450" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/master/assets/logo.png?raw=true>
+  <img width="350" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/master/assets/logo.png?raw=true>
 </p>
 
 
@@ -47,7 +47,45 @@ Additionally, we have seven more case studies which are less documented, but giv
 
 ### Video Tutorials
 
-[TBA]
+DeepTrack 2.0 introduction tutorial video: https://youtu.be/hyfaxF8q6VE  
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=hyfaxF8q6VE
+" target="_blank"><img src="https://img.youtube.com/vi/hyfaxF8q6VE/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 recognizing handwritten digits tutorial video: https://youtu.be/QD9JUXyLJpc  
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=QD9JUXyLJpc
+" target="_blank"><img src="https://img.youtube.com/vi/QD9JUXyLJpc/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 single particle tracking tutorial video: https://youtu.be/6Cntik6AfBI   
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=6Cntik6AfBI
+" target="_blank"><img src="https://img.youtube.com/vi/6Cntik6AfBI/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 single-particle characterization tutorial video: https://youtu.be/ia2H1QO1cHg   
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=ia2H1QO1cHg
+" target="_blank"><img src="https://img.youtube.com/vi/ia2H1QO1cHg/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 multiple particle tracking tutorial video: https://youtu.be/wFV2VqzpeZs  
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=wFV2VqzpeZs
+" target="_blank"><img src="https://img.youtube.com/vi/wFV2VqzpeZs/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 multiple particle tracking in 3D tutorial video: https://youtu.be/fzD1QIEIJ04  
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=fzD1QIEIJ04
+" target="_blank"><img src="https://img.youtube.com/vi/fzD1QIEIJ04/mqdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 cell counting tutorial video: https://youtu.be/C6hu_IYoWtI  
+<a href="https://www.youtube.com/watch?feature=player_embedded&v=C6hu_IYoWtI
+" target="_blank"><img src="https://img.youtube.com/vi/C6hu_IYoWtI/mqdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 GAN image generation tutorial video: https://youtu.be/8g44Yks7cis  
+<a href="https://www.youtube.com/watch?feature=player_embedded&v=8g44Yks7cis
+" target="_blank"><img src="https://img.youtube.com/vi/8g44Yks7cis/mqdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
 
 ### In-depth dives
 
@@ -69,9 +107,27 @@ This order is as follows:
 12. [sequences_example](examples/sequences_example.ipynb)
 13. [math_example](examples/math_example.ipynb)
 
+## Graphical user interface
+
+DeepTrack 2.0 provides a completely stand-alone  [graphical  user  interface](https://github.com/softmatterlab/DeepTrack-2.0-app),  which  delivers  all  the power of DeepTrack without requiring programming knowledge.
+
+[![InterfaceDemo](https://i.imgur.com/lTy2vhz.gif)](https://i.imgur.com/lTy2vhz.gif)
+
 ## Documentation
 
 The detailed documentation of DeepTrack 2.0 is available at the following link: https://softmatterlab.github.io/DeepTrack-2.0/deeptrack.html
+
+## Cite us!
+
+If you use DeepTrack 2.0 in your project, please cite us here:
+
+    Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. "Quantitative Digital Microscopy with Deep Learning." [arXiv:2010.08260](https://arxiv.org/abs/2010.08260)
+
+See also:
+
+    Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "Digital video microscopy enhanced by deep learning." Optica 6.4 (2019): 506-513. [10.1364/OPTICA.6.000506](https://doi.org/10.1364/OPTICA.6.000506)
+
+    Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "DeepTrack." https://github.com/softmatterlab/DeepTrack.git (2019).
 
 ## Funding
 This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511).

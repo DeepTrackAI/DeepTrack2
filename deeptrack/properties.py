@@ -18,9 +18,19 @@ PropertyDict
 """
 
 import numpy as np
-from deeptrack.utils import isiterable, hasmethod, get_kwarg_names, kwarg_has_default
-import deeptrack
+from .utils import (
+    isiterable,
+    get_kwarg_names,
+    kwarg_has_default,
+)
+
+import typing
+
+
+from . import features
+
 import copy
+import collections
 
 
 class Property:
@@ -72,11 +82,11 @@ class Property:
     @current_value.setter
     def current_value(self, updated_current_value):
         self._current_value = updated_current_value
-        if id(self) not in deeptrack.UPDATE_MEMO["memoization"]:
+        if id(self) not in features.UPDATE_MEMO["memoization"]:
             # Some values work, some don't. self, updated_current_value and self._current_value work
             # Best guess is an error in the gc reference counter causing it to dereference
             # But then again, I don't think it should be the same reference anyway
-            deeptrack.UPDATE_MEMO["memoization"][id(self)] = updated_current_value
+            features.UPDATE_MEMO["memoization"][id(self)] = updated_current_value
 
     @current_value.getter
     def current_value(self):
@@ -109,15 +119,15 @@ class Property:
         #     a = 1+1
 
         if (
-            deeptrack.UPDATE_LOCK.locked()
-            and my_id in deeptrack.UPDATE_MEMO["memoization"]
+            features.UPDATE_LOCK.locked()
+            and my_id in features.UPDATE_MEMO["memoization"]
         ):
             return self
 
         if self.parent:
             kwargs.update(self.parent)
 
-        kwargs.update(deeptrack.UPDATE_MEMO["user_arguments"])
+        kwargs.update(features.UPDATE_MEMO["user_arguments"])
         self.current_value = self.sample(self.sampling_rule, **kwargs)
 
         return self
@@ -155,9 +165,9 @@ class Property:
 
         """
 
-        if isinstance(sampling_rule, deeptrack.Feature):
-            # Don't pass my properties to other feature (avoid name clash)
-            sampling_rule._update()
+        if isinstance(sampling_rule, features.Feature):
+            # I am worried passing kwargs may lead to name clash
+            sampling_rule._update(**kwargs)
             return sampling_rule
 
         if isinstance(sampling_rule, Property):
@@ -185,6 +195,12 @@ class Property:
                 return next(sampling_rule)
             except StopIteration:
                 return self.current_value
+        elif isinstance(sampling_rule, slice):
+            return slice(
+                self.sample(sampling_rule.start, **kwargs),
+                self.sample(sampling_rule.stop, **kwargs),
+                self.sample(sampling_rule.step, **kwargs)
+            )
 
         elif callable(sampling_rule):
             # If it's a function, extract the arguments it accepts.
@@ -229,7 +245,7 @@ class Property:
             return sampling_rule
 
     def __deepcopy__(self, memo):
-        is_in = id(self) in deeptrack.UPDATE_MEMO["memoization"]
+        is_in = id(self) in features.UPDATE_MEMO["memoization"]
         if is_in:
             return self
         else:
@@ -309,12 +325,12 @@ class SequentialProperty(Property):
         """
         my_id = id(self)
         if (
-            deeptrack.UPDATE_LOCK.locked()
-            and my_id in deeptrack.UPDATE_MEMO["memoization"]
+            features.UPDATE_LOCK.locked()
+            and my_id in features.UPDATE_MEMO["memoization"]
         ):
             return self
 
-        kwargs.update(deeptrack.UPDATE_MEMO["user_arguments"])
+        kwargs.update(features.UPDATE_MEMO["user_arguments"])
 
         new_current_value = []
 
@@ -338,11 +354,8 @@ class SequentialProperty(Property):
             new_current_value.append(next_value)
 
         self.current_value = new_current_value
-        deeptrack.UPDATE_MEMO["memoization"][my_id] = new_current_value
+        features.UPDATE_MEMO["memoization"][my_id] = new_current_value
         return self
-
-
-import collections
 
 
 class PropertyDict(collections.OrderedDict):
@@ -382,7 +395,7 @@ class PropertyDict(collections.OrderedDict):
             # of the current timestep
             if isinstance(property, SequentialProperty):
                 sequence_step = kwargs.get("sequence_step", None)
-                if not sequence_step is None:
+                if sequence_step is not None:
                     property_value = property_value[sequence_step]
 
             current_value_dict[key] = property_value
@@ -402,11 +415,11 @@ class PropertyDict(collections.OrderedDict):
         """
         property_arguments = collections.OrderedDict(self)
         property_arguments.update(kwargs)
-        property_arguments.update(deeptrack.UPDATE_MEMO["user_arguments"])
+        property_arguments.update(features.UPDATE_MEMO["user_arguments"])
         for key, prop in self.items():
             if isinstance(property_arguments[key], Property):
                 prop.update(**property_arguments)
-            elif id(prop) not in deeptrack.UPDATE_MEMO["memoization"]:
+            elif id(prop) not in features.UPDATE_MEMO["memoization"]:
                 prop.current_value = property_arguments[key]
 
         return self

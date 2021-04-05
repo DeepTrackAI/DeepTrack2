@@ -4,7 +4,7 @@ optics
 .. automodule:: deeptrack.optics
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 Brightfield
 ^^^^^^^^^^^

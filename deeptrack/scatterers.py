@@ -1,6 +1,6 @@
 """Implementations of Feature the model scattering objects.
 
-Provides some basic implementations of scattering objects 
+Provides some basic implementations of scattering objects
 that are frequently used.
 
 Classes
@@ -17,12 +17,16 @@ Ellipsoid
     Generates 3-d ellipsoids
 """
 
-from threading import Lock
+
+from typing import Callable, Tuple
 import numpy as np
-from scipy.special import jv as jn, spherical_jn as jv, h1vp, eval_legendre as leg, jvp
-from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
-from deeptrack.image import Image
-import deeptrack.image
+
+from . import backend as D
+from .features import Feature, MERGE_STRATEGY_APPEND
+from .image import Image
+from . import image
+from .types import PropertyLike, ArrayLike
+import warnings
 
 
 class Scatterer(Feature):
@@ -57,8 +61,8 @@ class Scatterer(Feature):
     Other Parameters
     ----------------
     upsample_axes : tuple of ints
-        Sets the axes along which the calculation is upsampled (default is None,
-        which implies all axes are upsampled).
+        Sets the axes along which the calculation is upsampled (default is
+        None, which implies all axes are upsampled).
     crop_zeros : bool
         Whether to remove slices in which all elements are zero.
     """
@@ -68,11 +72,11 @@ class Scatterer(Feature):
 
     def __init__(
         self,
-        position=(32, 32),
-        z=0.0,
-        value=1.0,
-        position_unit="pixel",
-        upsample=1,
+        position: PropertyLike[ArrayLike[float]] = (32, 32),
+        z: PropertyLike[float] = 0.0,
+        value: PropertyLike[float] = 1.0,
+        position_unit: PropertyLike[str] = "pixel",
+        upsample: PropertyLike[int] = 1,
         **kwargs
     ):
         self._processed_properties = False
@@ -109,10 +113,11 @@ class Scatterer(Feature):
         # Post processes the created object to handle upsampling,
         # as well as cropping empty slices.
         if not self._processed_properties:
-            import warnings
 
             warnings.warn(
-                "Overridden _process_properties method does not call super. This is likely to result in errors if used with Optics.upscale != 1."
+                "Overridden _process_properties method does not call super. "
+                + "This is likely to result in errors if used with "
+                + "Optics.upscale != 1."
             )
 
         # Calculates upsampled voxel_size
@@ -128,6 +133,15 @@ class Scatterer(Feature):
             *args, voxel_size=voxel_size, upsample=upsample, **kwargs
         )
         new_image = new_image[0]
+
+        if new_image.size == 0:
+            warnings.warn(
+                "Scatterer created that is smaller than a pixel. "
+                + "This may yield inconsistent results."
+                + " Consider using upsample on the scatterer,"
+                + " or upscale on the optics.",
+                Warning,
+            )
 
         # Downsamples the image along the axes it was upsampled
         if upsample != 1 and upsample_axes:
@@ -216,7 +230,12 @@ class Ellipse(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
-    def __init__(self, radius=1e-6, rotation=0, **kwargs):
+    def __init__(
+        self,
+        radius: PropertyLike[float] = 1e-6,
+        rotation: PropertyLike[float] = 0,
+        **kwargs
+    ):
         super().__init__(
             radius=radius, rotation=rotation, upsample_axes=(0, 1), **kwargs
         )
@@ -284,7 +303,7 @@ class Sphere(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
-    def __init__(self, radius=1e-6, **kwargs):
+    def __init__(self, radius: PropertyLike[float] = 1e-6, **kwargs):
         super().__init__(radius=radius, **kwargs)
 
     def get(self, image, radius, voxel_size, **kwargs):
@@ -327,7 +346,12 @@ class Ellipsoid(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
-    def __init__(self, radius=1e-6, rotation=0, **kwargs):
+    def __init__(
+        self,
+        radius: PropertyLike[float] = 1e-6,
+        rotation: PropertyLike[float] = 0,
+        **kwargs
+    ):
         super().__init__(radius=radius, rotation=rotation, **kwargs)
 
     def _process_properties(self, propertydict):
@@ -337,7 +361,8 @@ class Ellipsoid(Scatterer):
         length 3.
 
         If the radius is a single value, the particle is made a sphere
-        If the radius are two values, the smallest value is appended as the third value
+        If the radius are two values, the smallest value is appended as the
+        third value
 
         The rotation vector is padded with zeros until it is of length 3
         """
@@ -415,28 +440,174 @@ class Ellipsoid(Scatterer):
 
 
 class MieScatterer(Scatterer):
-    def __init__(self, **kwargs):
+    """Base implementation of a Mie particle.
+
+    New Mie-theory scatterers can be implemented by extending this class, and
+    passing a function that calculates the coefficients of the harmonics up to
+    order `L`. To beprecise, the feature expects a wrapper function that takes
+    the current values of the properties, as well as a inner function that
+    takes an integer as the only parameter, and calculates the coefficients up
+    to that integer. The return format is expected to be a tuple with two
+    values, corresponding to `an` and `bn`. See
+    `deeptrack.backend.mie_coefficients` for an example.
+
+    Parameters
+    ----------
+    coefficients : Callable[int] -> Tuple[ndarray, ndarray]
+        Function that returns the harmonics coefficients.
+    offset_z : "auto" or float
+        Distance from the particle in the z direction the field is evaluated.
+        If "auto", this is calculated from the pixel size and
+        `collection_angle`
+    collection_angle : "auto" or float
+        The maximum collection angle in radians. If "auto", this
+        is calculated from the objective NA (which is true if the objective is
+        the limiting
+        aperature).
+    polarization_angle : float
+        Angle of the polarization of the incoming light relative to the x-axis.
+    L : int or str
+        The number of terms used to evaluate the mie theory. If `"auto"`,
+        it determines the number of terms automatically.
+    position : array_like[float, float (, float)]
+        The position of the particle. Third index is optional,
+        and represents the position in the direction normal to the
+        camera plane.
+    z : float
+        The position in the direction normal to the
+        camera plane. Used if `position` is of length 2.
+    """
+
+    def __init__(
+        self,
+        coefficients: Callable[..., Callable[[int], Tuple[ArrayLike, ArrayLike]]],
+        offset_z: PropertyLike[str] = "auto",
+        polarization_angle: PropertyLike[float] = 0,
+        collection_angle: PropertyLike[str] = "auto",
+        L: PropertyLike[str] = "auto",
+        **kwargs
+    ):
         kwargs.pop("is_field", None)
         kwargs.pop("crop_empty", None)
-        super().__init__(is_field=True, crop_empty=False, **kwargs)
 
+        super().__init__(
+            is_field=True,
+            crop_empty=False,
+            L=L,
+            offset_z=offset_z,
+            polarization_angle=polarization_angle,
+            collection_angle=collection_angle,
+            coefficients=coefficients,
+            **kwargs
+        )
 
-# class MieBisphere(MieScatterer):
-#     def __init__(self, refractive_index=1.45, distance=2e-6, radius=1e-6, **kwargs):
-#         super().__init__(
-#             refractive_index=refractive_index,
-#             distance=distance,
-#             radius=radius,
-#             **kwargs
-#         )
+    def _process_properties(self, properties):
+
+        properties = super()._process_properties(properties)
+
+        if properties["L"] == "auto":
+            try:
+                v = 2 * np.pi * np.max(properties["radius"]) / properties["wavelength"]
+                properties["L"] = int(np.ceil(v + 4 * (v ** (1 / 3)) + 2))
+            except (ValueError, TypeError):
+                pass
+        if properties["collection_angle"] == "auto":
+            properties["collection_angle"] = np.arcsin(
+                properties["NA"] / properties["refractive_index_medium"]
+            )
+
+        if properties["offset_z"] == "auto":
+            properties["offset_z"] = (
+                32
+                * min(properties["voxel_size"][:2])
+                / np.sin(properties["collection_angle"])
+                * properties["upscale"]
+            )
+        return properties
+
+    def get(
+        self,
+        inp,
+        position,
+        upscaled_output_region,
+        voxel_size,
+        padding,
+        wavelength,
+        refractive_index_medium,
+        L,
+        offset_z,
+        collection_angle,
+        polarization_angle,
+        coefficients,
+        upscale=1,
+        **kwargs
+    ):
+
+        xSize = (
+            padding[2]
+            + upscaled_output_region[2]
+            - upscaled_output_region[0]
+            + padding[0]
+        )
+        ySize = (
+            padding[3]
+            + upscaled_output_region[3]
+            - upscaled_output_region[1]
+            + padding[1]
+        )
+        arr = image.pad_image_to_fft(np.zeros((xSize, ySize)))
+
+        # Evluation grid
+        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[0]) * upscale
+        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[1]) * upscale
+        X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
+
+        R2 = np.sqrt(X ** 2 + Y ** 2)
+        R3 = np.sqrt(R2 ** 2 + (offset_z) ** 2)
+        ct = offset_z / R3
+
+        ANGLE = np.arctan2(Y, X) + polarization_angle
+        COS2 = np.square(np.cos(ANGLE))
+        SIN2 = 1 - COS2
+
+        ct_max = np.cos(collection_angle)
+
+        # Wave vector
+        k = 2 * np.pi / wavelength * refractive_index_medium
+
+        # Harmonics
+
+        A, B = coefficients(L)
+        PI, TAU = D.mie_harmonics(ct, L)
+
+        # Normalization factor
+        E = [(2 * i + 1) / (i * (i + 1)) for i in range(1, L + 1)]
+
+        # Scattering terms
+        S1 = sum([E[i] * A[i] * TAU[i] + E[i] * B[i] * PI[i] for i in range(0, L)])
+        S2 = sum([E[i] * B[i] * TAU[i] + E[i] * A[i] * PI[i] for i in range(0, L)])
+
+        field = (
+            (ct > ct_max)
+            * 1j
+            / (k * R3)
+            * np.exp(1j * k * (R3 - offset_z))
+            * (S1 * COS2 + S2 * SIN2)
+        )
+
+        return np.expand_dims(field, axis=-1)
 
 
 class MieSphere(MieScatterer):
     """Scattered field by a sphere
 
-    Calculates the scattered field by a spherical particle in a homogenous medium,
-    as predicted by Mie theory. Note that the induced phase shift is calculated
-    in comparison to the `refractive_index_medium` property of the optical device.
+    Should be calculated on at least a 64 by 64 grid. Use padding in the
+    optics if necessary.
+
+    Calculates the scattered field by a spherical particle in a homogenous
+    medium, as predicted by Mie theory. Note that the induced phase shift is
+    calculated in comparison to the `refractive_index_medium` property of the
+    optical device.
 
     Parameters
     ----------
@@ -454,253 +625,106 @@ class MieSphere(MieScatterer):
     z : float
         The position in the direction normal to the
         camera plane. Used if `position` is of length 2.
-    value : float
-        A default value of the characteristic of the particle. Used by
-        optics unless a more direct property is set: (eg. `refractive_index`
-        for `Brightfield` and `intensity` for `Fluorescence`).
+    offset_z : "auto" or float
+        Distance from the particle in the z direction the field is evaluated.
+        If "auto", this is calculated from the pixel size and
+        `collection_angle`
+    collection_angle : "auto" or float
+        The maximum collection angle in radians. If "auto", this
+        is calculated from the objective NA (which is true if the objective
+        is the limiting aperature).
+    polarization_angle : float
+        Angle of the polarization of the incoming light relative to the x-axis.
     """
 
     def __init__(
         self,
-        radius=1e-6,
-        refractive_index=1.45,
-        offset_z=lambda radius: max(radius * 2, 5e-6),
-        polarization_angle=0,
-        aperature_angle="auto",
-        L="auto",
-        crop_empty=False,
+        radius: PropertyLike[float] = 1e-6,
+        refractive_index: PropertyLike[float] = 1.45,
         **kwargs
     ):
+        def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
+            def inner(L):
+                return D.mie_coefficients(
+                    refractive_index / refractive_index_medium,
+                    radius * 2 * np.pi / wavelength * refractive_index_medium,
+                    L,
+                )
+
+            return inner
+
         super().__init__(
+            coefficients=coeffs,
             radius=radius,
             refractive_index=refractive_index,
-            L=L,
-            offset_z=offset_z,
-            polarization_angle=polarization_angle,
-            aperature_angle=aperature_angle,
-            crop_empty=crop_empty,
             **kwargs
         )
 
-    def _process_properties(self, properties):
 
-        properties = super()._process_properties(properties)
+class MieStratifiedSphere(MieScatterer):
+    """Scattered field by a stratified sphere
 
-        if properties["L"] == "auto":
-            v = 2 * np.pi * properties["radius"] / properties["wavelength"]
-            properties["L"] = int(np.ceil(v + 4 * (v ** (1 / 3)) + 2))
-        if properties["aperature_angle"] == "auto":
-            properties["aperature_angle"] = np.sqrt(
-                1 - properties["NA"] ** 2 / properties["refractive_index_medium"] ** 2
-            )
-        return properties
+    A stratified sphere is a sphere with several concentric shells of uniform
+    refractive index.
 
-    def get(
+    Should be calculated on at least a 64 by 64 grid. Use padding in the
+    optics if necessary
+
+    Calculates the scattered field by in a homogenous medium, as predicted by
+    Mie theory. Note that the induced phase shift is calculated in comparison
+    to the `refractive_index_medium` property of the optical device.
+
+    Parameters
+    ----------
+    radius : list of float
+        The radius of each cell in increasing order.
+    refractive_index : list of float
+        Refractive index of each cell in the same order as `radius`
+    L : int or str
+        The number of terms used to evaluate the mie theory. If `"auto"`,
+        it determines the number of terms automatically.
+    position : array_like[float, float (, float)]
+        The position of the particle. Third index is optional,
+        and represents the position in the direction normal to the
+        camera plane.
+    z : float
+        The position in the direction normal to the
+        camera plane. Used if `position` is of length 2.
+    offset_z : "auto" or float
+        Distance from the particle in the z direction the field is evaluated.
+        If "auto", this is calculated from the pixel size and
+        `collection_angle`
+    collection_angle : "auto" or float
+        The maximum collection angle in radians. If "auto", this
+        is calculated from the objective NA (which is true if the objective
+        is the limiting aperature).
+    polarization_angle : float
+        Angle of the polarization of the incoming light relative to the x-axis.
+    """
+
+    def __init__(
         self,
-        image,
-        position,
-        radius,
-        refractive_index,
-        upscaled_output_region,
-        voxel_size,
-        padding,
-        wavelength,
-        refractive_index_medium,
-        L,
-        offset_z,
-        aperature_angle,
-        polarization_angle,
-        upscale=1,
+        radius: PropertyLike[ArrayLike[float]] = [1e-6],
+        refractive_index: PropertyLike[ArrayLike[float]] = [1.45],
         **kwargs
     ):
+        def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
+            assert np.all(
+                radius[1:] >= radius[:-1]
+            ), "Radius of the shells of a stratified sphere should be monotonically increasing"
 
-        xSize = (
-            padding[2]
-            + upscaled_output_region[2]
-            - upscaled_output_region[0]
-            + padding[0]
+            def inner(L):
+                return D.stratified_mie_coefficients(
+                    np.array(refractive_index) / refractive_index_medium,
+                    np.array(radius) * 2 * np.pi / wavelength * refractive_index_medium,
+                    L,
+                )
+
+            return inner
+
+        super().__init__(
+            coefficients=coeffs,
+            radius=radius,
+            refractive_index=refractive_index,
+            **kwargs
         )
-        ySize = (
-            padding[3]
-            + upscaled_output_region[3]
-            - upscaled_output_region[1]
-            + padding[1]
-        )
-        arr = deeptrack.image.pad_image_to_fft(np.zeros((xSize, ySize)))
-
-        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[1]) * upscale
-        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[0]) * upscale
-        X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1])
-
-        ct_max = np.cos(aperature_angle)
-        field = _get_field(
-            X,
-            Y,
-            offset_z,
-            2 * np.pi / wavelength,
-            refractive_index,
-            radius,
-            L,
-            refractive_index_medium,
-            ct_max=ct_max,
-            polarization_angle=polarization_angle,
-        )
-
-        return np.expand_dims(field, axis=-1)
-
-
-CACHE = {
-    "maxL": -1,
-    "minKR": None,
-    "maxKR": 0,
-    "resolution": 0.001,
-    "L": [],
-    "PI": {
-        "value": [],
-        "resolution": 0.001,
-        "min": -1,
-        "max": 1,
-    },
-}
-
-
-def B(k, n, a, l, nm=1.33):
-    ka = k * nm * a
-    kna = k * n * a
-    jka = jv(l, ka)
-    djka = jv(l, ka, True)
-    jkna = jv(l, kna)
-    djkna = jv(l, kna, True)
-    h = h1vp(l, ka, n=1)
-    return (
-        (2 * l + 1)
-        * 1j ** l
-        * (jka * djkna * n - jkna * djka * nm)
-        / (jkna * h * nm - h * djkna * n)
-    )
-
-
-def ricbesj(l, x):
-    return np.sqrt(np.pi * x / 2) * besselj(l + 0.5, x)
-
-
-def dricbesj(l, x):
-    return 0.5 * np.sqrt(np.pi / x / 2) * besselj(l + 0.5, x) + np.sqrt(
-        np.pi * x / 2
-    ) * dbesselj(l + 0.5, x)
-
-
-def besselj(l, x):
-    return jn(l, x)
-
-
-def dbesselj(l, x):
-    return 0.5 * (besselj(l - 1, x) - besselj(l + 1, x))
-
-
-def ricbesh(l, x):
-    return np.sqrt(np.pi * x / 2) * h1vp(l + 0.5, x, False)
-
-
-def dricbesh(nu, z):
-    xi = 0.5 * np.sqrt(np.pi / 2 / z) * h1vp(nu + 0.5, z, False) + np.sqrt(
-        np.pi * z / 2
-    ) * h1vp(nu + 0.5, z, True)
-    return xi
-
-
-def coeffs(k, n, a, L, nm=1.33):
-    AA = np.zeros((L + 1,)) * 1j
-    BB = np.zeros((L + 1,)) * 1j
-    m = n / nm
-    for l in range(1, L + 1):
-
-        Sx = ricbesj(l, k * a)
-        dSx = dricbesj(l, k * a)
-
-        Smx = ricbesj(l, k * m * a)
-
-        dSmx = dricbesj(l, k * m * a)
-        xix = ricbesh(l, k * a)
-        dxix = dricbesh(l, k * a)
-        AA[l - 1] = (m * Smx * dSx - Sx * dSmx) / (m * Smx * dxix - xix * dSmx)
-        BB[l - 1] = (Smx * dSx - m * Sx * dSmx) / (Smx * dxix - m * xix * dSmx)
-    return AA, BB
-
-
-def h1vp_cached(L, hin):
-    hin_max = np.max(hin)
-    if hin_max > CACHE["maxKR"]:
-        calc_arr = np.arange(
-            CACHE["maxKR"] + CACHE["resolution"],
-            hin_max + CACHE["resolution"],
-            CACHE["resolution"],
-        )
-        for l in range(CACHE["maxL"]):
-            CACHE["L"][l] = np.concatenate((CACHE["L"][l], h1vp(l, calc_arr)))
-        CACHE["maxKR"] = calc_arr[-1]
-
-    if L > len(CACHE["L"]):
-        calc_arr = np.arange(
-            0, CACHE["maxKR"] + CACHE["resolution"], CACHE["resolution"]
-        )
-        for l in range(len(CACHE["L"]), L):
-            CACHE["L"].append(h1vp(l, calc_arr))
-
-        CACHE["maxL"] = L
-
-    residx = ((hin // CACHE["resolution"])).astype(np.int)
-    c = CACHE["L"]
-    out = [c[l][residx] for l in range(L)]
-    return out
-
-
-def _get_scattering_matrix(A, B, k, L):
-    theta = np.linspace(0, 2 * np.pi)
-
-
-def _get_angular_dependence(ct, L):
-    PI = np.zeros((L, *ct.shape))
-    TAU = np.zeros((L, *ct.shape))
-
-    PI[0, :] = 1
-    PI[1, :] = 3 * ct
-    TAU[0, :] = ct
-    TAU[1, :] = 6 * ct * ct - 3
-
-    for i in range(3, L + 1):
-
-        PI[i - 1] = (2 * i - 1) / (i - 1) * ct * PI[i - 2] - i / (i - 1) * PI[i - 3]
-
-        TAU[i - 1] = i * ct * PI[i - 1] - (i + 1) * PI[i - 2]
-    return PI, TAU
-
-
-def _get_field(X, Y, dz, k, n, a, L, nm=1.33, ct_max=1, polarization_angle=0):
-    k = k * nm
-    A, B = coeffs(k, n, a, L, nm)
-
-    R2 = np.sqrt(X ** 2 + Y ** 2)
-    R3 = np.sqrt(R2 ** 2 + (dz) ** 2)
-    ct = dz / R3
-
-    PI, TAU = _get_angular_dependence(ct, L)
-
-    E = [(2 * l + 1) / (l * (l + 1)) for l in range(1, L + 1)]
-
-    S1 = sum([E[l] * A[l] * TAU[l] + E[l] * B[l] * PI[l] for l in range(0, L)])
-    S2 = sum([E[l] * B[l] * TAU[l] + E[l] * A[l] * PI[l] for l in range(0, L)])
-
-    ANGLE = np.arctan2(Y, X) + polarization_angle
-    COS = np.square(np.cos(ANGLE))
-    SIN = 1 - COS
-
-    field = (
-        (ct > ct_max)
-        * -1j
-        / (k * R3)
-        * np.exp(1j * k * (R3 - dz))
-        * (S1 * COS + S2 * SIN)
-    )
-
-    return field

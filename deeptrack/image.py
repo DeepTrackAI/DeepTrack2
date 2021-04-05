@@ -176,7 +176,7 @@ class Image(np.ndarray):
 
             for arg in input_args:
 
-                if not arg is self and isinstance(arg, Image):
+                if arg is not self and isinstance(arg, Image):
                     self.merge_properties_from(arg)
 
         return image_with_restored_properties

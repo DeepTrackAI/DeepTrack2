@@ -1,12 +1,12 @@
 import sys
 
-sys.path.append("..")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
-import deeptrack as dt
-import deeptrack.augmentations as augmentations
 
-from deeptrack.features import Feature
+from .. import augmentations, optics, scatterers
+
+from ..features import Feature
 import numpy as np
 
 
@@ -49,10 +49,10 @@ class TestAugmentations(unittest.TestCase):
         self.assertTrue(np.all(output_2 == np.array([[[1], [0]], [[2], [0]]])))
 
     def test_Affine(self):
-        optics = dt.Fluorescence(magnification=10)
-        particle = dt.PointParticle(
+        opt = optics.Fluorescence(magnification=10)
+        particle = scatterers.PointParticle(
             position=lambda image_size: np.random.rand(2) * image_size[-2:],
-            image_size=optics.output_region,
+            image_size=opt.output_region,
         )
 
         augmentation = augmentations.Affine(
@@ -63,7 +63,7 @@ class TestAugmentations(unittest.TestCase):
             mode="constant",
         )
 
-        pipe = optics(particle) + augmentation
+        pipe = opt(particle) + augmentation
 
         for _ in range(10):
             image = pipe.update().resolve()
@@ -117,50 +117,50 @@ class TestAugmentations(unittest.TestCase):
     def test_Crop(self):
         image = np.ones((10, 10, 10))
 
-        cropper = dt.Crop(crop=(3, 2, 1), crop_mode="remove")
+        cropper = augmentations.Crop(crop=(3, 2, 1), crop_mode="remove")
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (7, 8, 9))
 
-        cropper = dt.Crop(crop=(3, 2, 1), crop_mode="retain")
+        cropper = augmentations.Crop(crop=(3, 2, 1), crop_mode="retain")
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (3, 2, 1))
 
-        cropper = dt.Crop(crop=2, crop_mode="remove")
+        cropper = augmentations.Crop(crop=2, crop_mode="remove")
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (8, 8, 8))
 
-        cropper = dt.Crop(crop=2, crop_mode="retain")
+        cropper = augmentations.Crop(crop=2, crop_mode="retain")
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (2, 2, 2))
 
-        cropper = dt.Crop(crop=12, crop_mode="remove")
+        cropper = augmentations.Crop(crop=12, crop_mode="remove")
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (1, 1, 1))
 
-        cropper = dt.Crop(crop=0, crop_mode="retain")
+        cropper = augmentations.Crop(crop=0, crop_mode="retain")
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (1, 1, 1))
 
     def test_CropToMultiple(self):
         image = np.ones((11, 11, 11))
 
-        cropper = dt.CropToMultiplesOf(multiple=2)
+        cropper = augmentations.CropToMultiplesOf(multiple=2)
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (10, 10, 10))
 
-        cropper = dt.CropToMultiplesOf(multiple=-1)
+        cropper = augmentations.CropToMultiplesOf(multiple=-1)
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (11, 11, 11))
 
-        cropper = dt.CropToMultiplesOf(multiple=(2, 3, 5))
+        cropper = augmentations.CropToMultiplesOf(multiple=(2, 3, 5))
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (10, 9, 10))
 
-        cropper = dt.CropToMultiplesOf(multiple=(2, -1, 7))
+        cropper = augmentations.CropToMultiplesOf(multiple=(2, -1, 7))
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (10, 11, 7))
 
-        cropper = dt.CropToMultiplesOf(multiple=(2, 3, None))
+        cropper = augmentations.CropToMultiplesOf(multiple=(2, 3, None))
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (10, 9, 11))
 

@@ -1,13 +1,13 @@
 import sys
 
-sys.path.append("..")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.optics as optics
+from .. import optics
 
-from deeptrack.scatterers import PointParticle
-from deeptrack.image import Image
+from ..scatterers import PointParticle
+from ..image import Image
 
 
 class TestOptics(unittest.TestCase):
@@ -32,6 +32,7 @@ class TestOptics(unittest.TestCase):
         output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
+        self.assertEqual(output_image.get_property("pupil_at_focus").shape, (128, 128))
 
     def test_Brightfield(self):
         microscope = optics.Brightfield(
@@ -54,6 +55,7 @@ class TestOptics(unittest.TestCase):
         output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
+        self.assertEqual(output_image.get_property("pupil_at_focus").shape, (128, 128))
 
     def test_IlluminationGradient(self):
         illumination_gradient = optics.IlluminationGradient(gradient=(5e-5, 5e-5))
@@ -78,6 +80,7 @@ class TestOptics(unittest.TestCase):
         output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
+        self.assertEqual(output_image.get_property("pupil_at_focus").shape, (128, 128))
 
 
 if __name__ == "__main__":

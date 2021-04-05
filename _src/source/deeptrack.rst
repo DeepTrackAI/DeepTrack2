@@ -4,6 +4,7 @@ Documentation
 .. toctree::
    :maxdepth: 1
    
+   backend
    aberrations
    augmentations
    features
@@ -18,4 +19,6 @@ Documentation
    properties
    scatterers
    sequences
+   test
+   types
    utils

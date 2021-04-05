@@ -4,7 +4,7 @@ math
 .. automodule:: deeptrack.math
 
 Module classes
---------------
+<<<<<<<<<<<<<<
 
 Add
 ^^^

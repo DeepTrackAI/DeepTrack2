@@ -1,13 +1,13 @@
 import sys
 
-sys.path.append("..")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.layers as layers
+from .. import layers
 import tensorflow.keras.layers as k_layers
 import tensorflow.keras.models as k_models
-from tensorflow_addons.layers import InstanceNormalization
+from ..layers import InstanceNormalization
 
 import numpy as np
 

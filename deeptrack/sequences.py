@@ -11,8 +11,9 @@ Sequential
     Converts a feature to be resolved as a sequence.
 """
 
-from deeptrack.features import Feature
-from deeptrack.properties import SequentialProperty
+from .features import Feature
+from .properties import SequentialProperty
+from .types import PropertyLike
 
 
 class Sequence(Feature):
@@ -37,12 +38,14 @@ class Sequence(Feature):
 
     __distributed__ = False
 
-    def __init__(self, feature: Feature, sequence_length: int = 1, **kwargs):
+    def __init__(
+        self, feature: Feature, sequence_length: PropertyLike[int] = 1, **kwargs
+    ):
         self.feature = feature
         super().__init__(sequence_length=sequence_length, **kwargs)
 
         # Require update
-        self.update()
+        # self.update()
 
     def get(self, input_list, sequence_length=None, **kwargs):
         return (input_list or []) + [
@@ -52,14 +55,14 @@ class Sequence(Feature):
             for sequence_step in range(sequence_length)
         ]
 
-    def update(self, **kwargs):
-        super().update(**kwargs)
+    def _update(self, **kwargs):
+        super()._update(**kwargs)
 
         sequence_length = self.properties["sequence_length"].current_value
         if "sequence_length" not in kwargs:
             kwargs["sequence_length"] = sequence_length
 
-        self.feature.update(**kwargs)
+        self.feature._update(**kwargs)
 
         return self
 
@@ -67,11 +70,13 @@ class Sequence(Feature):
 def Sequential(feature: Feature, **kwargs):
     """Converts a feature to be resolved as a sequence.
 
-    Should be called on individual features, not combinations of features. All keyword
-    arguments will be trated as sequential properties and will be passed to the parent feature.
+    Should be called on individual features, not combinations of features. All
+    keyword arguments will be trated as sequential properties and will be
+    passed to the parent feature.
 
-    If a property from the keyword argument already exists on the feature, the existing property
-    will be used to initilize the passed property (that is, it will be used for the first timestep).
+    If a property from the keyword argument already exists on the feature, the
+    existing property will be used to initilize the passed property (that is,
+    it will be used for the first timestep).
 
     Parameters
     ----------

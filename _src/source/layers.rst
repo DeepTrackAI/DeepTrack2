@@ -4,7 +4,7 @@ layers
 .. automodule:: deeptrack.layers
 
 Module functions
-----------------
+<<<<<<<<<<<<<<<<
 
 ConvolutionalBlock
 ^^^^^^^^^^^^^^^^^^
