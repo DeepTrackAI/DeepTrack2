@@ -157,6 +157,28 @@ class Feature:
         Image or List[Image]
             The resolved image
         """
+        return self(image_list, **global_kwargs)
+
+    def __call__(self, image_list: Image or List[Image] = None, **global_kwargs):
+        """Creates the image.
+        Transforms the input image by calling the method `get()` with the
+        correct inputs. The properties of the feature can be overruled by
+        passing a different value as a keyword argument.
+
+        Parameters
+        ----------
+        image_list : Image or List[Image], optional
+            The Image or list of images to be transformed.
+        **global_kwargs
+            Set of arguments that are applied globally. That is, every
+            feature in the set of features required to resolve an image
+            will receive these keyword arguments.
+
+        Returns
+        -------
+        Image or List[Image]
+            The resolved image
+        """
 
         # Remove hash_key from globals.
         global_kwargs.pop("hash_key", False)
