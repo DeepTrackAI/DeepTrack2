@@ -192,7 +192,10 @@ class Property:
                 return next(sampling_rule)
             except StopIteration:
                 return self.current_value
+
         elif isinstance(sampling_rule, slice):
+            # If the sampling rule is a slice, create a new slice with start, 
+            # stop and step sampled from the original slice
             return slice(
                 self.sample(sampling_rule.start, **kwargs),
                 self.sample(sampling_rule.stop, **kwargs),
