@@ -11,12 +11,26 @@ This branch is a developmental branch preparing for the next major release. Whil
 
 ## Roadmap
 
+### New Features!
+
 - [ ] Full GPU support.
   - [ ] Infer cupy support during import.
   - [ ] Allow separate GPU/CPU methods for optimization.
   - [ ] Integrated benchmarking.
   - [ ] Allow forcefully overriding CPU/GPU state.
   - [ ] Disable/enable GPU using environment variables.
+- [ ] Simulation-parameters optimization
+  - [ ] Grid search
+  - [ ] Genetic optimization
+  - [ ] Independent variables assumption
+- [ ] Architecure searches.
+- [ ] Common architectures with pre-trained weights.
+- [ ] Label free training of particle tracking models
+- [ ] Particle tracing / linking
+- [ ] Export to DeepImageJ
+
+### Usage improvements
+
 - [ ] Move from .resolve() to \_\_call\_\_ as primary evalution method.
   - [ ] Features can be passed as properties, and will be resolved with no input.
   - [ ] Implement way to bypass the property evaluation (better than wrapping in lambda).
@@ -28,6 +42,10 @@ This branch is a developmental branch preparing for the next major release. Whil
 - [ ] Allow for modular creation of optics pipeline.
   - [ ] Separately define the pupil, the input illumination, the simulation method and the sample.
   - [ ] Test simulations against theory to ensure that they work as expected.
+- [ ] Deprecate \* shorthand for probability and instead use it as shorthand for multiplication.
+
+### Misc
+
 - [ ] Implement rigorous and transparent error handling.
 - [ ] Expand and standardize unittests.
 - [ ] Better utilize continuous integration.
