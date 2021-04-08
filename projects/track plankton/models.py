@@ -13,19 +13,19 @@ def softmax_categorical(T, P):
     true_error = K.mean(T * K.log(P + eps) * classwise_weight, axis=-1)
     return -K.mean(true_error)
 
-def generate_unet(im_size_height, im_size_width, no_of_inputs, number_of_outputs):
+def generate_unet(im_size_height, im_size_width, no_of_inputs, no_of_outputs):
 #     image_size
     model = unet(
     (im_size_height, im_size_width, no_of_inputs), 
     conv_layers_dimensions=[16, 32, 64, 128],
     base_conv_layers_dimensions=[32, 32],
-    number_of_outputs=number_of_outputs,
+    number_of_outputs=no_of_outputs,
     output_activation="softmax",
     loss=softmax_categorical
     )
     return model
 
-def train_model(model, generator, patience=15, epochs=500, steps_per_epoch=10):
+def train_model_early_stopping(model, generator, patience=15, epochs=500, steps_per_epoch=10):
     callback = C.EarlyStopping(monitor='loss', patience=patience, restore_best_weights=True)
 
     with generator:

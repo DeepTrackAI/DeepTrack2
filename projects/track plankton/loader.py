@@ -257,7 +257,7 @@ def create_custom_batch_function(imaged_particle_sequence,
                 img = images[:,:,num]
 
                 for i in range(len(function_img)):
-                    img = function_img[i](img)
+                    img = function_img[i](img, **kwargs)
 
                 train_images[:,:,count] = img
 
@@ -265,7 +265,7 @@ def create_custom_batch_function(imaged_particle_sequence,
             if type(num) == list:
                 diff = images[:,:,num[1]] - images[:,:,num[0]]
                 for i in range(len(function_diff)):
-                    diff = function_diff[i](diff)
+                    diff = function_diff[i](diff, **kwargs)
 
                 train_images[:,:,count] = diff
 

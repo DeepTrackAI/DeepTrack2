@@ -16,7 +16,7 @@ def Normalize_image(image, min_value=0, max_value=1, **kwargs):
     return image - np.min(image) + min_value
 
 
-def RemoveRunningMean(folder_path, tot_no_of_frames, center_frame, im_size_width, im_size_height):
+def RemoveRunningMean(folder_path, tot_no_of_frames, center_frame, im_size_height, im_size_width):
     list_paths = os.listdir(folder_path)
     first_file_format = list_paths[0][-3:]
     for i in range(len(list_paths)):
@@ -79,7 +79,7 @@ def get_image_stack(*args, outputs=None, folder_path=None,
 
 
 
-def get_blob_center(label,array):
+def get_blob_center(label, array):
     x, y = np.where(array==label)
     if len(x)==0:
         return np.nan, np.nan
@@ -129,7 +129,9 @@ class Plankton:
          
     def get_latest_position(self, timestep=0, threshold=10, **kwargs):
         latest_position = [np.nan, np.nan]
-        for i in range(self.number_of_timesteps - timestep + 1, min(threshold + self.number_of_timesteps - timestep, self.number_of_timesteps+1)):
+        for i in range(self.number_of_timesteps - timestep + 1, min(threshold + self.number_of_timesteps - timestep, 
+                                                                    self.number_of_timesteps+1)):
+            
             if np.isfinite(self.positions[-i,0]):
                 latest_position = self.positions[-i,:]
                 break

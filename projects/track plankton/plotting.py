@@ -19,7 +19,7 @@ def plot_label(label_function, image):
         plt.subplot(no_of_labels,1,i+1)
         plt.imshow(labels[..., i], cmap="gray")
     
-def plot_im_stack(im_stack):
+def plot_image_stack(im_stack):
     num_imgs = im_stack.shape[-1]
     plt.figure(figsize=(7, 7*num_imgs))
     for i in range(num_imgs):
