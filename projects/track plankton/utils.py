@@ -205,6 +205,20 @@ def Update_list_of_plankton(list_of_plankton=None, positions=None, max_dist=10,
                 list_of_plankton['plankton%d' % temp_min_index].add_position(positions[i,:], timestep)
     return list_of_plankton
 
+
+
+def assign_positions_to_planktons(positions, **kwargs):
+    no_of_timesteps = len(positions)
+    list_of_plankton = Initialize_plankton(positions=positions[0], number_of_timesteps=no_of_timesteps)
+
+    for i in range(1,no_of_timesteps):
+        list_of_plankton = Update_list_of_plankton(list_of_plankton = list_of_plankton, 
+                                                   positions = positions[i], 
+                                                   timestep=i, **kwargs)
+    return list_of_plankton
+
+
+
 def Interpolate_gaps_in_plankton_positions(list_of_plankton=None, **kwargs):
     no_of_timesteps = len(list_of_plankton[list(list_of_plankton.keys())[0]].positions)
     for key in list_of_plankton:
@@ -259,18 +273,10 @@ def Trim_list_from_stationary_planktons(list_of_plankton=None, min_distance=10, 
     return list_of_plankton
 
 
-def assign_positions_to_planktons(positions, **kwargs):
-    no_of_timesteps = len(positions)
-    list_of_plankton = Initialize_plankton(positions=positions[0], number_of_timesteps=no_of_timesteps)
-
-    for i in range(1,no_of_timesteps):
-        list_of_plankton = Update_list_of_plankton(list_of_plankton = list_of_plankton, 
-                                                   positions = positions[i], 
-                                                   timestep=i, **kwargs)
-    return list_of_plankton
 
 
-def split_plankton(percentage_threshold=0.5, list_of_plankton=None, **kwargs):
+
+def split_plankton(list_of_plankton=None, percentage_threshold=0.5, **kwargs):
     no_of_timesteps = list_of_plankton[list(list_of_plankton.keys())[0]].number_of_timesteps
     min_positions = int(percentage_threshold*no_of_timesteps)
     plankton_track = {}
