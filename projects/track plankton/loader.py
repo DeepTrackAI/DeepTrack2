@@ -20,7 +20,7 @@ def stationary_spherical_plankton(im_size_height, im_size_width, radius, label=0
     radius=lambda: ((radius) + np.random.rand() * 0.5 * radius), # Dimensions of the principal axes of the ellipsoid
     refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
     upsample=4,                      # Amount the resolution is upsampled for accuracy
-    particle_type = -1 + label
+    particle_type = label
     )
     return plankton
 
@@ -33,7 +33,7 @@ def moving_spherical_plankton(im_size_height, im_size_width, radius, label=0, di
     radius=lambda: ((radius) + np.random.rand() * 0.5 * radius), # Dimensions of the principal axes of the ellipsoid
     refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
     upsample=4,                      # Amount the resolution is upsampled for accuracy
-    particle_type = 0,
+    particle_type = label,
     diffusion_constant=lambda: (1 + np.random.rand() * 9) * 2e-14 * diffusion_constant_coeff,
     alpha=lambda: np.random.rand() * np.pi * 2, # yaw, rotatin about z-axis
     beta=lambda: -np.random.rand() * np.pi * 2, # pitch, rotation about y-axis
@@ -52,7 +52,7 @@ def stationary_ellipsoid_plankton(im_size_height, im_size_width, radius=(1.5e-7,
     rotation=lambda: np.pi * np.random.rand(),
     refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
     upsample=4,                      # Amount the resolution is upsampled for accuracy
-    particle_type = -1 + label
+    particle_type = label
     )
     return plankton
     
@@ -66,7 +66,7 @@ def moving_ellipsoid_plankton(im_size_height, im_size_width, radius=(1.5e-7, 9e-
     rotation=lambda: np.pi * np.random.rand(),
     refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
     upsample=4,                      # Amount the resolution is upsampled for accuracy
-    particle_type = 0,
+    particle_type = label,
     diffusion_constant=lambda: (1 + np.random.rand() * 9) * 2e-14 * diffusion_constant_coeff,
     alpha=lambda: np.random.rand() * np.pi * 2, # yaw, rotatin about z-axis
     beta=lambda: -np.random.rand() * np.pi * 2, # pitch, rotation about y-axis
