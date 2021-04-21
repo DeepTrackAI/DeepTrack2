@@ -50,8 +50,8 @@ def plot_net_vs_gross_distance(list_of_plankton=None, **kwargs):
     plt.figure(figsize=(8,8))
     plt.axis([0, max(gross_distances[gross_distances!=0])*1.1, 0, max(net_distances[net_distances!=0])*1.1])
     plt.plot(gross_distances[gross_distances!=0], net_distances[net_distances!=0], **kwargs)
-    plt.xlabel('gross distance')
-    plt.ylabel('net distance')
+    plt.xlabel('mean gross distance')
+    plt.ylabel('mean net distance')
 
 
 
@@ -124,7 +124,7 @@ def plot_and_save_track(no_of_frames=10,
         
         plt.title('Planktons')
         if save_images: 
-            plt.savefig(save_path + '\\' + frame_name + '%d' % j + file_type)
+            plt.savefig(save_path + '\\' + frame_name + '%0{}d'.format(len(str(no_of_frames))) % j + file_type)
             plt.close(fig)
         else:
             

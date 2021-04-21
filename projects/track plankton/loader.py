@@ -10,7 +10,7 @@ import cv2
 import os
 from deeptrack.sequences import Sequence, Sequential
 from deeptrack.properties import SequentialProperty
-
+from deeptrack.features import Branch
 
 def stationary_spherical_plankton(im_size_height, im_size_width, radius, label=0):
     plankton = Sphere(
@@ -55,7 +55,7 @@ def stationary_ellipsoid_plankton(im_size_height, im_size_width, radius=(1.5e-7,
     particle_type = label
     )
     return plankton
-    
+
 
 def moving_ellipsoid_plankton(im_size_height, im_size_width, radius=(1.5e-7, 9e-7, 1.5e-7), label=0, diffusion_constant_coeff=1):
     plankton = Ellipsoid(
@@ -114,12 +114,19 @@ def plankton_brightfield(im_size_height, im_size_width, gradient_amp):
     return brightfield_microscope
 
 def create_sample(*arg):
-    no_of_plankton = lambda: np.random.randint(int(arg[1]*0.66), int(arg[1]*1.33))
-    sample = arg[0]**no_of_plankton
-    for i in range(2, len(arg), 2):
-        no_of_plankton = lambda: np.random.randint(int(arg[i+1]*0.66), int(arg[i+1]*1.33))
-        sample += arg[i]**no_of_plankton
-    return sample
+    if len(arg)==2:
+        no_of_plankton = lambda: np.random.randint(int(arg[1]*0.66), int(arg[1]*1.33))
+        return arg[0]**no_of_plankton
+    else:
+        no_of_plankton1 = lambda: np.random.randint(int(arg[1]*0.66), int(arg[1]*1.33))
+        no_of_plankton2 = lambda: np.random.randint(int(arg[3]*0.66), int(arg[3]*1.33))
+        
+        sample = Branch(arg[0]**no_of_plankton1, arg[2]**no_of_plankton2)
+        if len(arg) != 4:
+            for i in range(4, len(arg), 2):
+                no_of_plankton = lambda: np.random.randint(int(arg[i+1]*0.66), int(arg[i+1]*1.33))
+                sample = Branch(sample, arg[i]**no_of_plankton)
+            return sample
 
 def create_image(noise_amp, sample, microscope, norm_min, norm_max):
     noise = Poisson(snr=lambda: (60 + np.random.rand() * 30) * 1/(max(0.01,noise_amp)))
@@ -146,7 +153,7 @@ def get_target_image(image_of_particles):
     no_of_types = 1
     for property in image_of_particles.properties:
         if "particle_type" in property:
-            no_of_types = max(property['particle_type'], no_of_types)
+            no_of_types = max(property['particle_type'] + 1, no_of_types)
     label = np.zeros((*image_of_particles.shape[:2], no_of_types + 1))
     X, Y = np.meshgrid(
         np.arange(0, image_of_particles.shape[1]), 
@@ -166,7 +173,7 @@ def get_target_sequence(sequence_of_particles):
     no_of_types = 1
     for property in sequence_of_particles[0].properties:
         if "particle_type" in property:
-            no_of_types = max(property['particle_type'], no_of_types)
+            no_of_types = max(property['particle_type']+1, no_of_types)
     if no_of_types==1:
         indices = np.asarray(sequence_of_particles).shape[0]
         label = np.zeros((*np.asarray(sequence_of_particles).shape[1:3], indices + 1))
@@ -181,12 +188,11 @@ def get_target_sequence(sequence_of_particles):
                     position = property["position"]
                     distance_map = (X - position[1])**2 + (Y - position[0])**2
     
-                    label[distance_map < 3, (property["particle_type"] + 1) * (i+1)] = 1
+                    label[distance_map < 3, i + 1] = 1
         label[..., 0] = 1 - np.max(label[..., 1:], axis=-1)
     else:
         indices = np.asarray(sequence_of_particles).shape[0]
         label = np.zeros((*np.asarray(sequence_of_particles).shape[1:3], no_of_types + 1))
-        
         X, Y = np.meshgrid(
             np.arange(0, np.asarray(sequence_of_particles).shape[2]), 
             np.arange(0, np.asarray(sequence_of_particles).shape[1])
@@ -198,7 +204,7 @@ def get_target_sequence(sequence_of_particles):
                 position = property["position"]
                 distance_map = (X - position[1])**2 + (Y - position[0])**2
 
-                label[distance_map < 3, (property["particle_type"] + 1) * (i+1)] = 1
+                label[distance_map < 3, property["particle_type"] + 1] = 1
         label[..., 0] = 1 - np.max(label[..., 1:], axis=-1)
         
     return label
