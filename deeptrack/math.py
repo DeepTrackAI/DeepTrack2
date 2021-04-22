@@ -19,52 +19,7 @@ import skimage.measure
 import scipy.ndimage as ndimage
 
 
-class Add(Feature):
-    """Adds a value to the input.
 
-    Parameters
-    ----------
-    value : number
-        The value to add
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image + value
-
-
-class Subtract(Feature):
-    """Subtracts a value from the input.
-
-    Parameters
-    ----------
-    value : number
-        The value to subtract
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image - value
-
-
-class Multiply(Feature):
-    """Multiplies the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to multiply with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image * value
 
 
 class Divide(Feature):
