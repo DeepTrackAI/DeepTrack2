@@ -137,7 +137,7 @@ class Feature:
             The transformed image or list of images
         """
 
-    def resolve(self, image_list: Image or List[Image] = None, **global_kwargs):
+    def _resolve(self, image_list: Image or List[Image] = None, **global_kwargs):
         """Creates the image.
         Transforms the input image by calling the method `get()` with the
         correct inputs. The properties of the feature can be overruled by
@@ -159,7 +159,7 @@ class Feature:
         """
         return self(image_list, **global_kwargs)
 
-    def __call__(self, image_list: Image or List[Image] = None, **global_kwargs):
+    def resolve(self, image_list: Image or List[Image] = None, **global_kwargs):
         """Creates the image.
         Transforms the input image by calling the method `get()` with the
         correct inputs. The properties of the feature can be overruled by
@@ -396,6 +396,10 @@ class Feature:
     def _process_properties(self, propertydict) -> dict:
         # Optional hook for subclasses to preprocess input before calling
         # the method .get()
+
+        for key, val in propertydict.items():
+            if isinstance(val, Feature):
+                propertydict[key] = val.resolve()
         return propertydict
 
     def sample(self, **kwargs) -> "Feature":
@@ -417,36 +421,35 @@ class Feature:
         else:
             raise AttributeError
 
-    def __add__(self, other: "Feature") -> "Feature":
-        # Overrides add operator
-        if isinstance(other, list) and all(isinstance(f) for f in other):
-            other = Combine(features=other)
-
+    def __rshift__(self, other: "Feature") -> "Feature":
         if isinstance(other, Feature):
             return Branch(self, other)
+        if callable(other):
+            return self >> Lambda(lambda: other)
+        
+        return NotImplemented
+
+    def __add__(self, other) -> "Feature":
+        # Overrides add operator
+        return self >> Add(other)
 
     def __radd__(self, other) -> "Feature":
-        # Add when left hand is not a feature
-        # If left hand is falesly, return self
-        # This allows operations such as sum(list_of_features)
-        if isinstance(other, list) and all(isinstance(f) for f in other):
-            other = Combine(features=other)
+        # Overrides add operator
+        return Constant(other) >> Add(self) 
 
-        if isinstance(other, Feature):
-            return Branch(other, self)
-        elif not other:
-            return self
-        else:
-            return NotImplemented
+    def __sub__(self, other) -> "Feature":
+        # Overrides add operator
+        return self >> Subtract(other)
 
-    def __mul__(self, other: float) -> "Feature":
-        # Introduces a probablity of a feature to be resolved.
-        if isinstance(other, list) and all(isinstance(f) for f in other):
-            other = Combine(features=other)
+    def __rsub__(self, other) -> "Feature":
+        # Overrides add operator
+        return Constant(other) >> Subtract(self) 
 
-        return Probability(self, other)
+    def __mul__(self, other) -> "Feature":
+        return self >> Multiply(other)
 
-    __rmul__ = __mul__
+    def __rmul__(self, other) -> "Feature":
+        return Constant(other) >> Multiply(self) 
 
     def __pow__(self, other) -> "Feature":
         # Duplicate the feature to resolve more items
@@ -483,14 +486,87 @@ class Branch(StructuralFeature):
     feature_2 : Feature
     """
 
-    def __init__(self, feature_1: Feature, feature_2: Feature, *args, **kwargs):
-        super().__init__(*args, feature_1=feature_1, feature_2=feature_2, **kwargs)
+    def __init__(self, feature_1: Feature, feature_2: Feature, **kwargs):
+        self.feature_1 = feature_1
+        self.feature_2 = feature_2
+        super().__init__( **kwargs)
 
-    def get(self, image, feature_1, feature_2, **kwargs):
+    def _update(self, **kwargs):
+        self.feature_1._update(**kwargs)
+        self.feature_2._update(**kwargs)
+        return super()._update(**kwargs)
+        
+
+    def get(self, image, **kwargs):
         """Resolves `feature_1` and `feature_2` sequentially"""
-        image = feature_1.resolve(image, **kwargs)
-        image = feature_2.resolve(image, **kwargs)
+        image = self.feature_1.resolve(image, **kwargs)
+        image = self.feature_2.resolve(image, **kwargs)
         return image
+
+class Constant(Feature):
+    """Multiplies the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to multiply with.
+    """
+
+    __distributed__ = False
+
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return value
+
+class Add(Feature):
+    """Adds a value to the input.
+
+    Parameters
+    ----------
+    value : number
+        The value to add
+    """
+
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image + value
+
+
+class Subtract(Feature):
+    """Subtracts a value from the input.
+
+    Parameters
+    ----------
+    value : number
+        The value to subtract
+    """
+
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image - value
+
+
+class Multiply(Feature):
+    """Multiplies the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to multiply with.
+    """
+
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image * value
+
 
 
 class Probability(StructuralFeature):
