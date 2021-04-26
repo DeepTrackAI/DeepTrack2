@@ -3,14 +3,118 @@ import sys
 # sys.path.append(".")  # Adds the module to path
 
 import unittest
+import operator
+import itertools
+
+from numpy.testing._private.utils import assert_almost_equal
 
 from .. import features, Image, properties
 
 import numpy as np
+import numpy.testing
+
+
+def grid_test_features(
+    tester,
+    feature_a,
+    feature_b,
+    feature_a_inputs,
+    feature_b_inputs,
+    expected_result_function,
+    merge_operator=operator.rshift,
+):
+
+    assert callable(feature_a), "First feature constructor needs to be callable"
+    assert callable(feature_b), "Second feature constructor needs to be callable"
+    assert (
+        len(feature_a_inputs) > 0 and len(feature_b_inputs) > 0
+    ), "Feature input-lists cannot be empty"
+    assert callable(expected_result_function), "Result function needs to be callable"
+
+    for f_a_input, f_b_input in itertools.product(feature_a_inputs, feature_b_inputs):
+
+        f_a = feature_a(**f_a_input)
+        f_b = feature_b(**f_b_input)
+        f = merge_operator(f_a, f_b)
+
+        tester.assertIsInstance(f, features.Feature)
+
+        try:
+            output = f()
+        except Exception as e:
+            tester.assertRaises(
+                type(e),
+                lambda: expected_result_function(f_a.properties(), f_b.properties()),
+            )
+            continue
+
+        expected_result = expected_result_function(
+            f_a.properties(),
+            f_b.properties(),
+        )
+        is_equal = np.array_equal(output, expected_result, equal_nan=True)
+
+        tester.failIf(
+            not is_equal,
+            "Feature output {} is not equal to expect result {}.\n Using arguments \n\tFeature_1: {}, \n\t Feature_2: {}".format(
+                output, expected_result, f_a_input, f_b_input
+            ),
+        )
+
+        tester.failIf(
+            not any(p == f_a.properties() for p in output.properties),
+            "Feature_a properties {} not in output Image, with properties {}".format(
+                f_a.properties(), output.properties
+            ),
+        )
+        tester.failIf(
+            not any(p == f_a.properties() for p in output.properties),
+            "Feature_a properties {} not in output Image, with properties {}".format(
+                f_a.properties(), output.properties
+            ),
+        )
+
+
+def test_operator(self, operator):
+
+    value = features.Value(value=2)
+    f = operator(value, 3)
+    self.assertEqual(f(), operator(2, 3))
+    self.assertListEqual(f().get_property("value", get_one=False), [2, 3])
+
+    f = operator(3, value)
+    self.assertEqual(f(), operator(3, 2))
+
+    f = operator(value, lambda: 3)
+    self.assertEqual(f(), operator(2, 3))
+    self.assertListEqual(f().get_property("value", get_one=False), [2, 3])
+
+    grid_test_features(
+        self,
+        features.Value,
+        features.Value,
+        [
+            {"value": 1},
+            {"value": 0.5},
+            {"value": np.nan},
+            {"value": np.inf},
+            {"value": np.random.rand(10, 10)},
+        ],
+        [
+            {"value": 1},
+            {"value": 0.5},
+            {"value": np.nan},
+            {"value": np.inf},
+            {"value": np.random.rand(10, 10)},
+        ],
+        lambda a, b: operator(a["value"], b["value"]),
+        operator,
+    )
 
 
 class TestFeatures(unittest.TestCase):
     def test_create_Feature(self):
+
         feature = features.DummyFeature()
 
         self.assertIsInstance(feature, features.Feature)
@@ -107,20 +211,83 @@ class TestFeatures(unittest.TestCase):
 
         value = features.Value(value=1)
         self.assertEqual(value(), 1)
+        self.assertEqual(value.value(), 1)
 
-    # def test_Feature_1(self):
-    #     class FeatureConcreteClass(features.Feature):
-    #         __distributed__ = False
+        value = features.Value(value=lambda: 1)
+        self.assertEqual(value(), 1)
+        self.assertEqual(value.value(), 1)
 
-    #         def get(self, *args, **kwargs):
-    #             image = np.ones((2, 3))
-    #             return image
+    def test_Feature_dependence(self):
+        A = features.Value(lambda: np.random.rand())
+        B = features.Value(value=A.value)
+        C = features.Value(value=B.value + 1)
+        D = features.Value(value=C.value + B.value)
+        E = features.Value(value=D + C.value)
 
-    #     feature = FeatureConcreteClass()
-    #     feature.update()
-    #     output_image = feature.resolve()
-    #     self.assertIsInstance(output_image, Image)
-    #     self.assertEqual(output_image.size, 6)
+        self.assertEqual(A(), B())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
+
+        A.update()
+        self.assertEqual(A(), B())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
+
+        B.update()
+        self.assertEqual(A(), B())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
+
+        C.update()
+        self.assertEqual(A(), B())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
+
+        D.update()
+        # self.assertEqual(A(), B())
+        # self.assertEqual(C(), B() + 1)
+        # self.assertEqual(D(), C() + B())
+        # self.assertEqual(E(), D() + C())
+
+        E.update()
+        self.assertEqual(A(), B())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
+
+    def test_Add(self):
+        test_operator(self, operator.add)
+
+    def test_Subtract(self):
+        test_operator(self, operator.sub)
+
+    def test_Multiply(self):
+        test_operator(self, operator.add)
+
+    def test_TrueDivide(self):
+        test_operator(self, operator.truediv)
+
+    def test_TrueDivide(self):
+        test_operator(self, operator.floordiv)
+
+    def test_Power(self):
+        test_operator(self, operator.pow)
+
+    def test_GreaterThan(self):
+        test_operator(self, operator.gt)
+
+    def test_GreaterThanOrEqual(self):
+        test_operator(self, operator.ge)
+
+    def test_LessThan(self):
+        test_operator(self, operator.lt)
+
+    def test_LessThanOrEqual(self):
+        test_operator(self, operator.le)
 
     # def test_Feature_2(self):
     #     class FeatureAddValue(features.Feature):
