@@ -105,7 +105,7 @@ class Feature(DeepTrackNode):
 
         properties = getattr(self, "properties", {})
         properties.update(**kwargs)
-
+        properties.setdefault("name", type(self).__name__)
         # Bind properties
         self.properties = PropertyDict(**properties)
         self.add_dependency(self.properties)
@@ -202,9 +202,6 @@ class Feature(DeepTrackNode):
         # to the __distributed__ attribute
         new_list = self._process_and_get(image_list, **feature_input)
 
-        # Add feature_input to the image the class attribute __property_memorability__
-        # is not larger than the passed property_verbosity keyword
-        feature_input["name"] = type(self).__name__
         for index, image in enumerate(new_list):
             image.append(feature_input)
 
@@ -224,7 +221,6 @@ class Feature(DeepTrackNode):
 
         if image_list is not None:
             self._input.set_value(image_list)
-
         return super(Feature, self).__call__()
 
     resolve = __call__
@@ -232,6 +228,7 @@ class Feature(DeepTrackNode):
     def add_feature(self, feature):
         feature.add_child(self)
         self.add_dependency(feature)
+        return feature
 
     def seed(self):
         np.random.seed(self._random_seed())
@@ -394,7 +391,7 @@ class Feature(DeepTrackNode):
 
     def __rshift__(self, other: "Feature") -> "Feature":
         if isinstance(other, Feature):
-            return Branch(self, other)
+            return Chain(self, other)
         if callable(other):
             return self >> Lambda(lambda: other)
 
@@ -422,12 +419,47 @@ class Feature(DeepTrackNode):
     def __rmul__(self, other) -> "Feature":
         return Value(other) >> Multiply(self)
 
-    def __pow__(self, other) -> "Feature":
-        # Duplicate the feature to resolve more items
-        if isinstance(other, list) and all(isinstance(f) for f in other):
-            other = Combine(features=other)
+    def __truediv__(self, other) -> "Feature":
+        return self >> Divide(other)
 
-        return Duplicate(self, other)
+    def __rtruediv__(self, other) -> "Feature":
+        return Value(other) >> Divide(self)
+
+    def __floordiv__(self, other) -> "Feature":
+        return self >> FloorDivide(other)
+
+    def __rfloordiv__(self, other) -> "Feature":
+        return Value(other) >> FloorDivide(self)
+
+    def __pow__(self, other) -> "Feature":
+        return self >> Power(other)
+
+    def __rpow__(self, other) -> "Feature":
+        return Value(other) >> Power(self)
+
+    def __gt__(self, other) -> "Feature":
+        return self >> GreaterThan(other)
+
+    def __rgt__(self, other) -> "Feature":
+        return Value(other) >> GreaterThan(self)
+
+    def __lt__(self, other) -> "Feature":
+        return self >> LessThan(other)
+
+    def __rlt__(self, other) -> "Feature":
+        return Value(other) >> LessThan(self)
+
+    def __le__(self, other) -> "Feature":
+        return self >> LessThanOrEquals(other)
+
+    def __rle__(self, other) -> "Feature":
+        return Value(other) >> LessThanOrEquals(self)
+
+    def __ge__(self, other) -> "Feature":
+        return self >> GreaterThanOrEquals(other)
+
+    def __rge__(self, other) -> "Feature":
+        return Value(other) >> GreaterThanOrEquals(self)
 
     def __getitem__(self, slices) -> "Feature":
         # Allows direct slicing of the data.
@@ -449,7 +481,7 @@ class StructuralFeature(Feature):
     __distributed__ = False
 
 
-class Branch(StructuralFeature):
+class Chain(StructuralFeature):
     """Resolves two features sequentially.
     Passes the output of the first to the input of the second.
     Parameters
@@ -459,20 +491,21 @@ class Branch(StructuralFeature):
     """
 
     def __init__(self, feature_1: Feature, feature_2: Feature, **kwargs):
-        self.feature_1 = feature_1
-        self.feature_2 = feature_2
+
         super().__init__(**kwargs)
 
-    def _update(self, **kwargs):
-        self.feature_1._update(**kwargs)
-        self.feature_2._update(**kwargs)
-        return super()._update(**kwargs)
+        self.feature_1 = self.add_feature(feature_1)
+        self.feature_2 = self.add_feature(feature_2)
 
     def get(self, image, **kwargs):
         """Resolves `feature_1` and `feature_2` sequentially"""
-        image = self.feature_1.resolve(image, **kwargs)
-        image = self.feature_2.resolve(image, **kwargs)
+        image = self.feature_1(image)
+        image = self.feature_2(image)
         return image
+
+
+# Alias for backwards compatability
+Branch = Chain
 
 
 class Value(Feature):
@@ -534,11 +567,139 @@ class Multiply(Feature):
         The value to multiply with.
     """
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
         super().__init__(value=value, **kwargs)
 
     def get(self, image, value, **kwargs):
         return image * value
+
+
+class Divide(Feature):
+    """Divides the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to divide with.
+    """
+
+    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image / value
+
+
+class FloorDivide(Feature):
+    """Divides the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to divide with.
+    """
+
+    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image // value
+
+
+class Power(Feature):
+    """Raises the input to a power.
+
+    Parameters
+    ----------
+    value : number
+        The power to raise with.
+    """
+
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image ** value
+
+
+class LessThan(Feature):
+    """Divides the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to divide with.
+    """
+
+    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image < value
+
+
+class LessThanOrEquals(Feature):
+    """Divides the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to divide with.
+    """
+
+    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image <= value
+
+
+class GreaterThan(Feature):
+    """Divides the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to divide with.
+    """
+
+    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image > value
+
+
+class GreaterThanOrEquals(Feature):
+    """Divides the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to divide with.
+    """
+
+    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image >= value
+
+
+class Equals(Feature):
+    """Divides the input with a value.
+
+    Parameters
+    ----------
+    value : number
+        The value to divide with.
+    """
+
+    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+        return image == value
 
 
 class Probability(StructuralFeature):
