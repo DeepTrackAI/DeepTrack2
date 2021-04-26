@@ -46,15 +46,19 @@ class DeepTrackNode:
         super(DeepTrackNode, self).__init__(**kwargs)
 
     def add_child(self, other):
-        if other not in self.children:
-            self.children.append(other)
+        self.children.append(other)
+
+        return self
 
     def add_dependency(self, other):
-        if other not in self.dependencies:
-            self.dependencies.append(other)
+        self.dependencies.append(other)
+
+        return self
 
     def store(self, data):
-        return self.data.store(data)
+        self.data.store(data)
+
+        return self
 
     def is_valid(self):
         return self.data.is_valid()
@@ -65,28 +69,32 @@ class DeepTrackNode:
             for child in self.children:
                 child.invalidate()
 
+        return self
+
     def validate(self):
         if not self.is_valid():
             self.data.validate()
             for child in self.children:
                 child.validate()
 
+        return self
+
     def set_value(self, value):
 
         # If set to same value, no need to invalidate
-        if (
-            (value is not self.data.current_value())
-            and (id(value) != id(self.data.current_value()))
-            and not (np.array_equal(value, self.data.current_value()))
-        ):
+        if not equivalent(value, self.data.current_value()) or not self.is_valid():
 
             self.invalidate()
             self.store(value)
+
+        return self
 
     def update(self):
         self.invalidate()
         for dependency in self.dependencies:
             dependency.update()
+
+        return self
 
     def __call__(self):
 
@@ -156,12 +164,33 @@ class DeepTrackNode:
         return create_node_with_operator(operator.__ge__, other, self)
 
 
+def equivalent(a, b):
+
+    if a is b:
+        return True
+
+    if id(a) == id(b):
+        return True
+
+    # return False
+    if type(a) != type(b):
+        return False
+
+    if isinstance(a, np.ndarray):
+        # return False
+        if a.shape != b.shape:
+            return False
+        return np.array_equal(a, b, equal_nan=True)
+
+    return a == b
+
+
 def create_node_with_operator(op, a, b):
 
-    if not issubclass(a, DeepTrackNode):
+    if not isinstance(a, DeepTrackNode):
         a = DeepTrackNode(a)
 
-    if not issubclass(b, DeepTrackNode):
+    if not isinstance(b, DeepTrackNode):
         b = DeepTrackNode(b)
 
     new = DeepTrackNode(lambda: op(a(), b()))
