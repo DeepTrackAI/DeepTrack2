@@ -23,11 +23,13 @@ Duplicate
 import copy
 
 from typing import Any, Callable, Iterable, Iterator, List, Tuple
+from matplotlib import image
 import numpy as np
 import threading
 
 from .image import Image
 from .properties import Property, PropertyDict
+from .backend.core import DeepTrackNode
 from .types import PropertyLike, ArrayLike
 
 
@@ -41,7 +43,7 @@ UPDATE_LOCK = threading.Lock()
 UPDATE_MEMO = {"user_arguments": {}, "memoization": {}}
 
 
-class Feature:
+class Feature(DeepTrackNode):
     """Base feature class.
     Features define the image generation process. All features operate
     on lists of images. Most features, such as noise, apply some
@@ -94,29 +96,30 @@ class Feature:
     __distributed__ = True
     __property_memorability__ = 1
 
-    def __init__(self, *args: dict, **kwargs):
+    # A None-safe default value to compare against
+    __nonelike_default = object()
+
+    def __init__(self, _input=[], **kwargs):
+
         super(Feature, self).__init__()
+
         properties = getattr(self, "properties", {})
+        properties.update(**kwargs)
 
-        # Create an iterable of kwargs and args
-        all_dicts = (kwargs,) + args
-
-        for property_dict in all_dicts:
-            for key, value in property_dict.items():
-                if not isinstance(value, Property):
-
-                    value = Property(value)
-
-                properties[key] = value
-
-        # hash_key is an inexpensive way to compare dicts of properties
-        # The hash here is 4 31 bit integers, for a total of 124 bits.
-        if "hash_key" not in properties:
-            properties["hash_key"] = Property(
-                lambda: list(np.random.randint(2 ** 31, size=(4,)))
-            )
-
+        # Bind properties
         self.properties = PropertyDict(**properties)
+        self.add_dependency(self.properties)
+        self.properties.add_child(self)
+
+        # Bind holder for input value
+        self._input = DeepTrackNode(_input)
+        self.add_dependency(self._input)
+        self._input.add_child(self)
+
+        # Bind seed
+        self._random_seed = DeepTrackNode(lambda: np.random.randint(2147483648))
+        self.add_dependency(self._random_seed)
+        self._random_seed.add_child(self)
 
     def get(self, image: Image or List[Image], **kwargs) -> Image or List[Image]:
         """Method for altering an image
@@ -137,7 +140,9 @@ class Feature:
             The transformed image or list of images
         """
 
-    def _resolve(self, image_list: Image or List[Image] = None, **global_kwargs):
+    def action(
+        self,
+    ):
         """Creates the image.
         Transforms the input image by calling the method `get()` with the
         correct inputs. The properties of the feature can be overruled by
@@ -157,9 +162,6 @@ class Feature:
         Image or List[Image]
             The resolved image
         """
-        return self(image_list, **global_kwargs)
-
-    def resolve(self, image_list: Image or List[Image] = None, **global_kwargs):
         """Creates the image.
         Transforms the input image by calling the method `get()` with the
         correct inputs. The properties of the feature can be overruled by
@@ -180,19 +182,13 @@ class Feature:
             The resolved image
         """
 
-        # Remove hash_key from globals.
-        global_kwargs.pop("hash_key", False)
+        image_list = self._input()
 
         # Ensure that input is a list
-        image_list = self._format_input(image_list, **global_kwargs)
+        image_list = self._format_input(image_list)
 
         # Get the input arguments to the method .get()
-        feature_input = self.properties.current_value_dict(
-            is_resolving=True, **global_kwargs
-        )
-
-        # Add global_kwargs to input arguments
-        feature_input.update(global_kwargs)
+        feature_input = self.properties()
 
         # Call the _process_properties hook, default does nothing.
         # Can be used to ensure properties are formatted correctly
@@ -200,32 +196,17 @@ class Feature:
         feature_input = self._process_properties(feature_input)
 
         # Set the seed from the hash_key. Ensures equal results
-        np.random.seed(
-            int(feature_input["hash_key"][0])
-            * int(feature_input.get("sequence_step", 0) + 1)
-            % int(2 ** 32 - 1)
-        )
+        self.seed()
 
         # _process_and_get calls the get function correctly according
         # to the __distributed__ attribute
         new_list = self._process_and_get(image_list, **feature_input)
 
-        # If tuple, assume return additional properties
-        if isinstance(new_list, tuple):
-            feature_input = {**feature_input, **new_list[1]}
-            new_list = new_list[0]
-
         # Add feature_input to the image the class attribute __property_memorability__
         # is not larger than the passed property_verbosity keyword
-        property_verbosity = global_kwargs.get("property_memorability", 1)
         feature_input["name"] = type(self).__name__
-        if self.__property_memorability__ <= property_verbosity:
-            for index, image in enumerate(new_list):
-                if isinstance(image, tuple):
-                    image[0].append({**feature_input, **image[1]})
-                    new_list[index] = image[0]
-                else:
-                    image.append(feature_input)
+        for index, image in enumerate(new_list):
+            image.append(feature_input)
 
         # Merge input and new_list
         if self.__list_merge_strategy__ == MERGE_STRATEGY_OVERRIDE:
@@ -239,31 +220,21 @@ class Feature:
         else:
             return image_list
 
-    def update(self, **kwargs) -> "Feature":
-        """Updates the state of all properties.
+    def __call__(self, image_list: Image or List[Image] = None, **arguments):
 
-        Parameters
-        ----------
-        **kwargs
-            Arguments that will be set globally for the update call.
-            For example .update(value=10) will have all properties
-            and features that depend on "value" use 10 instead of what
-            they otherwise would.
+        if image_list is not None:
+            self._input.set_value(image_list)
 
-        Returns
-        -------
-        self
-        """
+        return super(Feature, self).__call__()
 
-        # This should only be accessed by the user. Call _update directly instead
-        with UPDATE_LOCK:
-            UPDATE_MEMO["user_arguments"] = kwargs
-            UPDATE_MEMO["memoization"] = {}
-            self._update(**kwargs)
-            return self
+    resolve = __call__
 
-    def _update(self, **kwargs):
-        self.properties.update(**kwargs)
+    def add_feature(self, feature):
+        feature.add_child(self)
+        self.add_dependency(feature)
+
+    def seed(self):
+        np.random.seed(self._random_seed())
 
     def plot(
         self,
@@ -411,9 +382,9 @@ class Feature:
         # Allows easier access to properties, while guaranteeing they are updated correctly.
         # Should only every be used from the inside of a property function.
         # Is not compatible with sequential properties.
+
         if "properties" in self.__dict__:
             properties = self.__dict__["properties"]
-
             if key in properties:
                 return properties[key]
             else:
@@ -426,7 +397,7 @@ class Feature:
             return Branch(self, other)
         if callable(other):
             return self >> Lambda(lambda: other)
-        
+
         return NotImplemented
 
     def __add__(self, other) -> "Feature":
@@ -435,7 +406,7 @@ class Feature:
 
     def __radd__(self, other) -> "Feature":
         # Overrides add operator
-        return Constant(other) >> Add(self) 
+        return Value(other) >> Add(self)
 
     def __sub__(self, other) -> "Feature":
         # Overrides add operator
@@ -443,13 +414,13 @@ class Feature:
 
     def __rsub__(self, other) -> "Feature":
         # Overrides add operator
-        return Constant(other) >> Subtract(self) 
+        return Value(other) >> Subtract(self)
 
     def __mul__(self, other) -> "Feature":
         return self >> Multiply(other)
 
     def __rmul__(self, other) -> "Feature":
-        return Constant(other) >> Multiply(self) 
+        return Value(other) >> Multiply(self)
 
     def __pow__(self, other) -> "Feature":
         # Duplicate the feature to resolve more items
@@ -461,11 +432,12 @@ class Feature:
     def __getitem__(self, slices) -> "Feature":
         # Allows direct slicing of the data.
         if not isinstance(slices, tuple):
-            slices = (slices, )
+            slices = (slices,)
 
         slices = list(slices)
 
         return self + Slice(slices)
+
 
 class StructuralFeature(Feature):
     """Provides the structure of a feature-set
@@ -489,13 +461,12 @@ class Branch(StructuralFeature):
     def __init__(self, feature_1: Feature, feature_2: Feature, **kwargs):
         self.feature_1 = feature_1
         self.feature_2 = feature_2
-        super().__init__( **kwargs)
+        super().__init__(**kwargs)
 
     def _update(self, **kwargs):
         self.feature_1._update(**kwargs)
         self.feature_2._update(**kwargs)
         return super()._update(**kwargs)
-        
 
     def get(self, image, **kwargs):
         """Resolves `feature_1` and `feature_2` sequentially"""
@@ -503,7 +474,8 @@ class Branch(StructuralFeature):
         image = self.feature_2.resolve(image, **kwargs)
         return image
 
-class Constant(Feature):
+
+class Value(Feature):
     """Multiplies the input with a value.
 
     Parameters
@@ -519,6 +491,7 @@ class Constant(Feature):
 
     def get(self, image, value, **kwargs):
         return value
+
 
 class Add(Feature):
     """Adds a value to the input.
@@ -566,7 +539,6 @@ class Multiply(Feature):
 
     def get(self, image, value, **kwargs):
         return image * value
-
 
 
 class Probability(StructuralFeature):
@@ -683,7 +655,7 @@ class Combine(StructuralFeature):
 
     __distribute__ = False
 
-    def __init__(self, features:List[Feature], **kwargs):
+    def __init__(self, features: List[Feature], **kwargs):
         super().__init__(features=features, **kwargs)
 
     def get(self, image_list, features, **kwargs):
@@ -691,7 +663,7 @@ class Combine(StructuralFeature):
 
 
 class Slice(Feature):
-    ''' Array indexing for each Image in list.
+    """Array indexing for each Image in list.
 
     Note, this feature is rarely needed to be used directly. Instead,
     you can do normal array indexing on a feature directly. For example::
@@ -704,11 +676,11 @@ class Slice(Feature):
        ]
        sliced_feature.resolve(np.arange(27).reshape((3, 3, 3)))
 
-    In the example above, `lambda` is used to demonstrate different ways 
+    In the example above, `lambda` is used to demonstrate different ways
     to interact with the slices. In this case, the `lambda` keyword is
     redundant.
 
-    Using `Slice` directly can be required in some cases, however. For example if 
+    Using `Slice` directly can be required in some cases, however. For example if
     dependencies between properties are required. In this case, one can replicate
     the previous example as follows::
 
@@ -720,21 +692,20 @@ class Slice(Feature):
            dim3=lambda: slice(None, None, -2)
        )
        sliced_feature.resolve(np.arange(27).reshape((3, 3, 3)))
-    
+
     Parameters
     ----------
     slices : iterable of int, slice or ellipsis
         The indexing of each dimension in order.
-    '''
+    """
 
-    def __init__(self, 
-        slices:PropertyLike[
-            Iterable[
-                PropertyLike[int] or 
-                PropertyLike[slice] or 
-                PropertyLike[ellipsis]
-            ]
-        ], **kwargs):
+    def __init__(
+        self,
+        slices: PropertyLike[
+            Iterable[PropertyLike[int] or PropertyLike[slice] or PropertyLike[ellipsis]]
+        ],
+        **kwargs
+    ):
         super().__init__(slices=slices, **kwargs)
 
     def get(self, image, slices, **kwargs):
@@ -746,7 +717,6 @@ class Slice(Feature):
 
         return image[slices]
 
-        
 
 class Bind(StructuralFeature):
     """Binds a feature with property arguments.
@@ -1333,5 +1303,3 @@ class AsType(Feature):
 
     def get(self, image, dtype, **kwargs):
         return image.astype(dtype)
-
-
