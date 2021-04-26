@@ -134,21 +134,12 @@ class Image(np.ndarray):
 
         for new_prop in other.properties:
 
-            # If no hash_key, add it
-            if "hash_key" not in new_prop:
-                self.append(new_prop)
-                continue
-
             should_append = True
-            # Else, see if hash is unique
             for my_prop in self.properties:
 
-                if (
-                    "hash_key" in my_prop
-                    and my_prop["hash_key"] == new_prop["hash_key"]
-                ):
+                if id(my_prop) == id(new_prop):
 
-                    # Key is not unique, don't add
+                    # Prop already added
                     should_append = False
                     break
 
