@@ -19,41 +19,6 @@ import skimage.measure
 import scipy.ndimage as ndimage
 
 
-
-
-
-class Divide(Feature):
-    """Divides the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to divide with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image / value
-
-
-class Power(Feature):
-    """Raises the input to a power.
-
-    Parameters
-    ----------
-    value : number
-        The power to raise with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image ** value
-
-
 class Average(Feature):
     """Average of input images
 
