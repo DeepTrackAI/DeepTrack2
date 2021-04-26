@@ -32,17 +32,12 @@ from . import features
 
 class Property(DeepTrackNode):
     def __init__(self, sampling_rule, **kwargs):
-
-        action = self.create_action(sampling_rule, **kwargs)
-        super().__init__(action)
+        super().__init__()
+        self.action = self.create_action(sampling_rule, **kwargs)
 
     def create_action(self, sampling_rule, **dependencies):
-        if isinstance(sampling_rule, features.Feature):
-            sampling_rule.add_child(self)
-            self.add_dependency(sampling_rule)
-            return sampling_rule.resolve
 
-        if isinstance(sampling_rule, Property):
+        if isinstance(sampling_rule, DeepTrackNode):
             sampling_rule.add_child(self)
             self.add_dependency(sampling_rule)
             return sampling_rule
@@ -125,7 +120,7 @@ class PropertyDict(DeepTrackNode, dict):
                 try:
                     dependencies[key] = Property(val, **{**dependencies, **kwargs})
                     kwargs.pop(key)
-                except AttributeError:
+                except AttributeError as e:
                     pass
 
         def action():
