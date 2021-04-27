@@ -882,15 +882,17 @@ class Slice(Feature):
     ----------
     slices : iterable of int, slice or ellipsis
         The indexing of each dimension in order.
-    """
 
-    def __init__(
-        self,
-        slices: PropertyLike[
-            Iterable[PropertyLike[int] or PropertyLike[slice] or PropertyLike[ellipsis]]
-        ],
-        **kwargs
-    ):
+
+    def __init__(self, 
+        slices:PropertyLike[
+            Iterable[
+                PropertyLike[int] or 
+                PropertyLike[slice] or 
+                PropertyLike[Ellipsis]
+            ]
+        ], **kwargs):
+
         super().__init__(slices=slices, **kwargs)
 
     def get(self, image, slices, **kwargs):
