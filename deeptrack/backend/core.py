@@ -30,10 +30,14 @@ class DeepTrackDataObject:
 class DeepTrackDataList:
     def __init__(self):
         self.list = []
-        self.default = DeepTrackDataObject()
+        self.default = None
 
     def __getitem__(self, replicate_index):
+        if self.default is not None:
+            return self.default
+
         if replicate_index is None:
+            self.default = DeepTrackDataObject()
             return self.default
 
         if isinstance(replicate_index, int):
@@ -217,7 +221,10 @@ def equivalent(a, b):
             return False
         return np.array_equal(a, b, equal_nan=True)
 
-    return a == b
+    try:
+        return a == b
+    except ValueError as e:
+        return np.array_equal(a, b, equal_nan=True)
 
 
 def create_node_with_operator(op, a, b):
