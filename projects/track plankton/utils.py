@@ -66,7 +66,6 @@ def get_image_stack(*args, outputs=None, folder_path=None,
             img0 = Normalize_image(cv2.imread(folder_path +'\\' + list_paths[frame_im0 + num[0]], 0))
             img1 = Normalize_image(cv2.imread(folder_path +'\\' + list_paths[frame_im0 + num[1]], 0))
             diff = img1-img0
-            
             diff = cv2.resize(diff, dsize=(im_resize_width, im_resize_height), interpolation=cv2.INTER_AREA)
             
             for i in range(len(function_diff)):
@@ -149,7 +148,7 @@ class Plankton:
             mean_velocity = 0
         return mean_velocity
         
-def Initialize_plankton(positions=None, number_of_timesteps=None, **kwargs):
+def Initialize_plankton(positions=None, number_of_timesteps=None, current_timestep=0, **kwargs):
     if np.any(np.isnan(positions)):
         print('No positions recieved for this time step', 0)
         return
@@ -157,19 +156,23 @@ def Initialize_plankton(positions=None, number_of_timesteps=None, **kwargs):
     list_of_plankton = {}
     
     for i in range(no_of_plankton):
-        list_of_plankton['plankton%d' % i] = Plankton(positions[i,:], number_of_timesteps, 0)
+        list_of_plankton['plankton%d' % i] = Plankton(positions[i], number_of_timesteps, current_timestep)
     return list_of_plankton
 
 def Update_list_of_plankton(list_of_plankton=None, positions=None, max_dist=10, 
                             timestep=None, threshold=10, extrapolate=False, **kwargs):
     if np.any(np.isnan(positions)):
-        print('No positions recieved for this time step', timestep)
+        print('No positions recieved for time step', timestep)
         return list_of_plankton
     
     if type(positions)==tuple:
         positions = np.reshape(positions, (-1, 2))
         
-        
+    if list_of_plankton is None:
+        no_of_timesteps = len(positions)
+        list_of_plankton = Initialize_plankton(positions=positions, number_of_timesteps=no_of_timesteps, current_timestep=timestep)
+        return list_of_plankton
+    
     no_of_plankton = len(list_of_plankton)
     no_of_positions = len(positions)
     plankton_positions = np.zeros([no_of_plankton, 2])
@@ -177,13 +180,10 @@ def Update_list_of_plankton(list_of_plankton=None, positions=None, max_dist=10,
     for value, key in enumerate(list_of_plankton):
         plankton_positions[value,:] = list_of_plankton[key].get_latest_position(timestep = timestep, threshold = threshold)
       
-        
     if extrapolate == True and timestep > 1:
         plankton_positions = Extrapolate_positions(list_of_plankton=list_of_plankton, timestep=timestep, threshold=threshold)
         
-      
     distances = cdist(positions, plankton_positions)
-
     for i in range(no_of_positions):
         if np.nanmin(distances[i,:]) > max_dist:
             position = positions[i,:]

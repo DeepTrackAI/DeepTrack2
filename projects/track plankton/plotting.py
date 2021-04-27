@@ -73,6 +73,8 @@ def plot_and_save_track(no_of_frames=10,
                color_plankton_track='b',
                color_plankton_dont_track='r',
                color_specific_plankton='g',
+               im_size_width=640, 
+               im_size_height=512,
                x_axis_label='pixels',
                y_axis_label='pixels',
                pixel_length_ratio=1,
@@ -84,36 +86,42 @@ def plot_and_save_track(no_of_frames=10,
     list_paths = os.listdir(folder_path)
     for i, j in enumerate(range(frame_im0, frame_im0 + no_of_frames)):
         fig, ax = plt.subplots(figsize=(10, 10), constrained_layout=True)
-
+        
+        im = Normalize_image(np.asarray(LoadImage(folder_path +'\\' + list_paths[j]).resolve()))
+        dims = im.shape
+        
+        scale_height = dims[0]/im_size_height
+        scale_width = dims[1]/im_size_width
+        
         if show_plankton_track:
             for key in plankton_track:
-                ax.plot(2*plankton_track[key].positions[max(i-5,0):i+1, 1],2*plankton_track[key].positions[max(i-5,0):i+1, 0], c=color_plankton_track,linewidth=1)
-                ax.scatter(2*plankton_track[key].positions[i,1], 2*plankton_track[key].positions[i,0], s=100, marker='.', facecolor='none', edgecolors=color_plankton_track)
+                ax.plot(scale_width*plankton_track[key].positions[max(i-5,0):i+1, 1],scale_height*plankton_track[key].positions[max(i-5,0):i+1, 0], c=color_plankton_track,linewidth=1)
+                ax.scatter(scale_width*plankton_track[key].positions[i,1], scale_height*plankton_track[key].positions[i,0], s=100, marker='.', facecolor='none', edgecolors=color_plankton_track)
 
         if show_plankton_dont_track:    
             for key in plankton_dont_track:
-                ax.plot(2*plankton_dont_track[key].positions[max(i-5,0):i+1, 1],2*plankton_dont_track[key].positions[max(i-5,0):i+1, 0], c=color_plankton_dont_track, linewidth=1)
-                ax.scatter(2*plankton_dont_track[key].positions[i,1], 2*plankton_dont_track[key].positions[i,0], s=100, marker='.', facecolor='none', edgecolors=color_plankton_dont_track)
+                ax.plot(scale_width*plankton_dont_track[key].positions[max(i-5,0):i+1, 1],scale_height*plankton_dont_track[key].positions[max(i-5,0):i+1, 0], c=color_plankton_dont_track, linewidth=1)
+                ax.scatter(scale_width*plankton_dont_track[key].positions[i,1], scale_height*plankton_dont_track[key].positions[i,0], s=100, marker='.', facecolor='none', edgecolors=color_plankton_dont_track)
 
         if show_specific_plankton:
             for num in specific_plankton:
-                ax.plot(2*plankton_track['plankton%d' % num].positions[max(i-5,0):i+1, 1],2*plankton_track['plankton%d' % num].positions[max(i-5,0):i+1, 0], c=color_specific_plankton, linewidth=1)
-                ax.scatter(2*plankton_track['plankton%d' % num].positions[i,1], 2*plankton_track['plankton%d' % num].positions[i,0], s=100, marker='.', facecolor='none', edgecolors=color_specific_plankton)
+                ax.plot(scale_width*plankton_track['plankton%d' % num].positions[max(i-5,0):i+1, 1], scale_height*plankton_track['plankton%d' % num].positions[max(i-5,0):i+1, 0], c=color_specific_plankton, linewidth=1)
+                ax.scatter(scale_width*plankton_track['plankton%d' % num].positions[i,1], scale_height*plankton_track['plankton%d' % num].positions[i,0], s=100, marker='.', facecolor='none', edgecolors=color_specific_plankton)
 
-        im1 = Normalize_image(np.asarray(LoadImage(folder_path +'\\' + list_paths[j]).resolve()))
-        ax.imshow(im1, cmap="gray")
+        
+        ax.imshow(im, cmap="gray")
 
         if show_numbers_track:
             for key in plankton_track:
-                ax.annotate(key.replace('plankton',''), (2*plankton_track[key].positions[i,1]-27, 2*plankton_track[key].positions[i,0]-10), color=color_plankton_track, fontsize=10)
+                ax.annotate(key.replace('plankton',''), (scale_width*plankton_track[key].positions[i,1]-27, scale_height*plankton_track[key].positions[i,0]-10), color=color_plankton_track, fontsize=10)
 
         if show_numbers_dont_track:
             for key in plankton_dont_track:
-                ax.annotate(key.replace('plankton',''), (2*plankton_dont_track[key].positions[i,1]-27, 2*plankton_dont_track[key].positions[i,0]-10), color=color_plankton_dont_track, fontsize=10)
+                ax.annotate(key.replace('plankton',''), (scale_width*plankton_dont_track[key].positions[i,1]-27, scale_height*plankton_dont_track[key].positions[i,0]-10), color=color_plankton_dont_track, fontsize=10)
 
         if show_numbers_specific_plankton:
             for num in specific_plankton:
-                ax.annotate(num, (2*plankton_track['plankton%d' % num].positions[i,1]-27, 2*plankton_track['plankton%d' % num].positions[i,0]-10), color=color_specific_plankton, fontsize=10)
+                ax.annotate(num, (scale_width*plankton_track['plankton%d' % num].positions[i,1]-27, scale_height*plankton_track['plankton%d' % num].positions[i,0]-10), color=color_specific_plankton, fontsize=10)
         
         locs, labels = plt.xticks()
         labels = [int(float(item)*pixel_length_ratio) for item in locs]
