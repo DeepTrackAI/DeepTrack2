@@ -22,7 +22,7 @@ Everybody learns in different ways! Depending on your preferences, and what you 
 
 ### Fundamentals
 
-First, we have a very general walkthrough of [basic](https://softmatterlab.github.io/DeepTrack-2.0/basics.html) and [advanced](https://softmatterlab.github.io/DeepTrack-2.0/advanced.html) topics. This is a 5-10 minute read, that well get you well on your way to understand the unique interactions available in DeepTrack.
+First, we have a very general walkthrough of [basic](https://softmatterlab.github.io/DeepTrack-2.0/basics.html) and [advanced](https://softmatterlab.github.io/DeepTrack-2.0/advanced.html) topics. This is a 5-10 minute read, that will get you well on your way to understand the unique interactions available in DeepTrack.
 
 ### DeepTrack 2.0 in action
 
