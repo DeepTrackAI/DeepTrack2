@@ -48,14 +48,19 @@ class Property(DeepTrackNode):
                 for key, val in sampling_rule.items()
             )
 
-            return lambda: dict((key, val()) for key, val in dict_of_actions.items())
+            return lambda replicate_index=None: dict(
+                (key, val(replicate_index=replicate_index))
+                for key, val in dict_of_actions.items()
+            )
 
         if isinstance(sampling_rule, list):
             list_of_actions = [
                 self.create_action(val, **dependencies) for val in sampling_rule
             ]
 
-            return lambda: [val() for val in list_of_actions]
+            return lambda replicate_index=None: [
+                val(replicate_index) for val in list_of_actions
+            ]
 
         if isinstance(sampling_rule, (tuple, np.ndarray)):
             return lambda: sampling_rule
@@ -90,8 +95,11 @@ class Property(DeepTrackNode):
                 dep.add_child(self)
                 self.add_dependency(dep)
 
-            return lambda: sampling_rule(
-                **dict((key, dep()) for key, dep in used_dependencies.items())
+            return lambda replicate_index=None: sampling_rule(
+                **dict(
+                    (key, dep(replicate_index=replicate_index))
+                    for key, dep in used_dependencies.items()
+                )
             )
 
         return lambda: sampling_rule
@@ -123,8 +131,11 @@ class PropertyDict(DeepTrackNode, dict):
                 except AttributeError as e:
                     pass
 
-        def action():
-            return dict((key, val()) for key, val in dependencies.items())
+        def action(replicate_index=None):
+            return dict(
+                (key, val(replicate_index=replicate_index))
+                for key, val in dependencies.items()
+            )
 
         super().__init__(action, **dependencies)
 
