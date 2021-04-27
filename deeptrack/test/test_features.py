@@ -230,6 +230,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(E(), D() + C())
 
         A.update()
+        print(A.value.is_valid(), B.value.is_valid())
         self.assertEqual(A(), B())
         self.assertEqual(C(), B() + 1)
         self.assertEqual(D(), C() + B())
@@ -248,10 +249,10 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(E(), D() + C())
 
         D.update()
-        # self.assertEqual(A(), B())
-        # self.assertEqual(C(), B() + 1)
-        # self.assertEqual(D(), C() + B())
-        # self.assertEqual(E(), D() + C())
+        self.assertEqual(A(), B())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
 
         E.update()
         self.assertEqual(A(), B())
@@ -289,133 +290,172 @@ class TestFeatures(unittest.TestCase):
     def test_LessThanOrEqual(self):
         test_operator(self, operator.le)
 
-    # def test_Feature_2(self):
-    #     class FeatureAddValue(features.Feature):
-    #         def get(self, image, value_to_add=0, **kwargs):
-    #             image = image + value_to_add
-    #             return image
+    def test_Feature_2(self):
+        class FeatureAddValue(features.Feature):
+            def get(self, image, value_to_add=0, **kwargs):
+                image = image + value_to_add
+                return image
 
-    #     feature = FeatureAddValue(value_to_add=1)
-    #     feature.update()
-    #     input_image = np.zeros((1, 1))
-    #     output_image = feature.resolve(input_image)
-    #     self.assertEqual(output_image, 1)
-    #     self.assertListEqual(
-    #         output_image.get_property("value_to_add", get_one=False), [1]
-    #     )
-    #     output_image = feature.resolve(output_image)
-    #     self.assertEqual(output_image, 2)
-    #     self.assertListEqual(
-    #         output_image.get_property("value_to_add", get_one=False), [1, 1]
-    #     )
+        feature = FeatureAddValue(value_to_add=1)
+        feature.update()
+        input_image = np.zeros((1, 1))
+        output_image = feature.resolve(input_image)
+        self.assertEqual(output_image, 1)
+        self.assertListEqual(
+            output_image.get_property("value_to_add", get_one=False), [1]
+        )
+        output_image = feature.resolve(output_image)
+        self.assertEqual(output_image, 2)
+        self.assertListEqual(
+            output_image.get_property("value_to_add", get_one=False), [1, 1]
+        )
 
-    # def test_Feature_with_dummy_property(self):
-    #     class FeatureConcreteClass(features.Feature):
-    #         __distributed__ = False
+    def test_Feature_with_dummy_property(self):
+        class FeatureConcreteClass(features.Feature):
+            __distributed__ = False
 
-    #         def get(self, *args, **kwargs):
-    #             image = np.ones((2, 3))
-    #             return image
+            def get(self, *args, **kwargs):
+                image = np.ones((2, 3))
+                return image
 
-    #     feature = FeatureConcreteClass(dummy_property="foo")
-    #     feature.update()
-    #     output_image = feature.resolve()
-    #     self.assertListEqual(
-    #         output_image.get_property("dummy_property", get_one=False), ["foo"]
-    #     )
+        feature = FeatureConcreteClass(dummy_property="foo")
+        feature.update()
+        output_image = feature.resolve()
+        self.assertListEqual(
+            output_image.get_property("dummy_property", get_one=False), ["foo"]
+        )
 
-    # def test_Feature_plus_1(self):
-    #     class FeatureAddValue(features.Feature):
-    #         def get(self, image, value_to_add=0, **kwargs):
-    #             image = image + value_to_add
-    #             return image
+    def test_Feature_plus_1(self):
+        class FeatureAddValue(features.Feature):
+            def get(self, image, value_to_add=0, **kwargs):
+                image = image + value_to_add
+                return image
 
-    #     feature1 = FeatureAddValue(value_to_add=1)
-    #     feature2 = FeatureAddValue(value_to_add=2)
-    #     feature = feature1 + feature2
-    #     feature.update()
-    #     input_image = np.zeros((1, 1))
-    #     output_image = feature.resolve(input_image)
-    #     self.assertEqual(output_image, 3)
-    #     self.assertListEqual(
-    #         output_image.get_property("value_to_add", get_one=False), [1, 2]
-    #     )
-    #     self.assertEqual(output_image.get_property("value_to_add", get_one=True), 1)
+        feature1 = FeatureAddValue(value_to_add=1)
+        feature2 = FeatureAddValue(value_to_add=2)
+        feature = feature1 >> feature2
+        feature.update()
+        input_image = np.zeros((1, 1))
+        output_image = feature.resolve(input_image)
+        self.assertEqual(output_image, 3)
+        self.assertListEqual(
+            output_image.get_property("value_to_add", get_one=False), [1, 2]
+        )
+        self.assertEqual(output_image.get_property("value_to_add", get_one=True), 1)
 
-    # def test_Feature_plus_2(self):
-    #     class FeatureAddValue(features.Feature):
-    #         def get(self, image, value_to_add=0, **kwargs):
-    #             image = image + value_to_add
-    #             return image
+    def test_Feature_plus_2(self):
+        class FeatureAddValue(features.Feature):
+            def get(self, image, value_to_add=0, **kwargs):
+                image = image + value_to_add
+                return image
 
-    #     class FeatureMultiplyByValue(features.Feature):
-    #         def get(self, image, value_to_multiply=0, **kwargs):
-    #             image = image * value_to_multiply
-    #             return image
+        class FeatureMultiplyByValue(features.Feature):
+            def get(self, image, value_to_multiply=0, **kwargs):
+                image = image * value_to_multiply
+                return image
 
-    #     feature1 = FeatureAddValue(value_to_add=1)
-    #     feature2 = FeatureMultiplyByValue(value_to_multiply=10)
-    #     input_image = np.zeros((1, 1))
-    #     feature12 = feature1 + feature2
-    #     feature12.update()
-    #     output_image12 = feature12.resolve(input_image)
-    #     self.assertEqual(output_image12, 10)
-    #     feature21 = feature2 + feature1
-    #     output_image21 = feature21.resolve(input_image)
-    #     self.assertEqual(output_image21, 1)
+        feature1 = FeatureAddValue(value_to_add=1)
+        feature2 = FeatureMultiplyByValue(value_to_multiply=10)
+        input_image = np.zeros((1, 1))
+        feature12 = feature1 >> feature2
+        feature12.update()
+        output_image12 = feature12.resolve(input_image)
+        self.assertEqual(output_image12, 10)
+        feature21 = feature2 >> feature1
+        output_image21 = feature21.resolve(input_image)
+        self.assertEqual(output_image21, 1)
 
-    # def test_Feature_plus_3(self):
-    #     class FeatureAppendImageOfShape(features.Feature):
-    #         __distributed__ = False
-    #         __list_merge_strategy__ = features.MERGE_STRATEGY_APPEND
+    def test_Feature_plus_3(self):
+        class FeatureAppendImageOfShape(features.Feature):
+            __distributed__ = False
+            __list_merge_strategy__ = features.MERGE_STRATEGY_APPEND
 
-    #         def get(self, *args, shape, **kwargs):
-    #             image = np.zeros(shape)
-    #             return image
+            def get(self, *args, shape, **kwargs):
+                image = np.zeros(shape)
+                return image
 
-    #     feature1 = FeatureAppendImageOfShape(shape=(1, 1))
-    #     feature2 = FeatureAppendImageOfShape(shape=(2, 2))
-    #     feature12 = feature1 + feature2
-    #     feature12.update()
-    #     output_image = feature12.resolve()
-    #     self.assertIsInstance(output_image, list)
-    #     self.assertIsInstance(output_image[0], Image)
-    #     self.assertIsInstance(output_image[1], Image)
-    #     self.assertEqual(output_image[0].shape, (1, 1))
-    #     self.assertEqual(output_image[1].shape, (2, 2))
+        feature1 = FeatureAppendImageOfShape(shape=(1, 1))
+        feature2 = FeatureAppendImageOfShape(shape=(2, 2))
+        feature12 = feature1 >> feature2
+        feature12.update()
+        output_image = feature12.resolve()
+        self.assertIsInstance(output_image, list)
+        self.assertIsInstance(output_image[0], Image)
+        self.assertIsInstance(output_image[1], Image)
+        self.assertEqual(output_image[0].shape, (1, 1))
+        self.assertEqual(output_image[1].shape, (2, 2))
 
-    # def test_Feature_times_1(self):
-    #     class FeatureAddValue(features.Feature):
-    #         def get(self, image, value_to_add=0, **kwargs):
-    #             image = image + value_to_add
-    #             return image
+    def test_Feature_repeat(self):
+        feature = features.Value(value=0) >> (features.Add(1) ^ iter(range(10)))
 
-    #     input_image = np.zeros((1, 1))
-    #     feature0 = FeatureAddValue(value_to_add=1) * 0
-    #     feature0.update()
-    #     output_image0 = feature0.resolve(input_image)
-    #     self.assertEqual(output_image0, 0)
-    #     feature1 = FeatureAddValue(value_to_add=1) * 1
-    #     feature1.update()
-    #     output_image1 = feature1.resolve(input_image)
-    #     self.assertEqual(output_image1, 1)
-    #     feature05 = FeatureAddValue(value_to_add=1) * 0.5
-    #     for _ in range(100):
-    #         feature05.update()
-    #         output_image05 = feature05.resolve(input_image)
-    #         self.assertTrue(output_image05[0, 0] == 0 or output_image05[0, 0] == 1)
+        for n in range(10):
+            feature.update()
+            output_image = feature()
+            self.assertEqual(output_image, n)
 
-    # def test_Feature_exp_1(self):
-    #     class FeatureAddValue(features.Feature):
-    #         def get(self, image, value_to_add=0, **kwargs):
-    #             image = image + value_to_add
-    #             return image
+    def test_Feature_repeat_random(self):
+        feature = features.Value(value=0) >> (
+            features.Add(value=lambda: np.random.randint(100)) ^ 100
+        )
 
-    #     feature = FeatureAddValue(value_to_add=1) ** 10
-    #     feature.update()
-    #     input_image = np.zeros((1, 1))
-    #     output_image = feature.resolve(input_image)
-    #     self.assertEqual(output_image, 10)
+        feature.update()
+        output_image = feature()
+        values = output_image.get_property("value", get_one=False)[1:]
+
+        num_dups = values.count(values[0])
+        self.assertNotEqual(num_dups, len(values))
+        self.assertEqual(output_image, sum(values))
+
+    def test_Feature_repeat_nested(self):
+
+        value = features.Value(0)
+        add = features.Add(5)
+        sub = features.Subtract(1)
+
+        feature = value >> (((add ^ 2) >> (sub ^ 5)) ^ 3)
+
+        self.assertEqual(feature(), 15)
+
+    def test_Feature_repeat_nested_random_times(self):
+
+        value = features.Value(0)
+        add = features.Add(5)
+        sub = features.Subtract(1)
+
+        feature = value >> (
+            ((add ^ 2) >> (sub ^ 5)) ^ (lambda: np.random.randint(2, 5))
+        )
+
+        for _ in range(5):
+            feature.update()
+            self.assertEqual(feature(), feature.feature_2.N() * 5)
+
+    def test_Feature_repeat_nested_random_addition(self):
+
+        value = features.Value(0)
+        add = features.Add(lambda: np.random.rand())
+        sub = features.Subtract(1)
+
+        feature = value >> (((add ^ 2) >> (sub ^ 3)) ^ 4)
+
+        feature.update()
+
+        for _ in range(4):
+
+            feature.update()
+
+            added_values = list(
+                map(
+                    lambda f: f["value"],
+                    filter(lambda f: f["name"] == "Add", feature().properties),
+                )
+            )
+            self.assertEqual(len(added_values), 8)
+            self.assertAlmostEqual(sum(added_values) - 3 * 4, feature())
+
+        # print("OUT", added_values)
+        # self.assertEqual(len(added_values), 6)
+        # self.assertEqual(sum(added_values) - 15, feature())
 
     # def test_Feature_property_memorability(self):
     #     class FeatureWithForgettableProperties(features.Feature):
