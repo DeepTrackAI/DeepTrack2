@@ -140,9 +140,7 @@ class Feature(DeepTrackNode):
             The transformed image or list of images
         """
 
-    def action(
-        self,
-    ):
+    def action(self, replicate_index=None):
         """Creates the image.
         Transforms the input image by calling the method `get()` with the
         correct inputs. The properties of the feature can be overruled by
@@ -188,7 +186,9 @@ class Feature(DeepTrackNode):
         image_list = self._format_input(image_list)
 
         # Get the input arguments to the method .get()
-        feature_input = self.properties()
+        feature_input = self.properties(replicate_index=replicate_index)
+        if replicate_index is not None:
+            feature_input["replicate_index"] = replicate_index
 
         # Call the _process_properties hook, default does nothing.
         # Can be used to ensure properties are formatted correctly
@@ -196,13 +196,14 @@ class Feature(DeepTrackNode):
         feature_input = self._process_properties(feature_input)
 
         # Set the seed from the hash_key. Ensures equal results
-        self.seed()
+        # self.seed(replicate_index=replicate_index)
 
         # _process_and_get calls the get function correctly according
         # to the __distributed__ attribute
         new_list = self._process_and_get(image_list, **feature_input)
 
         for index, image in enumerate(new_list):
+
             image.append(feature_input)
 
         # Merge input and new_list
@@ -217,11 +218,11 @@ class Feature(DeepTrackNode):
         else:
             return image_list
 
-    def __call__(self, image_list: Image or List[Image] = None, **arguments):
+    def __call__(self, image_list: Image or List[Image] = None, replicate_index=None):
 
         if image_list is not None:
             self._input.set_value(image_list)
-        return super(Feature, self).__call__()
+        return super(Feature, self).__call__(replicate_index=replicate_index)
 
     resolve = __call__
 
@@ -230,8 +231,8 @@ class Feature(DeepTrackNode):
         self.add_dependency(feature)
         return feature
 
-    def seed(self):
-        np.random.seed(self._random_seed())
+    def seed(self, replicate_index=None):
+        np.random.seed(self._random_seed(replicate_index=replicate_index))
 
     def plot(
         self,
@@ -359,7 +360,7 @@ class Feature(DeepTrackNode):
         if not isinstance(image_list, list):
             image_list = [image_list]
 
-        return [Image(image) for image in image_list]
+        return [(Image(image)) for image in image_list]
 
     def _process_properties(self, propertydict) -> dict:
         # Optional hook for subclasses to preprocess input before calling
@@ -461,6 +462,9 @@ class Feature(DeepTrackNode):
     def __rge__(self, other) -> "Feature":
         return Value(other) >> GreaterThanOrEquals(self)
 
+    def __xor__(self, other) -> "Feature":
+        return Repeat(self, other)
+
     def __getitem__(self, slices) -> "Feature":
         # Allows direct slicing of the data.
         if not isinstance(slices, tuple):
@@ -497,10 +501,10 @@ class Chain(StructuralFeature):
         self.feature_1 = self.add_feature(feature_1)
         self.feature_2 = self.add_feature(feature_2)
 
-    def get(self, image, **kwargs):
+    def get(self, image, replicate_index=None, **kwargs):
         """Resolves `feature_1` and `feature_2` sequentially"""
-        image = self.feature_1(image)
-        image = self.feature_2(image)
+        image = self.feature_1(image, replicate_index=replicate_index)
+        image = self.feature_2(image, replicate_index=replicate_index)
         return image
 
 
@@ -739,67 +743,87 @@ class Probability(StructuralFeature):
         return image
 
 
-class Duplicate(StructuralFeature):
-    """Resolves copies of a feature sequentially
-    Creates `num_duplicates` copies of the feature and resolves
-    them sequentially
+class Repeat(Feature):
+    def __init__(self, feature, N, **kwargs):
+        super().__init__(N=N, **kwargs)
+        self.feature = self.add_feature(feature)
 
-    Parameters
-    ----------
-    feature: Feature
-        The feature to duplicate
-    num_duplicates: int
-        The number of duplicates to create
-    """
+    def get(self, image, N, replicate_index=None, **kwargs):
+        for n in range(N):
 
-    def __init__(
-        self, feature: Feature, num_duplicates: PropertyLike[int], *args, **kwargs
-    ):
+            if replicate_index is None:
+                index = n
+            elif isinstance(replicate_index, int):
+                index = (replicate_index, n)
+            else:
+                index = replicate_index + (n,)
 
-        self.feature = feature
-        super().__init__(
-            *args,
-            num_duplicates=num_duplicates,  # py > 3.6 dicts are ordered by insert time.
-            features=lambda num_duplicates: [
-                copy.deepcopy(self.feature) for _ in range(num_duplicates)
-            ],
-            **kwargs
-        )
-
-    def get(self, image, features: List[Feature], **kwargs):
-        """Resolves each feature in `features` sequentially"""
-        for index in range(len(features)):
-            image = features[index].resolve(image, **kwargs)
+            image = self.feature(image, replicate_index=index)
 
         return image
 
-    def _update(self, **kwargs):
 
-        super()._update(**kwargs)
-        features = self.properties["features"].current_value
-        for index in range(len(features)):
-            features[index]._update(**kwargs)
-        return self
+# class Duplicate(StructuralFeature):
+#     """Resolves copies of a feature sequentially
+#     Creates `num_duplicates` copies of the feature and resolves
+#     them sequentially
 
-    def __deepcopy__(self, memo):
-        # If this is getting deep-copied, we have
-        # nested copies, which needs to be handled
-        # separately.
+#     Parameters
+#     ----------
+#     feature: Feature
+#         The feature to duplicate
+#     num_duplicates: int
+#         The number of duplicates to create
+#     """
 
-        self.properties.update()
-        num_duplicates = self.num_duplicates.current_value
-        features = []
-        for idx in range(num_duplicates):
-            memo_copy = copy.copy(memo)
-            new_feature = copy.deepcopy(self.feature, memo_copy)
-            features.append(new_feature)
-        self.properties["features"].current_value = features
+#     def __init__(
+#         self, feature: Feature, num_duplicates: PropertyLike[int], *args, **kwargs
+#     ):
 
-        out = copy.copy(self)
-        self.properties = copy.copy(self.properties)
-        for key, val in self.properties.items():
-            self.properties[key] = copy.copy(val)
-        return out
+#         self.feature = feature
+#         super().__init__(
+#             *args,
+#             num_duplicates=num_duplicates,  # py > 3.6 dicts are ordered by insert time.
+#             features=lambda num_duplicates: [
+#                 copy.deepcopy(self.feature) for _ in range(num_duplicates)
+#             ],
+#             **kwargs
+#         )
+
+#     def get(self, image, features: List[Feature], **kwargs):
+#         """Resolves each feature in `features` sequentially"""
+#         for index in range(len(features)):
+#             image = features[index].resolve(image, **kwargs)
+
+#         return image
+
+#     def _update(self, **kwargs):
+
+#         super()._update(**kwargs)
+#         features = self.properties["features"].current_value
+#         for index in range(len(features)):
+#             features[index]._update(**kwargs)
+#         return self
+
+#     def __deepcopy__(self, memo):
+#         # If this is getting deep-copied, we have
+#         # nested copies, which needs to be handled
+#         # separately.
+
+#         self.properties.update()
+#         num_duplicates = self.num_duplicates.current_value
+#         features = []
+#         for idx in range(num_duplicates):
+#             memo_copy = copy.copy(memo)
+#             new_feature = copy.deepcopy(self.feature, memo_copy)
+#             features.append(new_feature)
+#         self.properties["features"].current_value = features
+
+#         out = copy.copy(self)
+#         self.properties = copy.copy(self.properties)
+#         for key, val in self.properties.items():
+#             self.properties[key] = copy.copy(val)
+#         return out
 
 
 class Combine(StructuralFeature):
