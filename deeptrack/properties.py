@@ -59,11 +59,11 @@ class Property(DeepTrackNode):
             ]
 
             return lambda replicate_index=None: [
-                val(replicate_index) for val in list_of_actions
+                val(replicate_index=replicate_index) for val in list_of_actions
             ]
 
         if isinstance(sampling_rule, (tuple, np.ndarray)):
-            return lambda: sampling_rule
+            return lambda replicate_index=None: sampling_rule
 
         if isiterable(sampling_rule):
             # If it's iterable, return the next value
@@ -81,7 +81,11 @@ class Property(DeepTrackNode):
             stop = self.create_action(sampling_rule.stop, **dependencies)
             step = self.create_action(sampling_rule.step, **dependencies)
 
-            return lambda: slice(start(), stop(), step())
+            return lambda replicate_index=None: slice(
+                start(replicate_index=replicate_index),
+                stop(replicate_index=replicate_index),
+                step(replicate_index=replicate_index),
+            )
 
         if callable(sampling_rule):
 
@@ -102,7 +106,7 @@ class Property(DeepTrackNode):
                 )
             )
 
-        return lambda: sampling_rule
+        return lambda replicate_index=None: sampling_rule
 
 
 class PropertyDict(DeepTrackNode, dict):
