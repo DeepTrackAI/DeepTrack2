@@ -121,6 +121,9 @@ class Feature(DeepTrackNode):
         self.add_dependency(self._random_seed)
         self._random_seed.add_child(self)
 
+        # Initilaize arguments
+        self.arguments = None
+
     def get(self, image: Image or List[Image], **kwargs) -> Image or List[Image]:
         """Method for altering an image
         Abstract method that define how the feature transforms the input. The current
@@ -180,7 +183,7 @@ class Feature(DeepTrackNode):
             The resolved image
         """
 
-        image_list = self._input()
+        image_list = self._input(replicate_index=replicate_index)
 
         # Ensure that input is a list
         image_list = self._format_input(image_list)
@@ -218,11 +221,32 @@ class Feature(DeepTrackNode):
         else:
             return image_list
 
-    def __call__(self, image_list: Image or List[Image] = None, replicate_index=None):
+    def __call__(
+        self, image_list: Image or List[Image] = None, replicate_index=None, **kwargs
+    ):
 
         if image_list is not None:
-            self._input.set_value(image_list)
-        return super(Feature, self).__call__(replicate_index=replicate_index)
+            self._input.set_value(image_list, replicate_index=replicate_index)
+
+        original_values = {}
+        if isinstance(self.arguments, Feature):
+            for key, value in kwargs.items():
+                if key in self.arguments.properties:
+                    original_values[key] = self.arguments.properties[key](
+                        replicate_index=replicate_index
+                    )
+                    self.arguments.properties[key].set_value(
+                        value, replicate_index=replicate_index
+                    )
+
+        output = super(Feature, self).__call__(replicate_index=replicate_index)
+
+        for key, value in original_values.items():
+            self.arguments.properties[key].set_value(
+                value, replicate_index=replicate_index
+            )
+
+        return output
 
     resolve = __call__
 
@@ -233,6 +257,9 @@ class Feature(DeepTrackNode):
 
     def seed(self, replicate_index=None):
         np.random.seed(self._random_seed(replicate_index=replicate_index))
+
+    def bind_arguments(self, arguments):
+        self.arguments = arguments
 
     def plot(
         self,
@@ -465,6 +492,12 @@ class Feature(DeepTrackNode):
     def __xor__(self, other) -> "Feature":
         return Repeat(self, other)
 
+    def __and__(self, other) -> "Feature":
+        return self >> Stack(other)
+
+    def __rand__(self, other) -> "Feature":
+        return Value(other) >> Stack(self)
+
     def __getitem__(self, slices) -> "Feature":
         # Allows direct slicing of the data.
         if not isinstance(slices, tuple):
@@ -472,7 +505,7 @@ class Feature(DeepTrackNode):
 
         slices = list(slices)
 
-        return self + Slice(slices)
+        return self >> Slice(slices)
 
 
 class StructuralFeature(Feature):
@@ -706,6 +739,108 @@ class Equals(Feature):
         return image == value
 
 
+class Stack(Feature):
+    """Stacks the input and the value.
+
+    If B is a feature then Stack can be visualized as::
+
+       A >> Stack(B) = [*A(), *B()]
+
+    If either A or B create a single Image, an additional dimension is automatically added.
+
+    This can be
+
+    Parameters
+    ----------
+    value
+       Feature that produces image to stack on input.
+    """
+
+    __distributed__ = False
+
+    def __init__(self, value=PropertyLike[Any], **kwargs):
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+
+        if not isinstance(image, list):
+            image = [image]
+
+        if not isinstance(value, list):
+            value = [value]
+
+        return [*image, *value]
+
+
+class Arguments(Feature):
+    """A convenience container for pipeline arguments.
+
+    A typical use-case is::
+
+       arguments = Arguments(is_label=False)
+       image_loader = (
+           LoadImage(path="./image.png") >>
+           GaussianNoise(sigma = (1 - arguments.is_label) * 5)
+       )
+       image_loader.bind_arguments(arguments)
+
+       image_loader()              # Image with added noise
+       image_loader(is_label=True) # Raw image with no noise
+
+    For non-mathematical dependence, create a local link to the property as follows::
+
+       arguments = Arguments(is_label=False)
+       image_loader = (
+           LoadImage(path="./image.png") >>
+           GaussianNoise(
+              is_label=arguments.is_label,
+              sigma=lambda is_label: 0 if is_label else 5
+           )
+       )
+       image_loader.bind_arguments(arguments)
+
+       image_loader()              # Image with added noise
+       image_loader(is_label=True) # Raw image with no noise
+
+    Keep in mind that if any dependent property is non-deterministic,
+    they may permanently change::
+       arguments = Arguments(noise_max_sigma=5)
+       image_loader = (
+           LoadImage(path="./image.png") >>
+           GaussianNoise(
+              noise_max_sigma=5,
+              sigma=lambda noise_max_sigma: rand() * noise_max_sigma
+           )
+       )
+
+       image_loader.bind_arguments(arguments)
+
+       image_loader().get_property("sigma") # 3.27...
+       image_loader(noise_max_sigma=0) # 0
+       image_loader().get_property("sigma") # 1.93...
+
+    As with any feature, all arguments can be passed by deconstructing the properties dict::
+
+       arguments = Arguments(is_label=False, noise_sigma=5)
+       image_loader = (
+           LoadImage(path="./image.png") >>
+           GaussianNoise(
+              sigma=lambda is_label, noise_sigma: 0 if is_label else noise_sigma
+              **arguments.properties
+           )
+       )
+       image_loader.bind_arguments(arguments)
+
+       image_loader()              # Image with added noise
+       image_loader(is_label=True) # Raw image with no noise
+
+
+    """
+
+    def get(self, image, **kwargs):
+        return image
+
+
 class Probability(StructuralFeature):
     """Resolves a feature with a certain probability
 
@@ -882,17 +1017,15 @@ class Slice(Feature):
     ----------
     slices : iterable of int, slice or ellipsis
         The indexing of each dimension in order.
+    """
 
-
-    def __init__(self, 
-        slices:PropertyLike[
-            Iterable[
-                PropertyLike[int] or 
-                PropertyLike[slice] or 
-                PropertyLike[Ellipsis]
-            ]
-        ], **kwargs):
-
+    def __init__(
+        self,
+        slices: PropertyLike[
+            Iterable[PropertyLike[int] or PropertyLike[slice] or PropertyLike[ellipsis]]
+        ],
+        **kwargs
+    ):
         super().__init__(slices=slices, **kwargs)
 
     def get(self, image, slices, **kwargs):
