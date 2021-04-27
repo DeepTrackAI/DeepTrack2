@@ -5,10 +5,11 @@ import sys
 import unittest
 import operator
 import itertools
+from numpy.core.numeric import array_equal
 
 from numpy.testing._private.utils import assert_almost_equal
 
-from .. import features, Image, properties
+from .. import features, Image, properties, utils
 
 import numpy as np
 import numpy.testing
@@ -52,30 +53,41 @@ def grid_test_features(
             f_a.properties(),
             f_b.properties(),
         )
-        is_equal = np.array_equal(output, expected_result, equal_nan=True)
 
-        tester.failIf(
-            not is_equal,
-            "Feature output {} is not equal to expect result {}.\n Using arguments \n\tFeature_1: {}, \n\t Feature_2: {}".format(
-                output, expected_result, f_a_input, f_b_input
-            ),
-        )
+        if isinstance(output, list) and isinstance(expected_result, list):
+            [
+                np.testing.assert_almost_equal(Image(a), Image(b))
+                for a, b in zip(output, expected_result)
+            ]
 
-        tester.failIf(
-            not any(p == f_a.properties() for p in output.properties),
-            "Feature_a properties {} not in output Image, with properties {}".format(
-                f_a.properties(), output.properties
-            ),
-        )
-        tester.failIf(
-            not any(p == f_a.properties() for p in output.properties),
-            "Feature_a properties {} not in output Image, with properties {}".format(
-                f_a.properties(), output.properties
-            ),
-        )
+        else:
+            is_equal = np.array_equal(output, expected_result, equal_nan=True)
+
+            tester.failIf(
+                not is_equal,
+                "Feature output {} is not equal to expect result {}.\n Using arguments \n\tFeature_1: {}, \n\t Feature_2: {}".format(
+                    output, expected_result, f_a_input, f_b_input
+                ),
+            )
+        if not isinstance(output, list):
+            tester.failIf(
+                not any(p == f_a.properties() for p in output.properties),
+                "Feature_a properties {} not in output Image, with properties {}".format(
+                    f_a.properties(), output.properties
+                ),
+            )
+        if not isinstance(output, list):
+            tester.failIf(
+                not any(p == f_a.properties() for p in output.properties),
+                "Feature_a properties {} not in output Image, with properties {}".format(
+                    f_a.properties(), output.properties
+                ),
+            )
 
 
-def test_operator(self, operator):
+def test_operator(self, operator, emulated_operator=None):
+    if emulated_operator is None:
+        emulated_operator = operator
 
     value = features.Value(value=2)
     f = operator(value, 3)
@@ -107,7 +119,7 @@ def test_operator(self, operator):
             {"value": np.inf},
             {"value": np.random.rand(10, 10)},
         ],
-        lambda a, b: operator(a["value"], b["value"]),
+        lambda a, b: emulated_operator(a["value"], b["value"]),
         operator,
     )
 
@@ -230,7 +242,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(E(), D() + C())
 
         A.update()
-        print(A.value.is_valid(), B.value.is_valid())
         self.assertEqual(A(), B())
         self.assertEqual(C(), B() + 1)
         self.assertEqual(D(), C() + B())
@@ -289,6 +300,43 @@ class TestFeatures(unittest.TestCase):
 
     def test_LessThanOrEqual(self):
         test_operator(self, operator.le)
+
+    def test_Stack(self):
+
+        value = features.Value(value=2)
+        f = value & 3
+        self.assertEqual(f(), [2, 3])
+
+        f = 3 & value
+        self.assertEqual(f(), [3, 2])
+
+        f = value & (lambda: 3)
+        self.assertEqual(f(), [2, 3])
+
+        grid_test_features(
+            self,
+            features.Value,
+            features.Value,
+            [
+                {"value": 1},
+                {"value": [1, 2]},
+                {"value": np.nan},
+                {"value": np.inf},
+                {"value": np.random.rand(10, 10)},
+            ],
+            [
+                {"value": 1},
+                {"value": [1, 2]},
+                {"value": np.nan},
+                {"value": np.inf},
+                {"value": np.random.rand(10, 10)},
+            ],
+            lambda a, b: [
+                *(a["value"] if isinstance(a["value"], list) else [a["value"]]),
+                *(b["value"] if isinstance(b["value"], list) else [b["value"]]),
+            ],
+            operator.__and__,
+        )
 
     def test_Feature_2(self):
         class FeatureAddValue(features.Feature):
@@ -451,215 +499,199 @@ class TestFeatures(unittest.TestCase):
                 )
             )
             self.assertEqual(len(added_values), 8)
-            self.assertAlmostEqual(sum(added_values) - 3 * 4, feature())
+            self.assertAlmostEqual(sum(added_values) - 3 * 4, float(feature()))
 
-        # print("OUT", added_values)
-        # self.assertEqual(len(added_values), 6)
-        # self.assertEqual(sum(added_values) - 15, feature())
+    def test_nested_Duplicate(self):
 
-    # def test_Feature_property_memorability(self):
-    #     class FeatureWithForgettableProperties(features.Feature):
-    #         __property_memorability__ = 2
+        A = features.DummyFeature(
+            a=lambda: np.random.randint(100) * 1000,
+        )
+        B = features.DummyFeature(
+            a2=A.a,
+            b=lambda a2: a2 + np.random.randint(10) * 100,
+        )
+        C = features.DummyFeature(
+            b2=B.b,
+            c=lambda b2: b2 + np.random.randint(10) * 10,
+        )
+        D = features.DummyFeature(
+            c2=C.c,
+            d=lambda c2: c2 + np.random.randint(10) * 1,
+        )
 
-    #         def get(self, image, forgettable_property, **kwargs):
-    #             return image
+        for _ in range(5):
 
-    #     feature = FeatureWithForgettableProperties(forgettable_property=1)
-    #     feature.update()
-    #     input_image = np.zeros((1, 1))
-    #     output_image = feature.resolve(input_image)
-    #     self.assertIsNone(
-    #         output_image.get_property("forgettable_property", default=None)
-    #     )
-    #     output_image = feature.resolve(input_image, property_memorability=2)
-    #     self.assertEqual(
-    #         output_image.get_property("forgettable_property", default=None), 1
-    #     )
+            AB = A >> (B >> (C >> D ^ 2) ^ 3) ^ 4
 
-    # def test_Feature_with_overruled_property(self):
-    #     class FeatureAddValue(features.Feature):
-    #         def get(self, image, value_to_add=0, **kwargs):
-    #             image = image + value_to_add
-    #             return image
+            output = AB.update().resolve(0)
+            al = output.get_property("a", get_one=False)
+            bl = output.get_property("b", get_one=False)
+            cl = output.get_property("c", get_one=False)
+            dl = output.get_property("d", get_one=False)
 
-    #     feature = FeatureAddValue(value_to_add=1)
-    #     feature.update()
-    #     input_image = np.zeros((1, 1))
-    #     output_image = feature.resolve(input_image, value_to_add=10)
-    #     self.assertEqual(output_image, 10)
-    #     self.assertListEqual(
-    #         output_image.get_property("value_to_add", get_one=False), [10]
-    #     )
-    #     self.assertEqual(output_image.get_property("value_to_add", get_one=True), 10)
+            self.assertFalse(all(a == al[0] for a in al))
+            self.assertFalse(all(b == bl[0] for b in bl))
+            self.assertFalse(all(c == cl[0] for c in cl))
+            self.assertFalse(all(d == dl[0] for d in dl))
+            for ai, a in enumerate(al):
+                for bi, b in list(enumerate(bl))[ai * 3 : (ai + 1) * 3]:
+                    self.assertIn(b - a, range(0, 1000))
+                    for ci, c in list(enumerate(cl))[bi * 2 : (bi + 1) * 2]:
+                        self.assertIn(c - b, range(0, 100))
+                        self.assertIn(dl[ci] - c, range(0, 10))
 
-    # def test_nested_Duplicate(self):
-    #     for _ in range(5):
-    #         A = features.DummyFeature(
-    #             a=lambda: np.random.randint(100) * 1000,
-    #         )
-    #         B = features.DummyFeature(
-    #             a=A.a,
-    #             b=lambda a: a + np.random.randint(10) * 100,
-    #         )
-    #         C = features.DummyFeature(
-    #             b=B.b,
-    #             c=lambda b: b + np.random.randint(10) * 10,
-    #         )
-    #         D = features.DummyFeature(
-    #             c=C.c,
-    #             d=lambda c: c + np.random.randint(10) * 1,
-    #         )
+    def test_outside_dependence(self):
+        A = features.DummyFeature(
+            a=lambda: np.random.randint(100) * 1000,
+        )
 
-    #         for _ in range(5):
-    #             AB = (A + (B + (C + D) ** 2) ** 2) ** 6
-    #             output = AB.update().resolve(0)
-    #             al = output.get_property("a", get_one=False)[::3]
-    #             bl = output.get_property("b", get_one=False)[::3]
-    #             cl = output.get_property("c", get_one=False)[::2]
-    #             dl = output.get_property("d", get_one=False)[::1]
+        B = features.DummyFeature(
+            a2=A.a,
+            b=lambda a2: a2 + np.random.randint(10) * 100,
+        )
 
-    #             self.assertFalse(all(a == al[0] for a in al))
-    #             self.assertFalse(all(b == bl[0] for b in bl))
-    #             self.assertFalse(all(c == cl[0] for c in cl))
-    #             self.assertFalse(all(d == dl[0] for d in dl))
-    #             for ai, a in enumerate(al):
-    #                 for bi, b in list(enumerate(bl))[ai * 2 : (ai + 1) * 2]:
-    #                     self.assertIn(b - a, range(0, 1000))
-    #                     for ci, c in list(enumerate(cl))[bi * 2 : (bi + 1) * 2]:
-    #                         self.assertIn(c - b, range(0, 100))
-    #                         self.assertIn(dl[ci] - c, range(0, 10))
+        AB = A >> (B ^ 5)
 
-    # def test_LambdaDependence(self):
-    #     A = features.DummyFeature(a=1, b=2, c=3)
+        for _ in range(5):
+            AB.update()
+            output = AB(0)
+            self.assertEqual(len(output.get_property("a", get_one=False)), 1)
+            self.assertEqual(len(output.get_property("b", get_one=False)), 5)
 
-    #     B = features.DummyFeature(
-    #         key="a",
-    #         prop=lambda key: A.a if key == "a" else (A.b if key == "b" else A.c),
-    #     )
+            a = output.get_property("a")
+            for b in output.get_property("b", get_one=False):
+                self.assertLess(b - a, 1000)
+                self.assertGreaterEqual(b - a, 0)
 
-    #     B.update()
-    #     self.assertEqual(B.prop.current_value, 1)
-    #     B.update(key="a")
-    #     self.assertEqual(B.prop.current_value, 1)
-    #     B.update(key="b")
-    #     self.assertEqual(B.prop.current_value, 2)
-    #     B.update(key="c")
-    #     self.assertEqual(B.prop.current_value, 3)
+    def test_LambdaDependence(self):
+        A = features.DummyFeature(a=1, b=2, c=3)
 
-    # def test_LambdaDependenceTwice(self):
-    #     A = features.DummyFeature(a=1, b=2, c=3)
+        B = features.DummyFeature(
+            key="a",
+            prop=lambda key: A.a() if key == "a" else (A.b() if key == "b" else A.c()),
+        )
 
-    #     B = features.DummyFeature(
-    #         key="a",
-    #         prop=lambda key: A.a if key == "a" else (A.b if key == "b" else A.c),
-    #         prop2=lambda prop: prop * 2,
-    #     )
+        B.update()
+        self.assertEqual(B.prop(), 1)
+        B.key.set_value("a")
+        self.assertEqual(B.prop(), 1)
+        B.key.set_value("b")
+        self.assertEqual(B.prop(), 2)
+        B.key.set_value("c")
+        self.assertEqual(B.prop(), 3)
 
-    #     B.update()
-    #     self.assertEqual(B.prop2.current_value, 2)
-    #     B.update(key="a")
-    #     self.assertEqual(B.prop2.current_value, 2)
-    #     B.update(key="b")
-    #     self.assertEqual(B.prop2.current_value, 4)
-    #     B.update(key="c")
-    #     self.assertEqual(B.prop2.current_value, 6)
+    def test_LambdaDependenceTwice(self):
+        A = features.DummyFeature(a=1, b=2, c=3)
 
-    # def test_LambdaDependenceOtherFeature(self):
-    #     A = features.DummyFeature(a=1, b=2, c=3)
+        B = features.DummyFeature(
+            key="a",
+            prop=lambda key: A.a() if key == "a" else (A.b() if key == "b" else A.c()),
+            prop2=lambda prop: prop * 2,
+        )
 
-    #     B = features.DummyFeature(
-    #         key="a",
-    #         prop=lambda key: A.a if key == "a" else (A.b if key == "b" else A.c),
-    #         prop2=lambda prop: prop * 2,
-    #     )
+        B.update()
+        self.assertEqual(B.prop2(), 2)
+        B.key.set_value("a")
+        self.assertEqual(B.prop2(), 2)
+        B.key.set_value("b")
+        self.assertEqual(B.prop2(), 4)
+        B.key.set_value("c")
+        self.assertEqual(B.prop2(), 6)
 
-    #     C = features.DummyFeature(B_prop=B.prop2, prop=lambda B_prop: B_prop * 2)
+    def test_LambdaDependenceOtherFeature(self):
+        A = features.DummyFeature(a=1, b=2, c=3)
 
-    #     C.update()
-    #     self.assertEqual(C.prop.current_value, 4)
-    #     C.update(key="a")
-    #     self.assertEqual(C.prop.current_value, 4)
-    #     C.update(key="b")
-    #     self.assertEqual(C.prop.current_value, 8)
-    #     C.update(key="c")
-    #     self.assertEqual(C.prop.current_value, 12)
+        B = features.DummyFeature(
+            key="a",
+            prop=lambda key: A.a() if key == "a" else (A.b() if key == "b" else A.c()),
+            prop2=lambda prop: prop * 2,
+        )
 
-    # def test_SliceConstant(self):
+        C = features.DummyFeature(B_prop=B.prop2, prop=lambda B_prop: B_prop * 2)
 
-    #     input = np.arange(9).reshape((3, 3))
+        C.update()
+        self.assertEqual(C.prop(), 4)
+        B.key.set_value("a")
+        self.assertEqual(C.prop(), 4)
+        B.key.set_value("b")
+        self.assertEqual(C.prop(), 8)
+        B.key.set_value("c")
+        self.assertEqual(C.prop(), 12)
 
-    #     A = features.DummyFeature()
+    def test_SliceConstant(self):
 
-    #     A0 = A[0]
-    #     A1 = A[1]
-    #     A22 = A[2, 2]
-    #     A12 = A[1, lambda: -1]
+        input = np.arange(9).reshape((3, 3))
 
-    #     a0 = A0.resolve(input)
-    #     a1 = A1.resolve(input)
-    #     a22 = A22.resolve(input)
-    #     a12 = A12.resolve(input)
+        A = features.DummyFeature()
 
-    #     self.assertEqual(a0.tolist(), input[0].tolist())
-    #     self.assertEqual(a1.tolist(), input[1].tolist())
-    #     self.assertEqual(a22, input[2, 2])
-    #     self.assertEqual(a12, input[1, -1])
+        A0 = A[0]
+        A1 = A[1]
+        A22 = A[2, 2]
+        A12 = A[1, lambda: -1]
 
-    # def test_SliceColon(self):
+        a0 = A0.resolve(input)
+        a1 = A1.resolve(input)
+        a22 = A22.resolve(input)
+        a12 = A12.resolve(input)
 
-    #     input = np.arange(16).reshape((4, 4))
+        self.assertEqual(a0.tolist(), input[0].tolist())
+        self.assertEqual(a1.tolist(), input[1].tolist())
+        self.assertEqual(a22, input[2, 2])
+        self.assertEqual(a12, input[1, -1])
 
-    #     A = features.DummyFeature()
+    def test_SliceColon(self):
 
-    #     A0 = A[0, :1]
-    #     A1 = A[
-    #         1,
-    #         lambda: 0:
-    #         lambda: 4:
-    #         lambda: 2
-    #     ]
-    #     A2 = A[lambda: slice(0, 4, 1), 2]
-    #     A3 = A[lambda: 0 :
-    #            lambda: 2,
-    #            :]
+        input = np.arange(16).reshape((4, 4))
 
-    #     a0 = A0.resolve(input)
-    #     a1 = A1.resolve(input)
-    #     a2 = A2.resolve(input)
-    #     a3 = A3.resolve(input)
+        A = features.DummyFeature()
 
-    #     self.assertEqual(a0.tolist(), input[0, :1].tolist())
-    #     self.assertEqual(a1.tolist(), input[1, 0:4:2].tolist())
-    #     self.assertEqual(a2.tolist(), input[:, 2].tolist())
-    #     self.assertEqual(a3.tolist(), input[0:2, :].tolist())
+        A0 = A[0, :1]
+        A1 = A[1, lambda: 0 : lambda: 4 : lambda: 2]
+        A2 = A[lambda: slice(0, 4, 1), 2]
+        A3 = A[lambda: 0 : lambda: 2, :]
 
-    # def test_SliceEllipse(self):
+        a0 = A0.resolve(input)
+        a1 = A1.resolve(input)
+        a2 = A2.resolve(input)
+        a3 = A3.resolve(input)
 
-    #     input = np.arange(16).reshape((4, 4))
+        self.assertEqual(a0.tolist(), input[0, :1].tolist())
+        self.assertEqual(a1.tolist(), input[1, 0:4:2].tolist())
+        self.assertEqual(a2.tolist(), input[:, 2].tolist())
+        self.assertEqual(a3.tolist(), input[0:2, :].tolist())
 
-    #     A = features.DummyFeature()
+    def test_SliceEllipse(self):
 
-    #     A0 = A[..., :1]
-    #     A1 = A[
-    #         ...,
-    #         lambda: 0:
-    #         lambda: 4:
-    #         lambda: 2
-    #     ]
-    #     A2 = A[lambda: slice(0, 4, 1), ...]
-    #     A3 = A[lambda: 0 :
-    #            lambda: 2,
-    #            lambda: ...]
+        input = np.arange(16).reshape((4, 4))
 
-    #     a0 = A0.resolve(input)
-    #     a1 = A1.resolve(input)
-    #     a2 = A2.resolve(input)
-    #     a3 = A3.resolve(input)
+        A = features.DummyFeature()
 
-    #     self.assertEqual(a0.tolist(), input[..., :1].tolist())
-    #     self.assertEqual(a1.tolist(), input[..., 0:4:2].tolist())
-    #     self.assertEqual(a2.tolist(), input[:, ...].tolist())
-    #     self.assertEqual(a3.tolist(), input[0:2, ...].tolist())
+        A0 = A[..., :1]
+        A1 = A[..., lambda: 0 : lambda: 4 : lambda: 2]
+        A2 = A[lambda: slice(0, 4, 1), ...]
+        A3 = A[lambda: 0 : lambda: 2, lambda: ...]
+
+        a0 = A0.resolve(input)
+        a1 = A1.resolve(input)
+        a2 = A2.resolve(input)
+        a3 = A3.resolve(input)
+
+        self.assertEqual(a0.tolist(), input[..., :1].tolist())
+        self.assertEqual(a1.tolist(), input[..., 0:4:2].tolist())
+        self.assertEqual(a2.tolist(), input[:, ...].tolist())
+        self.assertEqual(a3.tolist(), input[0:2, ...].tolist())
+
+    def test_Arguments(self):
+
+        arguments = features.Arguments(
+            a="foo", b="bar", c=lambda a, b: a + b, d=np.random.rand
+        )
+
+        f1 = features.DummyFeature(p1=arguments.a, p2=lambda p1: p1 + "baz")
+        f2 = features.DummyFeature(
+            p1=f1.p2,
+            p2=arguments.d,
+        )
 
 
 if __name__ == "__main__":
