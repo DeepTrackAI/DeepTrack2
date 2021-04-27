@@ -52,7 +52,11 @@ class DeepTrackDataList:
             while len(self.list) <= replicate_index:
                 self.list.append(DeepTrackDataList())
 
-            return self.list[replicate_index][rest]
+            output = self.list[replicate_index]
+            if isinstance(output, DeepTrackDataList):
+                return output[rest]
+            else:
+                return output
 
         raise NotImplementedError("Indexing with non-integer types not yet implemented")
 
@@ -67,9 +71,7 @@ class DeepTrackNode:
         self.dependencies = []
 
         if action is not self.__nonelike_default:
-
             if callable(action):
-
                 self.action = action
             else:
                 self.action = lambda: action
