@@ -1,15 +1,16 @@
+from copy import copy, deepcopy
 import numpy as np
 import operator
+
+from .. import utils, image
 
 
 class DeepTrackDataObject:
     def __init__(self):
         self.data = None
         self.valid = False
-        self.propagated = False
 
     def store(self, data):
-        self.propagated = False
         self.valid = True
         self.data = data
 
@@ -26,12 +27,42 @@ class DeepTrackDataObject:
         self.valid = True
 
 
+class DeepTrackDataList:
+    def __init__(self):
+        self.list = []
+        self.default = DeepTrackDataObject()
+
+    def __getitem__(self, replicate_index):
+        if replicate_index is None:
+            return self.default
+
+        if isinstance(replicate_index, int):
+
+            while len(self.list) <= replicate_index:
+                self.list.append(DeepTrackDataObject())
+
+            return self.list[replicate_index]
+
+        if isinstance(replicate_index, (tuple, list)):
+            replicate_index, *rest = replicate_index
+
+            if not rest:
+                return self[replicate_index]
+
+            while len(self.list) <= replicate_index:
+                self.list.append(DeepTrackDataList())
+
+            return self.list[replicate_index][rest]
+
+        raise NotImplementedError("Indexing with non-integer types not yet implemented")
+
+
 class DeepTrackNode:
 
     __nonelike_default = object()
 
-    def __init__(self, action=__nonelike_default, _static=False, **kwargs):
-        self.data = DeepTrackDataObject()
+    def __init__(self, action=__nonelike_default, **kwargs):
+        self.data = DeepTrackDataList()
         self.children = []
         self.dependencies = []
 
@@ -43,7 +74,7 @@ class DeepTrackNode:
             else:
                 self.action = lambda: action
 
-        super(DeepTrackNode, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def add_child(self, other):
         self.children.append(other)
@@ -55,59 +86,61 @@ class DeepTrackNode:
 
         return self
 
-    def store(self, data):
-        self.data.store(data)
+    def store(self, data, replicate_index=None):
+        self.data[replicate_index].store(data)
 
         return self
 
-    def is_valid(self):
-        return self.data.is_valid()
+    def is_valid(self, replicate_index=None):
+        return self.data[replicate_index].is_valid()
 
-    def invalidate(self):
-        if self.is_valid():
-            self.data.invalidate()
+    def invalidate(self, replicate_index=None):
+        if self.is_valid(replicate_index=replicate_index):
+            self.data[replicate_index].invalidate()
             for child in self.children:
-                child.invalidate()
+                child.invalidate(replicate_index=replicate_index)
 
         return self
 
-    def validate(self):
-        if not self.is_valid():
-            self.data.validate()
+    def validate(self, replicate_index=None):
+        if not self.is_valid(replicate_index=replicate_index):
+            self.data[replicate_index].validate()
             for child in self.children:
-                child.validate()
+                child.validate(replicate_index=replicate_index)
 
         return self
 
-    def set_value(self, value):
+    def set_value(self, value, replicate_index=None):
 
         # If set to same value, no need to invalidate
-        if not equivalent(value, self.data.current_value()) or not self.is_valid():
+        if not equivalent(
+            value, self.data[replicate_index].current_value()
+        ) or not self.is_valid(replicate_index=replicate_index):
 
-            self.invalidate()
-            self.store(value)
+            self.invalidate(replicate_index=replicate_index)
+            self.store(value, replicate_index=replicate_index)
 
         return self
 
-    def update(self):
-        self.invalidate()
+    def update(self, replicate_index=None):
+
+        self.invalidate(replicate_index=replicate_index)
+        self.data = DeepTrackDataList()
         for dependency in self.dependencies:
-            dependency.update()
+            dependency.update(replicate_index=replicate_index)
 
         return self
 
-    def __call__(self):
+    def previous(self, replicate_index=None):
+        return self.data[replicate_index].current_value()
 
-        if not self.is_valid():
+    def __call__(self, replicate_index=None):
 
-            new_value = self.action()
+        if not self.is_valid(replicate_index=replicate_index):
+            new_value = utils.safe_call(self.action, replicate_index=replicate_index)
+            self.store(new_value, replicate_index=replicate_index)
 
-            self.store(new_value)
-
-        return self.data.current_value()
-
-    def previous(self):
-        return self.data.current_value()
+        return self.data[replicate_index].current_value()
 
     def __add__(self, other):
         return create_node_with_operator(operator.__add__, self, other)
@@ -193,7 +226,11 @@ def create_node_with_operator(op, a, b):
     if not isinstance(b, DeepTrackNode):
         b = DeepTrackNode(b)
 
-    new = DeepTrackNode(lambda: op(a(), b()))
+    new = DeepTrackNode(
+        lambda replicate_index=None: op(
+            a(replicate_index=replicate_index), b(replicate_index=replicate_index)
+        )
+    )
     new.add_dependency(a)
     new.add_dependency(b)
     a.add_child(new)
