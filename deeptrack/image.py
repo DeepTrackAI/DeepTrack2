@@ -77,7 +77,7 @@ class Image(np.ndarray):
             Returns itself.
         """
 
-        self.properties.append(property_dict)
+        self.properties = [*self.properties, property_dict]
         return self
 
     def get_property(
