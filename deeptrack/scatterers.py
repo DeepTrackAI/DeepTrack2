@@ -23,8 +23,7 @@ import numpy as np
 
 from . import backend as D
 from .features import Feature, MERGE_STRATEGY_APPEND
-from .image import Image
-from . import image
+from . import pad_image_to_fft, Image
 from .types import PropertyLike, ArrayLike
 import warnings
 
@@ -77,6 +76,8 @@ class Scatterer(Feature):
         value: PropertyLike[float] = 1.0,
         position_unit: PropertyLike[str] = "pixel",
         upsample: PropertyLike[int] = 1,
+        voxel_size=None,
+        upscale=None,
         **kwargs
     ):
         self._processed_properties = False
@@ -86,13 +87,16 @@ class Scatterer(Feature):
             value=value,
             position_unit=position_unit,
             upsample=upsample,
-            **kwargs
+            voxel_size=voxel_size,
+            upscale=upscale,
+            **kwargs,
         )
 
     def _process_properties(self, properties: dict) -> dict:
         # Rescales the position property
         self._processed_properties = True
         if "position" in properties:
+
             if properties["position_unit"] == "meter":
                 properties["position"] = (
                     np.array(properties["position"])
@@ -485,6 +489,11 @@ class MieScatterer(Scatterer):
         polarization_angle: PropertyLike[float] = 0,
         collection_angle: PropertyLike[str] = "auto",
         L: PropertyLike[str] = "auto",
+        refractive_index_medium=None,
+        wavelength=None,
+        NA=None,
+        padding=(0,) * 4,
+        upscaled_output_region=None,
         **kwargs
     ):
         kwargs.pop("is_field", None)
@@ -498,7 +507,12 @@ class MieScatterer(Scatterer):
             polarization_angle=polarization_angle,
             collection_angle=collection_angle,
             coefficients=coefficients,
-            **kwargs
+            refractive_index_medium=refractive_index_medium,
+            wavelength=wavelength,
+            NA=NA,
+            padding=padding,
+            upscaled_output_region=upscaled_output_region,
+            **kwargs,
         )
 
     def _process_properties(self, properties):
@@ -555,7 +569,7 @@ class MieScatterer(Scatterer):
             - upscaled_output_region[1]
             + padding[1]
         )
-        arr = image.pad_image_to_fft(np.zeros((xSize, ySize)))
+        arr = pad_image_to_fft(np.zeros((xSize, ySize)))
 
         # Evluation grid
         x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[0]) * upscale
@@ -657,7 +671,7 @@ class MieSphere(MieScatterer):
             coefficients=coeffs,
             radius=radius,
             refractive_index=refractive_index,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -726,5 +740,5 @@ class MieStratifiedSphere(MieScatterer):
             coefficients=coeffs,
             radius=radius,
             refractive_index=refractive_index,
-            **kwargs
+            **kwargs,
         )
