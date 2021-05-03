@@ -51,6 +51,7 @@ class Microscope(StructuralFeature):
         propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
 
         list_of_scatterers = self._sample()
+
         if not isinstance(list_of_scatterers, list):
             list_of_scatterers = [list_of_scatterers]
 
@@ -65,7 +66,9 @@ class Microscope(StructuralFeature):
             if scatterer.get_property("is_field", default=False)
         ]
 
-        sample_volume, limits = _create_volume(volume_samples, **kwargs)
+        sample_volume, limits = _create_volume(
+            volume_samples, **additional_sample_kwargs
+        )
         sample_volume = Image(sample_volume)
 
         for scatterer in volume_samples + field_samples:
@@ -78,24 +81,6 @@ class Microscope(StructuralFeature):
         )
 
         imaged_sample = self._objective.resolve(sample_volume)
-
-        upscale = additional_sample_kwargs["upscale"]
-        shape = imaged_sample.shape
-        if upscale > 1:
-            mean_imaged_sample = np.reshape(
-                imaged_sample,
-                (
-                    shape[0] // upscale,
-                    upscale,
-                    shape[1] // upscale,
-                    upscale,
-                    shape[2],
-                ),
-            ).mean(axis=(3, 1))
-
-            imaged_sample = Image(mean_imaged_sample).merge_properties_from(
-                imaged_sample
-            )
 
         # Merge with input
         if not image:
@@ -129,8 +114,6 @@ class Optics(Feature):
         included to define the resolution in the z-direction.
     refractive_index_medium : float
         The refractive index of the medium.
-    upscale : int
-        Upscales the pupil function for a more accurate result.
     padding : array_like[int, int, int, int]
         Pads the sample volume with zeros to avoid edge effects.
     output_region : array_like[int, int, int, int]
@@ -149,14 +132,13 @@ class Optics(Feature):
         magnification: PropertyLike[float] = 10,
         resolution: PropertyLike[float or ArrayLike[float]] = (1e-6, 1e-6, 1e-6),
         refractive_index_medium: PropertyLike[float] = 1.33,
-        upscale: PropertyLike[float] = 1,
         padding: PropertyLike[ArrayLike[int]] = (10, 10, 10, 10),
         output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
         pupil: Feature = None,
         illumination: Feature = None,
         **kwargs
     ):
-        def get_voxel_size(resolution, magnification, upscale):
+        def get_voxel_size(resolution, magnification):
             if (
                 not isinstance(resolution, (list, tuple, np.ndarray))
                 or len(resolution) == 1
@@ -164,7 +146,7 @@ class Optics(Feature):
                 resolution = (resolution,) * 3
             elif len(resolution) == 2:
                 resolution = (*resolution, np.min(resolution))
-            return np.array(resolution) / (magnification * upscale)
+            return np.array(resolution) / (magnification)
 
         super().__init__(
             NA=NA,
@@ -172,14 +154,10 @@ class Optics(Feature):
             refractive_index_medium=refractive_index_medium,
             magnification=magnification,
             resolution=resolution,
-            upscale=upscale,
             padding=padding,
             output_region=output_region,
-            upscaled_output_region=lambda output_region, upscale: [
-                i * upscale for i in output_region
-            ],
-            voxel_size=lambda resolution, magnification, upscale: get_voxel_size(
-                resolution, magnification, upscale
+            voxel_size=lambda resolution, magnification: get_voxel_size(
+                resolution, magnification
             ),
             limits=None,
             fields=None,
@@ -203,7 +181,6 @@ class Optics(Feature):
         wavelength,
         refractive_index_medium,
         voxel_size,
-        upscale,
         include_aberration=True,
         defocus=0,
         **kwargs
@@ -258,43 +235,35 @@ class Optics(Feature):
         return pupil_functions
 
     def _pad_volume(
-        self, volume, limits=None, padding=None, upscaled_output_region=None, **kwargs
+        self, volume, limits=None, padding=None, output_region=None, **kwargs
     ):
         if limits is None:
             limits = np.zeros((3, 2))
 
         new_limits = np.array(limits)
-        upscaled_output_region = np.array(upscaled_output_region)
+        output_region = np.array(output_region)
 
         # Replace None entries with current limit
-        upscaled_output_region[0] = (
-            upscaled_output_region[0]
-            if not upscaled_output_region[0] is None
-            else new_limits[0, 0]
+        output_region[0] = (
+            output_region[0] if not output_region[0] is None else new_limits[0, 0]
         )
-        upscaled_output_region[1] = (
-            upscaled_output_region[1]
-            if not upscaled_output_region[1] is None
-            else new_limits[0, 1]
+        output_region[1] = (
+            output_region[1] if not output_region[1] is None else new_limits[0, 1]
         )
-        upscaled_output_region[2] = (
-            upscaled_output_region[2]
-            if not upscaled_output_region[2] is None
-            else new_limits[1, 0]
+        output_region[2] = (
+            output_region[2] if not output_region[2] is None else new_limits[1, 0]
         )
-        upscaled_output_region[3] = (
-            upscaled_output_region[3]
-            if not upscaled_output_region[3] is None
-            else new_limits[1, 1]
+        output_region[3] = (
+            output_region[3] if not output_region[3] is None else new_limits[1, 1]
         )
 
         for i in range(2):
             new_limits[i, :] = (
-                np.min([new_limits[i, 0], upscaled_output_region[i] - padding[1]]),
+                np.min([new_limits[i, 0], output_region[i] - padding[1]]),
                 np.max(
                     [
                         new_limits[i, 1],
-                        upscaled_output_region[i + 2] + padding[i + 2],
+                        output_region[i + 2] + padding[i + 2],
                     ]
                 ),
             )
@@ -337,8 +306,6 @@ class Fluorescence(Optics):
         included to define the resolution in the z-direction.
     refractive_index_medium : float
         The refractive index of the medium.
-    upscale : int
-        Upscales the pupil function for a more accurate result.
     padding : array_like[int, int, int, int]
         Pads the sample volume with zeros to avoid edge effects.
     output_region : array_like[int, int, int, int]
@@ -352,6 +319,7 @@ class Fluorescence(Optics):
 
     def get(self, illuminated_volume, limits, **kwargs):
         """Convolves the image with a pupil function"""
+
         # Pad volume
         padded_volume, limits = self._pad_volume(
             illuminated_volume, limits=limits, **kwargs
@@ -359,9 +327,7 @@ class Fluorescence(Optics):
 
         # Extract indexes of the output region
         pad = kwargs.get("padding", (0, 0, 0, 0))
-        output_region = np.array(
-            kwargs.get("upscaled_output_region", (None, None, None, None))
-        )
+        output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
         output_region[0] = (
             None
             if output_region[0] is None
@@ -468,8 +434,6 @@ class Brightfield(Optics):
         included to define the resolution in the z-direction.
     refractive_index_medium : float
         The refractive index of the medium.
-    upscale : int
-        Upscales the pupil function for a more accurate result.
     padding : array_like[int, int, int, int]
         Pads the sample volume with zeros to avoid edge effects.
     output_region : array_like[int, int, int, int]
@@ -490,9 +454,7 @@ class Brightfield(Optics):
 
         # Extract indexes of the output region
         pad = kwargs.get("padding", (0, 0, 0, 0))
-        output_region = np.array(
-            kwargs.get("upscaled_output_region", (None, None, None, None))
-        )
+        output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
         output_region[0] = (
             None
             if output_region[0] is None
@@ -693,10 +655,9 @@ def _get_position(image, mode="corner", return_z=False):
     else:
         shift = np.zeros((num_outputs))
 
-    upscale = image.get_property("upscale")
-    position = np.array(image.get_property("position")) * upscale
+    position = np.array(image.get_property("position"))
 
-    position[:2] = position[:2] + 0.5 * (upscale - 1)
+    position[:2] = position[:2]
 
     if position is None:
         return position
@@ -710,14 +671,7 @@ def _get_position(image, mode="corner", return_z=False):
     elif len(position) == 2:
         if return_z:
             outp = (
-                np.array(
-                    [
-                        position[0],
-                        position[1],
-                        image.get_property("z", default=0)
-                        * image.get_property("upscale"),
-                    ]
-                )
+                np.array([position[0], position[1], image.get_property("z", default=0)])
                 - shift
             )
             return outp
@@ -730,9 +684,8 @@ def _get_position(image, mode="corner", return_z=False):
 def _create_volume(
     list_of_scatterers,
     pad=(0, 0, 0, 0),
-    upscaled_output_region=(None, None, None, None),
+    output_region=(None, None, None, None),
     refractive_index_medium=1.33,
-    upscale=1,
     **kwargs
 ):
     # Converts a list of scatterers into a volume.
@@ -743,26 +696,10 @@ def _create_volume(
     volume = np.zeros((1, 1, 1), dtype=np.complex)
     limits = None
     OR = np.zeros((4,))
-    OR[0] = (
-        np.inf
-        if upscaled_output_region[0] is None
-        else int(upscaled_output_region[0] - pad[0])
-    )
-    OR[1] = (
-        -np.inf
-        if upscaled_output_region[1] is None
-        else int(upscaled_output_region[1] - pad[1])
-    )
-    OR[2] = (
-        np.inf
-        if upscaled_output_region[2] is None
-        else int(upscaled_output_region[2] + pad[2])
-    )
-    OR[3] = (
-        -np.inf
-        if upscaled_output_region[3] is None
-        else int(upscaled_output_region[3] + pad[3])
-    )
+    OR[0] = np.inf if output_region[0] is None else int(output_region[0] - pad[0])
+    OR[1] = -np.inf if output_region[1] is None else int(output_region[1] - pad[1])
+    OR[2] = np.inf if output_region[2] is None else int(output_region[2] + pad[2])
+    OR[3] = -np.inf if output_region[3] is None else int(output_region[3] + pad[3])
 
     for scatterer in list_of_scatterers:
 
