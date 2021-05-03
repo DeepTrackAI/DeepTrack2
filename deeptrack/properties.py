@@ -17,7 +17,6 @@ PropertyDict
     properties.
 """
 
-from datetime import time
 import numpy as np
 from .utils import (
     isiterable,
