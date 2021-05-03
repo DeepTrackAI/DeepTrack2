@@ -77,7 +77,6 @@ class Scatterer(Feature):
         position_unit: PropertyLike[str] = "pixel",
         upsample: PropertyLike[int] = 1,
         voxel_size=None,
-        upscale=None,
         **kwargs
     ):
         self._processed_properties = False
@@ -88,7 +87,6 @@ class Scatterer(Feature):
             position_unit=position_unit,
             upsample=upsample,
             voxel_size=voxel_size,
-            upscale=upscale,
             **kwargs,
         )
 
@@ -101,12 +99,10 @@ class Scatterer(Feature):
                 properties["position"] = (
                     np.array(properties["position"])
                     / np.array(properties["voxel_size"])[: len(properties["position"])]
-                    / properties.get("upscale", 1)
                 )
                 properties["z"] = (
                     np.array(properties["z"])
                     / np.array(properties["voxel_size"])[: len(properties["position"])]
-                    / properties.get("upscale", 1)
                 )
 
         return properties
@@ -493,7 +489,7 @@ class MieScatterer(Scatterer):
         wavelength=None,
         NA=None,
         padding=(0,) * 4,
-        upscaled_output_region=None,
+        output_region=None,
         **kwargs
     ):
         kwargs.pop("is_field", None)
@@ -511,7 +507,7 @@ class MieScatterer(Scatterer):
             wavelength=wavelength,
             NA=NA,
             padding=padding,
-            upscaled_output_region=upscaled_output_region,
+            output_region=output_region,
             **kwargs,
         )
 
@@ -535,7 +531,6 @@ class MieScatterer(Scatterer):
                 32
                 * min(properties["voxel_size"][:2])
                 / np.sin(properties["collection_angle"])
-                * properties["upscale"]
             )
         return properties
 
@@ -543,7 +538,7 @@ class MieScatterer(Scatterer):
         self,
         inp,
         position,
-        upscaled_output_region,
+        output_region,
         voxel_size,
         padding,
         wavelength,
@@ -553,27 +548,16 @@ class MieScatterer(Scatterer):
         collection_angle,
         polarization_angle,
         coefficients,
-        upscale=1,
         **kwargs
     ):
 
-        xSize = (
-            padding[2]
-            + upscaled_output_region[2]
-            - upscaled_output_region[0]
-            + padding[0]
-        )
-        ySize = (
-            padding[3]
-            + upscaled_output_region[3]
-            - upscaled_output_region[1]
-            + padding[1]
-        )
+        xSize = padding[2] + output_region[2] - output_region[0] + padding[0]
+        ySize = padding[3] + output_region[3] - output_region[1] + padding[1]
         arr = pad_image_to_fft(np.zeros((xSize, ySize)))
 
         # Evluation grid
-        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[0]) * upscale
-        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[1]) * upscale
+        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[0])
+        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[1])
         X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
 
         R2 = np.sqrt(X ** 2 + Y ** 2)
