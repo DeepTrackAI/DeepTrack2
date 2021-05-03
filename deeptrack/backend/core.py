@@ -101,18 +101,22 @@ class DeepTrackNode:
         return self.data[replicate_index].is_valid()
 
     def invalidate(self, replicate_index=None):
-        if self.is_valid(replicate_index=replicate_index):
-            self.data[replicate_index].invalidate()
-            for child in self.children:
-                child.invalidate(replicate_index=replicate_index)
-
+        for child in self.recurse_children():
+            child.data[replicate_index].invalidate()
         return self
 
     def validate(self, replicate_index=None):
-        if not self.is_valid(replicate_index=replicate_index):
-            self.data[replicate_index].validate()
-            for child in self.children:
-                child.validate(replicate_index=replicate_index)
+        for child in self.recurse_children():
+            child.data[replicate_index].validate()
+        return self
+
+    def update(self):
+        # Pre-instantiate memory for optimization
+        child_memory = []
+
+        for dependency in self.recurse_dependencies():
+            for dep_child in dependency.recurse_children(memory=child_memory):
+                dep_child.data = DeepTrackDataList()
 
         return self
 
@@ -128,17 +132,44 @@ class DeepTrackNode:
 
         return self
 
-    def update(self, replicate_index=None):
-
-        self.invalidate(replicate_index=replicate_index)
-        self.data = DeepTrackDataList()
-        for dependency in self.dependencies:
-            dependency.update(replicate_index=replicate_index)
-
-        return self
-
     def previous(self, replicate_index=None):
         return self.data[replicate_index].current_value()
+
+    def recurse_children(self, memory=None):
+        # On first call, instantiate memory
+        if memory is None:
+            memory = []
+
+        # Make sure each DeepTrackNode is only yielded once
+        if self in memory:
+            return
+
+        # Remember self
+        memory.append(self)
+
+        # Yield self and recurse children
+        yield self
+
+        for child in self.children:
+            yield from child.recurse_children(memory=memory)
+
+    def recurse_dependencies(self, memory=None):
+        # On first call, instantiate memory
+        if memory is None:
+            memory = []
+
+        # Make sure each DeepTrackNode is only yielded once
+        if self in memory:
+            return
+
+        # Remember self
+        memory.append(self)
+
+        # Yield self and recurse dependencies
+        yield self
+
+        for dependency in self.dependencies:
+            yield from dependency.recurse_dependencies(memory=memory)
 
     def __call__(self, replicate_index=None):
 
