@@ -15,8 +15,9 @@ Brightfield
     Images coherently illuminated samples.
 """
 
+from deeptrack.properties import PropertyDict, propagate_data_to_dependencies
 import numpy as np
-from .features import Feature, StructuralFeature
+from .features import DummyFeature, Feature, StructuralFeature
 from .image import Image, pad_image_to_fft
 from .types import ArrayLike, PropertyLike
 
@@ -39,16 +40,17 @@ class Microscope(StructuralFeature):
     __distributed__ = False
 
     def __init__(self, sample: Feature, objective: Feature, **kwargs):
-        super().__init__(sample=sample, objective=objective, **kwargs)
+        super().__init__(**kwargs)
+        self._sample = self.add_feature(sample)
+        self._objective = self.add_feature(objective)
 
-    def get(self, image, sample, objective, **kwargs):
+    def get(self, image, **kwargs):
 
         # Grab properties from the objective to pass to the sample
-        new_kwargs = objective.properties.current_value_dict(**kwargs)
-        new_kwargs.update(kwargs)
-        kwargs = new_kwargs
+        additional_sample_kwargs = self._objective.properties()
+        propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
 
-        list_of_scatterers = sample.resolve(**kwargs)
+        list_of_scatterers = self._sample()
         if not isinstance(list_of_scatterers, list):
             list_of_scatterers = [list_of_scatterers]
 
@@ -69,11 +71,15 @@ class Microscope(StructuralFeature):
         for scatterer in volume_samples + field_samples:
             sample_volume.merge_properties_from(scatterer)
 
-        imaged_sample = objective.resolve(
-            sample_volume, limits=limits, fields=field_samples, **kwargs
+        propagate_data_to_dependencies(
+            self._objective,
+            limits=limits,
+            fields=field_samples,
         )
 
-        upscale = kwargs["upscale"]
+        imaged_sample = self._objective.resolve(sample_volume)
+
+        upscale = additional_sample_kwargs["upscale"]
         shape = imaged_sample.shape
         if upscale > 1:
             mean_imaged_sample = np.reshape(
@@ -100,15 +106,6 @@ class Microscope(StructuralFeature):
         for i in range(len(image)):
             image[i].merge_properties_from(imaged_sample)
         return image
-
-    def _update(self, **kwargs):
-        self.properties["sample"].update(
-            **{
-                **kwargs,
-                **self.objective.update(**kwargs).current_value.properties,
-            }
-        )
-        super()._update(**kwargs)
 
 
 # OPTICAL SYSTEMS
@@ -156,6 +153,7 @@ class Optics(Feature):
         padding: PropertyLike[ArrayLike[int]] = (10, 10, 10, 10),
         output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
         pupil: Feature = None,
+        illumination: Feature = None,
         **kwargs
     ):
         def get_voxel_size(resolution, magnification, upscale):
@@ -180,18 +178,23 @@ class Optics(Feature):
             upscaled_output_region=lambda output_region, upscale: [
                 i * upscale for i in output_region
             ],
-            pupil=pupil,
             voxel_size=lambda resolution, magnification, upscale: get_voxel_size(
                 resolution, magnification, upscale
             ),
+            limits=None,
+            fields=None,
             **kwargs
+        )
+
+        self.pupil = self.add_feature(pupil) if pupil else DummyFeature()
+        self.illumination = (
+            self.add_feature(illumination) if illumination else DummyFeature()
         )
 
     def _process_and_get(self, image, **kwargs):
         output = super()._process_and_get(image, **kwargs)
-        pupil = self._pupil(output[-1].shape[:2], defocus=[0], **kwargs)[0]
 
-        return output, {"pupil_at_focus": pupil}
+        return output
 
     def _pupil(
         self,
@@ -201,8 +204,6 @@ class Optics(Feature):
         refractive_index_medium,
         voxel_size,
         upscale,
-        pupil,
-        aberration=None,
         include_aberration=True,
         defocus=0,
         **kwargs
@@ -240,9 +241,9 @@ class Optics(Feature):
         pupil_function_is_nonzero = pupil_function != 0
 
         if include_aberration:
-            pupil = pupil or aberration
+            pupil = self.pupil
             if isinstance(pupil, Feature):
-                pupil_function = pupil.resolve(pupil_function, **kwargs)
+                pupil_function = pupil(pupil_function, **kwargs)
             elif isinstance(pupil, np.ndarray):
                 pupil_function *= pupil
 
@@ -545,13 +546,9 @@ class Brightfield(Optics):
 
         pupil_step = np.fft.fftshift(pupils[0])
 
-        if "illumination" in kwargs:
-            light_in = np.ones(volume.shape[:2], dtype=np.complex)
-            light_in = kwargs["illumination"].resolve(light_in, **kwargs)
-            light_in = np.fft.fft2(light_in)
-        else:
-            light_in = np.zeros(volume.shape[:2], dtype=np.complex)
-            light_in[0, 0] = light_in.size
+        light_in = np.ones(volume.shape[:2], dtype=np.complex)
+        light_in = self.illumination.resolve(light_in)
+        light_in = np.fft.fft2(light_in)
 
         K = 2 * np.pi / kwargs["wavelength"]
 
