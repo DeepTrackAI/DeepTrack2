@@ -177,6 +177,9 @@ class DeepTrackNode:
             new_value = utils.safe_call(self.action, replicate_index=replicate_index)
             self.store(new_value, replicate_index=replicate_index)
 
+        return self.current_value(replicate_index=replicate_index)
+
+    def current_value(self, replicate_index=None):
         return self.data[replicate_index].current_value()
 
     def __add__(self, other):
