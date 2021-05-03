@@ -67,11 +67,21 @@ class Property(DeepTrackNode):
 
         if isiterable(sampling_rule):
             # If it's iterable, return the next value
-            def action():
-                try:
-                    return next(sampling_rule)
-                except StopIteration:
-                    return self.previous()
+
+            def wrapped_iterator():
+
+                while True:
+                    try:
+                        next_value = next(sampling_rule)
+                    except StopIteration:
+                        pass
+
+                    yield next_value
+
+            iterator = wrapped_iterator()
+
+            def action(replicate_index=None):
+                return next(iterator)
 
             return action
 
@@ -146,6 +156,14 @@ class PropertyDict(DeepTrackNode, dict):
         for val in dependencies.values():
             val.add_child(self)
             self.add_dependency(val)
+
+
+def propagate_data_to_dependencies(X, **kwargs):
+    for dep in X.recurse_dependencies():
+        if isinstance(dep, PropertyDict):
+            for key, value in kwargs.items():
+                if key in dep:
+                    dep[key].set_value(value)
 
 
 # class SequentialProperty(Property):
