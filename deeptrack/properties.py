@@ -17,6 +17,7 @@ PropertyDict
     properties.
 """
 
+from datetime import time
 import numpy as np
 from .utils import (
     isiterable,
@@ -147,8 +148,7 @@ class PropertyDict(DeepTrackNode, dict):
 
         def action(replicate_index=None):
             return dict(
-                (key, val(replicate_index=replicate_index))
-                for key, val in dependencies.items()
+                (key, val(replicate_index=replicate_index)) for key, val in self.items()
             )
 
         super().__init__(action, **dependencies)
@@ -166,98 +166,147 @@ def propagate_data_to_dependencies(X, **kwargs):
                     dep[key].set_value(value)
 
 
-# class SequentialProperty(Property):
-#     """Property that has multiple sequential values
+class SequentialProperty(Property):
+    """Property that has multiple sequential values
 
-#     Extends standard `Property` to resolve one value for each step
-#     in a sequence of images. This is often used when creating movies.
+    Extends standard `Property` to resolve one value for each step
+    in a sequence of images. This is often used when creating movies.
 
-#     Parameters
-#     ----------
-#     initializer : any
-#         Sampling rule for the first step of the sequence.
-#     sampling_rule : any
-#         Sampling rule for each step after the first.
+    Parameters
+    ----------
+    initializer : any
+        Sampling rule for the first step of the sequence.
+    sampling_rule : any
+        Sampling rule for each step after the first.
 
-#     Attributes
-#     ----------
-#     initializer : any
-#         Sampling rule for the first step of the sequence.
-#     sampling_rule : any
-#         Sampling rule for each step after the first.
-#     has_updated_since_last_resolve : bool
-#         Whether the property has been updated since the last resolve.
+    Attributes
+    ----------
+    initializer : any
+        Sampling rule for the first step of the sequence.
+    sampling_rule : any
+        Sampling rule for each step after the first.
+    has_updated_since_last_resolve : bool
+        Whether the property has been updated since the last resolve.
 
-#     """
+    """
 
-#     def __init__(self, sampling_rule, initializer=None):
-#         super().__init__(sampling_rule)
-#         if initializer is None:
-#             self.initializer = sampling_rule
-#         else:
-#             self.initializer = initializer
+    def __init__(self, initialization=None, **kwargs):
 
-#         self.sampling_rule = sampling_rule
+        super().__init__(None)
 
-#         # Deprecated
-#         self.has_updated_since_last_resolve = False
+        # Create extra dependencies
+        self.sequence_length = Property(0)
+        self.add_dependency(self.sequence_length)
+        self.sequence_length.add_child(self)
 
-#     def update(self, sequence_length=0, **kwargs):
-#         """Updates current_value
+        self.sequence_step = Property(0)
+        self.add_dependency(self.sequence_step)
+        self.sequence_step.add_child(self)
 
-#         For each step in the sequence, sample `self.sampling_rule`.
-#         `self.initializer` is used for the first step. These rules
-#         should output one value per step. Sampling rules
-#         that are functions can optionally accept the following keyword
-#         arguments:
+        self.previous_values = Property(
+            lambda: self.previous()[: self.sequence_step() - 1]
+            if self.sequence_step()
+            else []
+        )
+        self.add_dependency(self.previous_values)
+        self.previous_values.add_child(self)
+        self.previous_values.add_dependency(self.sequence_step)
+        self.sequence_step.add_child(self.previous_values)
 
-#         * sequence_step : the current position in the sequence.
-#         * sequence_length : the length of the sequence.
-#         * previous_value : the value of the property at the previous
-#           step in the sequence.
-#         * previous_values : the value of the property at all previous
-#           steps in the sequence.
+        self.previous_value = Property(
+            lambda: self.previous()[self.sequence_step() - 1]
+            if self.previous()
+            else None
+        )
+        self.add_dependency(self.previous_value)
+        self.previous_value.add_child(self)
+        self.previous_value.add_dependency(self.sequence_step)
+        self.sequence_step.add_child(self.previous_value)
 
-#         Parameters
-#         ----------
-#         sequence_length : int, optional
-#             length of the sequence
+        if initialization:
+            self.initialization = self.create_action(initialization, **kwargs)
+        else:
+            self.initialization = None
 
-#         Returns
-#         -------
-#         self
-#             returns self
-#         """
-#         my_id = id(self)
-#         if (
-#             features.UPDATE_LOCK.locked()
-#             and my_id in features.UPDATE_MEMO["memoization"]
-#         ):
-#             return self
+        self.current = lambda: None
 
-#         kwargs.update(features.UPDATE_MEMO["user_arguments"])
+        self.action = (
+            lambda replicate_index=None: self.initialization(
+                replicate_index=replicate_index
+            )
+            if self.sequence_step(replicate_index=replicate_index) == 0
+            else self.current(replicate_index=replicate_index)
+        )
 
-#         new_current_value = []
+    def store(self, value, replicate_index=None):
 
-#         for step in range(sequence_length):
-#             # Use initializer for first time step
-#             ruleset = self.sampling_rule
+        current_data = self.data[replicate_index].current_value()
+        if not current_data:
+            super().store([value], replicate_index=replicate_index)
+        else:
+            super().store(current_data + [value], replicate_index=replicate_index)
 
-#             # Elements inserted here can be passed to property functions
-#             kwargs.update(
-#                 sequence_step=step,
-#                 sequence_length=sequence_length,
-#                 previous_values=new_current_value,
-#             )
-#             if step == 0:
-#                 kwargs.update(previous_value=self.sample(self.initializer, **kwargs))
-#             else:
-#                 kwargs.update(previous_value=new_current_value[-1])
+    def current_value(self, replicate_index):
+        return super().current_value(replicate_index=replicate_index)[
+            self.sequence_step()
+        ]
 
-#             next_value = self.sample(ruleset, **kwargs)
+    def update(self, sequence_length=0, **kwargs):
+        """Updates current_value
 
-#             new_current_value.append(next_value)
+        For each step in the sequence, sample `self.sampling_rule`.
+        `self.initializer` is used for the first step. These rules
+        should output one value per step. Sampling rules
+        that are functions can optionally accept the following keyword
+        arguments:
 
-#         self.current_value = new_current_value
-#         features.UPDATE_MEMO["memoization"][my_id] = new_current_value
-#         return self
+        * sequence_step : the current position in the sequence.
+        * sequence_length : the length of the sequence.
+        * previous_value : the value of the property at the previous
+          step in the sequence.
+        * previous_values : the value of the property at all previous
+          steps in the sequence.
+
+        Parameters
+        ----------
+        sequence_length : int, optional
+            length of the sequence
+
+        Returns
+        -------
+        self
+            returns self
+        """
+        my_id = id(self)
+        if (
+            features.UPDATE_LOCK.locked()
+            and my_id in features.UPDATE_MEMO["memoization"]
+        ):
+            return self
+
+        kwargs.update(features.UPDATE_MEMO["user_arguments"])
+
+        new_current_value = []
+
+        for step in range(sequence_length):
+            # Use initializer for first time step
+            ruleset = self.sampling_rule
+
+            # Elements inserted here can be passed to property functions
+            kwargs.update(
+                sequence_step=step,
+                sequence_length=sequence_length,
+                previous_values=new_current_value,
+            )
+            if step == 0:
+                kwargs.update(previous_value=self.sample(self.initializer, **kwargs))
+            else:
+                kwargs.update(previous_value=new_current_value[-1])
+
+            next_value = self.sample(ruleset, **kwargs)
+
+            new_current_value.append(next_value)
+
+        self.current_value = new_current_value
+        features.UPDATE_MEMO["memoization"][my_id] = new_current_value
+        return self
