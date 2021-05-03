@@ -9,6 +9,8 @@ from .. import optics
 from ..scatterers import PointParticle
 from ..image import Image
 
+import numpy as np
+
 
 class TestOptics(unittest.TestCase):
     def test_Fluorescence(self):
