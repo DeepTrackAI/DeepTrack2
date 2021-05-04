@@ -21,7 +21,6 @@ def plot_label(label_function, image):
     
 def plot_image_stack(im_stack):
     num_imgs = im_stack.shape[-1]
-    plt.figure(figsize=(7, 7*num_imgs))
     for i in range(num_imgs):
         plt.subplot(num_imgs,1,i+1)
         plt.imshow(im_stack[0,:,:,i], cmap='gray')
@@ -89,7 +88,7 @@ def plot_and_save_track(no_of_frames=10,
         
         im = Normalize_image(np.asarray(LoadImage(folder_path +'\\' + list_paths[j]).resolve()))
         dims = im.shape
-        
+
         scale_height = dims[0]/im_size_height
         scale_width = dims[1]/im_size_width
         

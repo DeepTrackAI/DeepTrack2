@@ -7,7 +7,7 @@ from scipy.spatial.distance import cdist
 import pandas as pd
 import openpyxl
 import glob
-
+from inspect import signature
 
 def Normalize_image(image, min_value=0, max_value=1, **kwargs):
     min_im = np.min(image)
@@ -16,23 +16,23 @@ def Normalize_image(image, min_value=0, max_value=1, **kwargs):
     return image - np.min(image) + min_value
 
 
-def RemoveRunningMean(folder_path, tot_no_of_frames, center_frame, im_size_height, im_size_width):
-    list_paths = os.listdir(folder_path)
+def RemoveRunningMean(image, path_folder=None, tot_no_of_frames=None, center_frame=None, im_height=None, im_width=None, **kwargs):
+    list_paths = os.listdir(path_folder)
     first_file_format = list_paths[0][-3:]
     for i in range(len(list_paths)):
         if list_paths[i][-3:] != first_file_format:
             print('Only the images to be analyzed can be in the folder with the images.')
             break
     frames_one_dir = int(tot_no_of_frames/2)
-    first_image = np.asarray(LoadImage(folder_path +'\\' + list_paths[0]).resolve())
+    first_image = np.asarray(LoadImage(path_folder +'\\' + list_paths[0]).resolve())
     mean_image = np.zeros(first_image.shape)
     start_point, end_point = max(center_frame - frames_one_dir,0), min(center_frame + frames_one_dir + 1, len(list_paths))
     for i in range(start_point, end_point):
-        mean_image += np.asarray(LoadImage(folder_path +'\\' + list_paths[max(i,0)]).resolve()) / tot_no_of_frames
+        mean_image += np.asarray(LoadImage(path_folder +'\\' + list_paths[max(i,0)]).resolve()) / tot_no_of_frames
     
-    img = cv2.imread(folder_path +'\\' + list_paths[center_frame], 0)
-    resized_center_image = Normalize_image(cv2.resize(img, dsize=(im_size_width, im_size_height), interpolation=cv2.INTER_AREA))
-    resized_mean_image = Normalize_image(cv2.resize(mean_image, dsize=(im_size_width, im_size_height), interpolation=cv2.INTER_AREA))
+    img = cv2.imread(path_folder +'\\' + list_paths[center_frame], 0)
+    resized_center_image = Normalize_image(cv2.resize(img, dsize=(im_width, im_height), interpolation=cv2.INTER_AREA))
+    resized_mean_image = Normalize_image(cv2.resize(mean_image, dsize=(im_width, im_height), interpolation=cv2.INTER_AREA))
     
     return Normalize_image(resized_center_image-resized_mean_image)
 
@@ -58,7 +58,11 @@ def get_image_stack(*args, outputs=None, folder_path=None,
             img = cv2.resize(img, dsize=(im_resize_width, im_resize_height), interpolation=cv2.INTER_AREA)
             
             for i in range(len(function_img)):
-                    img = function_img[i](img, **kwargs)
+                sig = str(signature(function_img[i]))
+                if 'kwargs' in sig:
+                    img = function_img[i](img, center_frame=frame_im0, **kwargs)
+                else:
+                    img = function_img[i](img)
                 
             im_stack[0, :, :, count] = img
             
@@ -88,21 +92,21 @@ def get_blob_center(label, array):
     return x_center, y_center
 
 
-def get_blob_centers(prediction, value_threshold):
+def get_blob_centers(prediction, value_threshold=0.5, prediction_size=0, **kwargs):
     prediction[prediction < value_threshold]=0
     prediction[prediction >= value_threshold]=1
     labeled_array, num_features = label(prediction, structure = [[1,1,1],
                                                                  [1,1,1],
                                                                  [1,1,1]])
-    centers = get_blob_center(1, labeled_array)
+    centers = np.array([get_blob_center(1, labeled_array)])
     for i in range(2,num_features):
-        if np.count_nonzero(labeled_array==(i)) > 0:
+        if np.count_nonzero(labeled_array==(i)) > prediction_size:
             centers = np.vstack((centers,get_blob_center(i, labeled_array)))
     return centers
 
-def Extract_positions_from_prediction(im_stack=None, model=None, layer=None, value_threshold=0.5, **kwargs):
+def Extract_positions_from_prediction(im_stack=None, model=None, layer=None, **kwargs):
     prediction = model.predict(im_stack)[0, :, :, layer]
-    positions = get_blob_centers(prediction, value_threshold)
+    positions = get_blob_centers(prediction, **kwargs)
     return positions
 
 
@@ -381,25 +385,79 @@ def Make_video(frame_im0=0, folder_path=None, save_path=None, fps=7, no_of_frame
         out.write(img_array[i])
     out.release()
 
-def crop_and_append_image(image=None, x_delete_list=[0,1], y_delete_list=[0,1], mult_of=16, **kwargs):
+def crop_and_append_image(image=None, col_delete_list=[0,1], row_delete_list=[0,1], mult_of=16, print_shape=False, **kwargs):
     
     rows0, cols0 = image.shape
     
     
-    for i in range(int(len(x_delete_list)/2)):
+    for i in range(int(len(col_delete_list)/2)):
         rows, cols = image.shape
-        start = int(x_delete_list[2*i]-cols0+cols)
-        stop = int(x_delete_list[2*i+1]-cols0+cols)
+        start = int(col_delete_list[2*i]-cols0+cols)
+        stop = int(col_delete_list[2*i+1]-cols0+cols)
         image = np.delete(image, slice(start, stop), 1)
 
-    for i in range(int(len(y_delete_list)/2)):
+    for i in range(int(len(row_delete_list)/2)):
         rows, cols = image.shape
-        start = int(y_delete_list[2*i]-rows0+rows)
-        stop = int(y_delete_list[2*i+1]-rows0+rows)
+        start = int(row_delete_list[2*i]-rows0+rows)
+        stop = int(row_delete_list[2*i+1]-rows0+rows)
         image = np.delete(image, slice(start, stop), 0)
     rows, cols = image.shape
     
-    return image[0:int(rows/mult_of)*mult_of, 0:int(cols/mult_of)*mult_of]
+    image = image[0:int(rows/mult_of)*mult_of, 0:int(cols/mult_of)*mult_of] 
+    
+    if print_shape:
+        print(image.shape)
+    
+    return image
 
+
+def fix_positions_from_cropping(positions, col_delete_list=[None], row_delete_list=[None], **kwargs):
+    new_positions = positions.copy()
+    if len(col_delete_list)>1:
+        for i in range(len(new_positions)):
+            new_positions[i] = positions[i].copy()
+            pixels_to_add = 0
+            for j in range(int(len(col_delete_list)/2)):
+                if j==0:
+                    lower_bound = col_delete_list[j]
+
+                    temp_correction = np.zeros(len(new_positions[i][:,1]))
+
+                else:
+                    lower_bound += col_delete_list[j*2] - col_delete_list[j*2-1]
+                    
+                
+                bol_low = lower_bound <= positions[i][:,1]
+                
+                
+                pixels_to_add = col_delete_list[j*2+1]-col_delete_list[j*2]
+                
+                temp_correction = pixels_to_add * bol_low + temp_correction
+                
+            new_positions[i][:, 1] += temp_correction
+            
+
+            
+    if len(row_delete_list)>1:
+        for i in range(len(new_positions)):
+            pixels_to_add = 0
+            for j in range(int(len(row_delete_list)/2)):
+                if j==0:
+                    lower_bound = row_delete_list[j]
+
+                    temp_correction = np.zeros(len(new_positions[i][:,0]))
+                else:
+                    lower_bound += row_delete_list[j*2] - row_delete_list[j*2-1]
+                    
+                bol_low = lower_bound <= positions[i][:,0]
+
+                
+                pixels_to_add = row_delete_list[j*2+1]-row_delete_list[j*2]
+                temp_correction = pixels_to_add * bol_low + temp_correction
+                
+
+            new_positions[i][:, 0] += temp_correction
+
+    return new_positions
 
 
