@@ -23,10 +23,12 @@ Duplicate
 import copy
 
 from typing import Any, Callable, Iterable, Iterator, List, Tuple
-from matplotlib import image
+
 import numpy as np
 import threading
 
+from pint.quantity import Quantity
+from .backend.units import ConversionTable
 from .image import Image
 from .properties import Property, PropertyDict
 from .backend.core import DeepTrackNode
@@ -95,6 +97,7 @@ class Feature(DeepTrackNode):
     __list_merge_strategy__ = MERGE_STRATEGY_OVERRIDE
     __distributed__ = True
     __property_memorability__ = 1
+    __conversion_table__ = ConversionTable()
 
     # A None-safe default value to compare against
     __nonelike_default = object()
@@ -393,10 +396,12 @@ class Feature(DeepTrackNode):
         # Optional hook for subclasses to preprocess input before calling
         # the method .get()
 
-        for key, val in propertydict.items():
-            if isinstance(val, Feature):
-                propertydict[key] = val.resolve()
-        return propertydict
+        converted_properties = self.__conversion_table__.convert(**propertydict)
+
+        for key, val in converted_properties.items():
+            if isinstance(val, Quantity):
+                converted_properties[key] = val.magnitude
+        return converted_properties
 
     def sample(self, **kwargs) -> "Feature":
         """Returns the feature"""
@@ -898,69 +903,6 @@ class Repeat(Feature):
         return image
 
 
-# class Duplicate(StructuralFeature):
-#     """Resolves copies of a feature sequentially
-#     Creates `num_duplicates` copies of the feature and resolves
-#     them sequentially
-
-#     Parameters
-#     ----------
-#     feature: Feature
-#         The feature to duplicate
-#     num_duplicates: int
-#         The number of duplicates to create
-#     """
-
-#     def __init__(
-#         self, feature: Feature, num_duplicates: PropertyLike[int], *args, **kwargs
-#     ):
-
-#         self.feature = feature
-#         super().__init__(
-#             *args,
-#             num_duplicates=num_duplicates,  # py > 3.6 dicts are ordered by insert time.
-#             features=lambda num_duplicates: [
-#                 copy.deepcopy(self.feature) for _ in range(num_duplicates)
-#             ],
-#             **kwargs
-#         )
-
-#     def get(self, image, features: List[Feature], **kwargs):
-#         """Resolves each feature in `features` sequentially"""
-#         for index in range(len(features)):
-#             image = features[index].resolve(image, **kwargs)
-
-#         return image
-
-#     def _update(self, **kwargs):
-
-#         super()._update(**kwargs)
-#         features = self.properties["features"].current_value
-#         for index in range(len(features)):
-#             features[index]._update(**kwargs)
-#         return self
-
-#     def __deepcopy__(self, memo):
-#         # If this is getting deep-copied, we have
-#         # nested copies, which needs to be handled
-#         # separately.
-
-#         self.properties.update()
-#         num_duplicates = self.num_duplicates.current_value
-#         features = []
-#         for idx in range(num_duplicates):
-#             memo_copy = copy.copy(memo)
-#             new_feature = copy.deepcopy(self.feature, memo_copy)
-#             features.append(new_feature)
-#         self.properties["features"].current_value = features
-
-#         out = copy.copy(self)
-#         self.properties = copy.copy(self.properties)
-#         for key, val in self.properties.items():
-#             self.properties[key] = copy.copy(val)
-#         return out
-
-
 class Combine(StructuralFeature):
     """Combines multiple features into a single feature.
 
@@ -1248,6 +1190,8 @@ class Dataset(Feature):
         return data
 
     def _process_properties(self, properties):
+        properties = super()._process_properties(properties)
+
         data = properties["data"]
 
         if isinstance(data, tuple):

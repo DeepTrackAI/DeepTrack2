@@ -1,3 +1,8 @@
+from pint import UnitRegistry, Context
+
+units = UnitRegistry()
+units.define("pixel = nan meter = px")
+
 from .aberrations import *
 from .augmentations import *
 from .features import *

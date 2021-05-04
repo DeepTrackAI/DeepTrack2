@@ -29,45 +29,6 @@ class TestProperties(unittest.TestCase):
             P.update()
             self.assertTrue(P() >= 0 and P() <= 1)
 
-    # def test_SequentialProperty_Constant(self):
-    #     sampling_rule = 1
-    #     P = properties.SequentialProperty(sampling_rule, initializer=0)
-    #     P.update(sequence_length=10)
-    #     self.assertEqual(P.current_value, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-
-    # def test_SequentialProperty_timedependent(self):
-    #     def steady_increase(previous_value):
-    #         return previous_value + 1
-
-    #     sampling_rule = steady_increase
-    #     P = properties.SequentialProperty(sampling_rule, initializer=2)
-    #     P.update(sequence_length=5)
-    #     self.assertEqual(P.current_value, [3, 4, 5, 6, 7])
-
-    # def test_SequentialProperty_dependence_on_SequentialProperty(self):
-    #     def steady_increase(previous_value):
-    #         return previous_value + 1
-
-    #     P1 = properties.SequentialProperty(steady_increase, initializer=1)
-
-    #     def geometric_increase(previous_value, step_length):
-    #         return previous_value + step_length
-
-    #     P2 = properties.SequentialProperty(geometric_increase, initializer=1)
-
-    #     P2.update(sequence_length=5, step_length=P1)
-    #     self.assertEqual(P2.current_value, [3, 6, 10, 15, 21])
-
-    # def test_UpdateFromParent(self):
-    #     opt = optics.Fluorescence()
-    #     sample = features.DummyFeature(voxel_size=opt.voxel_size)
-    #     together = opt(sample)
-    #     together.update()
-    #     self.assertEqual(
-    #         tuple(opt.voxel_size.current_value),
-    #         tuple(opt.voxel_size.current_value),
-    #     )
-
     def test_PropertyDict(self):
         property_dict = properties.PropertyDict(
             P1=properties.Property(1),

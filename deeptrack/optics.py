@@ -15,6 +15,7 @@ Brightfield
     Images coherently illuminated samples.
 """
 
+from deeptrack.backend.units import ConversionTable
 from deeptrack.properties import PropertyDict, propagate_data_to_dependencies
 import numpy as np
 from .features import DummyFeature, Feature, StructuralFeature
@@ -22,6 +23,9 @@ from .image import Image, pad_image_to_fft
 from .types import ArrayLike, PropertyLike
 
 from scipy.ndimage import convolve
+
+from pint import Context
+from . import units as u
 
 
 class Microscope(StructuralFeature):
@@ -125,12 +129,17 @@ class Optics(Feature):
 
     """
 
+    __conversion_table__ = ConversionTable(
+        wavelength=(u.meter, u.meter),
+        resolution=(u.meter, u.meter),
+    )
+
     def __init__(
         self,
         NA: PropertyLike[float] = 0.7,
         wavelength: PropertyLike[float] = 0.66e-6,
         magnification: PropertyLike[float] = 10,
-        resolution: PropertyLike[float or ArrayLike[float]] = (1e-6, 1e-6, 1e-6),
+        resolution: PropertyLike[float or ArrayLike[float]] = 1e-6,
         refractive_index_medium: PropertyLike[float] = 1.33,
         padding: PropertyLike[ArrayLike[int]] = (10, 10, 10, 10),
         output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
@@ -148,6 +157,10 @@ class Optics(Feature):
                 resolution = (*resolution, np.min(resolution))
             return np.array(resolution) / (magnification)
 
+        def get_context(resolution, magnification):
+            ctx = Context()
+            ctx.redefine("pixel = {} m".format(resolution / magnification))
+
         super().__init__(
             NA=NA,
             wavelength=wavelength,
@@ -156,9 +169,8 @@ class Optics(Feature):
             resolution=resolution,
             padding=padding,
             output_region=output_region,
-            voxel_size=lambda resolution, magnification: get_voxel_size(
-                resolution, magnification
-            ),
+            voxel_size=get_voxel_size,
+            context=get_context,
             limits=None,
             fields=None,
             **kwargs

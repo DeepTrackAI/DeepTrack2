@@ -18,6 +18,7 @@ Ellipsoid
 """
 
 
+from deeptrack.backend.units import ConversionTable
 from typing import Callable, Tuple
 import numpy as np
 
@@ -25,6 +26,7 @@ from . import backend as D
 from .features import Feature, MERGE_STRATEGY_APPEND
 from . import pad_image_to_fft, Image
 from .types import PropertyLike, ArrayLike
+from . import units as u
 import warnings
 
 
@@ -68,6 +70,9 @@ class Scatterer(Feature):
 
     __list_merge_strategy__ = MERGE_STRATEGY_APPEND
     __distributed__ = False
+    __conversion_table__ = ConversionTable(
+        position=(u.pixel, u.pixel), z=(u.pixel, u.pixel), voxel_size=(u.meter, u.meter)
+    )
 
     def __init__(
         self,
@@ -230,6 +235,11 @@ class Ellipse(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
+    __conversion_table__ = ConversionTable(
+        radius=(u.meter, u.meter),
+        rotation=(u.radian, u.radian),
+    )
+
     def __init__(
         self,
         radius: PropertyLike[float] = 1e-6,
@@ -303,6 +313,10 @@ class Sphere(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
+    __conversion_table__ = ConversionTable(
+        radius=(u.meter, u.meter),
+    )
+
     def __init__(self, radius: PropertyLike[float] = 1e-6, **kwargs):
         super().__init__(radius=radius, **kwargs)
 
@@ -345,6 +359,11 @@ class Ellipsoid(Scatterer):
     upsample : int
         Upsamples the calculations of the pixel occupancy fraction.
     """
+
+    __conversion_table__ = ConversionTable(
+        radius=(u.meter, u.meter),
+        rotation=(u.radian, u.radian),
+    )
 
     def __init__(
         self,
@@ -477,6 +496,14 @@ class MieScatterer(Scatterer):
         The position in the direction normal to the
         camera plane. Used if `position` is of length 2.
     """
+
+    __conversion_table__ = ConversionTable(
+        radius=(u.meter, u.meter),
+        polarization_angle=(u.radian, u.radian),
+        collection_angle=(u.radian, u.radian),
+        wavelength=(u.meter, u.meter),
+        offset_z=(u.pixel, u.meter),
+    )
 
     def __init__(
         self,
