@@ -49,8 +49,6 @@ class Microscope(StructuralFeature):
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
 
-        self._objective.add_feature(self._sample)
-
     def get(self, image, **kwargs):
 
         # Grab properties from the objective to pass to the sample
