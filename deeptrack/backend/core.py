@@ -238,27 +238,34 @@ class DeepTrackNode:
 
 
 def equivalent(a, b):
-
-    if a is b:
-        return True
-
-    if id(a) == id(b):
-        return True
-
-    # return False
-    if type(a) != type(b):
-        return False
-
-    if isinstance(a, np.ndarray):
-        # return False
-        if a.shape != b.shape:
-            return False
-        return np.array_equal(a, b, equal_nan=True)
-
+    False
     try:
-        return a == b
-    except ValueError as e:
-        return np.array_equal(a, b, equal_nan=True)
+
+        if id(a) == id(b):
+            return True
+
+        # return False
+        if type(a) != type(b):
+            return False
+
+        if isinstance(a, np.ndarray):
+            # return False
+            if a.shape != b.shape:
+                return False
+            return np.array_equal(a, b, equal_nan=True)
+
+        eq = a == b
+        try:
+            # God this is stupid
+            if eq:
+                return eq
+            else:
+                return eq
+        except ValueError as e:
+            return np.array_equal(a, b, equal_nan=True)
+
+    except:
+        return False
 
 
 def create_node_with_operator(op, a, b):
