@@ -82,6 +82,7 @@ class Scatterer(Feature):
         position_unit: PropertyLike[str] = "pixel",
         upsample: PropertyLike[int] = 1,
         voxel_size=None,
+        pixel_size=None,
         **kwargs
     ):
         self._processed_properties = False
@@ -92,24 +93,14 @@ class Scatterer(Feature):
             position_unit=position_unit,
             upsample=upsample,
             voxel_size=voxel_size,
+            pixel_size=pixel_size,
             **kwargs,
         )
 
     def _process_properties(self, properties: dict) -> dict:
         # Rescales the position property
+        properties = super()._process_properties(properties)
         self._processed_properties = True
-        if "position" in properties:
-
-            if properties["position_unit"] == "meter":
-                properties["position"] = (
-                    np.array(properties["position"])
-                    / np.array(properties["voxel_size"])[: len(properties["position"])]
-                )
-                properties["z"] = (
-                    np.array(properties["z"])
-                    / np.array(properties["voxel_size"])[: len(properties["position"])]
-                )
-
         return properties
 
     def _process_and_get(
@@ -422,15 +413,15 @@ class Ellipsoid(Scatterer):
 
     def get(self, image, radius, rotation, voxel_size, **kwargs):
 
-        radius_in_pixels = radius / voxel_size
+        radius_in_pixels = radius
 
-        max_rad = np.max(radius) / voxel_size
+        max_rad = np.max(radius)
         rad_ceil = np.ceil(max_rad)
 
         # Create grid to calculate on
-        x = np.arange(-rad_ceil[0], rad_ceil[0])
-        y = np.arange(-rad_ceil[1], rad_ceil[1])
-        z = np.arange(-rad_ceil[2], rad_ceil[2])
+        x = np.arange(-rad_ceil, rad_ceil)
+        y = np.arange(-rad_ceil, rad_ceil)
+        z = np.arange(-rad_ceil, rad_ceil)
         X, Y, Z = np.meshgrid(x, y, z)
 
         # Rotate the grid

@@ -1,3 +1,4 @@
+from numpy import ndarray
 from pint import Quantity, Unit, Context
 from .. import units as u
 
@@ -19,7 +20,9 @@ class ConversionTable:
             ), "Each element in the conversion table needs to be a tuple of two units"
         self.conversions = conversions
 
-    def convert(self, context=None, **kwargs):
+    def convert(self, **kwargs):
+
+        pixel_size = kwargs.get("pixel_size", 1)
 
         for key, val in self.conversions.items():
 
@@ -28,15 +31,17 @@ class ConversionTable:
 
             quantity = kwargs[key]
 
+            if not isinstance(quantity, (int, float, list, tuple, ndarray, Quantity)):
+                continue
+
             default_unit, desired_unit = val
 
             # If not quantity, assume default
             if not isinstance(quantity, Quantity):
                 quantity = quantity * default_unit
-            if context:
-                quantity = quantity.to(desired_unit, context)
-            else:
-                quantity = quantity.to(desired_unit)
+
+            quantity = quantity.to(desired_unit, "dt", pixel_size=pixel_size)
+
             quantity = quantity.to_reduced_units()
 
             kwargs[key] = quantity

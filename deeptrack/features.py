@@ -263,6 +263,7 @@ class Feature(DeepTrackNode):
 
     def bind_arguments(self, arguments):
         self.arguments = arguments
+        return self
 
     def plot(
         self,
@@ -396,12 +397,14 @@ class Feature(DeepTrackNode):
         # Optional hook for subclasses to preprocess input before calling
         # the method .get()
 
-        converted_properties = self.__conversion_table__.convert(**propertydict)
+        for cl in type(self).mro():
+            if hasattr(cl, "__conversion_table__"):
+                propertydict = cl.__conversion_table__.convert(**propertydict)
 
-        for key, val in converted_properties.items():
+        for key, val in propertydict.items():
             if isinstance(val, Quantity):
-                converted_properties[key] = val.magnitude
-        return converted_properties
+                propertydict[key] = val.magnitude
+        return propertydict
 
     def sample(self, **kwargs) -> "Feature":
         """Returns the feature"""
@@ -597,7 +600,7 @@ class Subtract(Feature):
         super().__init__(value=value, **kwargs)
 
     def get(self, image, value, **kwargs):
-        return image - value
+        return value - image
 
 
 class Multiply(Feature):
@@ -884,6 +887,8 @@ class Probability(StructuralFeature):
 
 
 class Repeat(Feature):
+    __distributed__ = False
+
     def __init__(self, feature, N, **kwargs):
         super().__init__(N=N, **kwargs)
         self.feature = self.add_feature(feature)

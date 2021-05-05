@@ -15,6 +15,7 @@ Brightfield
     Images coherently illuminated samples.
 """
 
+from pint.quantity import Quantity
 from deeptrack.backend.units import ConversionTable
 from deeptrack.properties import PropertyDict, propagate_data_to_dependencies
 import numpy as np
@@ -47,6 +48,8 @@ class Microscope(StructuralFeature):
         super().__init__(**kwargs)
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
+
+        self._objective.add_feature(self._sample)
 
     def get(self, image, **kwargs):
 
@@ -132,6 +135,7 @@ class Optics(Feature):
     __conversion_table__ = ConversionTable(
         wavelength=(u.meter, u.meter),
         resolution=(u.meter, u.meter),
+        voxel_size=(u.meter, u.meter),
     )
 
     def __init__(
@@ -148,18 +152,15 @@ class Optics(Feature):
         **kwargs
     ):
         def get_voxel_size(resolution, magnification):
-            if (
-                not isinstance(resolution, (list, tuple, np.ndarray))
-                or len(resolution) == 1
-            ):
-                resolution = (resolution,) * 3
-            elif len(resolution) == 2:
-                resolution = (*resolution, np.min(resolution))
-            return np.array(resolution) / (magnification)
 
-        def get_context(resolution, magnification):
-            ctx = Context()
-            ctx.redefine("pixel = {} m".format(resolution / magnification))
+            return np.ones((3,)) * resolution / magnification
+
+        def get_pixel_size(resolution, magnification):
+            pixel_size = resolution / magnification
+            if isinstance(pixel_size, Quantity):
+                return pixel_size.to(u.meter).magnitude
+            else:
+                return pixel_size
 
         super().__init__(
             NA=NA,
@@ -170,7 +171,7 @@ class Optics(Feature):
             padding=padding,
             output_region=output_region,
             voxel_size=get_voxel_size,
-            context=get_context,
+            pixel_size=get_pixel_size,
             limits=None,
             fields=None,
             **kwargs
@@ -180,11 +181,6 @@ class Optics(Feature):
         self.illumination = (
             self.add_feature(illumination) if illumination else DummyFeature()
         )
-
-    def _process_and_get(self, image, **kwargs):
-        output = super()._process_and_get(image, **kwargs)
-
-        return output
 
     def _pupil(
         self,
@@ -232,7 +228,8 @@ class Optics(Feature):
         if include_aberration:
             pupil = self.pupil
             if isinstance(pupil, Feature):
-                pupil_function = pupil(pupil_function, **kwargs)
+
+                pupil_function = pupil(pupil_function)
             elif isinstance(pupil, np.ndarray):
                 pupil_function *= pupil
 
