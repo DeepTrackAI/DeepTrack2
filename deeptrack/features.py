@@ -192,7 +192,10 @@ class Feature(DeepTrackNode):
         image_list = self._format_input(image_list)
 
         # Get the input arguments to the method .get()
-        feature_input = self.properties(replicate_index=replicate_index)
+
+        feature_input = self.properties(replicate_index=replicate_index).copy()
+
+
         if replicate_index is not None:
             feature_input["replicate_index"] = replicate_index
 
@@ -897,12 +900,11 @@ class Repeat(Feature):
         for n in range(N):
 
             if replicate_index is None:
-                index = n
+                index = (n,)
             elif isinstance(replicate_index, int):
                 index = (replicate_index, n)
             else:
                 index = replicate_index + (n,)
-
             image = self.feature(image, replicate_index=index)
 
         return image
