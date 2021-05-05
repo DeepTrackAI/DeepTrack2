@@ -1,4 +1,5 @@
 from copy import copy, deepcopy
+import re
 import numpy as np
 import operator
 
@@ -32,7 +33,26 @@ class DeepTrackDataList:
         self.list = []
         self.default = None
 
+    def has_index(self, index):
+        if index is None:
+            return self.default is not None
+
+        if isinstance(index, int):
+            return len(self.list) > index
+
+        if isinstance(index, tuple):
+            index, *rest = index
+
+            if not self.has_index(index) or isinstance(
+                self.list[index], DeepTrackDataObject
+            ):
+                return False
+
+            else:
+                return self.list[index].has_index(rest)
+
     def __getitem__(self, replicate_index):
+
         if self.default is not None:
             return self.default
 
@@ -100,14 +120,19 @@ class DeepTrackNode:
     def is_valid(self, replicate_index=None):
         return self.data[replicate_index].is_valid()
 
+    def has_index(self, replicate_index):
+        return self.data.has_index(replicate_index)
+
     def invalidate(self, replicate_index=None):
         for child in self.recurse_children():
-            child.data[replicate_index].invalidate()
+            if child.has_index(replicate_index):
+                child.data[replicate_index].invalidate()
         return self
 
     def validate(self, replicate_index=None):
         for child in self.recurse_children():
-            child.data[replicate_index].validate()
+            if child.has_index(replicate_index):
+                child.data[replicate_index].validate()
         return self
 
     def update(self):
@@ -238,7 +263,13 @@ class DeepTrackNode:
 
 
 def equivalent(a, b):
-    False
+    if a is b:
+        return True
+
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == 0 and len(b) == 0
+
+    return False
     try:
 
         if id(a) == id(b):
