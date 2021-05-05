@@ -600,7 +600,7 @@ class Subtract(Feature):
         super().__init__(value=value, **kwargs)
 
     def get(self, image, value, **kwargs):
-        return value - image
+        return image - value
 
 
 class Multiply(Feature):
