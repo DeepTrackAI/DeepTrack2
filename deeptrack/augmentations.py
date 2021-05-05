@@ -93,7 +93,7 @@ class Augmentation(Feature):
                 self.seed()
                 augmented_image = Image(self.get(image, **kwargs))
                 augmented_image.merge_properties_from(image)
-                self.update_properties(augmented_image)
+                self.update_properties(augmented_image, **kwargs)
                 augmented_list.append(augmented_image)
 
             new_list_of_lists.append(augmented_list)
