@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import os  
 import numpy as np
-from deeptrack.features import LoadImage
+import cv2
 from utils import Normalize_image, get_mean_net_and_gross_distance
 
 def plot_image(image):
@@ -13,22 +13,40 @@ def plot_label(label_function, image):
     resolved_image = image.resolve()
     labels = label_function(resolved_image)
     no_of_labels = labels.shape[-1]
-    
-    plt.figure(figsize=(7,7*no_of_labels))
+    if type(resolved_image)==list:
+        shape = np.asarray(resolved_image).shape
+        tot_pixels = shape[1]+shape[2]
+        x_frac = shape[2]/tot_pixels
+        y_frac = shape[1]/tot_pixels
+    else:
+        shape = resolved_image.shape
+        tot_pixels = shape[0]+shape[1]
+        x_frac = shape[1]/tot_pixels
+        y_frac = shape[0]/tot_pixels
+
+    plt.figure(figsize=(15*x_frac, 15*no_of_labels*y_frac))
     for i in range(no_of_labels):
         plt.subplot(no_of_labels,1,i+1)
         plt.imshow(labels[..., i], cmap="gray")
     
 def plot_image_stack(im_stack):
     num_imgs = im_stack.shape[-1]
+    
+    shape = im_stack.shape
+    tot_pixels = shape[1]+shape[2]
+    x_frac = shape[2]/tot_pixels
+    y_frac = shape[1]/tot_pixels
+    
+    plt.figure(figsize=(15*x_frac, 15*num_imgs*y_frac))
     for i in range(num_imgs):
         plt.subplot(num_imgs,1,i+1)
         plt.imshow(im_stack[0,:,:,i], cmap='gray')
         
         
-def plot_batch(train_images):
+def plot_batch(images, batch_function):
+    train_images = batch_function(images.resolve())
     num_imgs = train_images.shape[-1]
-    plt.figure(figsize=(7, 7*num_imgs))
+    plt.figure(figsize=(10, 10*num_imgs))
     
     for i in range(train_images.shape[-1]):
         plt.subplot(num_imgs,1,i+1)
@@ -38,22 +56,33 @@ def plot_batch(train_images):
 def plot_prediction(model=None, im_stack=None, **kwargs):
     predictions = model.predict(im_stack)
     num_imgs = predictions.shape[-1]
-    plt.figure(figsize=(7, 7*num_imgs))
+    shape = im_stack.shape
+    tot_pixels = shape[1]+shape[2]
+    x_frac = shape[2]/tot_pixels
+    y_frac = shape[1]/tot_pixels
+    
+    plt.figure(figsize=(15*x_frac, 15*num_imgs*y_frac))
     for i in range(num_imgs):
         plt.subplot(num_imgs,1,i+1)
         plt.imshow(predictions[0,:,:,i], cmap='gray')
 
 
 def plot_net_vs_gross_distance(list_of_plankton=None, **kwargs):
-    net_distances, gross_distances = get_mean_net_and_gross_distance(list_of_plankton)
+    net_distances, gross_distances = get_mean_net_and_gross_distance(list_of_plankton, **kwargs)
     plt.figure(figsize=(8,8))
     plt.axis([0, max(gross_distances[gross_distances!=0])*1.1, 0, max(net_distances[net_distances!=0])*1.1])
-    plt.plot(gross_distances[gross_distances!=0], net_distances[net_distances!=0], **kwargs)
+    plt.plot(gross_distances[gross_distances!=0], net_distances[net_distances!=0])
     plt.xlabel('mean gross distance')
     plt.ylabel('mean net distance')
 
 
+def load_and_plot_folder_image(folder_path, frame):
+    list_paths = os.listdir(folder_path)   
+    image = cv2.imread(folder_path +'\\' + list_paths[frame], 0)
+    plt.figure(figsize=(15,15))
 
+    plt.imshow(image, cmap='gray')
+    return image
 
 
 def plot_and_save_track(no_of_frames=10,
@@ -85,8 +114,7 @@ def plot_and_save_track(no_of_frames=10,
     list_paths = os.listdir(folder_path)
     for i, j in enumerate(range(frame_im0, frame_im0 + no_of_frames)):
         fig, ax = plt.subplots(figsize=(10, 10), constrained_layout=True)
-        
-        im = Normalize_image(np.asarray(LoadImage(folder_path +'\\' + list_paths[j]).resolve()))
+        im = cv2.imread(folder_path +'\\' + list_paths[j], 0)
         dims = im.shape
 
         scale_height = dims[0]/im_size_height
@@ -138,3 +166,11 @@ def plot_and_save_track(no_of_frames=10,
             plt.show()
             
             
+def plot_found_positions(positions, width=1280, height=1024):
+    plt.figure(figsize=(10,10))
+    plt.scatter(positions[0][:,1], positions[0][:,0], cmap='gray', marker='.', facecolor='white')
+    plt.gca().set_xlim([0, width])
+    plt.gca().set_ylim([0, height])
+    plt.gca().invert_yaxis()
+    plt.gca().set_facecolor('xkcd:black')
+    plt.gca().set_aspect('equal', adjustable='box')

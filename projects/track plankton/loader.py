@@ -25,11 +25,12 @@ def stationary_spherical_plankton(im_size_height, im_size_width, radius, label=0
     return plankton
 
 
+
 def moving_spherical_plankton(im_size_height, im_size_width, radius, label=0, diffusion_constant_coeff=1):
     plankton = Sphere(
     position_unit="pixel",          # Units of position (default meter)
     position=lambda: np.random.rand(2) * np.array([im_size_height, im_size_width]),
-    z= lambda:  -1.5 + np.random.rand() * 0.5,
+    z= lambda:  -1.0 + np.random.rand() * 0.5,
     radius=lambda: ((radius) + np.random.rand() * 0.5 * radius), # Dimensions of the principal axes of the ellipsoid
     refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
     upsample=4,                      # Amount the resolution is upsampled for accuracy
@@ -61,7 +62,7 @@ def moving_ellipsoid_plankton(im_size_height, im_size_width, radius=(1.5e-7, 9e-
     plankton = Ellipsoid(
     position_unit="pixel",          # Units of position (default meter)
     position=lambda: np.random.rand(2) * np.array([im_size_height, im_size_width]),
-    z= lambda:  -1.5 + np.random.rand() * 0.5,
+    z= lambda:  -1.0 + np.random.rand() * 0.5,
     radius=lambda: (radius + np.random.rand(3) * (1e-6) * radius), # Dimensions of the principal axes of the ellipsoid
     rotation=lambda: np.pi * np.random.rand(),
     refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
@@ -114,19 +115,12 @@ def plankton_brightfield(im_size_height, im_size_width, gradient_amp):
     return brightfield_microscope
 
 def create_sample(*arg):
-    if len(arg)==2:
-        no_of_plankton = lambda: np.random.randint(int(arg[1]*0.66), int(arg[1]*1.33))
-        return arg[0]**no_of_plankton
-    else:
-        no_of_plankton1 = lambda: np.random.randint(int(arg[1]*0.66), int(arg[1]*1.33))
-        no_of_plankton2 = lambda: np.random.randint(int(arg[3]*0.66), int(arg[3]*1.33))
-        
-        sample = Branch(arg[0]**no_of_plankton1, arg[2]**no_of_plankton2)
-        if len(arg) != 4:
-            for i in range(4, len(arg), 2):
-                no_of_plankton = lambda: np.random.randint(int(arg[i+1]*0.66), int(arg[i+1]*1.33))
-                sample = Branch(sample, arg[i]**no_of_plankton)
-            return sample
+    no_of_plankton = lambda: np.random.randint(int(arg[1]*0.66), int(arg[1]*1.33))
+    sample = arg[0]**no_of_plankton
+    for i in range(2, len(arg), 2):
+        no_of_plankton = lambda: np.random.randint(int(arg[i+1]*0.66), int(arg[i+1]*1.33))
+        sample = Branch(sample, arg[i]**no_of_plankton)
+    return sample
 
 def create_image(noise_amp, sample, microscope, norm_min, norm_max):
     noise = Poisson(snr=lambda: (60 + np.random.rand() * 30) * 1/(max(0.01,noise_amp)))

@@ -1,6 +1,5 @@
 import numpy as np
 import os  
-from deeptrack.features import LoadImage
 import cv2
 from scipy.ndimage import label
 from scipy.spatial.distance import cdist
@@ -16,7 +15,7 @@ def Normalize_image(image, min_value=0, max_value=1, **kwargs):
     return image - np.min(image) + min_value
 
 
-def RemoveRunningMean(image, path_folder=None, tot_no_of_frames=None, center_frame=None, im_height=None, im_width=None, **kwargs):
+def RemoveRunningMean(image, path_folder=None, tot_no_of_frames=None, center_frame=None, im_width=None, im_height=None, **kwargs):
     list_paths = os.listdir(path_folder)
     first_file_format = list_paths[0][-3:]
     for i in range(len(list_paths)):
@@ -24,14 +23,14 @@ def RemoveRunningMean(image, path_folder=None, tot_no_of_frames=None, center_fra
             print('Only the images to be analyzed can be in the folder with the images.')
             break
     frames_one_dir = int(tot_no_of_frames/2)
-    first_image = np.asarray(LoadImage(path_folder +'\\' + list_paths[0]).resolve())
+    first_image = cv2.imread(path_folder +'\\' + list_paths[0], 0)
     mean_image = np.zeros(first_image.shape)
     start_point, end_point = max(center_frame - frames_one_dir,0), min(center_frame + frames_one_dir + 1, len(list_paths))
     for i in range(start_point, end_point):
-        mean_image += np.asarray(LoadImage(path_folder +'\\' + list_paths[max(i,0)]).resolve()) / tot_no_of_frames
-    
-    img = cv2.imread(path_folder +'\\' + list_paths[center_frame], 0)
-    resized_center_image = Normalize_image(cv2.resize(img, dsize=(im_width, im_height), interpolation=cv2.INTER_AREA))
+        mean_image += Normalize_image(cv2.imread(path_folder +'\\' + list_paths[max(i,0)], 0)) / tot_no_of_frames
+
+    img = Normalize_image(cv2.imread(path_folder +'\\' + list_paths[center_frame], 0))
+    resized_center_image = cv2.resize(img, dsize=(im_width, im_height), interpolation=cv2.INTER_AREA)
     resized_mean_image = Normalize_image(cv2.resize(mean_image, dsize=(im_width, im_height), interpolation=cv2.INTER_AREA))
     
     return Normalize_image(resized_center_image-resized_mean_image)
@@ -41,7 +40,7 @@ def get_mean_image(folder_path, im_size_width, im_size_height):
     mean_img = cv2.imread(folder_path +'\\' + list_paths[0], 0)/len(list_paths)
     for i in range(1,len(list_paths)):
         mean_img =+ cv2.imread(folder_path +'\\' + list_paths[i], 0)/len(list_paths)
-    resized_mean_image = Normalize_image(cv2.resize(mean_img, dsize=(im_size_width, im_size_height), interpolation=cv2.INTER_AREA))
+    resized_mean_image = cv2.resize(mean_img, dsize=(im_size_width, im_size_height), interpolation=cv2.INTER_AREA)
     return resized_mean_image
 
 
@@ -297,7 +296,7 @@ def split_plankton(list_of_plankton=None, percentage_threshold=0.5, **kwargs):
     return plankton_track, plankton_dont_track
 
 
-def get_mean_net_and_gross_distance(list_of_plankton=None, use_3D_dist=False):
+def get_mean_net_and_gross_distance(list_of_plankton=None, use_3D_dist=False, **kwargs):
     no_of_timesteps = list_of_plankton[list(list_of_plankton.keys())[0]].number_of_timesteps
     no_of_plankton = len(list_of_plankton)
     mean_net_distances = np.zeros([no_of_timesteps,1])
