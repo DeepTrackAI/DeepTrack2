@@ -96,9 +96,12 @@ class NormalizeMinMax(Feature):
         super().__init__(min=min, max=max, **kwargs)
 
     def get(self, image, min, max, **kwargs):
-        image = image / (np.max(image) - np.min(image)) * (max - min)
+        image = image / np.ptp(image) * (max - min)
         image = image - np.min(image) + min
-        image[np.isnan(image)] = 0
+        try:
+            image[np.isnan(image)] = 0
+        except TypeError:
+            pass
         return image
 
 
