@@ -661,10 +661,9 @@ def _get_position(image, mode="corner", return_z=False):
         )
     else:
         shift = np.zeros((num_outputs))
+    position = np.array(image.get_property("position", default=None))
 
-    position = np.array(image.get_property("position"))
-
-    position[:2] = position[:2]
+    # position[:2] = position[:2]
 
     if position is None:
         return position
@@ -744,7 +743,8 @@ def _create_volume(
                 constant_values=0,
             )
         )
-        padded_scatterer.properties = scatterer.properties
+        padded_scatterer.merge_properties_from(scatterer)
+
         scatterer = padded_scatterer
         position = _get_position(scatterer, mode="corner", return_z=True)
         shape = np.array(scatterer.shape)
