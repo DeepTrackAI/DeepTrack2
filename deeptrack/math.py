@@ -105,6 +105,27 @@ class NormalizeMinMax(Feature):
         return image
 
 
+class NormalizeStandard(Feature):
+    """Image normalization.
+
+    Normalize the image to have sigma 1 and mean 0.
+
+    Parameters
+    ----------
+    min : float
+        The minimum of the transformation.
+    max : float
+        The maximum of the transformation.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def get(self, image, **kwargs):
+
+        return (image - np.mean(image)) / np.std(image)
+
+
 class Blur(Feature):
     def __init__(
         self, filter_function: Callable, mode: PropertyLike[str] = "reflect", **kwargs
@@ -140,7 +161,7 @@ class AverageBlur(Blur):
 
         weights = np.ones(ksize) / np.prod(ksize)
 
-        return utils.safe_call(ndimage, input=input, weights=weights, **kwargs)
+        return utils.safe_call(ndimage.convolve, input=input, weights=weights, **kwargs)
 
 
 class GaussianBlur(Blur):
