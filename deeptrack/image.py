@@ -17,50 +17,95 @@ pad_image_to_fft(image: Image, axes = (0, 1))
 """
 
 import numpy as np
+import numpy.lib.mixins
+import operator as ops
+from tensorflow import Tensor
+from .backend.tensorflow_bindings import TENSORFLOW_BINDINGS
 
 
-class Image(np.ndarray):
-    """Subclass of numpy ndarray
+def _binary_method(op):
+    """Implement a forward binary method with a noperator, e.g., __add__."""
 
-    The class Image is used by features to resolve images and store
-    the current values of the properties of each feature in the feature
-    series. These properties are stored in the field `properties`
-    as a list of dictionaries, in the same order as that in which
-    the features have been evaluated.
+    def func(self, other):
+        if isinstance(other, Image):
+            return Image(op(self._value, other._value)).merge_properties_from(
+                [self, other]
+            )
+        else:
+            return Image(op(self._value, other)).merge_properties_from(self)
 
-    The field `properties` is used to store and extract information
-    about how an image has been generated.
+    func.__name__ = "__{}__".format(op.__name__)
+    return func
 
-    Parameters
-    ----------
-    input_array : array_like
-        An array_like object that is used to instantiate the ndarray.
-    properties : list of dicts, optional
-        Optional parameter to set as the initial value for the field properties.
 
-    Attributes
-    ----------
-    properties : list
-        List of dictionaries of the current value of all properties of
-        the features used to resolve the image.
+def _reflected_binary_method(op):
+    """Implement a reflected binary method with a noperator, e.g., __radd__."""
 
-    """
+    def func(self, other):
+        if isinstance(other, Image):
+            return Image(op(other._value, self._value)).merge_properties_from(
+                [other, self]
+            )
+        else:
+            return Image(op(other, self._value)).merge_properties_from(self)
 
-    # Used by numpy to determine output type of u_funcs.
-    # This ensures that the output will always be an Image
-    __array_priority__ = 999
+    func.__name__ = "__r{}__".format(op.__name__)
+    return func
 
-    def __new__(cls, input_array, properties=None):
-        # Converts input to ndarray, and then to an Image
-        # In particular, it creates the properties
 
-        image = np.array(input_array).view(cls)
-        if properties is None:
-            # If input_array has properties attribute, retrieve a copy of it
-            properties = getattr(input_array, "properties", [])[:]
-        image.properties = properties
+def _inplace_binary_method(op):
+    """Implement a reflected binary method with a noperator, e.g., __radd__."""
 
-        return image
+    def func(self, other):
+        if isinstance(other, Image):
+            self._value = op(self._value, other._value)
+            self.merge_properties_from(other)
+        else:
+            self._value = op(self._value, other)
+
+        return self
+
+    func.__name__ = "__i{}__".format(op.__name__)
+    return func
+
+
+def _numeric_methods(op):
+    """Implement forward, reflected and inplace binary methods with an ufunc."""
+    return (
+        _binary_method(op),
+        _reflected_binary_method(op),
+        _inplace_binary_method(op),
+    )
+
+
+def _unary_method(
+    op,
+):
+    """Implement a unary special method with an ufunc."""
+
+    def func(self):
+        return Image(op(self._value)).merge_properties_from(self)
+
+    func.__name__ = "__{}__".format(op)
+    return func
+
+
+class Image:
+    def __init__(self, value):
+        super().__init__()
+        self._value = self._view(value)
+
+        # Override magic methods
+        # if not hasattr(self._value, "__len__"):
+        #     del self.__dict__["__len__"]
+        # self.__len__ = getattr(self._value, "__len__", None)
+        # self.__float__ = getattr(self._value, "__float__", None)
+        # self.__int__ = getattr(self._value, "__int__", None)
+
+        if isinstance(value, Image):
+            self.properties = list(value.properties)
+        else:
+            self.properties = []
 
     def append(self, property_dict: dict):
         """Appends a dictionary to the properties list.
@@ -131,61 +176,186 @@ class Image(np.ndarray):
             The Image to retrieve properties from.
 
         """
+        if isinstance(other, Image):
+            for new_prop in other.properties:
 
-        for new_prop in other.properties:
+                should_append = True
+                for my_prop in self.properties:
 
-            should_append = True
-            for my_prop in self.properties:
+                    if id(my_prop) == id(new_prop):
 
-                if id(my_prop) == id(new_prop):
+                        # Prop already added
+                        should_append = False
+                        break
 
-                    # Prop already added
-                    should_append = False
-                    break
-
-            if should_append:
-                self.append(new_prop)
-
+                if should_append:
+                    self.append(new_prop)
+        elif isinstance(other, np.ndarray):
+            return self
+        else:
+            try:
+                for i in other:
+                    self.merge_properties_from(i)
+            except TypeError:
+                pass
         return self
 
-    def __array_wrap__(self, image_after_function, context=None):
-        # Called at end when a function is called on an image
-        # It might be that the information about properties is lost,
-        # this method restores it.
-        # This method also correctly concatenate the the properties of two images.
+    def _view(self, value):
+        if isinstance(value, Image):
+            return self._view(value._value)
+        if isinstance(value, (np.ndarray, list, tuple, int, float, bool)):
+            return np.array(value)
+        if isinstance(value, Tensor):
+            return value
 
-        if image_after_function is self:  # for in-place operations
-            image_with_restored_properties = image_after_function
+        return value
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+
+        if isinstance(self._value, Tensor):
+            if ufunc in TENSORFLOW_BINDINGS:
+                ufunc = TENSORFLOW_BINDINGS[ufunc]
+            else:
+                return NotImplemented
+
+        out = kwargs.get("out", ())
+
+        args = tuple(x._value if isinstance(x, Image) else x for x in inputs)
+
+        if out:
+            kwargs["out"] = tuple(x._value if isinstance(x, Image) else x for x in out)
+
+        results = getattr(ufunc, method)(*args, **kwargs)
+
+        if type(results) is tuple:
+
+            outputs = []
+            for result in results:
+                out = Image(result)
+                out.merge_properties_from(inputs)
+                outputs.append(out)
+
+            return tuple(outputs)
+        elif method == "at":
+            return None
         else:
-            image_with_restored_properties = Image(image_after_function)
+            result = Image(results)
+            result.merge_properties_from(inputs)
+            return result
 
-        if context is not None:
-            # context is information about operation
+    def __array_function__(self, func, types, args, kwargs):
 
-            func, args, _ = context
-            input_args = args[: func.nin]
+        # # Note: this allows subclasses that don't override
+        # # __array_function__ to handle DiagonalArray objects.
+        # if not all(issubclass(t, Image) for t in types):
+        #     return NotImplemented
+        values = [strip(arg) for arg in args]
 
-            for arg in input_args:
+        if isinstance(self._value, Tensor):
+            if func in TENSORFLOW_BINDINGS:
+                func = TENSORFLOW_BINDINGS[func]
+            else:
+                return NotImplemented
 
-                if arg is not self and isinstance(arg, Image):
-                    self.merge_properties_from(arg)
+        out = func(*values, **kwargs)
 
-        return image_with_restored_properties
+        if isinstance(out, bool):
+            return out
 
-    def __array_finalize__(self, image):
-        # Called when an image is created
-        # It might be that the information about properties is lost,
-        # this method restores it.
+        out = Image(out)
+        for inp in args:
+            if isinstance(inp, Image):
+                out.merge_properties_from(inp)
 
-        if image is None:
-            return
+        return out
 
-        # Ensure self has properties defined
-        self.properties = getattr(self, "properties", [])
+    def __array__(self):
+        return np.array(self._value)
 
-        # Merge from image if image is Image
-        if isinstance(image, Image):
-            self.merge_properties_from(image)
+    def __getattr__(self, key):
+        return getattr(self._value, key)
+
+    def __getitem__(self, idx):
+
+        idx = strip(idx)
+        out = Image(self._value.__getitem__(idx))
+        out.merge_properties_from([self, idx])
+        return out
+
+    def __setitem__(self, key, value):
+        key = strip(key)
+        value = strip(value)
+        o = self._value.__setitem__(key, value)
+        self.merge_properties_from([key, value])
+        return o
+
+    def __int__(self):
+        return int(self._value)
+
+    def __float__(self):
+        return float(self._value)
+
+    def __nonzero__(self):
+        return bool(self._value)
+
+    def __bool__(self):
+        return bool(self._value)
+
+    def __round__(self, *args, **kwargs):
+        return round(self._value, *args, **kwargs)
+
+    def __len__(self):
+        return len(self._value)
+
+    def __repr__(self):
+        return repr(self._value) + "\nWith properties:" + repr(self.properties)
+
+    __lt__ = _binary_method(ops.lt)
+    __le__ = _binary_method(ops.le)
+    __eq__ = _binary_method(ops.eq)
+    __ne__ = _binary_method(ops.ne)
+    __gt__ = _binary_method(ops.gt)
+    __ge__ = _binary_method(ops.ge)
+
+    # numeric methods
+    __add__, __radd__, __iadd__ = _numeric_methods(ops.add)
+    __sub__, __rsub__, __isub__ = _numeric_methods(ops.sub)
+    __mul__, __rmul__, __imul__ = _numeric_methods(ops.mul)
+    __matmul__, __rmatmul__, __imatmul__ = _numeric_methods(ops.matmul)
+    # Python 3 does not use __div__, __rdiv__, or __idiv__
+    __truediv__, __rtruediv__, __itruediv__ = _numeric_methods(ops.truediv)
+    __floordiv__, __rfloordiv__, __ifloordiv__ = _numeric_methods(ops.floordiv)
+    __mod__, __rmod__, __imod__ = _numeric_methods(ops.mod)
+    __divmod__ = _binary_method(divmod)
+    __rdivmod__ = _reflected_binary_method(divmod)
+    # __idivmod__ does not exist
+    # TODO: handle the optional third argument for __pow__?
+    __pow__, __rpow__, __ipow__ = _numeric_methods(ops.pow)
+    __lshift__, __rlshift__, __ilshift__ = _numeric_methods(ops.lshift)
+    __rshift__, __rrshift__, __irshift__ = _numeric_methods(ops.rshift)
+    __and__, __rand__, __iand__ = _numeric_methods(ops.and_)
+    __xor__, __rxor__, __ixor__ = _numeric_methods(ops.xor)
+    __or__, __ror__, __ior__ = _numeric_methods(ops.or_)
+
+    # unary methods
+    __neg__ = _unary_method(ops.neg)
+    __pos__ = _unary_method(ops.pos)
+    __abs__ = _unary_method(ops.abs)
+    __invert__ = _unary_method(ops.invert)
+
+
+def strip(v):
+    if isinstance(v, Image):
+        return v._value
+
+    if isinstance(v, (list, tuple)):
+        return type(v)([strip(i) for i in v])
+
+    return v
+
+
+def array(v):
+    return np.array(strip(v))
 
 
 FASTEST_SIZES = [0]
