@@ -13,7 +13,7 @@ import numpy as np
 from typing import List
 import tensorflow.keras as keras
 from .features import Feature
-from .image import Image
+from .image import Image, array
 import threading
 import random
 import time
@@ -100,8 +100,8 @@ class Generator(keras.utils.Sequence):
                     if shuffle_batch:
                         self._shuffle(sub_batch, sub_labels)
 
-                    sub_batch = np.array(sub_batch)
-                    sub_labels = np.array(sub_labels)
+                    sub_batch = array(sub_batch)
+                    sub_labels = array(sub_labels)
 
                     # Console found batch_size with results
                     if sub_batch.ndim > ndim:
@@ -300,7 +300,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         batch_size = self._batch_size
 
         subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
-        outputs = [np.array(a) for a in list(zip(*subset))]
+        outputs = [array(a) for a in list(zip(*subset))]
         outputs = (outputs[0], *outputs[1:])
         return outputs
 
@@ -326,7 +326,7 @@ class ContinuousGenerator(keras.utils.Sequence):
             if self.batch_function:
                 new_image = self.batch_function(new_image)
 
-            new_image = np.array(new_image)
+            new_image = array(new_image)
             if new_image.ndim < self.ndim:
                 new_image = [new_image]
                 new_label = [new_label]
@@ -421,7 +421,7 @@ class CappedContinuousGenerator(ContinuousGenerator):
         subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
         for a in subset:
             a[-1] += 1
-        outputs = [np.array(a) for a in list(zip(*subset))]
+        outputs = [array(a) for a in list(zip(*subset))]
         outputs = (outputs[0], *outputs[1:])
         return outputs
 
