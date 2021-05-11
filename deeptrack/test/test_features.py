@@ -11,6 +11,8 @@ from numpy.testing._private.utils import assert_almost_equal
 
 from .. import features, Image, properties, utils
 
+from ..image import array
+
 import numpy as np
 import numpy.testing
 
@@ -56,12 +58,14 @@ def grid_test_features(
 
         if isinstance(output, list) and isinstance(expected_result, list):
             [
-                np.testing.assert_almost_equal(Image(a), Image(b))
+                np.testing.assert_almost_equal(array(a), array(b))
                 for a, b in zip(output, expected_result)
             ]
 
         else:
-            is_equal = np.array_equal(output, expected_result, equal_nan=True)
+            is_equal = np.array_equal(
+                array(output), array(expected_result), equal_nan=True
+            )
 
             tester.failIf(
                 not is_equal,
@@ -439,7 +443,7 @@ class TestFeatures(unittest.TestCase):
         for n in range(10):
             feature.update()
             output_image = feature()
-            self.assertEqual(output_image, n)
+            self.assertEqual(np.array(output_image), np.array(n))
 
     def test_Feature_repeat_random(self):
         feature = features.Value(value=0) >> (
@@ -499,7 +503,7 @@ class TestFeatures(unittest.TestCase):
                 )
             )
             self.assertEqual(len(added_values), 8)
-            self.assertAlmostEqual(sum(added_values) - 3 * 4, float(feature()))
+            np.testing.assert_almost_equal(sum(added_values) - 3 * 4, feature())
 
     def test_nested_Duplicate(self):
 

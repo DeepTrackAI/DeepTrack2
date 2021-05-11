@@ -25,75 +25,68 @@ def grid_test_features(
 
     for f_a_input in feature_inputs:
 
-        for axis in [None] + [range(4)]:
+        for axis in [None]:
             for distributed in [True, False]:
-                for keepdims in [True, False]:
-                    inp = features.Value(f_a_input)
+                inp = features.Value(f_a_input)
 
-                    f_a = feature(
-                        inp,
-                        axis=axis,
-                        distributed=distributed,
-                        keepdims=keepdims,
-                        q=lambda: np.random.rand(),
-                    )
-                    f_b = inp >> feature(
-                        axis=axis,
-                        distributed=distributed,
-                        keepdims=keepdims,
-                        q=lambda: np.random.rand(),
-                    )
+                f_a = feature(
+                    inp,
+                    axis=axis,
+                    distributed=distributed,
+                    q=lambda: np.random.rand(),
+                )
+                f_b = inp >> feature(
+                    axis=axis,
+                    distributed=distributed,
+                    q=lambda: np.random.rand(),
+                )
 
-                    for f in [f_a, f_b]:
-                        try:
-                            output = f()
-                        except Exception as e:
-                            tester.assertRaises(
-                                type(e),
-                                lambda: expected_result_function(
-                                    f_a_input,
-                                    axis=axis,
-                                    keepdims=keepdims,
-                                    q=0.95,
-                                ),
-                            )
-                            continue
-
-                        if distributed and isinstance(f_a_input, list):
-                            expected_result = [
-                                expected_result_function(
-                                    i,
-                                    axis=axis,
-                                    keepdims=keepdims,
-                                    q=0.95,
-                                )
-                                for i in f_a_input
-                            ]
-                        elif not distributed and not isinstance(f_a_input, list):
-                            expected_result = expected_result_function(
-                                [f_a_input],
-                                axis=axis,
-                                keepdims=keepdims,
-                                q=output.get_property("q"),
-                            )
-                        else:
-                            expected_result = expected_result_function(
+                for f in [f_a, f_b]:
+                    try:
+                        output = f()
+                    except Exception as e:
+                        tester.assertRaises(
+                            type(e),
+                            lambda: expected_result_function(
                                 f_a_input,
                                 axis=axis,
-                                keepdims=keepdims,
-                                q=output.get_property("q"),
+                                q=0.95,
+                            ),
+                        )
+                        continue
+
+                    if distributed and isinstance(f_a_input, list):
+                        expected_result = [
+                            expected_result_function(
+                                i,
+                                axis=axis,
+                                q=0.95,
                             )
+                            for i in f_a_input
+                        ]
+                    elif not distributed and not isinstance(f_a_input, list):
+                        expected_result = expected_result_function(
+                            [f_a_input],
+                            axis=axis,
+                            q=output.get_property("q"),
+                        )
+                    else:
+                        expected_result = expected_result_function(
+                            f_a_input,
+                            axis=axis,
+                            q=output.get_property("q"),
+                        )
 
-                        if isinstance(output, list) and isinstance(
-                            expected_result, list
-                        ):
-                            [
-                                np.testing.assert_almost_equal(np.array(a), np.array(b))
-                                for a, b in zip(output, expected_result)
-                            ]
+                    if isinstance(output, list) and isinstance(expected_result, list):
+                        [
+                            np.testing.assert_almost_equal(np.array(a), np.array(b))
+                            for a, b in zip(output, expected_result)
+                        ]
 
-                        else:
-                            np.testing.assert_almost_equal(output, expected_result)
+                    else:
+                        np.testing.assert_almost_equal(
+                            np.array(output), np.array(expected_result)
+                        )
 
 
 # def array_equal(a, b):

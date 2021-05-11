@@ -44,12 +44,14 @@ def grid_test_features(
 
             if isinstance(output, list) and isinstance(expected_result, list):
                 [
-                    np.testing.assert_almost_equal(Image(a), Image(b))
+                    np.testing.assert_almost_equal(np.array(a), np.array(b))
                     for a, b in zip(output, expected_result)
                 ]
 
             else:
-                is_equal = np.array_equal(output, expected_result, equal_nan=True)
+                is_equal = np.array_equal(
+                    np.array(output), np.array(expected_result), equal_nan=True
+                )
 
                 tester.failIf(
                     not is_equal,
