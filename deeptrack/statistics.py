@@ -18,8 +18,11 @@ class Reducer(Feature):
         self.__distributed__ = feature_input["distributed"]
         return super()._process_and_get(image_list, **feature_input)
 
-    def get(self, image, axis, keepdims, **kwargs):
-        return self.function(image, axis=axis, keepdims=keepdims)
+    def get(self, image, axis, keepdims=None, **kwargs):
+        if keepdims is None:
+            return self.function(image, axis=axis)
+        else:
+            return self.function(image, axis=axis, keepdims=keepdims)
 
 
 class Sum(Reducer):
@@ -107,16 +110,9 @@ class Variance(Reducer):
 
 
 class Cumsum(Reducer):
-    def __init__(
-        self, feature=None, axis=None, keepdims=False, distributed=True, **kwargs
-    ):
+    def __init__(self, feature=None, axis=None, distributed=True, **kwargs):
         super().__init__(
-            np.cumsum,
-            feature=feature,
-            axis=axis,
-            keepdims=keepdims,
-            distributed=distributed,
-            **kwargs
+            np.cumsum, feature=feature, axis=axis, distributed=distributed, **kwargs
         )
 
 
