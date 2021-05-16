@@ -422,7 +422,7 @@ class CappedContinuousGenerator(ContinuousGenerator):
         for a in subset:
             a[-1] += 1
         outputs = [array(a) for a in list(zip(*subset))]
-        outputs = (outputs[0], *outputs[1:])
+        outputs = (outputs[0], *outputs[1:-1])
         return outputs
 
     def construct_datapoint(self, image, label):
