@@ -5,13 +5,13 @@ import numpy as np
 
 
 class Reducer(Feature):
-    def __init__(self, function, feature=None, **kwargs):
+    def __init__(self, function, feature=None, distributed=True, **kwargs):
         self.function = function
 
         if feature:
-            super().__init__(_input=feature, **kwargs)
+            super().__init__(_input=feature, distributed=distributed, **kwargs)
         else:
-            super().__init__(**kwargs)
+            super().__init__(distributed=distributed, **kwargs)
 
     def _process_and_get(self, image_list, **feature_input) -> List[Image]:
 
