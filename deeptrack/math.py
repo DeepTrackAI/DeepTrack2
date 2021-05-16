@@ -88,12 +88,18 @@ class NormalizeMinMax(Feature):
         The minimum of the transformation.
     max : float
         The maximum of the transformation.
+    featurewise : bool
+        Whether to normalize each feature independently
     """
 
     def __init__(
-        self, min: PropertyLike[float] = 0, max: PropertyLike[float] = 1, **kwargs
+        self,
+        min: PropertyLike[float] = 0,
+        max: PropertyLike[float] = 1,
+        featurewise=True,
+        **kwargs
     ):
-        super().__init__(min=min, max=max, **kwargs)
+        super().__init__(min=min, max=max, featurewise=featurewise, **kwargs)
 
     def get(self, image, min, max, **kwargs):
         image = image / np.ptp(image) * (max - min)
@@ -112,18 +118,38 @@ class NormalizeStandard(Feature):
 
     Parameters
     ----------
-    min : float
-        The minimum of the transformation.
-    max : float
-        The maximum of the transformation.
+    featurewise : bool
+        Whether to normalize each feature independently
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, featurewise=True, **kwargs):
+        super().__init__(featurewise=featurewise, **kwargs)
 
     def get(self, image, **kwargs):
 
         return (image - np.mean(image)) / np.std(image)
+
+
+class NormalizeQuantile(Feature):
+    """Image normalization.
+
+    Center the image to the median, and divide by the difference between the quantiles
+    defined by `q_max` and `q_min`
+
+    Parameters
+    ----------
+    quantiles : tuple (q_min, q_max), 0.0 < q_min < q_max < 1.0
+       Quantile range to calculate scaling factor
+    featurewise : bool
+        Whether to normalize each feature independently
+    """
+
+    def __init__(self, quantiles=(0.25, 0.75), featurewise=True, **kwargs):
+        super().__init__(self, quantiles=quantiles, featurewise=featurewise, **kwargs)
+
+    def get(self, image, quantiles, **kwargs):
+        q_low, q_high, median = np.quantile(image, (*quantiles, 0.5))
+        return (image - median) / (q_high - q_low)
 
 
 class Blur(Feature):

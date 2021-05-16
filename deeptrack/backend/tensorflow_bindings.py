@@ -1,6 +1,12 @@
+""" Contains bindings for tensorflow.
+
+Registers __array_function__ implementations for dealing with tensorflow Tensor objects.
+"""
+
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
+import tensorflow_probability as tfp
 
 TENSORFLOW_BINDINGS = {}
 
@@ -189,7 +195,11 @@ def _tf_mean(x, axis=None, keepdims=False):
     return K.mean(x, axis=axis, keepdims=keepdims)
 
 
-# TODO: Median?
+@implements_tf(np.median)
+def _tf_median(x, axis=None, keepdims=False, interpolation=None):
+    return tfp.stats.quantiles(
+        x, 0.5, axis=axis, keepdims=keepdims, interpolation=interpolation
+    )
 
 
 @implements_tf(np.std)
@@ -203,8 +213,8 @@ def _tf_var(x, axis=None, keepdims=False):
 
 
 @implements_tf(np.cumsum)
-def _tf_cumsum(x, axis=None, keepdims=False):
-    return K.cumsum(x, axis=axis, keepdims=keepdims)
+def _tf_cumsum(x, axis=None):
+    return K.cumsum(x, axis=axis)
 
 
 @implements_tf(np.min)
@@ -221,4 +231,18 @@ def _tf_max(x, axis=None, keepdims=False):
 def _tf_ptp(x, axis=None, keepdims=False):
     return K.max(x, axis=axis, keepdims=keepdims) - K.min(
         x, axis=axis, keepdims=keepdims
+    )
+
+
+@implements_tf(np.quantile)
+def _tf_quantile(x, q, axis=None, keepdims=False, interpolation=None):
+    return tfp.stats.quantiles(
+        x, q, axis=axis, keepdims=keepdims, interpolation=interpolation
+    )
+
+
+@implements_tf(np.percentile)
+def _tf_percentile(x, q, axis=None, keepdims=False, interpolation=None):
+    return tfp.stats.percentile(
+        x, q, axis=axis, keepdims=keepdims, interpolation=interpolation
     )
