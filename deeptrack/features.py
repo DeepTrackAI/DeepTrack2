@@ -21,19 +21,19 @@ Duplicate
 """
 
 import copy
-
+import itertools
+import operator
+import threading
 from typing import Any, Callable, Iterable, Iterator, List, Tuple
 
 import numpy as np
-import threading
-
 from pint.quantity import Quantity
+
+from .backend.core import DeepTrackNode
 from .backend.units import ConversionTable
 from .image import Image
 from .properties import Property, PropertyDict
-from .backend.core import DeepTrackNode
-from .types import PropertyLike, ArrayLike
-
+from .types import ArrayLike, PropertyLike
 
 MERGE_STRATEGY_OVERRIDE = 0
 MERGE_STRATEGY_APPEND = 1
@@ -195,7 +195,6 @@ class Feature(DeepTrackNode):
 
         feature_input = self.properties(replicate_index=replicate_index).copy()
 
-
         if replicate_index is not None:
             feature_input["replicate_index"] = replicate_index
 
@@ -230,9 +229,20 @@ class Feature(DeepTrackNode):
     def __call__(
         self, image_list: Image or List[Image] = None, replicate_index=None, **kwargs
     ):
-
-        if image_list is not None:
+        # Potentially fragile. Maybe a special variable dt._last_input instead?
+        if image_list is not None and not (
+            isinstance(image_list, list) and len(image_list) == 0
+        ):
+            # if replicate_index is not None:
+            #     print(
+            #         "b", replicate_index, self._input(replicate_index=replicate_index)
+            #     )
             self._input.set_value(image_list, replicate_index=replicate_index)
+
+            # if replicate_index is not None:
+            #     print(
+            #         "a", replicate_index, self._input(replicate_index=replicate_index)
+            #     )
 
         original_values = {}
         if isinstance(self.arguments, Feature):
@@ -296,8 +306,8 @@ class Feature(DeepTrackNode):
             keyword arguments passed to the method pyplot.imshow()
         """
 
-        import matplotlib.pyplot as plt
         import matplotlib.animation as animation
+        import matplotlib.pyplot as plt
         from IPython.display import HTML, display
 
         if input_image is not None:
@@ -574,7 +584,29 @@ class Value(Feature):
         return value
 
 
-class Add(Feature):
+class ArithmeticOperationFeature(Feature):
+    """Parent feature of arithmetic operation features like +*-/> etc."""
+
+    __distributed__ = False
+
+    def __init__(self, op, value=0, **kwargs):
+        self.op = op
+        super().__init__(value=value, **kwargs)
+
+    def get(self, image, value, **kwargs):
+
+        if not isinstance(value, (list, tuple)):
+            value = [value]
+
+        if len(image) < len(value):
+            image = itertools.cycle(image)
+        elif len(value) < len(image):
+            value = itertools.cycle(value)
+
+        return [self.op(a, b) for a, b in zip(image, value)]
+
+
+class Add(ArithmeticOperationFeature):
     """Adds a value to the input.
 
     Parameters
@@ -584,13 +616,10 @@ class Add(Feature):
     """
 
     def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image + value
+        super().__init__(operator.add, value=value, **kwargs)
 
 
-class Subtract(Feature):
+class Subtract(ArithmeticOperationFeature):
     """Subtracts a value from the input.
 
     Parameters
@@ -600,13 +629,10 @@ class Subtract(Feature):
     """
 
     def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image - value
+        super().__init__(operator.sub, value=value, **kwargs)
 
 
-class Multiply(Feature):
+class Multiply(ArithmeticOperationFeature):
     """Multiplies the input with a value.
 
     Parameters
@@ -615,14 +641,11 @@ class Multiply(Feature):
         The value to multiply with.
     """
 
-    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image * value
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(operator.mul, value=value, **kwargs)
 
 
-class Divide(Feature):
+class Divide(ArithmeticOperationFeature):
     """Divides the input with a value.
 
     Parameters
@@ -631,14 +654,11 @@ class Divide(Feature):
         The value to divide with.
     """
 
-    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image / value
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(operator.truediv, value=value, **kwargs)
 
 
-class FloorDivide(Feature):
+class FloorDivide(ArithmeticOperationFeature):
     """Divides the input with a value.
 
     Parameters
@@ -647,14 +667,11 @@ class FloorDivide(Feature):
         The value to divide with.
     """
 
-    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image // value
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(operator.floordiv, value=value, **kwargs)
 
 
-class Power(Feature):
+class Power(ArithmeticOperationFeature):
     """Raises the input to a power.
 
     Parameters
@@ -664,13 +681,10 @@ class Power(Feature):
     """
 
     def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image ** value
+        super().__init__(operator.pow, value=value, **kwargs)
 
 
-class LessThan(Feature):
+class LessThan(ArithmeticOperationFeature):
     """Divides the input with a value.
 
     Parameters
@@ -679,14 +693,11 @@ class LessThan(Feature):
         The value to divide with.
     """
 
-    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image < value
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(operator.lt, value=value, **kwargs)
 
 
-class LessThanOrEquals(Feature):
+class LessThanOrEquals(ArithmeticOperationFeature):
     """Divides the input with a value.
 
     Parameters
@@ -695,14 +706,11 @@ class LessThanOrEquals(Feature):
         The value to divide with.
     """
 
-    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image <= value
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(operator.le, value=value, **kwargs)
 
 
-class GreaterThan(Feature):
+class GreaterThan(ArithmeticOperationFeature):
     """Divides the input with a value.
 
     Parameters
@@ -711,14 +719,11 @@ class GreaterThan(Feature):
         The value to divide with.
     """
 
-    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image > value
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(operator.gt, value=value, **kwargs)
 
 
-class GreaterThanOrEquals(Feature):
+class GreaterThanOrEquals(ArithmeticOperationFeature):
     """Divides the input with a value.
 
     Parameters
@@ -727,14 +732,11 @@ class GreaterThanOrEquals(Feature):
         The value to divide with.
     """
 
-    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image >= value
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(operator.ge, value=value, **kwargs)
 
 
-class Equals(Feature):
+class Equals(ArithmeticOperationFeature):
     """Divides the input with a value.
 
     Parameters
@@ -743,11 +745,8 @@ class Equals(Feature):
         The value to divide with.
     """
 
-    def __init__(self, value: PropertyLike[float] = 1, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image == value
+    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+        super().__init__(operator.eq, value=value, **kwargs)
 
 
 class Stack(Feature):
@@ -905,6 +904,7 @@ class Repeat(Feature):
                 index = (replicate_index, n)
             else:
                 index = replicate_index + (n,)
+
             image = self.feature(image, replicate_index=index)
 
         return image
