@@ -33,23 +33,41 @@ class DeepTrackDataList:
         self.list = []
         self.default = None
 
-    def has_index(self, index):
+    def valid_index(self, index):
+
+        if self.default is not None:
+            return True
+
         if index is None:
             return self.default is not None
 
         if isinstance(index, int):
-            return len(self.list) > index
 
-        if isinstance(index, tuple):
-            index, *rest = index
-
-            if not self.has_index(index) or isinstance(
-                self.list[index], DeepTrackDataObject
-            ):
+            if not len(self.list) > index:
+                return False
+            if not isinstance(self.list[index], DeepTrackDataObject):
                 return False
 
-            else:
-                return self.list[index].has_index(rest)
+            return True
+
+        if isinstance(index, (tuple, list)):
+            next_index, *rest = index
+
+            # Not enough items to be valid
+            if len(self.list) <= next_index:
+                return False
+
+            # Enough items and is DataObject
+            if isinstance(self.list[next_index], DeepTrackDataObject):
+
+                return True
+
+            # Not dataobject and no more to grab
+            if not rest:
+                return False
+
+            # Try deeper
+            return self.list[next_index].valid_index(rest)
 
     def __getitem__(self, replicate_index):
 
@@ -61,10 +79,6 @@ class DeepTrackDataList:
             return self.default
 
         if isinstance(replicate_index, int):
-
-            while len(self.list) <= replicate_index:
-                self.list.append(DeepTrackDataObject())
-
             return self.list[replicate_index]
 
         if isinstance(replicate_index, (tuple, list)):
@@ -77,12 +91,43 @@ class DeepTrackDataList:
                 self.list.append(DeepTrackDataList())
 
             output = self.list[replicate_index]
+
             if isinstance(output, DeepTrackDataList):
                 return output[rest]
             else:
                 return output
 
         raise NotImplementedError("Indexing with non-integer types not yet implemented")
+
+    def create_index(self, replicate_index=None):
+
+        if replicate_index is None:
+            return
+
+        if isinstance(replicate_index, int):
+            if self.list and isinstance(self.list[0], DeepTrackDataList):
+                # Bad
+                raise RuntimeError(
+                    "Invalid nested structure. Ensure that properties are resolved in the correct order for nested structures."
+                )
+            while len(self.list) <= replicate_index:
+                self.list.append(DeepTrackDataObject())
+
+        if isinstance(replicate_index, (tuple, list)) and replicate_index:
+            replicate_index, *rest = replicate_index
+
+            if rest:
+
+                while len(self.list) <= replicate_index:
+                    if self.list and isinstance(self.list[0], DeepTrackDataObject):
+                        self.list.append(DeepTrackDataObject())
+                    else:
+                        self.list.append(DeepTrackDataList())
+                if isinstance(self.list[replicate_index], DeepTrackDataList):
+                    self.list[replicate_index].create_index(rest)
+
+            else:
+                self.create_index(replicate_index)
 
 
 class DeepTrackNode:
@@ -113,25 +158,30 @@ class DeepTrackNode:
         return self
 
     def store(self, data, replicate_index=None):
+
+        self.data.create_index(replicate_index)
         self.data[replicate_index].store(data)
 
         return self
 
     def is_valid(self, replicate_index=None):
-        return self.data[replicate_index].is_valid()
+        return (
+            self.valid_index(replicate_index) and self.data[replicate_index].is_valid()
+        )
 
-    def has_index(self, replicate_index):
-        return self.data.has_index(replicate_index)
+    def valid_index(self, replicate_index):
+
+        return self.data.valid_index(replicate_index)
 
     def invalidate(self, replicate_index=None):
         for child in self.recurse_children():
-            if child.has_index(replicate_index):
+            if child.valid_index(replicate_index):
                 child.data[replicate_index].invalidate()
         return self
 
     def validate(self, replicate_index=None):
         for child in self.recurse_children():
-            if child.has_index(replicate_index):
+            if child.valid_index(replicate_index):
                 child.data[replicate_index].validate()
         return self
 
@@ -148,9 +198,11 @@ class DeepTrackNode:
     def set_value(self, value, replicate_index=None):
 
         # If set to same value, no need to invalidate
-        if not equivalent(
-            value, self.data[replicate_index].current_value()
-        ) or not self.is_valid(replicate_index=replicate_index):
+
+        if not (
+            self.is_valid(replicate_index=replicate_index)
+            and equivalent(value, self.data[replicate_index].current_value())
+        ):
 
             self.invalidate(replicate_index=replicate_index)
             self.store(value, replicate_index=replicate_index)

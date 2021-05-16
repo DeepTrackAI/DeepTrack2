@@ -437,6 +437,18 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(output_image[0].shape, (1, 1))
         self.assertEqual(output_image[1].shape, (2, 2))
 
+    def test_Feature_arithmetic(self):
+
+        inp = features.DummyFeature()
+
+        pipeline = inp - inp * 2
+
+        input_1 = 10
+        self.assertEqual(pipeline(input_1), -input_1)
+
+        input_2 = [10, 20]
+        self.assertListEqual(pipeline(input_2), [-input_2[0], -input_2[1]])
+
     def test_Feature_repeat(self):
         feature = features.Value(value=0) >> (features.Add(1) ^ iter(range(10)))
 

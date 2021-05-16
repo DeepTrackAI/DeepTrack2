@@ -134,7 +134,15 @@ def create_test(cl):
 
 
 class TestFeatures(unittest.TestCase):
-    pass
+    def test_broadcast_list(self):
+
+        inp = features.Value([1, 0])
+
+        pipeline = inp - statistics.Mean(inp)
+        self.assertListEqual(pipeline(), [0, 0])
+
+        pipeline = inp - (inp >> statistics.Mean())
+        self.assertListEqual(pipeline(), [0, 0])
 
 
 classes = inspect.getmembers(statistics, inspect.isclass)
