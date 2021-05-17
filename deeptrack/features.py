@@ -23,6 +23,7 @@ Duplicate
 import copy
 
 from typing import Any, Callable, Iterable, Iterator, List, Tuple
+import warnings
 import numpy as np
 import threading
 
@@ -395,13 +396,31 @@ class Feature:
         else:
             raise AttributeError
 
-    def __add__(self, other: "Feature") -> "Feature":
-        # Overrides add operator
+    def __rshift__(self, other:"Feature") -> "Feature":
+        # Overrides >> operator
         if isinstance(other, list) and all(isinstance(f) for f in other):
             other = Combine(features=other)
 
         if isinstance(other, Feature):
             return Branch(self, other)
+
+    def __xor__(self, other) -> "Feature":
+        # Duplicate the feature to resolve more items
+        if isinstance(other, list) and all(isinstance(f) for f in other):
+            other = Combine(features=other)
+
+        return Duplicate(self, other)
+
+
+    def __add__(self, other: "Feature") -> "Feature":
+        import warnings
+        warnings.warn(
+            "Chaining features with the + operator is deprecated, use the >> operator instead",
+            DeprecationWarning
+        )
+        return self.__rshift__(other)
+
+    
 
     def __radd__(self, other) -> "Feature":
         # Add when left hand is not a feature
@@ -418,6 +437,7 @@ class Feature:
             return NotImplemented
 
     def __mul__(self, other: float) -> "Feature":
+        warnings.warn("Using * to probabilistically resolve a feature is deprecated. Use `Probability` instead.", DeprecationWarning)
         # Introduces a probablity of a feature to be resolved.
         if isinstance(other, list) and all(isinstance(f) for f in other):
             other = Combine(features=other)
@@ -427,11 +447,9 @@ class Feature:
     __rmul__ = __mul__
 
     def __pow__(self, other) -> "Feature":
+        warnings.warn("Using ** to duplicate a feature is deprecated. Use ^ instead.", DeprecationWarning)
         # Duplicate the feature to resolve more items
-        if isinstance(other, list) and all(isinstance(f) for f in other):
-            other = Combine(features=other)
-
-        return Duplicate(self, other)
+        return self.__xor__(other)
 
     def __getitem__(self, slices) -> "Feature":
         # Allows direct slicing of the data.
