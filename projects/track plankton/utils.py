@@ -8,6 +8,7 @@ import openpyxl
 import glob
 from inspect import signature
 
+
 def Normalize_image(image, min_value=0, max_value=1, **kwargs):
     min_im = np.min(image)
     max_im = np.max(image)
@@ -139,18 +140,20 @@ class Plankton:
                 break
         return latest_position
     
-            
-    def get_mean_velocity(self):
-        no_of_timesteps = len(self.positions[:,0])
-        no_of_numbers = sum(x is not np.nan for x in self.positions[:,0].tolist())
-        mean_velocity = 0
-        if no_of_numbers > 1:
-            for i in range(no_of_timesteps-1):
-                mean_velocity += np.nansum(np.linalg.norm(self.positions[i,:]-self.positions[i+1,:]))/(no_of_numbers)
-        else:
-            mean_velocity = 0
-        return mean_velocity
+
         
+    def get_mean_velocity(self): 
+        no_of_timesteps = len(self.positions[:,0]) 
+        no_of_numbers = np.count_nonzero(~np.isnan(self.positions[:,0].astype('float'))) 
+        mean_velocity = 0 
+        if no_of_numbers > 1: 
+            for i in range(no_of_timesteps-1): 
+                mean_velocity += np.nansum(np.linalg.norm(self.positions[i,:]-self.positions[i+1,:]))/(no_of_numbers) 
+            else: mean_velocity = 0 
+            
+        return mean_velocity
+    
+    
 def Initialize_plankton(positions=None, number_of_timesteps=None, current_timestep=0, **kwargs):
     if np.any(np.isnan(positions)):
         print('No positions recieved for this time step', 0)
@@ -183,6 +186,8 @@ def Update_list_of_plankton(list_of_plankton=None, positions=None, max_dist=10,
     for value, key in enumerate(list_of_plankton):
         plankton_positions[value,:] = list_of_plankton[key].get_latest_position(timestep = timestep, threshold = threshold)
       
+    distances0 = cdist(positions, plankton_positions)
+        
     if extrapolate == True and timestep > 1:
         plankton_positions = Extrapolate_positions(list_of_plankton=list_of_plankton, timestep=timestep, threshold=threshold)
         
@@ -194,7 +199,7 @@ def Update_list_of_plankton(list_of_plankton=None, positions=None, max_dist=10,
         else:
             if np.sum(distances[i,:] < max_dist) > 1:
                 temp_indices = np.where(distances[i,:] < max_dist)[0]
-                temp_dists = distances[i,:][temp_indices]
+                temp_dists = distances0[i,:][temp_indices]
                 temp_veldiffs = np.zeros((len(temp_indices),1))
                 for j in range(len(temp_dists)):
                     temp_veldiffs[j] = np.abs(temp_dists[j]-list_of_plankton['plankton%d' % temp_indices[j]].get_mean_velocity())
@@ -460,3 +465,26 @@ def fix_positions_from_cropping(positions, col_delete_list=[None], row_delete_li
     return new_positions
 
 
+def get_track_durations(plankton_track):
+    no_of_timesteps = len(plankton_track[list(plankton_track.keys())[0]].positions)
+    track_durations = np.zeros(no_of_timesteps)
+    for plankton in plankton_track:
+        plankton = np.array(plankton_track[plankton].positions[:,0], dtype=float)
+        where_list = np.where(np.isfinite(plankton))
+        track_start = np.min(where_list)
+        track_end = np.max(where_list)
+
+        track_durations[track_end-track_start] += 1
+    return track_durations
+
+
+def get_found_plankton_at_timestep(plankton_track):
+    no_timesteps = len(plankton_track[list(plankton_track.keys())[0]].positions)
+    found_plankton_at_timestep = np.zeros(no_timesteps)
+
+    for plankton in plankton_track:
+        plankton = np.array(plankton_track[plankton].positions[:,0], dtype=float)
+        where_list = np.where(np.isfinite(plankton))
+        for i in where_list[0]:
+            found_plankton_at_timestep[i] += 1
+    return found_plankton_at_timestep

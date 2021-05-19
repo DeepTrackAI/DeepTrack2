@@ -71,14 +71,19 @@ def plot_net_vs_gross_distance(list_of_plankton=None, **kwargs):
     net_distances, gross_distances = get_mean_net_and_gross_distance(list_of_plankton, **kwargs)
     plt.figure(figsize=(8,8))
     plt.axis([0, max(gross_distances[gross_distances!=0])*1.1, 0, max(net_distances[net_distances!=0])*1.1])
-    plt.plot(gross_distances[gross_distances!=0], net_distances[net_distances!=0])
+    X = gross_distances
+    Y = net_distances
+    min_length = min(X.shape[0], Y.shape[0])
+    X_plot = X[0:min_length]
+    Y_plot = Y[0:min_length]
+    plt.plot(X_plot, Y_plot)
     plt.xlabel('mean gross distance')
     plt.ylabel('mean net distance')
 
 
 def load_and_plot_folder_image(folder_path, frame):
     list_paths = os.listdir(folder_path)   
-    image = cv2.imread(folder_path +'\\' + list_paths[frame], 0)
+    image = cv2.imread(folder_path +'\\' + list_paths[frame])
     plt.figure(figsize=(15,15))
 
     plt.imshow(image, cmap='gray')
@@ -101,8 +106,8 @@ def plot_and_save_track(no_of_frames=10,
                color_plankton_track='b',
                color_plankton_dont_track='r',
                color_specific_plankton='g',
-               im_size_width=640, 
-               im_size_height=512,
+               im_size_width=1280, 
+               im_size_height=1024,
                x_axis_label='pixels',
                y_axis_label='pixels',
                pixel_length_ratio=1,
@@ -114,7 +119,7 @@ def plot_and_save_track(no_of_frames=10,
     list_paths = os.listdir(folder_path)
     for i, j in enumerate(range(frame_im0, frame_im0 + no_of_frames)):
         fig, ax = plt.subplots(figsize=(10, 10), constrained_layout=True)
-        im = cv2.imread(folder_path +'\\' + list_paths[j], 0)
+        im = cv2.imread(folder_path +'\\' + list_paths[j])
         dims = im.shape
 
         scale_height = dims[0]/im_size_height

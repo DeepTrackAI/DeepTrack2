@@ -31,7 +31,7 @@ def moving_spherical_plankton(im_size_height, im_size_width, radius, label=0, di
     position_unit="pixel",          # Units of position (default meter)
     position=lambda: np.random.rand(2) * np.array([im_size_height, im_size_width]),
     z= lambda:  -1.0 + np.random.rand() * 0.5,
-    radius=lambda: ((radius) + np.random.rand() * 0.5 * radius), # Dimensions of the principal axes of the ellipsoid
+    radius=lambda: ((radius) + np.random.rand() * 0.2 * radius), # Dimensions of the principal axes of the ellipsoid
     refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
     upsample=4,                      # Amount the resolution is upsampled for accuracy
     particle_type = label,
@@ -49,7 +49,7 @@ def stationary_ellipsoid_plankton(im_size_height, im_size_width, radius=(1.5e-7,
     position_unit="pixel",          # Units of position (default meter)
     position=lambda: np.random.rand(2) * np.array([im_size_height, im_size_width]),
     z= lambda:  -1.0 + np.random.rand() * 0.5,
-    radius=lambda: (radius + np.random.rand(3) * (1e-6) * radius), # Dimensions of the principal axes of the ellipsoid
+    radius=lambda: (radius + np.random.rand(3) * (0.1) * radius), # Dimensions of the principal axes of the ellipsoid
     rotation=lambda: np.pi * np.random.rand(),
     refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
     upsample=4,                      # Amount the resolution is upsampled for accuracy
@@ -63,7 +63,7 @@ def moving_ellipsoid_plankton(im_size_height, im_size_width, radius=(1.5e-7, 9e-
     position_unit="pixel",          # Units of position (default meter)
     position=lambda: np.random.rand(2) * np.array([im_size_height, im_size_width]),
     z= lambda:  -1.0 + np.random.rand() * 0.5,
-    radius=lambda: (radius + np.random.rand(3) * (1e-6) * radius), # Dimensions of the principal axes of the ellipsoid
+    radius=lambda: (radius + np.random.rand(3) * (0.1) * radius), # Dimensions of the principal axes of the ellipsoid
     rotation=lambda: np.pi * np.random.rand(),
     refractive_index=lambda: 0.9 + 1*(0.1j + np.random.rand() * 0.00j),
     upsample=4,                      # Amount the resolution is upsampled for accuracy
@@ -114,13 +114,13 @@ def plankton_brightfield(im_size_height, im_size_width, gradient_amp):
                           in spectrum]
     return brightfield_microscope
 
-def create_sample(*arg):
-    no_of_plankton = lambda: np.random.randint(int(arg[1]*0.66), int(arg[1]*1.33))
-    sample = arg[0]**no_of_plankton
-    for i in range(2, len(arg), 2):
-        no_of_plankton = lambda: np.random.randint(int(arg[i+1]*0.66), int(arg[i+1]*1.33))
-        sample = Branch(sample, arg[i]**no_of_plankton)
-    return sample
+# def create_sample(*arg): doesn't work, use sample = plankton1**number1 + plankton2**number2 instead
+#     no_of_plankton = lambda: np.random.randint(int(arg[1]*0.66), int(arg[1]*1.33))
+#     sample = arg[0]**no_of_plankton
+#     for i in range(2, len(arg), 2):
+#         no_of_plankton = lambda: np.random.randint(int(arg[i+1]*0.66), int(arg[i+1]*1.33))
+#         sample = Branch(sample, arg[i]**no_of_plankton)
+#     return sample
 
 def create_image(noise_amp, sample, microscope, norm_min, norm_max):
     noise = Poisson(snr=lambda: (60 + np.random.rand() * 30) * 1/(max(0.01,noise_amp)))
@@ -183,7 +183,7 @@ def get_target_sequence(sequence_of_particles):
                     distance_map = (X - position[1])**2 + (Y - position[0])**2
     
                     label[distance_map < 3, i + 1] = 1
-        label[..., 0] = 1 - np.max(label[..., 1:], axis=-1)
+        label[..., 0] = 1 - label[:,:, int((1+indices)/2)]
     else:
         indices = np.asarray(sequence_of_particles).shape[0]
         label = np.zeros((*np.asarray(sequence_of_particles).shape[1:3], no_of_types + 1))
