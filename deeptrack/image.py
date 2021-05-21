@@ -16,11 +16,23 @@ pad_image_to_fft(image: Image, axes = (0, 1))
     Transforms.
 """
 
+import warnings
 import numpy as np
 import numpy.lib.mixins
 import operator as ops
 from tensorflow import Tensor
 from .backend.tensorflow_bindings import TENSORFLOW_BINDINGS
+
+CUPY_INSTALLED = False
+try:
+    import cupy as cp
+
+    CUPY_INSTALLED = True
+except Exception as e:
+    CUPY_INSTALLED = False
+    warnings.warn(
+        "cupy not installed. GPU-accelerated simulations will not be possible"
+    )
 
 
 def _binary_method(op):
@@ -257,9 +269,16 @@ class Image:
             else:
                 return NotImplemented
 
+        elif not (
+            isinstance(self._value, (np.ndarray, tuple, list))
+            or np.isscalar(self._value)
+        ) and not hasattr(self._value, "__array_function__"):
+            print(func, type(self._value), self._value)
+            return NotImplemented
+
         out = func(*values, **kwargs)
 
-        if isinstance(out, bool):
+        if isinstance(out, (bool, int, float)):
             return out
 
         out = Image(out)
@@ -270,7 +289,7 @@ class Image:
         return out
 
     def __array__(self):
-        return np.array(self._value)
+            return np.array(self._value)
 
     def __getattr__(self, key):
         return getattr(self._value, key)

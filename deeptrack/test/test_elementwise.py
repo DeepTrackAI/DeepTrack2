@@ -12,6 +12,7 @@ from numpy.testing._private.utils import assert_almost_equal
 from .. import elementwise, features, Image
 
 import numpy as np
+import cupy as cp
 import numpy.testing
 import inspect
 
@@ -42,6 +43,12 @@ def grid_test_features(
 
             expected_result = expected_result_function(f_a_input)
 
+            if isinstance(output._value, cp.ndarray):
+                output = output.get()
+
+            if isinstance(expected_result, cp.ndarray):
+                expected_result = expected_result.get()
+
             if isinstance(output, list) and isinstance(expected_result, list):
                 [
                     np.testing.assert_almost_equal(np.array(a), np.array(b))
@@ -68,7 +75,15 @@ def create_test(cl):
         grid_test_features(
             self,
             cl,
-            [-1, 0, 1, (np.random.rand(50, 500) - 0.5) * 100, np.inf, np.nan],
+            [
+                -1,
+                0,
+                1,
+                (np.random.rand(50, 500) - 0.5) * 100,
+                (cp.random.rand(50, 500) - 0.5) * 100,
+                np.inf,
+                np.nan,
+            ],
             np.__dict__[cl.__name__.lower()],
         )
 

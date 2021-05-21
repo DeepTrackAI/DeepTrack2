@@ -1031,12 +1031,18 @@ class BindUpdate(StructuralFeature):
     __distributed__ = False
 
     def __init__(self, feature: Feature, **kwargs):
-        self.feature = feature
+        import warnings
+
+        warnings.warn(
+            "BindUpdate is deprecated and may be removed in a future release. Please use BindResolve in conjunction with Arguments.",
+            DeprecationWarning,
+        )
+        self.feature = self.add_feature(feature)
         super().__init__(**kwargs)
 
-    def _update(self, **kwargs):
-        super()._update(**kwargs)
-        self.feature._update(**{**kwargs, **self.properties})
+    def update(self, **kwargs):
+        super().update(**kwargs)
+        self.feature.update(**{**kwargs, **self.properties})
 
     def get(self, image, **kwargs):
         return self.feature.resolve(image, **kwargs)
