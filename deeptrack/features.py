@@ -25,24 +25,24 @@ import itertools
 import operator
 import threading
 from typing import Any, Callable, Iterable, Iterator, List, Tuple
+import warnings
 
 import numpy as np
 from pint.quantity import Quantity
+import tensorflow as tf
 
 from .backend.core import DeepTrackNode
 from .backend.units import ConversionTable
+from .backend import config
 from .image import Image
-from .properties import Property, PropertyDict
+from .properties import Property, PropertyDict, propagate_data_to_dependencies
 from .types import ArrayLike, PropertyLike
+
 
 MERGE_STRATEGY_OVERRIDE = 0
 MERGE_STRATEGY_APPEND = 1
 
-# Global thread execution lock for update calls.
-UPDATE_LOCK = threading.Lock()
-
-# Global update memoization. Ensures that the update is consistent
-UPDATE_MEMO = {"user_arguments": {}, "memoization": {}}
+_USER_ARGUMENTS = {}
 
 
 class Feature(DeepTrackNode):
@@ -98,6 +98,7 @@ class Feature(DeepTrackNode):
     __distributed__ = True
     __property_memorability__ = 1
     __conversion_table__ = ConversionTable()
+    __gpu_compatible__ = False
 
     # A None-safe default value to compare against
     __nonelike_default = object()
@@ -233,18 +234,14 @@ class Feature(DeepTrackNode):
         if image_list is not None and not (
             isinstance(image_list, list) and len(image_list) == 0
         ):
-            # if replicate_index is not None:
-            #     print(
-            #         "b", replicate_index, self._input(replicate_index=replicate_index)
-            #     )
+
             self._input.set_value(image_list, replicate_index=replicate_index)
 
-            # if replicate_index is not None:
-            #     print(
-            #         "a", replicate_index, self._input(replicate_index=replicate_index)
-            #     )
-
         original_values = {}
+
+        if kwargs and self.arguments is None:
+            propagate_data_to_dependencies(self, **kwargs)
+
         if isinstance(self.arguments, Feature):
             for key, value in kwargs.items():
                 if key in self.arguments.properties:
@@ -266,6 +263,21 @@ class Feature(DeepTrackNode):
 
     resolve = __call__
 
+    def update(self, **global_arguments):
+        self._update()
+        return self
+
+    def _update(self, **global_arguments):
+        if global_arguments:
+            warnings.warn(
+                "Passing information through .update is no longer supported. "
+                "A quick fix is to pass the information when resolving the feature. "
+                "The prefered solution is to use dt.Arguments",
+                DeprecationWarning,
+            )
+        super()._update()
+        return self
+
     def add_feature(self, feature):
         feature.add_child(self)
         self.add_dependency(feature)
@@ -277,6 +289,16 @@ class Feature(DeepTrackNode):
     def bind_arguments(self, arguments):
         self.arguments = arguments
         return self
+
+    def _coerce_inputs(self, inputs):
+
+        if any(isinstance(i._value, tf.Tensor) for i in inputs):
+
+            return inputs
+        if config.gpu_enabled and self.__gpu_compatible__:
+            return [i.to_cupy() for i in inputs]
+        else:
+            return [i.to_numpy() for i in inputs]
 
     def plot(
         self,
@@ -404,7 +426,8 @@ class Feature(DeepTrackNode):
         if not isinstance(image_list, list):
             image_list = [image_list]
 
-        return [(Image(image)) for image in image_list]
+        inputs = [(Image(image)) for image in image_list]
+        return self._coerce_inputs(inputs)
 
     def _process_properties(self, propertydict) -> dict:
         # Optional hook for subclasses to preprocess input before calling
@@ -1034,29 +1057,31 @@ class BindUpdate(StructuralFeature):
         import warnings
 
         warnings.warn(
-            "BindUpdate is deprecated and may be removed in a future release. Please use BindResolve in conjunction with Arguments.",
+            "BindUpdate is deprecated and may be removed in a future release."
+            "The current implementation is not guaranteed to be exactly equivalent to prior implementations. "
+            "Please use Bind instead.",
             DeprecationWarning,
         )
-        self.feature = self.add_feature(feature)
-        super().__init__(**kwargs)
 
-    def update(self, **kwargs):
-        super().update(**kwargs)
-        self.feature.update(**{**kwargs, **self.properties})
+        super().__init__(**kwargs)
+        self.feature = self.add_feature(feature)
 
     def get(self, image, **kwargs):
         return self.feature.resolve(image, **kwargs)
 
 
 class ConditionalSetProperty(StructuralFeature):
-    """Conditionally overrides the properties of child features
+    """Conditionally overrides the properties of child features.
+
+    It is adviceable to use dt.Arguments instead. Note that this overwrites the properties, and as
+    such may affect future calls.
 
     Parameters
     ----------
     feature : Feature
         The child feature
-    condition : str
-        The name of the conditional property
+    condition : bool-like or str
+        A boolean or the name a boolean property
     **kwargs
         Properties to be used if `condition` is True
 
@@ -1064,17 +1089,20 @@ class ConditionalSetProperty(StructuralFeature):
 
     __distributed__ = False
 
-    def __init__(self, feature: Feature, condition=PropertyLike[str], **kwargs):
-        super().__init__(feature=feature, condition=condition, **kwargs)
+    def __init__(self, feature: Feature, condition=PropertyLike[str or bool], **kwargs):
+        self.feature = self.add_feature(feature)
+        super().__init__(condition=condition, **kwargs)
 
-    def get(self, image, feature, condition, **kwargs):
-        if kwargs.get(condition, False):
-            return feature.resolve(image, **kwargs)
-        else:
-            for property_key in self.properties.keys():
-                kwargs.pop(property_key, None)
+    def get(self, image, condition, **kwargs):
 
-            return feature.resolve(image, **kwargs)
+        _condition = condition
+        if isinstance(condition, str):
+            _condition = kwargs.get(condition, False)
+
+        if _condition:
+            propagate_data_to_dependencies(self.feature, **kwargs)
+
+        return self.feature(image)
 
 
 class ConditionalSetFeature(StructuralFeature):
@@ -1106,24 +1134,36 @@ class ConditionalSetFeature(StructuralFeature):
         self,
         on_false: Feature = None,
         on_true: Feature = None,
-        condition: PropertyLike[str] = "is_label",
+        condition: PropertyLike[str or bool] = "is_label",
         **kwargs
     ):
+
+        if on_true:
+            self.add_feature(self.on_true)
+        if on_false:
+            self.add_feature(on_false)
+
+        self.on_true = on_true
+        self.on_false = on_false
 
         super().__init__(
             on_true=on_true, on_false=on_false, condition=condition, **kwargs
         )
 
-    def get(self, image, *, condition, on_true, on_false, **kwargs):
+    def get(self, image, *, condition, **kwargs):
 
-        if kwargs.get(condition, False):
-            if on_true:
-                return on_true.resolve(image, **kwargs)
+        _condition = condition
+        if isinstance(condition, str):
+            _condition = kwargs.get(condition, False)
+
+        if _condition:
+            if self.on_true:
+                return self.on_true(image)
             else:
                 return image
         else:
-            if on_false:
-                return on_false.resolve(image, **kwargs)
+            if self.on_false:
+                return self.resolve(image)
             else:
                 return image
 
@@ -1234,7 +1274,7 @@ class Label(Feature):
     def __init__(self, output_shape: PropertyLike[int] = None, **kwargs):
         super().__init__(output_shape=output_shape, **kwargs)
 
-    def get(self, image, output_shape=None, hash_key=None, **kwargs):
+    def get(self, image, output_shape=None, **kwargs):
         result = []
         for key in self.properties.keys():
             if key in kwargs:
