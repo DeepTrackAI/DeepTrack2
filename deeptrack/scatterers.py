@@ -18,6 +18,7 @@ Ellipsoid
 """
 
 
+from . import image
 from deeptrack.backend.units import ConversionTable
 from typing import Callable, Tuple
 import numpy as np
@@ -488,6 +489,8 @@ class MieScatterer(Scatterer):
         camera plane. Used if `position` is of length 2.
     """
 
+    __gpu_compatible__ = True
+
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
         polarization_angle=(u.radian, u.radian),
@@ -536,7 +539,7 @@ class MieScatterer(Scatterer):
         if properties["L"] == "auto":
             try:
                 v = 2 * np.pi * np.max(properties["radius"]) / properties["wavelength"]
-                properties["L"] = int(np.ceil(v + 4 * (v ** (1 / 3)) + 2))
+                properties["L"] = int(np.ceil((v + 4 * (v ** (1 / 3)) + 2) / 10))
             except (ValueError, TypeError):
                 pass
         if properties["collection_angle"] == "auto":
@@ -577,6 +580,9 @@ class MieScatterer(Scatterer):
         x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[0])
         y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[1])
         X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
+
+        X = image.maybe_cupy(X)
+        Y = image.maybe_cupy(Y)
 
         R2 = np.sqrt(X ** 2 + Y ** 2)
         R3 = np.sqrt(R2 ** 2 + (offset_z) ** 2)
