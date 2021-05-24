@@ -27,6 +27,7 @@ from scipy.ndimage import convolve
 
 from pint import Context
 from . import units as u
+from deeptrack import image
 
 
 class Microscope(StructuralFeature):
@@ -452,6 +453,8 @@ class Brightfield(Optics):
 
     """
 
+    __gpu_compatible__ = True
+
     def get(self, illuminated_volume, limits, fields, **kwargs):
         """Convolves the image with a pupil function"""
         # Pad volume
@@ -490,7 +493,7 @@ class Brightfield(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(np.zeros((*padded_volume.shape[0:2], 1)))
+        output_image = Image(image.maybe_cupy(np.zeros((*padded_volume.shape[0:2], 1))))
 
         index_iterator = range(padded_volume.shape[2])
         z_iterator = np.linspace(
@@ -515,7 +518,7 @@ class Brightfield(Optics):
 
         pupil_step = np.fft.fftshift(pupils[0])
 
-        light_in = np.ones(volume.shape[:2], dtype=np.complex)
+        light_in = image.maybe_cupy(np.ones(volume.shape[:2], dtype=np.complex))
         light_in = self.illumination.resolve(light_in)
         light_in = np.fft.fft2(light_in)
 
@@ -531,12 +534,14 @@ class Brightfield(Optics):
             to_remove = []
             for idx, fz in enumerate(field_z):
                 if fz < z:
-                    propagation_matrix = self._pupil(
-                        fields[idx].shape,
-                        defocus=[z - fz - field_offsets[idx] / voxel_size[-1]],
-                        include_aberration=False,
-                        **kwargs
-                    )[0]
+                    propagation_matrix = image.maybe_cupy(
+                        self._pupil(
+                            fields[idx].shape,
+                            defocus=[z - fz - field_offsets[idx] / voxel_size[-1]],
+                            include_aberration=False,
+                            **kwargs
+                        )[0]
+                    )
                     propagation_matrix = propagation_matrix * np.exp(
                         1j
                         * voxel_size[-1]
@@ -567,12 +572,14 @@ class Brightfield(Optics):
         # Add remaining fields
         for idx, fz in enumerate(field_z):
             prop_dist = z - fz - field_offsets[idx] / voxel_size[-1]
-            propagation_matrix = self._pupil(
-                fields[idx].shape,
-                defocus=[prop_dist],
-                include_aberration=False,
-                **kwargs
-            )[0]
+            propagation_matrix = image.maybe_cupy(
+                self._pupil(
+                    fields[idx].shape,
+                    defocus=[prop_dist],
+                    include_aberration=False,
+                    **kwargs
+                )[0]
+            )
             propagation_matrix = propagation_matrix * np.exp(
                 -1j
                 * voxel_size[-1]
@@ -586,7 +593,7 @@ class Brightfield(Optics):
                 propagation_matrix
             )
 
-        light_in_focus = light_in * np.fft.fftshift(pupils[-1])
+        light_in_focus = light_in * image.maybe_cupy(np.fft.fftshift(pupils[-1]))
 
         output_image = np.fft.ifft2(light_in_focus)[
             : padded_volume.shape[0], : padded_volume.shape[1]
