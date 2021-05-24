@@ -15,6 +15,7 @@ class TestMath(unittest.TestCase):
         input_image = np.array([[10, 4], [4, -10]])
         feature = math.Clip(min=-5, max=5)
         clipped_feature = feature.resolve(input_image)
+        print(clipped_feature)
         self.assertTrue(np.all(clipped_feature == [[5, 4], [4, -5]]))
 
     def test_NormalizeMinMax(self):
@@ -22,11 +23,11 @@ class TestMath(unittest.TestCase):
         feature = math.NormalizeMinMax(min=-5, max=5)
 
         input_image = np.array([[10, 4], [4, -10]])
-        normalized_image = feature.resolve(input_image)
+        normalized_image = feature(input_image)
         self.assertTrue(np.all(normalized_image == [[5, 2], [2, -5]]))
 
         input_image = tf.constant(np.array([[10, 4], [4, -10]]))
-        normalized_image = feature.resolve(input_image)
+        normalized_image = feature(input_image)
         self.assertTrue(np.all(normalized_image.numpy() == [[5, 2], [2, -5]]))
 
 

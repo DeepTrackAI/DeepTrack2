@@ -13,7 +13,7 @@ class TestProperties(unittest.TestCase):
     def test_Property_constant(self):
         P = properties.Property(1)
         self.assertEqual(P(), 1)
-        P.update()
+        P._update()
         self.assertEqual(P(), 1)
 
     def test_Property_iter(self):
@@ -21,12 +21,12 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(P(), 1)
         for i in range(1, 5):
             self.assertEqual(P(), i)
-            P.update()
+            P._update()
 
     def test_Property_random(self):
         P = properties.Property(lambda: np.random.rand())
         for _ in range(100):
-            P.update()
+            P._update()
             self.assertTrue(P() >= 0 and P() <= 1)
 
     def test_PropertyDict(self):
@@ -46,7 +46,7 @@ class TestProperties(unittest.TestCase):
             self.assertTrue(
                 current_value_dict["P3"] >= 0 and current_value_dict["P3"] <= 1
             )
-            property_dict.update()
+            property_dict._update()
 
 
 if __name__ == "__main__":

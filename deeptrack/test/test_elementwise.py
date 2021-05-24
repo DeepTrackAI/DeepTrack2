@@ -56,7 +56,7 @@ def grid_test_features(
                 ]
 
             else:
-                is_equal = np.array_equal(
+                is_equal = np.allclose(
                     np.array(output), np.array(expected_result), equal_nan=True
                 )
 
@@ -81,8 +81,6 @@ def create_test(cl):
                 1,
                 (np.random.rand(50, 500) - 0.5) * 100,
                 (cp.random.rand(50, 500) - 0.5) * 100,
-                np.inf,
-                np.nan,
             ],
             np.__dict__[cl.__name__.lower()],
         )

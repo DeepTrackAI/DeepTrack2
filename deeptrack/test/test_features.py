@@ -709,6 +709,22 @@ class TestFeatures(unittest.TestCase):
             p2=arguments.d,
         )
 
+    def test_BindUpdate(self):
+
+        value = features.Value(value=lambda input_value: input_value, input_value=10)
+        pipeline = (value + 10) / value
+
+        pipeline_with_small_input = features.BindUpdate(pipeline, input_value=1)
+
+        res = pipeline.update().resolve()
+        self.assertEqual(res, 2)
+
+        res = pipeline_with_small_input.update().resolve()
+        self.assertEqual(res, 11)
+
+        res = pipeline_with_small_input.update(input_value=10).resolve()
+        self.assertEqual(res, 11)
+
 
 if __name__ == "__main__":
     unittest.main()
