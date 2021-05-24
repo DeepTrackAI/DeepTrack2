@@ -73,8 +73,7 @@ class Clip(Feature):
         super().__init__(min=min, max=max, **kwargs)
 
     def get(self, image, min=None, max=None, **kwargs):
-        np.clip(image, min, max, image)
-        return image
+        return np.clip(image, min, max)
 
 
 class NormalizeMinMax(Feature):
