@@ -185,7 +185,7 @@ class DeepTrackNode:
                 child.data[replicate_index].validate()
         return self
 
-    def update(self):
+    def _update(self):
         # Pre-instantiate memory for optimization
         child_memory = []
 
