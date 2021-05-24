@@ -17,11 +17,14 @@ pad_image_to_fft(image: Image, axes = (0, 1))
 """
 
 import warnings
+import cupy
 import numpy as np
 import numpy.lib.mixins
 import operator as ops
 from tensorflow import Tensor
+import tensorflow
 from .backend.tensorflow_bindings import TENSORFLOW_BINDINGS
+
 
 CUPY_INSTALLED = False
 try:
@@ -39,6 +42,7 @@ def _binary_method(op):
     """Implement a forward binary method with a noperator, e.g., __add__."""
 
     def func(self, other):
+        self, other = coerce([self, other])
         if isinstance(other, Image):
             return Image(op(self._value, other._value)).merge_properties_from(
                 [self, other]
@@ -54,6 +58,7 @@ def _reflected_binary_method(op):
     """Implement a reflected binary method with a noperator, e.g., __radd__."""
 
     def func(self, other):
+        self, other = coerce([self, other])
         if isinstance(other, Image):
             return Image(op(other._value, self._value)).merge_properties_from(
                 [other, self]
@@ -69,6 +74,7 @@ def _inplace_binary_method(op):
     """Implement a reflected binary method with a noperator, e.g., __radd__."""
 
     def func(self, other):
+        self, other = coerce([self, other])
         if isinstance(other, Image):
             self._value = op(self._value, other._value)
             self.merge_properties_from(other)
@@ -106,13 +112,6 @@ class Image:
     def __init__(self, value):
         super().__init__()
         self._value = self._view(value)
-
-        # Override magic methods
-        # if not hasattr(self._value, "__len__"):
-        #     del self.__dict__["__len__"]
-        # self.__len__ = getattr(self._value, "__len__", None)
-        # self.__float__ = getattr(self._value, "__float__", None)
-        # self.__int__ = getattr(self._value, "__int__", None)
 
         if isinstance(value, Image):
             self.properties = list(value.properties)
@@ -224,6 +223,9 @@ class Image:
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
 
+        args = coerce(inputs)
+        args = tuple(strip(arg) for arg in args)
+
         if isinstance(self._value, Tensor):
             if ufunc in TENSORFLOW_BINDINGS:
                 ufunc = TENSORFLOW_BINDINGS[ufunc]
@@ -231,8 +233,6 @@ class Image:
                 return NotImplemented
 
         out = kwargs.get("out", ())
-
-        args = tuple(x._value if isinstance(x, Image) else x for x in inputs)
 
         if out:
             kwargs["out"] = tuple(x._value if isinstance(x, Image) else x for x in out)
@@ -261,7 +261,9 @@ class Image:
         # # __array_function__ to handle DiagonalArray objects.
         # if not all(issubclass(t, Image) for t in types):
         #     return NotImplemented
-        values = [strip(arg) for arg in args]
+
+        values = coerce(args)
+        values = [strip(arg) for arg in values]
 
         if isinstance(self._value, Tensor):
             if func in TENSORFLOW_BINDINGS:
@@ -273,7 +275,6 @@ class Image:
             isinstance(self._value, (np.ndarray, tuple, list))
             or np.isscalar(self._value)
         ) and not hasattr(self._value, "__array_function__"):
-            print(func, type(self._value), self._value)
             return NotImplemented
 
         out = func(*values, **kwargs)
@@ -288,14 +289,42 @@ class Image:
 
         return out
 
-    def __array__(self):
-            return np.array(self._value)
+    def __array__(self, *args, **kwargs):
+
+        return self.to_numpy()._value
+
+    def to_tf(self):
+
+        if isinstance(self._value, np.ndarray):
+            return Image(tensorflow.constant(self._value)).merge_properties_from(self)
+
+        if isinstance(self._value, cupy.ndarray):
+            return Image(tensorflow.constant(self._value.get())).merge_properties_from(
+                self
+            )
+
+        return self
+
+    def to_cupy(self):
+
+        if isinstance(self._value, np.ndarray):
+            return Image(cupy.array(self._value)).merge_properties_from(self)
+
+        return self
+
+    def to_numpy(self):
+
+        if isinstance(self._value, cupy.ndarray):
+            return Image(self._value.get()).merge_properties_from(self)
+        if isinstance(self._value, tensorflow.Tensor):
+            return Image(self._value.numpy()).merge_properties_from(self)
+
+        return self
 
     def __getattr__(self, key):
         return getattr(self._value, key)
 
     def __getitem__(self, idx):
-
         idx = strip(idx)
         out = Image(self._value.__getitem__(idx))
         out.merge_properties_from([self, idx])
@@ -377,6 +406,17 @@ def array(v):
     return np.array(strip(v))
 
 
+def coerce(images):
+    images = [Image(image) for image in images]
+
+    # if any(isinstance(i._value, tensorflow.Tensor) for i in images):
+    #     return [i.to_tf() for i in images]
+    if any(isinstance(i._value, cupy.ndarray) for i in images):
+        return [i.to_cupy() for i in images]
+    else:
+        return images
+
+
 FASTEST_SIZES = [0]
 for n in range(1, 10):
     FASTEST_SIZES += [2 ** a * 3 ** (n - a - 1) for a in range(n)]
@@ -411,3 +451,12 @@ def pad_image_to_fft(image: Image, axes=(0, 1)) -> Image:
     pad_width = [(0, inc) for inc in increase]
 
     return np.pad(image, pad_width, mode="constant")
+
+
+def maybe_cupy(array):
+    from . import config
+
+    if config.gpu_enabled:
+        return cp.array(array)
+
+    return array
