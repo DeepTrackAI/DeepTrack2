@@ -8,6 +8,7 @@ ContinuousGenerator
     Generator that asynchronously expands the dataset
 """
 
+from deeptrack.augmentations import Augmentation
 import numpy as np
 
 from typing import List
@@ -191,17 +192,15 @@ class ContinuousGenerator(keras.utils.Sequence):
     def __init__(
         self,
         feature,
-        label_function=None,
-        batch_function=lambda image: image,
+        label_function=lambda image: image[1],
+        batch_function=lambda image: image[0],
+        augmentation=None,
         min_data_size=None,
         max_data_size=np.inf,
         batch_size=32,
         shuffle_batch=True,
-        feature_kwargs={},
-        update_kwargs={},
-        verbose=1,
         ndim=4,
-        max_sample_exposure=np.inf,
+        max_epochs_per_sample=np.inf,
     ):
 
         if min_data_size is None:
@@ -219,12 +218,9 @@ class ContinuousGenerator(keras.utils.Sequence):
         self.batch_function = batch_function
         self.batch_size = batch_size
         self.shuffle_batch = shuffle_batch
-        self.feature_kwargs = feature_kwargs
-        self.update_kwargs = update_kwargs
-        if not isinstance(self.update_kwargs, list):
-            self.update_kwargs = itertools.cycle([update_kwargs])
-
+        self.max_epochs_per_sample = max_epochs_per_sample
         self.ndim = ndim
+        self.augmentation = augmentation
 
         self.lock = threading.Lock()
         self.data = []
@@ -233,7 +229,6 @@ class ContinuousGenerator(keras.utils.Sequence):
         self.exit_signal = False
         self.epoch = 0
         self._batch_size = 32
-        self.verbose = verbose
         self.data_generation_thread = threading.Thread(
             target=self._continuous_get_training_data, daemon=True
         )
@@ -279,9 +274,12 @@ class ContinuousGenerator(keras.utils.Sequence):
         return False
 
     def on_epoch_end(self):
-
         # Grab a copy
         current_data = list(self.data)
+        if self.augmentation:
+            current_data = [
+                self.augmentation.update().resolve(i["data"]) for i in current_data
+            ]
 
         if self.shuffle_batch:
             random.shuffle(current_data)
@@ -295,14 +293,19 @@ class ContinuousGenerator(keras.utils.Sequence):
         else:
             self._batch_size = self.batch_size
 
+        while len(self.data) < self.min_data_size:
+            print("Awaiting dataset to reach minimum size...", end="\r")
+            time.sleep(0.1)
+
     def __getitem__(self, idx):
 
         batch_size = self._batch_size
 
         subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
-        outputs = [array(a) for a in list(zip(*subset))]
-        outputs = (outputs[0], *outputs[1:])
-        return outputs
+
+        data = [self.batch_function(d["data"]) for d in subset]
+        labels = [self.label_function(d["data"]) for d in subset]
+        return np.array(data), np.array(labels)
 
     def __len__(self):
         steps = int((len(self.current_data) // self._batch_size))
@@ -312,7 +315,6 @@ class ContinuousGenerator(keras.utils.Sequence):
         return steps
 
     def _continuous_get_training_data(self):
-        index = 0
         while True:
             # Stop generator
             if self.exit_signal:
@@ -320,33 +322,22 @@ class ContinuousGenerator(keras.utils.Sequence):
 
             new_image = self._get(self.feature, self.feature_kwargs)
 
-            # if self.label_function:
-            new_label = self.label_function(new_image)
-
-            if self.batch_function:
-                new_image = self.batch_function(new_image)
-
-            new_image = array(new_image)
-            if new_image.ndim < self.ndim:
-                new_image = [new_image]
-                new_label = [new_label]
-
-            for new_image_i, new_label_i in zip(new_image, new_label):
-                datapoint = self.construct_datapoint(new_image_i, new_label_i)
-                if len(self.data) >= self.max_data_size:
-                    self.data[index % self.max_data_size] = datapoint
-                else:
-                    self.data.append(datapoint)
-
-                index += 1
+            datapoint = self.construct_datapoint(new_image)
+            if len(self.data) >= self.max_data_size:
+                self.data.pop(0)
+            else:
+                self.data.append(datapoint)
 
             self.cleanup()
 
-    def construct_datapoint(self, image, label):
-        return (image, label)
+    def construct_datapoint(self, image):
+
+        return {"data": image, "usage": 0}
 
     def cleanup(self):
-        pass
+        self.data = [
+            sample for sample in self.data if sample[-1] < self.max_epochs_per_sample
+        ]
 
     def _get(self, features: Feature or List[Feature], feature_kwargs) -> Image:
         # Updates and resolves a feature or list of features.
@@ -411,6 +402,12 @@ class CappedContinuousGenerator(ContinuousGenerator):
     """
 
     def __init__(self, *args, max_sample_exposure=np.inf, **kwargs):
+        import warnings
+
+        warnings.warn(
+            "CappedContinuousGenerator is deprecated in favor of ContinuousGenerator with the max_epochs_per_sample argument.",
+            DeprecationWarning,
+        )
         self.max_sample_exposure = max_sample_exposure
         super().__init__(*args, **kwargs)
 
