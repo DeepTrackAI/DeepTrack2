@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import itertools
 import deeptrack as dt
+import pytest
 
 
 u = dt.units
@@ -23,97 +24,18 @@ def create_pipeline(output_region=(0, 0, 128, 128), num_particles=1):
     return field
 
 
-def test_simulate_mie_128_1(benchmark):
-    dt.config.disable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 128, 128), num_particles=1)
-    benchmark(
-        lambda: pipeline.update()(),
-    )
-
-
-def test_simulate_mie_128_5(benchmark):
-    dt.config.disable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 128, 128), num_particles=5)
-    benchmark(
-        lambda: pipeline.update()(),
-    )
-
-
-def test_simulate_mie_512_1(benchmark):
-    dt.config.disable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 512, 512), num_particles=1)
-    benchmark(
-        lambda: pipeline.update()(),
-    )
-
-
-def test_simulate_mie_512_5(benchmark):
-    dt.config.disable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 512, 512), num_particles=5)
-    benchmark(
-        lambda: pipeline.update()(),
-    )
-
-
-def test_simulate_mie_1024_1(benchmark):
-    dt.config.disable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 1024, 1024), num_particles=1)
-    benchmark(
-        lambda: pipeline.update()(),
-    )
-
-
-def test_simulate_mie_1024_5(benchmark):
-    dt.config.disable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 1024, 1024), num_particles=5)
-    benchmark(
-        lambda: pipeline.update()(),
-    )
-
-
-def test_simulate_mie_128_1_gpu(benchmark):
-    dt.config.enable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 128, 128), num_particles=1)
-    benchmark(
-        lambda: pipeline.update()(),
-    )
-
-
-def test_simulate_mie_128_5_gpu(benchmark):
-    dt.config.enable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 128, 128), num_particles=5)
-    benchmark(
-        lambda: pipeline.update()(),
-    )
-
-
-def test_simulate_mie_512_1_gpu(benchmark):
-    dt.config.enable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 512, 512), num_particles=1)
-    benchmark(
-        lambda: pipeline.update()(),
-    )
-
-
-def test_simulate_mie_512_5_gpu(benchmark):
-    dt.config.enable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 512, 512), num_particles=5)
-    benchmark(
-        lambda: pipeline.update()(),
-    )
-
-
-def test_simulate_mie_1024_1_gpu(benchmark):
-    dt.config.enable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 1024, 1024), num_particles=1)
-    benchmark(
-        lambda: pipeline.update()(),
-    )
-
-
-def test_simulate_mie_1024_5_gpu(benchmark):
-    dt.config.enable_gpu()
-    pipeline = create_pipeline(output_region=(0, 0, 1024, 1024), num_particles=5)
+@pytest.mark.parametrize(
+    "size,gpu",
+    [*itertools.product((64, 128, 256, 512, 728), [True, False])],
+)
+def test_simulate_mie(size, gpu, benchmark):
+    benchmark.group = "mie_{}_px_image".format(size)
+    benchmark.name = "test_simulate_mie_{}".format("gpu" if gpu else "cpu")
+    if gpu:
+        dt.config.enable_gpu()
+    else:
+        dt.config.disable_gpu()
+    pipeline = create_pipeline(output_region=(0, 0, size, size), num_particles=2)
     benchmark(
         lambda: pipeline.update()(),
     )

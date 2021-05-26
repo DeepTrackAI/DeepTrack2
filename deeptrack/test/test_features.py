@@ -725,6 +725,77 @@ class TestFeatures(unittest.TestCase):
         res = pipeline_with_small_input.update(input_value=10).resolve()
         self.assertEqual(res, 11)
 
+    def test_Bind(self):
+
+        value = features.Value(value=lambda input_value: input_value, input_value=10)
+        pipeline = (value + 10) / value
+
+        pipeline_with_small_input = features.Bind(pipeline, input_value=1)
+
+        res = pipeline.update().resolve()
+        self.assertEqual(res, 2)
+
+        res = pipeline_with_small_input.update().resolve()
+        self.assertEqual(res, 11)
+
+        res = pipeline_with_small_input.update(input_value=10).resolve()
+        self.assertEqual(res, 11)
+
+    def test_BindResolve(self):
+
+        value = features.Value(value=lambda input_value: input_value, input_value=10)
+        pipeline = (value + 10) / value
+
+        pipeline_with_small_input = features.BindResolve(pipeline, input_value=1)
+
+        res = pipeline.update().resolve()
+        self.assertEqual(res, 2)
+
+        res = pipeline_with_small_input.update().resolve()
+        self.assertEqual(res, 11)
+
+        res = pipeline_with_small_input.update(input_value=10).resolve()
+        self.assertEqual(res, 11)
+
+    def test_ConditionalSetProperty(self):
+
+        value = features.Value(value=lambda input_value: input_value, input_value=10)
+
+        pipeline = (value + 10) / value
+
+        pipeline_with_small_input = features.ConditionalSetProperty(
+            pipeline, condition="is_condition", input_value=1, is_condition=True
+        )
+
+        res = pipeline.update().resolve()
+        self.assertEqual(res, 2)
+
+        res = pipeline_with_small_input.update().resolve()
+        self.assertEqual(res, 11)
+
+        res = pipeline_with_small_input.update().resolve(is_condition=False)
+        self.assertEqual(res, 2)
+
+    def test_ConditionalSetFeature(self):
+
+        one_value = features.Value(value=10)
+        other_value = features.Value(value=1)
+
+        value = features.ConditionalSetFeature(
+            on_true=one_value, on_false=other_value, condition=True
+        )
+
+        pipeline = (value + 10) / value
+
+        res = pipeline.update().resolve()
+        self.assertEqual(res, 2)
+
+        res = pipeline.update().resolve(condition=False)
+        self.assertEqual(res, 11)
+
+        res = pipeline.update().resolve(is_condition=True)
+        self.assertEqual(res, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
