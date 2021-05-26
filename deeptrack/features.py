@@ -189,20 +189,20 @@ class Feature(DeepTrackNode):
 
         image_list = self._input(replicate_index=replicate_index)
 
-        # Ensure that input is a list
-        image_list = self._format_input(image_list)
-
         # Get the input arguments to the method .get()
 
         feature_input = self.properties(replicate_index=replicate_index).copy()
 
-        if replicate_index is not None:
-            feature_input["replicate_index"] = replicate_index
-
         # Call the _process_properties hook, default does nothing.
         # Can be used to ensure properties are formatted correctly
         # or to rescale properties.
+
         feature_input = self._process_properties(feature_input)
+        if replicate_index is not None:
+            feature_input["replicate_index"] = replicate_index
+
+        # Ensure that input is a list
+        image_list = self._format_input(image_list, **feature_input)
 
         # Set the seed from the hash_key. Ensures equal results
         # self.seed(replicate_index=replicate_index)
@@ -263,6 +263,9 @@ class Feature(DeepTrackNode):
 
     resolve = __call__
 
+    def __use_gpu__(self, inp, **kwargs):
+        return self.__gpu_compatible__ and np.prod(np.shape(inp)) > (90000)
+
     def update(self, **global_arguments):
         self._update()
         return self
@@ -290,13 +293,19 @@ class Feature(DeepTrackNode):
         self.arguments = arguments
         return self
 
-    def _coerce_inputs(self, inputs):
+    def _coerce_inputs(self, inputs, **kwargs):
 
         if any(isinstance(i._value, tf.Tensor) for i in inputs):
-
             return inputs
-        if config.gpu_enabled and self.__gpu_compatible__:
-            return [i.to_cupy() for i in inputs]
+        if config.gpu_enabled:
+
+            return [
+                i.to_cupy()
+                if (not self.__distributed__) and self.__use_gpu__(i, **kwargs)
+                else i
+                for i in inputs
+            ]
+
         else:
             return [i.to_numpy() for i in inputs]
 
@@ -427,7 +436,7 @@ class Feature(DeepTrackNode):
             image_list = [image_list]
 
         inputs = [(Image(image)) for image in image_list]
-        return self._coerce_inputs(inputs)
+        return self._coerce_inputs(inputs, **kwargs)
 
     def _process_properties(self, propertydict) -> dict:
         # Optional hook for subclasses to preprocess input before calling
@@ -611,6 +620,7 @@ class ArithmeticOperationFeature(Feature):
     """Parent feature of arithmetic operation features like +*-/> etc."""
 
     __distributed__ = False
+    __gpu_compatible__ = True
 
     def __init__(self, op, value=0, **kwargs):
         self.op = op
@@ -1028,10 +1038,12 @@ class Bind(StructuralFeature):
     __distributed__ = False
 
     def __init__(self, feature: Feature, **kwargs):
-        super().__init__(feature=feature, **kwargs)
 
-    def get(self, image, feature, **kwargs):
-        return feature.resolve(image, **kwargs)
+        super().__init__(**kwargs)
+        self.feature = self.add_feature(feature)
+
+    def get(self, image, **kwargs):
+        return self.feature.resolve(image, **kwargs)
 
 
 BindResolve = Bind
@@ -1090,8 +1102,9 @@ class ConditionalSetProperty(StructuralFeature):
     __distributed__ = False
 
     def __init__(self, feature: Feature, condition=PropertyLike[str or bool], **kwargs):
-        self.feature = self.add_feature(feature)
+
         super().__init__(condition=condition, **kwargs)
+        self.feature = self.add_feature(feature)
 
     def get(self, image, condition, **kwargs):
 
@@ -1138,17 +1151,14 @@ class ConditionalSetFeature(StructuralFeature):
         **kwargs
     ):
 
+        super().__init__(condition=condition, **kwargs)
         if on_true:
-            self.add_feature(self.on_true)
+            self.add_feature(on_true)
         if on_false:
             self.add_feature(on_false)
 
         self.on_true = on_true
         self.on_false = on_false
-
-        super().__init__(
-            on_true=on_true, on_false=on_false, condition=condition, **kwargs
-        )
 
     def get(self, image, *, condition, **kwargs):
 
@@ -1163,7 +1173,7 @@ class ConditionalSetFeature(StructuralFeature):
                 return image
         else:
             if self.on_false:
-                return self.resolve(image)
+                return self.on_false(image)
             else:
                 return image
 
