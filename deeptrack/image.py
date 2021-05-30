@@ -44,11 +44,11 @@ def _binary_method(op):
     def func(self, other):
         self, other = coerce([self, other])
         if isinstance(other, Image):
-            return Image(op(self._value, other._value)).merge_properties_from(
-                [self, other]
-            )
+            return Image(
+                op(self._value, other._value), copy=False
+            ).merge_properties_from([self, other])
         else:
-            return Image(op(self._value, other)).merge_properties_from(self)
+            return Image(op(self._value, other), copy=False).merge_properties_from(self)
 
     func.__name__ = "__{}__".format(op.__name__)
     return func
@@ -60,11 +60,11 @@ def _reflected_binary_method(op):
     def func(self, other):
         self, other = coerce([self, other])
         if isinstance(other, Image):
-            return Image(op(other._value, self._value)).merge_properties_from(
-                [other, self]
-            )
+            return Image(
+                op(other._value, self._value), copy=False
+            ).merge_properties_from([other, self])
         else:
-            return Image(op(other, self._value)).merge_properties_from(self)
+            return Image(op(other, self._value), copy=False).merge_properties_from(self)
 
     func.__name__ = "__r{}__".format(op.__name__)
     return func
@@ -109,9 +109,15 @@ def _unary_method(
 
 
 class Image:
-    def __init__(self, value):
+    def __init__(self, value, copy=True):
         super().__init__()
-        self._value = self._view(value)
+
+        if isinstance(value, Image):
+            value = value._value
+        if copy:
+            self._value = self._view(value)
+        else:
+            self._value = value
 
         if isinstance(value, Image):
             self.properties = list(value.properties)
@@ -193,7 +199,7 @@ class Image:
                 should_append = True
                 for my_prop in self.properties:
 
-                    if id(my_prop) == id(new_prop):
+                    if my_prop is new_prop:
 
                         # Prop already added
                         should_append = False
@@ -407,7 +413,7 @@ def array(v):
 
 
 def coerce(images):
-    images = [Image(image) for image in images]
+    images = [Image(image, copy=False) for image in images]
 
     # if any(isinstance(i._value, tensorflow.Tensor) for i in images):
     #     return [i.to_tf() for i in images]
