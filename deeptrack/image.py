@@ -112,12 +112,13 @@ class Image:
     def __init__(self, value, copy=True):
         super().__init__()
 
-        if isinstance(value, Image):
-            value = value._value
         if copy:
             self._value = self._view(value)
         else:
-            self._value = value
+            if isinstance(value, Image):
+                self._value = value._value
+            else:
+                self._value = value
 
         if isinstance(value, Image):
             self.properties = list(value.properties)
@@ -249,7 +250,7 @@ class Image:
 
             outputs = []
             for result in results:
-                out = Image(result)
+                out = Image(result, copy=False)
                 out.merge_properties_from(inputs)
                 outputs.append(out)
 
@@ -257,7 +258,7 @@ class Image:
         elif method == "at":
             return None
         else:
-            result = Image(results)
+            result = Image(results, copy=False)
             result.merge_properties_from(inputs)
             return result
 
@@ -288,7 +289,7 @@ class Image:
         if isinstance(out, (bool, int, float)):
             return out
 
-        out = Image(out)
+        out = Image(out, copy=False)
         for inp in args:
             if isinstance(inp, Image):
                 out.merge_properties_from(inp)
@@ -302,28 +303,32 @@ class Image:
     def to_tf(self):
 
         if isinstance(self._value, np.ndarray):
-            return Image(tensorflow.constant(self._value)).merge_properties_from(self)
+            return Image(
+                tensorflow.constant(self._value), copy=False
+            ).merge_properties_from(self)
 
         if isinstance(self._value, cupy.ndarray):
-            return Image(tensorflow.constant(self._value.get())).merge_properties_from(
-                self
-            )
+            return Image(
+                tensorflow.constant(self._value.get()), copy=False
+            ).merge_properties_from(self)
 
         return self
 
     def to_cupy(self):
 
         if isinstance(self._value, np.ndarray):
-            return Image(cupy.array(self._value)).merge_properties_from(self)
+            return Image(cupy.array(self._value), copy=False).merge_properties_from(
+                self
+            )
 
         return self
 
     def to_numpy(self):
 
         if isinstance(self._value, cupy.ndarray):
-            return Image(self._value.get()).merge_properties_from(self)
+            return Image(self._value.get(), copy=False).merge_properties_from(self)
         if isinstance(self._value, tensorflow.Tensor):
-            return Image(self._value.numpy()).merge_properties_from(self)
+            return Image(self._value.numpy(), copy=False).merge_properties_from(self)
 
         return self
 
@@ -332,7 +337,7 @@ class Image:
 
     def __getitem__(self, idx):
         idx = strip(idx)
-        out = Image(self._value.__getitem__(idx))
+        out = Image(self._value.__getitem__(idx), copy=False)
         out.merge_properties_from([self, idx])
         return out
 
