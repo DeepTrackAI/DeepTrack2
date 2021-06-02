@@ -391,26 +391,26 @@ def Make_video(frame_im0=0, folder_path=None, save_path=None, fps=7, no_of_frame
 
 def crop_and_append_image(image=None, col_delete_list=[0,1], row_delete_list=[0,1], mult_of=16, print_shape=False, **kwargs):
     
-    rows0, cols0 = image.shape
+    rows0, cols0 = image.shape[0:2]
     
     
     for i in range(int(len(col_delete_list)/2)):
-        rows, cols = image.shape
+        rows, cols = image.shape[0:2]
         start = int(col_delete_list[2*i]-cols0+cols)
         stop = int(col_delete_list[2*i+1]-cols0+cols)
         image = np.delete(image, slice(start, stop), 1)
 
     for i in range(int(len(row_delete_list)/2)):
-        rows, cols = image.shape
+        rows, cols = image.shape[0:2]
         start = int(row_delete_list[2*i]-rows0+rows)
         stop = int(row_delete_list[2*i+1]-rows0+rows)
         image = np.delete(image, slice(start, stop), 0)
-    rows, cols = image.shape
+    rows, cols = image.shape[0:2]
     
     image = image[0:int(rows/mult_of)*mult_of, 0:int(cols/mult_of)*mult_of] 
     
     if print_shape:
-        print(image.shape)
+        print(image.shape[0:2])
     
     return image
 
@@ -488,3 +488,11 @@ def get_found_plankton_at_timestep(plankton_track):
         for i in where_list[0]:
             found_plankton_at_timestep[i] += 1
     return found_plankton_at_timestep
+
+
+def extract_positions_from_list(list_of_plankton):
+    shape_position = np.shape(list_of_plankton[list(list_of_plankton.keys())[0]].positions.astype('float64'))
+    positions_array = np.zeros((shape_position[0], len(list_of_plankton)*2))
+    for i, key in enumerate(list_of_plankton):
+        positions_array[:,2*i:2*(i+1)] = list_of_plankton[key].positions.astype('float64')
+    return positions_array

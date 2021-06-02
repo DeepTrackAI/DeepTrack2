@@ -205,38 +205,38 @@ def get_target_sequence(sequence_of_particles):
 
 
 
-def batch_function0(image):
-    return np.squeeze(image)
+# def batch_function0(image):
+#     return np.squeeze(image)
 
 
-def batch_function1(imaged_particle_sequence):
-    images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
-    train_images = np.zeros((images.shape[0],images.shape[1],images.shape[2]-1))
+# def batch_function1(imaged_particle_sequence):
+#     images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
+#     train_images = np.zeros((images.shape[0],images.shape[1],images.shape[2]-1))
     
-    for i in range(images.shape[2]-1):
-        train_images[:,:,i] = Normalize_image(images[:,:,i]-images[:,:,i+1])
-    return train_images
+#     for i in range(images.shape[2]-1):
+#         train_images[:,:,i] = Normalize_image(images[:,:,i]-images[:,:,i+1])
+#     return train_images
 
-def batch_function2(imaged_particle_sequence):
-    images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
-    train_images = np.zeros((images.shape[0],images.shape[1],images.shape[2]))
+# def batch_function2(imaged_particle_sequence):
+#     images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
+#     train_images = np.zeros((images.shape[0],images.shape[1],images.shape[2]))
     
-    for i in range(images.shape[2]-1):
-        train_images[:,:,i] = Normalize_image(images[:,:,i]-images[:,:,i+1])
+#     for i in range(images.shape[2]-1):
+#         train_images[:,:,i] = Normalize_image(images[:,:,i]-images[:,:,i+1])
         
-    train_images[:,:,-1] = images[:,:,np.int((images.shape[2])/2)]
-    return train_images
+#     train_images[:,:,-1] = images[:,:,np.int((images.shape[2])/2)]
+#     return train_images
 
-def batch_function3(imaged_particle_sequence):
-    images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
-    train_images = np.zeros((images.shape[0],images.shape[1],images.shape[2]+2))
+# def batch_function3(imaged_particle_sequence):
+#     images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
+#     train_images = np.zeros((images.shape[0],images.shape[1],images.shape[2]+2))
     
-    for i in range(images.shape[2]-1):
-        train_images[:,:,i] = Normalize_image(images[:,:,i]-images[:,:,i+1])
+#     for i in range(images.shape[2]-1):
+#         train_images[:,:,i] = Normalize_image(images[:,:,i]-images[:,:,i+1])
         
-    for i in range(images.shape[2]):
-        train_images[:,:,images.shape[2]-1+i] = images[:,:,i]
-    return train_images
+#     for i in range(images.shape[2]):
+#         train_images[:,:,images.shape[2]-1+i] = images[:,:,i]
+#     return train_images
 
 
 def create_custom_batch_function(imaged_particle_sequence, 

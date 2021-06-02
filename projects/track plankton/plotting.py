@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os  
 import numpy as np
 import cv2
-from utils import Normalize_image, get_mean_net_and_gross_distance
+from utils import Normalize_image, get_mean_net_and_gross_distance, extract_positions_from_list
 
 def plot_image(image):
     plt.figure(figsize=(11, 11))
@@ -117,6 +117,12 @@ def plot_and_save_track(no_of_frames=10,
                **kwargs):
 
     list_paths = os.listdir(folder_path)
+    
+    if show_plankton_track:
+        positions_track = extract_positions_from_list(plankton_track)
+    if show_plankton_dont_track:
+        positions_dont_track = extract_positions_from_list(plankton_dont_track)
+        
     for i, j in enumerate(range(frame_im0, frame_im0 + no_of_frames)):
         fig, ax = plt.subplots(figsize=(10, 10), constrained_layout=True)
         im = cv2.imread(folder_path +'\\' + list_paths[j])
@@ -126,14 +132,12 @@ def plot_and_save_track(no_of_frames=10,
         scale_width = dims[1]/im_size_width
         
         if show_plankton_track:
-            for key in plankton_track:
-                ax.plot(scale_width*plankton_track[key].positions[max(i-5,0):i+1, 1],scale_height*plankton_track[key].positions[max(i-5,0):i+1, 0], c=color_plankton_track,linewidth=1)
-                ax.scatter(scale_width*plankton_track[key].positions[i,1], scale_height*plankton_track[key].positions[i,0], s=100, marker='.', facecolor='none', edgecolors=color_plankton_track)
+            ax.plot(scale_width*positions_track[max(i-5,0):i+1, 1::2],scale_height*positions_track[max(i-5,0):i+1, 0::2], c=color_plankton_track,linewidth=1)
+            ax.scatter(scale_width*positions_track[i,1::2], scale_height*positions_track[i,0::2], s=100, marker='.', facecolor='none', edgecolors=color_plankton_track)
 
         if show_plankton_dont_track:    
-            for key in plankton_dont_track:
-                ax.plot(scale_width*plankton_dont_track[key].positions[max(i-5,0):i+1, 1],scale_height*plankton_dont_track[key].positions[max(i-5,0):i+1, 0], c=color_plankton_dont_track, linewidth=1)
-                ax.scatter(scale_width*plankton_dont_track[key].positions[i,1], scale_height*plankton_dont_track[key].positions[i,0], s=100, marker='.', facecolor='none', edgecolors=color_plankton_dont_track)
+            ax.plot(scale_width*positions_dont_track[max(i-5,0):i+1, 1::2],scale_height*positions_dont_track[max(i-5,0):i+1, 0::2], c=color_plankton_dont_track, linewidth=1)
+            ax.scatter(scale_width*positions_dont_track[i,1::2], scale_height*positions_dont_track[i,0::2], s=100, marker='.', facecolor='none', edgecolors=color_plankton_dont_track)
 
         if show_specific_plankton:
             for num in specific_plankton:
