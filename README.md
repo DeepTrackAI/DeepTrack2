@@ -6,6 +6,11 @@
 DeepTrack is a comprehensive deep learning framework for digital microscopy. 
 We provide tools to create physical simulations of customizable optical systems, to generate and train neural network models, and to analyze experimental data.
 
+If you use DeepTrack 2.0 in your project, please cite us here:
+
+Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. 
+"Quantitative Digital Microscopy with Deep Learning."
+Applied Physics Reviews 8 (2021), 011310.
 [https://doi.org/10.1063/5.0034891](https://aip.scitation.org/doi/10.1063/5.0034891)
 
 # Getting started
