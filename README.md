@@ -12,7 +12,7 @@ If you use DeepTrack 2.0 in your project, please cite our DeepTrack 2.0 article:
 Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. 
 "Quantitative Digital Microscopy with Deep Learning."
 Applied Physics Reviews 8 (2021), 011310.
-[https://doi.org/10.1063/5.0034891](https://aip.scitation.org/doi/10.1063/5.0034891)
+https://doi.org/10.1063/5.0034891
 ```
 # Getting started
 
@@ -132,14 +132,14 @@ If you use DeepTrack 2.0 in your project, please cite us here:
 Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. 
 "Quantitative Digital Microscopy with Deep Learning."
 Applied Physics Reviews 8 (2021), 011310.
-[https://doi.org/10.1063/5.0034891](https://aip.scitation.org/doi/10.1063/5.0034891)
+https://doi.org/10.1063/5.0034891
 ```
 See also:
 ```
 Saga Helgadottir, Aykut Argun, and Giovanni Volpe. 
 "Digital video microscopy enhanced by deep learning." 
 Optica 6.4 (2019): 506-513. 
-[10.1364/OPTICA.6.000506](https://doi.org/10.1364/OPTICA.6.000506)
+https://doi.org/10.1364/OPTICA.6.000506
 ```
 ```
 Saga Helgadottir, Aykut Argun, and Giovanni Volpe. 
