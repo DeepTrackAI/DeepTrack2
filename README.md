@@ -6,6 +6,8 @@
 DeepTrack is a comprehensive deep learning framework for digital microscopy. 
 We provide tools to create physical simulations of customizable optical systems, to generate and train neural network models, and to analyze experimental data.
 
+[https://doi.org/10.1063/5.0034891](https://aip.scitation.org/doi/10.1063/5.0034891)
+
 # Getting started
 
 ## Installation
@@ -121,13 +123,21 @@ The detailed documentation of DeepTrack 2.0 is available at the following link: 
 
 If you use DeepTrack 2.0 in your project, please cite us here:
 
-    Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. "Quantitative Digital Microscopy with Deep Learning." [https://doi.org/10.1063/5.0034891](https://aip.scitation.org/doi/10.1063/5.0034891)
+Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. 
+"Quantitative Digital Microscopy with Deep Learning."
+Applied Physics Reviews 8 (2021), 011310.
+[https://doi.org/10.1063/5.0034891](https://aip.scitation.org/doi/10.1063/5.0034891)
 
 See also:
 
-    Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "Digital video microscopy enhanced by deep learning." Optica 6.4 (2019): 506-513. [10.1364/OPTICA.6.000506](https://doi.org/10.1364/OPTICA.6.000506)
+Saga Helgadottir, Aykut Argun, and Giovanni Volpe. 
+"Digital video microscopy enhanced by deep learning." 
+Optica 6.4 (2019): 506-513. 
+[10.1364/OPTICA.6.000506](https://doi.org/10.1364/OPTICA.6.000506)
 
-    Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "DeepTrack." https://github.com/softmatterlab/DeepTrack.git (2019).
+Saga Helgadottir, Aykut Argun, and Giovanni Volpe. 
+"DeepTrack." (2019)
+https://github.com/softmatterlab/DeepTrack.git
 
 ## Funding
 This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511).
