@@ -19,4 +19,6 @@ Documentation
    properties
    scatterers
    sequences
+   test
+   types
    utils

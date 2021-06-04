@@ -5,11 +5,11 @@ sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.scatterers as scatterers
+from .. import scatterers
 
 import numpy as np
-from deeptrack.optics import Fluorescence, Brightfield
-from deeptrack.image import Image
+from ..optics import Fluorescence, Brightfield
+from ..image import Image
 
 
 class TestScatterers(unittest.TestCase):

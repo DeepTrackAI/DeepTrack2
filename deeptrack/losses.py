@@ -2,7 +2,7 @@
 
 Functions
 ---------
-flatten 
+flatten
     Flattends the inputs before calling the loss function.
 sigmoid
     Adds a signmoid transformation to the prediction before calling the loss function.

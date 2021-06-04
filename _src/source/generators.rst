@@ -6,6 +6,13 @@ generators
 Module classes
 <<<<<<<<<<<<<<
 
+CappedContinuousGenerator
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: deeptrack.generators.CappedContinuousGenerator
+   :members:
+   :exclude-members: get
+
 ContinuousGenerator
 ^^^^^^^^^^^^^^^^^^^
 

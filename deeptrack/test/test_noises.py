@@ -1,12 +1,12 @@
 import sys
 
-sys.path.append(".")  # Adds the module to path
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-import deeptrack.noises as noises
+from .. import noises
 
-from deeptrack.image import Image
+from ..image import Image
 import numpy as np
 
 

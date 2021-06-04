@@ -1,13 +1,14 @@
 
+
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Index &#8212; DeepTrack 2.0 documentation</title>
     
-  <link rel="stylesheet" href="_static/css/index.d431a4ee1c1efae0e38bdfebc22debff.css">
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
 
     
   <link rel="stylesheet"
@@ -19,22 +20,18 @@
 
     
       
-  <link rel="stylesheet"
-    href="_static/vendor/open-sans_all/1.44.1/index.css">
-  <link rel="stylesheet"
-    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
 
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-  <link rel="preload" as="script" href="_static/js/index.30270b6e4c972e43c488.js">
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
 
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -42,39 +39,44 @@
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
-<div class="container-xl">
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
 
     
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
 
+    
     <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
       <ul id="navbar-main-elements" class="navbar-nav mr-auto">
-        
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="installation.html">Getting started</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="tutorials.html">Tutorials and notebooks</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="deeptrack.html">Documentation</a>
-        </li>
-        
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
         
       </ul>
 
-
-      
-
-      <ul class="navbar-nav">
-        
-        
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
       </ul>
     </div>
 </div>
@@ -84,31 +86,19 @@
     <div class="container-xl">
       <div class="row">
           
-          <div class="col-12 col-md-3 bd-sidebar">
-
-<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form>
-
-
 <nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-
   <div class="bd-toc-item active">
-  
-
-  <ul class="nav bd-sidenav">
-      
-      
-      
-      
-      
-      
-      
-    </ul>
-
+    
+  </div>
 </nav>
-          </div>
+            </div>
+            
           
 
           
@@ -116,9 +106,7 @@
               
 
 <nav id="bd-toc-nav">
-    <ul class="nav section-nav flex-column">
     
-    </ul>
 </nav>
 
 
@@ -126,6 +114,9 @@
           </div>
           
 
+          
+          
+            
           
           <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
@@ -172,11 +163,13 @@
 </li>
       <li><a href="layers.html#deeptrack.layers.as_block">as_block() (in module deeptrack.layers)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="utils.html#deeptrack.utils.as_list">as_list() (in module deeptrack.utils)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="aberrations.html#deeptrack.aberrations.Astigmatism">Astigmatism (class in deeptrack.aberrations)</a>
+</li>
+      <li><a href="features.html#deeptrack.features.AsType">AsType (class in deeptrack.features)</a>
 </li>
       <li><a href="augmentations.html#deeptrack.augmentations.Augmentation">Augmentation (class in deeptrack.augmentations)</a>
 </li>
@@ -200,8 +193,14 @@
 </li>
       <li><a href="math.html#deeptrack.math.BilateralBlur">BilateralBlur (class in deeptrack.math)</a>
 </li>
+      <li><a href="features.html#deeptrack.features.Bind">Bind (class in deeptrack.features)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="features.html#deeptrack.features.BindResolve">BindResolve (in module deeptrack.features)</a>
+</li>
+      <li><a href="features.html#deeptrack.features.BindUpdate">BindUpdate (class in deeptrack.features)</a>
+</li>
       <li><a href="math.html#deeptrack.math.Blur">Blur (class in deeptrack.math)</a>
 </li>
       <li><a href="math.html#deeptrack.math.BlurCV2">BlurCV2 (class in deeptrack.math)</a>
@@ -216,6 +215,10 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="models.html#deeptrack.models.cgan.call">call() (deeptrack.models.cgan method)</a>
+</li>
+      <li><a href="generators.html#deeptrack.generators.CappedContinuousGenerator">CappedContinuousGenerator (class in deeptrack.generators)</a>
+</li>
       <li><a href="models.html#deeptrack.models.cgan">cgan (class in deeptrack.models)</a>
 </li>
       <li><a href="math.html#deeptrack.math.Clip">Clip (class in deeptrack.math)</a>
@@ -226,10 +229,10 @@
 </li>
       <li><a href="features.html#deeptrack.features.ConditionalSetProperty">ConditionalSetProperty (class in deeptrack.features)</a>
 </li>
-      <li><a href="generators.html#deeptrack.generators.ContinuousGenerator">ContinuousGenerator (class in deeptrack.generators)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generators.html#deeptrack.generators.ContinuousGenerator">ContinuousGenerator (class in deeptrack.generators)</a>
+</li>
       <li><a href="models.html#deeptrack.models.Convolutional">Convolutional() (in module deeptrack.models)</a>
 </li>
       <li><a href="models.html#deeptrack.models.convolutional">convolutional() (in module deeptrack.models)</a>
@@ -256,120 +259,44 @@
 </li>
       <li><a href="layers.html#deeptrack.layers.DeconvolutionalBlock">DeconvolutionalBlock() (in module deeptrack.layers)</a>
 </li>
-      <li>
-    deeptrack.aberrations
-
-      <ul>
-        <li><a href="aberrations.html#module-deeptrack.aberrations">module</a>
+      <li><a href="aberrations.html#module-deeptrack.aberrations">deeptrack.aberrations (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.augmentations
-
-      <ul>
-        <li><a href="augmentations.html#module-deeptrack.augmentations">module</a>
+      <li><a href="augmentations.html#module-deeptrack.augmentations">deeptrack.augmentations (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.backend
-
-      <ul>
-        <li><a href="backend.html#module-deeptrack.backend">module</a>
+      <li><a href="backend.html#module-deeptrack.backend">deeptrack.backend (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.features
-
-      <ul>
-        <li><a href="features.html#module-deeptrack.features">module</a>
+      <li><a href="features.html#module-deeptrack.features">deeptrack.features (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.generators
-
-      <ul>
-        <li><a href="generators.html#module-deeptrack.generators">module</a>
+      <li><a href="generators.html#module-deeptrack.generators">deeptrack.generators (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.image
-
-      <ul>
-        <li><a href="image.html#module-deeptrack.image">module</a>
+      <li><a href="image.html#module-deeptrack.image">deeptrack.image (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.layers
-
-      <ul>
-        <li><a href="layers.html#module-deeptrack.layers">module</a>
+      <li><a href="layers.html#module-deeptrack.layers">deeptrack.layers (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.losses
-
-      <ul>
-        <li><a href="losses.html#module-deeptrack.losses">module</a>
+      <li><a href="losses.html#module-deeptrack.losses">deeptrack.losses (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.math
-
-      <ul>
-        <li><a href="math.html#module-deeptrack.math">module</a>
+      <li><a href="math.html#module-deeptrack.math">deeptrack.math (module)</a>
 </li>
-      </ul></li>
+      <li><a href="models.html#module-deeptrack.models">deeptrack.models (module)</a>
+</li>
+      <li><a href="noises.html#module-deeptrack.noises">deeptrack.noises (module)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    deeptrack.models
-
-      <ul>
-        <li><a href="models.html#module-deeptrack.models">module</a>
+      <li><a href="optics.html#module-deeptrack.optics">deeptrack.optics (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.noises
-
-      <ul>
-        <li><a href="noises.html#module-deeptrack.noises">module</a>
+      <li><a href="properties.html#module-deeptrack.properties">deeptrack.properties (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.optics
-
-      <ul>
-        <li><a href="optics.html#module-deeptrack.optics">module</a>
+      <li><a href="scatterers.html#module-deeptrack.scatterers">deeptrack.scatterers (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.properties
-
-      <ul>
-        <li><a href="properties.html#module-deeptrack.properties">module</a>
+      <li><a href="sequences.html#module-deeptrack.sequences">deeptrack.sequences (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.scatterers
-
-      <ul>
-        <li><a href="scatterers.html#module-deeptrack.scatterers">module</a>
+      <li><a href="test.html#module-deeptrack.test">deeptrack.test (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.sequences
-
-      <ul>
-        <li><a href="sequences.html#module-deeptrack.sequences">module</a>
+      <li><a href="types.html#module-deeptrack.types">deeptrack.types (module)</a>
 </li>
-      </ul></li>
-      <li>
-    deeptrack.utils
-
-      <ul>
-        <li><a href="utils.html#module-deeptrack.utils">module</a>
+      <li><a href="utils.html#module-deeptrack.utils">deeptrack.utils (module)</a>
 </li>
-      </ul></li>
       <li><a href="losses.html#deeptrack.losses.deeptrack_loss_function">deeptrack_loss_function() (in module deeptrack.losses)</a>
 </li>
       <li><a href="aberrations.html#deeptrack.aberrations.Defocus">Defocus (class in deeptrack.aberrations)</a>
@@ -520,6 +447,8 @@
 </li>
       <li><a href="backend.html#deeptrack.backend.mie_coefficients">mie_coefficients() (in module deeptrack.backend)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="backend.html#deeptrack.backend.mie_harmonics">mie_harmonics() (in module deeptrack.backend)</a>
 </li>
       <li><a href="scatterers.html#deeptrack.scatterers.MieScatterer">MieScatterer (class in deeptrack.scatterers)</a>
@@ -530,45 +459,6 @@
 </li>
       <li><a href="models.html#deeptrack.models.Model">Model (class in deeptrack.models)</a>
 </li>
-      <li>
-    module
-
-      <ul>
-        <li><a href="aberrations.html#module-deeptrack.aberrations">deeptrack.aberrations</a>
-</li>
-        <li><a href="augmentations.html#module-deeptrack.augmentations">deeptrack.augmentations</a>
-</li>
-        <li><a href="backend.html#module-deeptrack.backend">deeptrack.backend</a>
-</li>
-        <li><a href="features.html#module-deeptrack.features">deeptrack.features</a>
-</li>
-        <li><a href="generators.html#module-deeptrack.generators">deeptrack.generators</a>
-</li>
-        <li><a href="image.html#module-deeptrack.image">deeptrack.image</a>
-</li>
-        <li><a href="layers.html#module-deeptrack.layers">deeptrack.layers</a>
-</li>
-        <li><a href="losses.html#module-deeptrack.losses">deeptrack.losses</a>
-</li>
-        <li><a href="math.html#module-deeptrack.math">deeptrack.math</a>
-</li>
-        <li><a href="models.html#module-deeptrack.models">deeptrack.models</a>
-</li>
-        <li><a href="noises.html#module-deeptrack.noises">deeptrack.noises</a>
-</li>
-        <li><a href="optics.html#module-deeptrack.optics">deeptrack.optics</a>
-</li>
-        <li><a href="properties.html#module-deeptrack.properties">deeptrack.properties</a>
-</li>
-        <li><a href="scatterers.html#module-deeptrack.scatterers">deeptrack.scatterers</a>
-</li>
-        <li><a href="sequences.html#module-deeptrack.sequences">deeptrack.sequences</a>
-</li>
-        <li><a href="utils.html#module-deeptrack.utils">deeptrack.utils</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="math.html#deeptrack.math.Multiply">Multiply (class in deeptrack.math)</a>
 </li>
   </ul></td>
@@ -609,12 +499,16 @@
 </li>
       <li><a href="aberrations.html#deeptrack.aberrations.ObliqueTrefoil">ObliqueTrefoil (class in deeptrack.aberrations)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="noises.html#deeptrack.noises.Offset">Offset (in module deeptrack.noises)</a>
 </li>
-      <li><a href="generators.html#deeptrack.generators.ContinuousGenerator.on_epoch_end">on_epoch_end() (deeptrack.generators.ContinuousGenerator method)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generators.html#deeptrack.generators.CappedContinuousGenerator.on_epoch_end">on_epoch_end() (deeptrack.generators.CappedContinuousGenerator method)</a>
+
+      <ul>
+        <li><a href="generators.html#deeptrack.generators.ContinuousGenerator.on_epoch_end">(deeptrack.generators.ContinuousGenerator method)</a>
 </li>
+      </ul></li>
       <li><a href="optics.html#deeptrack.optics.Optics">Optics (class in deeptrack.optics)</a>
 </li>
   </ul></td>
@@ -626,6 +520,8 @@
       <li><a href="augmentations.html#deeptrack.augmentations.Pad">Pad (class in deeptrack.augmentations)</a>
 </li>
       <li><a href="image.html#deeptrack.image.pad_image_to_fft">pad_image_to_fft() (in module deeptrack.image)</a>
+</li>
+      <li><a href="augmentations.html#deeptrack.augmentations.PadToMultiplesOf">PadToMultiplesOf (class in deeptrack.augmentations)</a>
 </li>
       <li><a href="aberrations.html#deeptrack.aberrations.Piston">Piston (class in deeptrack.aberrations)</a>
 </li>
@@ -703,6 +599,8 @@
 </li>
       <li><a href="losses.html#deeptrack.losses.sigmoid">sigmoid() (in module deeptrack.losses)</a>
 </li>
+      <li><a href="features.html#deeptrack.features.Slice">Slice (class in deeptrack.features)</a>
+</li>
       <li><a href="scatterers.html#deeptrack.scatterers.Sphere">Sphere (class in deeptrack.scatterers)</a>
 </li>
       <li><a href="aberrations.html#deeptrack.aberrations.SphericalAberration">SphericalAberration (class in deeptrack.aberrations)</a>
@@ -720,6 +618,10 @@
 
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="models.html#deeptrack.models.cgan.train_step">train_step() (deeptrack.models.cgan method)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="aberrations.html#deeptrack.aberrations.Trefoil">Trefoil (class in deeptrack.aberrations)</a>
 </li>
@@ -741,8 +643,6 @@
         <li><a href="properties.html#deeptrack.properties.PropertyDict.update">(deeptrack.properties.PropertyDict method)</a>
 </li>
         <li><a href="properties.html#deeptrack.properties.SequentialProperty.update">(deeptrack.properties.SequentialProperty method)</a>
-</li>
-        <li><a href="sequences.html#deeptrack.sequences.Sequence.update">(deeptrack.sequences.Sequence method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -797,14 +697,14 @@
     </div>
 
     
-  <script src="_static/js/index.30270b6e4c972e43c488.js"></script>
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
 
 
     <footer class="footer mt-5 mt-md-0">
   <div class="container">
     <p>
           &copy; Copyright 2020, Benjamin Midtvedt.<br/>
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
     </p>
   </div>
 </footer>

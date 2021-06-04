@@ -22,7 +22,7 @@ Everybody learns in different ways! Depending on your preferences, and what you 
 
 ### Fundamentals
 
-First, we have a very general walkthrough of [basic](https://softmatterlab.github.io/DeepTrack-2.0/basics.html) and [advanced](https://softmatterlab.github.io/DeepTrack-2.0/advanced.html) topics. This is a 5-10 minute read, that well get you well on your way to understand the unique interactions available in DeepTrack.
+First, we have a very general walkthrough of [basic](https://softmatterlab.github.io/DeepTrack-2.0/basics.html) and [advanced](https://softmatterlab.github.io/DeepTrack-2.0/advanced.html) topics. This is a 5-10 minute read, that will get you well on your way to understand the unique interactions available in DeepTrack.
 
 ### DeepTrack 2.0 in action
 
@@ -47,7 +47,45 @@ Additionally, we have seven more case studies which are less documented, but giv
 
 ### Video Tutorials
 
-[TBA]
+DeepTrack 2.0 introduction tutorial video: https://youtu.be/hyfaxF8q6VE  
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=hyfaxF8q6VE
+" target="_blank"><img src="https://img.youtube.com/vi/hyfaxF8q6VE/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 recognizing handwritten digits tutorial video: https://youtu.be/QD9JUXyLJpc  
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=QD9JUXyLJpc
+" target="_blank"><img src="https://img.youtube.com/vi/QD9JUXyLJpc/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 single particle tracking tutorial video: https://youtu.be/6Cntik6AfBI   
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=6Cntik6AfBI
+" target="_blank"><img src="https://img.youtube.com/vi/6Cntik6AfBI/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 single-particle characterization tutorial video: https://youtu.be/ia2H1QO1cHg   
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=ia2H1QO1cHg
+" target="_blank"><img src="https://img.youtube.com/vi/ia2H1QO1cHg/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 multiple particle tracking tutorial video: https://youtu.be/wFV2VqzpeZs  
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=wFV2VqzpeZs
+" target="_blank"><img src="https://img.youtube.com/vi/wFV2VqzpeZs/maxresdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 multiple particle tracking in 3D tutorial video: https://youtu.be/fzD1QIEIJ04  
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=fzD1QIEIJ04
+" target="_blank"><img src="https://img.youtube.com/vi/fzD1QIEIJ04/mqdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 cell counting tutorial video: https://youtu.be/C6hu_IYoWtI  
+<a href="https://www.youtube.com/watch?feature=player_embedded&v=C6hu_IYoWtI
+" target="_blank"><img src="https://img.youtube.com/vi/C6hu_IYoWtI/mqdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
+
+DeepTrack 2.0 GAN image generation tutorial video: https://youtu.be/8g44Yks7cis  
+<a href="https://www.youtube.com/watch?feature=player_embedded&v=8g44Yks7cis
+" target="_blank"><img src="https://img.youtube.com/vi/8g44Yks7cis/mqdefault.jpg" 
+alt="Tutorial" width="384" height="216" border="10" /></a>
 
 ### In-depth dives
 
@@ -83,7 +121,7 @@ The detailed documentation of DeepTrack 2.0 is available at the following link: 
 
 If you use DeepTrack 2.0 in your project, please cite us here:
 
-    Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. "Quantitative Digital Microscopy with Deep Learning." [arXiv:2010.08260](https://arxiv.org/abs/2010.08260)
+    Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. "Quantitative Digital Microscopy with Deep Learning." [https://doi.org/10.1063/5.0034891](https://aip.scitation.org/doi/10.1063/5.0034891)
 
 See also:
 

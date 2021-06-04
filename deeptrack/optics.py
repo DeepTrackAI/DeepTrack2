@@ -16,10 +16,10 @@ Brightfield
 """
 
 import numpy as np
-from deeptrack.features import Feature, StructuralFeature
-from deeptrack.image import Image, pad_image_to_fft
+from .features import Feature, StructuralFeature
+from .image import Image, pad_image_to_fft
+from .types import ArrayLike, PropertyLike
 
-from scipy.interpolate import RectBivariateSpline
 from scipy.ndimage import convolve
 
 
@@ -78,7 +78,13 @@ class Microscope(StructuralFeature):
         if upscale > 1:
             mean_imaged_sample = np.reshape(
                 imaged_sample,
-                (shape[0] // upscale, upscale, shape[1] // upscale, upscale, shape[2]),
+                (
+                    shape[0] // upscale,
+                    upscale,
+                    shape[1] // upscale,
+                    upscale,
+                    shape[2],
+                ),
             ).mean(axis=(3, 1))
 
             imaged_sample = Image(mean_imaged_sample).merge_properties_from(
@@ -97,7 +103,10 @@ class Microscope(StructuralFeature):
 
     def _update(self, **kwargs):
         self.properties["sample"].update(
-            **{**kwargs, **self.objective.update(**kwargs).current_value.properties}
+            **{
+                **kwargs,
+                **self.objective.update(**kwargs).current_value.properties,
+            }
         )
         super()._update(**kwargs)
 
@@ -138,14 +147,14 @@ class Optics(Feature):
 
     def __init__(
         self,
-        NA=0.7,
-        wavelength=0.66e-6,
-        magnification=10,
-        resolution=(1e-6, 1e-6, 1e-6),
-        refractive_index_medium=1.33,
-        upscale=1,
-        padding=(10, 10, 10, 10),
-        output_region=(0, 0, 128, 128),
+        NA: PropertyLike[float] = 0.7,
+        wavelength: PropertyLike[float] = 0.66e-6,
+        magnification: PropertyLike[float] = 10,
+        resolution: PropertyLike[float or ArrayLike[float]] = (1e-6, 1e-6, 1e-6),
+        refractive_index_medium: PropertyLike[float] = 1.33,
+        upscale: PropertyLike[float] = 1,
+        padding: PropertyLike[ArrayLike[int]] = (10, 10, 10, 10),
+        output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
         pupil: Feature = None,
         **kwargs
     ):
@@ -282,11 +291,15 @@ class Optics(Feature):
             new_limits[i, :] = (
                 np.min([new_limits[i, 0], upscaled_output_region[i] - padding[1]]),
                 np.max(
-                    [new_limits[i, 1], upscaled_output_region[i + 2] + padding[i + 2]]
+                    [
+                        new_limits[i, 1],
+                        upscaled_output_region[i + 2] + padding[i + 2],
+                    ]
                 ),
             )
         new_volume = np.zeros(
-            np.diff(new_limits, axis=1)[:, 0].astype(np.int32), dtype=np.complex
+            np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
+            dtype=np.complex,
         )
 
         old_region = (limits - new_limits).astype(np.int32)
@@ -370,7 +383,9 @@ class Fluorescence(Optics):
         )
 
         padded_volume = padded_volume[
-            output_region[0] : output_region[2], output_region[1] : output_region[3], :
+            output_region[0] : output_region[2],
+            output_region[1] : output_region[3],
+            :,
         ]
         z_limits = limits[2, :]
 
@@ -380,7 +395,10 @@ class Fluorescence(Optics):
 
         # Get planes in volume where not all values are 0.
         z_iterator = np.linspace(
-            z_limits[0], z_limits[1], num=padded_volume.shape[2], endpoint=False
+            z_limits[0],
+            z_limits[1],
+            num=padded_volume.shape[2],
+            endpoint=False,
         )
         zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
         z_values = z_iterator[~zero_plane]
@@ -496,7 +514,9 @@ class Brightfield(Optics):
         )
 
         padded_volume = padded_volume[
-            output_region[0] : output_region[2], output_region[1] : output_region[3], :
+            output_region[0] : output_region[2],
+            output_region[1] : output_region[3],
+            :,
         ]
         z_limits = limits[2, :]
 
@@ -504,7 +524,10 @@ class Brightfield(Optics):
 
         index_iterator = range(padded_volume.shape[2])
         z_iterator = np.linspace(
-            z_limits[0], z_limits[1], num=padded_volume.shape[2], endpoint=False
+            z_limits[0],
+            z_limits[1],
+            num=padded_volume.shape[2],
+            endpoint=False,
         )
 
         zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
@@ -629,7 +652,14 @@ class IlluminationGradient(Feature):
 
     """
 
-    def __init__(self, gradient=(0, 0), constant=0, vmin=0, vmax=np.inf, **kwargs):
+    def __init__(
+        self,
+        gradient: PropertyLike[ArrayLike[float]] = (0, 0),
+        constant: PropertyLike[float] = 0,
+        vmin: PropertyLike[float] = 0,
+        vmax: PropertyLike[float] = np.inf,
+        **kwargs
+    ):
         super().__init__(
             gradient=gradient, constant=constant, vmin=vmin, vmax=vmax, **kwargs
         )
@@ -766,7 +796,12 @@ def _create_volume(
             continue
 
         padded_scatterer = Image(
-            np.pad(scatterer, [(2, 2), (2, 2), (2, 2)], "constant", constant_values=0)
+            np.pad(
+                scatterer,
+                [(2, 2), (2, 2), (2, 2)],
+                "constant",
+                constant_values=0,
+            )
         )
         padded_scatterer.properties = scatterer.properties
         scatterer = padded_scatterer
@@ -815,7 +850,8 @@ def _create_volume(
 
         if not (np.array(new_limits) == np.array(limits)).all():
             new_volume = np.zeros(
-                np.diff(new_limits, axis=1)[:, 0].astype(np.int32), dtype=np.complex
+                np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
+                dtype=np.complex,
             )
             old_region = (limits - new_limits).astype(np.int32)
             limits = limits.astype(np.int32)

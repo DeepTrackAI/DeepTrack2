@@ -1,6 +1,6 @@
 """Implementations of Feature the model scattering objects.
 
-Provides some basic implementations of scattering objects 
+Provides some basic implementations of scattering objects
 that are frequently used.
 
 Classes
@@ -18,14 +18,15 @@ Ellipsoid
 """
 
 
-from threading import Lock
+from typing import Callable, Tuple
 import numpy as np
 
-# from scipy.special import jv as jn, spherical_jn as jv, h1vp, eval_legendre as leg, jvp
-import deeptrack.backend as D
-from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
-from deeptrack.image import Image
-import deeptrack.image
+from . import backend as D
+from .features import Feature, MERGE_STRATEGY_APPEND
+from .image import Image
+from . import image
+from .types import PropertyLike, ArrayLike
+import warnings
 
 
 class Scatterer(Feature):
@@ -60,8 +61,8 @@ class Scatterer(Feature):
     Other Parameters
     ----------------
     upsample_axes : tuple of ints
-        Sets the axes along which the calculation is upsampled (default is None,
-        which implies all axes are upsampled).
+        Sets the axes along which the calculation is upsampled (default is
+        None, which implies all axes are upsampled).
     crop_zeros : bool
         Whether to remove slices in which all elements are zero.
     """
@@ -71,11 +72,11 @@ class Scatterer(Feature):
 
     def __init__(
         self,
-        position=(32, 32),
-        z=0.0,
-        value=1.0,
-        position_unit="pixel",
-        upsample=1,
+        position: PropertyLike[ArrayLike[float]] = (32, 32),
+        z: PropertyLike[float] = 0.0,
+        value: PropertyLike[float] = 1.0,
+        position_unit: PropertyLike[str] = "pixel",
+        upsample: PropertyLike[int] = 1,
         **kwargs
     ):
         self._processed_properties = False
@@ -112,10 +113,11 @@ class Scatterer(Feature):
         # Post processes the created object to handle upsampling,
         # as well as cropping empty slices.
         if not self._processed_properties:
-            import warnings
 
             warnings.warn(
-                "Overridden _process_properties method does not call super. This is likely to result in errors if used with Optics.upscale != 1."
+                "Overridden _process_properties method does not call super. "
+                + "This is likely to result in errors if used with "
+                + "Optics.upscale != 1."
             )
 
         # Calculates upsampled voxel_size
@@ -134,7 +136,10 @@ class Scatterer(Feature):
 
         if new_image.size == 0:
             warnings.warn(
-                "Scatterer created that is smaller than a pixel. This may yield inconsistent results. Consider using upsample on the scatterer, or upscale on the optics.",
+                "Scatterer created that is smaller than a pixel. "
+                + "This may yield inconsistent results."
+                + " Consider using upsample on the scatterer,"
+                + " or upscale on the optics.",
                 Warning,
             )
 
@@ -225,7 +230,12 @@ class Ellipse(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
-    def __init__(self, radius=1e-6, rotation=0, **kwargs):
+    def __init__(
+        self,
+        radius: PropertyLike[float] = 1e-6,
+        rotation: PropertyLike[float] = 0,
+        **kwargs
+    ):
         super().__init__(
             radius=radius, rotation=rotation, upsample_axes=(0, 1), **kwargs
         )
@@ -293,7 +303,7 @@ class Sphere(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
-    def __init__(self, radius=1e-6, **kwargs):
+    def __init__(self, radius: PropertyLike[float] = 1e-6, **kwargs):
         super().__init__(radius=radius, **kwargs)
 
     def get(self, image, radius, voxel_size, **kwargs):
@@ -336,7 +346,12 @@ class Ellipsoid(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
-    def __init__(self, radius=1e-6, rotation=0, **kwargs):
+    def __init__(
+        self,
+        radius: PropertyLike[float] = 1e-6,
+        rotation: PropertyLike[float] = 0,
+        **kwargs
+    ):
         super().__init__(radius=radius, rotation=rotation, **kwargs)
 
     def _process_properties(self, propertydict):
@@ -346,7 +361,8 @@ class Ellipsoid(Scatterer):
         length 3.
 
         If the radius is a single value, the particle is made a sphere
-        If the radius are two values, the smallest value is appended as the third value
+        If the radius are two values, the smallest value is appended as the
+        third value
 
         The rotation vector is padded with zeros until it is of length 3
         """
@@ -426,12 +442,13 @@ class Ellipsoid(Scatterer):
 class MieScatterer(Scatterer):
     """Base implementation of a Mie particle.
 
-    New Mie-theory scatterers can be implemented by extending this class, and passing
-    a function that calculates the coefficients of the harmonics up to order `L`. To be
-    precise, the feature expects a wrapper function that takes the current values of the
-    properties, as well as a inner function that takes an integer as the only parameter,
-    and calculates the coefficients up to that integer. The return format is expected to
-    be a tuple with two values, corresponding to `an` and `bn`. See
+    New Mie-theory scatterers can be implemented by extending this class, and
+    passing a function that calculates the coefficients of the harmonics up to
+    order `L`. To beprecise, the feature expects a wrapper function that takes
+    the current values of the properties, as well as a inner function that
+    takes an integer as the only parameter, and calculates the coefficients up
+    to that integer. The return format is expected to be a tuple with two
+    values, corresponding to `an` and `bn`. See
     `deeptrack.backend.mie_coefficients` for an example.
 
     Parameters
@@ -439,11 +456,13 @@ class MieScatterer(Scatterer):
     coefficients : Callable[int] -> Tuple[ndarray, ndarray]
         Function that returns the harmonics coefficients.
     offset_z : "auto" or float
-        Distance from the particle in the z direction the field is evaluated. If "auto",
-        this is calculated from the pixel size and `collection_angle`
+        Distance from the particle in the z direction the field is evaluated.
+        If "auto", this is calculated from the pixel size and
+        `collection_angle`
     collection_angle : "auto" or float
         The maximum collection angle in radians. If "auto", this
-        is calculated from the objective NA (which is true if the objective is the limiting
+        is calculated from the objective NA (which is true if the objective is
+        the limiting
         aperature).
     polarization_angle : float
         Angle of the polarization of the incoming light relative to the x-axis.
@@ -461,11 +480,11 @@ class MieScatterer(Scatterer):
 
     def __init__(
         self,
-        coefficients,
-        offset_z="auto",
-        polarization_angle=0,
-        collection_angle="auto",
-        L="auto",
+        coefficients: Callable[..., Callable[[int], Tuple[ArrayLike, ArrayLike]]],
+        offset_z: PropertyLike[str] = "auto",
+        polarization_angle: PropertyLike[float] = 0,
+        collection_angle: PropertyLike[str] = "auto",
+        L: PropertyLike[str] = "auto",
         **kwargs
     ):
         kwargs.pop("is_field", None)
@@ -493,9 +512,10 @@ class MieScatterer(Scatterer):
             except (ValueError, TypeError):
                 pass
         if properties["collection_angle"] == "auto":
-            properties["collection_angle"] = np.sqrt(
-                1 - properties["NA"] ** 2 / properties["refractive_index_medium"] ** 2
+            properties["collection_angle"] = np.arcsin(
+                properties["NA"] / properties["refractive_index_medium"]
             )
+
         if properties["offset_z"] == "auto":
             properties["offset_z"] = (
                 32
@@ -507,7 +527,7 @@ class MieScatterer(Scatterer):
 
     def get(
         self,
-        image,
+        inp,
         position,
         upscaled_output_region,
         voxel_size,
@@ -535,11 +555,11 @@ class MieScatterer(Scatterer):
             - upscaled_output_region[1]
             + padding[1]
         )
-        arr = deeptrack.image.pad_image_to_fft(np.zeros((xSize, ySize)))
+        arr = image.pad_image_to_fft(np.zeros((xSize, ySize)))
 
         # Evluation grid
-        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[1]) * upscale
-        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[0]) * upscale
+        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[0]) * upscale
+        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[1]) * upscale
         X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
 
         R2 = np.sqrt(X ** 2 + Y ** 2)
@@ -561,11 +581,11 @@ class MieScatterer(Scatterer):
         PI, TAU = D.mie_harmonics(ct, L)
 
         # Normalization factor
-        E = [(2 * l + 1) / (l * (l + 1)) for l in range(1, L + 1)]
+        E = [(2 * i + 1) / (i * (i + 1)) for i in range(1, L + 1)]
 
         # Scattering terms
-        S1 = sum([E[l] * A[l] * TAU[l] + E[l] * B[l] * PI[l] for l in range(0, L)])
-        S2 = sum([E[l] * B[l] * TAU[l] + E[l] * A[l] * PI[l] for l in range(0, L)])
+        S1 = sum([E[i] * A[i] * TAU[i] + E[i] * B[i] * PI[i] for i in range(0, L)])
+        S2 = sum([E[i] * B[i] * TAU[i] + E[i] * A[i] * PI[i] for i in range(0, L)])
 
         field = (
             (ct > ct_max)
@@ -581,11 +601,13 @@ class MieScatterer(Scatterer):
 class MieSphere(MieScatterer):
     """Scattered field by a sphere
 
-    Should be calculated on at least a 64 by 64 grid. Use padding in the optics if necessary
+    Should be calculated on at least a 64 by 64 grid. Use padding in the
+    optics if necessary.
 
-    Calculates the scattered field by a spherical particle in a homogenous medium,
-    as predicted by Mie theory. Note that the induced phase shift is calculated
-    in comparison to the `refractive_index_medium` property of the optical device.
+    Calculates the scattered field by a spherical particle in a homogenous
+    medium, as predicted by Mie theory. Note that the induced phase shift is
+    calculated in comparison to the `refractive_index_medium` property of the
+    optical device.
 
     Parameters
     ----------
@@ -604,24 +626,21 @@ class MieSphere(MieScatterer):
         The position in the direction normal to the
         camera plane. Used if `position` is of length 2.
     offset_z : "auto" or float
-        Distance from the particle in the z direction the field is evaluated. If "auto",
-        this is calculated from the pixel size and `collection_angle`
+        Distance from the particle in the z direction the field is evaluated.
+        If "auto", this is calculated from the pixel size and
+        `collection_angle`
     collection_angle : "auto" or float
         The maximum collection angle in radians. If "auto", this
-        is calculated from the objective NA (which is true if the objective is the limiting
-        aperature).
+        is calculated from the objective NA (which is true if the objective
+        is the limiting aperature).
     polarization_angle : float
         Angle of the polarization of the incoming light relative to the x-axis.
     """
 
     def __init__(
         self,
-        radius=1e-6,
-        refractive_index=1.45,
-        offset_z="auto",
-        polarization_angle=0,
-        collection_angle="auto",
-        L="auto",
+        radius: PropertyLike[float] = 1e-6,
+        refractive_index: PropertyLike[float] = 1.45,
         **kwargs
     ):
         def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
@@ -638,10 +657,6 @@ class MieSphere(MieScatterer):
             coefficients=coeffs,
             radius=radius,
             refractive_index=refractive_index,
-            L=L,
-            offset_z=offset_z,
-            polarization_angle=polarization_angle,
-            collection_angle=collection_angle,
             **kwargs
         )
 
@@ -649,19 +664,21 @@ class MieSphere(MieScatterer):
 class MieStratifiedSphere(MieScatterer):
     """Scattered field by a stratified sphere
 
-    A stratified sphere is a sphere with several concentric shells of uniform refractive index.
+    A stratified sphere is a sphere with several concentric shells of uniform
+    refractive index.
 
-    Should be calculated on at least a 64 by 64 grid. Use padding in the optics if necessary
+    Should be calculated on at least a 64 by 64 grid. Use padding in the
+    optics if necessary
 
-    Calculates the scattered field by in a homogenous medium, as predicted by Mie theory.
-    Note that the induced phase shift is calculated in comparison to the
-    `refractive_index_medium` property of the optical device.
+    Calculates the scattered field by in a homogenous medium, as predicted by
+    Mie theory. Note that the induced phase shift is calculated in comparison
+    to the `refractive_index_medium` property of the optical device.
 
     Parameters
     ----------
-    radius : float
+    radius : list of float
         The radius of each cell in increasing order.
-    refractive_index : float
+    refractive_index : list of float
         Refractive index of each cell in the same order as `radius`
     L : int or str
         The number of terms used to evaluate the mie theory. If `"auto"`,
@@ -674,24 +691,21 @@ class MieStratifiedSphere(MieScatterer):
         The position in the direction normal to the
         camera plane. Used if `position` is of length 2.
     offset_z : "auto" or float
-        Distance from the particle in the z direction the field is evaluated. If "auto",
-        this is calculated from the pixel size and `collection_angle`
+        Distance from the particle in the z direction the field is evaluated.
+        If "auto", this is calculated from the pixel size and
+        `collection_angle`
     collection_angle : "auto" or float
         The maximum collection angle in radians. If "auto", this
-        is calculated from the objective NA (which is true if the objective is the limiting
-        aperature).
+        is calculated from the objective NA (which is true if the objective
+        is the limiting aperature).
     polarization_angle : float
         Angle of the polarization of the incoming light relative to the x-axis.
     """
 
     def __init__(
         self,
-        radius=1e-6,
-        refractive_index=1.45,
-        offset_z="auto",
-        polarization_angle=0,
-        collection_angle="auto",
-        L="auto",
+        radius: PropertyLike[ArrayLike[float]] = [1e-6],
+        refractive_index: PropertyLike[ArrayLike[float]] = [1.45],
         **kwargs
     ):
         def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
@@ -712,9 +726,5 @@ class MieStratifiedSphere(MieScatterer):
             coefficients=coeffs,
             radius=radius,
             refractive_index=refractive_index,
-            L=L,
-            offset_z=offset_z,
-            polarization_angle=polarization_angle,
-            collection_angle=collection_angle,
             **kwargs
         )

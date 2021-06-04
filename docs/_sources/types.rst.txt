@@ -1,0 +1,5 @@
+types
+=====
+
+.. automodule:: deeptrack.types
+

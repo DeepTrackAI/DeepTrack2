@@ -11,7 +11,7 @@ hasfunction(obj: any, function_name: str) -> bool
 isiterable(obj: any)
     Return True if the object is iterable. Else, return False.
 as_list(obj: any)
-    If the input is iterable, convert it to list. 
+    If the input is iterable, convert it to list.
     Otherwise, wrap the input in a list.
 get_kwarg_names(function: Callable)
     Return the names of the keyword arguments the function accepts.
@@ -142,8 +142,8 @@ def kwarg_has_default(function: Callable, argument: str) -> bool:
 def safe_call(function, positional_args=[], **kwargs):
     """Calls a function, using keyword arguments from a dictionary of arguments.
 
-    If the function does not accept one of the argument provided, it will not be passed. Does not support
-    non-keyword arguments.
+    If the function does not accept one of the argument provided, it will not
+    be passed. Does not support non-keyword arguments.
 
     Parameters
     ----------

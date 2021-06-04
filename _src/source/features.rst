@@ -6,6 +6,34 @@ features
 Module classes
 <<<<<<<<<<<<<<
 
+AsType
+^^^^^^
+
+.. autoclass:: deeptrack.features.AsType
+   :members:
+   :exclude-members: get
+
+Bind
+^^^^
+
+.. autoclass:: deeptrack.features.Bind
+   :members:
+   :exclude-members: get
+
+BindResolve
+^^^^^^^^^^^
+
+.. autoclass:: deeptrack.features.BindResolve
+   :members:
+   :exclude-members: get
+
+BindUpdate
+^^^^^^^^^^
+
+.. autoclass:: deeptrack.features.BindUpdate
+   :members:
+   :exclude-members: get
+
 Branch
 ^^^^^^
 
@@ -101,6 +129,13 @@ SampleToMasks
 ^^^^^^^^^^^^^
 
 .. autoclass:: deeptrack.features.SampleToMasks
+   :members:
+   :exclude-members: get
+
+Slice
+^^^^^
+
+.. autoclass:: deeptrack.features.Slice
    :members:
    :exclude-members: get
 
