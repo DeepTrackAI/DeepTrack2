@@ -446,12 +446,6 @@ class Affine(Augmentation):
             if "position" in prop:
                 position = np.array(prop["position"])
 
-                print(
-                    position.shape,
-                    inverse_mapping.shape,
-                    (position[..., :2] - center + np.array([dy, dx])).shape,
-                )
-
                 inverted = (
                     np.dot(
                         inverse_mapping,
