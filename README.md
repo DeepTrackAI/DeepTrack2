@@ -121,7 +121,7 @@ The detailed documentation of DeepTrack 2.0 is available at the following link: 
 
 If you use DeepTrack 2.0 in your project, please cite us here:
 
-    Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. "Quantitative Digital Microscopy with Deep Learning." [arXiv:2010.08260](https://arxiv.org/abs/2010.08260)
+    Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. "Quantitative Digital Microscopy with Deep Learning." [https://doi.org/10.1063/5.0034891](https://aip.scitation.org/doi/10.1063/5.0034891)
 
 See also:
 
