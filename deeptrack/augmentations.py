@@ -710,15 +710,8 @@ class Pad(Augmentation):
         results = [self.get(image, **kwargs) for image in images]
         for idx, result in enumerate(results):
             if isinstance(result, tuple):
-                shape = result[0].shape
-                padding = result[1]
-                de_pad = tuple(
-                    slice(p[0], shape[dim] - p[1]) for dim, p in enumerate(padding)
-                )
-                results[idx] = (
-                    Image(result[0]).merge_properties_from(images[idx]),
-                    {"undo_padding": de_pad},
-                )
+
+                results[idx] = Image(result[0]).merge_properties_from(images[idx])
             else:
                 Image(results[idx]).merge_properties_from(images[idx])
         return results
@@ -739,7 +732,7 @@ class PadToMultiplesOf(Pad):
     def __init__(self, multiple: PropertyLike[int or None] = 1, **kwargs):
         def amount_to_pad(image):
             shape = image.shape
-            multiple = self.multiple.current_value
+            multiple = self.multiple()
 
             if not isinstance(multiple, (list, tuple, np.ndarray)):
                 multiple = (multiple,) * image.ndim
