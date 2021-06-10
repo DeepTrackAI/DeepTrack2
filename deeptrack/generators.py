@@ -201,6 +201,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         shuffle_batch=True,
         ndim=4,
         max_epochs_per_sample=np.inf,
+        verbose=1,
     ):
 
         if min_data_size is None:
@@ -229,6 +230,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         self.exit_signal = False
         self.epoch = 0
         self._batch_size = 32
+        self.verbose = verbose
         self.data_generation_thread = threading.Thread(
             target=self._continuous_get_training_data, daemon=True
         )
@@ -320,7 +322,7 @@ class ContinuousGenerator(keras.utils.Sequence):
             if self.exit_signal:
                 break
 
-            new_image = self._get(self.feature, self.feature_kwargs)
+            new_image = self._get(self.feature)
 
             datapoint = self.construct_datapoint(new_image)
             if len(self.data) >= self.max_data_size:
@@ -336,26 +338,22 @@ class ContinuousGenerator(keras.utils.Sequence):
 
     def cleanup(self):
         self.data = [
-            sample for sample in self.data if sample[-1] < self.max_epochs_per_sample
+            sample
+            for sample in self.data
+            if sample["usage"] < self.max_epochs_per_sample
         ]
 
-    def _get(self, features: Feature or List[Feature], feature_kwargs) -> Image:
+    def _get(self, features: Feature or List[Feature]) -> Image:
         # Updates and resolves a feature or list of features.
         if isinstance(features, list):
 
-            for feature, update_kw in zip(features, self.update_kwargs):
-                feature.update(**update_kw)
+            for feature in features:
+                feature.update()
 
-            if not isinstance(feature_kwargs, list):
-                feature_kwargs = itertools.cycle([feature_kwargs])
-
-            return [
-                feature.resolve(**kwargs)
-                for feature, kwargs in zip(features, feature_kwargs)
-            ]
+            return [feature.resolve() for feature in features]
         else:
             features.update()
-            return features.resolve(**feature_kwargs)
+            return features.resolve()
 
 
 class CappedContinuousGenerator(ContinuousGenerator):
