@@ -353,7 +353,7 @@ class Ellipsoid(Scatterer):
     """
 
     __conversion_table__ = ConversionTable(
-        radius=(u.meter, u.meter),
+        radius=(u.meter, u.pixel),
         rotation=(u.radian, u.radian),
     )
 
