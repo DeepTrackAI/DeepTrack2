@@ -141,6 +141,24 @@ class KerasModel(Model):
 
         return self.model.predict(image)
 
+    def __rrshift__(self, other):
+        return self.add_preprocessing(other)
+
+    def add_preprocessing(self, other, input_shape="same"):
+
+        if input_shape == "same":
+            input_shape = self.model.input_shape
+
+        layer = layers.Lambda(other)
+
+        i = layers.Input(input_shape=input_shape)
+        p = layer(i)
+        o = self.model(p)
+
+        self.model = models.Model(i, o)
+
+        return self
+
     def __call__(self, *args, **kwargs):
         return self.model(*args, **kwargs)
 
