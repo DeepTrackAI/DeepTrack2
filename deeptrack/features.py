@@ -31,6 +31,7 @@ import numpy as np
 from pint.quantity import Quantity
 import tensorflow as tf
 
+
 from .backend.core import DeepTrackNode
 from .backend.units import ConversionTable
 from .backend import config
@@ -470,9 +471,31 @@ class Feature(DeepTrackNode):
         else:
             raise AttributeError
 
+    def __iter__(self):
+        while True:
+            yield from next(self)
+
+    def __next__(self):
+        data = self.update().resolve()
+
+        if isinstance(data, list):
+            data = tuple(np.array(d) for d in data)
+
+        else:
+            data = np.array(data)
+
+        yield data
+
     def __rshift__(self, other: "Feature") -> "Feature":
+
         if isinstance(other, Feature):
             return Chain(self, other)
+
+        # to avoid circular import
+        from . import models
+
+        if isinstance(other, models.KerasModel):
+            return NotImplemented
         if callable(other):
             return self >> Lambda(lambda: other)
 

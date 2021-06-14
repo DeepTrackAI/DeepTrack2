@@ -8,7 +8,7 @@ ContinuousGenerator
     Generator that asynchronously expands the dataset
 """
 
-from deeptrack.augmentations import Augmentation
+from .augmentations import Affine, Augmentation
 import numpy as np
 
 from typing import List
@@ -192,8 +192,12 @@ class ContinuousGenerator(keras.utils.Sequence):
     def __init__(
         self,
         feature,
-        label_function=lambda image: image[1],
-        batch_function=lambda image: image[0],
+        label_function=lambda image: image[1]
+        if isinstance(image, (list, tuple))
+        else None,
+        batch_function=lambda image: image[0]
+        if isinstance(image, (list, tuple))
+        else image,
         augmentation=None,
         min_data_size=None,
         max_data_size=np.inf,
@@ -234,6 +238,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         self.data_generation_thread = threading.Thread(
             target=self._continuous_get_training_data, daemon=True
         )
+        self.new_epoch = True
 
     def __enter__(self):
         try:
@@ -278,10 +283,13 @@ class ContinuousGenerator(keras.utils.Sequence):
     def on_epoch_end(self):
         # Grab a copy
         current_data = list(self.data)
+
+        self.new_epoch = True
         if self.augmentation:
-            current_data = [
-                self.augmentation.update().resolve(i["data"]) for i in current_data
-            ]
+            for data_point in current_data:
+                data_point["data"] = self.augmentation.update().resolve(
+                    data_point["data"]
+                )
 
         if self.shuffle_batch:
             random.shuffle(current_data)
@@ -317,6 +325,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         return steps
 
     def _continuous_get_training_data(self):
+        index = 0
         while True:
             # Stop generator
             if self.exit_signal:
@@ -331,6 +340,15 @@ class ContinuousGenerator(keras.utils.Sequence):
                 self.data.append(datapoint)
 
             self.cleanup()
+
+            index += 1
+
+            if index % self.max_data_size == 0:
+
+                while not self.new_epoch and not self.exit_signal:
+                    time.sleep(0.1)
+
+            self.new_epoch = False
 
     def construct_datapoint(self, image):
 
@@ -356,82 +374,121 @@ class ContinuousGenerator(keras.utils.Sequence):
             return features.resolve()
 
 
-class CappedContinuousGenerator(ContinuousGenerator):
+# class CappedContinuousGenerator(ContinuousGenerator):
 
-    """Generator that asynchronously expands the dataset.
+#     """Generator that asynchronously expands the dataset.
 
-    Generator that aims to speed up the training of networks by striking a
-    balance between the generalization gained by generating new images
-    and the speed gained from reusing images. The generator will continuously
-    create new training data during training, until `max_data_size` is reached,
-    at which point the oldest data point is replaced.
+#     Generator that aims to speed up the training of networks by striking a
+#     balance between the generalization gained by generating new images
+#     and the speed gained from reusing images. The generator will continuously
+#     create new training data during training, until `max_data_size` is reached,
+#     at which point the oldest data point is replaced.
 
-    Unlike the `ContinuousGenerator`, this generator will purge any data that
-    has been seen more than `max_sample_exposure` times.
+#     Unlike the `ContinuousGenerator`, this generator will purge any data that
+#     has been seen more than `max_sample_exposure` times.
 
-    The generator is expected to be used with the python "with" statement, which
-    ensures that the generator worker is consumed correctly.
+#     The generator is expected to be used with the python "with" statement, which
+#     ensures that the generator worker is consumed correctly.
 
-    Parameters
-    ----------
-    feature : Feature
-        The feature to resolve images from.
-    label_function : Callable[Image or list of Image] -> array_like
-        Function that returns the label corresponding to a feature output.
-    batch_function : Callable[Image or list of Image] -> array_like, optional
-        Function that returns the training data corresponding a feature output.
-    min_data_size : int
-        Minimum size of the training data before training starts
-    max_data_set : int
-        Maximum size of the training data before old data is replaced.
-    max_sample_exposure : int
-        Any sample that has been seen for more than `max_sample_exposure` will be removed from the dataset
-    batch_size : int or Callable[int, int] -> int
-        Number of images per batch. A function is expected to accept the current epoch
-        and the size of the training data as input.
-    shuffle_batch : bool
-        If True, the batches are shuffled before outputting.
-    feature_kwargs : dict or list of dicts
-        Set of options to pass to the feature when resolving
-    ndim : int
-        Number of dimensions of each batch (including the batch dimension).
-    max_sample_exposure : int
-        Any sample that has been seen for more than `max_sample_exposure` will be removed from the dataset
-    """
+#     Parameters
+#     ----------
+#     feature : Feature
+#         The feature to resolve images from.
+#     label_function : Callable[Image or list of Image] -> array_like
+#         Function that returns the label corresponding to a feature output.
+#     batch_function : Callable[Image or list of Image] -> array_like, optional
+#         Function that returns the training data corresponding a feature output.
+#     min_data_size : int
+#         Minimum size of the training data before training starts
+#     max_data_set : int
+#         Maximum size of the training data before old data is replaced.
+#     max_sample_exposure : int
+#         Any sample that has been seen for more than `max_sample_exposure` will be removed from the dataset
+#     batch_size : int or Callable[int, int] -> int
+#         Number of images per batch. A function is expected to accept the current epoch
+#         and the size of the training data as input.
+#     shuffle_batch : bool
+#         If True, the batches are shuffled before outputting.
+#     feature_kwargs : dict or list of dicts
+#         Set of options to pass to the feature when resolving
+#     ndim : int
+#         Number of dimensions of each batch (including the batch dimension).
+#     max_sample_exposure : int
+#         Any sample that has been seen for more than `max_sample_exposure` will be removed from the dataset
+#     """
 
-    def __init__(self, *args, max_sample_exposure=np.inf, **kwargs):
-        import warnings
+#     def __init__(self, *args, max_sample_exposure=np.inf, **kwargs):
+#         import warnings
 
-        warnings.warn(
-            "CappedContinuousGenerator is deprecated in favor of ContinuousGenerator with the max_epochs_per_sample argument.",
-            DeprecationWarning,
-        )
-        self.max_sample_exposure = max_sample_exposure
-        super().__init__(*args, **kwargs)
+#         warnings.warn(
+#             "CappedContinuousGenerator is deprecated in favor of ContinuousGenerator with the max_epochs_per_sample argument.",
+#             DeprecationWarning,
+#         )
+#         self.max_sample_exposure = max_sample_exposure
+#         super().__init__(*args, **kwargs)
 
+#     def __getitem__(self, idx):
+
+#         # TODO: Use parent method
+#         batch_size = self._batch_size
+#         subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
+#         for a in subset:
+#             a[-1] += 1
+#         outputs = [array(a) for a in list(zip(*subset))]
+#         outputs = (outputs[0], *outputs[1:-1])
+#         return outputs
+
+#     def construct_datapoint(self, image, label):
+#         return [image, label, 0]
+
+#     def cleanup(self):
+#         self.data = [
+#             sample for sample in self.data if sample[-1] < self.max_sample_exposure
+#         ]
+
+#     def on_epoch_end(self):
+
+#         while len(self.data) < self.min_data_size:
+#             print("Awaiting dataset to reach minimum size...", end="\r")
+#             time.sleep(0.1)
+
+#         return super().on_epoch_end()
+
+
+class AutoTrackGenerator(ContinuousGenerator):
     def __getitem__(self, idx):
 
-        # TODO: Use parent method
-        batch_size = self._batch_size
-        subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
-        for a in subset:
-            a[-1] += 1
-        outputs = [array(a) for a in list(zip(*subset))]
-        outputs = (outputs[0], *outputs[1:-1])
-        return outputs
+        aug = self.augmentation
+        if aug is None:
+            aug = Affine(
+                translate=lambda: (np.random.rand() - 0.5) * 8,
+                scale=lambda: np.random.choice([-1, 1], size=(2,)),
+            )
 
-    def construct_datapoint(self, image, label):
-        return [image, label, 0]
+        x = self.current_data[idx]["data"]
+        sample = np.array(x)
+        batch = [aug.update().resolve(sample) for _ in range(self.batch_size)]
 
-    def cleanup(self):
-        self.data = [
-            sample for sample in self.data if sample[-1] < self.max_sample_exposure
-        ]
+        labels = [self.get_transform_matrix(batch[0], b).reshape((-1,)) for b in batch]
 
-    def on_epoch_end(self):
+        return np.array(batch), np.array(labels)
 
-        while len(self.data) < self.min_data_size:
-            print("Awaiting dataset to reach minimum size...", end="\r")
-            time.sleep(0.1)
+    def __len__(self):
+        return len(self.current_data)
 
-        return super().on_epoch_end()
+    def get_transform_matrix(self, base_image, new_image):
+        t0 = base_image.get_property("translate")[2::-1]
+        r0 = base_image.get_property("rotate")
+        s0 = base_image.get_property("scale")
+
+        t1 = new_image.get_property("translate")[2::-1]
+        r1 = new_image.get_property("rotate")
+        s1 = new_image.get_property("scale")
+
+        rmat0 = np.array([[np.cos(r0), np.sin(r0)], [-np.sin(r0), np.cos(r0)]]) * s0
+        rmat1 = np.array([[np.cos(r1), np.sin(r1)], [-np.sin(r1), np.cos(r1)]]) * s1
+
+        rmat = np.linalg.inv(rmat0) @ rmat1
+        dt = (np.array(t1) - t0) @ rmat1
+
+        return np.array((*rmat, dt))

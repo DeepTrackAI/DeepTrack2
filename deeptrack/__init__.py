@@ -20,9 +20,10 @@ except:
 units.load_definitions(_pixel_context.split("\n"))
 units.enable_contexts("dt")
 
+from .features import *
 from .aberrations import *
 from .augmentations import *
-from .features import *
+
 from .math import *
 from .noises import *
 from .optics import *

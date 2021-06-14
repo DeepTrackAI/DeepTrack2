@@ -298,7 +298,7 @@ class Image:
 
     def __array__(self, *args, **kwargs):
 
-        return self.to_numpy()._value
+        return np.array(self.to_numpy()._value)
 
     def to_tf(self):
 

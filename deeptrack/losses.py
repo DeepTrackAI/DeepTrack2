@@ -26,7 +26,10 @@ nd_mean_absolute_percentage_error
     Mean absolute percentage error with flattened inputs.
 """
 
+from functools import wraps
+import tensorflow as tf
 import tensorflow.keras as keras
+
 
 losses = keras.losses
 K = keras.backend
@@ -43,6 +46,24 @@ _COMPATIBLE_LOSS_FUNCTIONS = [
     losses.mae,
     losses.mape,
 ]
+
+
+def squared(func):
+    @wraps(func)
+    def inner(T, P):
+        error = func(T, P)
+        return K.square(error)
+
+    return inner
+
+
+def abs(func):
+    @wraps(func)
+    def inner(T, P):
+        error = func(T, P)
+        return K.abs(error)
+
+    return inner
 
 
 # LOSS WRAPPERS
@@ -113,6 +134,28 @@ def weighted_crossentropy(weight=(1, 1), eps=1e-4):
 
     return unet_crossentropy
 
+
+def affine_consistency(T, P):
+    """Guides the network to be consistent under augmentations"""
+
+    # Reconstruct transformation matrix
+    T = K.reshape(T, (-1, 3, 2))
+
+    offset_vector = T[:, -1, :]
+    transformation_matrix = T[:, :2, :2]
+
+    # Prediction on first image is transformed
+    transformed_origin = tf.linalg.matvec(
+        transformation_matrix, P[0, :2], transpose_a=True
+    )
+
+    error = offset_vector - (P - transformed_origin)
+
+    return error
+
+
+squared_affine_consistency = squared(affine_consistency)
+abs_affine_consistency = abs(affine_consistency)
 
 # Wrap standard keras loss function with flatten.
 for keras_loss_function in _COMPATIBLE_LOSS_FUNCTIONS:
