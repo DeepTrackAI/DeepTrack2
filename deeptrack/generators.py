@@ -491,4 +491,6 @@ class AutoTrackGenerator(ContinuousGenerator):
         rmat = np.linalg.inv(rmat0) @ rmat1
         dt = (np.array(t1) - t0) @ rmat1
 
-        return np.array((*rmat, dt))
+        return np.array(
+            [rmat[0, 0], rmat[0, 1], dt[0], rmat[1, 0], rmat[1, 1], dt[1], 0, 0]
+        )

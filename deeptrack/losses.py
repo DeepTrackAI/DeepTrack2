@@ -29,6 +29,8 @@ nd_mean_absolute_percentage_error
 from functools import wraps
 import tensorflow as tf
 import tensorflow.keras as keras
+from tensorflow.python.framework.dtypes import as_dtype
+import tensorflow_addons
 
 
 losses = keras.losses
@@ -113,6 +115,11 @@ def sigmoid(func):
     return wrapper
 
 
+def softmax(X, axis=(1, 2, 3)):
+    X = K.exp(X - K.max(X, axis=axis, keepdims=True))
+    return X / K.sum(X, axis, keepdims=True)
+
+
 def weighted_crossentropy(weight=(1, 1), eps=1e-4):
     """Binary crossentropy with weighted classes.
 
@@ -139,21 +146,76 @@ def affine_consistency(T, P):
     """Guides the network to be consistent under augmentations"""
 
     # Reconstruct transformation matrix
-    T = K.reshape(T, (-1, 3, 2))
+    T = K.reshape(T, (-1, 2, 4))
 
-    offset_vector = T[:, -1, :]
+    offset_vector = T[:, :, 2]
     transformation_matrix = T[:, :2, :2]
 
     # Prediction on first image is transformed
-    transformed_origin = tf.linalg.matvec(
-        transformation_matrix, P[0, :2], transpose_a=True
-    )
+    transformed_origin = tf.linalg.matvec(transformation_matrix, P[0, :2])
 
     error = offset_vector - (P - transformed_origin)
 
     return error
 
 
+def adjancency_consistency(_, P):
+
+    # dX0 = P[:, 1:, :, 1] - P[:, :-1, :, 1]
+    # dX1 = P[:, 1:, :, 0] - P[:, :-1, :, 0]
+
+    # dY0 = P[:, :, 1:, 0] - P[:, :, :-1, 0]
+    # dY1 = P[:, :, 1:, 1] - P[:, :, :-1, 1]
+
+    # dX0_error = K.square(dX0 + 1)
+    # dX1_error = K.square(dX1)
+    # dY0_error = K.square(dY0 + 1)
+    # dY1_error = K.square(dY1)
+
+    dFdx = P[:, 1:, :, :2] - P[:, :-1, :, :2]
+    dFdy = P[:, :, 1:, :2] - P[:, :, :-1, :2]
+
+    Wx = softmax((P[:, 1:, :, 2] + P[:, :-1, :, 2]) / 2, axis=(1, 2))
+    Wy = softmax((P[:, :, 1:, 2] + P[:, :, :-1, 2]) / 2, axis=(1, 2))
+
+    dFdx_err = (K.square(dFdx[..., 0]) + K.square(dFdx[..., 1] + 1)) * Wx
+    dFdy_err = (K.square(dFdy[..., 0] + 1) + K.square(dFdy[..., 1])) * Wy
+
+    return (K.sum(dFdx_err) + K.sum(dFdy_err)) / 2
+
+
+def field_affine_consistency(T, P):
+
+    transform = K.reshape(T[:, :6], (-1, 2, 3))
+
+    offset_vector = transform[:, :, 2]
+    transformation_matrix = transform[:, :2, :2]
+
+    # For broadcasting
+
+    offset_vector = K.reshape(offset_vector, (-1, 1, 1, 2))
+    transformation_matrix = K.reshape(transformation_matrix, (-1, 1, 1, 2, 2))
+
+    # Transforms and broadcasts the
+    transformed_origin = tf.linalg.matvec(transformation_matrix, P[:1, ..., :2])
+
+    # Transforms all prediced images to match the first image
+    transformed_field = tensorflow_addons.image.transform(
+        transformed_origin, T, fill_mode="wrap"
+    )
+
+    error = offset_vector - (P[..., :2] - transformed_field)
+
+    error = (
+        error
+        * softmax(P[:, :, :, 2:3], axis=(1, 2, 3))
+        * K.cast_to_floatx(K.shape(error)[1] * K.shape(error)[2])
+    )
+    return error
+
+
+squared_field_affine_consistency = squared(field_affine_consistency)
+abs_field_affine_consistency = abs(field_affine_consistency)
 squared_affine_consistency = squared(affine_consistency)
 abs_affine_consistency = abs(affine_consistency)
 
