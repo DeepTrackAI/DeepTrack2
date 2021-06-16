@@ -469,7 +469,9 @@ class AutoTrackGenerator(ContinuousGenerator):
         sample = np.array(x)
         batch = [aug.update().resolve(sample) for _ in range(self.batch_size)]
 
-        labels = [self.get_transform_matrix(batch[0], b).reshape((-1,)) for b in batch]
+        labels = np.array(
+            [self.get_transform_matrix(batch[0], b).reshape((-1,)) for b in batch]
+        )
 
         labels[1::2, 0] = -1
         labels[1::2, 3] = -1
