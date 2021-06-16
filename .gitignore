@@ -2,7 +2,7 @@
 **/__pycache__
 deeptrack-app/*
 */datasets/*
-*/models/*
+paper-examples/models/*
 
 build/*
 dist/*
