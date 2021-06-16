@@ -27,11 +27,11 @@ nd_mean_absolute_percentage_error
 """
 
 from functools import wraps
+
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
-from tensorflow.python.framework.dtypes import as_dtype
 import tensorflow_addons
-
 
 losses = keras.losses
 K = keras.backend
@@ -54,7 +54,7 @@ def squared(func):
     @wraps(func)
     def inner(T, P):
         error = func(T, P)
-        return K.square(error)
+        return K.sum(K.square(error))
 
     return inner
 
@@ -146,7 +146,7 @@ def affine_consistency(T, P):
     """Guides the network to be consistent under augmentations"""
 
     # Reconstruct transformation matrix
-    T = K.reshape(T, (-1, 2, 4))
+    T = K.reshape(T[:, :6], (-1, 2, 3))
 
     offset_vector = T[:, :, 2]
     transformation_matrix = T[:, :2, :2]
@@ -159,7 +159,7 @@ def affine_consistency(T, P):
     return error
 
 
-def adjancency_consistency(_, P):
+def adjacency_consistency(_, P):
 
     # dX0 = P[:, 1:, :, 1] - P[:, :-1, :, 1]
     # dX1 = P[:, 1:, :, 0] - P[:, :-1, :, 0]
@@ -175,11 +175,11 @@ def adjancency_consistency(_, P):
     dFdx = P[:, 1:, :, :2] - P[:, :-1, :, :2]
     dFdy = P[:, :, 1:, :2] - P[:, :, :-1, :2]
 
-    Wx = softmax((P[:, 1:, :, 2] + P[:, :-1, :, 2]) / 2, axis=(1, 2))
-    Wy = softmax((P[:, :, 1:, 2] + P[:, :, :-1, 2]) / 2, axis=(1, 2))
+    Wx = softmax(P[:, 1:, :, 2], axis=(1, 2))
+    Wy = softmax(P[:, :, 1:, 2], axis=(1, 2))
 
-    dFdx_err = (K.square(dFdx[..., 0]) + K.square(dFdx[..., 1] + 1)) * Wx
-    dFdy_err = (K.square(dFdy[..., 0] + 1) + K.square(dFdy[..., 1])) * Wy
+    dFdx_err = (K.abs(dFdx[..., 0] + 1) + K.abs(dFdx[..., 1])) * Wx
+    dFdy_err = (K.abs(dFdy[..., 0]) + K.abs(dFdy[..., 1] + 1)) * Wy
 
     return (K.sum(dFdx_err) + K.sum(dFdy_err)) / 2
 
@@ -189,29 +189,23 @@ def field_affine_consistency(T, P):
     transform = K.reshape(T[:, :6], (-1, 2, 3))
 
     offset_vector = transform[:, :, 2]
-    transformation_matrix = transform[:, :2, :2]
 
-    # For broadcasting
+    non_mirrored = P[2::2]
+    mirrored = P[1::2, ::-1, ::-1] * np.array([-1, -1, 1])
 
     offset_vector = K.reshape(offset_vector, (-1, 1, 1, 2))
-    transformation_matrix = K.reshape(transformation_matrix, (-1, 1, 1, 2, 2))
 
-    # Transforms and broadcasts the
-    transformed_origin = tf.linalg.matvec(transformation_matrix, P[:1, ..., :2])
+    non_mirrored_error = (
+        (P[:1, ..., :2] - non_mirrored[..., :2]) + offset_vector[2::2]
+    ) * softmax(non_mirrored[..., 2:3], axis=(1, 2))
 
-    # Transforms all prediced images to match the first image
-    transformed_field = tensorflow_addons.image.transform(
-        transformed_origin, T, fill_mode="wrap"
-    )
+    mirrored_error = (
+        (P[:1, ..., :2] - mirrored[..., :2]) + offset_vector[1::2]
+    ) * softmax(mirrored[..., 2:3], axis=(1, 2))
 
-    error = offset_vector - (P[..., :2] - transformed_field)
-
-    error = (
-        error
-        * softmax(P[:, :, :, 2:3], axis=(1, 2, 3))
-        * K.cast_to_floatx(K.shape(error)[1] * K.shape(error)[2])
-    )
-    return error
+    error = K.concatenate((non_mirrored_error, mirrored_error), axis=0)
+    # error = error * K.cast_to_floatx(K.shape(error)[1] * K.shape(error)[2])
+    return error * 8
 
 
 squared_field_affine_consistency = squared(field_affine_consistency)
