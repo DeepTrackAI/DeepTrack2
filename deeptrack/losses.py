@@ -54,7 +54,7 @@ def squared(func):
     @wraps(func)
     def inner(T, P):
         error = func(T, P)
-        return K.sum(K.square(error))
+        return K.square(error)
 
     return inner
 
@@ -152,7 +152,9 @@ def affine_consistency(T, P):
     transformation_matrix = T[:, :2, :2]
 
     # Prediction on first image is transformed
-    transformed_origin = tf.linalg.matvec(transformation_matrix, P[0, :2])
+    transformed_origin = tf.linalg.matvec(
+        transformation_matrix, P[0, :2], transpose_a=True
+    )
 
     error = offset_vector - (P - transformed_origin)
 

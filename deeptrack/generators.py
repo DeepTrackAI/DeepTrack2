@@ -9,6 +9,7 @@ ContinuousGenerator
 """
 
 from .augmentations import Affine, Augmentation
+from .noises import Gaussian
 import numpy as np
 
 from typing import List
@@ -461,25 +462,31 @@ class AutoTrackGenerator(ContinuousGenerator):
         aug = self.augmentation
         if aug is None:
             aug = Affine(
-                translate=lambda: (np.random.rand(2) - 0.5) * 4,
+                translate=lambda: np.random.randn(2) * 2,
                 # scale=lambda: np.random.choice([-1, 1], size=(2,)),
+                rotate=lambda: np.random.rand() * np.pi * 2,
             )
 
         x = self.current_data[idx]["data"]
+        x = np.array(x)
+
+        # x = (
+        #     (
+        #         Affine(
+        #             scale=lambda: np.random.choice([-1, 1], size=(2,)),
+        #             rotate=lambda: np.random.rand() * np.pi * 2,
+        #         )
+        #         >> Gaussian(sigma=lambda: np.random.rand() * 0.01)
+        #     )
+        #     .update()
+        #     .resolve(x)
+        # )
         sample = np.array(x)
         batch = [aug.update().resolve(sample) for _ in range(self.batch_size)]
 
         labels = np.array(
             [self.get_transform_matrix(batch[0], b).reshape((-1,)) for b in batch]
         )
-
-        labels[1::2, 0] = -1
-        labels[1::2, 3] = -1
-
-        batch = [
-            batch[idx][::-1, ::-1] if idx % 2 else batch[idx]
-            for idx in range(self.batch_size)
-        ]
 
         return np.array(batch), np.array(labels)
 

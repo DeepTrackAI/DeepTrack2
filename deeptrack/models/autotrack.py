@@ -41,6 +41,13 @@ class AutoTracker(KerasModel):
             number_of_outputs=2,
         )
 
+    # def predict(self, x, *args, **kwargs):
+
+    #     a = self.model.predict(x, *args, **kwargs)
+    #     b = self.model.predict(x[:, ::-1, ::-1], *args, **kwargs)
+
+    #     return (a - b) / 2
+
 
 class AutoMultiTracker(KerasModel):
 
