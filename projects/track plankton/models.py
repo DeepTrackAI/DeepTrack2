@@ -19,7 +19,7 @@ def generate_unet(im_size_height, im_size_width, no_of_inputs, no_of_outputs):
     model = unet(
     (im_size_height, im_size_width, no_of_inputs), 
     conv_layers_dimensions=[16, 32, 64, 128],
-    base_conv_layers_dimensions=[32, 32],
+    base_conv_layers_dimensions=[128, 128],
     number_of_outputs=no_of_outputs,
     output_activation="softmax",
     loss=softmax_categorical

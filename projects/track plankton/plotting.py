@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os  
 import numpy as np
 import cv2
-from utils import Normalize_image, get_mean_net_and_gross_distance, extract_positions_from_list
+from utils import normalize_image, get_mean_net_and_gross_distance, extract_positions_from_list
 
 def plot_image(image):
     plt.figure(figsize=(11, 11))

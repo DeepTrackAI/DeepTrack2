@@ -5,7 +5,7 @@ from deeptrack.math import NormalizeMinMax, Clip
 from deeptrack.augmentations import FlipLR, FlipUD
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import Normalize_image, RemoveRunningMean
+from utils import normalize_image, remove_running_mean
 import cv2
 import os
 from deeptrack.sequences import Sequence, Sequential
@@ -114,13 +114,6 @@ def plankton_brightfield(im_size_height, im_size_width, gradient_amp):
                           in spectrum]
     return brightfield_microscope
 
-# def create_sample(*arg): doesn't work, use sample = plankton1**number1 + plankton2**number2 instead
-#     no_of_plankton = lambda: np.random.randint(int(arg[1]*0.66), int(arg[1]*1.33))
-#     sample = arg[0]**no_of_plankton
-#     for i in range(2, len(arg), 2):
-#         no_of_plankton = lambda: np.random.randint(int(arg[i+1]*0.66), int(arg[i+1]*1.33))
-#         sample = Branch(sample, arg[i]**no_of_plankton)
-#     return sample
 
 def create_image(noise_amp, sample, microscope, norm_min, norm_max):
     noise = Poisson(snr=lambda: (60 + np.random.rand() * 30) * 1/(max(0.01,noise_amp)))
@@ -204,39 +197,6 @@ def get_target_sequence(sequence_of_particles):
     return label
 
 
-
-# def batch_function0(image):
-#     return np.squeeze(image)
-
-
-# def batch_function1(imaged_particle_sequence):
-#     images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
-#     train_images = np.zeros((images.shape[0],images.shape[1],images.shape[2]-1))
-    
-#     for i in range(images.shape[2]-1):
-#         train_images[:,:,i] = Normalize_image(images[:,:,i]-images[:,:,i+1])
-#     return train_images
-
-# def batch_function2(imaged_particle_sequence):
-#     images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
-#     train_images = np.zeros((images.shape[0],images.shape[1],images.shape[2]))
-    
-#     for i in range(images.shape[2]-1):
-#         train_images[:,:,i] = Normalize_image(images[:,:,i]-images[:,:,i+1])
-        
-#     train_images[:,:,-1] = images[:,:,np.int((images.shape[2])/2)]
-#     return train_images
-
-# def batch_function3(imaged_particle_sequence):
-#     images = np.array(np.concatenate(imaged_particle_sequence,axis=-1))
-#     train_images = np.zeros((images.shape[0],images.shape[1],images.shape[2]+2))
-    
-#     for i in range(images.shape[2]-1):
-#         train_images[:,:,i] = Normalize_image(images[:,:,i]-images[:,:,i+1])
-        
-#     for i in range(images.shape[2]):
-#         train_images[:,:,images.shape[2]-1+i] = images[:,:,i]
-#     return train_images
 
 
 def create_custom_batch_function(imaged_particle_sequence, 
