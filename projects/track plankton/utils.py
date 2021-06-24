@@ -20,8 +20,8 @@ def remove_running_mean(
     path_folder=None,
     tot_no_of_frames=None,
     center_frame=None,
-    im_width=None,
-    im_height=None,
+    im_width=1280,
+    im_height=1024,
     **kwargs
 ):
     list_paths = os.listdir(path_folder)
@@ -57,7 +57,7 @@ def remove_running_mean(
     return normalize_image(resized_center_image - resized_mean_image)
 
 
-def get_mean_image(folder_path, im_size_width, im_size_height):
+def get_mean_image(folder_path, im_size_width=1280, im_size_height=1024):
     list_paths = os.listdir(folder_path)
     mean_img = cv2.imread(folder_path + "\\" + list_paths[0], 0) / len(list_paths)
     for i in range(1, len(list_paths)):
@@ -70,13 +70,13 @@ def get_mean_image(folder_path, im_size_width, im_size_height):
 
 def get_image_stack(
     *args,
-    outputs=None,
+    outputs=[0],
     folder_path=None,
-    frame_im0=None,
-    im_size_width=None,
-    im_size_height=None,
-    im_resize_width=None,
-    im_resize_height=None,
+    frame_im0=0,
+    im_size_width=1280,
+    im_size_height=1024,
+    im_resize_width=1280,
+    im_resize_height=1024,
     function_img=[lambda img: 1 * img],
     function_diff=[lambda img: 1 * img],
     **kwargs
@@ -140,13 +140,13 @@ def get_blob_centers(prediction, value_threshold=0.5, prediction_size=0, **kwarg
         prediction, structure=[[1, 1, 1], [1, 1, 1], [1, 1, 1]]
     )
     centers = np.array([get_blob_center(1, labeled_array)])
-    for i in range(2, num_features):
+    for i in range(2, num_features + 1):
         if np.count_nonzero(labeled_array == (i)) > prediction_size:
             centers = np.vstack((centers, get_blob_center(i, labeled_array)))
     return centers
 
 
-def extract_positions_from_prediction(im_stack=None, model=None, layer=None, **kwargs):
+def extract_positions_from_prediction(im_stack=None, model=None, layer=0, **kwargs):
     prediction = model.predict(im_stack)[0, :, :, layer]
     positions = get_blob_centers(prediction, **kwargs)
     return positions
