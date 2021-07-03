@@ -23,8 +23,6 @@ from .utils import (
     get_kwarg_names,
 )
 
-import typing
-
 
 from .backend.core import DeepTrackNode
 from . import features
@@ -142,7 +140,7 @@ class PropertyDict(DeepTrackNode, dict):
                 try:
                     dependencies[key] = Property(val, **{**dependencies, **kwargs})
                     kwargs.pop(key)
-                except AttributeError as e:
+                except AttributeError:
                     pass
 
         def action(replicate_index=None):

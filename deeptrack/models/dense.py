@@ -1,4 +1,4 @@
-from deeptrack.models.utils import KerasModel, as_KerasModel
+from deeptrack.models.utils import as_KerasModel
 from deeptrack.layers import as_block
 from tensorflow.keras import layers, models
 

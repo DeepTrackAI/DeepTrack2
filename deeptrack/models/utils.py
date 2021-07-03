@@ -1,7 +1,10 @@
-from ..generators import ContinuousGenerator
-from .. import features
 from functools import wraps
-from tensorflow.keras import models
+
+import numpy as np
+from tensorflow.keras import layers, models
+
+from .. import features
+from ..generators import ContinuousGenerator
 
 __all__ = ["compile", "load_model", "Model", "KerasModel", "LoadModel"]
 

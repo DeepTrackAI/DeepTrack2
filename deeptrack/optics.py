@@ -17,7 +17,7 @@ Brightfield
 
 from pint.quantity import Quantity
 from deeptrack.backend.units import ConversionTable
-from deeptrack.properties import PropertyDict, propagate_data_to_dependencies
+from deeptrack.properties import propagate_data_to_dependencies
 import numpy as np
 from .features import DummyFeature, Feature, StructuralFeature
 from .image import Image, pad_image_to_fft
@@ -25,7 +25,6 @@ from .types import ArrayLike, PropertyLike
 
 from scipy.ndimage import convolve
 
-from pint import Context
 from . import units as u
 from deeptrack import image
 

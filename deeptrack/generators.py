@@ -8,8 +8,7 @@ ContinuousGenerator
     Generator that asynchronously expands the dataset
 """
 
-from .augmentations import Affine, Augmentation
-from .noises import Gaussian
+from .augmentations import Affine
 import numpy as np
 
 from typing import List
@@ -19,7 +18,6 @@ from .image import Image, array
 import threading
 import random
 import time
-import itertools
 
 
 class Generator(keras.utils.Sequence):

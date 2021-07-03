@@ -1,8 +1,8 @@
 """ Contains features that perform some statistics operation on the input.
 
-These features reduce some dimension of the input by calculating some statistical metric. They 
+These features reduce some dimension of the input by calculating some statistical metric. They
 follow the syntax of the equivalent numpy function, meaning that axis and keepdims are valid arguments.
-Moreover, they all accept the `distributed` keyword, which determines if each image in the input list 
+Moreover, they all accept the `distributed` keyword, which determines if each image in the input list
 should be handled individually or not. For example:
 
 >>> input_values = [np.ones((2,)), np.zeros((2,))]
@@ -31,7 +31,7 @@ from typing import List
 
 import numpy as np
 
-from . import Image
+from .image import Image
 from .features import Feature
 
 
@@ -205,20 +205,6 @@ class Max(Reducer):
     ):
         super().__init__(
             np.max,
-            feature=feature,
-            axis=axis,
-            keepdims=keepdims,
-            distributed=distributed,
-            **kwargs
-        )
-
-
-class PeakToPeak(Reducer):
-    def __init__(
-        self, feature=None, axis=None, keepdims=False, distributed=True, **kwargs
-    ):
-        super().__init__(
-            np.ptp,
             feature=feature,
             axis=axis,
             keepdims=keepdims,

@@ -31,7 +31,6 @@ from functools import wraps
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
-import tensorflow_addons
 
 losses = keras.losses
 K = keras.backend

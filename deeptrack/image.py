@@ -31,7 +31,7 @@ try:
     import cupy as cp
 
     CUPY_INSTALLED = True
-except Exception as e:
+except Exception:
     CUPY_INSTALLED = False
     warnings.warn(
         "cupy not installed. GPU-accelerated simulations will not be possible"

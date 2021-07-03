@@ -29,9 +29,6 @@ import scipy.ndimage as ndimage
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
 
-from typing import Callable
-import warnings
-
 
 class Augmentation(Feature):
     """Base abstract augmentation class.
@@ -103,7 +100,7 @@ class Augmentation(Feature):
 
         return new_list_of_lists
 
-    def update_properties(*args, **kwargs):
+    def update_properties(self, *args, **kwargs):
         pass
 
 

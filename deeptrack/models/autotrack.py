@@ -4,7 +4,6 @@ from ..generators import AutoTrackGenerator
 from ..losses import (
     squared_affine_consistency,
     squared_field_affine_consistency,
-    adjacency_consistency,
 )
 from ..layers import ConvolutionalBlock, PoolingBlock, DeconvolutionalBlock
 

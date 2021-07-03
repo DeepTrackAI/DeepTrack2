@@ -20,11 +20,9 @@ Duplicate
 
 """
 
-import copy
 import itertools
 import operator
-import threading
-from typing import Any, Callable, Iterable, Iterator, List, Tuple
+from typing import Any, Callable, Iterable, Iterator, List
 import warnings
 
 import numpy as np
@@ -36,7 +34,7 @@ from .backend.core import DeepTrackNode
 from .backend.units import ConversionTable
 from .backend import config
 from .image import Image
-from .properties import Property, PropertyDict, propagate_data_to_dependencies
+from .properties import PropertyDict, propagate_data_to_dependencies
 from .types import ArrayLike, PropertyLike
 
 
@@ -1027,7 +1025,7 @@ class Slice(Feature):
     def __init__(
         self,
         slices: PropertyLike[
-            Iterable[PropertyLike[int] or PropertyLike[slice] or PropertyLike[ellipsis]]
+            Iterable[PropertyLike[int] or PropertyLike[slice] or PropertyLike[...]]
         ],
         **kwargs
     ):

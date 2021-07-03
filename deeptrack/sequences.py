@@ -11,8 +11,6 @@ Sequential
     Converts a feature to be resolved as a sequence.
 """
 
-import numpy as np
-from deeptrack.image import Image
 from .features import Feature
 from .properties import SequentialProperty
 from .types import PropertyLike
