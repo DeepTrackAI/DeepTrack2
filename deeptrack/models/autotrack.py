@@ -17,16 +17,16 @@ except:
 
 
 class AutoTracker(KerasModel):
-
-    data_generator = AutoTrackGenerator
-
     def __init__(
         self,
         model=None,
         input_shape=(64, 64, 1),
         loss=squared_affine_consistency,
+        symmetries=1,
         **kwargs
     ):
+        self.symmetries = symmetries
+
         if model is None:
             model = self.default_model(input_shape=input_shape)
 
@@ -38,8 +38,11 @@ class AutoTracker(KerasModel):
             conv_layers_dimensions=[16, 32, 64],
             dense_layers_dimensions=(32, 32),
             steps_per_pooling=1,
-            number_of_outputs=2,
+            number_of_outputs=4,
         )
+
+    def data_generator(self, *args, **kwargs):
+        return AutoTrackGenerator(*args, symmetries=self.symmetries, **kwargs)
 
     # def predict(self, x, *args, **kwargs):
 

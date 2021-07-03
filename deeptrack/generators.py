@@ -457,9 +457,13 @@ class ContinuousGenerator(keras.utils.Sequence):
 
 
 class AutoTrackGenerator(ContinuousGenerator):
+    def __init__(self, *args, symmetries=1, **kwargs):
+        self.symmetries = symmetries
+        super().__init__(*args, **kwargs)
+
     def __getitem__(self, idx):
 
-        aug = self.augmentation
+        aug = None
         if aug is None:
             aug = Affine(
                 translate=lambda: np.random.randn(2) * 2,
