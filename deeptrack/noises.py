@@ -13,6 +13,7 @@ Poisson
 """
 
 import numpy as np
+
 from .features import Feature
 from .image import Image
 from .types import PropertyLike

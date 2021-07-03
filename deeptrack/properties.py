@@ -17,20 +17,14 @@ PropertyDict
     properties.
 """
 
-import numpy as np
-from .utils import (
-    isiterable,
-    get_kwarg_names,
-    kwarg_has_default,
-)
-
+import collections
+import copy
 import typing
 
+import numpy as np
 
 from . import features
-
-import copy
-import collections
+from .utils import get_kwarg_names, isiterable, kwarg_has_default
 
 
 class Property:

@@ -8,16 +8,17 @@ ContinuousGenerator
     Generator that asynchronously expands the dataset
 """
 
-import numpy as np
-
+import itertools
+import random
+import threading
+import time
 from typing import List
+
+import numpy as np
 import tensorflow.keras as keras
+
 from .features import Feature
 from .image import Image
-import threading
-import random
-import time
-import itertools
 
 
 class Generator(keras.utils.Sequence):
@@ -407,7 +408,8 @@ class CappedContinuousGenerator(ContinuousGenerator):
     ndim : int
         Number of dimensions of each batch (including the batch dimension).
     max_sample_exposure : int
-        Any sample that has been seen for more than `max_sample_exposure` will be removed from the dataset
+        Any sample that has been seen for more than `max_sample_exposure`
+        will be removed from the dataset
     """
 
     def __init__(self, *args, max_sample_exposure=np.inf, **kwargs):

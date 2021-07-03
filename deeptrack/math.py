@@ -9,14 +9,16 @@ NormalizeMinMax
 """
 
 from typing import Callable, List
-from .features import Feature
-from .image import Image
-from . import utils
-from .types import PropertyLike
+
 import numpy as np
+import scipy.ndimage as ndimage
 import skimage
 import skimage.measure
-import scipy.ndimage as ndimage
+
+from . import utils
+from .features import Feature
+from .image import Image
+from .types import PropertyLike
 
 
 class Add(Feature):

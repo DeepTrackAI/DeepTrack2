@@ -16,11 +16,11 @@ Brightfield
 """
 
 import numpy as np
+from scipy.ndimage import convolve
+
 from .features import Feature, StructuralFeature
 from .image import Image, pad_image_to_fft
 from .types import ArrayLike, PropertyLike
-
-from scipy.ndimage import convolve
 
 
 class Microscope(StructuralFeature):

@@ -19,18 +19,18 @@ FlipDiagonal
     Flips images diagonally.
 """
 
-from .features import Feature
-from .image import Image
-from . import utils
-from .types import ArrayLike, PropertyLike
+import warnings
+from typing import Callable
 
 import numpy as np
 import scipy.ndimage as ndimage
-from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage.interpolation import map_coordinates
 
-from typing import Callable
-import warnings
+from . import utils
+from .features import Feature
+from .image import Image
+from .types import ArrayLike, PropertyLike
 
 
 class Augmentation(Feature):

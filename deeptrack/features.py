@@ -21,15 +21,14 @@ Duplicate
 """
 
 import copy
-
-from typing import Any, Callable, Iterable, Iterator, List, Tuple
-import numpy as np
 import threading
+from typing import Any, Callable, Iterable, Iterator, List, Tuple
+
+import numpy as np
 
 from .image import Image
 from .properties import Property, PropertyDict
-from .types import PropertyLike, ArrayLike
-
+from .types import ArrayLike, PropertyLike
 
 MERGE_STRATEGY_OVERRIDE = 0
 MERGE_STRATEGY_APPEND = 1
@@ -271,8 +270,8 @@ class Feature:
             keyword arguments passed to the method pyplot.imshow()
         """
 
-        import matplotlib.pyplot as plt
         import matplotlib.animation as animation
+        import matplotlib.pyplot as plt
         from IPython.display import HTML, display
 
         if input_image is not None:

@@ -18,15 +18,16 @@ Ellipsoid
 """
 
 
+import warnings
 from typing import Callable, Tuple
+
 import numpy as np
 
 from . import backend as D
-from .features import Feature, MERGE_STRATEGY_APPEND
-from .image import Image
 from . import image
-from .types import PropertyLike, ArrayLike
-import warnings
+from .features import MERGE_STRATEGY_APPEND, Feature
+from .image import Image
+from .types import ArrayLike, PropertyLike
 
 
 class Scatterer(Feature):

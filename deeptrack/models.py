@@ -12,13 +12,15 @@ RNN, rnn
     Creates and compiles a recurrent neural network.
 """
 
+import numpy as np
 import tensorflow
-from .losses import nd_mean_absolute_error
+import tensorflow as tf
+from tensorflow.keras import backend as K
+from tensorflow.keras import layers, models
+
 from .features import Feature
 from .layers import as_block
-from tensorflow.keras import models, layers, backend as K
-import tensorflow as tf
-import numpy as np
+from .losses import nd_mean_absolute_error
 
 
 def _compile(

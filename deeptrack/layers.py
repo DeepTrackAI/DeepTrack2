@@ -4,7 +4,6 @@
 
 from tensorflow.keras import layers
 
-
 try:
     from tensorflow_addons.layers import InstanceNormalization
 except Exception:
