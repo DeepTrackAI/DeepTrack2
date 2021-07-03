@@ -156,9 +156,40 @@ def affine_consistency(T, P):
         transformation_matrix, P[0, :2], transpose_a=True
     )
 
-    error = offset_vector - (P - transformed_origin)
+    error = offset_vector - (P[:, :2] - transformed_origin)
 
     return error
+
+
+def rotational_consistency(T, P):
+    T = K.reshape(T[:, :6], (-1, 2, 3))
+    transformation_matrix = T[:, :2, :2]
+    normed_transf_matrix, _ = tf.linalg.normalize(transformation_matrix, axis=(1, 2))
+    relative_normed_transf_matrix = tf.matmul(
+        tf.linalg.inv(normed_transf_matrix[:1]), normed_transf_matrix
+    )
+    true_relative_cos = relative_normed_transf_matrix[:, 0, 0]
+    true_relative_sin = relative_normed_transf_matrix[:, 0, 1]
+
+    # Processing the prediction
+    rotation_prediction = P[:, 2:4]  # cos(th), sin(th)
+    norm_factor = K.sqrt(K.sum(K.square(rotation_prediction), axis=-1, keepdims=True))
+    normed_predictions = rotation_prediction / norm_factor
+    relative_cos = (
+        normed_predictions[:1, 0] * normed_predictions[:, 0]
+        + normed_predictions[:1, 1] * normed_predictions[:, 1]
+    )
+
+    relative_sin = (
+        normed_predictions[:1, 0] * normed_predictions[:, 1]
+        - normed_predictions[:1, 1] * normed_predictions[:, 0]
+    )
+
+    cos_err = K.square(true_relative_cos - relative_cos)
+    sin_err = K.square(true_relative_sin - relative_sin)
+    norm_err = K.square(norm_factor - 1)
+
+    return K.mean(cos_err + sin_err + norm_err * 5) / 3
 
 
 def adjacency_consistency(_, P):
