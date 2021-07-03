@@ -9,6 +9,7 @@ ContinuousGenerator
 """
 
 from .augmentations import Affine, Augmentation
+from .noises import Gaussian
 import numpy as np
 
 from typing import List
@@ -456,20 +457,40 @@ class ContinuousGenerator(keras.utils.Sequence):
 
 
 class AutoTrackGenerator(ContinuousGenerator):
+    def __init__(self, *args, symmetries=1, **kwargs):
+        self.symmetries = symmetries
+        super().__init__(*args, **kwargs)
+
     def __getitem__(self, idx):
 
-        aug = self.augmentation
+        aug = None
         if aug is None:
             aug = Affine(
-                translate=lambda: (np.random.rand() - 0.5) * 8,
-                scale=lambda: np.random.choice([-1, 1], size=(2,)),
+                translate=lambda: np.random.randn(2) * 2,
+                # scale=lambda: np.random.choice([-1, 1], size=(2,)),
+                rotate=lambda: np.random.rand() * np.pi * 2,
             )
 
         x = self.current_data[idx]["data"]
+        x = np.array(x)
+
+        # x = (
+        #     (
+        #         Affine(
+        #             scale=lambda: np.random.choice([-1, 1], size=(2,)),
+        #             rotate=lambda: np.random.rand() * np.pi * 2,
+        #         )
+        #         >> Gaussian(sigma=lambda: np.random.rand() * 0.01)
+        #     )
+        #     .update()
+        #     .resolve(x)
+        # )
         sample = np.array(x)
         batch = [aug.update().resolve(sample) for _ in range(self.batch_size)]
 
-        labels = [self.get_transform_matrix(batch[0], b).reshape((-1,)) for b in batch]
+        labels = np.array(
+            [self.get_transform_matrix(batch[0], b).reshape((-1,)) for b in batch]
+        )
 
         return np.array(batch), np.array(labels)
 
@@ -491,4 +512,6 @@ class AutoTrackGenerator(ContinuousGenerator):
         rmat = np.linalg.inv(rmat0) @ rmat1
         dt = (np.array(t1) - t0) @ rmat1
 
-        return np.array((*rmat, dt))
+        return np.array(
+            [rmat[0, 0], rmat[0, 1], dt[0], rmat[1, 0], rmat[1, 1], dt[1], 0, 0]
+        )

@@ -27,9 +27,11 @@ nd_mean_absolute_percentage_error
 """
 
 from functools import wraps
+
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
-
+import tensorflow_addons
 
 losses = keras.losses
 K = keras.backend
@@ -113,6 +115,11 @@ def sigmoid(func):
     return wrapper
 
 
+def softmax(X, axis=(1, 2, 3)):
+    X = K.exp(X - K.max(X, axis=axis, keepdims=True))
+    return X / K.sum(X, axis, keepdims=True)
+
+
 def weighted_crossentropy(weight=(1, 1), eps=1e-4):
     """Binary crossentropy with weighted classes.
 
@@ -139,9 +146,9 @@ def affine_consistency(T, P):
     """Guides the network to be consistent under augmentations"""
 
     # Reconstruct transformation matrix
-    T = K.reshape(T, (-1, 3, 2))
+    T = K.reshape(T[:, :6], (-1, 2, 3))
 
-    offset_vector = T[:, -1, :]
+    offset_vector = T[:, :, 2]
     transformation_matrix = T[:, :2, :2]
 
     # Prediction on first image is transformed
@@ -149,11 +156,93 @@ def affine_consistency(T, P):
         transformation_matrix, P[0, :2], transpose_a=True
     )
 
-    error = offset_vector - (P - transformed_origin)
+    error = offset_vector - (P[:, :2] - transformed_origin)
 
     return error
 
 
+def rotational_consistency(T, P):
+    T = K.reshape(T[:, :6], (-1, 2, 3))
+    transformation_matrix = T[:, :2, :2]
+    normed_transf_matrix, _ = tf.linalg.normalize(transformation_matrix, axis=(1, 2))
+    relative_normed_transf_matrix = tf.matmul(
+        tf.linalg.inv(normed_transf_matrix[:1]), normed_transf_matrix
+    )
+    true_relative_cos = relative_normed_transf_matrix[:, 0, 0]
+    true_relative_sin = relative_normed_transf_matrix[:, 0, 1]
+
+    # Processing the prediction
+    rotation_prediction = P[:, 2:4]  # cos(th), sin(th)
+    norm_factor = K.sqrt(K.sum(K.square(rotation_prediction), axis=-1, keepdims=True))
+    normed_predictions = rotation_prediction / norm_factor
+    relative_cos = (
+        normed_predictions[:1, 0] * normed_predictions[:, 0]
+        + normed_predictions[:1, 1] * normed_predictions[:, 1]
+    )
+
+    relative_sin = (
+        normed_predictions[:1, 0] * normed_predictions[:, 1]
+        - normed_predictions[:1, 1] * normed_predictions[:, 0]
+    )
+
+    cos_err = K.square(true_relative_cos - relative_cos)
+    sin_err = K.square(true_relative_sin - relative_sin)
+    norm_err = K.square(norm_factor - 1)
+
+    return K.mean(cos_err + sin_err + norm_err * 5) / 3
+
+
+def adjacency_consistency(_, P):
+
+    # dX0 = P[:, 1:, :, 1] - P[:, :-1, :, 1]
+    # dX1 = P[:, 1:, :, 0] - P[:, :-1, :, 0]
+
+    # dY0 = P[:, :, 1:, 0] - P[:, :, :-1, 0]
+    # dY1 = P[:, :, 1:, 1] - P[:, :, :-1, 1]
+
+    # dX0_error = K.square(dX0 + 1)
+    # dX1_error = K.square(dX1)
+    # dY0_error = K.square(dY0 + 1)
+    # dY1_error = K.square(dY1)
+
+    dFdx = P[:, 1:, :, :2] - P[:, :-1, :, :2]
+    dFdy = P[:, :, 1:, :2] - P[:, :, :-1, :2]
+
+    Wx = softmax(P[:, 1:, :, 2], axis=(1, 2))
+    Wy = softmax(P[:, :, 1:, 2], axis=(1, 2))
+
+    dFdx_err = (K.abs(dFdx[..., 0] + 1) + K.abs(dFdx[..., 1])) * Wx
+    dFdy_err = (K.abs(dFdy[..., 0]) + K.abs(dFdy[..., 1] + 1)) * Wy
+
+    return (K.sum(dFdx_err) + K.sum(dFdy_err)) / 2
+
+
+def field_affine_consistency(T, P):
+
+    transform = K.reshape(T[:, :6], (-1, 2, 3))
+
+    offset_vector = transform[:, :, 2]
+
+    non_mirrored = P[2::2]
+    mirrored = P[1::2, ::-1, ::-1] * np.array([-1, -1, 1])
+
+    offset_vector = K.reshape(offset_vector, (-1, 1, 1, 2))
+
+    non_mirrored_error = (
+        (P[:1, ..., :2] - non_mirrored[..., :2]) + offset_vector[2::2]
+    ) * softmax(non_mirrored[..., 2:3], axis=(1, 2))
+
+    mirrored_error = (
+        (P[:1, ..., :2] - mirrored[..., :2]) + offset_vector[1::2]
+    ) * softmax(mirrored[..., 2:3], axis=(1, 2))
+
+    error = K.concatenate((non_mirrored_error, mirrored_error), axis=0)
+    # error = error * K.cast_to_floatx(K.shape(error)[1] * K.shape(error)[2])
+    return error * 8
+
+
+squared_field_affine_consistency = squared(field_affine_consistency)
+abs_field_affine_consistency = abs(field_affine_consistency)
 squared_affine_consistency = squared(affine_consistency)
 abs_affine_consistency = abs(affine_consistency)
 

@@ -661,13 +661,12 @@ def _get_position(image, mode="corner", return_z=False):
     num_outputs = 2 + return_z
 
     if mode == "corner":
-        # Probably unecessarily complicated expression
-        shift = (
-            np.ceil((np.array(image.shape) - 1) / 2)
-            - (1 - np.mod(image.shape, 2)) * 0.5
-        )
+        import scipy.ndimage
+
+        shift = scipy.ndimage.measurements.center_of_mass(image)
     else:
         shift = np.zeros((num_outputs))
+
     position = np.array(image.get_property("position", default=None))
 
     # position[:2] = position[:2]
