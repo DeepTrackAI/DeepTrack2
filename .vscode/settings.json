@@ -1,5 +1,0 @@
-{
-    "python.pythonPath": "c:\\users\\gu\\appdata\\local\\programs\\python\\python38\\python.exe",
-    "restructuredtext.confPath": "${workspaceFolder}\\docs\\source",
-    "python.linting.pylintEnabled": true
-}
