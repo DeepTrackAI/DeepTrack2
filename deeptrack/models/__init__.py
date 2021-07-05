@@ -1,8 +1,10 @@
 # flake8: noqa
 from .convolutional import *
 from .dense import *
+from .recurrent import *
 from .layers import *
 from .autotrack import *
+
 
 # from .mrcnn import *
 # from .yolov1 import *
