@@ -766,8 +766,6 @@ def _create_volume(
 
         splined_scatterer = np.zeros_like(scatterer)
 
-        print(position)
-
         x_off = position[0] - np.floor(position[0])
         y_off = position[1] - np.floor(position[1])
 
