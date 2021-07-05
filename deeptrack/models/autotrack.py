@@ -2,6 +2,7 @@ from .utils import KerasModel
 from .convolutional import Convolutional, UNet
 from ..generators import AutoTrackGenerator
 from ..losses import (
+    rotational_consistency,
     squared_affine_consistency,
     squared_field_affine_consistency,
 )
@@ -20,11 +21,23 @@ class AutoTracker(KerasModel):
         self,
         model=None,
         input_shape=(64, 64, 1),
-        loss=squared_affine_consistency,
+        loss="auto",
         symmetries=1,
+        mode="tracking",
         **kwargs
     ):
         self.symmetries = symmetries
+        self.mode = mode
+
+        if loss == "auto":
+            if mode == "tracking":
+                loss = squared_affine_consistency
+            elif mode == "orientation":
+                loss = rotational_consistency
+            else:
+                raise ValueError(
+                    "Unknown mode provided to the auto tracker. Valid modes are 'tracking' and 'orientation'"
+                )
 
         if model is None:
             model = self.default_model(input_shape=input_shape)
@@ -32,23 +45,17 @@ class AutoTracker(KerasModel):
         super().__init__(model, loss=loss, **kwargs)
 
     def default_model(self, input_shape):
+
         return Convolutional(
             input_shape=input_shape,
             conv_layers_dimensions=[16, 32, 64],
             dense_layers_dimensions=(32, 32),
             steps_per_pooling=1,
-            number_of_outputs=4,
+            number_of_outputs=2,
         )
 
     def data_generator(self, *args, **kwargs):
         return AutoTrackGenerator(*args, symmetries=self.symmetries, **kwargs)
-
-    # def predict(self, x, *args, **kwargs):
-
-    #     a = self.model.predict(x, *args, **kwargs)
-    #     b = self.model.predict(x[:, ::-1, ::-1], *args, **kwargs)
-
-    #     return (a - b) / 2
 
 
 class AutoMultiTracker(KerasModel):
