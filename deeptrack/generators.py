@@ -497,11 +497,11 @@ class AutoTrackGenerator(ContinuousGenerator):
 
     def get_transform_matrix(self, base_image, new_image):
         t0 = base_image.get_property("translate")[2::-1]
-        r0 = base_image.get_property("rotate")
+        r0 = base_image.get_property("rotate") * self.symmetries
         s0 = base_image.get_property("scale")
 
         t1 = new_image.get_property("translate")[2::-1]
-        r1 = new_image.get_property("rotate")
+        r1 = new_image.get_property("rotate") * self.symmetries
         s1 = new_image.get_property("scale")
 
         rmat0 = np.array([[np.cos(r0), np.sin(r0)], [-np.sin(r0), np.cos(r0)]]) * s0
