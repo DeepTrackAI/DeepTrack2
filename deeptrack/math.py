@@ -21,86 +21,6 @@ from .image import Image
 from .types import PropertyLike
 
 
-class Add(Feature):
-    """Adds a value to the input.
-
-    Parameters
-    ----------
-    value : number
-        The value to add
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image + value
-
-
-class Subtract(Feature):
-    """Subtracts a value from the input.
-
-    Parameters
-    ----------
-    value : number
-        The value to subtract
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image - value
-
-
-class Multiply(Feature):
-    """Multiplies the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to multiply with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image * value
-
-
-class Divide(Feature):
-    """Divides the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to divide with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image / value
-
-
-class Power(Feature):
-    """Raises the input to a power.
-
-    Parameters
-    ----------
-    value : number
-        The power to raise with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return image ** value
-
-
 class Average(Feature):
     """Average of input images
 
@@ -155,8 +75,7 @@ class Clip(Feature):
         super().__init__(min=min, max=max, **kwargs)
 
     def get(self, image, min=None, max=None, **kwargs):
-        np.clip(image, min, max, image)
-        return image
+        return np.clip(image, min, max)
 
 
 class NormalizeMinMax(Feature):
@@ -170,18 +89,68 @@ class NormalizeMinMax(Feature):
         The minimum of the transformation.
     max : float
         The maximum of the transformation.
+    featurewise : bool
+        Whether to normalize each feature independently
     """
 
     def __init__(
-        self, min: PropertyLike[float] = 0, max: PropertyLike[float] = 1, **kwargs
+        self,
+        min: PropertyLike[float] = 0,
+        max: PropertyLike[float] = 1,
+        featurewise=True,
+        **kwargs
     ):
-        super().__init__(min=min, max=max, **kwargs)
+        super().__init__(min=min, max=max, featurewise=featurewise, **kwargs)
 
     def get(self, image, min, max, **kwargs):
-        image = image / (np.max(image) - np.min(image)) * (max - min)
+        image = image / np.ptp(image) * (max - min)
         image = image - np.min(image) + min
-        image[np.isnan(image)] = 0
+        try:
+            image[np.isnan(image)] = 0
+        except TypeError:
+            pass
         return image
+
+
+class NormalizeStandard(Feature):
+    """Image normalization.
+
+    Normalize the image to have sigma 1 and mean 0.
+
+    Parameters
+    ----------
+    featurewise : bool
+        Whether to normalize each feature independently
+    """
+
+    def __init__(self, featurewise=True, **kwargs):
+        super().__init__(featurewise=featurewise, **kwargs)
+
+    def get(self, image, **kwargs):
+
+        return (image - np.mean(image)) / np.std(image)
+
+
+class NormalizeQuantile(Feature):
+    """Image normalization.
+
+    Center the image to the median, and divide by the difference between the quantiles
+    defined by `q_max` and `q_min`
+
+    Parameters
+    ----------
+    quantiles : tuple (q_min, q_max), 0.0 < q_min < q_max < 1.0
+       Quantile range to calculate scaling factor
+    featurewise : bool
+        Whether to normalize each feature independently
+    """
+
+    def __init__(self, quantiles=(0.25, 0.75), featurewise=True, **kwargs):
+        super().__init__(self, quantiles=quantiles, featurewise=featurewise, **kwargs)
+
+    def get(self, image, quantiles, **kwargs):
+        q_low, q_high, median = np.quantile(image, (*quantiles, 0.5))
+        return (image - median) / (q_high - q_low)
 
 
 class Blur(Feature):
@@ -219,7 +188,7 @@ class AverageBlur(Blur):
 
         weights = np.ones(ksize) / np.prod(ksize)
 
-        return utils.safe_call(ndimage, input=input, weights=weights, **kwargs)
+        return utils.safe_call(ndimage.convolve, input=input, weights=weights, **kwargs)
 
 
 class GaussianBlur(Blur):

@@ -5,7 +5,14 @@ import pkg_resources
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-required = ["tensorflow", "numpy", "scipy"]
+required = [
+    "tensorflow",
+    "tensorflow-probability",
+    "numpy",
+    "scipy",
+    "pint",
+    "pydeepimagej",
+]
 installed = [pkg.key for pkg in pkg_resources.working_set]
 if (
     not "tensorflow" in installed
@@ -16,7 +23,7 @@ if (
 
 setuptools.setup(
     name="deeptrack",  # Replace with your own username
-    version="0.10.0",
+    version="1.0.0.a0",
     author="Benjamin Midtvedt",
     author_email="benjamin.midtvedt@physics.gu.se",
     description="A deep learning oriented microscopy image simulation package",

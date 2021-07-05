@@ -9,6 +9,8 @@ from .. import optics
 from ..scatterers import PointParticle
 from ..image import Image
 
+import numpy as np
+
 
 class TestOptics(unittest.TestCase):
     def test_Fluorescence(self):
@@ -32,7 +34,6 @@ class TestOptics(unittest.TestCase):
         output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
-        self.assertEqual(output_image.get_property("pupil_at_focus").shape, (128, 128))
 
     def test_Brightfield(self):
         microscope = optics.Brightfield(
@@ -55,7 +56,6 @@ class TestOptics(unittest.TestCase):
         output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
-        self.assertEqual(output_image.get_property("pupil_at_focus").shape, (128, 128))
 
     def test_IlluminationGradient(self):
         illumination_gradient = optics.IlluminationGradient(gradient=(5e-5, 5e-5))
@@ -80,7 +80,6 @@ class TestOptics(unittest.TestCase):
         output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
-        self.assertEqual(output_image.get_property("pupil_at_focus").shape, (128, 128))
 
 
 if __name__ == "__main__":

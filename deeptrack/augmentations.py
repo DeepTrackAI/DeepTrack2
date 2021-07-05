@@ -66,172 +66,77 @@ class Augmentation(Feature):
         the properties of the output to account for the augmentation.
     """
 
-    __distributed__ = False
+    def __init__(self, time_consistent=False, **kwargs):
+        super().__init__(time_consistent=time_consistent, **kwargs)
 
-    def __init__(
-        self,
-        feature: Feature = None,
-        load_size: PropertyLike[int] = 1,
-        updates_per_reload: PropertyLike[int] = 1,
-        update_properties: Callable or None = None,
-        **kwargs
-    ):
+    def _process_and_get(self, image_list, time_consistent, **kwargs):
 
-        if load_size != 1:
-            warnings.warn(
-                "Using an augmentation with a load size other than one is no longer supported",
-                DeprecationWarning,
-            )
-
-        self.feature = feature
-
-        def get_number_of_updates(updates_per_reload=1):
-            # Updates the number of updates. The very first update is not counted.
-            if not hasattr(self.properties["number_of_updates"], "_current_value"):
-                return 0
-            return (
-                self.properties["number_of_updates"].current_value + 1
-            ) % updates_per_reload
-
-        def tally():
-            idx = 0
-            while True:
-                yield idx
-                idx += 1
-
-        if not update_properties:
-            update_properties = self.update_properties
-
-        super().__init__(
-            load_size=load_size,
-            update_tally=tally(),
-            updates_per_reload=updates_per_reload,
-            index=kwargs.pop("index", False)
-            or (lambda load_size: np.random.randint(load_size)),
-            number_of_updates=get_number_of_updates,
-            update_properties=lambda: update_properties,
-            **kwargs
-        )
-
-    def _process_and_get(self, *args, update_properties=None, **kwargs):
-
-        # Loads a result from storage
-        if self.feature and (
-            not hasattr(self, "cache")
-            or kwargs["update_tally"] - self.last_update >= kwargs["updates_per_reload"]
-        ):
-
-            if isinstance(self.feature, list):
-                self.cache = [feature.resolve() for feature in self.feature]
-            else:
-                self.cache = self.feature.resolve()
-            self.last_update = kwargs["update_tally"]
-
-        if not self.feature:
-            image_list_of_lists = args[0]
+        if not isinstance(image_list, list):
+            wrap_depth = 2
+            image_list_of_lists = [[image_list]]
+        elif len(image_list) == 0 or not isinstance(image_list[0], list):
+            wrap_depth = 1
+            image_list_of_lists = [image_list]
         else:
-            image_list_of_lists = self.cache
-
-        if not isinstance(image_list_of_lists, list):
-            image_list_of_lists = [image_list_of_lists]
+            wrap_depth = 0
+            image_list_of_lists = image_list
 
         new_list_of_lists = []
-        # Calls get
-
-        np.random.seed(kwargs["hash_key"][0])
 
         for image_list in image_list_of_lists:
-            if isinstance(self.feature, list):
-                # If multiple features, ensure consistent rng
-                np.random.seed(kwargs["hash_key"][0])
 
-            if isinstance(image_list, list):
-                new_list_of_lists.append(
-                    [
-                        [
-                            Image(
-                                self.get(Image(image), **kwargs)
-                            ).merge_properties_from(image)
-                            for image in image_list
-                        ]
-                    ]
-                )
-            else:
-                # DANGEROUS
-                # if not isinstance(image_list, Image):
-                image_list = Image(image_list)
+            if time_consistent:
+                self.seed()
 
-                output = self.get(image_list, **kwargs)
+            augmented_list = []
+            for image in image_list:
+                self.seed()
+                augmented_image = Image(self.get(image, **kwargs))
+                augmented_image.merge_properties_from(image)
+                self.update_properties(augmented_image, **kwargs)
+                augmented_list.append(augmented_image)
 
-                if not isinstance(output, Image):
-                    output = Image(output)
-                new_list_of_lists.append(output.merge_properties_from(image_list))
+            new_list_of_lists.append(augmented_list)
 
-        if update_properties:
-            if not isinstance(new_list_of_lists, list):
-                new_list_of_lists = [new_list_of_lists]
-            for image_list in new_list_of_lists:
-                if not isinstance(image_list, list):
-                    image_list = [image_list]
-                for image in image_list:
-                    image.properties = [dict(prop) for prop in image.properties]
-                    update_properties(image, **kwargs)
+        for _ in range(wrap_depth):
+            new_list_of_lists = new_list_of_lists[0]
 
         return new_list_of_lists
 
-    def _update(self, **kwargs):
-        super()._update(**kwargs)
-        if self.feature and not self.number_of_updates.current_value:
-            if isinstance(self.feature, Feature):
-                self.feature._update(**kwargs)
-            elif isinstance(self.feature, list):
-                [feature._update(**kwargs) for feature in self.feature]
-
-    def update_properties(*args, **kwargs):
+    def update_properties(self, *args, **kwargs):
         pass
-
-
-class PreLoad(Augmentation):
-    """Simple storage with no augmentation.
-
-    Parameters
-    ----------
-    feature : Feature
-        The parent feature.
-    load_size : int
-        Number of results to resolve from the parent feature.
-    updates_per_reload : int
-        Number of times `.update()` is called before resolving new results
-        from the parent feature.
-    index : int
-        The index of the image to grab from storage. By default a random image.
-    update_properties : Callable or None
-        Function called on the output of the method `.get()`. Overrides
-        the default behaviour, allowing full control over how to update
-        the properties of the output to account for the augmentation.
-
-    """
-
-    def get(self, image, **kwargs):
-        return image
 
 
 class FlipLR(Augmentation):
     """Flips images left-right.
 
     Updates all properties called "position" to flip the second index.
+
+    Arguments
+    ---------
+    p : float
+       Probability of flipping the image
+
+    Extra arguments
+    ---------------
+    augment : bool
+       Whether to perform the augmentation. Leaving as default is sufficient most of the time.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, load_size=1, updates_per_reload=2, **kwargs)
+    def __init__(self, p=0.5, augment=None, **kwargs):
+        super().__init__(
+            p=p,
+            augment=(lambda p: np.random.rand() < p) if augment is None else augment,
+            **kwargs,
+        )
 
-    def get(self, image, number_of_updates, **kwargs):
-        if number_of_updates % 2:
+    def get(self, image, augment, **kwargs):
+        if augment:
             image = np.fliplr(image)
         return image
 
-    def update_properties(self, image, number_of_updates, **kwargs):
-        if number_of_updates % 2:
+    def update_properties(self, image, augment, **kwargs):
+        if augment:
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
@@ -246,19 +151,33 @@ class FlipLR(Augmentation):
 class FlipUD(Augmentation):
     """Flips images up-down.
 
-    Updates all properties called "position" by flipping the first index.
+    Updates all properties called "position" to flip the first index.
+
+    Arguments
+    ---------
+    p : float
+       Probability of flipping the image
+
+    Extra arguments
+    ---------------
+    augment : bool
+       Whether to perform the augmentation. Leaving as default is sufficient most of the time.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, load_size=1, updates_per_reload=2, **kwargs)
+    def __init__(self, p=0.5, augment=None, **kwargs):
+        super().__init__(
+            p=p,
+            augment=(lambda p: np.random.rand() < p) if augment is None else augment,
+            **kwargs,
+        )
 
-    def get(self, image, number_of_updates=0, **kwargs):
-        if number_of_updates % 2:
+    def get(self, image, augment, **kwargs):
+        if augment:
             image = np.flipud(image)
         return image
 
-    def update_properties(self, image, number_of_updates, **kwargs):
-        if number_of_updates % 2:
+    def update_properties(self, image, augment, **kwargs):
+        if augment:
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
@@ -273,18 +192,32 @@ class FlipDiagonal(Augmentation):
     """Flips images along the main diagonal.
 
     Updates all properties called "position" by swapping the first and second index.
+
+    Arguments
+    ---------
+    p : float
+       Probability of flipping the image
+
+    Extra arguments
+    ---------------
+    augment : bool
+       Whether to perform the augmentation. Leaving as default is sufficient most of the time.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, load_size=1, updates_per_reload=2, **kwargs)
+    def __init__(self, p=0.5, augment=None, **kwargs):
+        super().__init__(
+            p=p,
+            augment=(lambda p: np.random.rand() < p) if augment is None else augment,
+            **kwargs,
+        )
 
-    def get(self, image, number_of_updates, axes=(1, 0, 2), **kwargs):
-        if number_of_updates % 2:
-            image = np.transpose(image, axes=axes)
+    def get(self, image, augment, **kwargs):
+        if augment:
+            image = np.transpose(image, axes=(1, 0, *range(2, image.ndim)))
         return image
 
-    def update_properties(self, image, number_of_updates, **kwargs):
-        if number_of_updates % 2:
+    def update_properties(self, image, augment, **kwargs):
+        if augment:
             for prop in image.properties:
                 if "position" in prop:
                     position = prop["position"]
@@ -363,7 +296,7 @@ class Affine(Augmentation):
             order=order,
             cval=cval,
             mode=mode,
-            **kwargs
+            **kwargs,
         )
 
     def _process_properties(self, properties):
@@ -428,7 +361,7 @@ class Affine(Augmentation):
                 input=image,
                 matrix=mapping,
                 offset=d,
-                **kwargs
+                **kwargs,
             )
 
             new_image = Image(new_image)
@@ -442,7 +375,7 @@ class Affine(Augmentation):
                     input=image[:, :, z],
                     matrix=mapping,
                     offset=d,
-                    **kwargs
+                    **kwargs,
                 )
 
         # Map positions
@@ -542,7 +475,7 @@ class ElasticTransformation(Augmentation):
             order=order,
             cval=cval,
             mode=mode,
-            **kwargs
+            **kwargs,
         )
 
     def get(self, image, sigma, alpha, ignore_last_dim, **kwargs):
@@ -581,7 +514,7 @@ class ElasticTransformation(Augmentation):
                     map_coordinates,
                     input=image[..., z],
                     coordinates=coordinates,
-                    **kwargs
+                    **kwargs,
                 ).reshape(shape)
         else:
             image = utils.safe_call(
@@ -608,7 +541,7 @@ class Crop(Augmentation):
         Can also be a function that returns any of the other types.
     crop_mode : str {"retain", "remove"}
         How the `crop` argument is interpreted. If "remove", then
-        `crop` denotes the amount to crop from the edges. If "retain", 
+        `crop` denotes the amount to crop from the edges. If "retain",
         `crop` denotes the size of the output.
     corner : tuple of ints or Callable[Image]->tuple of ints or "random"
         Top left corner of the cropped region. Can be a tuple of ints,
@@ -710,7 +643,7 @@ class CropToMultiplesOf(Crop):
 
         def image_to_crop(image):
             shape = image.shape
-            multiple = self.multiple.current_value
+            multiple = self.multiple()
 
             if not isinstance(multiple, (list, tuple, np.ndarray)):
                 multiple = (multiple,) * image.ndim
@@ -728,7 +661,7 @@ class CropToMultiplesOf(Crop):
             corner=corner,
             crop=lambda: image_to_crop,
             crop_mode="retain",
-            **kwargs
+            **kwargs,
         )
 
 
@@ -777,15 +710,8 @@ class Pad(Augmentation):
         results = [self.get(image, **kwargs) for image in images]
         for idx, result in enumerate(results):
             if isinstance(result, tuple):
-                shape = result[0].shape
-                padding = result[1]
-                de_pad = tuple(
-                    slice(p[0], shape[dim] - p[1]) for dim, p in enumerate(padding)
-                )
-                results[idx] = (
-                    Image(result[0]).merge_properties_from(images[idx]),
-                    {"undo_padding": de_pad},
-                )
+
+                results[idx] = Image(result[0]).merge_properties_from(images[idx])
             else:
                 Image(results[idx]).merge_properties_from(images[idx])
         return results
@@ -806,7 +732,7 @@ class PadToMultiplesOf(Pad):
     def __init__(self, multiple: PropertyLike[int or None] = 1, **kwargs):
         def amount_to_pad(image):
             shape = image.shape
-            multiple = self.multiple.current_value
+            multiple = self.multiple()
 
             if not isinstance(multiple, (list, tuple, np.ndarray)):
                 multiple = (multiple,) * image.ndim

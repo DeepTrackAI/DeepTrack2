@@ -2,9 +2,54 @@
   <img width="350" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/master/assets/logo.png?raw=true>
 </p>
 
-
-DeepTrack is a comprehensive deep learning framework for digital microscopy. 
+DeepTrack is a comprehensive deep learning framework for digital microscopy.
 We provide tools to create physical simulations of customizable optical systems, to generate and train neural network models, and to analyze experimental data.
+
+# Note!
+
+This branch is a developmental branch preparing for the next major release. While the branch should be working at any point in time, many features may be developmental and are subject to change.
+
+## Roadmap
+
+### New Features!
+
+- [ ] Full GPU support.
+  - [ ] Infer cupy support during import.
+  - [ ] Allow separate GPU/CPU methods for optimization.
+  - [ ] Integrated benchmarking.
+  - [ ] Allow forcefully overriding CPU/GPU state.
+  - [ ] Disable/enable GPU using environment variables.
+- [ ] Simulation-parameters optimization
+  - [ ] Grid search
+  - [ ] Genetic optimization
+  - [ ] Independent variables assumption
+- [ ] Architecure searches.
+- [ ] Common architectures with pre-trained weights.
+- [ ] Label free training of particle tracking models
+- [ ] Particle tracing / linking
+- [ ] Export to DeepImageJ
+
+### Usage improvements
+
+- [ ] Move from .resolve() to \_\_call\_\_ as primary evalution method.
+  - [ ] Features can be passed as properties, and will be resolved with no input.
+  - [ ] Implement way to bypass the property evaluation (better than wrapping in lambda).
+- [ ] Facilitate the construction of compound shapes.
+  - [ ] Separate Scatterers into Geometry and Scatterers
+  - [ ] Compund shape using dt.Scatter.
+  - [ ] Implement \_\_sub\_\_, which sets everything within it to 0.
+  - [ ] All optics wraps the sample as a dt.Scatter, which produces a volume.
+- [ ] Allow for modular creation of optics pipeline.
+  - [ ] Separately define the pupil, the input illumination, the simulation method and the sample.
+  - [ ] Test simulations against theory to ensure that they work as expected.
+- [ ] Deprecate \* shorthand for probability and instead use it as shorthand for multiplication.
+
+### Misc
+
+- [ ] Implement rigorous and transparent error handling.
+- [ ] Expand and standardize unittests.
+- [ ] Better utilize continuous integration.
+- [ ] Expand documentation with examples of each feature.
 
 # Getting started
 
@@ -15,7 +60,7 @@ DeepTrack 2.0 requires at least python 3.6
 To install DeepTrack 2.0, open a terminal or command prompt and run
 
     pip install deeptrack
-    
+
 ## Learning DeepTrack 2.0
 
 Everybody learns in different ways! Depending on your preferences, and what you want to do with DeepTrack, you may want to check out one or more of these resources.
@@ -29,7 +74,7 @@ First, we have a very general walkthrough of [basic](https://softmatterlab.githu
 To see DeepTrack in action, we provide six well documented tutorial notebooks that create simulation pipelines and train models:
 
 1. [deeptrack_introduction_tutorial](tutorials/deeptrack_introduction_tutorial.ipynb) gives an overview of how to use DeepTrack 2.0.
-2. [tracking_particle_cnn_tutorial](tutorials/tracking_particle_cnn_tutorial.ipynb) demonstrates how to track a point particle with a convolutional neural network (CNN). 
+2. [tracking_particle_cnn_tutorial](tutorials/tracking_particle_cnn_tutorial.ipynb) demonstrates how to track a point particle with a convolutional neural network (CNN).
 3. [tracking_multiple_particles_unet_tutorial](tutorials/tracking_multiple_particles_unet_tutorial.ipynb) demonstrates how to track multiple particles using a U-net.
 4. [characterizing_aberrations_tutorial](tutorials/characterizing_aberrations_tutorial.ipynb) demonstrates how to add and characterize aberrations of an optical device.
 5. [distinguishing_particles_in_brightfield_tutorial](tutorials/distinguishing_particles_in_brightfield_tutorial.ipynb) demonstrates how to use a U-net to track and distinguish particles of different sizes in brightfield microscopy.
@@ -57,12 +102,12 @@ DeepTrack 2.0 recognizing handwritten digits tutorial video: https://youtu.be/QD
 " target="_blank"><img src="https://img.youtube.com/vi/QD9JUXyLJpc/maxresdefault.jpg" 
 alt="Tutorial" width="384" height="216" border="10" /></a>
 
-DeepTrack 2.0 single particle tracking tutorial video: https://youtu.be/6Cntik6AfBI   
+DeepTrack 2.0 single particle tracking tutorial video: https://youtu.be/6Cntik6AfBI  
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=6Cntik6AfBI
 " target="_blank"><img src="https://img.youtube.com/vi/6Cntik6AfBI/maxresdefault.jpg" 
 alt="Tutorial" width="384" height="216" border="10" /></a>
 
-DeepTrack 2.0 single-particle characterization tutorial video: https://youtu.be/ia2H1QO1cHg   
+DeepTrack 2.0 single-particle characterization tutorial video: https://youtu.be/ia2H1QO1cHg  
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=ia2H1QO1cHg
 " target="_blank"><img src="https://img.youtube.com/vi/ia2H1QO1cHg/maxresdefault.jpg" 
 alt="Tutorial" width="384" height="216" border="10" /></a>
@@ -99,17 +144,17 @@ This order is as follows:
 5. [aberrations_example](examples/aberrations_example.ipynb)
 6. [noises_example](examples/noises_example.ipynb)
 7. [augmentations_example](examples/augmentations_example.ipynb)
-6. [image_example](examples/image_example.ipynb)
-7. [generators_example](examples/generators_example.ipynb)
-8. [models_example](examples/models_example.ipynb)
-10. [losses_example](examples/losses_example.ipynb)
-11. [utils_example](examples/utils_example.ipynb)
-12. [sequences_example](examples/sequences_example.ipynb)
-13. [math_example](examples/math_example.ipynb)
+8. [image_example](examples/image_example.ipynb)
+9. [generators_example](examples/generators_example.ipynb)
+10. [models_example](examples/models_example.ipynb)
+11. [losses_example](examples/losses_example.ipynb)
+12. [utils_example](examples/utils_example.ipynb)
+13. [sequences_example](examples/sequences_example.ipynb)
+14. [math_example](examples/math_example.ipynb)
 
 ## Graphical user interface
 
-DeepTrack 2.0 provides a completely stand-alone  [graphical  user  interface](https://github.com/softmatterlab/DeepTrack-2.0-app),  which  delivers  all  the power of DeepTrack without requiring programming knowledge.
+DeepTrack 2.0 provides a completely stand-alone [graphical user interface](https://github.com/softmatterlab/DeepTrack-2.0-app), which delivers all the power of DeepTrack without requiring programming knowledge.
 
 [![InterfaceDemo](https://i.imgur.com/lTy2vhz.gif)](https://i.imgur.com/lTy2vhz.gif)
 
@@ -130,4 +175,5 @@ See also:
     Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "DeepTrack." https://github.com/softmatterlab/DeepTrack.git (2019).
 
 ## Funding
+
 This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511).
