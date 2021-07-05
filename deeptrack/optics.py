@@ -659,10 +659,13 @@ def _get_position(image, mode="corner", return_z=False):
     # Extracts the position of the upper left corner of a scatterer
     num_outputs = 2 + return_z
 
-    if mode == "corner":
+    if mode == "corner" and image.size > 0:
         import scipy.ndimage
 
-        shift = scipy.ndimage.measurements.center_of_mass(image)
+        shift = scipy.ndimage.measurements.center_of_mass(np.abs(image))
+
+        if np.isnan(shift).any():
+            shift = np.array(image.shape) / 2
 
     else:
         shift = np.zeros((num_outputs))
@@ -762,6 +765,8 @@ def _create_volume(
             continue
 
         splined_scatterer = np.zeros_like(scatterer)
+
+        print(position)
 
         x_off = position[0] - np.floor(position[0])
         y_off = position[1] - np.floor(position[1])
