@@ -221,7 +221,7 @@ class Image:
     def _view(self, value):
         if isinstance(value, Image):
             return self._view(value._value)
-        if isinstance(value, (np.ndarray, list, tuple, int, float, bool)):
+        if isinstance(value, (np.ndarray, list, int, float, bool)):
             return np.array(value)
         if isinstance(value, Tensor):
             return value
