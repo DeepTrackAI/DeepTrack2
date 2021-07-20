@@ -413,7 +413,6 @@ class Fluorescence(Optics):
 
         output_image.properties = illuminated_volume.properties + pupils.properties
 
-
         return output_image
 
 
@@ -524,7 +523,7 @@ class Brightfield(Optics):
 
         K = 2 * np.pi / kwargs["wavelength"]
 
-        field_z = [_get_position(field, return_z=True)[-1] for field in fields]
+        field_z = [field.get_property("z") for field in fields]
         field_offsets = [field.get_property("offset_z", default=0) for field in fields]
 
         z = z_limits[1]
