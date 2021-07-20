@@ -14,10 +14,10 @@ This branch is a developmental branch preparing for the next major release. Whil
 ### New Features!
 
 - [ ] Full GPU support.
-  - [ ] Infer cupy support during import.
-  - [ ] Allow separate GPU/CPU methods for optimization.
-  - [ ] Integrated benchmarking.
-  - [ ] Allow forcefully overriding CPU/GPU state.
+  - [x] Infer cupy support during import.
+  - [x] Allow separate GPU/CPU methods for optimization.
+  - [x] Integrated benchmarking.
+  - [x] Allow forcefully overriding CPU/GPU state.
   - [ ] Disable/enable GPU using environment variables.
 - [ ] Simulation-parameters optimization
   - [ ] Grid search
@@ -25,14 +25,14 @@ This branch is a developmental branch preparing for the next major release. Whil
   - [ ] Independent variables assumption
 - [ ] Architecure searches.
 - [ ] Common architectures with pre-trained weights.
-- [ ] Label free training of particle tracking models
+- [x] Label free training of particle tracking models
 - [ ] Particle tracing / linking
 - [ ] Export to DeepImageJ
 
 ### Usage improvements
 
-- [ ] Move from .resolve() to \_\_call\_\_ as primary evalution method.
-  - [ ] Features can be passed as properties, and will be resolved with no input.
+- [x] Move from .resolve() to \_\_call\_\_ as primary evalution method.
+  - [x] Features can be passed as properties, and will be resolved with no input.
   - [ ] Implement way to bypass the property evaluation (better than wrapping in lambda).
 - [ ] Facilitate the construction of compound shapes.
   - [ ] Separate Scatterers into Geometry and Scatterers
@@ -42,13 +42,13 @@ This branch is a developmental branch preparing for the next major release. Whil
 - [ ] Allow for modular creation of optics pipeline.
   - [ ] Separately define the pupil, the input illumination, the simulation method and the sample.
   - [ ] Test simulations against theory to ensure that they work as expected.
-- [ ] Deprecate \* shorthand for probability and instead use it as shorthand for multiplication.
+- [x] Deprecate \* shorthand for probability and instead use it as shorthand for multiplication.
 
 ### Misc
 
 - [ ] Implement rigorous and transparent error handling.
-- [ ] Expand and standardize unittests.
-- [ ] Better utilize continuous integration.
+- [x] Expand and standardize unittests.
+- [x] Better utilize continuous integration.
 - [ ] Expand documentation with examples of each feature.
 
 # Getting started
