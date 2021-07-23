@@ -15,12 +15,13 @@ Brightfield
     Images coherently illuminated samples.
 """
 
+import cupy
 from pint.quantity import Quantity
 from deeptrack.backend.units import ConversionTable
 from deeptrack.properties import propagate_data_to_dependencies
 import numpy as np
 from .features import DummyFeature, Feature, StructuralFeature
-from .image import Image, pad_image_to_fft
+from .image import Image, pad_image_to_fft, maybe_cupy
 from .types import ArrayLike, PropertyLike
 
 from scipy.ndimage import convolve
@@ -204,24 +205,23 @@ class Optics(Feature):
         y = (np.linspace(-(shape[1] / 2), shape[1] / 2 - 1, shape[1])) / y_radius + 1e-8
 
         W, H = np.meshgrid(y, x)
+        W = maybe_cupy(W)
+        H = maybe_cupy(H)
         RHO = W ** 2 + H ** 2
-        RHO[RHO > 1] = 1
-        pupil_function = ((RHO < 1) * 1.0).astype(np.complex)
+        pupil_function = Image((RHO < 1) + 0.0j, copy=False)
         # Defocus
-        z_shift = (
+        z_shift = Image(
             2
             * np.pi
             * refractive_index_medium
             / wavelength
             * voxel_size[2]
-            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO)
+            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO),
+            copy=False,
         )
 
-        # Downsample the upsampled pupil
-
-        pupil_function[np.isnan(pupil_function)] = 0
-        pupil_function[np.isinf(pupil_function)] = 0
-        pupil_function_is_nonzero = pupil_function != 0
+        defocus = np.reshape(defocus, (-1, 1, 1))
+        z_shift = defocus * np.expand_dims(z_shift, axis=0)
 
         if include_aberration:
             pupil = self.pupil
@@ -231,13 +231,7 @@ class Optics(Feature):
             elif isinstance(pupil, np.ndarray):
                 pupil_function *= pupil
 
-        pupil_functions = []
-        for z in defocus:
-            pupil_at_z = Image(pupil_function)
-            pupil_at_z[pupil_function_is_nonzero] *= np.exp(
-                1j * z_shift[pupil_function_is_nonzero] * z
-            )
-            pupil_functions.append(pupil_at_z)
+        pupil_functions = pupil_function * np.exp(1j * z_shift)
 
         return pupil_functions
 
@@ -294,6 +288,7 @@ class Optics(Feature):
 
 
 class Fluorescence(Optics):
+
     """Optical device for fluorescenct imaging
 
     Images samples by creating a discretized volume, where each pixel
@@ -323,6 +318,8 @@ class Fluorescence(Optics):
         receive an unaberrated pupil as input.
 
     """
+
+    __gpu_compatible__ = True
 
     def get(self, illuminated_volume, limits, **kwargs):
         """Convolves the image with a pupil function"""
@@ -363,7 +360,9 @@ class Fluorescence(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(np.zeros((*padded_volume.shape[0:2], 1)))
+        output_image = Image(
+            maybe_cupy(np.zeros((*padded_volume.shape[0:2], 1))), copy=False
+        )
 
         index_iterator = range(padded_volume.shape[2])
 
@@ -378,40 +377,40 @@ class Fluorescence(Optics):
         z_values = z_iterator[~zero_plane]
 
         # Further pad image to speed up fft
-        volume = pad_image_to_fft(padded_volume, axes=(0, 1))
+        volume = maybe_cupy(pad_image_to_fft(padded_volume, axes=(0, 1)))
 
         pupils = self._pupil(volume.shape[:2], defocus=z_values, **kwargs)
-        pupil_iterator = iter(pupils)
+
+        z_index = 0
 
         # Loop through voluma and convole sample with pupil function
+
         for i, z in zip(index_iterator, z_iterator):
 
             if zero_plane[i]:
                 continue
 
-            image = volume[:, :, i]
-            pupil = Image(next(pupil_iterator))
+            pupil = pupils[z_index]
+            z_index += 1
 
             psf = np.square(np.abs(np.fft.ifft2(np.fft.fftshift(pupil))))
             optical_transfer_function = np.fft.fft2(psf)
 
-            fourier_field = np.fft.fft2(image)
+            fourier_field = np.fft.fft2(volume[:, :, i])
             convolved_fourier_field = fourier_field * optical_transfer_function
 
-            field = Image(np.fft.ifft2(convolved_fourier_field))
+            field = np.fft.ifft2(convolved_fourier_field)
 
-            # Discard remaining imaginary part (should be 0 up to rounding error)
+            # # Discard remaining imaginary part (should be 0 up to rounding error)
             field = np.real(field)
 
-            output_image[:, :, 0] += field[
+            output_image._value[:, :, 0] += field[
                 : padded_volume.shape[0], : padded_volume.shape[1]
             ]
 
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
-        try:
-            output_image.properties = illuminated_volume.properties + pupil.properties
-        except UnboundLocalError:
-            output_image.properties = illuminated_volume.properties
+
+        output_image.properties = illuminated_volume.properties + pupils.properties
 
         return output_image
 
