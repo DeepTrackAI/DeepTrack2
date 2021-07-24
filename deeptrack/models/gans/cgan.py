@@ -1,5 +1,4 @@
 import tensorflow as tf
-from tensorflow.python.keras.utils.generic_utils import default
 from .utils import as_KerasModel
 
 layers = tf.keras.layers
@@ -7,6 +6,37 @@ layers = tf.keras.layers
 
 @as_KerasModel
 class CGAN(tf.keras.Model):
+    """Creates and compiles a conditional generative adversarial
+    neural network (CGAN).
+    Parameters
+    ----------
+    generator: keras model
+        The generator network
+    discriminator: keras model
+        The discriminator network
+    discriminator_loss: str or keras loss function
+        The loss function of the discriminator network
+    discriminator_optimizer: str or keras optimizer
+        The optimizer of the discriminator network 
+    discriminator_metrics: list, optional
+        List of metrics to be evaluated by the discriminator
+        model during training and testing 
+    assemble_loss: list of str or keras loss functions
+        List of loss functions to be evaluated on each output
+        of the assemble model (stacked generator and discriminator),
+        such as `assemble_loss = ["mse", "mse", "mae"]` for
+        the prediction of the discriminator, the predicted
+        perceptual features, and the generated image, respectively
+    assemble_optimizer: str or keras optimizer
+        The optimizer of the assemble network  
+    assemble_loss_weights: list or dict, optional
+        List or dictionary specifying scalar coefficients (floats) 
+        to weight the loss contributions of the assemble model outputs
+    metrics: list, optional 
+        List of metrics to be evaluated on the generated images during 
+        training and testing
+    """
+
     def __init__(
         self,
         generator=None,
