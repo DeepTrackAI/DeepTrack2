@@ -1,5 +1,4 @@
 import tensorflow as tf
-from tensorflow.python.keras.utils.generic_utils import default
 from .utils import as_KerasModel
 
 layers = tf.keras.layers
@@ -8,7 +7,45 @@ layers = tf.keras.layers
 @as_KerasModel
 class PCGAN(tf.keras.Model):
     """Creates and compiles a conditional generative adversarial
-       neural network (cgan) with an additional perceptual discriminator. 
+    neural network (CGAN) with an additional perceptual discriminator,
+    which introduces perceptual criteria on the image generation process.
+    Parameters
+    ----------
+    generator: keras model
+        The generator network
+    discriminator: keras model
+        The discriminator network
+    discriminator_loss: str or keras loss function
+        The loss function of the discriminator network
+    discriminator_optimizer: str or keras optimizer
+        The optimizer of the discriminator network 
+    discriminator_metrics: list, optional
+        List of metrics to be evaluated by the discriminator
+        model during training and testing 
+    assemble_loss: list of str or keras loss functions
+        List of loss functions to be evaluated on each output
+        of the assemble model (stacked generator and discriminator),
+        such as `assemble_loss = ["mse", "mse", "mae"]` for
+        the prediction of the discriminator, the predicted
+        perceptual features, and the generated image, respectively 
+    assemble_optimizer: str or keras optimizer
+        The optimizer of the assemble network 
+    assemble_loss_weights: list or dict, optional
+        List or dictionary specifying scalar coefficients (floats) 
+        to weight the loss contributions of the assemble model outputs
+    perceptual_discriminator: str or keras model
+        Name of the perceptual discriminator. Select the name of this network
+        from the available keras application canned architectures
+        avalaible on [tensorflow](https://www.tensorflow.org/api_docs/python/tf/keras/applications).
+        You can also pass a custom keras model with pre-trained weights.
+    perceptual_discriminator_weights: str or path
+        The weights of the perceptual discriminator. Use 'imagenet' to load
+        ImageNet weights, or provide the path to the weights file to be loaded.
+        Only to be specified if `perceptual_discriminator` is a keras application
+        model.
+    metrics: list, optional 
+        List of metrics to be evaluated on the generated images during 
+        training and testing
     """
 
     def __init__(
@@ -21,7 +58,8 @@ class PCGAN(tf.keras.Model):
         assemble_loss=None,
         assemble_optimizer=None,
         assemble_loss_weights=None,
-        content_discriminator="DenseNet121",
+        perceptual_discriminator="DenseNet121",
+        perceptual_discriminator_weights="imagenet",
         metrics=[],
         **kwargs
     ):
@@ -35,20 +73,29 @@ class PCGAN(tf.keras.Model):
             metrics=discriminator_metrics,
         )
 
-        # perceptual discriminator (pre-trained)
-        self.content_discriminator = tf.keras.Sequential(
-            [
-                layers.Lambda(
-                    lambda img: layers.Concatenate(axis=-1)([img] * 3)
-                ),
-                getattr(tf.keras.applications, content_discriminator)(
-                    include_top=False,
-                    weights="imagenet",
-                    input_shape=(*generator.output.shape[1:3], 3),
-                ),
-            ]
-        )
-        self.content_discriminator.layers[1].trainable = False
+        # perceptual discriminator
+        if isinstance(perceptual_discriminator, str):
+            self.perceptual_discriminator = tf.keras.Sequential(
+                [
+                    layers.Lambda(
+                        lambda img: layers.Concatenate(axis=-1)([img] * 3)
+                    ),
+                    getattr(tf.keras.applications, perceptual_discriminator)(
+                        include_top=False,
+                        weights=perceptual_discriminator_weights,
+                        input_shape=(*generator.output.shape[1:3], 3),
+                    ),
+                ]
+            )
+        elif isinstance(perceptual_discriminator, tf.keras.Model):
+            self.perceptual_discriminator = perceptual_discriminator
+        else:
+            raise AttributeError(
+                'Invalid model format. perceptual_discriminator must be either a string '
+                'indicating the name of the pre-trained model, or a keras model.'
+            )
+
+        self.perceptual_discriminator.layers[1].trainable = False
 
         # Build the generator
         self.generator = generator
@@ -66,12 +113,12 @@ class PCGAN(tf.keras.Model):
         validity = self.discriminator([img, self.model_input])
 
         # Compute content loss
-        content = self.content_discriminator(img)
+        perceptual = self.perceptual_discriminator(img)
 
         # The assembled model (stacked generator and discriminator)
         # Trains the generator to fool the discriminator
         self.assemble = tf.keras.models.Model(
-            self.model_input, [validity, content, img]
+            self.model_input, [validity, perceptual, img]
         )
 
         self.num_losses = len(assemble_loss)
@@ -109,7 +156,7 @@ class PCGAN(tf.keras.Model):
         )
 
         # Compute content loss
-        content_valid = self.content_discriminator(batch_y)
+        perceptual_valid = self.perceptual_discriminator(batch_y)
 
         # Train the assembly
         with tf.GradientTape() as tape:
@@ -127,7 +174,7 @@ class PCGAN(tf.keras.Model):
                     assemble_output[1],
                     *generated_image_copies,
                 ],
-                [valid, content_valid, *batch_y_copies],
+                [valid, perceptual_valid, *batch_y_copies],
             )
 
         # Compute gradient and apply gradient
