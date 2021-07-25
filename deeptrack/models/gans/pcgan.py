@@ -87,15 +87,17 @@ class PCGAN(tf.keras.Model):
                     ),
                 ]
             )
+
         elif isinstance(perceptual_discriminator, tf.keras.Model):
             self.perceptual_discriminator = perceptual_discriminator
+
         else:
             raise AttributeError(
                 'Invalid model format. perceptual_discriminator must be either a string '
                 'indicating the name of the pre-trained model, or a keras model.'
             )
 
-        self.perceptual_discriminator.layers[1].trainable = False
+        self.perceptual_discriminator.trainable = False
 
         # Build the generator
         self.generator = generator
