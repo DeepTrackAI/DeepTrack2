@@ -114,7 +114,7 @@ class PCGAN(tf.keras.Model):
         # The discriminator takes the generated images as input and determines validity
         validity = self.discriminator([img, self.model_input])
 
-        # Compute content loss
+        # Compute perceptual loss
         perceptual = self.perceptual_discriminator(img)
 
         # The assembled model (stacked generator and discriminator)
@@ -157,7 +157,7 @@ class PCGAN(tf.keras.Model):
             zip(grads, self.discriminator.trainable_weights)
         )
 
-        # Compute content loss
+        # Compute perceptual loss
         perceptual_valid = self.perceptual_discriminator(batch_y)
 
         # Train the assembly
