@@ -20,6 +20,7 @@ from .features import Feature, StructuralFeature
 from .image import Image, pad_image_to_fft
 from .types import ArrayLike, PropertyLike
 
+import scipy.ndimage
 from scipy.ndimage import convolve
 
 
@@ -555,7 +556,7 @@ class Brightfield(Optics):
 
         K = 2 * np.pi / kwargs["wavelength"]
 
-        field_z = [_get_position(field, return_z=True)[-1] for field in fields]
+        field_z = [field.get_property("z") for field in fields]
         field_offsets = [field.get_property("offset_z", default=0) for field in fields]
 
         z = z_limits[1]
@@ -687,12 +688,13 @@ def _get_position(image, mode="corner", return_z=False):
     # Extracts the position of the upper left corner of a scatterer
     num_outputs = 2 + return_z
 
-    if mode == "corner":
-        # Probably unecessarily complicated expression
-        shift = (
-            np.ceil((np.array(image.shape) - 1) / 2)
-            - (1 - np.mod(image.shape, 2)) * 0.5
-        )
+    if mode == "corner" and image.size > 0:
+
+        shift = scipy.ndimage.measurements.center_of_mass(np.abs(np.array(image)))
+
+        if np.isnan(shift).any():
+            shift = np.array(image.shape) / 2
+
     else:
         shift = np.zeros((num_outputs))
 
