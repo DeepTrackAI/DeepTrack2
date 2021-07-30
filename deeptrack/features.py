@@ -301,7 +301,7 @@ class Feature(DeepTrackNode):
             return [
                 i.to_cupy()
                 if (not self.__distributed__) and self.__use_gpu__(i, **kwargs)
-                else i
+                else i.to_numpy()
                 for i in inputs
             ]
 
