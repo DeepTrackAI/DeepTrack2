@@ -220,6 +220,11 @@ class Optics(Feature):
             copy=False,
         )
 
+        try:
+            np.nan_to_num(z_shift, False, 0, 0, 0)
+        except TypeError:
+            np.nan_to_num(z_shift, z_shift)
+
         defocus = np.reshape(defocus, (-1, 1, 1))
         z_shift = defocus * np.expand_dims(z_shift, axis=0)
 
@@ -394,6 +399,7 @@ class Fluorescence(Optics):
             z_index += 1
 
             psf = np.square(np.abs(np.fft.ifft2(np.fft.fftshift(pupil))))
+
             optical_transfer_function = np.fft.fft2(psf)
 
             fourier_field = np.fft.fft2(volume[:, :, i])
