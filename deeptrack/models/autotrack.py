@@ -98,10 +98,3 @@ class AutoMultiTracker(KerasModel):
             pooling_block=valid_pooling_block,
             upsampling_block=valid_deconv_block,
         )
-
-    def predict(self, x, *args, **kwargs):
-
-        a = self.model.predict(x, *args, **kwargs)
-        b = self.model.predict(x[:, ::-1, ::-1], *args, **kwargs)[:, ::-1, ::-1]
-
-        return (a - b) / 2
