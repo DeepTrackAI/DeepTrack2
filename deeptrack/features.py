@@ -1250,6 +1250,69 @@ class Merge(Feature):
         return function(list_of_images)
 
 
+class OneOf(Feature):
+    """Resolves one feature from a collection on the input.
+
+    Valid collections are any object that can be iterated (such as lists, tuples and sets).
+    Internally, the collection is converted to a tuple.
+
+    Default behaviour is to sample the collection uniformly random. This can be
+    controlled by the `key` argument, where the feature resolved is chosen as
+    `tuple(collection)[key]`.
+    """
+
+    __distributed__ = False
+
+    def __init__(self, collection, key=None, **kwargs):
+        self.collection = tuple(collection)
+        super().__init__(key=key, **kwargs)
+
+        for feature in self.collection:
+            self.add_feature(feature)
+
+    def _process_properties(self, propertydict) -> dict:
+        super()._process_properties(propertydict)
+
+        if propertydict["key"] is None:
+            propertydict["key"] = np.random.randint(len(self.collection))
+
+        return propertydict
+
+    def get(self, image, key, **kwargs):
+        return self.collection[key](image)
+
+
+class OneOfDict(Feature):
+    """Resolves one feature from a dictionary.
+
+    Default behaviour is to sample the values diction uniformly random. This can be
+    controlled by the `key` argument, where the feature resolved is chosen as
+    `collection[key]`.
+    """
+
+    __distributed__ = False
+
+    def __init__(self, collection, key=None, **kwargs):
+
+        self.collection = collection
+
+        super().__init__(key=key, **kwargs)
+
+        for feature in self.collection.values():
+            self.add_feature(feature)
+
+    def _process_properties(self, propertydict) -> dict:
+        super()._process_properties(propertydict)
+
+        if propertydict["key"] is None:
+            propertydict["key"] = np.random.choice(list(self.collection.keys()))
+
+        return propertydict
+
+    def get(self, image, key, **kwargs):
+        return self.collection[key](image)
+
+
 class Dataset(Feature):
     """Grabs data from a local set of data.
 

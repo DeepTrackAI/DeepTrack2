@@ -795,6 +795,124 @@ class TestFeatures(unittest.TestCase):
         res = pipeline.update().resolve(is_condition=True)
         self.assertEqual(res, 2)
 
+    def test_OneOfList(self):
+
+        values = features.OneOf(
+            [features.Value(1), features.Value(2), features.Value(3)]
+        )
+
+        has_been_one = False
+        has_been_two = False
+        has_been_three = False
+
+        for _ in range(50):
+            val = values.update().resolve()
+            self.assertIn(val, [1, 2, 3])
+            if val == 1:
+                has_been_one = True
+            elif val == 2:
+                has_been_two = True
+            else:
+                has_been_three = True
+        self.assertTrue(has_been_one)
+        self.assertTrue(has_been_two)
+        self.assertTrue(has_been_three)
+
+        self.assertEquals(values.update().resolve(key=0), 1)
+
+        self.assertEquals(values.update().resolve(key=1), 2)
+
+        self.assertEquals(values.update().resolve(key=2), 3)
+
+        self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
+
+    def test_OneOfTuple(self):
+
+        values = features.OneOf(
+            (features.Value(1), features.Value(2), features.Value(3))
+        )
+
+        has_been_one = False
+        has_been_two = False
+        has_been_three = False
+
+        for _ in range(50):
+            val = values.update().resolve()
+            self.assertIn(val, [1, 2, 3])
+            if val == 1:
+                has_been_one = True
+            elif val == 2:
+                has_been_two = True
+            else:
+                has_been_three = True
+        self.assertTrue(has_been_one)
+        self.assertTrue(has_been_two)
+        self.assertTrue(has_been_three)
+
+        self.assertEquals(values.update().resolve(key=0), 1)
+
+        self.assertEquals(values.update().resolve(key=1), 2)
+
+        self.assertEquals(values.update().resolve(key=2), 3)
+
+        self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
+
+    def test_OneOfSet(self):
+
+        values = features.OneOf(
+            set([features.Value(1), features.Value(2), features.Value(3)])
+        )
+
+        has_been_one = False
+        has_been_two = False
+        has_been_three = False
+
+        for _ in range(50):
+            val = values.update().resolve()
+            self.assertIn(val, [1, 2, 3])
+            if val == 1:
+                has_been_one = True
+            elif val == 2:
+                has_been_two = True
+            else:
+                has_been_three = True
+        self.assertTrue(has_been_one)
+        self.assertTrue(has_been_two)
+        self.assertTrue(has_been_three)
+
+        self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
+
+    def test_OneOfDict(self):
+
+        values = features.OneOfDict(
+            {"1": features.Value(1), "2": features.Value(2), "3": features.Value(3)}
+        )
+
+        has_been_one = False
+        has_been_two = False
+        has_been_three = False
+
+        for _ in range(50):
+            val = values.update().resolve()
+            self.assertIn(val, [1, 2, 3])
+            if val == 1:
+                has_been_one = True
+            elif val == 2:
+                has_been_two = True
+            else:
+                has_been_three = True
+        self.assertTrue(has_been_one)
+        self.assertTrue(has_been_two)
+        self.assertTrue(has_been_three)
+
+        self.assertEquals(values.update().resolve(key="1"), 1)
+
+        self.assertEquals(values.update().resolve(key="2"), 2)
+
+        self.assertEquals(values.update().resolve(key="3"), 3)
+
+        self.assertRaises(KeyError, lambda: values.update().resolve(key="4"))
+
 
 if __name__ == "__main__":
     unittest.main()
