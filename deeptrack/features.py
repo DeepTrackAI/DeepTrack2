@@ -212,6 +212,9 @@ class Feature(DeepTrackNode):
 
         for index, image in enumerate(new_list):
 
+            if self.arguments:
+                image.append(self.arguments.properties())
+
             image.append(feature_input)
 
         # Merge input and new_list
