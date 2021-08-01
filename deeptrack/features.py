@@ -1267,11 +1267,13 @@ class OneOf(Feature):
         for feature in self.collection:
             self.add_feature(feature)
 
+    def _process_properties(self, propertydict) -> dict:
+        super()._process_properties(propertydict)
+
+        if propertydict["key"] is None:
+            propertydict["key"] = np.random.randint(len(self.collection))
+
     def get(self, image, key, **kwargs):
-
-        if key is None:
-            key = lambda: np.random.randint(len(self.collection))
-
         return self.collection[key](image)
 
 
@@ -1294,9 +1296,13 @@ class OneOfDict(Feature):
         for feature in self.collection.values():
             self.add_feature(feature)
 
+    def _process_properties(self, propertydict) -> dict:
+        super()._process_properties(propertydict)
+
+        if propertydict["key"] is None:
+            propertydict["key"] = np.random.choice(list(self.collection.keys()))
+
     def get(self, image, key, **kwargs):
-        if key is None:
-            key = lambda: np.random.choice(list(self.collection.keys()))
         return self.collection[key](image)
 
 
