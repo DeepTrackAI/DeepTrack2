@@ -15,7 +15,7 @@ Brightfield
     Images coherently illuminated samples.
 """
 
-import cupy
+
 from pint.quantity import Quantity
 from deeptrack.backend.units import ConversionTable
 from deeptrack.properties import propagate_data_to_dependencies
@@ -23,7 +23,7 @@ import numpy as np
 from .features import DummyFeature, Feature, StructuralFeature
 from .image import Image, pad_image_to_fft, maybe_cupy
 from .types import ArrayLike, PropertyLike
-
+from .backend._config import cupy
 from scipy.ndimage import convolve
 
 from . import units as u
@@ -221,7 +221,7 @@ class Optics(Feature):
         )
 
         try:
-            np.nan_to_num(z_shift, False, 0, 0, 0)
+            z_shift = np.nan_to_num(z_shift, False, 0, 0, 0)
         except TypeError:
             np.nan_to_num(z_shift, z_shift)
 

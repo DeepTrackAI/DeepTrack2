@@ -11,7 +11,6 @@ from numpy.testing._private.utils import assert_almost_equal
 
 from .. import features, Image, properties, utils
 
-from ..image import array
 
 import numpy as np
 import numpy.testing
@@ -58,13 +57,13 @@ def grid_test_features(
 
         if isinstance(output, list) and isinstance(expected_result, list):
             [
-                np.testing.assert_almost_equal(array(a), array(b))
+                np.testing.assert_almost_equal(np.array(a), np.array(b))
                 for a, b in zip(output, expected_result)
             ]
 
         else:
             is_equal = np.array_equal(
-                array(output), array(expected_result), equal_nan=True
+                np.array(output), np.array(expected_result), equal_nan=True
             )
 
             tester.failIf(

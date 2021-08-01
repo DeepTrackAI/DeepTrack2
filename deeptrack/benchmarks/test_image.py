@@ -4,7 +4,7 @@ import itertools
 import deeptrack as dt
 import pytest
 import itertools
-import cupy as cp
+from deeptrack.backend._config import cupy as cp
 
 u = dt.units
 

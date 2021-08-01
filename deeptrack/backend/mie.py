@@ -1,7 +1,7 @@
 """ Perform Mie-specific calculations
 """
 
-import cupy
+from ._config import cupy
 import numpy as np
 
 from typing import Tuple
