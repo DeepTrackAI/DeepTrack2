@@ -33,6 +33,6 @@ from .sequences import *
 from .elementwise import *
 from .statistics import *
 
-from .image import array, strip
+from .image import strip
 
 from . import image, losses, generators, models, utils, layers, backend, test

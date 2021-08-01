@@ -17,7 +17,7 @@ import numpy as np
 import tensorflow.keras as keras
 
 from .features import Feature
-from .image import Image, array
+from .image import Image
 import threading
 import random
 import time
@@ -103,8 +103,8 @@ class Generator(keras.utils.Sequence):
                     if shuffle_batch:
                         self._shuffle(sub_batch, sub_labels)
 
-                    sub_batch = array(sub_batch)
-                    sub_labels = array(sub_labels)
+                    sub_batch = np.array(sub_batch)
+                    sub_labels = np.array(sub_labels)
 
                     # Console found batch_size with results
                     if sub_batch.ndim > ndim:
@@ -376,118 +376,22 @@ class ContinuousGenerator(keras.utils.Sequence):
             return features.resolve()
 
 
-# class CappedContinuousGenerator(ContinuousGenerator):
-
-#     """Generator that asynchronously expands the dataset.
-
-#     Generator that aims to speed up the training of networks by striking a
-#     balance between the generalization gained by generating new images
-#     and the speed gained from reusing images. The generator will continuously
-#     create new training data during training, until `max_data_size` is reached,
-#     at which point the oldest data point is replaced.
-
-#     Unlike the `ContinuousGenerator`, this generator will purge any data that
-#     has been seen more than `max_sample_exposure` times.
-
-#     The generator is expected to be used with the python "with" statement, which
-#     ensures that the generator worker is consumed correctly.
-
-#     Parameters
-#     ----------
-#     feature : Feature
-#         The feature to resolve images from.
-#     label_function : Callable[Image or list of Image] -> array_like
-#         Function that returns the label corresponding to a feature output.
-#     batch_function : Callable[Image or list of Image] -> array_like, optional
-#         Function that returns the training data corresponding a feature output.
-#     min_data_size : int
-#         Minimum size of the training data before training starts
-#     max_data_set : int
-#         Maximum size of the training data before old data is replaced.
-#     max_sample_exposure : int
-#         Any sample that has been seen for more than `max_sample_exposure` will be removed from the dataset
-#     batch_size : int or Callable[int, int] -> int
-#         Number of images per batch. A function is expected to accept the current epoch
-#         and the size of the training data as input.
-#     shuffle_batch : bool
-#         If True, the batches are shuffled before outputting.
-#     feature_kwargs : dict or list of dicts
-#         Set of options to pass to the feature when resolving
-#     ndim : int
-#         Number of dimensions of each batch (including the batch dimension).
-#     max_sample_exposure : int
-#         Any sample that has been seen for more than `max_sample_exposure` will be removed from the dataset
-#     """
-
-#     def __init__(self, *args, max_sample_exposure=np.inf, **kwargs):
-#         import warnings
-
-#         warnings.warn(
-#             "CappedContinuousGenerator is deprecated in favor of ContinuousGenerator with the max_epochs_per_sample argument.",
-#             DeprecationWarning,
-#         )
-#         self.max_sample_exposure = max_sample_exposure
-#         super().__init__(*args, **kwargs)
-
-#     def __getitem__(self, idx):
-
-#         # TODO: Use parent method
-#         batch_size = self._batch_size
-#         subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
-#         for a in subset:
-#             a[-1] += 1
-#         outputs = [array(a) for a in list(zip(*subset))]
-#         outputs = (outputs[0], *outputs[1:-1])
-#         return outputs
-
-#     def construct_datapoint(self, image, label):
-#         return [image, label, 0]
-
-#     def cleanup(self):
-#         self.data = [
-#             sample for sample in self.data if sample[-1] < self.max_sample_exposure
-#         ]
-
-#     def on_epoch_end(self):
-
-#         while len(self.data) < self.min_data_size:
-#             print("Awaiting dataset to reach minimum size...", end="\r")
-#             time.sleep(0.1)
-
-#         return super().on_epoch_end()
-
-
 class AutoTrackGenerator(ContinuousGenerator):
-    def __init__(self, *args, symmetries=1, **kwargs):
+    def __init__(self, transformation_function, *args, symmetries=1, **kwargs):
         self.symmetries = symmetries
+        self.transformation_function = transformation_function
         super().__init__(*args, **kwargs)
 
     def __getitem__(self, idx):
 
-        aug = None
-        if aug is None:
-            aug = Affine(
-                translate=lambda: np.random.randn(2) * 2,
-                # scale=lambda: np.random.choice([-1, 1], size=(2,)),
-                rotate=lambda: np.random.rand() * np.pi * 2,
-            )
-
         x = self.current_data[idx]["data"]
         x = np.array(x)
 
-        # x = (
-        #     (
-        #         Affine(
-        #             scale=lambda: np.random.choice([-1, 1], size=(2,)),
-        #             rotate=lambda: np.random.rand() * np.pi * 2,
-        #         )
-        #         >> Gaussian(sigma=lambda: np.random.rand() * 0.01)
-        #     )
-        #     .update()
-        #     .resolve(x)
-        # )
         sample = np.array(x)
-        batch = [aug.update().resolve(sample) for _ in range(self.batch_size)]
+        batch = [
+            self.transformation_function.update().resolve(sample)
+            for _ in range(self.batch_size)
+        ]
 
         labels = np.array(
             [self.get_transform_matrix(batch[0], b).reshape((-1,)) for b in batch]

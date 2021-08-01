@@ -413,8 +413,6 @@ def strip(v):
     return v
 
 
-def array(v):
-    return np.array(strip(v))
 
 
 def coerce(images):

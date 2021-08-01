@@ -15,7 +15,6 @@ class TestMath(unittest.TestCase):
         input_image = np.array([[10, 4], [4, -10]])
         feature = math.Clip(min=-5, max=5)
         clipped_feature = feature.resolve(input_image)
-        print(clipped_feature)
         self.assertTrue(np.all(clipped_feature == [[5, 4], [4, -5]]))
 
     def test_NormalizeMinMax(self):
