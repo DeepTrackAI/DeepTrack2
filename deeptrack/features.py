@@ -1273,6 +1273,8 @@ class OneOf(Feature):
         if propertydict["key"] is None:
             propertydict["key"] = np.random.randint(len(self.collection))
 
+        return propertydict
+
     def get(self, image, key, **kwargs):
         return self.collection[key](image)
 
@@ -1301,6 +1303,8 @@ class OneOfDict(Feature):
 
         if propertydict["key"] is None:
             propertydict["key"] = np.random.choice(list(self.collection.keys()))
+
+        return propertydict
 
     def get(self, image, key, **kwargs):
         return self.collection[key](image)
