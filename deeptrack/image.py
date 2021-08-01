@@ -16,26 +16,14 @@ pad_image_to_fft(image: Image, axes = (0, 1))
     Transforms.
 """
 
-import warnings
-import cupy
 import numpy as np
-import numpy.lib.mixins
 import operator as ops
 from tensorflow import Tensor
 import tensorflow
 from .backend.tensorflow_bindings import TENSORFLOW_BINDINGS
+import numpy as np
 
-
-CUPY_INSTALLED = False
-try:
-    import cupy as cp
-
-    CUPY_INSTALLED = True
-except Exception:
-    CUPY_INSTALLED = False
-    warnings.warn(
-        "cupy not installed. GPU-accelerated simulations will not be possible"
-    )
+from .backend._config import cupy
 
 
 def _binary_method(op):
@@ -324,7 +312,8 @@ class Image:
         return self
 
     def to_numpy(self):
-
+        if isinstance(self._value, np.ndarray):
+            return self
         if isinstance(self._value, cupy.ndarray):
             return Image(self._value.get(), copy=False).merge_properties_from(self)
         if isinstance(self._value, tensorflow.Tensor):
@@ -413,8 +402,6 @@ def strip(v):
     return v
 
 
-
-
 def coerce(images):
     images = [Image(image, copy=False) for image in images]
 
@@ -466,6 +453,6 @@ def maybe_cupy(array):
     from . import config
 
     if config.gpu_enabled:
-        return cp.array(array)
+        return cupy.array(array)
 
     return array

@@ -12,7 +12,8 @@ from numpy.testing._private.utils import assert_almost_equal
 from .. import elementwise, features, Image
 
 import numpy as np
-import cupy as cp
+from deeptrack.backend._config import cupy as cp
+
 import numpy.testing
 import inspect
 
@@ -43,11 +44,9 @@ def grid_test_features(
 
             expected_result = expected_result_function(f_a_input)
 
-            if isinstance(output._value, cp.ndarray):
-                output = output.get()
+            output = np.array(output)
 
-            if isinstance(expected_result, cp.ndarray):
-                expected_result = expected_result.get()
+            expected_result = np.array(expected_result)
 
             if isinstance(output, list) and isinstance(expected_result, list):
                 [
