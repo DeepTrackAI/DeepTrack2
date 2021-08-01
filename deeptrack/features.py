@@ -1265,12 +1265,12 @@ class OneOf(Feature):
         for feature in self.collection:
             self.add_feature(feature)
 
-        if key is None:
-            key = lambda: np.random.randint(len(self.collection))
-
         super().__init__(key=key, **kwargs)
 
     def get(self, image, key, **kwargs):
+
+        if key is None:
+            key = lambda: np.random.randint(len(self.collection))
 
         return self.collection[key](image)
 
@@ -1289,15 +1289,14 @@ class OneOfDict(Feature):
 
         self.collection = collection
 
-        if key is None:
-            key = lambda: np.random.choice(list(self.collection.keys()))
-
         super().__init__(key=key, **kwargs)
 
         for feature in self.collection.values():
             self.add_feature(feature)
 
     def get(self, image, key, **kwargs):
+        if key is None:
+            key = lambda: np.random.choice(list(self.collection.keys()))
         return self.collection[key](image)
 
 
