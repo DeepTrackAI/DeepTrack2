@@ -1259,13 +1259,11 @@ class OneOf(Feature):
     """
 
     def __init__(self, collection, key=None, **kwargs):
-
         self.collection = tuple(collection)
+        super().__init__(key=key, **kwargs)
 
         for feature in self.collection:
             self.add_feature(feature)
-
-        super().__init__(key=key, **kwargs)
 
     def get(self, image, key, **kwargs):
 
