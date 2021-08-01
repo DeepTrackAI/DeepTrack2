@@ -1258,6 +1258,8 @@ class OneOf(Feature):
     `tuple(collection)[key]`.
     """
 
+    __distributed__ = False
+
     def __init__(self, collection, key=None, **kwargs):
         self.collection = tuple(collection)
         super().__init__(key=key, **kwargs)
