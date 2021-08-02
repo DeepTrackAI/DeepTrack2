@@ -1,7 +1,8 @@
-from .utils import as_KerasModel
-
-from .layers import as_block
 from tensorflow.keras import layers, models
+
+from ..backend.citations import unet_bibtex
+from .layers import as_block
+from .utils import as_KerasModel, with_citation
 
 
 def center_crop(layer, target_layer):
@@ -124,6 +125,7 @@ def Convolutional(
 convolutional = Convolutional
 
 
+@with_citation(unet_bibtex)
 @as_KerasModel
 def UNet(
     input_shape=(None, None, 1),
@@ -218,7 +220,7 @@ def UNet(
 
         layer = upsampling_block(conv_layer_dimension)(layer)
 
-        concat_layer = center_crop(concat_layer, layer)
+        # concat_layer = center_crop(concat_layer, layer) Not currently working
 
         layer = layers.Concatenate(axis=-1)([layer, concat_layer])
 
