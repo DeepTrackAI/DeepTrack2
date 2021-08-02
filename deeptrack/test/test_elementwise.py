@@ -43,10 +43,11 @@ def grid_test_features(
                 continue
 
             expected_result = expected_result_function(f_a_input)
-
             output = np.array(output)
-
-            expected_result = np.array(expected_result)
+            try:
+                expected_result = np.array(expected_result)
+            except TypeError:
+                expected_result = expected_result.get()
 
             if isinstance(output, list) and isinstance(expected_result, list):
                 [
