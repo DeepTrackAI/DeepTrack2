@@ -218,7 +218,7 @@ def UNet(
 
         layer = upsampling_block(conv_layer_dimension)(layer)
 
-        concat_layer = center_crop(concat_layer, layer)
+        # concat_layer = center_crop(concat_layer, layer) Not currently working
 
         layer = layers.Concatenate(axis=-1)([layer, concat_layer])
 
