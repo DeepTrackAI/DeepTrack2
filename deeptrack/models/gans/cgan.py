@@ -17,10 +17,10 @@ class CGAN(tf.keras.Model):
     discriminator_loss: str or keras loss function
         The loss function of the discriminator network
     discriminator_optimizer: str or keras optimizer
-        The optimizer of the discriminator network 
+        The optimizer of the discriminator network
     discriminator_metrics: list, optional
         List of metrics to be evaluated by the discriminator
-        model during training and testing 
+        model during training and testing
     assemble_loss: list of str or keras loss functions
         List of loss functions to be evaluated on each output
         of the assemble model (stacked generator and discriminator),
@@ -28,12 +28,12 @@ class CGAN(tf.keras.Model):
         the prediction of the discriminator, the predicted
         perceptual features, and the generated image, respectively
     assemble_optimizer: str or keras optimizer
-        The optimizer of the assemble network  
+        The optimizer of the assemble network
     assemble_loss_weights: list or dict, optional
-        List or dictionary specifying scalar coefficients (floats) 
+        List or dictionary specifying scalar coefficients (floats)
         to weight the loss contributions of the assemble model outputs
-    metrics: list, optional 
-        List of metrics to be evaluated on the generated images during 
+    metrics: list, optional
+        List of metrics to be evaluated on the generated images during
         training and testing
     """
 
@@ -77,8 +77,7 @@ class CGAN(tf.keras.Model):
 
         # The assembled model (stacked generator and discriminator)
         # Trains the generator to fool the discriminator
-        self.assemble = tf.keras.models.Model(
-            self.model_input, [validity, img])
+        self.assemble = tf.keras.models.Model(self.model_input, [validity, img])
 
         self.num_losses = len(assemble_loss)
 
@@ -119,8 +118,7 @@ class CGAN(tf.keras.Model):
         with tf.GradientTape() as tape:
             assemble_output = self.assemble(batch_x)
 
-            generated_image_copies = [
-                assemble_output[1]] * (self.num_losses - 1)
+            generated_image_copies = [assemble_output[1]] * (self.num_losses - 1)
 
             batch_y_copies = [batch_y] * (self.num_losses - 1)
 

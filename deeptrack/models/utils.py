@@ -43,7 +43,7 @@ def with_citation(citation):
             assert isinstance(
                 res, features.Feature
             ), "Wrapped model is not a deeptrack object. Did you forget @as_KerasModel?"
-            res.citations = {*res.citations, citation}
+            res.citation = citation
             return res
 
         return inner
