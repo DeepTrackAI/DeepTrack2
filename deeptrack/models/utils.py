@@ -35,6 +35,22 @@ def load_model(filepath, custom_objects=None, compile=True, options=None):
     model = KerasModel(model, compile=False)
 
 
+def with_citation(citation):
+    def wrapper(func):
+        @wraps(func)
+        def inner(*args, **kwargs):
+            res = func(*args, **kwargs)
+            assert isinstance(
+                res, features.Feature
+            ), "Wrapped model is not a deeptrack object. Did you forget @as_KerasModel?"
+            res.citations = {*res.citations, citation}
+            return res
+
+        return inner
+
+    return wrapper
+
+
 def as_KerasModel(func):
     @wraps(func)
     def inner(*args, **kwargs):

@@ -4,6 +4,7 @@ import numpy as np
 import operator
 
 from .. import utils, image
+from .citations import deeptrack_bibtex
 
 
 class DeepTrackDataObject:
@@ -134,6 +135,8 @@ class DeepTrackNode:
 
     __nonelike_default = object()
 
+    citations = {deeptrack_bibtex}
+
     def __init__(self, action=__nonelike_default, **kwargs):
         self.data = DeepTrackDataList()
         self.children = []
@@ -247,6 +250,13 @@ class DeepTrackNode:
 
         for dependency in self.dependencies:
             yield from dependency.recurse_dependencies(memory=memory)
+
+    def get_citations(self):
+        cites = self.citations
+        for dep in self.recurse_dependencies():
+            cites.union(dep.citations)
+
+        return cites
 
     def __call__(self, replicate_index=None):
 
