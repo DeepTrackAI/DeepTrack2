@@ -35,11 +35,8 @@ class ConversionTable:
             # If not quantity, assume default
             if not isinstance(quantity, Quantity):
                 quantity = quantity * default_unit
-            print(quantity)
             quantity = quantity.to(desired_unit)
-            print(quantity)
             quantity = quantity.to_reduced_units()
-            print(quantity)
             kwargs[key] = quantity
 
         return kwargs
