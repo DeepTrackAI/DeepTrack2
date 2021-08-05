@@ -135,7 +135,8 @@ class DeepTrackNode:
 
     __nonelike_default = object()
 
-    citations = {deeptrack_bibtex}
+    citation = deeptrack_bibtex
+
 
     def __init__(self, action=__nonelike_default, **kwargs):
         self.data = DeepTrackDataList()
@@ -252,9 +253,12 @@ class DeepTrackNode:
             yield from dependency.recurse_dependencies(memory=memory)
 
     def get_citations(self):
-        cites = self.citations
+        cites = {self.citation}
         for dep in self.recurse_dependencies():
-            cites.union(dep.citations)
+            for obj in type(dep).mro():
+                if hasattr(obj, "citation"):
+                    cites.add(obj.citation)
+
 
         return cites
 
