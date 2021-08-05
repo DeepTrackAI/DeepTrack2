@@ -5,6 +5,7 @@ from .layers import as_block
 from .utils import KerasModel, as_KerasModel, with_citation
 
 
+
 def center_crop(layer, target_layer):
     def inner(x):
         x, y = x
@@ -150,6 +151,7 @@ class UNet(KerasModel):
         pooling_block="pooling",
         upsampling_block="deconvolutional",
         **kwargs
+
     ):
 
         """Creates and compiles a U-Net.
@@ -242,6 +244,7 @@ class UNet(KerasModel):
             activation=output_activation,
             padding="same",
         )(layer)
+
 
         model = models.Model(unet_input, output_layer)
         super().__init__(model, **kwargs)

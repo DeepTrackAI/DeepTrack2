@@ -44,6 +44,7 @@ def with_citation(citation):
                 res, features.Feature
             ), "Wrapped model is not a deeptrack object. Did you forget @as_KerasModel?"
             res.citation = citation
+
             return res
 
         return inner

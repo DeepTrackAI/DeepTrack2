@@ -137,6 +137,7 @@ class DeepTrackNode:
 
     citation = deeptrack_bibtex
 
+
     def __init__(self, action=__nonelike_default, **kwargs):
         self.data = DeepTrackDataList()
         self.children = []
@@ -257,6 +258,7 @@ class DeepTrackNode:
             for obj in type(dep).mro():
                 if hasattr(obj, "citation"):
                     cites.add(obj.citation)
+
 
         return cites
 
