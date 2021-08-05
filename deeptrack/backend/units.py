@@ -4,8 +4,6 @@ from .. import units as u
 
 
 class ConversionTable:
-    __default_context = Context()
-
     def __init__(self, **conversions):
 
         for value in conversions.values():
@@ -22,8 +20,6 @@ class ConversionTable:
 
     def convert(self, **kwargs):
 
-        pixel_size = kwargs.get("pixel_size", 1)
-
         for key, val in self.conversions.items():
 
             if key not in kwargs:
@@ -39,11 +35,11 @@ class ConversionTable:
             # If not quantity, assume default
             if not isinstance(quantity, Quantity):
                 quantity = quantity * default_unit
-
-            quantity = quantity.to(desired_unit, "dt", pixel_size=pixel_size)
-
+            print(quantity)
+            quantity = quantity.to(desired_unit)
+            print(quantity)
             quantity = quantity.to_reduced_units()
-
+            print(quantity)
             kwargs[key] = quantity
 
         return kwargs
