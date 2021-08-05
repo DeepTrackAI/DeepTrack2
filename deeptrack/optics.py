@@ -56,7 +56,8 @@ class Microscope(StructuralFeature):
         additional_sample_kwargs = self._objective.properties()
         propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
 
-        list_of_scatterers = self._sample()
+        with u.context("dt", pixel_size=additional_sample_kwargs["voxel_size"][0]):
+            list_of_scatterers = self._sample()
 
         if not isinstance(list_of_scatterers, list):
             list_of_scatterers = [list_of_scatterers]
