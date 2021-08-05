@@ -514,11 +514,17 @@ class Brightfield(Optics):
 
         voxel_size = kwargs["voxel_size"]
 
-        pupils = self._pupil(
-            volume.shape[:2], defocus=[1], include_aberration=False, **kwargs
-        ) + self._pupil(
-            volume.shape[:2], defocus=[-z_limits[1]], include_aberration=True, **kwargs
-        )
+        pupils = [
+            self._pupil(
+                volume.shape[:2], defocus=[1], include_aberration=False, **kwargs
+            )[0],
+            self._pupil(
+                volume.shape[:2],
+                defocus=[-z_limits[1]],
+                include_aberration=True,
+                **kwargs
+            )[0],
+        ]
 
         pupil_step = np.fft.fftshift(pupils[0])
 
