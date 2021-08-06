@@ -405,7 +405,7 @@ class AutoTrackGenerator(ContinuousGenerator):
         s0 = base_image.get_property("scale")
 
         t1 = new_image.get_property("translate")[2::-1]
-        r1 = new_image.get_property("rotate") * self.symmetries
+        r1 = new_image.get_property("rotate")
         s1 = new_image.get_property("scale")
 
         rmat0 = np.array([[np.cos(r0), np.sin(r0)], [-np.sin(r0), np.cos(r0)]]) * s0
