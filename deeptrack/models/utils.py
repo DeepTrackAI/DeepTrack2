@@ -107,8 +107,8 @@ class KerasModel(Model):
             generator = self.data_generator(
                 x,
                 batch_size=batch_size,
-                min_data_size=batch_size * 50,
-                max_data_size=batch_size * 100,
+                min_data_size=batch_size * 20,
+                max_data_size=batch_size * 50,
             )
             with generator:
                 h = self.model.fit(generator, *args, batch_size=batch_size, **kwargs)

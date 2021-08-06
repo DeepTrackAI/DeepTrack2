@@ -117,6 +117,9 @@ class RNN(KerasModel):
 
         super().__init__(network, **kwargs)
 
+    def data_generator(self, *args, **kwargs):
+        return super().data_generator(*args, **{"ndim": 5, **kwargs})
+
 
 # Alias for backwards compatability
 rnn = RNN

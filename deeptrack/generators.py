@@ -17,7 +17,7 @@ import numpy as np
 import tensorflow.keras as keras
 
 from .features import Feature
-from .image import Image
+from .image import Image, strip
 import threading
 import random
 import time
@@ -194,12 +194,8 @@ class ContinuousGenerator(keras.utils.Sequence):
     def __init__(
         self,
         feature,
-        label_function=lambda image: image[1]
-        if isinstance(image, (list, tuple))
-        else None,
-        batch_function=lambda image: image[0]
-        if isinstance(image, (list, tuple))
-        else image,
+        label_function=lambda image: image[1],
+        batch_function=lambda image: image[0],
         augmentation=None,
         min_data_size=None,
         max_data_size=np.inf,
@@ -317,6 +313,7 @@ class ContinuousGenerator(keras.utils.Sequence):
 
         data = [self.batch_function(d["data"]) for d in subset]
         labels = [self.label_function(d["data"]) for d in subset]
+
         return np.array(data), np.array(labels)
 
     def __len__(self):
