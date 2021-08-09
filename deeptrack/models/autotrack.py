@@ -56,8 +56,8 @@ class AutoTracker(KerasModel):
             input_shape=input_shape,
             conv_layers_dimensions=[32, 64, 128],
             dense_layers_dimensions=(32, 32),
-            steps_per_pooling=1,
-            number_of_outputs=2,
+            steps_per_pooling=2,
+            number_of_outputs=1 if self.mode == "sizing" else 2,
         )
 
     def data_generator(self, *args, **kwargs):
@@ -78,7 +78,7 @@ class AutoTracker(KerasModel):
         elif self.mode == "sizing":
             transformation_function = Affine(
                 translate=lambda: np.random.randn(2) * 2,
-                scale=lambda: np.random.rand() * 1 + 0.7,
+                scale=lambda: np.random.rand() * 0.6 + 0.7,
                 rotate=lambda: np.random.rand() * np.pi * 2,
             )
 
