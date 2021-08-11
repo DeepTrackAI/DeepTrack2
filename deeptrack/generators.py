@@ -373,6 +373,14 @@ class ContinuousGenerator(keras.utils.Sequence):
             return features.resolve()
 
 
+class PyTorchContinuousGenerator(ContinuousGenerator):
+    def __getitem__(self, idx):
+        import torch
+
+        X, y = super().__getitem__(idx)
+        return torch.from_numpy(X).to(torch.float), torch.from_numpy(y).to(torch.float)
+
+
 class AutoTrackGenerator(ContinuousGenerator):
     def __init__(self, transformation_function, *args, symmetries=1, **kwargs):
         self.symmetries = symmetries
