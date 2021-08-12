@@ -385,8 +385,6 @@ class AutoTrackGenerator(ContinuousGenerator):
     def __getitem__(self, idx):
 
         x = self.current_data[idx]["data"]
-        x = np.array(x)
-
         sample = np.array(x)
         batch = [
             self.transformation_function.update().resolve(sample)
@@ -411,8 +409,8 @@ class AutoTrackGenerator(ContinuousGenerator):
         r1 = new_image.get_property("rotate") * self.symmetries
         s1 = new_image.get_property("scale")
 
-        rmat0 = np.array([[np.cos(r0), np.sin(r0)], [-np.sin(r0), np.cos(r0)]]) @ s0.T
-        rmat1 = np.array([[np.cos(r1), np.sin(r1)], [-np.sin(r1), np.cos(r1)]]) @ s1.T
+        rmat0 = np.array([[np.cos(r0), np.sin(r0)], [-np.sin(r0), np.cos(r0)]]) * s0
+        rmat1 = np.array([[np.cos(r1), np.sin(r1)], [-np.sin(r1), np.cos(r1)]]) * s1
 
         rmat = np.linalg.inv(rmat0) @ rmat1
         dt = (np.array(t1) - t0) @ rmat1
