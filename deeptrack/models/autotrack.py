@@ -1,4 +1,4 @@
-from .utils import KerasModel
+from .utils import KerasModel, as_KerasModel
 from .convolutional import Convolutional, UNet
 from ..generators import AutoTrackGenerator
 from ..losses import (
@@ -9,6 +9,7 @@ from ..losses import (
 )
 from ..layers import ConvolutionalBlock, PoolingBlock, DeconvolutionalBlock
 from ..augmentations import Affine
+import tensorflow as tf
 
 import numpy as np
 
@@ -20,12 +21,66 @@ except:
     TFA_INSTALLED = False
 
 
+class AutoTrackerModel(tf.keras.Model):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+
+    def compile(self, *args, **kwargs):
+        super().compile(*args, **kwargs)
+        self.model.compile(*args, **kwargs)
+
+    def train_step(self, data):
+        # Unpack the data. Its structure depends on your model and
+        # on what you pass to `fit()`.
+
+        x, (offset_vector, transformation_matrix) = data
+
+        with tf.GradientTape() as tape:
+            y_pred = self(x)  # Forward pass
+
+            # Prediction on first image is transformed
+            transformed_origin = tf.linalg.matvec(
+                transformation_matrix, y_pred[0, :2], transpose_a=True
+            )
+
+            y_pred = y_pred[:, :2] - transformed_origin
+            # Compute the loss value.
+            # The loss function is configured in `compile()`.
+            loss = self.compiled_loss(
+                offset_vector,
+                y_pred,
+                regularization_losses=self.losses,
+            )
+
+        # Compute gradients
+        trainable_vars = self.trainable_variables
+        gradients = tape.gradient(loss, trainable_vars)
+
+        # Update weights
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+
+        # Update the metrics.
+        # Metrics are configured in `compile()`.
+        self.compiled_metrics.update_state(
+            offset_vector,
+            y_pred,
+        )
+
+        # Return a dict mapping metric names to current value.
+        # Note that it will include the loss (tracked in self.metrics).
+        return {m.name: m.result() for m in self.metrics}
+
+    def call(self, x):
+        return self.model(x)
+
+
 class AutoTracker(KerasModel):
     def __init__(
         self,
         model=None,
         input_shape=(64, 64, 1),
-        loss="auto",
+        loss="mse",
         symmetries=1,
         mode="tracking",
         **kwargs
@@ -33,20 +88,22 @@ class AutoTracker(KerasModel):
         self.symmetries = symmetries
         self.mode = mode
 
-        if loss == "auto":
-            if mode == "tracking":
-                loss = squared_affine_consistency
-            elif mode == "orientation":
-                loss = rotational_consistency
-            elif mode == "sizing":
-                loss = size_consistency
-            else:
-                raise ValueError(
-                    "Unknown mode provided to the auto tracker. Valid modes are 'tracking' and 'orientation'"
-                )
+        # if loss == "auto":
+        #     if mode == "tracking":
+        #         loss = squared_affine_consistency
+        #     elif mode == "orientation":
+        #         loss = rotational_consistency
+        #     elif mode == "sizing":
+        #         loss = size_consistency
+        #     else:
+        #         raise ValueError(
+        #             "Unknown mode provided to the auto tracker. Valid modes are 'tracking' and 'orientation'"
+        #         )
 
         if model is None:
             model = self.default_model(input_shape=input_shape)
+
+        model = AutoTrackerModel(model.model)
 
         super().__init__(model, loss=loss, **kwargs)
 

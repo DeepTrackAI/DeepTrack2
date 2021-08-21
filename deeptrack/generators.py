@@ -391,11 +391,9 @@ class AutoTrackGenerator(ContinuousGenerator):
             for _ in range(self.batch_size)
         ]
 
-        labels = np.array(
-            [self.get_transform_matrix(batch[0], b).reshape((-1,)) for b in batch]
-        )
+        A, B = zip(*[self.get_transform_matrix(batch[0], b) for b in batch])
 
-        return np.array(batch), np.array(labels)
+        return np.array(batch), (np.array(A), np.array(B))
 
     def __len__(self):
         return len(self.current_data)
@@ -415,6 +413,4 @@ class AutoTrackGenerator(ContinuousGenerator):
         rmat = np.linalg.inv(rmat0) @ rmat1
         dt = (np.array(t1) - t0) @ rmat1
 
-        return np.array(
-            [rmat[0, 0], rmat[0, 1], dt[0], rmat[1, 0], rmat[1, 1], dt[1], 0, 0]
-        )
+        return dt, rmat
