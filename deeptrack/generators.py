@@ -287,7 +287,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         current_data = list(self.data)
 
         self.new_epoch = True
-        if self.augmentation:
+        if self.augmentation and isinstance(self.augmentation, Feature):
             for data_point in current_data:
                 data_point["data"] = self.augmentation.update().resolve(
                     data_point["data"]
