@@ -81,10 +81,10 @@ class AutoTrackerBaseModel(tf.keras.Model):
             # Prediction on first image is transformed to get a label for
             # subsequent images in the batch.
             transformed_origin = tf.linalg.matmul(
-                y_pred[:1],
                 transformation_matrix,
+                y_pred[:1],
                 transpose_a=True,
-                transpose_b=True,
+                # transpose_b=True,
             )
 
             y_pred = y_pred - transformed_origin
