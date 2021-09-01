@@ -229,7 +229,7 @@ class Ellipse(Scatterer):
     """
 
     __conversion_table__ = ConversionTable(
-        radius=(u.meter, u.meter),
+        radius=(u.meter, u.pixel),
         rotation=(u.radian, u.radian),
     )
 
@@ -267,7 +267,7 @@ class Ellipse(Scatterer):
     def get(self, *ignore, radius, rotation, voxel_size, **kwargs):
 
         # Create a grid to calculate on
-        rad = radius[:2] / voxel_size[:2]
+        rad = radius[:2]
         ceil = int(np.max(np.ceil(rad)))
         X, Y = np.meshgrid(np.arange(-ceil, ceil), np.arange(-ceil, ceil))
 
@@ -307,7 +307,7 @@ class Sphere(Scatterer):
     """
 
     __conversion_table__ = ConversionTable(
-        radius=(u.meter, u.meter),
+        radius=(u.meter, u.pixel),
     )
 
     def __init__(self, radius: PropertyLike[float] = 1e-6, **kwargs):
@@ -316,7 +316,7 @@ class Sphere(Scatterer):
     def get(self, image, radius, voxel_size, **kwargs):
 
         # Create a grid to calculate on
-        rad = radius / voxel_size
+        rad = radius * np.ones(3)
         rad_ceil = np.ceil(rad)
         x = np.arange(-rad_ceil[0], rad_ceil[0])
         y = np.arange(-rad_ceil[1], rad_ceil[1])
