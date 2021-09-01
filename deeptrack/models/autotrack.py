@@ -62,6 +62,13 @@ class AutoTrackerBaseModel(tf.keras.Model):
         super().__init__()
         self.model = model
 
+    def get_config(self):
+        return {"model": self.model}
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
     def compile(self, *args, **kwargs):
         super().compile(*args, **kwargs)
         self.model.compile(*args, **kwargs)
