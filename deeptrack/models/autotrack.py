@@ -295,6 +295,9 @@ class AutoMultiTracker(KerasModel):
             pred_y = y[..., 1] + Y_mat
             pred = tf.stack((pred_x, pred_y), axis=-1)
 
+            if training:
+                pred = pred[..., tf.newaxis]
+
             return pred
 
     def __init__(
