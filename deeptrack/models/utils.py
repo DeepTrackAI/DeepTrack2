@@ -131,20 +131,25 @@ class KerasModel(Model):
         )
 
     @wraps(models.Model.fit)
-    def fit(self, x, *args, batch_size=32, **kwargs):
+    def fit(self, x, *args, batch_size=32, generator_kwargs={}, **kwargs):
         if isinstance(x, features.Feature):
             generator = self.data_generator(
                 x,
                 batch_size=batch_size,
-                min_data_size=batch_size * 20,
-                max_data_size=batch_size * 50,
+                **{
+                    **{
+                        "min_data_size": batch_size * 20,
+                        "max_data_size": batch_size * 50,
+                    },
+                    **generator_kwargs,
+                }
             )
             with generator:
                 h = self.model.fit(generator, *args, batch_size=batch_size, **kwargs)
                 return h
             return None
 
-        return self.model.fit(x, *args, batch_size=batch_size, **kwargs)
+        return self.model.fit(x, *args, **kwargs)
 
     def export(
         self,

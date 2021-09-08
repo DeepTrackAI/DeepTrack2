@@ -209,7 +209,7 @@ class Image:
     def _view(self, value):
         if isinstance(value, Image):
             return self._view(value._value)
-        if isinstance(value, (np.ndarray, list)):
+        if isinstance(value, (np.ndarray, list, int, float, bool)):
             return np.array(value)
         if isinstance(value, Tensor):
             return value
@@ -326,10 +326,7 @@ class Image:
 
     def __getitem__(self, idx):
         idx = strip(idx)
-        if isinstance(idx, int):
-            return self._value[idx]
-
-        out = Image(self._value[idx], copy=True)
+        out = Image(self._value.__getitem__(idx), copy=False)
         out.merge_properties_from([self, idx])
         return out
 
@@ -359,7 +356,7 @@ class Image:
         return len(self._value)
 
     def __repr__(self):
-        return repr(self._value) + f"\nWith {len(self.properties)} properties"
+        return repr(self._value) + "\nWith properties:" + repr(self.properties)
 
     __lt__ = _binary_method(ops.lt)
     __le__ = _binary_method(ops.le)
