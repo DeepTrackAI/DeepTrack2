@@ -205,7 +205,6 @@ class ContinuousGenerator(keras.utils.Sequence):
         max_epochs_per_sample=np.inf,
         verbose=1,
     ):
-        print("c", batch_size)
 
         if min_data_size is None:
             min_data_size = min(batch_size * 10, max_data_size - 1)
