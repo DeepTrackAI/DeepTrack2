@@ -205,6 +205,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         max_epochs_per_sample=np.inf,
         verbose=1,
     ):
+        print("c", batch_size)
 
         if min_data_size is None:
             min_data_size = min(batch_size * 10, max_data_size - 1)
@@ -283,7 +284,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         current_data = list(self.data)
 
         self.new_epoch = True
-        if self.augmentation:
+        if self.augmentation and isinstance(self.augmentation, Feature):
             for data_point in current_data:
                 data_point["data"] = self.augmentation.update().resolve(
                     data_point["data"]
@@ -373,14 +374,6 @@ class ContinuousGenerator(keras.utils.Sequence):
             return features.resolve()
 
 
-class PyTorchContinuousGenerator(ContinuousGenerator):
-    def __getitem__(self, idx):
-        import torch
-
-        X, y = super().__getitem__(idx)
-        return torch.from_numpy(X).to(torch.float), torch.from_numpy(y).to(torch.float)
-
-
 class AutoTrackGenerator(ContinuousGenerator):
     def __init__(self, transformation_function, *args, symmetries=1, **kwargs):
         self.symmetries = symmetries
@@ -390,19 +383,15 @@ class AutoTrackGenerator(ContinuousGenerator):
     def __getitem__(self, idx):
 
         x = self.current_data[idx]["data"]
-        x = np.array(x)
-
         sample = np.array(x)
         batch = [
             self.transformation_function.update().resolve(sample)
             for _ in range(self.batch_size)
         ]
 
-        labels = np.array(
-            [self.get_transform_matrix(batch[0], b).reshape((-1,)) for b in batch]
-        )
+        A, B = zip(*[self.get_transform_matrix(batch[0], b) for b in batch])
 
-        return np.array(batch), np.array(labels)
+        return np.array(batch), (np.array(A), np.array(B))
 
     def __len__(self):
         return len(self.current_data)
@@ -422,6 +411,4 @@ class AutoTrackGenerator(ContinuousGenerator):
         rmat = np.linalg.inv(rmat0) @ rmat1
         dt = (np.array(t1) - t0) @ rmat1
 
-        return np.array(
-            [rmat[0, 0], rmat[0, 1], dt[0], rmat[1, 0], rmat[1, 1], dt[1], 0, 0]
-        )
+        return dt, rmat
