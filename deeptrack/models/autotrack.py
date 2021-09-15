@@ -62,6 +62,13 @@ class AutoTrackerBaseModel(tf.keras.Model):
         super().__init__()
         self.model = model
 
+    def get_config(self):
+        return {"model": self.model}
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
     def compile(self, *args, **kwargs):
         super().compile(*args, **kwargs)
         self.model.compile(*args, **kwargs)
@@ -288,6 +295,9 @@ class AutoMultiTracker(KerasModel):
             pred_x = y[..., 0] + X_mat
             pred_y = y[..., 1] + Y_mat
             pred = tf.stack((pred_x, pred_y), axis=-1)
+
+            if training:
+                pred = pred[..., tf.newaxis]
 
             return pred
 
