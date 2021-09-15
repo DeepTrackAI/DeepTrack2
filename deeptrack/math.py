@@ -42,11 +42,14 @@ class Average(Feature):
         axis: PropertyLike[int] = 0,
         **kwargs
     ):
-        super().__init__(axis=axis, features=features, **kwargs)
 
-    def get(self, images, axis, features, **kwargs):
+        super().__init__(axis=axis, **kwargs)
         if features is not None:
-            images = [feature.resolve() for feature in features]
+            self.features = [self.add_feature(feature) for feature in features]
+
+    def get(self, images, axis, **kwargs):
+        if self.features is not None:
+            images = [feature.resolve() for feature in self.features]
         result = Image(np.mean(images, axis=axis))
 
         for image in images:
