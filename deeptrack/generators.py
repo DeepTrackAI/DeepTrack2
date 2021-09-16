@@ -23,6 +23,18 @@ import random
 import time
 
 
+class DataList(list):
+    def __getitem__(self, idx):
+        items = super().__getitem__(idx)
+        if isinstance(items, list):
+            for item in items:
+                item["usage"] += 1
+        else:
+            items["usage"] += 1
+
+        return items
+
+
 class Generator(keras.utils.Sequence):
     """Base class for a generator.
 
@@ -357,7 +369,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         self.data = [
             sample
             for sample in self.data
-            if sample["usage"] < self.max_epochs_per_sample
+            if sample["usage"] <= self.max_epochs_per_sample
         ]
 
     def _get(self, features: Feature or List[Feature]) -> Image:
@@ -379,18 +391,21 @@ class AutoTrackGenerator(ContinuousGenerator):
         self.transformation_function = transformation_function
         super().__init__(*args, **kwargs)
 
-    def __getitem__(self, idx):
-
-        x = self.current_data[idx]["data"]
-        sample = np.array(x)
+    def construct_datapoint(self, image):
         batch = [
-            self.transformation_function.update().resolve(sample)
+            self.transformation_function.update().resolve(np.array(image))
             for _ in range(self.batch_size)
         ]
 
         A, B = zip(*[self.get_transform_matrix(batch[0], b) for b in batch])
 
-        return np.array(batch), (np.array(A), np.array(B))
+        return super().construct_datapoint(
+            (np.array(batch), (np.array(A), np.array(B)))
+        )
+
+    def __getitem__(self, idx):
+        batch, (A, B) = self.current_data[idx]["data"]
+        return batch, (np.array(A), np.array(B))
 
     def __len__(self):
         return len(self.current_data)
