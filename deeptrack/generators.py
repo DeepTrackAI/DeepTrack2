@@ -294,6 +294,11 @@ class ContinuousGenerator(keras.utils.Sequence):
         # Grab a copy
         current_data = list(self.data)
 
+        while len(current_data) < self.min_data_size:
+            current_data = list(self.data)
+            print("Awaiting dataset to reach minimum size...", end="\r")
+            time.sleep(0.2)
+
         self.new_epoch = True
         if self.augmentation and isinstance(self.augmentation, Feature):
             for data_point in current_data:
@@ -312,10 +317,6 @@ class ContinuousGenerator(keras.utils.Sequence):
             self._batch_size = self.batch_size(self.epoch, len(current_data))
         else:
             self._batch_size = self.batch_size
-
-        while len(self.data) < self.min_data_size:
-            print("Awaiting dataset to reach minimum size...", end="\r")
-            time.sleep(0.1)
 
     def __getitem__(self, idx):
 
