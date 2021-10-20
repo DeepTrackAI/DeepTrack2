@@ -323,6 +323,9 @@ class ContinuousGenerator(keras.utils.Sequence):
 
         subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
 
+        for d in subset:
+            d["usage"] += 1
+
         data = [self.batch_function(d["data"]) for d in subset]
         labels = [self.label_function(d["data"]) for d in subset]
 
@@ -383,46 +386,3 @@ class ContinuousGenerator(keras.utils.Sequence):
         else:
             features.update()
             return features.resolve()
-
-
-class AutoTrackGenerator(ContinuousGenerator):
-    def __init__(self, transformation_function, *args, symmetries=1, **kwargs):
-        self.symmetries = symmetries
-        self.transformation_function = transformation_function
-        super().__init__(*args, **kwargs)
-
-    def construct_datapoint(self, image):
-        batch = [
-            self.transformation_function.update().resolve(np.array(image))
-            for _ in range(self.batch_size)
-        ]
-
-        A, B = zip(*[self.get_transform_matrix(batch[0], b) for b in batch])
-
-        return super().construct_datapoint(
-            (np.array(batch), (np.array(A), np.array(B)))
-        )
-
-    def __getitem__(self, idx):
-        batch, (A, B) = self.current_data[idx]["data"]
-        return batch, (np.array(A), np.array(B))
-
-    def __len__(self):
-        return len(self.current_data)
-
-    def get_transform_matrix(self, base_image, new_image):
-        t0 = base_image.get_property("translate")[2::-1]
-        r0 = base_image.get_property("rotate") * self.symmetries
-        s0 = base_image.get_property("scale")
-
-        t1 = new_image.get_property("translate")[2::-1]
-        r1 = new_image.get_property("rotate")
-        s1 = new_image.get_property("scale")
-
-        rmat0 = np.array([[np.cos(r0), np.sin(r0)], [-np.sin(r0), np.cos(r0)]]) * s0
-        rmat1 = np.array([[np.cos(r1), np.sin(r1)], [-np.sin(r1), np.cos(r1)]]) * s1
-
-        rmat = np.linalg.inv(rmat0) @ rmat1
-        dt = (np.array(t1) - t0) @ rmat1
-
-        return dt, rmat
