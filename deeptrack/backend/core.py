@@ -34,6 +34,13 @@ class DeepTrackDataList:
         self.list = []
         self.default = None
 
+    def invalidate(self):
+        if self.default:
+            self.default.invalidate()
+
+        for d in self.list:
+            d.invalidate()
+
     def valid_index(self, index):
 
         if self.default is not None:
@@ -179,8 +186,10 @@ class DeepTrackNode:
 
     def invalidate(self, replicate_index=None):
         for child in self.recurse_children():
-            if child.valid_index(replicate_index):
-                child.data[replicate_index].invalidate()
+            
+            # Invalidates all replicate_indexes. Not great.
+            child.data.invalidate()
+
         return self
 
     def validate(self, replicate_index=None):
@@ -207,7 +216,6 @@ class DeepTrackNode:
             self.is_valid(replicate_index=replicate_index)
             and equivalent(value, self.data[replicate_index].current_value())
         ):
-
             self.invalidate(replicate_index=replicate_index)
             self.store(value, replicate_index=replicate_index)
 
