@@ -60,6 +60,9 @@ class Sequence(Feature):
 
             outputs.append(out)
 
+        if isinstance(outputs[0], (tuple, list)):
+            outputs = tuple(zip(*outputs))
+
         return outputs
 
 

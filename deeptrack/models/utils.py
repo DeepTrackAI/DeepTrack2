@@ -27,12 +27,44 @@ def compile(model: models.Model, *, loss="mae", optimizer="adam", metrics=[], **
     return model
 
 
-def load_model(filepath, custom_objects=None, compile=True, options=None):
-    model = models.load_model(
-        filepath, custom_objects=custom_objects, compile=compile, options=options
-    )
+def LoadModel(path, compile_from_file=False, custom_objects={}, **kwargs):
+    """Loads a keras model from disk.
 
-    model = KerasModel(model, compile=False)
+    Parameters
+    ----------
+    path : str
+        Path to the keras model to load.
+    compile_from_file : bool
+        Whether to compile the model using the loss and optimizer in the saved model. If false,
+        it will be compiled from the arguments in kwargs (loss, optimizer and metrics).
+    custom_objects : dict
+        Dict of objects to use when loading the model. Needed to load a model with a custom loss,
+        optimizer or metric.
+    """
+    model = models.load_model(
+        path, compile=compile_from_file, custom_objects=custom_objects
+    )
+    return KerasModel(model, compile=not compile_from_file, **kwargs)
+
+
+load_model = LoadModel
+
+
+def with_citation(citation):
+    def wrapper(func):
+        @wraps(func)
+        def inner(*args, **kwargs):
+            res = func(*args, **kwargs)
+            assert isinstance(
+                res, features.Feature
+            ), "Wrapped model is not a deeptrack object. Did you forget @as_KerasModel?"
+            res.citation = citation
+
+            return res
+
+        return inner
+
+    return wrapper
 
 
 def as_KerasModel(func):
@@ -44,6 +76,20 @@ def as_KerasModel(func):
         return KerasModel(model, **kwargs)
 
     return inner
+
+
+def register_config(config_name, cfg):
+    def wrapper(func):
+        @wraps(func)
+        def inner(*args, config=None, **kwargs):
+            if config_name == config:
+                kwargs = {**cfg, **kwargs}
+
+            return func(*args, config=config, **kwargs)
+
+        return inner
+
+    return wrapper
 
 
 class Model(features.Feature):
@@ -85,20 +131,25 @@ class KerasModel(Model):
         )
 
     @wraps(models.Model.fit)
-    def fit(self, x, *args, batch_size=32, **kwargs):
+    def fit(self, x, *args, batch_size=32, generator_kwargs={}, **kwargs):
         if isinstance(x, features.Feature):
             generator = self.data_generator(
                 x,
                 batch_size=batch_size,
-                min_data_size=batch_size * 50,
-                max_data_size=batch_size * 100,
+                **{
+                    **{
+                        "min_data_size": batch_size * 20,
+                        "max_data_size": batch_size * 50,
+                    },
+                    **generator_kwargs,
+                }
             )
             with generator:
                 h = self.model.fit(generator, *args, batch_size=batch_size, **kwargs)
                 return h
             return None
 
-        return self.model.fit(x, *args, batch_size=batch_size, **kwargs)
+        return self.model.fit(x, *args, **kwargs)
 
     def export(
         self,
@@ -112,7 +163,7 @@ class KerasModel(Model):
         Uses pyDeepImageJ by E. Gómez-de-Mariscal, C. García-López-de-Haro, L. Donati, M. Unser,
         A. Muñoz-Barrutia and D. Sage for exporting.
 
-        DeepImageJ, used for leading the models into ImageJ, is only compatible with
+        DeepImageJ, used for loading the models into ImageJ, is only compatible with
         tensorflow==2.2.1. Models using newer features may not load correctly.
 
         Pre-processing of the data should be defined when creating the model using the preprocess
@@ -177,23 +228,3 @@ class KerasModel(Model):
 
     def __call__(self, *args, **kwargs):
         return self.model(*args, **kwargs)
-
-
-def LoadModel(path, compile_from_file=False, custom_objects={}, **kwargs):
-    """Loads a keras model from disk.
-
-    Parameters
-    ----------
-    path : str
-        Path to the keras model to load.
-    compile_from_file : bool
-        Whether to compile the model using the loss and optimizer in the saved model. If false,
-        it will be compiled from the arguments in kwargs (loss, optimizer and metrics).
-    custom_objects : dict
-        Dict of objects to use when loading the model. Needed to load a model with a custom loss,
-        optimizer or metric.
-    """
-    model = models.load_model(
-        path, compile=compile_from_file, custom_objects=custom_objects
-    )
-    return KerasModel(model, compile=not compile_from_file, **kwargs)

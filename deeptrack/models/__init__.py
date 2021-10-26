@@ -3,7 +3,7 @@ from .convolutional import *
 from .dense import *
 from .recurrent import *
 from .layers import *
-from .autotrack import *
+from .autotracking import *
 
 
 # from .mrcnn import *

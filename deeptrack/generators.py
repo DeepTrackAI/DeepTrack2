@@ -23,6 +23,18 @@ import random
 import time
 
 
+class DataList(list):
+    def __getitem__(self, idx):
+        items = super().__getitem__(idx)
+        if isinstance(items, list):
+            for item in items:
+                item["usage"] += 1
+        else:
+            items["usage"] += 1
+
+        return items
+
+
 class Generator(keras.utils.Sequence):
     """Base class for a generator.
 
@@ -315,6 +327,9 @@ class ContinuousGenerator(keras.utils.Sequence):
 
         subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
 
+        for d in subset:
+            d["usage"] += 1
+
         data = [self.batch_function(d["data"]) for d in subset]
         labels = [self.label_function(d["data"]) for d in subset]
 
@@ -361,7 +376,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         self.data = [
             sample
             for sample in self.data
-            if sample["usage"] < self.max_epochs_per_sample
+            if sample["usage"] <= self.max_epochs_per_sample
         ]
 
     def _get(self, features: Feature or List[Feature]) -> Image:

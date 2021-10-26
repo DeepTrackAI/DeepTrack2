@@ -356,7 +356,7 @@ class Image:
         return len(self._value)
 
     def __repr__(self):
-        return repr(self._value) + "\nWith properties:" + repr(self.properties)
+        return f"Image({repr(self._value)})"
 
     __lt__ = _binary_method(ops.lt)
     __le__ = _binary_method(ops.le)

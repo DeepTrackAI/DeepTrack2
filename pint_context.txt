@@ -1,8 +1,0 @@
-[pixel] = [length]
-@alias pixel = px
-
-@context(pixel_size=1) deeptrack = dt
-    # n index of refraction of the medium.
-    [pixel] <-> [length]: value * pixel_size
-    [length] <-> [pixel]: value / pixel_size 
-@end

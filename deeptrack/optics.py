@@ -56,7 +56,8 @@ class Microscope(StructuralFeature):
         additional_sample_kwargs = self._objective.properties()
         propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
 
-        list_of_scatterers = self._sample()
+        with u.context("dt", pixel_size=additional_sample_kwargs["voxel_size"][0]):
+            list_of_scatterers = self._sample()
 
         if not isinstance(list_of_scatterers, list):
             list_of_scatterers = [list_of_scatterers]
@@ -514,11 +515,17 @@ class Brightfield(Optics):
 
         voxel_size = kwargs["voxel_size"]
 
-        pupils = self._pupil(
-            volume.shape[:2], defocus=[1], include_aberration=False, **kwargs
-        ) + self._pupil(
-            volume.shape[:2], defocus=[-z_limits[1]], include_aberration=True, **kwargs
-        )
+        pupils = [
+            self._pupil(
+                volume.shape[:2], defocus=[1], include_aberration=False, **kwargs
+            )[0],
+            self._pupil(
+                volume.shape[:2],
+                defocus=[-z_limits[1]],
+                include_aberration=True,
+                **kwargs
+            )[0],
+        ]
 
         pupil_step = np.fft.fftshift(pupils[0])
 
@@ -538,14 +545,13 @@ class Brightfield(Optics):
             to_remove = []
             for idx, fz in enumerate(field_z):
                 if fz < z:
-                    propagation_matrix = image.maybe_cupy(
-                        self._pupil(
-                            fields[idx].shape,
-                            defocus=[z - fz - field_offsets[idx] / voxel_size[-1]],
-                            include_aberration=False,
-                            **kwargs
-                        )[0]
-                    )
+                    propagation_matrix = self._pupil(
+                        fields[idx].shape,
+                        defocus=[z - fz - field_offsets[idx] / voxel_size[-1]],
+                        include_aberration=False,
+                        **kwargs
+                    )[0]
+
                     propagation_matrix = propagation_matrix * np.exp(
                         1j
                         * voxel_size[-1]
@@ -576,14 +582,13 @@ class Brightfield(Optics):
         # Add remaining fields
         for idx, fz in enumerate(field_z):
             prop_dist = z - fz - field_offsets[idx] / voxel_size[-1]
-            propagation_matrix = image.maybe_cupy(
-                self._pupil(
-                    fields[idx].shape,
-                    defocus=[prop_dist],
-                    include_aberration=False,
-                    **kwargs
-                )[0]
-            )
+            propagation_matrix = self._pupil(
+                fields[idx].shape,
+                defocus=[prop_dist],
+                include_aberration=False,
+                **kwargs
+            )[0]
+
             propagation_matrix = propagation_matrix * np.exp(
                 -1j
                 * voxel_size[-1]
@@ -597,7 +602,7 @@ class Brightfield(Optics):
                 propagation_matrix
             )
 
-        light_in_focus = light_in * image.maybe_cupy(np.fft.fftshift(pupils[-1]))
+        light_in_focus = light_in * np.fft.fftshift(pupils[-1])
 
         output_image = np.fft.ifft2(light_in_focus)[
             : padded_volume.shape[0], : padded_volume.shape[1]

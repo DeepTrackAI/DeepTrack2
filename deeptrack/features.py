@@ -979,7 +979,7 @@ class Combine(StructuralFeature):
 
     """
 
-    __distribute__ = False
+    __distributed__ = False
 
     def __init__(self, features: List[Feature], **kwargs):
         super().__init__(features=features, **kwargs)
