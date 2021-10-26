@@ -17,7 +17,7 @@ import numpy as np
 import tensorflow.keras as keras
 
 from .features import Feature
-from .image import Image
+from .image import Image, strip
 import threading
 import random
 import time
@@ -194,12 +194,8 @@ class ContinuousGenerator(keras.utils.Sequence):
     def __init__(
         self,
         feature,
-        label_function=lambda image: image[1]
-        if isinstance(image, (list, tuple))
-        else None,
-        batch_function=lambda image: image[0]
-        if isinstance(image, (list, tuple))
-        else image,
+        label_function=lambda image: image[1],
+        batch_function=lambda image: image[0],
         augmentation=None,
         min_data_size=None,
         max_data_size=np.inf,
@@ -286,8 +282,14 @@ class ContinuousGenerator(keras.utils.Sequence):
         # Grab a copy
         current_data = list(self.data)
 
+        while len(current_data) < self.min_data_size:
+            
+            print(f"Waiting for dataset to reach minimum size: {len(current_data)} / {self.min_data_size}", end="\r")
+            time.sleep(0.1)
+            current_data = list(self.data)
+
         self.new_epoch = True
-        if self.augmentation:
+        if self.augmentation and isinstance(self.augmentation, Feature):
             for data_point in current_data:
                 data_point["data"] = self.augmentation.update().resolve(
                     data_point["data"]
@@ -305,9 +307,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         else:
             self._batch_size = self.batch_size
 
-        while len(self.data) < self.min_data_size:
-            print("Awaiting dataset to reach minimum size...", end="\r")
-            time.sleep(0.1)
+        
 
     def __getitem__(self, idx):
 
@@ -317,6 +317,7 @@ class ContinuousGenerator(keras.utils.Sequence):
 
         data = [self.batch_function(d["data"]) for d in subset]
         labels = [self.label_function(d["data"]) for d in subset]
+
         return np.array(data), np.array(labels)
 
     def __len__(self):
@@ -376,47 +377,3 @@ class ContinuousGenerator(keras.utils.Sequence):
             return features.resolve()
 
 
-class AutoTrackGenerator(ContinuousGenerator):
-    def __init__(self, transformation_function, *args, symmetries=1, **kwargs):
-        self.symmetries = symmetries
-        self.transformation_function = transformation_function
-        super().__init__(*args, **kwargs)
-
-    def __getitem__(self, idx):
-
-        x = self.current_data[idx]["data"]
-        x = np.array(x)
-
-        sample = np.array(x)
-        batch = [
-            self.transformation_function.update().resolve(sample)
-            for _ in range(self.batch_size)
-        ]
-
-        labels = np.array(
-            [self.get_transform_matrix(batch[0], b).reshape((-1,)) for b in batch]
-        )
-
-        return np.array(batch), np.array(labels)
-
-    def __len__(self):
-        return len(self.current_data)
-
-    def get_transform_matrix(self, base_image, new_image):
-        t0 = base_image.get_property("translate")[2::-1]
-        r0 = base_image.get_property("rotate") * self.symmetries
-        s0 = base_image.get_property("scale")
-
-        t1 = new_image.get_property("translate")[2::-1]
-        r1 = new_image.get_property("rotate") * self.symmetries
-        s1 = new_image.get_property("scale")
-
-        rmat0 = np.array([[np.cos(r0), np.sin(r0)], [-np.sin(r0), np.cos(r0)]]) * s0
-        rmat1 = np.array([[np.cos(r1), np.sin(r1)], [-np.sin(r1), np.cos(r1)]]) * s1
-
-        rmat = np.linalg.inv(rmat0) @ rmat1
-        dt = (np.array(t1) - t0) @ rmat1
-
-        return np.array(
-            [rmat[0, 0], rmat[0, 1], dt[0], rmat[1, 0], rmat[1, 1], dt[1], 0, 0]
-        )
