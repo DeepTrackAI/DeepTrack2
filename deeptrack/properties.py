@@ -108,10 +108,13 @@ class Property(DeepTrackNode):
                 self.add_dependency(dep)
 
             return lambda replicate_index=None: sampling_rule(
-                **dict(
-                    (key, dep(replicate_index=replicate_index))
-                    for key, dep in used_dependencies.items()
-                )
+                **{
+                    **({"replicate_index": replicate_index} if "replicate_index" in knames else {}),
+                    **dict(
+                        (key, dep(replicate_index=replicate_index))
+                        for key, dep in used_dependencies.items()
+                    )
+                }
             )
 
         return lambda replicate_index=None: sampling_rule
@@ -201,8 +204,8 @@ class SequentialProperty(Property):
         self.sequence_step.add_child(self)
 
         self.previous_values = Property(
-            lambda: self.previous()[: self.sequence_step() - 1]
-            if self.sequence_step()
+            lambda replicate_index=None: self.previous(replicate_index=replicate_index)[: self.sequence_step() - 1]
+            if self.sequence_step(replicate_index=replicate_index)
             else []
         )
         self.add_dependency(self.previous_values)
@@ -211,8 +214,8 @@ class SequentialProperty(Property):
         self.sequence_step.add_child(self.previous_values)
 
         self.previous_value = Property(
-            lambda: self.previous()[self.sequence_step() - 1]
-            if self.previous()
+            lambda replicate_index=None: self.previous(replicate_index=replicate_index)[self.sequence_step() - 1]
+            if self.previous(replicate_index=replicate_index)
             else None
         )
         self.add_dependency(self.previous_value)
@@ -226,9 +229,10 @@ class SequentialProperty(Property):
             self.initialization = None
 
         self.current = lambda: None
-
-        self.action = (
-            lambda replicate_index=None: self.initialization(
+        self.action = self._action
+    def _action(self, replicate_index=None):
+        return (
+            self.initialization(
                 replicate_index=replicate_index
             )
             if self.sequence_step(replicate_index=replicate_index) == 0
@@ -237,16 +241,20 @@ class SequentialProperty(Property):
 
     def store(self, value, replicate_index=None):
 
-        current_data = self.data[replicate_index].current_value()
-        if not current_data:
-            super().store([value], replicate_index=replicate_index)
+        if self.data.valid_index(replicate_index):
+            current_data = self.data[replicate_index].current_value() or []
         else:
-            super().store(current_data + [value], replicate_index=replicate_index)
+            current_data = []
+        
+        super().store(current_data + [value], replicate_index=replicate_index)
 
     def current_value(self, replicate_index):
         return super().current_value(replicate_index=replicate_index)[
-            self.sequence_step()
+            self.sequence_step(replicate_index=replicate_index)
         ]
+
+    def __call__(self, replicate_index=None):
+        return super().__call__(replicate_index=replicate_index)
 
     def update(self, sequence_length=0, **kwargs):
         """Updates current_value
@@ -296,6 +304,7 @@ class SequentialProperty(Property):
                 previous_values=new_current_value,
             )
             if step == 0:
+                
                 kwargs.update(previous_value=self.sample(self.initializer, **kwargs))
             else:
                 kwargs.update(previous_value=new_current_value[-1])
