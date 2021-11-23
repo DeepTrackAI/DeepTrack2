@@ -497,7 +497,7 @@ class MieScatterer(Scatterer):
         polarization_angle=(u.radian, u.radian),
         collection_angle=(u.radian, u.radian),
         wavelength=(u.meter, u.meter),
-        offset_z=(u.pixel, u.meter),
+        offset_z=(u.meter, u.meter),
     )
 
     def __init__(
@@ -617,6 +617,12 @@ class MieScatterer(Scatterer):
             * np.exp(1j * k * (R3 - offset_z))
             * (S1 * COS2 + S2 * SIN2)
         )
+        import matplotlib.pyplot as plt
+        plt.imshow(np.abs((ct > ct_max)))
+        plt.show()
+
+        plt.imshow(np.abs(field))
+        plt.show()
 
         return np.expand_dims(field, axis=-1)
 
