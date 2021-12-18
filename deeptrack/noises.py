@@ -91,10 +91,7 @@ class Poisson(Noise):
         peak = np.abs(immax - background)
 
         rescale = snr ** 2 / peak ** 2
-        rescale = np.clip(
-            rescale,
-            1e-10,
-        )
+        rescale = np.clip(rescale, 1e-10, np.inf)
         noisy_image = Image(np.random.poisson(image * rescale) / rescale)
         noisy_image.properties = image.properties
         return noisy_image
