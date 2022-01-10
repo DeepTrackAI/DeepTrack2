@@ -5,7 +5,7 @@ import pkg_resources
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-required = ["tensorflow", "numpy", "scipy", "scikit-image"]
+required = ["tensorflow", "numpy", "scipy", "scikit-image", "pint"]
 installed = [pkg.key for pkg in pkg_resources.working_set]
 if (
     not "tensorflow" in installed
