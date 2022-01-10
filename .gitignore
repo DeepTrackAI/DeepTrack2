@@ -10,3 +10,8 @@ dist/*
 */datasets/*
 */theory
 _src/build/**/*
+
+ParticleSizing
+3DTracking
+CellData
+ParticleTracking

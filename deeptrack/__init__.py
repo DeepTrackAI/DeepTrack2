@@ -26,6 +26,7 @@ from .scatterers import *
 from .sequences import *
 from .elementwise import *
 from .statistics import *
+from .holography import *
 
 from .image import strip
 
