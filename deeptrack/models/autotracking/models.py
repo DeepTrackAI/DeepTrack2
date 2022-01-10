@@ -239,6 +239,7 @@ class AutoTracker(KerasModel):
         )
         model.add(
             tf.keras.layers.Conv2D(
+
                 64,
                 3,
                 padding="same",
@@ -286,6 +287,7 @@ class AutoTracker(KerasModel):
             )
         )
         model.add(tf.keras.layers.Conv2D(self.num_outputs + 1, 1, padding="same"))
+
         return model
 
     def predict_and_detect(
@@ -414,3 +416,43 @@ class AutoMultiTracker(AutoTracker):
     """
 
     AutoTrackerModel = AutoTrackerBaseModel
+
+import scipy
+from skimage import morphology
+
+def local_consistency(pred):
+    kernel = np.ones((3, 3, 1)) / 3**2
+
+    pred_local_squared = scipy.signal.convolve(pred, kernel, "same") ** 2
+    squared_pred_local = scipy.signal.convolve(pred ** 2, kernel, "same")
+
+    squared_diff = (squared_pred_local - pred_local_squared).sum(-1)
+    return 1 / (1e-6 + squared_diff)
+
+
+def get_detection_score(pred, weights, alpha=0.5, beta=0.5):
+    return weights[..., 0] ** alpha * local_consistency(pred) ** beta
+
+
+def find_local_maxima(pred, score, cutoff=0.9, mode="quantile"):
+
+    score = score[3:-3, 3:-3]
+
+    th = cutoff
+
+    if mode == "quantile":
+        th = np.quantile(score, cutoff)
+    elif mode == "ratio":
+        th = np.max(score.flatten()) * cutoff
+
+    hmax = morphology.h_maxima(np.squeeze(score), th) == 1
+
+    hmax = np.pad(hmax, ((3,3), (3,3)))
+    detections = pred[hmax, :]
+    return np.array(detections)
+
+
+def detect(pred, weights, alpha=0.5, beta=0.5, cutoff=0.95, mode="quantile"):
+
+    score = get_detection_score(pred, weights, alpha=alpha, beta=beta)
+    return find_local_maxima(pred, score, cutoff=cutoff, mode=mode)

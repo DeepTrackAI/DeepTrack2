@@ -617,6 +617,12 @@ class MieScatterer(Scatterer):
             * np.exp(1j * k * (R3 - offset_z))
             * (S1 * COS2 + S2 * SIN2)
         )
+        import matplotlib.pyplot as plt
+        plt.imshow(np.abs((ct > ct_max)))
+        plt.show()
+
+        plt.imshow(np.abs(field))
+        plt.show()
 
         return np.expand_dims(field, axis=-1)
 
