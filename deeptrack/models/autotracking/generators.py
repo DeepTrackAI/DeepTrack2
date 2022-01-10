@@ -8,22 +8,39 @@ from .equivariances import (
 )
 import numpy as np
 
-DEFAULT_TRANSFORMATION_FUNCTION = Affine(
-    translate=lambda: np.random.randn(2) * 2,
+# Define default equivariances
+a = Affine(translate=lambda: np.random.randn(2) * 2)
+b = Affine(
     rotate=lambda: np.random.rand() * 2 * np.pi * 2,
 )
 
-DEFAULT_EQUIVARIANCE = Rotational2DEquivariance(
-    DEFAULT_TRANSFORMATION_FUNCTION.rotate
-) >> TranslationalEquivariance(DEFAULT_TRANSFORMATION_FUNCTION.translate)
+DEFAULT_TRANSFORMATION_FUNCTION = b >> a
+
+DEFAULT_EQUIVARIANCE = Rotational2DEquivariance(b.rotate) >> TranslationalEquivariance(
+    a.translate
+)
 
 
 class AutoTrackGenerator(ContinuousGenerator):
+    """Data generator for use with an AutoTracker.
+
+    Parameters
+    ----------
+    feature : Feature
+        DeepTrack feature returning crops of single objects.
+    num_outputs : int
+        Number of values the model is expected to predict (not including the weight-map)
+    transformation_function : Feature, Feature, optional
+        Tuple of features defining transformations applied to each crop as well as the corresponding equivariance.
+
+
+    """
+
     def __init__(
         self,
-        data_feature,
-        transformation_function=(DEFAULT_TRANSFORMATION_FUNCTION, DEFAULT_EQUIVARIANCE),
+        feature,
         num_outputs=2,
+        transformation_function=(DEFAULT_TRANSFORMATION_FUNCTION, DEFAULT_EQUIVARIANCE),
         **kwargs
     ):
 
@@ -34,15 +51,14 @@ class AutoTrackGenerator(ContinuousGenerator):
         self.transformation_function = transformation_function[0] & (
             transformation_input >> transformation_function[1]
         )
-
         self.num_outputs = num_outputs
-        super().__init__(data_feature, **kwargs)
+        super().__init__(feature, **kwargs)
 
     def construct_datapoint(self, image):
         sample = np.array(image)
         batch, matvec = zip(
             *[
-                self.transformation_function.update().resolve(sample)
+                (*self.transformation_function.update().resolve(sample),)
                 for _ in range(self.batch_size)
             ]
         )
@@ -57,11 +73,5 @@ class AutoTrackGenerator(ContinuousGenerator):
         return len(self.current_data)
 
     def get_transform_matrix(self, matvec_1, matvec_2):
-
-        A_1, b_1 = matvec_1
         A_2, b_2 = matvec_2
-
-        A = np.linalg.inv(A_2) @ A_1
-        b = np.linalg.inv(A_2) @ (b_2 - b_1)
-
-        return A, b
+        return A_2, -b_2

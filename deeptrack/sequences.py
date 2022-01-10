@@ -41,9 +41,9 @@ class Sequence(Feature):
     def __init__(
         self, feature: Feature, sequence_length: PropertyLike[int] = 1, **kwargs
     ):
-        self.feature = feature
+        
         super().__init__(sequence_length=sequence_length, **kwargs)
-
+        self.feature = self.add_feature(feature)
         # Require update
         # self.update()
 
@@ -120,9 +120,8 @@ def Sequential(feature: Feature, **kwargs):
                 all_kwargs["previous_" + key] = val.previous_values
             else:
                 all_kwargs[key] = val
-
         if not prop.initialization:
-            prop.initialization = prop.create_action(sampling_rule, **all_kwargs)
+            prop.initialization = prop.create_action(sampling_rule, **{k:all_kwargs[k] for k in all_kwargs if k != "previous_value"})
 
         prop.current = prop.create_action(sampling_rule, **all_kwargs)
 

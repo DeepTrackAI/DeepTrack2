@@ -191,7 +191,7 @@ class Feature(DeepTrackNode):
         # Get the input arguments to the method .get()
 
         feature_input = self.properties(replicate_index=replicate_index).copy()
-        
+
         # Call the _process_properties hook, default does nothing.
         # Can be used to ensure properties are formatted correctly
         # or to rescale properties.
@@ -232,7 +232,7 @@ class Feature(DeepTrackNode):
     def __call__(
         self, image_list: Image or List[Image] = None, replicate_index=None, **kwargs
     ):
-        
+
         # Potentially fragile. Maybe a special variable dt._last_input instead?
         if image_list is not None and not (
             isinstance(image_list, list) and len(image_list) == 0
@@ -352,7 +352,7 @@ class Feature(DeepTrackNode):
         if isinstance(output_image, Image):
             # Single image
             plt.imshow(output_image[:, :, 0], **kwargs)
-            plt.show()
+            return plt.gca()
 
         else:
             # Assume video

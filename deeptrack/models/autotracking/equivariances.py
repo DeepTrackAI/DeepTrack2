@@ -1,8 +1,31 @@
+""" User defined equivariances for training autotrackers.
+
+Example:
+    action = Multiply(value=np.random.uniform(0.5, 1.5))
+    equivariance = Equivariance(mul=action.value) 
+
+"""
+
 from ...features import Feature
 import numpy as np
 
 
 class Equivariance(Feature):
+    """Defines equivariance between action and prediction.
+
+    Should define both a multiplicative equivariance (1, if invariant) and a additive equivariance (0, if invariant)
+
+    Parameters
+    ----------
+    mul : float, array-like
+        Multiplicative equivariance
+    add : float, array-like
+        Additive equivariance
+    indexes : optional, int or slice
+        Index of related predicted value(s)
+
+    """
+
     def __init__(self, mul, add, indexes=slice(None, None, 1), **kwargs):
         super().__init__(mul=mul, add=add, indexes=indexes, **kwargs)
 
@@ -22,6 +45,15 @@ class Equivariance(Feature):
 
 
 class TranslationalEquivariance(Equivariance):
+    """Defines translation-like equivariance between action and prediction, for use with dt.Affine
+
+    Parameters
+    ----------
+    translate : float, array-like
+        Should be exactly `affine.translate`
+
+    """
+
     def __init__(self, translation, indexes=None):
         if indexes is None:
             indexes = self.get_indexes
@@ -40,18 +72,27 @@ class TranslationalEquivariance(Equivariance):
 
 
 class Rotational2DEquivariance(Equivariance):
-    def __init__(self, rotation, indexes=None):
+    """Defines rotation-like equivariance between action and prediction, for use with dt.Affine
+
+    Parameters
+    ----------
+    rotate : float, array-like
+        Should be exactly `affine.rotate`
+
+    """
+
+    def __init__(self, rotate, indexes=None):
         if indexes is None:
             indexes = self.get_indexes
         super().__init__(
-            rotation=rotation, add=self.get_add, mul=self.get_mul, indexes=indexes
+            rotate=rotate, add=self.get_add, mul=self.get_mul, indexes=indexes
         )
 
     def get_add(self):
         return np.zeros((2, 1))
 
-    def get_mul(self, rotation):
-        s, c = np.sin(rotation), np.cos(rotation)
+    def get_mul(self, rotate):
+        s, c = np.sin(rotate), np.cos(rotate)
         return np.array([[c, s], [-s, c]])
 
     def get_indexes(self):
@@ -59,6 +100,15 @@ class Rotational2DEquivariance(Equivariance):
 
 
 class ScaleEquivariance(Equivariance):
+    """Defines scale-like equivariance between action and prediction, for use with dt.Affine
+
+    Parameters
+    ----------
+    scale : float, array-like
+        Should be exactly `affine.scale`
+
+    """
+
     def __init__(self, scale, indexes=None):
         if indexes is None:
             indexes = self.get_indexes
@@ -77,6 +127,17 @@ class ScaleEquivariance(Equivariance):
 
 
 class LogScaleEquivariance(Equivariance):
+    """Defines scale-like equivariance between action and prediction, for use with dt.Affine
+
+    Converts the scaling to log scale, for an additive equivariance.
+
+    Parameters
+    ----------
+    scale : float, array-like
+        Should be exactly `affine.scale`
+
+    """
+
     def __init__(self, scale, indexes=None):
         if indexes is None:
             indexes = self.get_indexes

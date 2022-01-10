@@ -497,7 +497,7 @@ class MieScatterer(Scatterer):
         polarization_angle=(u.radian, u.radian),
         collection_angle=(u.radian, u.radian),
         wavelength=(u.meter, u.meter),
-        offset_z=(u.pixel, u.meter),
+        offset_z=(u.meter, u.meter),
     )
 
     def __init__(

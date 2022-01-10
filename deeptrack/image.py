@@ -326,7 +326,11 @@ class Image:
 
     def __getitem__(self, idx):
         idx = strip(idx)
-        out = Image(self._value.__getitem__(idx), copy=False)
+        out = self._value.__getitem__(idx)
+        if isinstance(out, (bool, int, float, complex)):
+            return out
+
+        out = Image(out, copy=False)
         out.merge_properties_from([self, idx])
         return out
 
