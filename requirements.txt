@@ -8,3 +8,4 @@ numpydoc
 scikit-image
 tensorflow-probability
 pydeepimagej
+pint
