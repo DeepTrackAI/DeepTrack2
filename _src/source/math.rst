@@ -6,13 +6,6 @@ math
 Module classes
 <<<<<<<<<<<<<<
 
-Add
-^^^
-
-.. autoclass:: deeptrack.math.Add
-   :members:
-   :exclude-members: get
-
 Average
 ^^^^^^^
 
@@ -62,13 +55,6 @@ Clip
    :members:
    :exclude-members: get
 
-Divide
-^^^^^^
-
-.. autoclass:: deeptrack.math.Divide
-   :members:
-   :exclude-members: get
-
 GaussianBlur
 ^^^^^^^^^^^^
 
@@ -83,13 +69,6 @@ MedianBlur
    :members:
    :exclude-members: get
 
-Multiply
-^^^^^^^^
-
-.. autoclass:: deeptrack.math.Multiply
-   :members:
-   :exclude-members: get
-
 NormalizeMinMax
 ^^^^^^^^^^^^^^^
 
@@ -97,24 +76,24 @@ NormalizeMinMax
    :members:
    :exclude-members: get
 
+NormalizeQuantile
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: deeptrack.math.NormalizeQuantile
+   :members:
+   :exclude-members: get
+
+NormalizeStandard
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: deeptrack.math.NormalizeStandard
+   :members:
+   :exclude-members: get
+
 Pool
 ^^^^
 
 .. autoclass:: deeptrack.math.Pool
-   :members:
-   :exclude-members: get
-
-Power
-^^^^^
-
-.. autoclass:: deeptrack.math.Power
-   :members:
-   :exclude-members: get
-
-Subtract
-^^^^^^^^
-
-.. autoclass:: deeptrack.math.Subtract
    :members:
    :exclude-members: get
 

@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>math &#8212; DeepTrack 2.0 documentation</title>
+    <title>statistics &#8212; DeepTrack 2.0 documentation</title>
     
   <link href="_static/css/theme.css" rel="stylesheet" />
   <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
@@ -33,8 +33,8 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="models" href="models.html" />
-    <link rel="prev" title="losses" href="losses.html" />
+    <link rel="next" title="test" href="test.html" />
+    <link rel="prev" title="sequences" href="sequences.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
   </head>
@@ -141,8 +141,8 @@
    losses
   </a>
  </li>
- <li class="toctree-l2 current active">
-  <a class="current reference internal" href="#">
+ <li class="toctree-l2">
+  <a class="reference internal" href="math.html">
    math
   </a>
  </li>
@@ -176,8 +176,8 @@
    sequences
   </a>
  </li>
- <li class="toctree-l2">
-  <a class="reference internal" href="statistics.html">
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
    statistics
   </a>
  </li>
@@ -213,78 +213,73 @@
 <nav id="bd-toc-nav">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#classses">
-   Classses
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#module-classes">
    Module classes
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#average">
-     Average
+    <a class="reference internal nav-link" href="#cumsum">
+     Cumsum
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#averageblur">
-     AverageBlur
+    <a class="reference internal nav-link" href="#max">
+     Max
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#averagepooling">
-     AveragePooling
+    <a class="reference internal nav-link" href="#mean">
+     Mean
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#bilateralblur">
-     BilateralBlur
+    <a class="reference internal nav-link" href="#median">
+     Median
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#blur">
-     Blur
+    <a class="reference internal nav-link" href="#min">
+     Min
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#blurcv2">
-     BlurCV2
+    <a class="reference internal nav-link" href="#peaktopeak">
+     PeakToPeak
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#clip">
-     Clip
+    <a class="reference internal nav-link" href="#percentile">
+     Percentile
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#gaussianblur">
-     GaussianBlur
+    <a class="reference internal nav-link" href="#prod">
+     Prod
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#medianblur">
-     MedianBlur
+    <a class="reference internal nav-link" href="#quantile">
+     Quantile
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#normalizeminmax">
-     NormalizeMinMax
+    <a class="reference internal nav-link" href="#reducer">
+     Reducer
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#normalizequantile">
-     NormalizeQuantile
+    <a class="reference internal nav-link" href="#std">
+     Std
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#normalizestandard">
-     NormalizeStandard
+    <a class="reference internal nav-link" href="#sum">
+     Sum
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#pool">
-     Pool
+    <a class="reference internal nav-link" href="#variance">
+     Variance
     </a>
    </li>
   </ul>
@@ -306,37 +301,42 @@
               
               <div>
                 
-  <div class="section" id="module-deeptrack.math">
-<span id="math"></span><h1>math<a class="headerlink" href="#module-deeptrack.math" title="Permalink to this headline">¶</a></h1>
-<p>Mathematical oprations and structures</p>
-<div class="section" id="classses">
-<h2>Classses<a class="headerlink" href="#classses" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt>Clip</dt><dd><p>Clip the input within a minimum and a maximum value.</p>
-</dd>
-<dt>NormalizeMinMax</dt><dd><p>Min-max image normalization.</p>
-</dd>
-</dl>
+  <div class="section" id="module-deeptrack.statistics">
+<span id="statistics"></span><h1>statistics<a class="headerlink" href="#module-deeptrack.statistics" title="Permalink to this headline">¶</a></h1>
+<p>Contains features that perform some statistics operation on the input.</p>
+<p>These features reduce some dimension of the input by calculating some statistical metric. They
+follow the syntax of the equivalent numpy function, meaning that axis and keepdims are valid arguments.
+Moreover, they all accept the <cite>distributed</cite> keyword, which determines if each image in the input list
+should be handled individually or not. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span><span class="p">,)),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,))]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="kc">True</span><span class="p">)(</span><span class="n">input_values</span><span class="p">)</span> <span class="c1"># [1+1, 0+0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="kc">False</span><span class="p">)(</span><span class="n">input_values</span><span class="p">)</span> <span class="c1"># [1+0, 1+0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Reducers can be added to the pipeline in two ways:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">some_pipeline_of_features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">summed_pipeline</span> <span class="o">=</span> <span class="n">some_pipeline_of_features</span> <span class="o">&gt;&gt;</span> <span class="n">Sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">summed_pipeline</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="n">some_pipeline_of_features</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Combining the two, eg:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">incorrectly_summed_pipline</span> <span class="o">=</span> <span class="n">some_feature</span> <span class="o">&gt;&gt;</span> <span class="n">Sum</span><span class="p">(</span><span class="n">some_pipeline_of_features</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>is not supported and the behaviour is not guaranteed. However, other operators can be used in this way:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">correctly_summed_and_subtracted_pipline</span> <span class="o">=</span> <span class="n">some_feature</span> <span class="o">-</span> <span class="n">Sum</span><span class="p">(</span><span class="n">some_pipeline_of_features</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
 </div>
 <div class="section" id="module-classes">
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="average">
-<h3>Average<a class="headerlink" href="#average" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="cumsum">
+<h3>Cumsum<a class="headerlink" href="#cumsum" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.math.Average">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">Average</code><span class="sig-paren">(</span><em class="sig-param">features=typing.Union[typing.List[deeptrack.features.Feature], typing.Callable[..., typing.List[deeptrack.features.Feature]]], axis=0, **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.Average" title="Permalink to this definition">¶</a></dt>
-<dd><p>Average of input images</p>
-<p>If <cite>features</cite> is not None, it instead resolves all features
-in the list and averages the result.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>axis</strong><span class="classifier">int or tuple of ints</span></dt><dd><p>Axis along which to average</p>
-</dd>
-<dt><strong>features</strong><span class="classifier">list of features, optional</span></dt><dd></dd>
-</dl>
-</dd>
-</dl>
+<dt id="deeptrack.statistics.Cumsum">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Cumsum</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Cumsum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the cummulative sum along the specified axis.</p>
 <p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -423,21 +423,12 @@ in the list and averages the result.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="averageblur">
-<h3>AverageBlur<a class="headerlink" href="#averageblur" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="max">
+<h3>Max<a class="headerlink" href="#max" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.math.AverageBlur">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">AverageBlur</code><span class="sig-paren">(</span><em class="sig-param">ksize=3</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.AverageBlur" title="Permalink to this definition">¶</a></dt>
-<dd><p>Blur an image by computing simple means over neighbourhoods.</p>
-<p>Performs a (N-1)D convolution if the last dimension is smaller than the kernel size.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>ksize</strong><span class="classifier">int</span></dt><dd><p>Kernel size to use.</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt id="deeptrack.statistics.Max">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Max</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the maximum of an array or maximum along an axis.</p>
 <p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -524,24 +515,12 @@ in the list and averages the result.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="averagepooling">
-<h3>AveragePooling<a class="headerlink" href="#averagepooling" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="mean">
+<h3>Mean<a class="headerlink" href="#mean" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.math.AveragePooling">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">AveragePooling</code><span class="sig-paren">(</span><em class="sig-param">ksize=3</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.AveragePooling" title="Permalink to this definition">¶</a></dt>
-<dd><p>Apply average pooling to images.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>ksize</strong><span class="classifier">int</span></dt><dd><p>Size of the pooling kernel.</p>
-</dd>
-<dt><strong>cval</strong><span class="classifier">number</span></dt><dd><p>Value to pad edges with if necessary. Default 0.</p>
-</dd>
-<dt><strong>func_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Additional parameters sent to the pooling function.</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt id="deeptrack.statistics.Mean">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Mean</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the arithmetic mean along the specified axis.</p>
 <p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -628,32 +607,12 @@ in the list and averages the result.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="bilateralblur">
-<h3>BilateralBlur<a class="headerlink" href="#bilateralblur" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="median">
+<h3>Median<a class="headerlink" href="#median" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.math.BilateralBlur">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">BilateralBlur</code><span class="sig-paren">(</span><em class="sig-param">d=3</em>, <em class="sig-param">sigma_color=50</em>, <em class="sig-param">sigma_space=50</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.BilateralBlur" title="Permalink to this definition">¶</a></dt>
-<dd><p>Blur an image using a bilateral filter.</p>
-<p>Bilateral filters blur homogenous areas while trying to
-preserve edges.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>d</strong><span class="classifier">int</span></dt><dd><p>Diameter of each pixel neighborhood with value range.</p>
-</dd>
-<dt><strong>sigma_color</strong><span class="classifier">number</span></dt><dd><p>Filter sigma in the color space with value range. A
-large value of the parameter means that farther colors within the
-pixel neighborhood (see <cite>sigma_space</cite>) will be mixed together,
-resulting in larger areas of semi-equal color.</p>
-</dd>
-<dt><strong>sigma_space</strong><span class="classifier">number</span></dt><dd><p>Filter sigma in the coordinate space with value range. A
-large value of the parameter means that farther pixels will influence
-each other as long as their colors are close enough (see
-<cite>sigma_color</cite>).</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt id="deeptrack.statistics.Median">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Median</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Median" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the median along the specified axis.</p>
 <p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -740,204 +699,12 @@ each other as long as their colors are close enough (see
 </dd></dl>
 
 </div>
-<div class="section" id="blur">
-<h3>Blur<a class="headerlink" href="#blur" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="min">
+<h3>Min<a class="headerlink" href="#min" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.math.Blur">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">Blur</code><span class="sig-paren">(</span><em class="sig-param">filter_function</em>, <em class="sig-param">mode='reflect'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.Blur" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
-<table class="longtable table autosummary">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
-<td><p>Visualizes the output of the feature.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="blurcv2">
-<h3>BlurCV2<a class="headerlink" href="#blurcv2" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="deeptrack.math.BlurCV2">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">BlurCV2</code><span class="sig-paren">(</span><em class="sig-param">filter_function</em>, <em class="sig-param">mode='refelct'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.BlurCV2" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
-<table class="longtable table autosummary">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
-<td><p>Visualizes the output of the feature.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="clip">
-<h3>Clip<a class="headerlink" href="#clip" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="deeptrack.math.Clip">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">Clip</code><span class="sig-paren">(</span><em class="sig-param">min=-inf</em>, <em class="sig-param">max=inf</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.Clip" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clip the input within a minimum and a maximum value.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>min</strong><span class="classifier">float</span></dt><dd><p>Clip the input to be larger than this value.</p>
-</dd>
-<dt><strong>max</strong><span class="classifier">float</span></dt><dd><p>Clip the input to be smaller than this value.</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt id="deeptrack.statistics.Min">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Min</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the minimum of an array or minimum along an axis.</p>
 <p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -1024,16 +791,108 @@ each other as long as their colors are close enough (see
 </dd></dl>
 
 </div>
-<div class="section" id="gaussianblur">
-<h3>GaussianBlur<a class="headerlink" href="#gaussianblur" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="peaktopeak">
+<h3>PeakToPeak<a class="headerlink" href="#peaktopeak" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.math.GaussianBlur">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">GaussianBlur</code><span class="sig-paren">(</span><em class="sig-param">sigma=2</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.GaussianBlur" title="Permalink to this definition">¶</a></dt>
-<dd><p>Augmenter to blur images using gaussian kernels.</p>
+<dt id="deeptrack.statistics.PeakToPeak">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">PeakToPeak</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.PeakToPeak" title="Permalink to this definition">¶</a></dt>
+<dd><p>Range of values (maximum - minimum) along an axis.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="percentile">
+<h3>Percentile<a class="headerlink" href="#percentile" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Percentile">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Percentile</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">q=95</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Percentile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the q-th percentile of the data along the specified axis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>sigma</strong><span class="classifier">number</span></dt><dd><p>Standard deviation of the gaussian kernel.</p>
+<dt><strong>q</strong><span class="classifier">float</span></dt><dd><p>Percentile to compute, 0 through 100.</p>
 </dd>
 </dl>
 </dd>
@@ -1124,16 +983,108 @@ each other as long as their colors are close enough (see
 </dd></dl>
 
 </div>
-<div class="section" id="medianblur">
-<h3>MedianBlur<a class="headerlink" href="#medianblur" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="prod">
+<h3>Prod<a class="headerlink" href="#prod" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.math.MedianBlur">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">MedianBlur</code><span class="sig-paren">(</span><em class="sig-param">ksize=3</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.MedianBlur" title="Permalink to this definition">¶</a></dt>
-<dd><p>Blur an image by computing median values over neighbourhoods.</p>
+<dt id="deeptrack.statistics.Prod">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Prod</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Prod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the product along the specified axis</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="quantile">
+<h3>Quantile<a class="headerlink" href="#quantile" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Quantile">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Quantile</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">q=0.95</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Quantile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the q-th quantile of the data along the specified axis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>ksize :</strong></dt><dd><p>Kernel size.</p>
+<dt><strong>q</strong><span class="classifier">float</span></dt><dd><p>Quantile to compute, 0 through 1.</p>
 </dd>
 </dl>
 </dd>
@@ -1224,21 +1175,24 @@ each other as long as their colors are close enough (see
 </dd></dl>
 
 </div>
-<div class="section" id="normalizeminmax">
-<h3>NormalizeMinMax<a class="headerlink" href="#normalizeminmax" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="reducer">
+<h3>Reducer<a class="headerlink" href="#reducer" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.math.NormalizeMinMax">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">NormalizeMinMax</code><span class="sig-paren">(</span><em class="sig-param">min=0</em>, <em class="sig-param">max=1</em>, <em class="sig-param">featurewise=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.NormalizeMinMax" title="Permalink to this definition">¶</a></dt>
-<dd><p>Image normalization.</p>
-<p>Transforms the input to be between a minimum and a maximum value using a linear transformation.</p>
+<dt id="deeptrack.statistics.Reducer">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Reducer</code><span class="sig-paren">(</span><em class="sig-param">function</em>, <em class="sig-param">feature=None</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Reducer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class of features that reduce the dimensionality of the input.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>min</strong><span class="classifier">float</span></dt><dd><p>The minimum of the transformation.</p>
+<dt><strong>function</strong><span class="classifier">Callable</span></dt><dd><p>The function used to reduce the input</p>
 </dd>
-<dt><strong>max</strong><span class="classifier">float</span></dt><dd><p>The maximum of the transformation.</p>
+<dt><strong>feature</strong><span class="classifier">Feature, optional</span></dt><dd><p>If not None, the output of this feature is used as the input.</p>
 </dd>
-<dt><strong>featurewise</strong><span class="classifier">bool</span></dt><dd><p>Whether to normalize each feature independently</p>
+<dt><strong>distributed</strong><span class="classifier">boolean</span></dt><dd><p>Whether to apply the reducer to each image in the input list individually.</p>
+</dd>
+<dt><strong>axis</strong><span class="classifier">int, tuple of int</span></dt><dd><p>The axis / axes to reduce over</p>
+</dd>
+<dt><strong>keepdims</strong><span class="classifier">boolean</span></dt><dd><p>Whether to keep the singleton dimensions after reducing or squeeze them.</p>
 </dd>
 </dl>
 </dd>
@@ -1329,24 +1283,12 @@ each other as long as their colors are close enough (see
 </dd></dl>
 
 </div>
-<div class="section" id="normalizequantile">
-<h3>NormalizeQuantile<a class="headerlink" href="#normalizequantile" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="std">
+<h3>Std<a class="headerlink" href="#std" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.math.NormalizeQuantile">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">NormalizeQuantile</code><span class="sig-paren">(</span><em class="sig-param">quantiles=(0.25</em>, <em class="sig-param">0.75)</em>, <em class="sig-param">featurewise=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.NormalizeQuantile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Image normalization.</p>
-<p>Center the image to the median, and divide by the difference between the quantiles
-defined by <cite>q_max</cite> and <cite>q_min</cite></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>quantiles</strong><span class="classifier">tuple (q_min, q_max), 0.0 &lt; q_min &lt; q_max &lt; 1.0</span></dt><dd><p>Quantile range to calculate scaling factor</p>
-</dd>
-<dt><strong>featurewise</strong><span class="classifier">bool</span></dt><dd><p>Whether to normalize each feature independently</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt id="deeptrack.statistics.Std">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Std</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the standard deviation along the specified axis.</p>
 <p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -1433,21 +1375,12 @@ defined by <cite>q_max</cite> and <cite>q_min</cite></p>
 </dd></dl>
 
 </div>
-<div class="section" id="normalizestandard">
-<h3>NormalizeStandard<a class="headerlink" href="#normalizestandard" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="sum">
+<h3>Sum<a class="headerlink" href="#sum" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.math.NormalizeStandard">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">NormalizeStandard</code><span class="sig-paren">(</span><em class="sig-param">featurewise=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.NormalizeStandard" title="Permalink to this definition">¶</a></dt>
-<dd><p>Image normalization.</p>
-<p>Normalize the image to have sigma 1 and mean 0.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>featurewise</strong><span class="classifier">bool</span></dt><dd><p>Whether to normalize each feature independently</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt id="deeptrack.statistics.Sum">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Sum</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the sum along the specified axis</p>
 <p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -1534,29 +1467,12 @@ defined by <cite>q_max</cite> and <cite>q_min</cite></p>
 </dd></dl>
 
 </div>
-<div class="section" id="pool">
-<h3>Pool<a class="headerlink" href="#pool" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="variance">
+<h3>Variance<a class="headerlink" href="#variance" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.math.Pool">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.math.</code><code class="sig-name descname">Pool</code><span class="sig-paren">(</span><em class="sig-param">pooling_function</em>, <em class="sig-param">ksize=3</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.math.Pool" title="Permalink to this definition">¶</a></dt>
-<dd><p>Downsamples the image by applying a function to local regions of the image.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>pooling_function</strong><span class="classifier">function</span></dt><dd><p>A function that is applied to each local region of the image.
-DOES NOT NEED TO BE WRAPPED IN A ANOTHER FUNCTIOn.
-Must implement the axis argument. Examples include
-np.mean, np.max, np.min, etc.</p>
-</dd>
-<dt><strong>ksize</strong><span class="classifier">int</span></dt><dd><p>Size of the pooling kernel.</p>
-</dd>
-<dt><strong>cval</strong><span class="classifier">number</span></dt><dd><p>Value to pad edges with if necessary.</p>
-</dd>
-<dt><strong>func_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Additional parameters sent to the pooling function.</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dt id="deeptrack.statistics.Variance">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Variance</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Variance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the variance along the specified axis.</p>
 <p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -1652,8 +1568,8 @@ np.mean, np.max, np.min, etc.</p>
               
               <div class='prev-next-bottom'>
                 
-    <a class='left-prev' id="prev-link" href="losses.html" title="previous page">losses</a>
-    <a class='right-next' id="next-link" href="models.html" title="next page">models</a>
+    <a class='left-prev' id="prev-link" href="sequences.html" title="previous page">sequences</a>
+    <a class='right-next' id="next-link" href="test.html" title="next page">test</a>
 
               </div>
               
