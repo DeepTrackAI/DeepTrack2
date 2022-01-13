@@ -258,7 +258,7 @@ class FlipUD(Augmentation):
             for prop in image.properties:
                 if "position" in prop:
                     position = np.array(prop["position"])
-                    position[..., 0] = image.shape[1] - position[..., 0]
+                    position[..., 0] = image.shape[0] - position[..., 0]
                     prop["position"] = position
 
 
