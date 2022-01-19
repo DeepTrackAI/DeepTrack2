@@ -62,9 +62,9 @@ class TestModels(unittest.TestCase):
         self.assertEqual(len(model.layers), 2)
 
     def test_Norm_as_string(self):
-        block = layers.Identity(normalization="InstanceNormalization")
+        block = layers.Identity(normalization="BatchNormalization")
         model = makeMinimalModel(block(1), shape=(2, 2, 1))
-        self.assertIsInstance(model.layers[2], InstanceNormalization)
+        self.assertIsInstance(model.layers[2], k_layers.BatchNormalization)
 
     def test_Norm_as_tf_layer(self):
         block = layers.Identity(normalization=k_layers.BatchNormalization)
@@ -73,25 +73,23 @@ class TestModels(unittest.TestCase):
 
     def test_Norm_as_callable(self):
         block = layers.Identity(
-            normalization=lambda axis, center, scale: InstanceNormalization(
-                axis=axis, center=center, scale=scale
+            normalization=lambda axis, momentum, epsilon: k_layers.BatchNormalization(
+                axis=axis, momentum=momentum, epsilon=epsilon
             ),
-            norm_kwargs={"axis": -1, "center": False, "scale": False},
+            norm_kwargs={"axis": 1, "momentum": 0.99, "epsilon": 0.001},
         )
         model = makeMinimalModel(block(1), shape=(2, 2, 1))
-        self.assertIsInstance(model.layers[2], InstanceNormalization)
+        self.assertIsInstance(model.layers[2], k_layers.BatchNormalization)
 
-    # Instance Normalization with no learnable parameters. This is a special case where
-    # center and scale are False and do not update during training.
     def test_Norm_key_arguments(self):
         block = layers.Identity(
-            normalization=lambda axis, center, scale: InstanceNormalization(
-                axis=axis, center=center, scale=scale
+            normalization=lambda axis, momentum, epsilon: k_layers.BatchNormalization(
+                axis=axis, momentum=momentum, epsilon=epsilon
             ),
-            norm_kwargs={"axis": -1, "center": False, "scale": False},
+            norm_kwargs={"axis": 1, "momentum": 0.95, "epsilon": 0.001},
         )
         model = makeMinimalModel(block(1), shape=(2, 2, 1))
-        self.assertTrue(model.layers[2].count_params() == 0)
+        self.assertTrue(model.layers[2].momentum == 0.95)
 
 
 if __name__ == "__main__":
