@@ -18,6 +18,9 @@ except Exception:
         ImportWarning,
     )
 
+import pkg_resources
+
+installed_pkg = [pkg.key for pkg in pkg_resources.working_set]
 
 BLOCKS = {}
 
@@ -69,7 +72,7 @@ def _as_activation(x):
 def _get_norm_by_name(x):
     if hasattr(layers, x):
         return getattr(layers, x)
-    elif hasattr(tfa.layers, x):
+    elif "tensorflow-addons" in installed_pkg and hasattr(tfa.layers, x):
         return getattr(tfa.layers, x)
     else:
         raise ValueError(f"Unknown normalization {x}.")
