@@ -5,9 +5,10 @@
 from warnings import WarningMessage
 from tensorflow.keras import layers
 
-
 try:
-    from tensorflow_addons.layers import InstanceNormalization
+    import tensorflow_addons as tfa
+
+    InstanceNormalization = tfa.layers.InstanceNormalization
 except Exception:
     import warnings
 
@@ -17,6 +18,9 @@ except Exception:
         ImportWarning,
     )
 
+import pkg_resources
+
+installed_pkg = [pkg.key for pkg in pkg_resources.working_set]
 
 BLOCKS = {}
 
@@ -65,25 +69,39 @@ def _as_activation(x):
         return layers.Layer(x)
 
 
-def _single_layer_call(x, layer, instance_norm, activation):
+def _get_norm_by_name(x):
+    if hasattr(layers, x):
+        return getattr(layers, x)
+    elif "tensorflow-addons" in installed_pkg and hasattr(tfa.layers, x):
+        return getattr(tfa.layers, x)
+    else:
+        raise ValueError(f"Unknown normalization {x}.")
+
+
+def _as_normalization(x):
+    if x is None:
+        return layers.Layer()
+    elif isinstance(x, str):
+        return _get_norm_by_name(x)
+    elif isinstance(x, layers.Layer) or callable(x):
+        return x
+    else:
+        return layers.Layer(x)
+
+
+def _single_layer_call(x, layer, activation, normalization, norm_kwargs):
+    assert isinstance(norm_kwargs, dict), "norm_kwargs must be a dict. Got {0}".format(
+        type(norm_kwargs)
+    )
     y = layer(x)
 
-    if instance_norm:
-        if not isinstance(instance_norm, dict):
-            instance_norm = {}
-        y = InstanceNormalization(**instance_norm)(y)
+    if normalization:
+        y = _as_normalization(normalization)(**norm_kwargs)(y)
 
     if activation:
         y = _as_activation(activation)(y)
 
     return y
-
-
-def _instance_norm(x, filters):
-    if callable(x):
-        return x(filters)
-    else:
-        return x
 
 
 @register("convolutional", "conv")
@@ -92,7 +110,8 @@ def ConvolutionalBlock(
     activation="relu",
     padding="same",
     strides=1,
-    instance_norm=False,
+    normalization=False,
+    norm_kwargs={},
     **kwargs,
 ):
     """A single 2d convolutional layer.
@@ -109,8 +128,10 @@ def ConvolutionalBlock(
         How to pad the input tensor. See keras docs for accepted strings.
     strides : int
         Step length of kernel
-    instance_norm : bool
-        Whether to add instance normalization (before activation).
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
+    norm_kwargs : dict
+        Arguments for the normalization function.
     **kwargs
         Other keras.layers.Conv2D arguments
     """
@@ -125,14 +146,14 @@ def ConvolutionalBlock(
             **kwargs_inner,
         )
         return lambda x: _single_layer_call(
-            x, layer, _instance_norm(instance_norm, filters), activation
+            x, layer, activation, normalization, norm_kwargs
         )
 
     return Layer
 
 
 @register("dense")
-def DenseBlock(activation="tanh", instance_norm=False, **kwargs):
+def DenseBlock(activation="relu", normalization=False, norm_kwargs={}, **kwargs):
     """A single dense layer.
 
     Accepts arguments of keras.layers.Dense.
@@ -141,8 +162,10 @@ def DenseBlock(activation="tanh", instance_norm=False, **kwargs):
     ----------
     activation : str or activation function or layer
         Activation function of the layer. See keras docs for accepted strings.
-    instance_norm : bool
-        Whether to add instance normalization (before activation).
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
+    norm_kwargs : dict
+        Arguments for the normalization function.
     **kwargs
         Other keras.layers.Dense arguments
     """
@@ -151,7 +174,7 @@ def DenseBlock(activation="tanh", instance_norm=False, **kwargs):
         kwargs_inner.update(kwargs)
         layer = layers.Dense(filters, **kwargs_inner)
         return lambda x: _single_layer_call(
-            x, layer, _instance_norm(instance_norm, filters), activation
+            x, layer, activation, normalization, norm_kwargs
         )
 
     return Layer
@@ -163,7 +186,8 @@ def PoolingBlock(
     activation=None,
     padding="same",
     strides=2,
-    instance_norm=False,
+    normalization=False,
+    norm_kwargs={},
     **kwargs,
 ):
     """A single max pooling layer.
@@ -180,8 +204,10 @@ def PoolingBlock(
         How to pad the input tensor. See keras docs for accepted strings.
     strides : int
         Step length of kernel
-    instance_norm : bool
-        Whether to add instance normalization (before activation).
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
+    norm_kwargs : dict
+        Arguments for the normalization function.
     **kwargs
         Other keras.layers.MaxPool2D arguments
     """
@@ -192,7 +218,7 @@ def PoolingBlock(
             pool_size=pool_size, padding=padding, strides=strides, **kwargs_inner
         )
         return lambda x: _single_layer_call(
-            x, layer, _instance_norm(instance_norm, filters), activation
+            x, layer, activation, normalization, norm_kwargs
         )
 
     return Layer
@@ -204,7 +230,8 @@ def DeconvolutionalBlock(
     activation=None,
     padding="valid",
     strides=2,
-    instance_norm=False,
+    normalization=False,
+    norm_kwargs={},
     **kwargs,
 ):
     """A single 2d deconvolutional layer.
@@ -221,8 +248,10 @@ def DeconvolutionalBlock(
         How to pad the input tensor. See keras docs for accepted strings.
     strides : int
         Step length of kernel
-    instance_norm : bool
-        Whether to add instance normalization (before activation).
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
+    norm_kwargs : dict
+        Arguments for the normalization function.
     **kwargs
         Other keras.layers.Conv2DTranspose arguments
     """
@@ -237,7 +266,7 @@ def DeconvolutionalBlock(
             **kwargs_inner,
         )
         return lambda x: _single_layer_call(
-            x, layer, _instance_norm(instance_norm, filters), activation
+            x, layer, activation, normalization, norm_kwargs
         )
 
     return Layer
@@ -248,11 +277,12 @@ def StaticUpsampleBlock(
     size=(2, 2),
     activation=None,
     interpolation="bilinear",
-    instance_norm=False,
+    normalization=False,
     kernel_size=(1, 1),
     strides=1,
     padding="same",
     with_conv=True,
+    norm_kwargs={},
     **kwargs,
 ):
     """A single no-trainable 2d deconvolutional layer.
@@ -267,8 +297,8 @@ def StaticUpsampleBlock(
         Activation function of the layer. See keras docs for accepted strings.
     interpolation
         Interpolation type. Either "bilinear" or "nearest".
-    instance_norm : bool
-        Whether to add instance normalization (before activation).
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
     **kwargs
         Other keras.layers.Conv2DTranspose arguments
     """
@@ -289,7 +319,7 @@ def StaticUpsampleBlock(
             y = layer(x)
             if with_conv:
                 return _single_layer_call(
-                    y, conv, _instance_norm(instance_norm, filters), activation
+                    y, conv, activation, normalization, norm_kwargs
                 )
             else:
                 return layer(x)
@@ -301,7 +331,12 @@ def StaticUpsampleBlock(
 
 @register("residual")
 def ResidualBlock(
-    kernel_size=(3, 3), activation="relu", strides=1, instance_norm=True, **kwargs
+    kernel_size=(3, 3),
+    activation="relu",
+    strides=1,
+    normalization="BatchNormalization",
+    norm_kwargs={},
+    **kwargs,
 ):
     """A 2d residual layer with two convolutional steps.
 
@@ -315,8 +350,10 @@ def ResidualBlock(
         Activation function of the layer. See keras docs for accepted strings.
     strides : int
         Step length of kernel
-    instance_norm : bool
-        Whether to add instance normalization (before activation).
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
+    norm_kwargs : dict
+        Arguments for the normalization function.
     **kwargs
         Other keras.layers.Conv2D arguments
     """
@@ -337,12 +374,8 @@ def ResidualBlock(
         )
 
         def call(x):
-            y = _single_layer_call(
-                x, conv, _instance_norm(instance_norm, filters), activation
-            )
-            y = _single_layer_call(
-                y, conv2, _instance_norm(instance_norm, filters), None
-            )
+            y = _single_layer_call(x, conv, activation, normalization, norm_kwargs)
+            y = _single_layer_call(y, conv2, None, normalization, norm_kwargs)
             y = layers.Add()([identity(x), y])
             if activation:
                 y = _as_activation(activation)(y)
@@ -354,7 +387,7 @@ def ResidualBlock(
 
 
 @register("none", "identity", "None")
-def Identity(activation=None, instance_norm=False, **kwargs):
+def Identity(activation=None, normalization=False, norm_kwargs={}, **kwargs):
     """Identity layer that returns the input tensor.
 
     Can optionally perform instance normalization or some activation function.
@@ -366,8 +399,10 @@ def Identity(activation=None, instance_norm=False, **kwargs):
 
     activation : str or activation function or layer
         Activation function of the layer. See keras docs for accepted strings.
-    instance_norm : bool
-        Whether to add instance normalization (before activation).
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
+    norm_kwargs : dict
+        Arguments for the normalization function.
     **kwargs
         Other keras.layers.Layer arguments
     """
@@ -375,7 +410,7 @@ def Identity(activation=None, instance_norm=False, **kwargs):
     def Layer(filters, **kwargs_inner):
         layer = layers.Layer(**kwargs_inner)
         return lambda x: _single_layer_call(
-            x, layer, _instance_norm(instance_norm, filters), activation
+            x, layer, activation, normalization, norm_kwargs
         )
 
     return Layer
