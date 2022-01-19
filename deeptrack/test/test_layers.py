@@ -7,7 +7,6 @@ import unittest
 from .. import layers
 import tensorflow.keras.layers as k_layers
 import tensorflow.keras.models as k_models
-import tensorflow_addons as tfa
 from ..layers import InstanceNormalization
 
 import numpy as np
@@ -74,7 +73,7 @@ class TestModels(unittest.TestCase):
 
     def test_Norm_as_callable(self):
         block = layers.Identity(
-            normalization=lambda axis, center, scale: tfa.layers.InstanceNormalization(
+            normalization=lambda axis, center, scale: InstanceNormalization(
                 axis=axis, center=center, scale=scale
             ),
             norm_kwargs={"axis": -1, "center": False, "scale": False},
@@ -86,7 +85,7 @@ class TestModels(unittest.TestCase):
     # center and scale are False and do not update during training.
     def test_Norm_key_arguments(self):
         block = layers.Identity(
-            normalization=lambda axis, center, scale: tfa.layers.InstanceNormalization(
+            normalization=lambda axis, center, scale: InstanceNormalization(
                 axis=axis, center=center, scale=scale
             ),
             norm_kwargs={"axis": -1, "center": False, "scale": False},
