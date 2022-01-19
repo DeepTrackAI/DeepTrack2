@@ -334,7 +334,7 @@ def ResidualBlock(
     kernel_size=(3, 3),
     activation="relu",
     strides=1,
-    normalization="InstanceNormalization",
+    normalization="BatchNormalization",
     norm_kwargs={},
     **kwargs,
 ):
