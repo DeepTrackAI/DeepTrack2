@@ -155,33 +155,33 @@ class DeepTrackNode:
 
         return self
 
-    def store(self, data, replicate_index=()):
+    def store(self, data, _ID=()):
 
-        self.data.create_index(replicate_index)
-        self.data[replicate_index].store(data)
+        self.data.create_index(_ID)
+        self.data[_ID].store(data)
 
         return self
 
-    def is_valid(self, replicate_index=()):
+    def is_valid(self, _ID=()):
         try:
-            return self.data[replicate_index].is_valid()
+            return self.data[_ID].is_valid()
         except KeyError:
             return False
 
-    def valid_index(self, replicate_index):
+    def valid_index(self, _ID):
 
-        return self.data.valid_index(replicate_index)
+        return self.data.valid_index(_ID)
 
-    def invalidate(self, replicate_index=()):
+    def invalidate(self, _ID=()):
         for child in self.recurse_children():
             child.data.invalidate()
 
         return self
 
-    def validate(self, replicate_index=()):
+    def validate(self, _ID=()):
         for child in self.recurse_children():
             try:
-                child.data[replicate_index].validate()
+                child.data[_ID].validate()
             except KeyError:
                 pass
 
@@ -197,21 +197,20 @@ class DeepTrackNode:
 
         return self
 
-    def set_value(self, value, replicate_index=()):
+    def set_value(self, value, _ID=()):
 
         # If set to same value, no need to invalidate
 
         if not (
-            self.is_valid(replicate_index=replicate_index)
-            and equivalent(value, self.data[replicate_index].current_value())
+            self.is_valid(_ID=_ID) and equivalent(value, self.data[_ID].current_value())
         ):
-            self.invalidate(replicate_index=replicate_index)
-            self.store(value, replicate_index=replicate_index)
+            self.invalidate(_ID=_ID)
+            self.store(value, _ID=_ID)
 
         return self
 
-    def previous(self, replicate_index=()):
-        return self.data[replicate_index].current_value()
+    def previous(self, _ID=()):
+        return self.data[_ID].current_value()
 
     def recurse_children(self, memory=None):
         # On first call, instantiate memory
@@ -258,20 +257,20 @@ class DeepTrackNode:
 
         return cites
 
-    def __call__(self, replicate_index=()):
+    def __call__(self, _ID=()):
 
-        if self.is_valid(replicate_index):
+        if self.is_valid(_ID):
             try:
-                return self.current_value(replicate_index)
+                return self.current_value(_ID)
             except KeyError:
                 pass
 
-        new_value = utils.safe_call(self.action, replicate_index=replicate_index)
-        self.store(new_value, replicate_index=replicate_index)
-        return self.current_value(replicate_index)
+        new_value = utils.safe_call(self.action, _ID=_ID)
+        self.store(new_value, _ID=_ID)
+        return self.current_value(_ID)
 
-    def current_value(self, replicate_index=()):
-        return self.data[replicate_index].current_value()
+    def current_value(self, _ID=()):
+        return self.data[_ID].current_value()
 
     def __hash__(self):
         return id(self)
@@ -353,11 +352,7 @@ def create_node_with_operator(op, a, b):
     if not isinstance(b, DeepTrackNode):
         b = DeepTrackNode(b)
 
-    new = DeepTrackNode(
-        lambda replicate_index=(): op(
-            a(replicate_index=replicate_index), b(replicate_index=replicate_index)
-        )
-    )
+    new = DeepTrackNode(lambda _ID=(): op(a(_ID=_ID), b(_ID=_ID)))
     new.add_dependency(a)
     new.add_dependency(b)
     a.add_child(new)

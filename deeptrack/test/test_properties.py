@@ -50,7 +50,7 @@ class TestProperties(unittest.TestCase):
 
     def test_AcceptsReplicateIndex(self):
 
-        prop = properties.Property(lambda replicate_index: replicate_index)
+        prop = properties.Property(lambda _ID: _ID)
         self.assertEqual(prop(), ())
 
 
