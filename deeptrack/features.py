@@ -146,7 +146,7 @@ class Feature(DeepTrackNode):
             The transformed image or list of images
         """
 
-    def action(self, replicate_index=None):
+    def action(self, replicate_index=()):
         """Creates the image.
         Transforms the input image by calling the method `get()` with the
         correct inputs. The properties of the feature can be overruled by
@@ -197,7 +197,7 @@ class Feature(DeepTrackNode):
         # or to rescale properties.
 
         feature_input = self._process_properties(feature_input)
-        if replicate_index is not None:
+        if replicate_index is not ():
             feature_input["replicate_index"] = replicate_index
 
         # Ensure that input is a list
@@ -230,7 +230,7 @@ class Feature(DeepTrackNode):
             return image_list
 
     def __call__(
-        self, image_list: Image or List[Image] = None, replicate_index=None, **kwargs
+        self, image_list: Image or List[Image] = None, replicate_index=(), **kwargs
     ):
 
         # Potentially fragile. Maybe a special variable dt._last_input instead?
@@ -288,7 +288,7 @@ class Feature(DeepTrackNode):
         self.add_dependency(feature)
         return feature
 
-    def seed(self, replicate_index=None):
+    def seed(self, replicate_index=()):
         np.random.seed(self._random_seed(replicate_index=replicate_index))
 
     def bind_arguments(self, arguments):
@@ -611,7 +611,7 @@ class Chain(StructuralFeature):
         self.feature_1 = self.add_feature(feature_1)
         self.feature_2 = self.add_feature(feature_2)
 
-    def get(self, image, replicate_index=None, **kwargs):
+    def get(self, image, replicate_index=(), **kwargs):
         """Resolves `feature_1` and `feature_2` sequentially"""
         image = self.feature_1(image, replicate_index=replicate_index)
         image = self.feature_2(image, replicate_index=replicate_index)
@@ -952,7 +952,7 @@ class Repeat(Feature):
         super().__init__(N=N, **kwargs)
         self.feature = self.add_feature(feature)
 
-    def get(self, image, N, replicate_index=None, **kwargs):
+    def get(self, image, N, replicate_index=(), **kwargs):
         for n in range(N):
 
             if replicate_index is None:
