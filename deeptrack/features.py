@@ -197,7 +197,7 @@ class Feature(DeepTrackNode):
         # or to rescale properties.
 
         feature_input = self._process_properties(feature_input)
-        if _ID is not ():
+        if _ID != ():
             feature_input["_ID"] = _ID
 
         # Ensure that input is a list
@@ -947,12 +947,7 @@ class Repeat(Feature):
     def get(self, image, N, _ID=(), **kwargs):
         for n in range(N):
 
-            if _ID is None:
-                index = (n,)
-            elif isinstance(_ID, int):
-                index = (_ID, n)
-            else:
-                index = _ID + (n,)
+            index = _ID + (n,)
 
             image = self.feature(
                 image,
