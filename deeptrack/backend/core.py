@@ -1,5 +1,6 @@
 from copy import copy, deepcopy
 import re
+from weakref import WeakSet
 import numpy as np
 import operator
 
@@ -92,34 +93,6 @@ class DeepTrackDataDict:
         # Otherwise, check key is correct length
         return len(_ID) == self.keylength
 
-        # if self.default is not None:
-        #     return self.default
-
-        # if replicate_index is None:
-        #     self.default = DeepTrackDataObject()
-        #     return self.default
-
-        # if isinstance(replicate_index, int):
-        #     return self.list[replicate_index]
-
-        # if isinstance(replicate_index, (tuple, list)):
-        #     replicate_index, *rest = replicate_index
-
-        #     if not rest:
-        #         return self[replicate_index]
-
-        #     while len(self.list) <= replicate_index:
-        #         self.list.append(DeepTrackDataList())
-
-        #     output = self.list[replicate_index]
-
-        #     if isinstance(output, DeepTrackDataList):
-        #         return output[rest]
-        #     else:
-        #         return output
-
-        # raise NotImplementedError("Indexing with non-integer types not yet implemented")
-
     def create_index(self, _ID=()):
 
         assert isinstance(_ID, tuple), f"Data index {_ID} is not a tuple"
@@ -161,8 +134,8 @@ class DeepTrackNode:
 
     def __init__(self, action=__nonelike_default, **kwargs):
         self.data = DeepTrackDataDict()
-        self.children = []
-        self.dependencies = []
+        self.children = WeakSet()
+        self.dependencies = WeakSet()
 
         if action is not self.__nonelike_default:
             if callable(action):
@@ -173,12 +146,12 @@ class DeepTrackNode:
         super().__init__(**kwargs)
 
     def add_child(self, other):
-        self.children.append(other)
+        self.children.add(other)
 
         return self
 
     def add_dependency(self, other):
-        self.dependencies.append(other)
+        self.dependencies.add(other)
 
         return self
 
@@ -300,6 +273,10 @@ class DeepTrackNode:
     def current_value(self, replicate_index=()):
         return self.data[replicate_index].current_value()
 
+    def __hash__(self):
+        return id(self)
+
+    # node-node operators
     def __add__(self, other):
         return create_node_with_operator(operator.__add__, self, other)
 
@@ -356,6 +333,9 @@ class DeepTrackNode:
 
 
 def equivalent(a, b):
+    # This is a bare-bones implementation.
+    # We can implement more cases to reduce updates.
+
     if a is b:
         return True
 
@@ -363,33 +343,6 @@ def equivalent(a, b):
         return len(a) == 0 and len(b) == 0
 
     return False
-    try:
-
-        if id(a) == id(b):
-            return True
-
-        # return False
-        if type(a) != type(b):
-            return False
-
-        if isinstance(a, np.ndarray):
-            # return False
-            if a.shape != b.shape:
-                return False
-            return np.array_equal(a, b, equal_nan=True)
-
-        eq = a == b
-        try:
-            # God this is stupid
-            if eq:
-                return eq
-            else:
-                return eq
-        except ValueError as e:
-            return np.array_equal(a, b, equal_nan=True)
-
-    except:
-        return False
 
 
 def create_node_with_operator(op, a, b):
