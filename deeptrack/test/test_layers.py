@@ -1,3 +1,4 @@
+from pyexpat import model
 import sys
 
 # sys.path.append(".")  # Adds the module to path
@@ -7,7 +8,11 @@ import unittest
 from .. import layers
 import tensorflow.keras.layers as k_layers
 import tensorflow.keras.models as k_models
-from ..layers import InstanceNormalization
+from ..layers import (
+    InstanceNormalization,
+    MultiHeadSelfAttention,
+    MultiHeadGatedSelfAttention,
+)
 
 import numpy as np
 
@@ -90,6 +95,36 @@ class TestModels(unittest.TestCase):
         )
         model = makeMinimalModel(block(1), shape=(2, 2, 1))
         self.assertTrue(model.layers[2].momentum == 0.95)
+
+    def test_Multi_Head_Attention(self):
+        block = layers.MultiHeadSelfAttentionLayer()
+        model = makeMinimalModel(block(1), shape=(100, 96))
+        self.assertTrue(model.layers[1], MultiHeadSelfAttention)
+
+    def test_Multi_Head_Attention_arguments(self):
+        block = layers.MultiHeadSelfAttentionLayer(number_of_heads=6)
+        model = makeMinimalModel(block(1), shape=(100, 96))
+        self.assertEqual(model.layers[1].number_of_heads, 6)
+
+    def test_Multi_Head_Attention_bias(self):
+        block = layers.MultiHeadSelfAttentionLayer(use_bias=False)
+        model = makeMinimalModel(block(1), shape=(100, 96))
+        self.assertFalse(model.layers[1].key_dense.use_bias)
+
+    def test_Multi_Head_Attention_filters(self):
+        block = layers.MultiHeadGatedSelfAttentionLayer()
+        model = makeMinimalModel(block(1), shape=(100, 96))
+        self.assertEqual(model.layers[1].filters, 96)
+
+    def test_Multi_Head_Gated_Attention(self):
+        block = layers.MultiHeadGatedSelfAttentionLayer()
+        model = makeMinimalModel(block(1), shape=(100, 96))
+        self.assertTrue(model.layers[1], MultiHeadGatedSelfAttention)
+
+    def test_Multi_Head_Gated_Attention_filters(self):
+        block = layers.MultiHeadGatedSelfAttentionLayer()
+        model = makeMinimalModel(block(1), shape=(100, 96))
+        self.assertEqual(model.layers[1].filters, 96)
 
 
 if __name__ == "__main__":
