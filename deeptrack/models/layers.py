@@ -4,6 +4,7 @@
 
 from warnings import WarningMessage
 from tensorflow.keras import layers
+import tensorflow as tf
 
 try:
     import tensorflow_addons as tfa
@@ -409,6 +410,229 @@ def Identity(activation=None, normalization=False, norm_kwargs={}, **kwargs):
 
     def Layer(filters, **kwargs_inner):
         layer = layers.Layer(**kwargs_inner)
+        return lambda x: _single_layer_call(
+            x, layer, activation, normalization, norm_kwargs
+        )
+
+    return Layer
+
+
+class MultiHeadSelfAttention(layers.Layer):
+    """Multi-head self-attention layer.
+    Parameters
+    ----------
+    number_of_heads : int
+        Number of attention heads.
+    kwargs
+        Other arguments for the keras.layers.Layer
+    """
+
+    def __init__(self, number_of_heads, use_bias=True, **kwargs):
+        super().__init__(**kwargs)
+        self.number_of_heads = number_of_heads
+        self.use_bias = use_bias
+
+    def build(self, input_shape):
+        try:
+            filters = input_shape[1][-1]
+        except TypeError:
+            filters = input_shape[-1]
+
+        if filters % self.number_of_heads != 0:
+            raise ValueError(
+                f"embedding dimension = {filters} should be divisible by number of heads = {self.number_of_heads}"
+            )
+        self.filters = filters
+        self.projection_dim = filters // self.number_of_heads
+
+        self.query_dense = layers.Dense(filters, use_bias=self.use_bias)
+        self.key_dense = layers.Dense(filters, use_bias=self.use_bias)
+        self.value_dense = layers.Dense(filters, use_bias=self.use_bias)
+        self.combine_dense = layers.Dense(filters, use_bias=self.use_bias)
+
+    def SingleAttention(self, query, key, value, gate=None, **kwargs):
+        """
+        Single attention layer.
+        Parameters
+        ----------
+        query : tf.Tensor
+            Query tensor.
+        key : tf.Tensor
+            Key tensor.
+        value : tf.Tensor
+            Value tensor.
+        gate : tf.Tensor (optional). If provided, the attention gate is applied.
+            Gate tensor.
+        """
+        score = tf.matmul(query, key, transpose_b=True)
+        dim_key = tf.cast(tf.shape(key)[-1], score.dtype)
+        scaled_score = score / tf.math.sqrt(dim_key)
+
+        weights = tf.nn.softmax(scaled_score, axis=-1)
+        output = tf.matmul(weights, value)
+
+        if gate:
+            output = tf.math.multiply(output, gate)
+
+        return output, weights
+
+    def separate_heads(self, x, batch_size):
+        """
+        Parameters
+        ----------
+        x : tf.Tensor
+            Input tensor.
+        batch_size : int
+            Batch size.
+        projection_dim : int
+            Projection dimension.
+        """
+        x = tf.reshape(x, (batch_size, -1, self.number_of_heads, self.projection_dim))
+        return tf.transpose(x, perm=[0, 2, 1, 3])
+
+    def compute_attention(self, x, **kwargs):
+        """
+        Parameters
+        ----------
+        x : tf.Tensor
+            Input tensor.
+        kwargs
+            Other arguments to pass to SingleAttention.
+        """
+        if not isinstance(x, list):
+            x = [x]
+
+        x = tf.concat(x, axis=-1)
+        batch_size = tf.shape(x)[0]
+
+        query = self.query_dense(x)
+        key = self.key_dense(x)
+        value = self.value_dense(x)
+
+        query = self.separate_heads(query, batch_size)
+        key = self.separate_heads(key, batch_size)
+        value = self.separate_heads(value, batch_size)
+
+        return (
+            self.SingleAttention(query, key, value, **kwargs),
+            batch_size,
+        )
+
+    def call(self, x, **kwargs):
+        """
+        Parameters
+        ----------
+        x : tuple of tf.Tensors
+            Input tensors.
+        """
+        (attention, _), batch_size = self.compute_attention(x, **kwargs)
+        attention = tf.transpose(attention, perm=[0, 2, 1, 3])
+        concat_attention = tf.reshape(attention, (batch_size, -1, self.filters))
+        output = self.combine_dense(concat_attention)
+
+        return output
+
+
+class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
+    def build(self, input_shape):
+        super().build(input_shape)
+        self.gate_dense = layers.Dense(self.filters, activation="sigmoid")
+
+    def compute_gated_attention(self, x, **kwargs):
+        """
+        Compute attention.
+        Parameters
+        ----------
+        x : tf.Tensor
+            Input tensor.
+        kwargs
+            Other arguments to pass to SingleAttention.
+        """
+        if not isinstance(x, list):
+            x = [x]
+
+        x = tf.concat(x, axis=-1)
+        batch_size = tf.shape(x)[0]
+
+        query = self.query_dense(x)
+        key = self.key_dense(x)
+        value = self.value_dense(x)
+        gate = self.gate_dense(x)
+
+        query = self.separate_heads(query, batch_size)
+        key = self.separate_heads(key, batch_size)
+        value = self.separate_heads(value, batch_size)
+        gate = self.separate_heads(gate, batch_size)
+
+        return (
+            self.SingleAttention(query, key, value, gate, **kwargs),
+            batch_size,
+        )
+
+
+@register("MultiHeadSelfAttention")
+def MultiHeadSelfAttentionLayer(
+    number_of_heads=12,
+    use_bias=True,
+    activation=None,
+    normalization=None,
+    norm_kwargs={},
+    **kwargs,
+):
+    """Multi-head self-attention layer.
+    Parameters
+    ----------
+    number_of_heads : int
+        Number of attention heads.
+    use_bias : bool
+        Whether to use bias in the dense layers.
+    activation : str or activation function or layer
+        Activation function of the layer. See keras docs for accepted strings.
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
+    norm_kwargs : dict
+        Arguments for the normalization function.
+    kwargs
+        Other arguments for the keras.layers.Layer
+    """
+
+    def Layer(filters, **kwargs_inner):
+        layer = MultiHeadSelfAttention(number_of_heads, use_bias, **kwargs_inner)
+        return lambda x: _single_layer_call(
+            x, layer, activation, normalization, norm_kwargs
+        )
+
+    return Layer
+
+
+@register("MultiHeadGatedSelfAttention")
+def MultiHeadGatedSelfAttentionLayer(
+    number_of_heads=12,
+    use_bias=True,
+    activation=None,
+    normalization=None,
+    norm_kwargs={},
+    **kwargs,
+):
+    """Multi-head gated self-attention layer.
+    Parameters
+    ----------
+    number_of_heads : int
+        Number of attention heads.
+    use_bias : bool
+        Whether to use bias in the dense layers.
+    activation : str or activation function or layer
+        Activation function of the layer. See keras docs for accepted strings.
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
+    norm_kwargs : dict
+        Arguments for the normalization function.
+    kwargs
+        Other arguments for the keras.layers.Layer
+    """
+
+    def Layer(filters, **kwargs_inner):
+        layer = MultiHeadGatedSelfAttention(number_of_heads, use_bias, **kwargs_inner)
         return lambda x: _single_layer_call(
             x, layer, activation, normalization, norm_kwargs
         )
