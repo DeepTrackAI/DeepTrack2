@@ -152,11 +152,12 @@ class Optics(Feature):
         **kwargs
     ):
         def get_voxel_size(resolution, magnification):
-
-            return np.ones((3,)) * resolution / magnification
+            props = self._normalize(resolution=resolution, magnification=magnification)
+            return np.ones((3,)) * props["resolution"] / props["magnification"]
 
         def get_pixel_size(resolution, magnification):
-            pixel_size = resolution / magnification
+            props = self._normalize(resolution=resolution, magnification=magnification)
+            pixel_size = props["resolution"] / props["magnification"]
             if isinstance(pixel_size, Quantity):
                 return pixel_size.to(u.meter).magnitude
             else:
