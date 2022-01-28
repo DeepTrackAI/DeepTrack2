@@ -287,6 +287,17 @@ class Feature(DeepTrackNode):
         self.arguments = arguments
         return self
 
+    def _normalize(self, **properties):
+        # Handles all unit normalizations and conversions
+        for cl in type(self).mro():
+            if hasattr(cl, "__conversion_table__"):
+                properties = cl.__conversion_table__.convert(**properties)
+
+        for key, val in properties.items():
+            if isinstance(val, Quantity):
+                properties[key] = val.magnitude
+        return properties
+
     def _coerce_inputs(self, inputs, **kwargs):
 
         if any(isinstance(i._value, tf.Tensor) for i in inputs):
@@ -436,13 +447,7 @@ class Feature(DeepTrackNode):
         # Optional hook for subclasses to preprocess input before calling
         # the method .get()
 
-        for cl in type(self).mro():
-            if hasattr(cl, "__conversion_table__"):
-                propertydict = cl.__conversion_table__.convert(**propertydict)
-
-        for key, val in propertydict.items():
-            if isinstance(val, Quantity):
-                propertydict[key] = val.magnitude
+        propertydict = self._normalize(**propertydict)
         return propertydict
 
     def sample(self, **kwargs) -> "Feature":
