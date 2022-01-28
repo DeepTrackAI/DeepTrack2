@@ -13,6 +13,7 @@ Poisson
 """
 
 import numpy as np
+
 from .features import Feature
 from .image import Image
 from .types import PropertyLike
@@ -60,6 +61,23 @@ class Gaussian(Noise):
     def get(self, image, mu, sigma, **kwargs):
 
         noisy_image = mu + image + np.random.randn(*image.shape) * sigma
+        return noisy_image
+
+
+class ComplexGaussian(Noise):
+    def __init__(
+        self, mu: PropertyLike[float] = 0, sigma: PropertyLike[float] = 1, **kwargs
+    ):
+        super().__init__(mu=mu, sigma=sigma, **kwargs)
+
+    def get(self, image, mu, sigma, **kwargs):
+
+        noisy_image = (
+            mu
+            + image
+            + (np.random.randn(*image.shape) + np.random.randn(*image.shape) * 1j)
+            * sigma
+        )
         return noisy_image
 
 

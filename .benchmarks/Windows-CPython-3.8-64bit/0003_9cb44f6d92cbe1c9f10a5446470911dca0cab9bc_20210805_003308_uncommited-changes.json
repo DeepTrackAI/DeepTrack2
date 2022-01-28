@@ -1,0 +1,511 @@
+{
+    "machine_info": {
+        "node": "DESKTOP-BTQK41F",
+        "processor": "Intel64 Family 6 Model 165 Stepping 5, GenuineIntel",
+        "machine": "AMD64",
+        "python_compiler": "MSC v.1927 64 bit (AMD64)",
+        "python_implementation": "CPython",
+        "python_implementation_version": "3.8.6",
+        "python_version": "3.8.6",
+        "python_build": [
+            "tags/v3.8.6:db45529",
+            "Sep 23 2020 15:52:53"
+        ],
+        "release": "10",
+        "system": "Windows",
+        "cpu": {
+            "python_version": "3.8.6.final.0 (64 bit)",
+            "cpuinfo_version": [
+                8,
+                0,
+                0
+            ],
+            "cpuinfo_version_string": "8.0.0",
+            "arch": "X86_64",
+            "bits": 64,
+            "count": 20,
+            "arch_string_raw": "AMD64",
+            "vendor_id_raw": "GenuineIntel",
+            "brand_raw": "Intel(R) Core(TM) i9-10900KF CPU @ 3.70GHz",
+            "hz_advertised_friendly": "3.7000 GHz",
+            "hz_actual_friendly": "3.6960 GHz",
+            "hz_advertised": [
+                3700000000,
+                0
+            ],
+            "hz_actual": [
+                3696000000,
+                0
+            ],
+            "l2_cache_size": 2621440,
+            "stepping": 5,
+            "model": 165,
+            "family": 6,
+            "l3_cache_size": 20971520,
+            "flags": [
+                "3dnow",
+                "3dnowprefetch",
+                "abm",
+                "acpi",
+                "adx",
+                "aes",
+                "apic",
+                "avx",
+                "avx2",
+                "bmi1",
+                "bmi2",
+                "clflush",
+                "clflushopt",
+                "cmov",
+                "cx16",
+                "cx8",
+                "de",
+                "dtes64",
+                "dts",
+                "erms",
+                "est",
+                "f16c",
+                "fma",
+                "fpu",
+                "fxsr",
+                "ht",
+                "hypervisor",
+                "ia64",
+                "invpcid",
+                "lahf_lm",
+                "mca",
+                "mce",
+                "mmx",
+                "movbe",
+                "mpx",
+                "msr",
+                "mtrr",
+                "osxsave",
+                "pae",
+                "pat",
+                "pbe",
+                "pcid",
+                "pclmulqdq",
+                "pdcm",
+                "pge",
+                "pni",
+                "popcnt",
+                "pse",
+                "pse36",
+                "rdrnd",
+                "rdseed",
+                "sep",
+                "serial",
+                "smap",
+                "smep",
+                "ss",
+                "sse",
+                "sse2",
+                "sse4_1",
+                "sse4_2",
+                "ssse3",
+                "tm",
+                "tm2",
+                "tsc",
+                "vme",
+                "x2apic",
+                "xsave",
+                "xtpr"
+            ],
+            "l2_cache_line_size": 256,
+            "l2_cache_associativity": 6
+        }
+    },
+    "commit_info": {
+        "id": "9cb44f6d92cbe1c9f10a5446470911dca0cab9bc",
+        "time": "2021-08-05T02:30:01+02:00",
+        "author_time": "2021-08-05T02:30:01+02:00",
+        "dirty": true,
+        "project": "DeepTrack-2.0",
+        "branch": "v2.1"
+    },
+    "benchmarks": [
+        {
+            "group": "mie_64_px_image",
+            "name": "test_simulate_mie_gpu",
+            "fullname": "deeptrack/benchmarks/test_simulate_mie.py::test_simulate_mie[64-True]",
+            "params": {
+                "size": 64,
+                "gpu": true
+            },
+            "param": "64-True",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.022778100000000023,
+                "max": 0.02325949999999999,
+                "mean": 0.022934640000000072,
+                "stddev": 0.0002021959890799663,
+                "rounds": 5,
+                "median": 0.022858299999999332,
+                "iqr": 0.00028272500000037226,
+                "q1": 0.022779825000000198,
+                "q3": 0.02306255000000057,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 0.022778100000000023,
+                "hd15iqr": 0.02325949999999999,
+                "ops": 43.602166853283805,
+                "total": 0.11467320000000036,
+                "iterations": 1
+            }
+        },
+        {
+            "group": "mie_64_px_image",
+            "name": "test_simulate_mie_cpu",
+            "fullname": "deeptrack/benchmarks/test_simulate_mie.py::test_simulate_mie[64-False]",
+            "params": {
+                "size": 64,
+                "gpu": false
+            },
+            "param": "64-False",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.017699400000000587,
+                "max": 0.019967600000000196,
+                "mean": 0.018550702000000054,
+                "stddev": 0.00041899861014340256,
+                "rounds": 50,
+                "median": 0.01857154999999988,
+                "iqr": 0.0004955000000004262,
+                "q1": 0.018295999999999424,
+                "q3": 0.01879149999999985,
+                "iqr_outliers": 1,
+                "stddev_outliers": 16,
+                "outliers": "16;1",
+                "ld15iqr": 0.017699400000000587,
+                "hd15iqr": 0.019967600000000196,
+                "ops": 53.90631578255082,
+                "total": 0.9275351000000027,
+                "iterations": 1
+            }
+        },
+        {
+            "group": "mie_128_px_image",
+            "name": "test_simulate_mie_gpu",
+            "fullname": "deeptrack/benchmarks/test_simulate_mie.py::test_simulate_mie[128-True]",
+            "params": {
+                "size": 128,
+                "gpu": true
+            },
+            "param": "128-True",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.022802200000000106,
+                "max": 0.02511249999999876,
+                "mean": 0.02425398857142846,
+                "stddev": 0.0005133431020806661,
+                "rounds": 35,
+                "median": 0.02426389999999934,
+                "iqr": 0.00046965000000009915,
+                "q1": 0.02411209999999997,
+                "q3": 0.02458175000000007,
+                "iqr_outliers": 2,
+                "stddev_outliers": 8,
+                "outliers": "8;2",
+                "ld15iqr": 0.023418299999999448,
+                "hd15iqr": 0.02511249999999876,
+                "ops": 41.230331953648815,
+                "total": 0.8488895999999961,
+                "iterations": 1
+            }
+        },
+        {
+            "group": "mie_128_px_image",
+            "name": "test_simulate_mie_cpu",
+            "fullname": "deeptrack/benchmarks/test_simulate_mie.py::test_simulate_mie[128-False]",
+            "params": {
+                "size": 128,
+                "gpu": false
+            },
+            "param": "128-False",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.036932900000000046,
+                "max": 0.04562609999999978,
+                "mean": 0.03915186250000002,
+                "stddev": 0.0020984627665139666,
+                "rounds": 24,
+                "median": 0.03857414999999964,
+                "iqr": 0.0018824499999992028,
+                "q1": 0.03776785000000071,
+                "q3": 0.039650299999999916,
+                "iqr_outliers": 2,
+                "stddev_outliers": 5,
+                "outliers": "5;2",
+                "ld15iqr": 0.036932900000000046,
+                "hd15iqr": 0.0434196,
+                "ops": 25.541569063285287,
+                "total": 0.9396447000000006,
+                "iterations": 1
+            }
+        },
+        {
+            "group": "mie_256_px_image",
+            "name": "test_simulate_mie_gpu",
+            "fullname": "deeptrack/benchmarks/test_simulate_mie.py::test_simulate_mie[256-True]",
+            "params": {
+                "size": 256,
+                "gpu": true
+            },
+            "param": "256-True",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.028830199999999806,
+                "max": 0.038523299999999594,
+                "mean": 0.03101049230769246,
+                "stddev": 0.003318571732046601,
+                "rounds": 26,
+                "median": 0.02934405000000062,
+                "iqr": 0.0013598000000012433,
+                "q1": 0.02902319999999925,
+                "q3": 0.030383000000000493,
+                "iqr_outliers": 6,
+                "stddev_outliers": 5,
+                "outliers": "5;6",
+                "ld15iqr": 0.028830199999999806,
+                "hd15iqr": 0.032624800000000675,
+                "ops": 32.24715009609635,
+                "total": 0.8062728000000039,
+                "iterations": 1
+            }
+        },
+        {
+            "group": "mie_256_px_image",
+            "name": "test_simulate_mie_cpu",
+            "fullname": "deeptrack/benchmarks/test_simulate_mie.py::test_simulate_mie[256-False]",
+            "params": {
+                "size": 256,
+                "gpu": false
+            },
+            "param": "256-False",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.17516089999999984,
+                "max": 0.18802960000000013,
+                "mean": 0.17993561666666658,
+                "stddev": 0.004672914739824239,
+                "rounds": 6,
+                "median": 0.17859625,
+                "iqr": 0.005812499999999332,
+                "q1": 0.17670910000000006,
+                "q3": 0.1825215999999994,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 0.17516089999999984,
+                "hd15iqr": 0.18802960000000013,
+                "ops": 5.557543406498087,
+                "total": 1.0796136999999995,
+                "iterations": 1
+            }
+        },
+        {
+            "group": "mie_512_px_image",
+            "name": "test_simulate_mie_gpu",
+            "fullname": "deeptrack/benchmarks/test_simulate_mie.py::test_simulate_mie[512-True]",
+            "params": {
+                "size": 512,
+                "gpu": true
+            },
+            "param": "512-True",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.045383699999998584,
+                "max": 0.04746150000000071,
+                "mean": 0.04637184374999992,
+                "stddev": 0.0006783264985428992,
+                "rounds": 16,
+                "median": 0.04631145000000014,
+                "iqr": 0.0011335000000007867,
+                "q1": 0.04581649999999993,
+                "q3": 0.04695000000000071,
+                "iqr_outliers": 0,
+                "stddev_outliers": 7,
+                "outliers": "7;0",
+                "ld15iqr": 0.045383699999998584,
+                "hd15iqr": 0.04746150000000071,
+                "ops": 21.564810003915397,
+                "total": 0.7419494999999987,
+                "iterations": 1
+            }
+        },
+        {
+            "group": "mie_512_px_image",
+            "name": "test_simulate_mie_cpu",
+            "fullname": "deeptrack/benchmarks/test_simulate_mie.py::test_simulate_mie[512-False]",
+            "params": {
+                "size": 512,
+                "gpu": false
+            },
+            "param": "512-False",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.834140399999999,
+                "max": 0.8656549000000009,
+                "mean": 0.8481390999999998,
+                "stddev": 0.013097877712821013,
+                "rounds": 5,
+                "median": 0.8461448000000011,
+                "iqr": 0.022042075000000327,
+                "q1": 0.8369866499999992,
+                "q3": 0.8590287249999995,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 0.834140399999999,
+                "hd15iqr": 0.8656549000000009,
+                "ops": 1.1790518795796587,
+                "total": 4.240695499999999,
+                "iterations": 1
+            }
+        },
+        {
+            "group": "mie_728_px_image",
+            "name": "test_simulate_mie_gpu",
+            "fullname": "deeptrack/benchmarks/test_simulate_mie.py::test_simulate_mie[728-True]",
+            "params": {
+                "size": 728,
+                "gpu": true
+            },
+            "param": "728-True",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.0764745999999974,
+                "max": 0.07905089999999859,
+                "mean": 0.0776935499999997,
+                "stddev": 0.000876287440474909,
+                "rounds": 10,
+                "median": 0.0775313999999998,
+                "iqr": 0.0018006000000028166,
+                "q1": 0.07690399999999897,
+                "q3": 0.07870460000000179,
+                "iqr_outliers": 0,
+                "stddev_outliers": 4,
+                "outliers": "4;0",
+                "ld15iqr": 0.0764745999999974,
+                "hd15iqr": 0.07905089999999859,
+                "ops": 12.87108131884827,
+                "total": 0.7769354999999969,
+                "iterations": 1
+            }
+        },
+        {
+            "group": "mie_728_px_image",
+            "name": "test_simulate_mie_cpu",
+            "fullname": "deeptrack/benchmarks/test_simulate_mie.py::test_simulate_mie[728-False]",
+            "params": {
+                "size": 728,
+                "gpu": false
+            },
+            "param": "728-False",
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 1.8912359999999993,
+                "max": 1.9301898999999985,
+                "mean": 1.9076803999999996,
+                "stddev": 0.01654419979192045,
+                "rounds": 5,
+                "median": 1.9012335,
+                "iqr": 0.027363024999998764,
+                "q1": 1.8949002000000004,
+                "q3": 1.9222632249999991,
+                "iqr_outliers": 0,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 1.8912359999999993,
+                "hd15iqr": 1.9301898999999985,
+                "ops": 0.5241968203898306,
+                "total": 9.538401999999998,
+                "iterations": 1
+            }
+        }
+    ],
+    "datetime": "2021-08-05T00:33:41.834669",
+    "version": "3.4.1"
+}

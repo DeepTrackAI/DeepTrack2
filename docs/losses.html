@@ -112,6 +112,11 @@
   </a>
  </li>
  <li class="toctree-l2">
+  <a class="reference internal" href="elementwise.html">
+   elementwise
+  </a>
+ </li>
+ <li class="toctree-l2">
   <a class="reference internal" href="features.html">
    features
   </a>
@@ -172,6 +177,11 @@
   </a>
  </li>
  <li class="toctree-l2">
+  <a class="reference internal" href="statistics.html">
+   statistics
+  </a>
+ </li>
+ <li class="toctree-l2">
   <a class="reference internal" href="test.html">
    test
   </a>
@@ -213,8 +223,38 @@
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#abs">
+     abs
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#abs-affine-consistency">
+     abs_affine_consistency
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#abs-field-affine-consistency">
+     abs_field_affine_consistency
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#adjacency-consistency">
+     adjacency_consistency
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#affine-consistency">
+     affine_consistency
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#deeptrack-loss-function">
      deeptrack_loss_function
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#field-affine-consistency">
+     field_affine_consistency
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
@@ -263,8 +303,38 @@
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#rotational-consistency">
+     rotational_consistency
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#sigmoid">
      sigmoid
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#size-consistency">
+     size_consistency
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#softmax">
+     softmax
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#squared">
+     squared
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#squared-affine-consistency">
+     squared_affine_consistency
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#squared-field-affine-consistency">
+     squared_field_affine_consistency
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
@@ -323,11 +393,61 @@
 </div>
 <div class="section" id="module-functions">
 <h2>Module functions<a class="headerlink" href="#module-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="abs">
+<h3>abs<a class="headerlink" href="#abs" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.abs">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">abs</code><span class="sig-paren">(</span><em class="sig-param">func</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.abs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="abs-affine-consistency">
+<h3>abs_affine_consistency<a class="headerlink" href="#abs-affine-consistency" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.abs_affine_consistency">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">abs_affine_consistency</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.abs_affine_consistency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Guides the network to be consistent under augmentations</p>
+</dd></dl>
+
+</div>
+<div class="section" id="abs-field-affine-consistency">
+<h3>abs_field_affine_consistency<a class="headerlink" href="#abs-field-affine-consistency" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.abs_field_affine_consistency">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">abs_field_affine_consistency</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.abs_field_affine_consistency" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="adjacency-consistency">
+<h3>adjacency_consistency<a class="headerlink" href="#adjacency-consistency" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.adjacency_consistency">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">adjacency_consistency</code><span class="sig-paren">(</span><em class="sig-param">_</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.adjacency_consistency" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="affine-consistency">
+<h3>affine_consistency<a class="headerlink" href="#affine-consistency" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.affine_consistency">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">affine_consistency</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.affine_consistency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Guides the network to be consistent under augmentations</p>
+</dd></dl>
+
+</div>
 <div class="section" id="deeptrack-loss-function">
 <h3>deeptrack_loss_function<a class="headerlink" href="#deeptrack-loss-function" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="deeptrack.losses.deeptrack_loss_function">
 <code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">deeptrack_loss_function</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.deeptrack_loss_function" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="field-affine-consistency">
+<h3>field_affine_consistency<a class="headerlink" href="#field-affine-consistency" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.field_affine_consistency">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">field_affine_consistency</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.field_affine_consistency" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -418,6 +538,14 @@
 <dd></dd></dl>
 
 </div>
+<div class="section" id="rotational-consistency">
+<h3>rotational_consistency<a class="headerlink" href="#rotational-consistency" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.rotational_consistency">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">rotational_consistency</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.rotational_consistency" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
 <div class="section" id="sigmoid">
 <h3>sigmoid<a class="headerlink" href="#sigmoid" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
@@ -439,6 +567,47 @@
 </dd>
 </dl>
 </dd></dl>
+
+</div>
+<div class="section" id="size-consistency">
+<h3>size_consistency<a class="headerlink" href="#size-consistency" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.size_consistency">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">size_consistency</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.size_consistency" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="softmax">
+<h3>softmax<a class="headerlink" href="#softmax" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.softmax">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">softmax</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">axis=(1</em>, <em class="sig-param">2</em>, <em class="sig-param">3)</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.softmax" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="squared">
+<h3>squared<a class="headerlink" href="#squared" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.squared">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">squared</code><span class="sig-paren">(</span><em class="sig-param">func</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.squared" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="squared-affine-consistency">
+<h3>squared_affine_consistency<a class="headerlink" href="#squared-affine-consistency" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.squared_affine_consistency">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">squared_affine_consistency</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.squared_affine_consistency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Guides the network to be consistent under augmentations</p>
+</dd></dl>
+
+</div>
+<div class="section" id="squared-field-affine-consistency">
+<h3>squared_field_affine_consistency<a class="headerlink" href="#squared-field-affine-consistency" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.squared_field_affine_consistency">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">squared_field_affine_consistency</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.squared_field_affine_consistency" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 <div class="section" id="weighted-crossentropy">

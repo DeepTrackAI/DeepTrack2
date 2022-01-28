@@ -41,30 +41,29 @@ class Sequence(Feature):
     def __init__(
         self, feature: Feature, sequence_length: PropertyLike[int] = 1, **kwargs
     ):
-        self.feature = feature
+        
         super().__init__(sequence_length=sequence_length, **kwargs)
-
+        self.feature = self.add_feature(feature)
         # Require update
         # self.update()
 
     def get(self, input_list, sequence_length=None, **kwargs):
-        return (input_list or []) + [
-            self.feature.resolve(
-                sequence_length=sequence_length, sequence_step=sequence_step, **kwargs
+
+        outputs = input_list or []
+        for sequence_step in range(sequence_length):
+            propagate_sequential_data(
+                self.feature,
+                sequence_step=sequence_step,
+                sequence_length=sequence_length,
             )
-            for sequence_step in range(sequence_length)
-        ]
+            out = self.feature()
 
-    def _update(self, **kwargs):
-        super()._update(**kwargs)
+            outputs.append(out)
 
-        sequence_length = self.properties["sequence_length"].current_value
-        if "sequence_length" not in kwargs:
-            kwargs["sequence_length"] = sequence_length
+        if isinstance(outputs[0], (tuple, list)):
+            outputs = tuple(zip(*outputs))
 
-        self.feature._update(**kwargs)
-
-        return self
+        return outputs
 
 
 def Sequential(feature: Feature, **kwargs):
@@ -87,16 +86,51 @@ def Sequential(feature: Feature, **kwargs):
 
     """
 
-    for property_name, sampling_rule in kwargs.items():
+    for property_name in kwargs.keys():
 
         if property_name in feature.properties:
-            initializer = feature.properties[property_name].sampling_rule
+            # Insert property with initialized value
+            feature.properties[property_name] = SequentialProperty(
+                feature.properties[property_name], **feature.properties
+            )
         else:
-            initializer = sampling_rule
+            # insert empty property
+            feature.properties[property_name] = SequentialProperty()
 
-        feature.properties[property_name] = SequentialProperty(
-            sampling_rule, initializer=initializer
+        feature.properties.add_dependency(feature.properties[property_name])
+        feature.properties[property_name].add_child(feature.properties)
+
+    for property_name, sampling_rule in kwargs.items():
+
+        prop = feature.properties[property_name]
+
+        all_kwargs = dict(
+            previous_value=prop.previous_value,
+            previous_values=prop.previous_values,
+            sequence_length=prop.sequence_length,
+            sequence_step=prop.sequence_step,
         )
-        feature.properties[property_name].parent = feature.properties
+
+        for key, val in feature.properties.items():
+            if key == property_name:
+                continue
+
+            if isinstance(val, SequentialProperty):
+                all_kwargs[key] = val
+                all_kwargs["previous_" + key] = val.previous_values
+            else:
+                all_kwargs[key] = val
+        if not prop.initialization:
+            prop.initialization = prop.create_action(sampling_rule, **{k:all_kwargs[k] for k in all_kwargs if k != "previous_value"})
+
+        prop.current = prop.create_action(sampling_rule, **all_kwargs)
 
     return feature
+
+
+def propagate_sequential_data(X, **kwargs):
+    for dep in X.recurse_dependencies():
+        if isinstance(dep, SequentialProperty):
+            for key, value in kwargs.items():
+                if hasattr(dep, key):
+                    getattr(dep, key).set_value(value)

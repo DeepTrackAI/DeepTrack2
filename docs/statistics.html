@@ -1,0 +1,1595 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>statistics &#8212; DeepTrack 2.0 documentation</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
+
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="test" href="test.html" />
+    <link rel="prev" title="sequences" href="sequences.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+
+    
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
+        
+      </ul>
+
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2">
+  <a class="reference internal" href="backend.html">
+   backend
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="aberrations.html">
+   aberrations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="augmentations.html">
+   augmentations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="elementwise.html">
+   elementwise
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="features.html">
+   features
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="generators.html">
+   generators
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="image.html">
+   image
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="layers.html">
+   layers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="losses.html">
+   losses
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="math.html">
+   math
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="models.html">
+   models
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="noises.html">
+   noises
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="optics.html">
+   optics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="properties.html">
+   properties
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="scatterers.html">
+   scatterers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="sequences.html">
+   sequences
+  </a>
+ </li>
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   statistics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="test.html">
+   test
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="types.html">
+   types
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="utils.html">
+   utils
+  </a>
+ </li>
+</ul>
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-classes">
+   Module classes
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#cumsum">
+     Cumsum
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#max">
+     Max
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mean">
+     Mean
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#median">
+     Median
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#min">
+     Min
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#peaktopeak">
+     PeakToPeak
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#percentile">
+     Percentile
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#prod">
+     Prod
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#quantile">
+     Quantile
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#reducer">
+     Reducer
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#std">
+     Std
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#sum">
+     Sum
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#variance">
+     Variance
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.statistics">
+<span id="statistics"></span><h1>statistics<a class="headerlink" href="#module-deeptrack.statistics" title="Permalink to this headline">¶</a></h1>
+<p>Contains features that perform some statistics operation on the input.</p>
+<p>These features reduce some dimension of the input by calculating some statistical metric. They
+follow the syntax of the equivalent numpy function, meaning that axis and keepdims are valid arguments.
+Moreover, they all accept the <cite>distributed</cite> keyword, which determines if each image in the input list
+should be handled individually or not. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span><span class="p">,)),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,))]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="kc">True</span><span class="p">)(</span><span class="n">input_values</span><span class="p">)</span> <span class="c1"># [1+1, 0+0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="kc">False</span><span class="p">)(</span><span class="n">input_values</span><span class="p">)</span> <span class="c1"># [1+0, 1+0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Reducers can be added to the pipeline in two ways:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">some_pipeline_of_features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">summed_pipeline</span> <span class="o">=</span> <span class="n">some_pipeline_of_features</span> <span class="o">&gt;&gt;</span> <span class="n">Sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">summed_pipeline</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="n">some_pipeline_of_features</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Combining the two, eg:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">incorrectly_summed_pipline</span> <span class="o">=</span> <span class="n">some_feature</span> <span class="o">&gt;&gt;</span> <span class="n">Sum</span><span class="p">(</span><span class="n">some_pipeline_of_features</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>is not supported and the behaviour is not guaranteed. However, other operators can be used in this way:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">correctly_summed_and_subtracted_pipline</span> <span class="o">=</span> <span class="n">some_feature</span> <span class="o">-</span> <span class="n">Sum</span><span class="p">(</span><span class="n">some_pipeline_of_features</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="module-classes">
+<h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cumsum">
+<h3>Cumsum<a class="headerlink" href="#cumsum" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Cumsum">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Cumsum</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Cumsum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the cummulative sum along the specified axis.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="max">
+<h3>Max<a class="headerlink" href="#max" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Max">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Max</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the maximum of an array or maximum along an axis.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="mean">
+<h3>Mean<a class="headerlink" href="#mean" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Mean">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Mean</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the arithmetic mean along the specified axis.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="median">
+<h3>Median<a class="headerlink" href="#median" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Median">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Median</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Median" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the median along the specified axis.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="min">
+<h3>Min<a class="headerlink" href="#min" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Min">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Min</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the minimum of an array or minimum along an axis.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="peaktopeak">
+<h3>PeakToPeak<a class="headerlink" href="#peaktopeak" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.PeakToPeak">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">PeakToPeak</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.PeakToPeak" title="Permalink to this definition">¶</a></dt>
+<dd><p>Range of values (maximum - minimum) along an axis.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="percentile">
+<h3>Percentile<a class="headerlink" href="#percentile" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Percentile">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Percentile</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">q=95</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Percentile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the q-th percentile of the data along the specified axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>q</strong><span class="classifier">float</span></dt><dd><p>Percentile to compute, 0 through 100.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="prod">
+<h3>Prod<a class="headerlink" href="#prod" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Prod">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Prod</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Prod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the product along the specified axis</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="quantile">
+<h3>Quantile<a class="headerlink" href="#quantile" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Quantile">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Quantile</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">q=0.95</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Quantile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the q-th quantile of the data along the specified axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>q</strong><span class="classifier">float</span></dt><dd><p>Quantile to compute, 0 through 1.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="reducer">
+<h3>Reducer<a class="headerlink" href="#reducer" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Reducer">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Reducer</code><span class="sig-paren">(</span><em class="sig-param">function</em>, <em class="sig-param">feature=None</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Reducer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class of features that reduce the dimensionality of the input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>function</strong><span class="classifier">Callable</span></dt><dd><p>The function used to reduce the input</p>
+</dd>
+<dt><strong>feature</strong><span class="classifier">Feature, optional</span></dt><dd><p>If not None, the output of this feature is used as the input.</p>
+</dd>
+<dt><strong>distributed</strong><span class="classifier">boolean</span></dt><dd><p>Whether to apply the reducer to each image in the input list individually.</p>
+</dd>
+<dt><strong>axis</strong><span class="classifier">int, tuple of int</span></dt><dd><p>The axis / axes to reduce over</p>
+</dd>
+<dt><strong>keepdims</strong><span class="classifier">boolean</span></dt><dd><p>Whether to keep the singleton dimensions after reducing or squeeze them.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="std">
+<h3>Std<a class="headerlink" href="#std" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Std">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Std</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the standard deviation along the specified axis.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="sum">
+<h3>Sum<a class="headerlink" href="#sum" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Sum">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Sum</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the sum along the specified axis</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="variance">
+<h3>Variance<a class="headerlink" href="#variance" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.statistics.Variance">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.statistics.</code><code class="sig-name descname">Variance</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">distributed=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.statistics.Variance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the variance along the specified axis.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 71%" />
+<col style="width: 29%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>previous</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>seed</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>store</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>validate</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="sequences.html" title="previous page">sequences</a>
+    <a class='right-next' id="next-link" href="test.html" title="next page">test</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

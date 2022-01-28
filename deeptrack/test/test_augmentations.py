@@ -63,7 +63,7 @@ class TestAugmentations(unittest.TestCase):
             mode="constant",
         )
 
-        pipe = opt(particle) + augmentation
+        pipe = opt(particle) >> augmentation
 
         for _ in range(10):
             image = pipe.update().resolve()
@@ -96,7 +96,8 @@ class TestAugmentations(unittest.TestCase):
         out_2 = transformer.update().resolve(im)
         self.assertIsNone(np.testing.assert_allclose(out_2[:, :, 0], out_2[:, :, 1]))
 
-        out_3 = transformer.update(ignore_last_dim=False).resolve(im)
+        transformer.ignore_last_dim.set_value(False)
+        out_3 = transformer.resolve(im)
         self.assertRaises(
             AssertionError,
             lambda: np.testing.assert_allclose(out_3[:, :, 0], out_3[:, :, 1]),
