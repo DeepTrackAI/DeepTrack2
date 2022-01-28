@@ -5,51 +5,14 @@
 DeepTrack is a comprehensive deep learning framework for digital microscopy.
 We provide tools to create physical simulations of customizable optical systems, to generate and train neural network models, and to analyze experimental data.
 
-# Note!
+If you use DeepTrack 2.0 in your project, please cite our DeepTrack 2.0 article:
 
-This branch is a developmental branch preparing for the next major release. While the branch should be working at any point in time, many features may be developmental and are subject to change.
-
-## Roadmap
-
-### New Features!
-
-- [ ] Full GPU support.
-  - [x] Infer cupy support during import.
-  - [x] Allow separate GPU/CPU methods for optimization.
-  - [x] Integrated benchmarking.
-  - [x] Allow forcefully overriding CPU/GPU state.
-  - [ ] Disable/enable GPU using environment variables.
-- [ ] Simulation-parameters optimization
-  - [ ] Grid search
-  - [ ] Genetic optimization
-  - [ ] Independent variables assumption
-- [ ] Architecure searches.
-- [ ] Common architectures with pre-trained weights.
-- [x] Label free training of particle tracking models
-- [ ] Particle tracing / linking
-- [ ] Export to DeepImageJ
-
-### Usage improvements
-
-- [x] Move from .resolve() to \_\_call\_\_ as primary evalution method.
-  - [x] Features can be passed as properties, and will be resolved with no input.
-  - [ ] Implement way to bypass the property evaluation (better than wrapping in lambda).
-- [ ] Facilitate the construction of compound shapes.
-  - [ ] Separate Scatterers into Geometry and Scatterers
-  - [ ] Compund shape using dt.Scatter.
-  - [ ] Implement \_\_sub\_\_, which sets everything within it to 0.
-  - [ ] All optics wraps the sample as a dt.Scatter, which produces a volume.
-- [ ] Allow for modular creation of optics pipeline.
-  - [ ] Separately define the pupil, the input illumination, the simulation method and the sample.
-  - [ ] Test simulations against theory to ensure that they work as expected.
-- [x] Deprecate \* shorthand for probability and instead use it as shorthand for multiplication.
-
-### Misc
-
-- [ ] Implement rigorous and transparent error handling.
-- [x] Expand and standardize unittests.
-- [x] Better utilize continuous integration.
-- [ ] Expand documentation with examples of each feature.
+```
+Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe.
+"Quantitative Digital Microscopy with Deep Learning."
+Applied Physics Reviews 8 (2021), 011310.
+https://doi.org/10.1063/5.0034891
+```
 
 # Getting started
 
@@ -67,7 +30,7 @@ Everybody learns in different ways! Depending on your preferences, and what you 
 
 ### Fundamentals
 
-First, we have a very general walkthrough of [basic](https://softmatterlab.github.io/DeepTrack-2.0/basics.html) and [advanced](https://softmatterlab.github.io/DeepTrack-2.0/advanced.html) topics. This is a 5-10 minute read, that well get you well on your way to understand the unique interactions available in DeepTrack.
+First, we have a very general walkthrough of [basic](https://softmatterlab.github.io/DeepTrack-2.0/basics.html) and [advanced](https://softmatterlab.github.io/DeepTrack-2.0/advanced.html) topics. This is a 5-10 minute read, that will get you well on your way to understand the unique interactions available in DeepTrack.
 
 ### DeepTrack 2.0 in action
 
@@ -166,13 +129,27 @@ The detailed documentation of DeepTrack 2.0 is available at the following link: 
 
 If you use DeepTrack 2.0 in your project, please cite us here:
 
-    Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe. "Quantitative Digital Microscopy with Deep Learning." [arXiv:2010.08260](https://arxiv.org/abs/2010.08260)
+```
+Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe.
+"Quantitative Digital Microscopy with Deep Learning."
+Applied Physics Reviews 8 (2021), 011310.
+https://doi.org/10.1063/5.0034891
+```
 
 See also:
 
-    Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "Digital video microscopy enhanced by deep learning." Optica 6.4 (2019): 506-513. [10.1364/OPTICA.6.000506](https://doi.org/10.1364/OPTICA.6.000506)
+```
+Saga Helgadottir, Aykut Argun, and Giovanni Volpe.
+"Digital video microscopy enhanced by deep learning."
+Optica 6.4 (2019): 506-513.
+https://doi.org/10.1364/OPTICA.6.000506
+```
 
-    Saga Helgadottir, Aykut Argun, and Giovanni Volpe. "DeepTrack." https://github.com/softmatterlab/DeepTrack.git (2019).
+```
+Saga Helgadottir, Aykut Argun, and Giovanni Volpe.
+"DeepTrack." (2019)
+https://github.com/softmatterlab/DeepTrack.git
+```
 
 ## Funding
 
