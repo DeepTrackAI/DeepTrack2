@@ -11,8 +11,10 @@ required = [
     "numpy",
     "scipy",
     "pint",
+    "scikit-image"
     "pydeepimagej",
 ]
+
 installed = [pkg.key for pkg in pkg_resources.working_set]
 if (
     not "tensorflow" in installed
