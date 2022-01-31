@@ -146,7 +146,7 @@ class Feature(DeepTrackNode):
             The transformed image or list of images
         """
 
-    def action(self, replicate_index=None):
+    def action(self, _ID=()):
         """Creates the image.
         Transforms the input image by calling the method `get()` with the
         correct inputs. The properties of the feature can be overruled by
@@ -186,25 +186,25 @@ class Feature(DeepTrackNode):
             The resolved image
         """
 
-        image_list = self._input(replicate_index=replicate_index)
+        image_list = self._input(_ID=_ID)
 
         # Get the input arguments to the method .get()
 
-        feature_input = self.properties(replicate_index=replicate_index).copy()
+        feature_input = self.properties(_ID=_ID).copy()
 
         # Call the _process_properties hook, default does nothing.
         # Can be used to ensure properties are formatted correctly
         # or to rescale properties.
 
         feature_input = self._process_properties(feature_input)
-        if replicate_index is not None:
-            feature_input["replicate_index"] = replicate_index
+        if _ID != ():
+            feature_input["_ID"] = _ID
 
         # Ensure that input is a list
         image_list = self._format_input(image_list, **feature_input)
 
         # Set the seed from the hash_key. Ensures equal results
-        # self.seed(replicate_index=replicate_index)
+        # self.seed(_ID=_ID)
 
         # _process_and_get calls the get function correctly according
         # to the __distributed__ attribute
@@ -229,16 +229,14 @@ class Feature(DeepTrackNode):
         else:
             return image_list
 
-    def __call__(
-        self, image_list: Image or List[Image] = None, replicate_index=None, **kwargs
-    ):
+    def __call__(self, image_list: Image or List[Image] = None, _ID=(), **kwargs):
 
         # Potentially fragile. Maybe a special variable dt._last_input instead?
         if image_list is not None and not (
             isinstance(image_list, list) and len(image_list) == 0
         ):
 
-            self._input.set_value(image_list, replicate_index=replicate_index)
+            self._input.set_value(image_list, _ID=_ID)
 
         original_values = {}
 
@@ -248,18 +246,12 @@ class Feature(DeepTrackNode):
         if isinstance(self.arguments, Feature):
             for key, value in kwargs.items():
                 if key in self.arguments.properties:
-                    original_values[key] = self.arguments.properties[key](
-                        replicate_index=replicate_index
-                    )
-                    self.arguments.properties[key].set_value(
-                        value, replicate_index=replicate_index
-                    )
-        output = super(Feature, self).__call__(replicate_index=replicate_index)
+                    original_values[key] = self.arguments.properties[key](_ID=_ID)
+                    self.arguments.properties[key].set_value(value, _ID=_ID)
+        output = super(Feature, self).__call__(_ID=_ID)
 
         for key, value in original_values.items():
-            self.arguments.properties[key].set_value(
-                value, replicate_index=replicate_index
-            )
+            self.arguments.properties[key].set_value(value, _ID=_ID)
 
         return output
 
@@ -288,12 +280,23 @@ class Feature(DeepTrackNode):
         self.add_dependency(feature)
         return feature
 
-    def seed(self, replicate_index=None):
-        np.random.seed(self._random_seed(replicate_index=replicate_index))
+    def seed(self, _ID=()):
+        np.random.seed(self._random_seed(_ID=_ID))
 
     def bind_arguments(self, arguments):
         self.arguments = arguments
         return self
+
+    def _normalize(self, **properties):
+        # Handles all unit normalizations and conversions
+        for cl in type(self).mro():
+            if hasattr(cl, "__conversion_table__"):
+                properties = cl.__conversion_table__.convert(**properties)
+
+        for key, val in properties.items():
+            if isinstance(val, Quantity):
+                properties[key] = val.magnitude
+        return properties
 
     def _coerce_inputs(self, inputs, **kwargs):
 
@@ -444,13 +447,7 @@ class Feature(DeepTrackNode):
         # Optional hook for subclasses to preprocess input before calling
         # the method .get()
 
-        for cl in type(self).mro():
-            if hasattr(cl, "__conversion_table__"):
-                propertydict = cl.__conversion_table__.convert(**propertydict)
-
-        for key, val in propertydict.items():
-            if isinstance(val, Quantity):
-                propertydict[key] = val.magnitude
+        propertydict = self._normalize(**propertydict)
         return propertydict
 
     def sample(self, **kwargs) -> "Feature":
@@ -611,10 +608,10 @@ class Chain(StructuralFeature):
         self.feature_1 = self.add_feature(feature_1)
         self.feature_2 = self.add_feature(feature_2)
 
-    def get(self, image, replicate_index=None, **kwargs):
+    def get(self, image, _ID=(), **kwargs):
         """Resolves `feature_1` and `feature_2` sequentially"""
-        image = self.feature_1(image, replicate_index=replicate_index)
-        image = self.feature_2(image, replicate_index=replicate_index)
+        image = self.feature_1(image, _ID=_ID)
+        image = self.feature_2(image, _ID=_ID)
         return image
 
 
@@ -952,17 +949,16 @@ class Repeat(Feature):
         super().__init__(N=N, **kwargs)
         self.feature = self.add_feature(feature)
 
-    def get(self, image, N, replicate_index=None, **kwargs):
+    def get(self, image, N, _ID=(), **kwargs):
         for n in range(N):
 
-            if replicate_index is None:
-                index = (n,)
-            elif isinstance(replicate_index, int):
-                index = (replicate_index, n)
-            else:
-                index = replicate_index + (n,)
+            index = _ID + (n,)
 
-            image = self.feature(image, replicate_index=index)
+            image = self.feature(
+                image,
+                _ID=index,
+                replicate_index=index,  # Pass replicate_index for legacy reasons
+            )
 
         return image
 

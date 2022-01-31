@@ -124,16 +124,13 @@ class TestSequences(unittest.TestCase):
 
     def test_DistributedRepeatedParticle(self):
 
-        positions = [
-            (16, 25),
-            (15, 24)
-        ]
+        positions = [(16, 25), (15, 24)]
         optics = Fluorescence(
             output_region=(0, 0, 32, 32),
         )
         ellipse = Ellipse(
             position_unit="pixel",
-            position=lambda replicate_index:positions[replicate_index[-1]],
+            position=lambda _ID: positions[_ID[-1]],
             radius=(1.5e-6, 1e-6),
             rotation=0,  # This will be the value at time 0.
             upsample=2,
@@ -170,6 +167,7 @@ class TestSequences(unittest.TestCase):
 
             self.assertSequenceEqual(list(p_positions[0]), list(positions[0]))
             self.assertSequenceEqual(list(p_positions[1]), list(positions[1]))
+
 
 if __name__ == "__main__":
     unittest.main()

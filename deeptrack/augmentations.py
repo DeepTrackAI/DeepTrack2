@@ -139,13 +139,9 @@ class FlipLR(Augmentation):
         if augment:
             for prop in image.properties:
                 if "position" in prop:
-                    position = prop["position"]
-                    new_position = (
-                        position[0],
-                        image.shape[1] - position[1] - 1,
-                        *position[2:],
-                    )
-                    prop["position"] = new_position
+                    position = np.array(prop["position"])
+                    position[..., 1] = image.shape[1] - position[..., 1]
+                    prop["position"] = position
 
 
 class FlipUD(Augmentation):
@@ -180,12 +176,9 @@ class FlipUD(Augmentation):
         if augment:
             for prop in image.properties:
                 if "position" in prop:
-                    position = prop["position"]
-                    new_position = (
-                        image.shape[0] - position[0] - 1,
-                        *position[1:],
-                    )
-                    prop["position"] = new_position
+                    position = np.array(prop["position"])
+                    position[..., 0] = image.shape[0] - position[..., 0]
+                    prop["position"] = position
 
 
 class FlipDiagonal(Augmentation):
@@ -220,9 +213,11 @@ class FlipDiagonal(Augmentation):
         if augment:
             for prop in image.properties:
                 if "position" in prop:
-                    position = prop["position"]
-                    new_position = (position[1], position[0], *position[2:])
-                    prop["position"] = new_position
+                    position = np.array(prop["position"])
+                    t = np.array(position[..., 0])
+                    position[..., 0] = position[..., 1]
+                    position[..., 1] = t
+                    prop["position"] = position
 
 
 class Affine(Augmentation):
@@ -383,18 +378,21 @@ class Affine(Augmentation):
         for prop in image.properties:
             if "position" in prop:
                 position = np.array(prop["position"])
-                prop["position"] = np.array(
-                    (
-                        *(
-                            (
-                                inverse_mapping
-                                @ (position[:2] - center + np.array([dy, dx]))
-                                + center
-                            )
-                        ),
-                        *position[3:],
+
+                inverted = (
+                    np.dot(
+                        inverse_mapping,
+                        (position[..., :2] - center + np.array([dy, dx]))[
+                            ..., np.newaxis
+                        ],
                     )
-                )
+                    .squeeze()
+                    .transpose()
+                ) + center
+
+                position[..., :2] = inverted
+
+                prop["position"] = position
 
         return image
 
@@ -612,7 +610,7 @@ class Crop(Augmentation):
             if "position" in prop:
                 position = np.array(prop["position"])
                 try:
-                    position[0:2] -= np.array(slice_start)[0:2]
+                    position[..., 0:2] -= np.array(slice_start)[0:2]
                     prop["position"] = position
                 except IndexError:
                     pass
