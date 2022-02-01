@@ -151,22 +151,23 @@ class TestModels(unittest.TestCase):
         )
         self.assertTrue(model.layers[-1], layers.ClassTokenFGNN)
 
-    def test_Class_Token_FGNN_message_layer(self):
-        layer = layers.ClassTokenFGNNlayer()
-        model = makeMinimalModel(
-            layer(96),
-            input_layer=(
-                k_layers.Input(shape=(None, 96)),
-                k_layers.Input(shape=(None, 10)),
-                k_layers.Input(shape=(None, 1)),
-                k_layers.Input(shape=(None, 2), dtype=tf.int32),
-            ),
-        )
-        self.assertTrue(model.layers[-1].message_layer, layers.DenseBlock)
-
     def test_Class_Token_FGNN_update_layer(self):
+        layer = layers.ClassTokenFGNNlayer(att_layer_kwargs={"number_of_heads": 6})
+        model = makeMinimalModel(
+            layer(96),
+            input_layer=(
+                k_layers.Input(shape=(None, 96)),
+                k_layers.Input(shape=(None, 10)),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2), dtype=tf.int32),
+            ),
+        )
+        self.assertEqual(model.layers[-1].update_layer.layers[0].number_of_heads, 6)
+
+    def test_Class_Token_FGNN_normalization(self):
+        # By setting center=False, scale=False, the number of trainable parameters should be 0
         layer = layers.ClassTokenFGNNlayer(
-            update_layer=layers.MultiHeadSelfAttentionLayer()
+            norm_kwargs={"center": False, "scale": False, "axis": -1}
         )
         model = makeMinimalModel(
             layer(96),
@@ -177,7 +178,7 @@ class TestModels(unittest.TestCase):
                 k_layers.Input(shape=(None, 2), dtype=tf.int32),
             ),
         )
-        self.assertTrue(model.layers[-1].message_layer, layers.MultiHeadSelfAttention)
+        self.assertEqual(model.layers[-1].update_layer.layers[-1].count_params(), 0)
 
 
 if __name__ == "__main__":
