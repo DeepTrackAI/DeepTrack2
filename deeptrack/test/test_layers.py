@@ -17,7 +17,7 @@ def makeMinimalModel(
     layer, shape=(None, None, 1), input_layer=None, **kwargs
 ) -> k_models.Model:
     if input_layer is None:
-        input_layer = k_layers.Input(shape=shape, **kwargs)
+        input_layer = k_layers.Input(shape=shape)
 
     o = layer(input_layer)
 
