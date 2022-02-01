@@ -32,7 +32,7 @@ jobs:
     - name: Conditionally install tfa
       if: ${{ matrix.tfa }}
       run: |
-        pup install tensorflow-addons
+        pip install tensorflow-addons
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
