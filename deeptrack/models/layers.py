@@ -6,23 +6,9 @@ from warnings import WarningMessage
 from tensorflow.keras import layers
 import tensorflow as tf
 
-try:
-    import tensorflow_addons as tfa
+from .utils import single_layer_call, as_activation
 
-    InstanceNormalization = tfa.layers.InstanceNormalization
-    GELU = layers.Lambda(lambda x: tfa.activations.gelu(x, approximate=False))
-except Exception:
-    import warnings
-
-    InstanceNormalization, GELU = (layers.Layer(),) * 2
-    warnings.warn(
-        "DeepTrack not installed with tensorflow addons. Instance normalization and GELU activation will not work. Consider upgrading to tensorflow >= 2.0.",
-        ImportWarning,
-    )
-
-import pkg_resources
-
-installed_pkg = [pkg.key for pkg in pkg_resources.working_set]
+import warnings
 
 BLOCKS = {}
 
@@ -58,52 +44,6 @@ def as_block(x):
         raise TypeError("Layer block should be a function that returns a keras Layer.")
     else:
         return x
-
-
-def _as_activation(x):
-    if x is None:
-        return layers.Layer()
-    elif isinstance(x, str):
-        return layers.Activation(x)
-    elif isinstance(x, layers.Layer):
-        return x
-    else:
-        return layers.Layer(x)
-
-
-def _get_norm_by_name(x):
-    if hasattr(layers, x):
-        return getattr(layers, x)
-    elif "tensorflow-addons" in installed_pkg and hasattr(tfa.layers, x):
-        return getattr(tfa.layers, x)
-    else:
-        raise ValueError(f"Unknown normalization {x}.")
-
-
-def _as_normalization(x):
-    if x is None:
-        return layers.Layer()
-    elif isinstance(x, str):
-        return _get_norm_by_name(x)
-    elif isinstance(x, layers.Layer) or callable(x):
-        return x
-    else:
-        return layers.Layer(x)
-
-
-def single_layer_call(x, layer, activation, normalization, norm_kwargs):
-    assert isinstance(norm_kwargs, dict), "norm_kwargs must be a dict. Got {0}".format(
-        type(norm_kwargs)
-    )
-    y = layer(x)
-
-    if activation:
-        y = _as_activation(activation)(y)
-
-    if normalization:
-        y = _as_normalization(normalization)(**norm_kwargs)(y)
-
-    return y
 
 
 @register("convolutional", "conv")
@@ -380,7 +320,7 @@ def ResidualBlock(
             y = single_layer_call(y, conv2, None, normalization, norm_kwargs)
             y = layers.Add()([identity(x), y])
             if activation:
-                y = _as_activation(activation)(y)
+                y = as_activation(activation)(y)
             return y
 
         return call
@@ -428,7 +368,7 @@ class MultiHeadSelfAttention(layers.Layer):
         Other arguments for the keras.layers.Layer
     """
 
-    def __init__(self, number_of_heads, use_bias=True, **kwargs):
+    def __init__(self, number_of_heads=12, use_bias=True, **kwargs):
         super().__init__(**kwargs)
         self.number_of_heads = number_of_heads
         self.use_bias = use_bias
@@ -575,7 +515,7 @@ class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
 def MultiHeadSelfAttentionLayer(
     number_of_heads=12,
     use_bias=True,
-    activation=GELU,
+    activation="relu",
     normalization="LayerNormalization",
     norm_kwargs={},
     **kwargs,
@@ -611,7 +551,7 @@ def MultiHeadSelfAttentionLayer(
 def MultiHeadGatedSelfAttentionLayer(
     number_of_heads=12,
     use_bias=True,
-    activation=GELU,
+    activation="relu",
     normalization="LayerNormalization",
     norm_kwargs={},
     **kwargs,
