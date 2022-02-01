@@ -14,7 +14,7 @@ try:
 except Exception:
     import warnings
 
-    InstanceNormalization, GELU = (layers.Layer,) * 2
+    InstanceNormalization, GELU = (layers.Layer(),) * 2
     warnings.warn(
         "DeepTrack not installed with tensorflow addons. Instance normalization will not work. Consider upgrading to tensorflow >= 2.0.",
         ImportWarning,
