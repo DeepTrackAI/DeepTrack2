@@ -117,7 +117,6 @@ def single_layer_call(
     assert isinstance(norm_kwargs, dict), "norm_kwargs must be a dict. Got {0}".format(
         type(norm_kwargs)
     )
-    y = layer(x)
 
     n = (
         lambda x: as_normalization(normalization)(**norm_kwargs)(x)
@@ -125,9 +124,9 @@ def single_layer_call(
         else x
     )
     a = lambda x: as_activation(activation)(x) if activation else x
-    fs = [a, n] if activation_first else [n, a]
+    fs = [layer, a, n] if activation_first else [layer, n, a]
 
-    return reduce(lambda x, f: f(x), fs, y)
+    return reduce(lambda x, f: f(x), fs, x)
 
 
 def with_citation(citation):
