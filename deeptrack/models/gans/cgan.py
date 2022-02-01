@@ -1,5 +1,5 @@
 import tensorflow as tf
-from .utils import as_KerasModel
+from ..utils import as_KerasModel
 
 layers = tf.keras.layers
 

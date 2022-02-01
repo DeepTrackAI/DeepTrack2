@@ -1,5 +1,5 @@
 import tensorflow as tf
-from .utils import as_KerasModel
+from ..utils import as_KerasModel
 
 layers = tf.keras.layers
 
@@ -18,20 +18,20 @@ class PCGAN(tf.keras.Model):
     discriminator_loss: str or keras loss function
         The loss function of the discriminator network
     discriminator_optimizer: str or keras optimizer
-        The optimizer of the discriminator network 
+        The optimizer of the discriminator network
     discriminator_metrics: list, optional
         List of metrics to be evaluated by the discriminator
-        model during training and testing 
+        model during training and testing
     assemble_loss: list of str or keras loss functions
         List of loss functions to be evaluated on each output
         of the assemble model (stacked generator and discriminator),
         such as `assemble_loss = ["mse", "mse", "mae"]` for
         the prediction of the discriminator, the predicted
-        perceptual features, and the generated image, respectively 
+        perceptual features, and the generated image, respectively
     assemble_optimizer: str or keras optimizer
-        The optimizer of the assemble network 
+        The optimizer of the assemble network
     assemble_loss_weights: list or dict, optional
-        List or dictionary specifying scalar coefficients (floats) 
+        List or dictionary specifying scalar coefficients (floats)
         to weight the loss contributions of the assemble model outputs
     perceptual_discriminator: str or keras model
         Name of the perceptual discriminator. Select the name of this network
@@ -43,8 +43,8 @@ class PCGAN(tf.keras.Model):
         ImageNet weights, or provide the path to the weights file to be loaded.
         Only to be specified if `perceptual_discriminator` is a keras application
         model.
-    metrics: list, optional 
-        List of metrics to be evaluated on the generated images during 
+    metrics: list, optional
+        List of metrics to be evaluated on the generated images during
         training and testing
     """
 
@@ -77,9 +77,7 @@ class PCGAN(tf.keras.Model):
         if isinstance(perceptual_discriminator, str):
             self.perceptual_discriminator = tf.keras.Sequential(
                 [
-                    layers.Lambda(
-                        lambda img: layers.Concatenate(axis=-1)([img] * 3)
-                    ),
+                    layers.Lambda(lambda img: layers.Concatenate(axis=-1)([img] * 3)),
                     getattr(tf.keras.applications, perceptual_discriminator)(
                         include_top=False,
                         weights=perceptual_discriminator_weights,
@@ -93,8 +91,8 @@ class PCGAN(tf.keras.Model):
 
         else:
             raise AttributeError(
-                'Invalid model format. perceptual_discriminator must be either a string '
-                'indicating the name of the pre-trained model, or a keras model.'
+                "Invalid model format. perceptual_discriminator must be either a string "
+                "indicating the name of the pre-trained model, or a keras model."
             )
 
         self.perceptual_discriminator.trainable = False
@@ -164,9 +162,7 @@ class PCGAN(tf.keras.Model):
         with tf.GradientTape() as tape:
             assemble_output = self.assemble(batch_x)
 
-            generated_image_copies = [assemble_output[2]] * (
-                self.num_losses - 1
-            )
+            generated_image_copies = [assemble_output[2]] * (self.num_losses - 1)
 
             batch_y_copies = [batch_y] * (self.num_losses - 1)
 
