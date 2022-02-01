@@ -10,12 +10,13 @@ try:
     import tensorflow_addons as tfa
 
     InstanceNormalization = tfa.layers.InstanceNormalization
+    GELU = layers.Lambda(lambda x: tfa.activations.gelu(x, approximate=False))
 except Exception:
     import warnings
 
-    InstanceNormalization = layers.Layer
+    InstanceNormalization, GELU = (layers.Layer(),) * 2
     warnings.warn(
-        "DeepTrack not installed with tensorflow addons. Instance normalization will not work. Consider upgrading to tensorflow >= 2.0.",
+        "DeepTrack not installed with tensorflow addons. Instance normalization and GELU activation will not work. Consider upgrading to tensorflow >= 2.0.",
         ImportWarning,
     )
 
@@ -90,17 +91,17 @@ def _as_normalization(x):
         return layers.Layer(x)
 
 
-def _single_layer_call(x, layer, activation, normalization, norm_kwargs):
+def single_layer_call(x, layer, activation, normalization, norm_kwargs):
     assert isinstance(norm_kwargs, dict), "norm_kwargs must be a dict. Got {0}".format(
         type(norm_kwargs)
     )
     y = layer(x)
 
-    if normalization:
-        y = _as_normalization(normalization)(**norm_kwargs)(y)
-
     if activation:
         y = _as_activation(activation)(y)
+
+    if normalization:
+        y = _as_normalization(normalization)(**norm_kwargs)(y)
 
     return y
 
@@ -146,7 +147,7 @@ def ConvolutionalBlock(
             strides=strides,
             **kwargs_inner,
         )
-        return lambda x: _single_layer_call(
+        return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
         )
 
@@ -174,7 +175,7 @@ def DenseBlock(activation="relu", normalization=False, norm_kwargs={}, **kwargs)
     def Layer(filters, **kwargs_inner):
         kwargs_inner.update(kwargs)
         layer = layers.Dense(filters, **kwargs_inner)
-        return lambda x: _single_layer_call(
+        return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
         )
 
@@ -218,7 +219,7 @@ def PoolingBlock(
         layer = layers.MaxPool2D(
             pool_size=pool_size, padding=padding, strides=strides, **kwargs_inner
         )
-        return lambda x: _single_layer_call(
+        return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
         )
 
@@ -266,7 +267,7 @@ def DeconvolutionalBlock(
             strides=strides,
             **kwargs_inner,
         )
-        return lambda x: _single_layer_call(
+        return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
         )
 
@@ -319,7 +320,7 @@ def StaticUpsampleBlock(
         def call(x):
             y = layer(x)
             if with_conv:
-                return _single_layer_call(
+                return single_layer_call(
                     y, conv, activation, normalization, norm_kwargs
                 )
             else:
@@ -375,8 +376,8 @@ def ResidualBlock(
         )
 
         def call(x):
-            y = _single_layer_call(x, conv, activation, normalization, norm_kwargs)
-            y = _single_layer_call(y, conv2, None, normalization, norm_kwargs)
+            y = single_layer_call(x, conv, activation, normalization, norm_kwargs)
+            y = single_layer_call(y, conv2, None, normalization, norm_kwargs)
             y = layers.Add()([identity(x), y])
             if activation:
                 y = _as_activation(activation)(y)
@@ -410,7 +411,7 @@ def Identity(activation=None, normalization=False, norm_kwargs={}, **kwargs):
 
     def Layer(filters, **kwargs_inner):
         layer = layers.Layer(**kwargs_inner)
-        return lambda x: _single_layer_call(
+        return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
         )
 
@@ -574,8 +575,8 @@ class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
 def MultiHeadSelfAttentionLayer(
     number_of_heads=12,
     use_bias=True,
-    activation=None,
-    normalization=None,
+    activation=GELU,
+    normalization="LayerNormalization",
     norm_kwargs={},
     **kwargs,
 ):
@@ -597,8 +598,9 @@ def MultiHeadSelfAttentionLayer(
     """
 
     def Layer(filters, **kwargs_inner):
+        kwargs_inner.update(kwargs)
         layer = MultiHeadSelfAttention(number_of_heads, use_bias, **kwargs_inner)
-        return lambda x: _single_layer_call(
+        return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
         )
 
@@ -609,8 +611,8 @@ def MultiHeadSelfAttentionLayer(
 def MultiHeadGatedSelfAttentionLayer(
     number_of_heads=12,
     use_bias=True,
-    activation=None,
-    normalization=None,
+    activation=GELU,
+    normalization="LayerNormalization",
     norm_kwargs={},
     **kwargs,
 ):
@@ -632,8 +634,60 @@ def MultiHeadGatedSelfAttentionLayer(
     """
 
     def Layer(filters, **kwargs_inner):
+        kwargs_inner.update(kwargs)
         layer = MultiHeadGatedSelfAttention(number_of_heads, use_bias, **kwargs_inner)
-        return lambda x: _single_layer_call(
+        return lambda x: single_layer_call(
+            x, layer, activation, normalization, norm_kwargs
+        )
+
+    return Layer
+
+
+class ClassToken(tf.keras.layers.Layer):
+    """ClassToken Layer."""
+
+    def build(self, input_shape):
+        cls_init = tf.zeros_initializer()
+        self.hidden_size = input_shape[-1]
+        self.cls = tf.Variable(
+            name="cls",
+            initial_value=cls_init(shape=(1, 1, self.hidden_size), dtype="float32"),
+            trainable=True,
+        )
+
+    def call(self, inputs):
+        batch_size = tf.shape(inputs)[0]
+        cls_broadcasted = tf.cast(
+            tf.broadcast_to(self.cls, [batch_size, 1, self.hidden_size]),
+            dtype=inputs.dtype,
+        )
+        return tf.concat([cls_broadcasted, inputs], 1)
+
+
+def ClassTokenLayer(activation=None, normalization=None, norm_kwargs={}, **kwargs):
+    """ClassToken Layer that append a class token to the input.
+
+    Can optionally perform instance normalization or some activation function.
+
+    Accepts arguments of keras.layers.Layer.
+
+    Parameters
+    ----------
+
+    activation : str or activation function or layer
+        Activation function of the layer. See keras docs for accepted strings.
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
+    norm_kwargs : dict
+        Arguments for the normalization function.
+    **kwargs
+        Other keras.layers.Layer arguments
+    """
+
+    def Layer(filters, **kwargs_inner):
+        kwargs_inner.update(kwargs)
+        layer = ClassToken(**kwargs_inner)
+        return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
         )
 

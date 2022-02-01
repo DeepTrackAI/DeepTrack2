@@ -6,23 +6,22 @@ import sys
 import unittest
 
 from .. import layers
+import tensorflow as tf
 import tensorflow.keras.layers as k_layers
 import tensorflow.keras.models as k_models
-from ..layers import (
-    InstanceNormalization,
-    MultiHeadSelfAttention,
-    MultiHeadGatedSelfAttention,
-)
 
 import numpy as np
 
 
-def makeMinimalModel(layer, shape) -> k_models.Model:
+def makeMinimalModel(
+    layer, shape=(None, None, 1), input_layer=None, **kwargs
+) -> k_models.Model:
+    if input_layer is None:
+        input_layer = k_layers.Input(shape=shape)
 
-    i = k_layers.Input(shape=shape)
-    o = layer(i)
+    o = layer(input_layer)
 
-    return k_models.Model(i, o)
+    return k_models.Model(input_layer, o)
 
 
 class TestModels(unittest.TestCase):
@@ -99,7 +98,7 @@ class TestModels(unittest.TestCase):
     def test_Multi_Head_Attention(self):
         block = layers.MultiHeadSelfAttentionLayer()
         model = makeMinimalModel(block(1), shape=(100, 96))
-        self.assertTrue(model.layers[1], MultiHeadSelfAttention)
+        self.assertTrue(model.layers[1], layers.MultiHeadSelfAttention)
 
     def test_Multi_Head_Attention_arguments(self):
         block = layers.MultiHeadSelfAttentionLayer(number_of_heads=6)
@@ -119,12 +118,66 @@ class TestModels(unittest.TestCase):
     def test_Multi_Head_Gated_Attention(self):
         block = layers.MultiHeadGatedSelfAttentionLayer()
         model = makeMinimalModel(block(1), shape=(100, 96))
-        self.assertTrue(model.layers[1], MultiHeadGatedSelfAttention)
+        self.assertTrue(model.layers[1], layers.MultiHeadGatedSelfAttention)
 
     def test_Multi_Head_Gated_Attention_filters(self):
         block = layers.MultiHeadGatedSelfAttentionLayer()
         model = makeMinimalModel(block(1), shape=(100, 96))
         self.assertEqual(model.layers[1].filters, 96)
+
+    def test_FGNN_layer(self):
+        layer = layers.FGNNlayer()
+        model = makeMinimalModel(
+            layer(96),
+            input_layer=(
+                k_layers.Input(shape=(None, 96)),
+                k_layers.Input(shape=(None, 10)),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2), dtype=tf.int32),
+            ),
+        )
+        self.assertTrue(model.layers[-1], layers.FGNN)
+
+    def test_Class_Token_FGNN_layer(self):
+        layer = layers.ClassTokenFGNNlayer()
+        model = makeMinimalModel(
+            layer(96),
+            input_layer=(
+                k_layers.Input(shape=(None, 96)),
+                k_layers.Input(shape=(None, 10)),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2), dtype=tf.int32),
+            ),
+        )
+        self.assertTrue(model.layers[-1], layers.ClassTokenFGNN)
+
+    def test_Class_Token_FGNN_message_layer(self):
+        layer = layers.ClassTokenFGNNlayer()
+        model = makeMinimalModel(
+            layer(96),
+            input_layer=(
+                k_layers.Input(shape=(None, 96)),
+                k_layers.Input(shape=(None, 10)),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2), dtype=tf.int32),
+            ),
+        )
+        self.assertTrue(model.layers[-1].message_layer, layers.DenseBlock)
+
+    def test_Class_Token_FGNN_update_layer(self):
+        layer = layers.ClassTokenFGNNlayer(
+            update_layer=layers.MultiHeadSelfAttentionLayer()
+        )
+        model = makeMinimalModel(
+            layer(96),
+            input_layer=(
+                k_layers.Input(shape=(None, 96)),
+                k_layers.Input(shape=(None, 10)),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2), dtype=tf.int32),
+            ),
+        )
+        self.assertTrue(model.layers[-1].message_layer, layers.MultiHeadSelfAttention)
 
 
 if __name__ == "__main__":
