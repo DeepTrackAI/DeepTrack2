@@ -11,9 +11,12 @@ on:
 
 jobs:
   build:
-
+  
+    strategy:
+      matrix:
+        tfa: [true, false]
+        
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
@@ -25,6 +28,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest numpy
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+    - name: Conditionally install tfa
+      if: ${{ matrix.tfa }}
+      run: |
+        pup install tensorflow-addons
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
