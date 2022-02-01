@@ -5,8 +5,6 @@ import sys
 
 import unittest
 
-from deeptrack.models.layers import DenseBlock
-
 from .. import layers
 import tensorflow as tf
 import tensorflow.keras.layers as k_layers
