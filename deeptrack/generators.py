@@ -364,7 +364,11 @@ class ContinuousGenerator(keras.utils.Sequence):
 
             if index % self.max_data_size == 0:
 
-                while not self.new_epoch and not self.exit_signal:
+                while (
+                    len(self.data) > self.min_data_size
+                    and not self.new_epoch
+                    and not self.exit_signal
+                ):
                     time.sleep(0.1)
 
             self.new_epoch = False
