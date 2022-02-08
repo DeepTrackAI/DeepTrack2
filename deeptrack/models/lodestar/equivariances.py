@@ -1,4 +1,4 @@
-""" User defined equivariances for training autotrackers.
+""" User defined equivariances for training LodeSTAR.
 
 Example:
     action = Multiply(value=np.random.uniform(0.5, 1.5))

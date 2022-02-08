@@ -1,5 +1,5 @@
 from os import stat
-from .generators import AutoTrackGenerator
+from .generators import LodeSTARGenerator
 from ..utils import KerasModel
 from ...augmentations import Affine
 import tensorflow as tf
@@ -11,7 +11,7 @@ import scipy.ndimage
 import scipy
 
 
-class AutoTrackerBaseModel(tf.keras.Model):
+class LodeSTARBaseModel(tf.keras.Model):
     """Base wrapper for self-reinforced tracking models
 
     Learns to solve problems of the form::
@@ -172,7 +172,7 @@ class AutoTrackerBaseModel(tf.keras.Model):
         return pred, weights
 
 
-class AutoTracker(KerasModel):
+class LodeSTAR(KerasModel):
     """Model that automatically learns to track a single object.
 
     For best results, keep the size of the images small (40-70 px).
@@ -188,16 +188,8 @@ class AutoTracker(KerasModel):
        Keras arguments used to compile the model
     """
 
-    data_generator = AutoTrackGenerator
-
-    class AutoTrackerModel(AutoTrackerBaseModel):
-        def call(self, x, training=False):
-            pred, weights = super().call(x, training=training)
-            if not training:
-                weights = self.softmax(weights)
-                pred = self.global_pool(pred, weights)
-                return pred
-            return pred, weights
+    data_generator = LodeSTARGenerator
+    LodeSTARModel = LodeSTARBaseModel
 
     def __init__(
         self,
@@ -216,7 +208,7 @@ class AutoTracker(KerasModel):
         if isinstance(model, KerasModel):
             model = model.model
 
-        model = self.AutoTrackerModel(model, feature_weights=feature_weights)
+        model = self.LodeSTARModel(model, feature_weights=feature_weights)
 
         super().__init__(model, loss=loss, **kwargs)
 
@@ -239,7 +231,6 @@ class AutoTracker(KerasModel):
         )
         model.add(
             tf.keras.layers.Conv2D(
-
                 64,
                 3,
                 padding="same",
@@ -400,28 +391,12 @@ class AutoTracker(KerasModel):
         return np.array(detections)
 
 
-class AutoMultiTracker(AutoTracker):
-    """Model that automatically learns to track a multiple objects.
-
-    During training, expects ROIs of single objects. For best results, keep the size of
-    the ROIs small (40-70 px).
-
-    Parameters
-    ----------
-    model : Tensorflow model, optional
-       A model that returns a (N, N, 2) array. If not defined,
-       a default model is used instead.
-    loss, optimizer : compilation arguments
-       Keras arguments used to compile the model
-    """
-
-    AutoTrackerModel = AutoTrackerBaseModel
-
 import scipy
 from skimage import morphology
 
+
 def local_consistency(pred):
-    kernel = np.ones((3, 3, 1)) / 3**2
+    kernel = np.ones((3, 3, 1)) / 3 ** 2
 
     pred_local_squared = scipy.signal.convolve(pred, kernel, "same") ** 2
     squared_pred_local = scipy.signal.convolve(pred ** 2, kernel, "same")
@@ -447,7 +422,7 @@ def find_local_maxima(pred, score, cutoff=0.9, mode="quantile"):
 
     hmax = morphology.h_maxima(np.squeeze(score), th) == 1
 
-    hmax = np.pad(hmax, ((3,3), (3,3)))
+    hmax = np.pad(hmax, ((3, 3), (3, 3)))
     detections = pred[hmax, :]
     return np.array(detections)
 

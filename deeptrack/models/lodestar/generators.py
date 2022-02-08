@@ -21,8 +21,8 @@ DEFAULT_EQUIVARIANCE = Rotational2DEquivariance(b.rotate) >> TranslationalEquiva
 )
 
 
-class AutoTrackGenerator(ContinuousGenerator):
-    """Data generator for use with an AutoTracker.
+class LodeSTARGenerator(ContinuousGenerator):
+    """Data generator for use with an LodeSTARer.
 
     Parameters
     ----------
