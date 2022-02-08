@@ -22,6 +22,7 @@ Duplicate
 
 import itertools
 import operator
+from re import I
 from typing import Any, Callable, Iterable, Iterator, List
 import warnings
 
@@ -1414,7 +1415,7 @@ class LoadImage(Feature):
         path: PropertyLike[str or List[str]],
         load_options: PropertyLike[dict] = None,
         as_list: PropertyLike[bool] = False,
-        ndim: PropertyLike[int] = None,
+        ndim: PropertyLike[int] = 2,
         to_grayscale: PropertyLike[bool] = False,
         get_one_random: PropertyLike[bool] = False,
         **kwargs
@@ -1440,10 +1441,13 @@ class LoadImage(Feature):
         get_one_random,
         **kwargs
     ):
-        if not isinstance(path, List):
+
+        path_is_list = isinstance(path, list)
+        if not path_is_list:
             path = [path]
         if load_options is None:
             load_options = {}
+
         try:
             image = [np.load(file, **load_options) for file in path]
         except (IOError, ValueError):
@@ -1465,7 +1469,10 @@ class LoadImage(Feature):
                             "No filereader available for file {0}".format(path)
                         )
 
-        image = np.stack(image, axis=-1)
+        if path_is_list:
+            image = np.stack(image, axis=-1)
+        else:
+            image = image[0]
 
         if to_grayscale:
             try:
