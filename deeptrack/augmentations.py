@@ -131,15 +131,21 @@ class Reuse(Feature):
             output = self.feature(image)
             self.cache.append(output)
         else:
-            output = Image(random.choice(self.cache))
+            output = random.choice(self.cache)
 
         self.counter += 1
 
-        output = Image(output)
-        # shallow copy properties before output
-        output.properties = [prop.copy() for prop in output.properties]
+        if not isinstance(output, list):
+            output = [output]
 
-        return output
+        outputs = []
+        for image in output:
+            image_copy = Image(image)
+            # shallow copy properties before output
+            image_copy.properties = [prop.copy() for prop in image.properties]
+            outputs.append(image_copy)
+
+        return outputs
 
 
 class FlipLR(Augmentation):
