@@ -12,7 +12,6 @@ Poisson
     Adds Poisson-distributed noise to an image.
 """
 
-from multiprocessing.sharedctypes import Value
 import numpy as np
 
 from .features import Feature
