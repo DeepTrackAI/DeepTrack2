@@ -1,5 +1,5 @@
 import tensorflow as tf
-from .utils import as_KerasModel
+from ..utils import as_KerasModel
 
 layers = tf.keras.layers
 
@@ -50,7 +50,7 @@ class CGAN(tf.keras.Model):
         metrics=[],
         **kwargs
     ):
-        super(CGAN).__init__()
+        super().__init__()
 
         # Build and compile the discriminator
         self.discriminator = discriminator

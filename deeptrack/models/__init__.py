@@ -4,7 +4,7 @@ from .dense import *
 from .recurrent import *
 from .layers import *
 from .autotracking import *
-
+from .gans import *
 
 # from .mrcnn import *
 # from .yolov1 import *
