@@ -22,7 +22,6 @@ Duplicate
 
 import itertools
 import operator
-from re import I
 from typing import Any, Callable, Iterable, Iterator, List
 import warnings
 
