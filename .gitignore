@@ -15,3 +15,6 @@ ParticleSizing
 3DTracking
 CellData
 ParticleTracking
+data/
+datasets/
+models/
