@@ -20,6 +20,7 @@ FlipDiagonal
 """
 
 import warnings
+import random
 from typing import Callable
 
 import numpy as np
@@ -107,6 +108,46 @@ class Augmentation(Feature):
         pass
 
 
+class Reuse(Feature):
+    """"""
+
+    __distributed__ = False
+
+    def __init__(self, feature, uses=2, storage=1, **kwargs):
+
+        super().__init__(uses=uses, storage=storage, **kwargs)
+
+        self.feature = self.add_feature(feature)
+        self.counter = 0
+        self.cache = []
+
+    def get(self, image, uses, storage, **kwargs):
+
+        self.cache = self.cache[-storage:]
+
+        output = None
+
+        if len(self.cache) < storage or self.counter % (uses * storage) == 0:
+            output = self.feature(image)
+            self.cache.append(output)
+        else:
+            output = random.choice(self.cache)
+
+        self.counter += 1
+
+        if not isinstance(output, list):
+            output = [output]
+
+        outputs = []
+        for image in output:
+            image_copy = Image(image)
+            # shallow copy properties before output
+            image_copy.properties = [prop.copy() for prop in image.properties]
+            outputs.append(image_copy)
+
+        return outputs
+
+
 class FlipLR(Augmentation):
     """Flips images left-right.
 
@@ -132,7 +173,7 @@ class FlipLR(Augmentation):
 
     def get(self, image, augment, **kwargs):
         if augment:
-            image = np.fliplr(image)
+            image = image[:, ::-1]
         return image
 
     def update_properties(self, image, augment, **kwargs):
@@ -140,7 +181,7 @@ class FlipLR(Augmentation):
             for prop in image.properties:
                 if "position" in prop:
                     position = np.array(prop["position"])
-                    position[..., 1] = image.shape[1] - position[..., 1]
+                    position[..., 1] = image.shape[1] - position[..., 1] - 1
                     prop["position"] = position
 
 
@@ -169,7 +210,7 @@ class FlipUD(Augmentation):
 
     def get(self, image, augment, **kwargs):
         if augment:
-            image = np.flipud(image)
+            image = image[::-1]
         return image
 
     def update_properties(self, image, augment, **kwargs):
@@ -177,7 +218,7 @@ class FlipUD(Augmentation):
             for prop in image.properties:
                 if "position" in prop:
                     position = np.array(prop["position"])
-                    position[..., 0] = image.shape[0] - position[..., 0]
+                    position[..., 0] = image.shape[0] - position[..., 0] - 1
                     prop["position"] = position
 
 

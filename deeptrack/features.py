@@ -631,6 +631,11 @@ class Value(Feature):
     __distributed__ = False
 
     def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+
+        if isinstance(value, Image):
+            warnings.warn(
+                "Setting dt.Value value as a Image object is likely to lead to performance deterioation. Consider converting it to a numpy array using np.array"
+            )
         super().__init__(value=value, **kwargs)
 
     def get(self, image, value, **kwargs):
@@ -1414,7 +1419,7 @@ class LoadImage(Feature):
         path: PropertyLike[str or List[str]],
         load_options: PropertyLike[dict] = None,
         as_list: PropertyLike[bool] = False,
-        ndim: PropertyLike[int] = None,
+        ndim: PropertyLike[int] = 3,
         to_grayscale: PropertyLike[bool] = False,
         get_one_random: PropertyLike[bool] = False,
         **kwargs
@@ -1440,10 +1445,13 @@ class LoadImage(Feature):
         get_one_random,
         **kwargs
     ):
-        if not isinstance(path, List):
+
+        path_is_list = isinstance(path, list)
+        if not path_is_list:
             path = [path]
         if load_options is None:
             load_options = {}
+
         try:
             image = [np.load(file, **load_options) for file in path]
         except (IOError, ValueError):
@@ -1465,7 +1473,15 @@ class LoadImage(Feature):
                             "No filereader available for file {0}".format(path)
                         )
 
-        image = np.stack(image, axis=-1)
+        if as_list:
+            if get_one_random:
+                image = image[np.random.randint(len(image))]
+            else:
+                image = list(image)
+        elif path_is_list:
+            image = np.stack(image, axis=-1)
+        else:
+            image = image[0]
 
         if to_grayscale:
             try:
@@ -1477,14 +1493,8 @@ class LoadImage(Feature):
 
                 warnings.warn("Non-rgb image, ignoring to_grayscale")
 
-        if ndim and image.ndim < ndim:
+        while ndim and image.ndim < ndim:
             image = np.expand_dims(image, axis=-1)
-
-        elif as_list:
-            if get_one_random:
-                image = image[np.random.randint(len(image))]
-            else:
-                image = list(image)
 
         return image
 
