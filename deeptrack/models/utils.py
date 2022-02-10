@@ -145,7 +145,7 @@ class KerasModel(Model):
                 }
             )
             with generator:
-                h = self.model.fit(generator, *args, batch_size=batch_size, **kwargs)
+                h = self.model.fit(generator, *args, **kwargs)
                 return h
             return None
 

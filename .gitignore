@@ -17,4 +17,4 @@ CellData
 ParticleTracking
 data/
 datasets/
-models/
+examples/**/*/models/
