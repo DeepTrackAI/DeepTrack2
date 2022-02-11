@@ -2,11 +2,14 @@
 """
 
 
+from typing_extensions import Self
 from warnings import WarningMessage
 from tensorflow.keras import layers
 import tensorflow as tf
 
-from .utils import single_layer_call, as_activation
+from .utils import single_layer_call, as_activation, as_normalization, GELU
+
+from functools import reduce
 
 import warnings
 
@@ -332,7 +335,7 @@ def ResidualBlock(
 def Identity(activation=None, normalization=False, norm_kwargs={}, **kwargs):
     """Identity layer that returns the input tensor.
 
-    Can optionally perform instance normalization or some activation function.
+    Can optionally perform normalization or some activation function.
 
     Accepts arguments of keras.layers.Layer.
 
@@ -364,14 +367,25 @@ class MultiHeadSelfAttention(layers.Layer):
     ----------
     number_of_heads : int
         Number of attention heads.
+    use_bias : bool
+        Whether to use bias in attention layer.
+    return_attention_weights : bool
+        Whether to return the attention weights for visualization.
     kwargs
         Other arguments for the keras.layers.Layer
     """
 
-    def __init__(self, number_of_heads=12, use_bias=True, **kwargs):
+    def __init__(
+        self,
+        number_of_heads=12,
+        use_bias=True,
+        return_attention_weights=False,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.number_of_heads = number_of_heads
         self.use_bias = use_bias
+        self.return_attention_weights = return_attention_weights
 
     def build(self, input_shape):
         try:
@@ -466,12 +480,15 @@ class MultiHeadSelfAttention(layers.Layer):
         x : tuple of tf.Tensors
             Input tensors.
         """
-        (attention, _), batch_size = self.compute_attention(x, **kwargs)
+        (attention, weights), batch_size = self.compute_attention(x, **kwargs)
         attention = tf.transpose(attention, perm=[0, 2, 1, 3])
         concat_attention = tf.reshape(attention, (batch_size, -1, self.filters))
         output = self.combine_dense(concat_attention)
 
-        return output
+        if self.return_attention_weights:
+            return output, weights
+        else:
+            return output
 
 
 class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
@@ -515,18 +532,26 @@ class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
 def MultiHeadSelfAttentionLayer(
     number_of_heads=12,
     use_bias=True,
+    return_attention_weights=False,
     activation="relu",
     normalization="LayerNormalization",
     norm_kwargs={},
     **kwargs,
 ):
     """Multi-head self-attention layer.
+
+    Can optionally perform normalization or some activation function.
+
+    Accepts arguments of keras.layers.Layer.
+
     Parameters
     ----------
     number_of_heads : int
         Number of attention heads.
     use_bias : bool
         Whether to use bias in the dense layers.
+    return_attention_weights : bool
+        Whether to return attention weights for visualization.
     activation : str or activation function or layer
         Activation function of the layer. See keras docs for accepted strings.
     normalization : str or normalization function or layer
@@ -539,7 +564,9 @@ def MultiHeadSelfAttentionLayer(
 
     def Layer(filters, **kwargs_inner):
         kwargs_inner.update(kwargs)
-        layer = MultiHeadSelfAttention(number_of_heads, use_bias, **kwargs_inner)
+        layer = MultiHeadSelfAttention(
+            number_of_heads, use_bias, return_attention_weights, **kwargs_inner
+        )
         return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
         )
@@ -551,18 +578,26 @@ def MultiHeadSelfAttentionLayer(
 def MultiHeadGatedSelfAttentionLayer(
     number_of_heads=12,
     use_bias=True,
+    return_attention_weights=False,
     activation="relu",
     normalization="LayerNormalization",
     norm_kwargs={},
     **kwargs,
 ):
     """Multi-head gated self-attention layer.
+
+    Can optionally perform normalization or some activation function.
+
+    Accepts arguments of keras.layers.Layer.
+
     Parameters
     ----------
     number_of_heads : int
         Number of attention heads.
     use_bias : bool
         Whether to use bias in the dense layers.
+    return_attention_weights : bool
+        Whether to return attention weights for visualization.
     activation : str or activation function or layer
         Activation function of the layer. See keras docs for accepted strings.
     normalization : str or normalization function or layer
@@ -575,7 +610,9 @@ def MultiHeadGatedSelfAttentionLayer(
 
     def Layer(filters, **kwargs_inner):
         kwargs_inner.update(kwargs)
-        layer = MultiHeadGatedSelfAttention(number_of_heads, use_bias, **kwargs_inner)
+        layer = MultiHeadGatedSelfAttention(
+            number_of_heads, use_bias, return_attention_weights, **kwargs_inner
+        )
         return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
         )
@@ -583,52 +620,137 @@ def MultiHeadGatedSelfAttentionLayer(
     return Layer
 
 
-class ClassToken(tf.keras.layers.Layer):
-    """ClassToken Layer."""
-
-    def build(self, input_shape):
-        cls_init = tf.zeros_initializer()
-        self.hidden_size = input_shape[-1]
-        self.cls = tf.Variable(
-            name="cls",
-            initial_value=cls_init(shape=(1, 1, self.hidden_size), dtype="float32"),
-            trainable=True,
-        )
-
-    def call(self, inputs):
-        batch_size = tf.shape(inputs)[0]
-        cls_broadcasted = tf.cast(
-            tf.broadcast_to(self.cls, [batch_size, 1, self.hidden_size]),
-            dtype=inputs.dtype,
-        )
-        return tf.concat([cls_broadcasted, inputs], 1)
-
-
-def ClassTokenLayer(activation=None, normalization=None, norm_kwargs={}, **kwargs):
-    """ClassToken Layer that append a class token to the input.
-
-    Can optionally perform instance normalization or some activation function.
-
-    Accepts arguments of keras.layers.Layer.
-
+class TransformerEncoder(tf.keras.layers.Layer):
+    """Transformer Encoder.
     Parameters
     ----------
-
+    fwd_mlp_dim : int
+        Dimension of the forward MLP.
+    number_of_heads : int
+        Number of attention heads.
+    dropout : float
+        Dropout rate.
     activation : str or activation function or layer
         Activation function of the layer. See keras docs for accepted strings.
     normalization : str or normalization function or layer
         Normalization function of the layer. See keras and tfa docs for accepted strings.
+    use_gates : bool, optional
+        Whether to use gated self-attention layers as update layer. Defaults to False.
+    use_bias: bool, optional
+        Whether to use bias in the dense layers of the attention layers. Defaults to False.
     norm_kwargs : dict
         Arguments for the normalization function.
-    **kwargs
-        Other keras.layers.Layer arguments
+    kwargs : dict
+        Additional arguments.
+    """
+
+    def __init__(
+        self,
+        fwd_mlp_dim,
+        number_of_heads=12,
+        dropout=0.0,
+        activation=GELU,
+        normalization="LayerNormalization",
+        use_gates=False,
+        use_bias=False,
+        norm_kwargs={},
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.number_of_heads = number_of_heads
+        self.use_bias = use_bias
+        self.use_gates = use_gates
+
+        self.fwd_mlp_dim = fwd_mlp_dim
+        self.dropout = dropout
+
+        self.activation = activation
+
+        self.normalization = normalization
+
+        self.MultiHeadAttLayer = (
+            MultiHeadGatedSelfAttention if self.use_gates else MultiHeadSelfAttention
+        )(
+            number_of_heads=self.number_of_heads,
+            use_bias=self.use_bias,
+            return_attention_weights=True,
+            name="MultiHeadAttLayer",
+        )
+        self.norm_0, self.norm_1 = (
+            as_normalization(normalization)(**norm_kwargs),
+            as_normalization(normalization)(**norm_kwargs),
+        )
+        self.dropout_layer = tf.keras.layers.Dropout(self.dropout)
+
+    def build(self, input_shape):
+        self.feed_forward_layer = tf.keras.Sequential(
+            [
+                layers.Dense(
+                    self.fwd_mlp_dim,
+                    name=f"{self.name}/Dense_0",
+                ),
+                as_activation(self.activation),
+                layers.Dropout(self.dropout),
+                layers.Dense(input_shape[-1], name=f"{self.name}/Dense_1"),
+                layers.Dropout(self.dropout),
+            ],
+            name="feed_forward",
+        )
+
+    def call(self, inputs, training):
+        x, weights = self.MultiHeadAttLayer(inputs)
+        x = self.dropout_layer(x, training=training)
+        x = self.norm_0(inputs + x)
+
+        y = self.feed_forward_layer(x)
+        return self.norm_1(x + y), weights
+
+
+@register("TransformerEncoder")
+def TransformerEncoderLayer(
+    number_of_heads=12,
+    dropout=0.0,
+    activation=GELU,
+    normalization="LayerNormalization",
+    use_gates=False,
+    use_bias=False,
+    norm_kwargs={},
+    **kwargs,
+):
+    """Transformer Encoder Layer.
+    Parameters
+    ----------
+    number_of_heads : int
+        Number of attention heads.
+    dropout : float
+        Dropout rate.
+    activation : str or activation function or layer
+        Activation function of the layer. See keras docs for accepted strings.
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
+    use_gates : bool, optional
+        Whether to use gated self-attention layers as update layer. Defaults to False.
+    use_bias: bool, optional
+        Whether to use bias in the dense layers of the attention layers. Defaults to True.
+    norm_kwargs : dict
+        Arguments for the normalization function.
+    kwargs : dict
+        Additional arguments.
     """
 
     def Layer(filters, **kwargs_inner):
         kwargs_inner.update(kwargs)
-        layer = ClassToken(**kwargs_inner)
-        return lambda x: single_layer_call(
-            x, layer, activation, normalization, norm_kwargs
+        layer = TransformerEncoder(
+            filters,
+            number_of_heads,
+            dropout,
+            activation,
+            normalization,
+            use_gates,
+            use_bias,
+            norm_kwargs,
+            **kwargs,
         )
+        return lambda x: single_layer_call(x, layer, None, None, {})
 
     return Layer
