@@ -403,6 +403,7 @@ class MultiHeadSelfAttention(layers.Layer):
         self.query_dense = layers.Dense(filters, use_bias=self.use_bias)
         self.key_dense = layers.Dense(filters, use_bias=self.use_bias)
         self.value_dense = layers.Dense(filters, use_bias=self.use_bias)
+
         self.combine_dense = layers.Dense(filters, use_bias=self.use_bias)
 
     def SingleAttention(self, query, key, value, gate=None, **kwargs):
@@ -493,10 +494,29 @@ class MultiHeadSelfAttention(layers.Layer):
 
 class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
     def build(self, input_shape):
-        super().build(input_shape)
-        self.gate_dense = layers.Dense(self.filters, activation="sigmoid")
+        """
+        Build the layer.
+        """
+        try:
+            filters = input_shape[1][-1]
+        except TypeError:
+            filters = input_shape[-1]
 
-    def compute_gated_attention(self, x, **kwargs):
+        if filters % self.number_of_heads != 0:
+            raise ValueError(
+                f"embedding dimension = {filters} should be divisible by number of heads = {self.number_of_heads}"
+            )
+        self.filters = filters
+        self.projection_dim = filters // self.number_of_heads
+
+        self.query_dense = layers.Dense(filters)
+        self.key_dense = layers.Dense(filters)
+        self.value_dense = layers.Dense(filters)
+        self.gate_dense = layers.Dense(filters, activation="sigmoid")
+
+        self.combine_dense = layers.Dense(filters)
+
+    def compute_attention(self, x, **kwargs):
         """
         Compute attention.
         Parameters
