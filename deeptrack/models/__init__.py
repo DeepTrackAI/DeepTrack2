@@ -4,6 +4,7 @@ from .dense import *
 from .recurrent import *
 from .layers import *
 from .autotracking import *
+from .gnns import *
 
 
 # from .mrcnn import *
