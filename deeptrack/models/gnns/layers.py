@@ -157,7 +157,7 @@ class FGNN(tf.keras.layers.Layer):
         return (updated_nodes, weighted_messages, distance, edges)
 
 
-@register("FGnn")
+@register("FGNN")
 def FGNNlayer(
     activation=GELU,
     normalization="LayerNormalization",
@@ -319,6 +319,7 @@ class ClassTokenFGNN(FGNN):
         return (updated_nodes, weighted_messages, distance, edges)
 
 
+@register("CTFGNN")
 def ClassTokenFGNNlayer(
     activation=GELU,
     normalization="LayerNormalization",
