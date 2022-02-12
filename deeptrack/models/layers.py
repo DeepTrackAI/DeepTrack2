@@ -427,7 +427,7 @@ class MultiHeadSelfAttention(layers.Layer):
         weights = tf.nn.softmax(scaled_score, axis=-1)
         output = tf.matmul(weights, value)
 
-        if gate:
+        if gate is not None:
             output = tf.math.multiply(output, gate)
 
         return output, weights
