@@ -1,9 +1,8 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from ..layers import *
-
-GraphDenseBlock = DenseBlock(activation=GELU, normalization="LayerNormalization")
+from ..layers import MultiHeadGatedSelfAttention, MultiHeadSelfAttention, register
+from ..utils import as_activation, as_normalization, single_layer_call, GELU
 
 
 class FGNN(tf.keras.layers.Layer):
@@ -13,12 +12,18 @@ class FGNN(tf.keras.layers.Layer):
     ----------
     filters : int
         Number of filters.
-    message_layer : str or callable
-        Message layer.
-    update_layer : str or callable
-        Update layer.
+    activation : str or activation function or layer
+        Activation function of the layer. See keras docs for accepted strings.
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
     random_edge_dropout : float, optional
         Random edge dropout.
+    use_gates : bool, optional
+        Whether to use gated self-attention layers as update layer. Defaults to True.
+    att_layer_kwargs : dict, optional
+        Keyword arguments for the self-attention layer.
+    norm_kwargs : dict
+        Arguments for the normalization function.
     kwargs : dict
         Additional arguments.
     """
@@ -26,17 +31,37 @@ class FGNN(tf.keras.layers.Layer):
     def __init__(
         self,
         filters,
-        message_layer=GraphDenseBlock,
-        update_layer="MultiHeadGatedSelfAttention",
+        activation=GELU,
+        normalization="LayerNormalization",
         random_edge_dropout=False,
+        use_gates=True,
+        att_layer_kwargs={},
+        norm_kwargs={},
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.filters = filters
         self.random_edge_dropout = random_edge_dropout
 
-        self.message_layer = as_block(message_layer)(filters)
-        self.update_layer = as_block(update_layer)(None)
+        # self.message_layer = as_block(message_layer)(filters)
+        self.message_layer = tf.keras.Sequential(
+            [
+                layers.Dense(self.filters),
+                as_activation(activation),
+                as_normalization(normalization)(**norm_kwargs),
+            ]
+        )
+
+        _multi_head_att_layer = (
+            MultiHeadGatedSelfAttention if use_gates else MultiHeadSelfAttention
+        )
+        self.update_layer = tf.keras.Sequential(
+            [
+                _multi_head_att_layer(**att_layer_kwargs),
+                as_activation(activation),
+                as_normalization(normalization)(**norm_kwargs),
+            ]
+        )
 
     def build(self, input_shape):
         self.sigma = tf.Variable(
@@ -132,31 +157,31 @@ class FGNN(tf.keras.layers.Layer):
         return (updated_nodes, weighted_messages, distance, edges)
 
 
-@register("FGnn")
+@register("FGNN")
 def FGNNlayer(
-    message_layer=GraphDenseBlock,
-    update_layer="MultiHeadGatedSelfAttention",
+    activation=GELU,
+    normalization="LayerNormalization",
     random_edge_dropout=False,
-    activation=None,
-    normalization=None,
+    use_gates=True,
+    att_layer_kwargs={},
     norm_kwargs={},
     **kwargs,
 ):
     """Fingerprinting Graph Layer.
     Parameters
     ----------
-    number_of_heads : int
-        Number of attention heads.
-    message_layer : str or callable
-        Message layer.
-    update_layer : str or callable
-        Update layer.
-    random_edge_dropout : float, optional
-        Random edge dropout.
+    filters : int
+        Number of filters.
     activation : str or activation function or layer
         Activation function of the layer. See keras docs for accepted strings.
     normalization : str or normalization function or layer
         Normalization function of the layer. See keras and tfa docs for accepted strings.
+    random_edge_dropout : float, optional
+        Random edge dropout.
+    use_gates : bool, optional
+        Whether to use gated self-attention layers as update layer. Defaults to True.
+    att_layer_kwargs : dict, optional
+        Keyword arguments for the self-attention layer.
     norm_kwargs : dict
         Arguments for the normalization function.
     kwargs : dict
@@ -167,14 +192,15 @@ def FGNNlayer(
         kwargs_inner.update(kwargs)
         layer = FGNN(
             filters,
-            message_layer,
-            update_layer,
+            activation,
+            normalization,
             random_edge_dropout,
+            use_gates,
+            att_layer_kwargs,
+            norm_kwargs,
             **kwargs_inner,
         )
-        return lambda x: single_layer_call(
-            x, layer, activation, normalization, norm_kwargs
-        )
+        return lambda x: single_layer_call(x, layer, None, None, {})
 
     return Layer
 
@@ -186,24 +212,30 @@ class ClassTokenFGNN(FGNN):
     ----------
     filters : int
         Number of filters.
-    message_layer : str or callable
-        Message layer.
-    update_layer : str or callable
-        Update layer.
+    activation : str or activation function or layer
+        Activation function of the layer. See keras docs for accepted strings.
+    normalization : str or normalization function or layer
+        Normalization function of the layer. See keras and tfa docs for accepted strings.
     random_edge_dropout : float, optional
         Random edge dropout.
+    use_gates : bool, optional
+        Whether to use gated self-attention layers as update layer. Defaults to True.
+    att_layer_kwargs : dict, optional
+        Keyword arguments for the self-attention layer.
+    norm_kwargs : dict
+        Arguments for the normalization function.
     kwargs : dict
         Additional arguments.
     """
 
     def build(self, input_shape):
+        super().build(input_shape)
         self.combine_layer = tf.keras.Sequential(
             [
                 tf.keras.layers.Lambda(lambda x: tf.concat(x, axis=-1)),
                 layers.Dense(self.filters),
             ]
         )
-        super().build(input_shape)
 
     def call(self, inputs):
         nodes, edge_features, distance, edges = inputs
@@ -287,12 +319,13 @@ class ClassTokenFGNN(FGNN):
         return (updated_nodes, weighted_messages, distance, edges)
 
 
+@register("CTFGNN")
 def ClassTokenFGNNlayer(
-    message_layer=GraphDenseBlock,
-    update_layer="MultiHeadGatedSelfAttention",
+    activation=GELU,
+    normalization="LayerNormalization",
     random_edge_dropout=False,
-    activation=None,
-    normalization=None,
+    use_gates=True,
+    att_layer_kwargs={},
     norm_kwargs={},
     **kwargs,
 ):
@@ -321,13 +354,14 @@ def ClassTokenFGNNlayer(
         kwargs_inner.update(kwargs)
         layer = ClassTokenFGNN(
             filters,
-            message_layer,
-            update_layer,
+            activation,
+            normalization,
             random_edge_dropout,
+            use_gates,
+            att_layer_kwargs,
+            norm_kwargs,
             **kwargs_inner,
         )
-        return lambda x: single_layer_call(
-            x, layer, activation, normalization, norm_kwargs
-        )
+        return lambda x: single_layer_call(x, layer, None, None, {})
 
     return Layer

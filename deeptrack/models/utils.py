@@ -1,4 +1,4 @@
-from functools import wraps
+from functools import wraps, reduce
 
 import numpy as np
 from tensorflow.keras import layers, models
@@ -6,7 +6,37 @@ from tensorflow.keras import layers, models
 from .. import features
 from ..generators import ContinuousGenerator
 
-__all__ = ["compile", "load_model", "Model", "KerasModel", "LoadModel"]
+
+try:
+    import tensorflow_addons as tfa
+
+    InstanceNormalization = tfa.layers.InstanceNormalization
+    GELU = layers.Lambda(lambda x: tfa.activations.gelu(x, approximate=False))
+except Exception:
+    import warnings
+
+    InstanceNormalization, GELU = (layers.Layer(),) * 2
+    warnings.warn(
+        "DeepTrack not installed with tensorflow addons. Instance normalization and GELU activation will not work. Consider upgrading to tensorflow >= 2.0.",
+        ImportWarning,
+    )
+
+import pkg_resources
+
+installed_pkg = [pkg.key for pkg in pkg_resources.working_set]
+
+__all__ = [
+    "compile",
+    "load_model",
+    "Model",
+    "KerasModel",
+    "LoadModel",
+    "single_layer_call",
+    "as_activation",
+    "as_normalization",
+    "GELU",
+    "InstanceNormalization",
+]
 
 
 def compile(model: models.Model, *, loss="mae", optimizer="adam", metrics=[], **kwargs):
@@ -48,6 +78,55 @@ def LoadModel(path, compile_from_file=False, custom_objects={}, **kwargs):
 
 
 load_model = LoadModel
+
+
+def as_activation(x):
+    if x is None:
+        return layers.Layer()
+    elif isinstance(x, str):
+        return layers.Activation(x)
+    elif isinstance(x, layers.Layer):
+        return x
+    else:
+        return layers.Layer(x)
+
+
+def _get_norm_by_name(x):
+    if hasattr(layers, x):
+        return getattr(layers, x)
+    elif "tensorflow-addons" in installed_pkg and hasattr(tfa.layers, x):
+        return getattr(tfa.layers, x)
+    else:
+        raise ValueError(f"Unknown normalization {x}.")
+
+
+def as_normalization(x):
+    if x is None:
+        return layers.Layer()
+    elif isinstance(x, str):
+        return _get_norm_by_name(x)
+    elif isinstance(x, layers.Layer) or callable(x):
+        return x
+    else:
+        return layers.Layer(x)
+
+
+def single_layer_call(
+    x, layer, activation, normalization, norm_kwargs, activation_first=True
+):
+    assert isinstance(norm_kwargs, dict), "norm_kwargs must be a dict. Got {0}".format(
+        type(norm_kwargs)
+    )
+
+    n = (
+        lambda x: as_normalization(normalization)(**norm_kwargs)(x)
+        if normalization
+        else x
+    )
+    a = lambda x: as_activation(activation)(x) if activation else x
+    fs = [layer, a, n] if activation_first else [layer, n, a]
+
+    return reduce(lambda x, f: f(x), fs, x)
 
 
 def with_citation(citation):
@@ -117,7 +196,7 @@ class KerasModel(Model):
         metrics=[],
         compile=True,
         add_batch_dimension_on_resolve=True,
-        **kwargs
+        **kwargs,
     ):
 
         if compile:
@@ -127,7 +206,7 @@ class KerasModel(Model):
             model,
             add_batch_dimension_on_resolve=add_batch_dimension_on_resolve,
             metrics=metrics,
-            **kwargs
+            **kwargs,
         )
 
     @wraps(models.Model.fit)
@@ -142,7 +221,7 @@ class KerasModel(Model):
                         "max_data_size": batch_size * 50,
                     },
                     **generator_kwargs,
-                }
+                },
             )
             with generator:
                 h = self.model.fit(generator, *args, **kwargs)
