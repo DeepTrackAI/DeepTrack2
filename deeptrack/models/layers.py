@@ -2,7 +2,6 @@
 """
 
 
-from typing_extensions import Self
 from warnings import WarningMessage
 from tensorflow.keras import layers
 import tensorflow as tf
