@@ -109,8 +109,8 @@ See also:
 ```
 Jesús Pineda, Benjamin Midtvedt, Harshith Bachimanchi, Sergio Noé, Daniel  Midtvedt, Giovanni Volpe,1 and  Carlo  Manzo
 "Geometric deep learning reveals the spatiotemporal fingerprint ofmicroscopic motion."
-arxiv (2022).
- arXiv:2202.06355v1
+arXiv 2202.06355 (2022).
+https://arxiv.org/abs/2202.06355
 ```
 
 ```
@@ -128,4 +128,4 @@ https://github.com/softmatterlab/DeepTrack.git
 
 ## Funding
 
-This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511).
+This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511) and the ERC Starting Grant MAPEI (101001267).
