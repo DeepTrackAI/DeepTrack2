@@ -1,7 +1,6 @@
 """ Perform Mie-specific calculations
 """
 
-from ._config import cupy
 import numpy as np
 
 from typing import Tuple
@@ -141,7 +140,7 @@ def stratified_mie_coefficients(m, a, L):
     return an, bn
 
 
-def mie_harmonics(x, L: int) -> Tuple[np.ndarray]:
+def mie_harmonics(x: np.ndarray, L: int) -> Tuple[np.ndarray]:
     """Calculates the spherical harmonics of the mie field.
 
     The harmonics are calculated up to order L using the iterative method.
@@ -161,12 +160,8 @@ def mie_harmonics(x, L: int) -> Tuple[np.ndarray]:
 
     """
 
-    if isinstance(x, cupy.ndarray):
-        PI = cupy.zeros((L, *x.shape))
-        TAU = cupy.zeros((L, *x.shape))
-    else:
-        PI = np.zeros((L, *x.shape))
-        TAU = np.zeros((L, *x.shape))
+    PI = np.zeros((L, *x.shape))
+    TAU = np.zeros((L, *x.shape))
 
     PI[0, :] = 1
     PI[1, :] = 3 * x

@@ -21,143 +21,244 @@ import numpy as np
 from .utils import (
     isiterable,
     get_kwarg_names,
+    kwarg_has_default,
 )
 
+import typing
 
-from .backend.core import DeepTrackNode
+
 from . import features
 
-
-class Property(DeepTrackNode):
-    def __init__(self, sampling_rule, **kwargs):
-        super().__init__()
-        self.action = self.create_action(sampling_rule, **kwargs)
-
-    def create_action(self, sampling_rule, **dependencies):
-
-        if isinstance(sampling_rule, DeepTrackNode):
-            sampling_rule.add_child(self)
-            self.add_dependency(sampling_rule)
-            return sampling_rule
-
-        if isinstance(sampling_rule, dict):
-            dict_of_actions = dict(
-                (key, self.create_action(val, **dependencies))
-                for key, val in sampling_rule.items()
-            )
-
-            return lambda _ID=(): dict(
-                (key, val(_ID=_ID)) for key, val in dict_of_actions.items()
-            )
-
-        if isinstance(sampling_rule, list):
-            list_of_actions = [
-                self.create_action(val, **dependencies) for val in sampling_rule
-            ]
-
-            return lambda _ID=(): [val(_ID=_ID) for val in list_of_actions]
-
-        if isinstance(sampling_rule, (tuple, np.ndarray)):
-            return lambda _ID=(): sampling_rule
-
-        if isiterable(sampling_rule):
-            # If it's iterable, return the next value
-
-            def wrapped_iterator():
-
-                while True:
-                    try:
-                        next_value = next(sampling_rule)
-                    except StopIteration:
-                        pass
-
-                    yield next_value
-
-            iterator = wrapped_iterator()
-
-            def action(_ID=()):
-                return next(iterator)
-
-            return action
-
-        if isinstance(sampling_rule, slice):
-
-            start = self.create_action(sampling_rule.start, **dependencies)
-            stop = self.create_action(sampling_rule.stop, **dependencies)
-            step = self.create_action(sampling_rule.step, **dependencies)
-
-            return lambda _ID=(): slice(
-                start(_ID=_ID),
-                stop(_ID=_ID),
-                step(_ID=_ID),
-            )
-
-        if callable(sampling_rule):
-
-            knames = get_kwarg_names(sampling_rule)
-
-            used_dependencies = dict(
-                (key, dep) for key, dep in dependencies.items() if key in knames
-            )
-
-            for dep in used_dependencies.values():
-                dep.add_child(self)
-                self.add_dependency(dep)
-
-            return lambda _ID=(): sampling_rule(
-                **{
-                    **({"_ID": _ID} if "_ID" in knames else {}),
-                    **dict(
-                        (key, dep(_ID=_ID)) for key, dep in used_dependencies.items()
-                    ),
-                }
-            )
-
-        return lambda _ID=(): sampling_rule
+import copy
+import collections
 
 
-class PropertyDict(DeepTrackNode, dict):
-    """Dictionary with Property elements
+class Property:
+    """Represents a property of a feature
 
-    A dictionary of properties. It provides utility functions to update,
-    sample, reset and retrieve properties.
+    The class Property` wraps an input, which is treated
+    internally as a sampling rule. This sampling rule is used
+    to update the value of the property.
+    The sampling rule can be, for example:
+    * A constant (initialization with, e.g., a number, a tuple)
+    * A sequence of variables (initialization with, e.g., a generator)
+    * A discrete random variable (initialization with, e.g., a list, a dictionary)
+    * A continuous random variable (initialization with, e.g., a function)
 
     Parameters
     ----------
-    *args, **kwargs
-        Arguments used to initialize a dict
+    sampling_rule : any
+        Defines the sampling rule to update the value of the feature property.
+        See method `sample()` for how different sampling rules are sampled.
+
+    Attributes
+    ----------
+    sampling_rule : any
+        The sampling rule to update the value of the feature property.
+    current_value : any
+        The current value obtained from the last call to the sampling rule.
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, sampling_rule: any):
+        self.sampling_rule = sampling_rule
+        self.parent = None
 
-        dependencies = {}
+    @property
+    def current_value(self):
+        """Current value of the property of the feature
 
-        while kwargs:
+        `current_value` is the result of the latest `update()` call.
+        Note that any randomization only occurs when the method `update()` is called
+        and, therefore, the current value does not change between calls.
 
-            for key, val in list(kwargs.items()):
-                try:
-                    dependencies[key] = Property(val, **{**dependencies, **kwargs})
-                    kwargs.pop(key)
-                except AttributeError:
-                    pass
+        The method getter calls the method `update()` if `current_value`
+        has not been set yet.
 
-        def action(_ID=()):
-            return dict((key, val(_ID=_ID)) for key, val in self.items())
+        """
 
-        super().__init__(action, **dependencies)
+        self._current_value
 
-        for val in dependencies.values():
-            val.add_child(self)
-            self.add_dependency(val)
+    @current_value.setter
+    def current_value(self, updated_current_value):
+        self._current_value = updated_current_value
+        if id(self) not in features.UPDATE_MEMO["memoization"]:
+            # Some values work, some don't. self, updated_current_value and self._current_value work
+            # Best guess is an error in the gc reference counter causing it to dereference
+            # But then again, I don't think it should be the same reference anyway
+            features.UPDATE_MEMO["memoization"][id(self)] = updated_current_value
 
+    @current_value.getter
+    def current_value(self):
 
-def propagate_data_to_dependencies(X, **kwargs):
-    for dep in X.recurse_dependencies():
-        if isinstance(dep, PropertyDict):
-            for key, value in kwargs.items():
-                if key in dep:
-                    dep[key].set_value(value)
+        if not hasattr(self, "_current_value"):
+            self.update()
+
+        return self._current_value
+
+    def update(self, **kwargs) -> "Property":
+        """Updates the current value
+
+        The method `update()` sets the property `current_value`
+        as the output of the method `sample()`. Will only update
+        once per resolve.
+
+        Any object that implements the method `update()` will have it called.
+
+        Returns
+        -------
+        Property
+            Returns itself.
+
+        """
+
+        # If currently updated through a call to feature and deeptrack.UPDATE_MEMO
+        my_id = id(self)
+
+        # if my_id in deeptrack.UPDATE_MEMO["memoization"] and not hasattr(self, '_current_value'):
+        #     a = 1+1
+
+        if (
+            features.UPDATE_LOCK.locked()
+            and my_id in features.UPDATE_MEMO["memoization"]
+        ):
+            return self
+
+        if self.parent:
+            kwargs.update(self.parent)
+
+        kwargs.update(features.UPDATE_MEMO["user_arguments"])
+        self.current_value = self.sample(self.sampling_rule, **kwargs)
+
+        return self
+
+    def sample(self, sampling_rule, **kwargs):
+        """Samples the sampling rule
+
+        Returns a sampled instance of the `sampling_rule` field.
+        The logic behind the sampling depends on the type of
+        `sampling_rule`. These are checked in the following order of
+        priority:
+
+        1. Any object with a callable `sample()` method has this
+            method called and returned.
+        2. If the rule is a ``dict``, sample each value and combine the
+            result into a new ``dict`` using the original keys.
+        3. If the rule is a ``list``, sample each element of the list and
+            combine the result into a ne ``list``.
+        4. If the rule is an ``iterable``, return the next output.
+        5. If the rule is callable, call it with its accepted arguments.
+            Example arguments can be the value of some other property.
+        6. If none of the above apply, return the rule itself.
+
+        Parameters
+        ----------
+        sampling_rule : any
+            The rule to sample values from.
+        **kwargs
+            Arguments that will be passed on to functions that accepts them.
+
+        Returns
+        -------
+        any
+            A sampled instance of the `sampling_rule`.
+
+        """
+
+        if isinstance(sampling_rule, features.Feature):
+            # I am worried passing kwargs may lead to name clash
+            sampling_rule._update(**kwargs)
+            return sampling_rule
+
+        if isinstance(sampling_rule, Property):
+            sampling_rule.parent.update_item(sampling_rule)
+            return sampling_rule.current_value
+
+        elif isinstance(sampling_rule, dict):
+            # If the ruleset is a dict, return a new dict with each
+            # element being sampled from the original dict.
+            out = {}
+            for key, val in sampling_rule.items():
+                out[key] = self.sample(val, **kwargs)
+            return out
+
+        elif isinstance(sampling_rule, list):
+            return [self.sample(item, **kwargs) for item in sampling_rule]
+
+        elif isinstance(sampling_rule, (tuple, np.ndarray)):
+            # tuple and ndarrays are elementary
+            return sampling_rule
+
+        elif isiterable(sampling_rule):
+            # If it's iterable, return the next value
+            try:
+                return next(sampling_rule)
+            except StopIteration:
+                return self.current_value
+        elif isinstance(sampling_rule, slice):
+            return slice(
+                self.sample(sampling_rule.start, **kwargs),
+                self.sample(sampling_rule.stop, **kwargs),
+                self.sample(sampling_rule.step, **kwargs)
+            )
+
+        elif callable(sampling_rule):
+            # If it's a function, extract the arguments it accepts.
+            function_input = {}
+
+            # Get the kwarg arguments the function accepts
+            knames = get_kwarg_names(sampling_rule)
+            for i in range(len(knames)):
+                key = knames[i]
+                # If that name is among passed kwarg arguments
+                if key in kwargs:
+                    if isinstance(kwargs[key], Property):
+                        # If it is a property, update it and pass the current value
+                        if not kwargs[key] is self:
+                            if kwargs[key].parent:
+                                kwargs[key].parent.update_item(kwargs[key])
+                            else:
+                                kwargs[key].update(**kwargs)
+
+                        if (
+                            isinstance(kwargs[key], SequentialProperty)
+                            and "sequence_step" in kwargs
+                        ):
+                            function_input[key] = kwargs[key].current_value[
+                                kwargs["sequence_step"]
+                            ]
+                        else:
+                            function_input[key] = kwargs[key].current_value
+
+                    else:
+                        function_input[key] = kwargs[key]
+
+                elif not kwarg_has_default(sampling_rule, key):
+                    function_input[key] = None
+
+            new_value = sampling_rule(**function_input)
+            while isinstance(new_value, Property):
+                new_value = self.sample(new_value, **kwargs)
+            return new_value
+        else:
+            # Else, assume it's elementary.
+            return sampling_rule
+
+    def __deepcopy__(self, memo):
+        is_in = id(self) in features.UPDATE_MEMO["memoization"]
+        if is_in:
+            return self
+        else:
+            cls = self.__class__  # Extract the class of the object
+            result = cls.__new__(
+                cls
+            )  # Create a new instance of the object based on extracted class
+            memo[id(self)] = result
+            for k, v in self.__dict__.items():
+                setattr(
+                    result, k, copy.deepcopy(v, memo)
+                )  # Copy over attributes by copying directly or in case of complex objects like lists for exaample calling the `__deepcopy()__` method defined by them. Thus recursively copying the whole tree of objects.
+            return result
 
 
 class SequentialProperty(Property):
@@ -184,67 +285,17 @@ class SequentialProperty(Property):
 
     """
 
-    def __init__(self, initialization=None, **kwargs):
-
-        super().__init__(None)
-
-        # Create extra dependencies
-        self.sequence_length = Property(0)
-        self.add_dependency(self.sequence_length)
-        self.sequence_length.add_child(self)
-
-        self.sequence_step = Property(0)
-        self.add_dependency(self.sequence_step)
-        self.sequence_step.add_child(self)
-
-        self.previous_values = Property(
-            lambda _ID=(): self.previous(_ID=_ID)[: self.sequence_step() - 1]
-            if self.sequence_step(_ID=_ID)
-            else []
-        )
-        self.add_dependency(self.previous_values)
-        self.previous_values.add_child(self)
-        self.previous_values.add_dependency(self.sequence_step)
-        self.sequence_step.add_child(self.previous_values)
-
-        self.previous_value = Property(
-            lambda _ID=(): self.previous(_ID=_ID)[self.sequence_step() - 1]
-            if self.previous(_ID=_ID)
-            else None
-        )
-        self.add_dependency(self.previous_value)
-        self.previous_value.add_child(self)
-        self.previous_value.add_dependency(self.sequence_step)
-        self.sequence_step.add_child(self.previous_value)
-
-        if initialization:
-            self.initialization = self.create_action(initialization, **kwargs)
+    def __init__(self, sampling_rule, initializer=None):
+        super().__init__(sampling_rule)
+        if initializer is None:
+            self.initializer = sampling_rule
         else:
-            self.initialization = None
+            self.initializer = initializer
 
-        self.current = lambda: None
-        self.action = self._action
+        self.sampling_rule = sampling_rule
 
-    def _action(self, _ID=()):
-        return (
-            self.initialization(_ID=_ID)
-            if self.sequence_step(_ID=_ID) == 0
-            else self.current(_ID=_ID)
-        )
-
-    def store(self, value, _ID=()):
-        try:
-            current_data = self.data[_ID].current_value()
-        except KeyError:
-            current_data = []
-
-        super().store(current_data + [value], _ID=_ID)
-
-    def current_value(self, _ID):
-        return super().current_value(_ID=_ID)[self.sequence_step(_ID=_ID)]
-
-    def __call__(self, _ID=()):
-        return super().__call__(_ID=_ID)
+        # Deprecated
+        self.has_updated_since_last_resolve = False
 
     def update(self, sequence_length=0, **kwargs):
         """Updates current_value
@@ -294,7 +345,6 @@ class SequentialProperty(Property):
                 previous_values=new_current_value,
             )
             if step == 0:
-
                 kwargs.update(previous_value=self.sample(self.initializer, **kwargs))
             else:
                 kwargs.update(previous_value=new_current_value[-1])
@@ -306,3 +356,108 @@ class SequentialProperty(Property):
         self.current_value = new_current_value
         features.UPDATE_MEMO["memoization"][my_id] = new_current_value
         return self
+
+
+class PropertyDict(collections.OrderedDict):
+    """Dictionary with Property elements
+
+    A dictionary of properties. It provides utility functions to update,
+    sample, reset and retrieve properties.
+
+    Parameters
+    ----------
+    *args, **kwargs
+        Arguments used to initialize a dict
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for k, v in self.items():
+            if hasattr(v, "parent") and not v.parent:
+                v.parent = self
+
+    def current_value_dict(self, **kwargs) -> dict:
+        """Retrieves the current value of all properties as a dictionary
+
+        Returns
+        -------
+        dict
+            A dictionary with the current value of all properties
+
+        """
+        current_value_dict = {}
+        for key, property in self.items():
+
+            property_value = property.current_value
+
+            # If the property is sequential, retrieve the value
+            # of the current timestep
+            if isinstance(property, SequentialProperty):
+                sequence_step = kwargs.get("sequence_step", None)
+                if sequence_step is not None:
+                    property_value = property_value[sequence_step]
+
+            current_value_dict[key] = property_value
+
+        return current_value_dict
+
+    def update(self, **kwargs) -> "PropertyDict":
+        """Updates all properties
+
+        Calls the method `update()` on each property in the dictionary.
+
+        Returns
+        -------
+        Properties
+            Returns itself
+
+        """
+        property_arguments = collections.OrderedDict(self)
+        property_arguments.update(kwargs)
+        property_arguments.update(features.UPDATE_MEMO["user_arguments"])
+        for key, prop in self.items():
+            if isinstance(property_arguments[key], Property):
+                prop.update(**property_arguments)
+            elif id(prop) not in features.UPDATE_MEMO["memoization"]:
+                prop.current_value = property_arguments[key]
+
+        return self
+
+    def update_item(self, item: Property, **kwargs):
+        """Updates a single property.
+
+        Parameters
+        ----------
+        item: Property
+            The item to update.
+
+        Returns
+        -------
+        self
+        """
+        property_arguments = collections.OrderedDict(self)
+        property_arguments.update(kwargs)
+        for key, prop in self.items():
+            if prop == item:
+                prop.update(**property_arguments)
+                break
+
+        return self
+
+    def sample(self, **kwargs) -> dict:
+        """Samples all properties
+
+        Returns
+        -------
+        dict
+            A dictionary with each key-value pair the result of a
+            `sample()` call on the property with the same key.
+
+        """
+
+        sample_dict = {}
+        for key, property in self.items():
+            sample_dict[key] = property.sample(**kwargs)
+
+        return sample_dict

@@ -6,6 +6,4 @@ Sphinx==2.2.0
 pydata-sphinx-theme
 numpydoc
 scikit-image
-tensorflow-probability
-pydeepimagej
 pint

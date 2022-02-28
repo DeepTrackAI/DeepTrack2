@@ -21,8 +21,3 @@ Sequential
 
 .. autofunction:: deeptrack.sequences.Sequential
 
-propagate_sequential_data
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autofunction:: deeptrack.sequences.propagate_sequential_data
-

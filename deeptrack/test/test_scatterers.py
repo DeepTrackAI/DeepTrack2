@@ -126,7 +126,7 @@ class TestScatterers(unittest.TestCase):
         )
 
         scatterer = scatterers.MieStratifiedSphere(
-            radius=np.array([0.5e-6, 1.5e-6]),
+            radius=[0.5e-6, 1.5e-6],
             refractive_index=[1.45 + 0.1j, 1.52],
             aperature_angle=0.1,
         )
