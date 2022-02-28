@@ -91,13 +91,13 @@ class TestGenerators(unittest.TestCase):
                 if "position" in property:
                     return property["position"]
 
-        generator = generators.ContinuousGenerator(
+        generator = generators.CappedContinuousGenerator(
             imaged_scatterer,
             get_particle_position,
             batch_size=1,
             min_data_size=10,
             max_data_size=20,
-            max_epochs_per_sample=5,
+            max_sample_exposure=5,
         )
 
         # with generator:

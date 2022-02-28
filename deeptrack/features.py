@@ -20,31 +20,29 @@ Duplicate
 
 """
 
-import itertools
-import operator
-from typing import Any, Callable, Iterable, Iterator, List
+import copy
+
+from typing import Any, Callable, Iterable, Iterator, List, Tuple
 import warnings
-
 import numpy as np
-from pint.quantity import Quantity
-import tensorflow as tf
+import threading
 
-
-from .backend.core import DeepTrackNode
-from .backend.units import ConversionTable
-from .backend import config
 from .image import Image
-from .properties import PropertyDict, propagate_data_to_dependencies
-from .types import ArrayLike, PropertyLike
+from .properties import Property, PropertyDict
+from .types import PropertyLike, ArrayLike
 
 
 MERGE_STRATEGY_OVERRIDE = 0
 MERGE_STRATEGY_APPEND = 1
 
-_USER_ARGUMENTS = {}
+# Global thread execution lock for update calls.
+UPDATE_LOCK = threading.Lock()
+
+# Global update memoization. Ensures that the update is consistent
+UPDATE_MEMO = {"user_arguments": {}, "memoization": {}}
 
 
-class Feature(DeepTrackNode):
+class Feature:
     """Base feature class.
     Features define the image generation process. All features operate
     on lists of images. Most features, such as noise, apply some
@@ -96,36 +94,30 @@ class Feature(DeepTrackNode):
     __list_merge_strategy__ = MERGE_STRATEGY_OVERRIDE
     __distributed__ = True
     __property_memorability__ = 1
-    __conversion_table__ = ConversionTable()
-    __gpu_compatible__ = False
 
-    # A None-safe default value to compare against
-    __nonelike_default = object()
-
-    def __init__(self, _input=[], **kwargs):
-
+    def __init__(self, *args: dict, **kwargs):
         super(Feature, self).__init__()
-
         properties = getattr(self, "properties", {})
-        properties.update(**kwargs)
-        properties.setdefault("name", type(self).__name__)
-        # Bind properties
+
+        # Create an iterable of kwargs and args
+        all_dicts = (kwargs,) + args
+
+        for property_dict in all_dicts:
+            for key, value in property_dict.items():
+                if not isinstance(value, Property):
+
+                    value = Property(value)
+
+                properties[key] = value
+
+        # hash_key is an inexpensive way to compare dicts of properties
+        # The hash here is 4 31 bit integers, for a total of 124 bits.
+        if "hash_key" not in properties:
+            properties["hash_key"] = Property(
+                lambda: list(np.random.randint(2 ** 31, size=(4,)))
+            )
+
         self.properties = PropertyDict(**properties)
-        self.add_dependency(self.properties)
-        self.properties.add_child(self)
-
-        # Bind holder for input value
-        self._input = DeepTrackNode(_input)
-        self.add_dependency(self._input)
-        self._input.add_child(self)
-
-        # Bind seed
-        self._random_seed = DeepTrackNode(lambda: np.random.randint(2147483648))
-        self.add_dependency(self._random_seed)
-        self._random_seed.add_child(self)
-
-        # Initilaize arguments
-        self.arguments = None
 
     def get(self, image: Image or List[Image], **kwargs) -> Image or List[Image]:
         """Method for altering an image
@@ -146,7 +138,7 @@ class Feature(DeepTrackNode):
             The transformed image or list of images
         """
 
-    def action(self, _ID=()):
+    def resolve(self, image_list: Image or List[Image] = None, **global_kwargs):
         """Creates the image.
         Transforms the input image by calling the method `get()` with the
         correct inputs. The properties of the feature can be overruled by
@@ -166,56 +158,53 @@ class Feature(DeepTrackNode):
         Image or List[Image]
             The resolved image
         """
-        """Creates the image.
-        Transforms the input image by calling the method `get()` with the
-        correct inputs. The properties of the feature can be overruled by
-        passing a different value as a keyword argument.
 
-        Parameters
-        ----------
-        image_list : Image or List[Image], optional
-            The Image or list of images to be transformed.
-        **global_kwargs
-            Set of arguments that are applied globally. That is, every
-            feature in the set of features required to resolve an image
-            will receive these keyword arguments.
+        # Remove hash_key from globals.
+        global_kwargs.pop("hash_key", False)
 
-        Returns
-        -------
-        Image or List[Image]
-            The resolved image
-        """
-
-        image_list = self._input(_ID=_ID)
+        # Ensure that input is a list
+        image_list = self._format_input(image_list, **global_kwargs)
 
         # Get the input arguments to the method .get()
+        feature_input = self.properties.current_value_dict(
+            is_resolving=True, **global_kwargs
+        )
 
-        feature_input = self.properties(_ID=_ID).copy()
+        # Add global_kwargs to input arguments
+        feature_input.update(global_kwargs)
 
         # Call the _process_properties hook, default does nothing.
         # Can be used to ensure properties are formatted correctly
         # or to rescale properties.
-
         feature_input = self._process_properties(feature_input)
-        if _ID != ():
-            feature_input["_ID"] = _ID
-
-        # Ensure that input is a list
-        image_list = self._format_input(image_list, **feature_input)
 
         # Set the seed from the hash_key. Ensures equal results
-        # self.seed(_ID=_ID)
+        np.random.seed(
+            int(feature_input["hash_key"][0])
+            * int(feature_input.get("sequence_step", 0) + 1)
+            % int(2 ** 32 - 1)
+        )
 
         # _process_and_get calls the get function correctly according
         # to the __distributed__ attribute
         new_list = self._process_and_get(image_list, **feature_input)
 
-        for index, image in enumerate(new_list):
+        # If tuple, assume return additional properties
+        if isinstance(new_list, tuple):
+            feature_input = {**feature_input, **new_list[1]}
+            new_list = new_list[0]
 
-            if self.arguments:
-                image.append(self.arguments.properties())
-
-            image.append(feature_input)
+        # Add feature_input to the image the class attribute __property_memorability__
+        # is not larger than the passed property_verbosity keyword
+        property_verbosity = global_kwargs.get("property_memorability", 1)
+        feature_input["name"] = type(self).__name__
+        if self.__property_memorability__ <= property_verbosity:
+            for index, image in enumerate(new_list):
+                if isinstance(image, tuple):
+                    image[0].append({**feature_input, **image[1]})
+                    new_list[index] = image[0]
+                else:
+                    image.append(feature_input)
 
         # Merge input and new_list
         if self.__list_merge_strategy__ == MERGE_STRATEGY_OVERRIDE:
@@ -229,90 +218,31 @@ class Feature(DeepTrackNode):
         else:
             return image_list
 
-    def __call__(self, image_list: Image or List[Image] = None, _ID=(), **kwargs):
+    def update(self, **kwargs) -> "Feature":
+        """Updates the state of all properties.
 
-        # Potentially fragile. Maybe a special variable dt._last_input instead?
-        if image_list is not None and not (
-            isinstance(image_list, list) and len(image_list) == 0
-        ):
+        Parameters
+        ----------
+        **kwargs
+            Arguments that will be set globally for the update call.
+            For example .update(value=10) will have all properties
+            and features that depend on "value" use 10 instead of what
+            they otherwise would.
 
-            self._input.set_value(image_list, _ID=_ID)
+        Returns
+        -------
+        self
+        """
 
-        original_values = {}
+        # This should only be accessed by the user. Call _update directly instead
+        with UPDATE_LOCK:
+            UPDATE_MEMO["user_arguments"] = kwargs
+            UPDATE_MEMO["memoization"] = {}
+            self._update(**kwargs)
+            return self
 
-        if kwargs and self.arguments is None:
-            propagate_data_to_dependencies(self, **kwargs)
-
-        if isinstance(self.arguments, Feature):
-            for key, value in kwargs.items():
-                if key in self.arguments.properties:
-                    original_values[key] = self.arguments.properties[key](_ID=_ID)
-                    self.arguments.properties[key].set_value(value, _ID=_ID)
-        output = super(Feature, self).__call__(_ID=_ID)
-
-        for key, value in original_values.items():
-            self.arguments.properties[key].set_value(value, _ID=_ID)
-
-        return output
-
-    resolve = __call__
-
-    def __use_gpu__(self, inp, **_):
-        return self.__gpu_compatible__ and np.prod(np.shape(inp)) > (90000)
-
-    def update(self, **_):
-        self._update()
-        return self
-
-    def _update(self, **global_arguments):
-        if global_arguments:
-            warnings.warn(
-                "Passing information through .update is no longer supported. "
-                "A quick fix is to pass the information when resolving the feature. "
-                "The prefered solution is to use dt.Arguments",
-                DeprecationWarning,
-            )
-        super()._update()
-        return self
-
-    def add_feature(self, feature):
-        feature.add_child(self)
-        self.add_dependency(feature)
-        return feature
-
-    def seed(self, _ID=()):
-        np.random.seed(self._random_seed(_ID=_ID))
-
-    def bind_arguments(self, arguments):
-        self.arguments = arguments
-        return self
-
-    def _normalize(self, **properties):
-        # Handles all unit normalizations and conversions
-        for cl in type(self).mro():
-            if hasattr(cl, "__conversion_table__"):
-                properties = cl.__conversion_table__.convert(**properties)
-
-        for key, val in properties.items():
-            if isinstance(val, Quantity):
-                properties[key] = val.magnitude
-        return properties
-
-    def _coerce_inputs(self, inputs, **kwargs):
-
-        if any(isinstance(i._value, tf.Tensor) for i in inputs):
-            return inputs
-        if config.gpu_enabled:
-
-            return [
-                i.to_cupy()
-                if (not self.__distributed__) and self.__use_gpu__(i, **kwargs)
-                else i.to_numpy()
-                for i in inputs
-            ]
-
-        else:
-            return [i.to_numpy() for i in inputs]
+    def _update(self, **kwargs):
+        self.properties.update(**kwargs)
 
     def plot(
         self,
@@ -342,8 +272,8 @@ class Feature(DeepTrackNode):
             keyword arguments passed to the method pyplot.imshow()
         """
 
-        import matplotlib.animation as animation
         import matplotlib.pyplot as plt
+        import matplotlib.animation as animation
         from IPython.display import HTML, display
 
         if input_image is not None:
@@ -355,7 +285,7 @@ class Feature(DeepTrackNode):
         if isinstance(output_image, Image):
             # Single image
             plt.imshow(output_image[:, :, 0], **kwargs)
-            return plt.gca()
+            plt.show()
 
         else:
             # Assume video
@@ -440,14 +370,11 @@ class Feature(DeepTrackNode):
         if not isinstance(image_list, list):
             image_list = [image_list]
 
-        inputs = [(Image(image)) for image in image_list]
-        return self._coerce_inputs(inputs, **kwargs)
+        return [Image(image) for image in image_list]
 
     def _process_properties(self, propertydict) -> dict:
         # Optional hook for subclasses to preprocess input before calling
         # the method .get()
-
-        propertydict = self._normalize(**propertydict)
         return propertydict
 
     def sample(self, **kwargs) -> "Feature":
@@ -459,9 +386,9 @@ class Feature(DeepTrackNode):
         # Allows easier access to properties, while guaranteeing they are updated correctly.
         # Should only every be used from the inside of a property function.
         # Is not compatible with sequential properties.
-
         if "properties" in self.__dict__:
             properties = self.__dict__["properties"]
+
             if key in properties:
                 return properties[key]
             else:
@@ -469,118 +396,69 @@ class Feature(DeepTrackNode):
         else:
             raise AttributeError
 
-    def __iter__(self):
-        while True:
-            yield from next(self)
-
-    def __next__(self):
-        data = self.update().resolve()
-
-        if isinstance(data, list):
-            data = tuple(np.array(d) for d in data)
-
-        else:
-            data = np.array(data)
-
-        yield data
-
-    def __rshift__(self, other: "Feature") -> "Feature":
+    def __rshift__(self, other:"Feature") -> "Feature":
+        # Overrides >> operator
+        if isinstance(other, list) and all(isinstance(f) for f in other):
+            other = Combine(features=other)
 
         if isinstance(other, Feature):
-            return Chain(self, other)
-
-        # to avoid circular import
-        from . import models
-
-        if isinstance(other, models.KerasModel):
-            return NotImplemented
-        if callable(other):
-            return self >> Lambda(lambda: other)
-
-        return NotImplemented
-
-    def __add__(self, other) -> "Feature":
-        # Overrides add operator
-        return self >> Add(other)
-
-    def __radd__(self, other) -> "Feature":
-        # Overrides add operator
-        return Value(other) >> Add(self)
-
-    def __sub__(self, other) -> "Feature":
-        # Overrides add operator
-        return self >> Subtract(other)
-
-    def __rsub__(self, other) -> "Feature":
-        # Overrides add operator
-        return Value(other) >> Subtract(self)
-
-    def __mul__(self, other) -> "Feature":
-        return self >> Multiply(other)
-
-    def __rmul__(self, other) -> "Feature":
-        return Value(other) >> Multiply(self)
-
-    def __truediv__(self, other) -> "Feature":
-        return self >> Divide(other)
-
-    def __rtruediv__(self, other) -> "Feature":
-        return Value(other) >> Divide(self)
-
-    def __floordiv__(self, other) -> "Feature":
-        return self >> FloorDivide(other)
-
-    def __rfloordiv__(self, other) -> "Feature":
-        return Value(other) >> FloorDivide(self)
-
-    def __pow__(self, other) -> "Feature":
-        return self >> Power(other)
-
-    def __rpow__(self, other) -> "Feature":
-        return Value(other) >> Power(self)
-
-    def __gt__(self, other) -> "Feature":
-        return self >> GreaterThan(other)
-
-    def __rgt__(self, other) -> "Feature":
-        return Value(other) >> GreaterThan(self)
-
-    def __lt__(self, other) -> "Feature":
-        return self >> LessThan(other)
-
-    def __rlt__(self, other) -> "Feature":
-        return Value(other) >> LessThan(self)
-
-    def __le__(self, other) -> "Feature":
-        return self >> LessThanOrEquals(other)
-
-    def __rle__(self, other) -> "Feature":
-        return Value(other) >> LessThanOrEquals(self)
-
-    def __ge__(self, other) -> "Feature":
-        return self >> GreaterThanOrEquals(other)
-
-    def __rge__(self, other) -> "Feature":
-        return Value(other) >> GreaterThanOrEquals(self)
+            return Branch(self, other)
 
     def __xor__(self, other) -> "Feature":
-        return Repeat(self, other)
+        # Duplicate the feature to resolve more items
+        if isinstance(other, list) and all(isinstance(f) for f in other):
+            other = Combine(features=other)
 
-    def __and__(self, other) -> "Feature":
-        return self >> Stack(other)
+        return Duplicate(self, other)
 
-    def __rand__(self, other) -> "Feature":
-        return Value(other) >> Stack(self)
+
+    def __add__(self, other: "Feature") -> "Feature":
+        import warnings
+        warnings.warn(
+            "Chaining features with the + operator is deprecated, use the >> operator instead",
+            DeprecationWarning
+        )
+        return self.__rshift__(other)
+
+    
+
+    def __radd__(self, other) -> "Feature":
+        # Add when left hand is not a feature
+        # If left hand is falesly, return self
+        # This allows operations such as sum(list_of_features)
+        if isinstance(other, list) and all(isinstance(f) for f in other):
+            other = Combine(features=other)
+
+        if isinstance(other, Feature):
+            return Branch(other, self)
+        elif not other:
+            return self
+        else:
+            return NotImplemented
+
+    def __mul__(self, other: float) -> "Feature":
+        warnings.warn("Using * to probabilistically resolve a feature is deprecated. Use `Probability` instead.", DeprecationWarning)
+        # Introduces a probablity of a feature to be resolved.
+        if isinstance(other, list) and all(isinstance(f) for f in other):
+            other = Combine(features=other)
+
+        return Probability(self, other)
+
+    __rmul__ = __mul__
+
+    def __pow__(self, other) -> "Feature":
+        warnings.warn("Using ** to duplicate a feature is deprecated. Use ^ instead.", DeprecationWarning)
+        # Duplicate the feature to resolve more items
+        return self.__xor__(other)
 
     def __getitem__(self, slices) -> "Feature":
         # Allows direct slicing of the data.
         if not isinstance(slices, tuple):
-            slices = (slices,)
+            slices = (slices, )
 
         slices = list(slices)
 
-        return self >> Slice(slices)
-
+        return self + Slice(slices)
 
 class StructuralFeature(Feature):
     """Provides the structure of a feature-set
@@ -592,7 +470,7 @@ class StructuralFeature(Feature):
     __distributed__ = False
 
 
-class Chain(StructuralFeature):
+class Branch(StructuralFeature):
     """Resolves two features sequentially.
     Passes the output of the first to the input of the second.
     Parameters
@@ -601,312 +479,13 @@ class Chain(StructuralFeature):
     feature_2 : Feature
     """
 
-    def __init__(self, feature_1: Feature, feature_2: Feature, **kwargs):
+    def __init__(self, feature_1: Feature, feature_2: Feature, *args, **kwargs):
+        super().__init__(*args, feature_1=feature_1, feature_2=feature_2, **kwargs)
 
-        super().__init__(**kwargs)
-
-        self.feature_1 = self.add_feature(feature_1)
-        self.feature_2 = self.add_feature(feature_2)
-
-    def get(self, image, _ID=(), **kwargs):
+    def get(self, image, feature_1, feature_2, **kwargs):
         """Resolves `feature_1` and `feature_2` sequentially"""
-        image = self.feature_1(image, _ID=_ID)
-        image = self.feature_2(image, _ID=_ID)
-        return image
-
-
-# Alias for backwards compatability
-Branch = Chain
-
-
-class Value(Feature):
-    """Multiplies the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to multiply with.
-    """
-
-    __distributed__ = False
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-
-        if isinstance(value, Image):
-            warnings.warn(
-                "Setting dt.Value value as a Image object is likely to lead to performance deterioation. Consider converting it to a numpy array using np.array"
-            )
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-        return value
-
-
-class ArithmeticOperationFeature(Feature):
-    """Parent feature of arithmetic operation features like +*-/> etc."""
-
-    __distributed__ = False
-    __gpu_compatible__ = True
-
-    def __init__(self, op, value=0, **kwargs):
-        self.op = op
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-
-        if not isinstance(value, (list, tuple)):
-            value = [value]
-
-        if len(image) < len(value):
-            image = itertools.cycle(image)
-        elif len(value) < len(image):
-            value = itertools.cycle(value)
-
-        return [self.op(a, b) for a, b in zip(image, value)]
-
-
-class Add(ArithmeticOperationFeature):
-    """Adds a value to the input.
-
-    Parameters
-    ----------
-    value : number
-        The value to add
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(operator.add, value=value, **kwargs)
-
-
-class Subtract(ArithmeticOperationFeature):
-    """Subtracts a value from the input.
-
-    Parameters
-    ----------
-    value : number
-        The value to subtract
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(operator.sub, value=value, **kwargs)
-
-
-class Multiply(ArithmeticOperationFeature):
-    """Multiplies the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to multiply with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(operator.mul, value=value, **kwargs)
-
-
-class Divide(ArithmeticOperationFeature):
-    """Divides the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to divide with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(operator.truediv, value=value, **kwargs)
-
-
-class FloorDivide(ArithmeticOperationFeature):
-    """Divides the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to divide with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(operator.floordiv, value=value, **kwargs)
-
-
-class Power(ArithmeticOperationFeature):
-    """Raises the input to a power.
-
-    Parameters
-    ----------
-    value : number
-        The power to raise with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(operator.pow, value=value, **kwargs)
-
-
-class LessThan(ArithmeticOperationFeature):
-    """Divides the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to divide with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(operator.lt, value=value, **kwargs)
-
-
-class LessThanOrEquals(ArithmeticOperationFeature):
-    """Divides the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to divide with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(operator.le, value=value, **kwargs)
-
-
-class GreaterThan(ArithmeticOperationFeature):
-    """Divides the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to divide with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(operator.gt, value=value, **kwargs)
-
-
-class GreaterThanOrEquals(ArithmeticOperationFeature):
-    """Divides the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to divide with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(operator.ge, value=value, **kwargs)
-
-
-class Equals(ArithmeticOperationFeature):
-    """Divides the input with a value.
-
-    Parameters
-    ----------
-    value : number
-        The value to divide with.
-    """
-
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
-        super().__init__(operator.eq, value=value, **kwargs)
-
-
-class Stack(Feature):
-    """Stacks the input and the value.
-
-    If B is a feature then Stack can be visualized as::
-
-       A >> Stack(B) = [*A(), *B()]
-
-    If either A or B create a single Image, an additional dimension is automatically added.
-
-    This can be
-
-    Parameters
-    ----------
-    value
-       Feature that produces image to stack on input.
-    """
-
-    __distributed__ = False
-
-    def __init__(self, value=PropertyLike[Any], **kwargs):
-        super().__init__(value=value, **kwargs)
-
-    def get(self, image, value, **kwargs):
-
-        if not isinstance(image, list):
-            image = [image]
-
-        if not isinstance(value, list):
-            value = [value]
-
-        return [*image, *value]
-
-
-class Arguments(Feature):
-    """A convenience container for pipeline arguments.
-
-    A typical use-case is::
-
-       arguments = Arguments(is_label=False)
-       image_loader = (
-           LoadImage(path="./image.png") >>
-           GaussianNoise(sigma = (1 - arguments.is_label) * 5)
-       )
-       image_loader.bind_arguments(arguments)
-
-       image_loader()              # Image with added noise
-       image_loader(is_label=True) # Raw image with no noise
-
-    For non-mathematical dependence, create a local link to the property as follows::
-
-       arguments = Arguments(is_label=False)
-       image_loader = (
-           LoadImage(path="./image.png") >>
-           GaussianNoise(
-              is_label=arguments.is_label,
-              sigma=lambda is_label: 0 if is_label else 5
-           )
-       )
-       image_loader.bind_arguments(arguments)
-
-       image_loader()              # Image with added noise
-       image_loader(is_label=True) # Raw image with no noise
-
-    Keep in mind that if any dependent property is non-deterministic,
-    they may permanently change::
-       arguments = Arguments(noise_max_sigma=5)
-       image_loader = (
-           LoadImage(path="./image.png") >>
-           GaussianNoise(
-              noise_max_sigma=5,
-              sigma=lambda noise_max_sigma: rand() * noise_max_sigma
-           )
-       )
-
-       image_loader.bind_arguments(arguments)
-
-       image_loader().get_property("sigma") # 3.27...
-       image_loader(noise_max_sigma=0) # 0
-       image_loader().get_property("sigma") # 1.93...
-
-    As with any feature, all arguments can be passed by deconstructing the properties dict::
-
-       arguments = Arguments(is_label=False, noise_sigma=5)
-       image_loader = (
-           LoadImage(path="./image.png") >>
-           GaussianNoise(
-              sigma=lambda is_label, noise_sigma: 0 if is_label else noise_sigma
-              **arguments.properties
-           )
-       )
-       image_loader.bind_arguments(arguments)
-
-       image_loader()              # Image with added noise
-       image_loader(is_label=True) # Raw image with no noise
-
-
-    """
-
-    def get(self, image, **kwargs):
+        image = feature_1.resolve(image, **kwargs)
+        image = feature_2.resolve(image, **kwargs)
         return image
 
 
@@ -947,25 +526,67 @@ class Probability(StructuralFeature):
         return image
 
 
-class Repeat(Feature):
-    __distributed__ = False
+class Duplicate(StructuralFeature):
+    """Resolves copies of a feature sequentially
+    Creates `num_duplicates` copies of the feature and resolves
+    them sequentially
 
-    def __init__(self, feature, N, **kwargs):
-        super().__init__(N=N, **kwargs)
-        self.feature = self.add_feature(feature)
+    Parameters
+    ----------
+    feature: Feature
+        The feature to duplicate
+    num_duplicates: int
+        The number of duplicates to create
+    """
 
-    def get(self, image, N, _ID=(), **kwargs):
-        for n in range(N):
+    def __init__(
+        self, feature: Feature, num_duplicates: PropertyLike[int], *args, **kwargs
+    ):
 
-            index = _ID + (n,)
+        self.feature = feature
+        super().__init__(
+            *args,
+            num_duplicates=num_duplicates,  # py > 3.6 dicts are ordered by insert time.
+            features=lambda num_duplicates: [
+                copy.deepcopy(self.feature) for _ in range(num_duplicates)
+            ],
+            **kwargs
+        )
 
-            image = self.feature(
-                image,
-                _ID=index,
-                replicate_index=index,  # Pass replicate_index for legacy reasons
-            )
+    def get(self, image, features: List[Feature], **kwargs):
+        """Resolves each feature in `features` sequentially"""
+        for index in range(len(features)):
+            image = features[index].resolve(image, **kwargs)
 
         return image
+
+    def _update(self, **kwargs):
+
+        super()._update(**kwargs)
+        features = self.properties["features"].current_value
+        for index in range(len(features)):
+            features[index]._update(**kwargs)
+        return self
+
+    def __deepcopy__(self, memo):
+        # If this is getting deep-copied, we have
+        # nested copies, which needs to be handled
+        # separately.
+
+        self.properties.update()
+        num_duplicates = self.num_duplicates.current_value
+        features = []
+        for idx in range(num_duplicates):
+            memo_copy = copy.copy(memo)
+            new_feature = copy.deepcopy(self.feature, memo_copy)
+            features.append(new_feature)
+        self.properties["features"].current_value = features
+
+        out = copy.copy(self)
+        self.properties = copy.copy(self.properties)
+        for key, val in self.properties.items():
+            self.properties[key] = copy.copy(val)
+        return out
 
 
 class Combine(StructuralFeature):
@@ -980,9 +601,9 @@ class Combine(StructuralFeature):
 
     """
 
-    __distributed__ = False
+    __distribute__ = False
 
-    def __init__(self, features: List[Feature], **kwargs):
+    def __init__(self, features:List[Feature], **kwargs):
         super().__init__(features=features, **kwargs)
 
     def get(self, image_list, features, **kwargs):
@@ -990,7 +611,7 @@ class Combine(StructuralFeature):
 
 
 class Slice(Feature):
-    """Array indexing for each Image in list.
+    ''' Array indexing for each Image in list.
 
     Note, this feature is rarely needed to be used directly. Instead,
     you can do normal array indexing on a feature directly. For example::
@@ -1003,11 +624,11 @@ class Slice(Feature):
        ]
        sliced_feature.resolve(np.arange(27).reshape((3, 3, 3)))
 
-    In the example above, `lambda` is used to demonstrate different ways
+    In the example above, `lambda` is used to demonstrate different ways 
     to interact with the slices. In this case, the `lambda` keyword is
     redundant.
 
-    Using `Slice` directly can be required in some cases, however. For example if
+    Using `Slice` directly can be required in some cases, however. For example if 
     dependencies between properties are required. In this case, one can replicate
     the previous example as follows::
 
@@ -1019,20 +640,21 @@ class Slice(Feature):
            dim3=lambda: slice(None, None, -2)
        )
        sliced_feature.resolve(np.arange(27).reshape((3, 3, 3)))
-
+    
     Parameters
     ----------
     slices : iterable of int, slice or ellipsis
         The indexing of each dimension in order.
-    """
+    '''
 
-    def __init__(
-        self,
-        slices: PropertyLike[
-            Iterable[PropertyLike[int] or PropertyLike[slice] or PropertyLike[...]]
-        ],
-        **kwargs
-    ):
+    def __init__(self, 
+        slices:PropertyLike[
+            Iterable[
+                PropertyLike[int] or 
+                PropertyLike[slice] or 
+                PropertyLike[Ellipsis]
+            ]
+        ], **kwargs):
         super().__init__(slices=slices, **kwargs)
 
     def get(self, image, slices, **kwargs):
@@ -1044,6 +666,7 @@ class Slice(Feature):
 
         return image[slices]
 
+        
 
 class Bind(StructuralFeature):
     """Binds a feature with property arguments.
@@ -1063,12 +686,10 @@ class Bind(StructuralFeature):
     __distributed__ = False
 
     def __init__(self, feature: Feature, **kwargs):
+        super().__init__(feature=feature, **kwargs)
 
-        super().__init__(**kwargs)
-        self.feature = self.add_feature(feature)
-
-    def get(self, image, **kwargs):
-        return self.feature.resolve(image, **kwargs)
+    def get(self, image, feature, **kwargs):
+        return feature.resolve(image, **kwargs)
 
 
 BindResolve = Bind
@@ -1091,34 +712,26 @@ class BindUpdate(StructuralFeature):
     __distributed__ = False
 
     def __init__(self, feature: Feature, **kwargs):
-        import warnings
-
-        warnings.warn(
-            "BindUpdate is deprecated and may be removed in a future release."
-            "The current implementation is not guaranteed to be exactly equivalent to prior implementations. "
-            "Please use Bind instead.",
-            DeprecationWarning,
-        )
-
+        self.feature = feature
         super().__init__(**kwargs)
-        self.feature = self.add_feature(feature)
+
+    def _update(self, **kwargs):
+        super()._update(**kwargs)
+        self.feature._update(**{**kwargs, **self.properties})
 
     def get(self, image, **kwargs):
         return self.feature.resolve(image, **kwargs)
 
 
 class ConditionalSetProperty(StructuralFeature):
-    """Conditionally overrides the properties of child features.
-
-    It is adviceable to use dt.Arguments instead. Note that this overwrites the properties, and as
-    such may affect future calls.
+    """Conditionally overrides the properties of child features
 
     Parameters
     ----------
     feature : Feature
         The child feature
-    condition : bool-like or str
-        A boolean or the name a boolean property
+    condition : str
+        The name of the conditional property
     **kwargs
         Properties to be used if `condition` is True
 
@@ -1126,21 +739,17 @@ class ConditionalSetProperty(StructuralFeature):
 
     __distributed__ = False
 
-    def __init__(self, feature: Feature, condition=PropertyLike[str or bool], **kwargs):
+    def __init__(self, feature: Feature, condition=PropertyLike[str], **kwargs):
+        super().__init__(feature=feature, condition=condition, **kwargs)
 
-        super().__init__(condition=condition, **kwargs)
-        self.feature = self.add_feature(feature)
+    def get(self, image, feature, condition, **kwargs):
+        if kwargs.get(condition, False):
+            return feature.resolve(image, **kwargs)
+        else:
+            for property_key in self.properties.keys():
+                kwargs.pop(property_key, None)
 
-    def get(self, image, condition, **kwargs):
-
-        _condition = condition
-        if isinstance(condition, str):
-            _condition = kwargs.get(condition, False)
-
-        if _condition:
-            propagate_data_to_dependencies(self.feature, **kwargs)
-
-        return self.feature(image)
+            return feature.resolve(image, **kwargs)
 
 
 class ConditionalSetFeature(StructuralFeature):
@@ -1172,33 +781,24 @@ class ConditionalSetFeature(StructuralFeature):
         self,
         on_false: Feature = None,
         on_true: Feature = None,
-        condition: PropertyLike[str or bool] = "is_label",
+        condition: PropertyLike[str] = "is_label",
         **kwargs
     ):
 
-        super().__init__(condition=condition, **kwargs)
-        if on_true:
-            self.add_feature(on_true)
-        if on_false:
-            self.add_feature(on_false)
+        super().__init__(
+            on_true=on_true, on_false=on_false, condition=condition, **kwargs
+        )
 
-        self.on_true = on_true
-        self.on_false = on_false
+    def get(self, image, *, condition, on_true, on_false, **kwargs):
 
-    def get(self, image, *, condition, **kwargs):
-
-        _condition = condition
-        if isinstance(condition, str):
-            _condition = kwargs.get(condition, False)
-
-        if _condition:
-            if self.on_true:
-                return self.on_true(image)
+        if kwargs.get(condition, False):
+            if on_true:
+                return on_true.resolve(image, **kwargs)
             else:
                 return image
         else:
-            if self.on_false:
-                return self.on_false(image)
+            if on_false:
+                return on_false.resolve(image, **kwargs)
             else:
                 return image
 
@@ -1251,69 +851,6 @@ class Merge(Feature):
         return function(list_of_images)
 
 
-class OneOf(Feature):
-    """Resolves one feature from a collection on the input.
-
-    Valid collections are any object that can be iterated (such as lists, tuples and sets).
-    Internally, the collection is converted to a tuple.
-
-    Default behaviour is to sample the collection uniformly random. This can be
-    controlled by the `key` argument, where the feature resolved is chosen as
-    `tuple(collection)[key]`.
-    """
-
-    __distributed__ = False
-
-    def __init__(self, collection, key=None, **kwargs):
-        self.collection = tuple(collection)
-        super().__init__(key=key, **kwargs)
-
-        for feature in self.collection:
-            self.add_feature(feature)
-
-    def _process_properties(self, propertydict) -> dict:
-        super()._process_properties(propertydict)
-
-        if propertydict["key"] is None:
-            propertydict["key"] = np.random.randint(len(self.collection))
-
-        return propertydict
-
-    def get(self, image, key, **kwargs):
-        return self.collection[key](image)
-
-
-class OneOfDict(Feature):
-    """Resolves one feature from a dictionary.
-
-    Default behaviour is to sample the values diction uniformly random. This can be
-    controlled by the `key` argument, where the feature resolved is chosen as
-    `collection[key]`.
-    """
-
-    __distributed__ = False
-
-    def __init__(self, collection, key=None, **kwargs):
-
-        self.collection = collection
-
-        super().__init__(key=key, **kwargs)
-
-        for feature in self.collection.values():
-            self.add_feature(feature)
-
-    def _process_properties(self, propertydict) -> dict:
-        super()._process_properties(propertydict)
-
-        if propertydict["key"] is None:
-            propertydict["key"] = np.random.choice(list(self.collection.keys()))
-
-        return propertydict
-
-    def get(self, image, key, **kwargs):
-        return self.collection[key](image)
-
-
 class Dataset(Feature):
     """Grabs data from a local set of data.
 
@@ -1341,8 +878,6 @@ class Dataset(Feature):
         return data
 
     def _process_properties(self, properties):
-        properties = super()._process_properties(properties)
-
         data = properties["data"]
 
         if isinstance(data, tuple):
@@ -1372,7 +907,7 @@ class Label(Feature):
     def __init__(self, output_shape: PropertyLike[int] = None, **kwargs):
         super().__init__(output_shape=output_shape, **kwargs)
 
-    def get(self, image, output_shape=None, **kwargs):
+    def get(self, image, output_shape=None, hash_key=None, **kwargs):
         result = []
         for key in self.properties.keys():
             if key in kwargs:
@@ -1419,7 +954,7 @@ class LoadImage(Feature):
         path: PropertyLike[str or List[str]],
         load_options: PropertyLike[dict] = None,
         as_list: PropertyLike[bool] = False,
-        ndim: PropertyLike[int] = 3,
+        ndim: PropertyLike[int] = None,
         to_grayscale: PropertyLike[bool] = False,
         get_one_random: PropertyLike[bool] = False,
         **kwargs
@@ -1445,13 +980,10 @@ class LoadImage(Feature):
         get_one_random,
         **kwargs
     ):
-
-        path_is_list = isinstance(path, list)
-        if not path_is_list:
+        if not isinstance(path, List):
             path = [path]
         if load_options is None:
             load_options = {}
-
         try:
             image = [np.load(file, **load_options) for file in path]
         except (IOError, ValueError):
@@ -1473,15 +1005,7 @@ class LoadImage(Feature):
                             "No filereader available for file {0}".format(path)
                         )
 
-        if as_list:
-            if get_one_random:
-                image = image[np.random.randint(len(image))]
-            else:
-                image = list(image)
-        elif path_is_list:
-            image = np.stack(image, axis=-1)
-        else:
-            image = image[0]
+        image = np.stack(image, axis=-1)
 
         if to_grayscale:
             try:
@@ -1493,8 +1017,14 @@ class LoadImage(Feature):
 
                 warnings.warn("Non-rgb image, ignoring to_grayscale")
 
-        while ndim and image.ndim < ndim:
+        if ndim and image.ndim < ndim:
             image = np.expand_dims(image, axis=-1)
+
+        elif as_list:
+            if get_one_random:
+                image = image[np.random.randint(len(image))]
+            else:
+                image = list(image)
 
         return image
 
@@ -1723,3 +1253,5 @@ class AsType(Feature):
 
     def get(self, image, dtype, **kwargs):
         return image.astype(dtype)
+
+

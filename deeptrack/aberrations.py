@@ -35,9 +35,8 @@ SphericalAberration
 from typing import List, Tuple
 
 import numpy as np
-
-from .features import Feature
 from .types import PropertyLike
+from .features import Feature
 from .utils import as_list
 
 

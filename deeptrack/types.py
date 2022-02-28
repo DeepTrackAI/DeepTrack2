@@ -2,7 +2,6 @@
 """
 
 import typing
-
 import numpy as np
 
 # Property type declaration

@@ -13,13 +13,6 @@ Background
    :members:
    :exclude-members: get
 
-ComplexGaussian
-^^^^^^^^^^^^^^^
-
-.. autoclass:: deeptrack.noises.ComplexGaussian
-   :members:
-   :exclude-members: get
-
 Gaussian
 ^^^^^^^^
 

@@ -42,7 +42,6 @@ _ID = {
         "MitoGAN",
         "1Qf5vIWEksKPHJ1CBK6GPEhsSCvFFHFrg",
     ),
-    "CellData": ("1CJW7msDiI7xq7oMce4l9tRkNN6O5eKtj", "CellData", ""),
 }
 
 

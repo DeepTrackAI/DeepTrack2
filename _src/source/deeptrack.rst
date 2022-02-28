@@ -7,7 +7,6 @@ Documentation
    backend
    aberrations
    augmentations
-   elementwise
    features
    generators
    image
@@ -20,7 +19,6 @@ Documentation
    properties
    scatterers
    sequences
-   statistics
    test
    types
    utils
