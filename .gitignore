@@ -2,7 +2,7 @@
 **/__pycache__
 deeptrack-app/*
 */datasets/*
-*/models/*
+paper-examples/models/*
 
 build/*
 dist/*
@@ -10,3 +10,11 @@ dist/*
 */datasets/*
 */theory
 _src/build/**/*
+
+ParticleSizing
+3DTracking
+CellData
+ParticleTracking
+data/
+datasets/
+examples/**/*/models/

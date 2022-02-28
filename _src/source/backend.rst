@@ -3,6 +3,62 @@ backend
 
 .. automodule:: deeptrack.backend
 
+_config
+-------
+
+Module classes
+<<<<<<<<<<<<<<
+
+Config
+^^^^^^
+
+.. autoclass:: deeptrack.backend.Config
+   :members:
+   :exclude-members: get
+
+citations
+---------
+
+core
+----
+
+Module classes
+<<<<<<<<<<<<<<
+
+DeepTrackDataList
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: deeptrack.backend.DeepTrackDataList
+   :members:
+   :exclude-members: get
+
+DeepTrackDataObject
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: deeptrack.backend.DeepTrackDataObject
+   :members:
+   :exclude-members: get
+
+DeepTrackNode
+^^^^^^^^^^^^^
+
+.. autoclass:: deeptrack.backend.DeepTrackNode
+   :members:
+   :exclude-members: get
+
+Module functions
+<<<<<<<<<<<<<<<<
+
+create_node_with_operator
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: deeptrack.backend.create_node_with_operator
+
+equivalent
+^^^^^^^^^^
+
+.. autofunction:: deeptrack.backend.equivalent
+
 mie
 ---
 
@@ -23,6 +79,9 @@ stratified_mie_coefficients
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: deeptrack.backend.stratified_mie_coefficients
+
+pint_definition
+---------------
 
 polynomials
 -----------
@@ -79,4 +138,28 @@ ricbesy
 ^^^^^^^
 
 .. autofunction:: deeptrack.backend.ricbesy
+
+tensorflow_bindings
+-------------------
+
+Module functions
+<<<<<<<<<<<<<<<<
+
+implements_tf
+^^^^^^^^^^^^^
+
+.. autofunction:: deeptrack.backend.implements_tf
+
+units
+-----
+
+Module classes
+<<<<<<<<<<<<<<
+
+ConversionTable
+^^^^^^^^^^^^^^^
+
+.. autoclass:: deeptrack.backend.ConversionTable
+   :members:
+   :exclude-members: get
 

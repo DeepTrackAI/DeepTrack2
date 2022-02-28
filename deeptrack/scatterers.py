@@ -18,14 +18,17 @@ Ellipsoid
 """
 
 
+from . import image
+from deeptrack.backend.units import ConversionTable
 from typing import Callable, Tuple
+
 import numpy as np
 
 from . import backend as D
 from .features import Feature, MERGE_STRATEGY_APPEND
-from .image import Image
-from . import image
+from . import pad_image_to_fft, Image
 from .types import PropertyLike, ArrayLike
+from . import units as u
 import warnings
 
 
@@ -69,6 +72,9 @@ class Scatterer(Feature):
 
     __list_merge_strategy__ = MERGE_STRATEGY_APPEND
     __distributed__ = False
+    __conversion_table__ = ConversionTable(
+        position=(u.pixel, u.pixel), z=(u.pixel, u.pixel), voxel_size=(u.meter, u.meter)
+    )
 
     def __init__(
         self,
@@ -77,6 +83,8 @@ class Scatterer(Feature):
         value: PropertyLike[float] = 1.0,
         position_unit: PropertyLike[str] = "pixel",
         upsample: PropertyLike[int] = 1,
+        voxel_size=None,
+        pixel_size=None,
         **kwargs
     ):
         self._processed_properties = False
@@ -86,25 +94,15 @@ class Scatterer(Feature):
             value=value,
             position_unit=position_unit,
             upsample=upsample,
-            **kwargs
+            voxel_size=voxel_size,
+            pixel_size=pixel_size,
+            **kwargs,
         )
 
     def _process_properties(self, properties: dict) -> dict:
         # Rescales the position property
+        properties = super()._process_properties(properties)
         self._processed_properties = True
-        if "position" in properties:
-            if properties["position_unit"] == "meter":
-                properties["position"] = (
-                    np.array(properties["position"])
-                    / np.array(properties["voxel_size"])[: len(properties["position"])]
-                    / properties.get("upscale", 1)
-                )
-                properties["z"] = (
-                    np.array(properties["z"])
-                    / np.array(properties["voxel_size"])[: len(properties["position"])]
-                    / properties.get("upscale", 1)
-                )
-
         return properties
 
     def _process_and_get(
@@ -230,6 +228,11 @@ class Ellipse(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
+    __conversion_table__ = ConversionTable(
+        radius=(u.meter, u.pixel),
+        rotation=(u.radian, u.radian),
+    )
+
     def __init__(
         self,
         radius: PropertyLike[float] = 1e-6,
@@ -264,7 +267,7 @@ class Ellipse(Scatterer):
     def get(self, *ignore, radius, rotation, voxel_size, **kwargs):
 
         # Create a grid to calculate on
-        rad = radius[:2] / voxel_size[:2]
+        rad = radius[:2]
         ceil = int(np.max(np.ceil(rad)))
         X, Y = np.meshgrid(np.arange(-ceil, ceil), np.arange(-ceil, ceil))
 
@@ -303,13 +306,17 @@ class Sphere(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
     """
 
+    __conversion_table__ = ConversionTable(
+        radius=(u.meter, u.pixel),
+    )
+
     def __init__(self, radius: PropertyLike[float] = 1e-6, **kwargs):
         super().__init__(radius=radius, **kwargs)
 
     def get(self, image, radius, voxel_size, **kwargs):
 
         # Create a grid to calculate on
-        rad = radius / voxel_size
+        rad = radius * np.ones(3)
         rad_ceil = np.ceil(rad)
         x = np.arange(-rad_ceil[0], rad_ceil[0])
         y = np.arange(-rad_ceil[1], rad_ceil[1])
@@ -345,6 +352,11 @@ class Ellipsoid(Scatterer):
     upsample : int
         Upsamples the calculations of the pixel occupancy fraction.
     """
+
+    __conversion_table__ = ConversionTable(
+        radius=(u.meter, u.pixel),
+        rotation=(u.radian, u.radian),
+    )
 
     def __init__(
         self,
@@ -403,15 +415,15 @@ class Ellipsoid(Scatterer):
 
     def get(self, image, radius, rotation, voxel_size, **kwargs):
 
-        radius_in_pixels = radius / voxel_size
+        radius_in_pixels = radius
 
-        max_rad = np.max(radius) / voxel_size
+        max_rad = np.max(radius)
         rad_ceil = np.ceil(max_rad)
 
         # Create grid to calculate on
-        x = np.arange(-rad_ceil[0], rad_ceil[0])
-        y = np.arange(-rad_ceil[1], rad_ceil[1])
-        z = np.arange(-rad_ceil[2], rad_ceil[2])
+        x = np.arange(-rad_ceil, rad_ceil)
+        y = np.arange(-rad_ceil, rad_ceil)
+        z = np.arange(-rad_ceil, rad_ceil)
         X, Y, Z = np.meshgrid(x, y, z)
 
         # Rotate the grid
@@ -478,6 +490,16 @@ class MieScatterer(Scatterer):
         camera plane. Used if `position` is of length 2.
     """
 
+    __gpu_compatible__ = True
+
+    __conversion_table__ = ConversionTable(
+        radius=(u.meter, u.meter),
+        polarization_angle=(u.radian, u.radian),
+        collection_angle=(u.radian, u.radian),
+        wavelength=(u.meter, u.meter),
+        offset_z=(u.meter, u.meter),
+    )
+
     def __init__(
         self,
         coefficients: Callable[..., Callable[[int], Tuple[ArrayLike, ArrayLike]]],
@@ -485,6 +507,11 @@ class MieScatterer(Scatterer):
         polarization_angle: PropertyLike[float] = 0,
         collection_angle: PropertyLike[str] = "auto",
         L: PropertyLike[str] = "auto",
+        refractive_index_medium=None,
+        wavelength=None,
+        NA=None,
+        padding=(0,) * 4,
+        output_region=None,
         **kwargs
     ):
         kwargs.pop("is_field", None)
@@ -498,7 +525,12 @@ class MieScatterer(Scatterer):
             polarization_angle=polarization_angle,
             collection_angle=collection_angle,
             coefficients=coefficients,
-            **kwargs
+            refractive_index_medium=refractive_index_medium,
+            wavelength=wavelength,
+            NA=NA,
+            padding=padding,
+            output_region=output_region,
+            **kwargs,
         )
 
     def _process_properties(self, properties):
@@ -508,7 +540,7 @@ class MieScatterer(Scatterer):
         if properties["L"] == "auto":
             try:
                 v = 2 * np.pi * np.max(properties["radius"]) / properties["wavelength"]
-                properties["L"] = int(np.ceil(v + 4 * (v ** (1 / 3)) + 2))
+                properties["L"] = int(np.ceil((v + 4 * (v ** (1 / 3)) + 2) / 10))
             except (ValueError, TypeError):
                 pass
         if properties["collection_angle"] == "auto":
@@ -521,7 +553,6 @@ class MieScatterer(Scatterer):
                 32
                 * min(properties["voxel_size"][:2])
                 / np.sin(properties["collection_angle"])
-                * properties["upscale"]
             )
         return properties
 
@@ -529,7 +560,7 @@ class MieScatterer(Scatterer):
         self,
         inp,
         position,
-        upscaled_output_region,
+        output_region,
         voxel_size,
         padding,
         wavelength,
@@ -539,28 +570,20 @@ class MieScatterer(Scatterer):
         collection_angle,
         polarization_angle,
         coefficients,
-        upscale=1,
         **kwargs
     ):
 
-        xSize = (
-            padding[2]
-            + upscaled_output_region[2]
-            - upscaled_output_region[0]
-            + padding[0]
-        )
-        ySize = (
-            padding[3]
-            + upscaled_output_region[3]
-            - upscaled_output_region[1]
-            + padding[1]
-        )
-        arr = image.pad_image_to_fft(np.zeros((xSize, ySize)))
+        xSize = padding[2] + output_region[2] - output_region[0] + padding[0]
+        ySize = padding[3] + output_region[3] - output_region[1] + padding[1]
+        arr = pad_image_to_fft(np.zeros((xSize, ySize)))
 
         # Evluation grid
-        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[0]) * upscale
-        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[1]) * upscale
+        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[0])
+        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[1])
         X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
+
+        X = image.maybe_cupy(X)
+        Y = image.maybe_cupy(Y)
 
         R2 = np.sqrt(X ** 2 + Y ** 2)
         R3 = np.sqrt(R2 ** 2 + (offset_z) ** 2)
@@ -657,7 +680,7 @@ class MieSphere(MieScatterer):
             coefficients=coeffs,
             radius=radius,
             refractive_index=refractive_index,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -726,5 +749,5 @@ class MieStratifiedSphere(MieScatterer):
             coefficients=coeffs,
             radius=radius,
             refractive_index=refractive_index,
-            **kwargs
+            **kwargs,
         )
