@@ -5,7 +5,7 @@
 DeepTrack is a comprehensive deep learning framework for digital microscopy.
 We provide tools to create physical simulations of customizable optical systems, to generate and train neural network models, and to analyze experimental data.
 
-If you use DeepTrack 2.0 in your project, please cite our DeepTrack 2.0 article:
+If you use DeepTrack 2.1 in your project, please cite our DeepTrack 2.1 article:
 
 ```
 Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe.
@@ -26,7 +26,16 @@ To install DeepTrack 2.1, open a terminal or command prompt and run
     
 If you have a very recent version of python, you may need to install numpy _before_ DeepTrack. This is a known issue with scikit-image.
 
-## Learning DeepTrack 2.0
+## Updating to 2.1 from 2.0
+
+If you are already using DeepTrack 2.0 (pypi version 0.x.x), updating to DeepTrack 2.1 (pypi version 1.x.x) is painless. If you have followed deptraction warnings, no change to your code is needed. There are two breaking changes:
+
+- The deprecated operator `+` to chain features has been removed. It is now only possible using the `>>` operator.
+- The deprecated operator `**` to duplicate a feature has been removed. It is now only possible using the `^` operator.
+
+If you notice any other changes in behavior, please report it to us in the issues tab.
+
+## Learning DeepTrack 2.1
 
 Everybody learns in different ways! Depending on your preferences, and what you want to do with DeepTrack, you may want to check out one or more of these resources.
 
@@ -38,13 +47,13 @@ Similarly, you may find the [get-started notebooks](examples/get-started) a rewa
 
 ## Documentation
 
-The detailed documentation of DeepTrack 2.0 is available at the following link: https://softmatterlab.github.io/DeepTrack-2.0/deeptrack.html
+The detailed documentation of DeepTrack 2.1 is available at the following link: https://softmatterlab.github.io/DeepTrack-2.0/deeptrack.html
 
-### DeepTrack 2.0 in action
+### DeepTrack 2.1 in action
 
 To see DeepTrack in action, we provide six well documented tutorial notebooks that create simulation pipelines and train models:
 
-1. [deeptrack_introduction_tutorial](examples/tutorials/deeptrack_introduction_tutorial.ipynb) gives an overview of how to use DeepTrack 2.0.
+1. [deeptrack_introduction_tutorial](examples/tutorials/deeptrack_introduction_tutorial.ipynb) gives an overview of how to use DeepTrack 2.1.
 2. [tracking_particle_cnn_tutorial](examples/tutorials/tracking_particle_cnn_tutorial.ipynb) demonstrates how to track a point particle with a convolutional neural network (CNN).
 3. [tracking_multiple_particles_unet_tutorial](examples/tutorials/tracking_multiple_particles_unet_tutorial.ipynb) demonstrates how to track multiple particles using a U-net.
 4. [characterizing_aberrations_tutorial](examples/tutorials/characterizing_aberrations_tutorial.ipynb) demonstrates how to add and characterize aberrations of an optical device.
@@ -95,7 +104,7 @@ This order is as follows:
 
 ## Cite us!
 
-If you use DeepTrack 2.0 in your project, please cite us here:
+If you use DeepTrack 2.1 in your project, please cite us here:
 
 ```
 Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe.
@@ -106,24 +115,24 @@ https://doi.org/10.1063/5.0034891
 
 See also:
 
+<https://arxiv.org/abs/2202.06355>:
 ```
 Jesús Pineda, Benjamin Midtvedt, Harshith Bachimanchi, Sergio Noé, Daniel  Midtvedt, Giovanni Volpe,1 and  Carlo  Manzo
 "Geometric deep learning reveals the spatiotemporal fingerprint ofmicroscopic motion."
 arXiv 2202.06355 (2022).
-https://arxiv.org/abs/2202.06355
 ```
 
+<https://doi.org/10.1364/OPTICA.6.000506>:
 ```
 Saga Helgadottir, Aykut Argun, and Giovanni Volpe.
 "Digital video microscopy enhanced by deep learning."
 Optica 6.4 (2019): 506-513.
-https://doi.org/10.1364/OPTICA.6.000506
 ```
 
+<https://github.com/softmatterlab/DeepTrack.git>:
 ```
 Saga Helgadottir, Aykut Argun, and Giovanni Volpe.
 "DeepTrack." (2019)
-https://github.com/softmatterlab/DeepTrack.git
 ```
 
 ## Funding
