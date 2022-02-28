@@ -206,8 +206,8 @@ class ContinuousGenerator(keras.utils.Sequence):
     def __init__(
         self,
         feature,
-        label_function=lambda image: image[1],
-        batch_function=lambda image: image[0],
+        label_function=None,
+        batch_function=None,
         augmentation=None,
         min_data_size=None,
         max_data_size=np.inf,
@@ -217,7 +217,13 @@ class ContinuousGenerator(keras.utils.Sequence):
         max_epochs_per_sample=np.inf,
         verbose=1,
     ):
-
+        if label_function is None and batch_function is None:
+            label_function = lambda image: image[1]
+            batch_function = lambda image: image[0]
+        if batch_function is None:
+            batch_function = lambda image: image
+        if label_function is None:
+            raise ValueError("If batch_function is not None, then label_function cannot be None. Please define a valid label_function.")
         if min_data_size is None:
             min_data_size = min(batch_size * 10, max_data_size - 1)
 
