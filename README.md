@@ -5,7 +5,7 @@
 DeepTrack is a comprehensive deep learning framework for digital microscopy.
 We provide tools to create physical simulations of customizable optical systems, to generate and train neural network models, and to analyze experimental data.
 
-If you use DeepTrack 2.1 in your project, please cite our DeepTrack 2.1 article:
+If you use DeepTrack 2.1 in your project, please cite our DeepTrack article:
 
 ```
 Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe.
@@ -18,9 +18,9 @@ https://doi.org/10.1063/5.0034891
 
 ## Installation
 
-DeepTrack 2.1 requires at least python 3.6
+DeepTrack 2.1 requires at least python 3.6.
 
-To install DeepTrack 2.1, open a terminal or command prompt and run
+To install DeepTrack 2.1, open a terminal or command prompt and run:
 
     pip install deeptrack
     
