@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="350" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/master/assets/logo.png?raw=true>
+  <img width="350" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/develop/assets/logo.png?raw=true>
 </p>
 
 DeepTrack is a comprehensive deep learning framework for digital microscopy.
