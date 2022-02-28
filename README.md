@@ -28,7 +28,7 @@ If you have a very recent version of python, you may need to install numpy _befo
 
 ## Updating to 2.1 from 2.0
 
-If you are already using DeepTrack 2.0 (pypi version 0.x.x), updating to DeepTrack 2.1 (pypi version 1.x.x) is painless. If you have followed deptraction warnings, no change to your code is needed. There are two breaking changes:
+If you are already using DeepTrack 2.0 (pypi version 0.x.x), updating to DeepTrack 2.1 (pypi version 1.x.x) is painless. If you have followed deprecation warnings, no change to your code is needed. There are two breaking changes:
 
 - The deprecated operator `+` to chain features has been removed. It is now only possible using the `>>` operator.
 - The deprecated operator `**` to duplicate a feature has been removed. It is now only possible using the `^` operator.
