@@ -27,3 +27,11 @@ SequentialProperty
    :members:
    :exclude-members: get
 
+Module functions
+<<<<<<<<<<<<<<<<
+
+propagate_data_to_dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: deeptrack.properties.propagate_data_to_dependencies
+

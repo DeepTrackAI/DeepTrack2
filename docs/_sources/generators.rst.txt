@@ -6,17 +6,17 @@ generators
 Module classes
 <<<<<<<<<<<<<<
 
-CappedContinuousGenerator
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: deeptrack.generators.CappedContinuousGenerator
-   :members:
-   :exclude-members: get
-
 ContinuousGenerator
 ^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: deeptrack.generators.ContinuousGenerator
+   :members:
+   :exclude-members: get
+
+DataList
+^^^^^^^^
+
+.. autoclass:: deeptrack.generators.DataList
    :members:
    :exclude-members: get
 

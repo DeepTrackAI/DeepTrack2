@@ -13,6 +13,7 @@ Poisson
 """
 
 import numpy as np
+
 from .features import Feature
 from .image import Image
 from .types import PropertyLike
@@ -63,6 +64,23 @@ class Gaussian(Noise):
         return noisy_image
 
 
+class ComplexGaussian(Noise):
+    def __init__(
+        self, mu: PropertyLike[float] = 0, sigma: PropertyLike[float] = 1, **kwargs
+    ):
+        super().__init__(mu=mu, sigma=sigma, **kwargs)
+
+    def get(self, image, mu, sigma, **kwargs):
+
+        noisy_image = (
+            mu
+            + image
+            + (np.random.randn(*image.shape) + np.random.randn(*image.shape) * 1j)
+            * sigma
+        )
+        return noisy_image
+
+
 class Poisson(Noise):
     """Adds Poisson-distributed noise to an image
 
@@ -81,17 +99,25 @@ class Poisson(Noise):
         *args,
         snr: PropertyLike[float] = 100,
         background: PropertyLike[float] = 0,
+        max_val=1e8,
         **kwargs
     ):
-        super().__init__(*args, snr=snr, background=background, **kwargs)
+        super().__init__(
+            *args, snr=snr, background=background, max_val=max_val, **kwargs
+        )
 
-    def get(self, image, snr, background, **kwargs):
+    def get(self, image, snr, background, max_val, **kwargs):
         image[image < 0] = 0
         immax = np.max(image)
         peak = np.abs(immax - background)
 
         rescale = snr ** 2 / peak ** 2
-        rescale = np.clip(rescale, 1e-10, np.inf)
-        noisy_image = Image(np.random.poisson(image * rescale) / rescale)
-        noisy_image.properties = image.properties
-        return noisy_image
+        rescale = np.clip(rescale, 1e-10, max_val / np.abs(immax))
+        try:
+            noisy_image = Image(np.random.poisson(image * rescale) / rescale)
+            noisy_image.merge_properties_from(image)
+            return noisy_image
+        except ValueError:
+            raise ValueError(
+                "Numpy poisson function errored due to too large value. Set max_val in dt.Poisson to a lower value to fix."
+            )
