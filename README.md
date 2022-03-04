@@ -74,7 +74,7 @@ Additionally, we have seven more case studies which are less documented, but giv
 
 We also have examples that are specific for certain models. This includes 
 - [*LodeSTAR*](examples/LodeSTAR) for label-free particle tracking.
-- [*MAGIK*](examples/MAGIK) for graph-based particle linking a trace characterization.
+- [*MAGIK*](deeptrack/models/gnns/) for graph-based particle linking a trace characterization.
 
 ### Video Tutorials
 
