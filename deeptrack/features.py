@@ -231,6 +231,18 @@ class Feature(DeepTrackNode):
 
     def __call__(self, image_list: Image or List[Image] = None, _ID=(), **kwargs):
 
+        """Execute the feature or pipeline.
+
+        Arguments
+        ---------
+        image_list : Image or List[Image] or array-like or None
+           The input to the feature or pipeline. 
+        **kwargs : any
+           Additional paramaters sent to the pipeline. These will override properties of the same name.
+           For example `feature(x, value=4)` will execute `feature` on the input `x`, setting the property `value`
+           to 4. In a pipeline, all features will be affected by this.
+        
+        """
         # Potentially fragile. Maybe a special variable dt._last_input instead?
         if image_list is not None and not (
             isinstance(image_list, list) and len(image_list) == 0
@@ -261,6 +273,11 @@ class Feature(DeepTrackNode):
         return self.__gpu_compatible__ and np.prod(np.shape(inp)) > (90000)
 
     def update(self, **_):
+        """Refresh the feature to create a new image.
+
+        Per default, when a feature is called multiple times, it will return the same value.
+        To tell the feature to return a new value, we first call `update`.
+        """
         self._update()
         return self
 
@@ -284,6 +301,7 @@ class Feature(DeepTrackNode):
         np.random.seed(self._random_seed(_ID=_ID))
 
     def bind_arguments(self, arguments):
+        """See `features.Arguments`"""
         self.arguments = arguments
         return self
 

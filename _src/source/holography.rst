@@ -1,50 +1,44 @@
-noises
-======
+holography
+==========
 
-.. automodule:: deeptrack.noises
+.. automodule:: deeptrack.holography
 
 Module classes
 <<<<<<<<<<<<<<
 
-Background
-^^^^^^^^^^
+FourierTransform
+^^^^^^^^^^^^^^^^
 
-.. autoclass:: deeptrack.noises.Background
+.. autoclass:: deeptrack.holography.FourierTransform
    :members:
    :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
-ComplexGaussian
-^^^^^^^^^^^^^^^
+FourierTransformTransformation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: deeptrack.noises.ComplexGaussian
+.. autoclass:: deeptrack.holography.FourierTransformTransformation
    :members:
    :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
-Gaussian
-^^^^^^^^
+InverseFourierTransform
+^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: deeptrack.noises.Gaussian
+.. autoclass:: deeptrack.holography.InverseFourierTransform
    :members:
    :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
-Noise
-^^^^^
-
-.. autoclass:: deeptrack.noises.Noise
-   :members:
-   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
-
-Offset
-^^^^^^
-
-.. autoclass:: deeptrack.noises.Offset
-   :members:
-   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
-
-Poisson
+Rescale
 ^^^^^^^
 
-.. autoclass:: deeptrack.noises.Poisson
+.. autoclass:: deeptrack.holography.Rescale
    :members:
    :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
+
+Module functions
+<<<<<<<<<<<<<<<<
+
+get_propagation_matrix
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: deeptrack.holography.get_propagation_matrix
 

@@ -33,7 +33,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="image" href="image.html" />
+    <link rel="next" title="holography" href="holography.html" />
     <link rel="prev" title="features" href="features.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
@@ -124,6 +124,11 @@
  <li class="toctree-l2 current active">
   <a class="current reference internal" href="#">
    generators
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="holography.html">
+   holography
   </a>
  </li>
  <li class="toctree-l2">
@@ -274,7 +279,7 @@
 <h3>ContinuousGenerator<a class="headerlink" href="#continuousgenerator" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="deeptrack.generators.ContinuousGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.generators.</code><code class="sig-name descname">ContinuousGenerator</code><span class="sig-paren">(</span><em class="sig-param">feature</em>, <em class="sig-param">label_function=&lt;function ContinuousGenerator.&lt;lambda&gt;&gt;</em>, <em class="sig-param">batch_function=&lt;function ContinuousGenerator.&lt;lambda&gt;&gt;</em>, <em class="sig-param">augmentation=None</em>, <em class="sig-param">min_data_size=None</em>, <em class="sig-param">max_data_size=inf</em>, <em class="sig-param">batch_size=32</em>, <em class="sig-param">shuffle_batch=True</em>, <em class="sig-param">ndim=4</em>, <em class="sig-param">max_epochs_per_sample=inf</em>, <em class="sig-param">verbose=1</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.generators.ContinuousGenerator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.generators.</code><code class="sig-name descname">ContinuousGenerator</code><span class="sig-paren">(</span><em class="sig-param">feature</em>, <em class="sig-param">label_function=None</em>, <em class="sig-param">batch_function=None</em>, <em class="sig-param">augmentation=None</em>, <em class="sig-param">min_data_size=None</em>, <em class="sig-param">max_data_size=inf</em>, <em class="sig-param">batch_size=32</em>, <em class="sig-param">shuffle_batch=True</em>, <em class="sig-param">ndim=4</em>, <em class="sig-param">max_epochs_per_sample=inf</em>, <em class="sig-param">verbose=1</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.generators.ContinuousGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generator that asynchronously expands the dataset.</p>
 <p>Generator that aims to speed up the training of networks by striking a
 balance between the generalization gained by generating new images
@@ -458,7 +463,7 @@ frameworks to continuously access new features.</p>
               <div class='prev-next-bottom'>
                 
     <a class='left-prev' id="prev-link" href="features.html" title="previous page">features</a>
-    <a class='right-next' id="next-link" href="image.html" title="next page">image</a>
+    <a class='right-next' id="next-link" href="holography.html" title="next page">holography</a>
 
               </div>
               

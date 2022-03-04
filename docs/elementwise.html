@@ -127,6 +127,11 @@
   </a>
  </li>
  <li class="toctree-l2">
+  <a class="reference internal" href="holography.html">
+   holography
+  </a>
+ </li>
+ <li class="toctree-l2">
   <a class="reference internal" href="image.html">
    image
   </a>
@@ -399,79 +404,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -490,79 +436,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -581,79 +468,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -672,79 +500,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -763,79 +532,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -854,79 +564,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -945,79 +596,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1036,79 +628,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1127,79 +660,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1218,79 +692,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1309,79 +724,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1400,79 +756,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1491,79 +788,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1582,79 +820,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1673,79 +852,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1764,79 +884,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1855,79 +916,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1946,79 +948,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2037,79 +980,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2128,79 +1012,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2219,79 +1044,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2310,79 +1076,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2401,79 +1108,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2492,79 +1140,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2583,79 +1172,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2674,79 +1204,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2765,79 +1236,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2856,79 +1268,20 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, replicate_index])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
 <td><p>Call self as a function.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">action</span></code>([replicate_index])</p></td>
-<td><p>Creates the image.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
+<td><p>See <cite>features.Arguments</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
+<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
 <td><p>Visualizes the output of the feature.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list, replicate_index])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
-<td><p>Returns the feature</p></td>
-</tr>
-</tbody>
-</table>
-<table class="table">
-<colgroup>
-<col style="width: 71%" />
-<col style="width: 29%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>add_child</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>add_dependency</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>add_feature</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>bind_arguments</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>current_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_citations</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>invalidate</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>is_valid</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>previous</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>recurse_children</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>recurse_dependencies</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>seed</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>set_value</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>store</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>valid_index</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>validate</strong></p></td>
-<td></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
+<td><p>Refresh the feature to create a new image.</p></td>
 </tr>
 </tbody>
 </table>

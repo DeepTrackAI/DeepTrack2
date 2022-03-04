@@ -3,8 +3,19 @@ models
 
 .. automodule:: deeptrack.models
 
-autotracking
-------------
+cgan
+----
+
+Module functions
+<<<<<<<<<<<<<<<<
+
+CGAN
+^^^^
+
+.. autofunction:: deeptrack.models.CGAN
+
+cyclegan
+--------
 
 dense
 -----
@@ -17,7 +28,40 @@ FullyConnected
 
 .. autoclass:: deeptrack.models.FullyConnected
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
+
+embeddings
+----------
+
+Module classes
+<<<<<<<<<<<<<<
+
+ClassToken
+^^^^^^^^^^
+
+.. autoclass:: deeptrack.models.ClassToken
+   :members:
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
+
+LearnablePositionEmbs
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: deeptrack.models.LearnablePositionEmbs
+   :members:
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
+
+Module functions
+<<<<<<<<<<<<<<<<
+
+ClassTokenLayer
+^^^^^^^^^^^^^^^
+
+.. autofunction:: deeptrack.models.ClassTokenLayer
+
+LearnablePositionEmbsLayer
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: deeptrack.models.LearnablePositionEmbsLayer
 
 equivariances
 -------------
@@ -30,35 +74,49 @@ Equivariance
 
 .. autoclass:: deeptrack.models.Equivariance
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 LogScaleEquivariance
 ^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: deeptrack.models.LogScaleEquivariance
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 Rotational2DEquivariance
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: deeptrack.models.Rotational2DEquivariance
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 ScaleEquivariance
 ^^^^^^^^^^^^^^^^^
 
 .. autoclass:: deeptrack.models.ScaleEquivariance
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 TranslationalEquivariance
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: deeptrack.models.TranslationalEquivariance
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
+
+gan
+---
+
+Module functions
+<<<<<<<<<<<<<<<<
+
+GAN
+^^^
+
+.. autofunction:: deeptrack.models.GAN
+
+gans
+----
 
 generators
 ----------
@@ -66,12 +124,18 @@ generators
 Module classes
 <<<<<<<<<<<<<<
 
-AutoTrackGenerator
-^^^^^^^^^^^^^^^^^^
+LodeSTARGenerator
+^^^^^^^^^^^^^^^^^
 
-.. autoclass:: deeptrack.models.AutoTrackGenerator
+.. autoclass:: deeptrack.models.LodeSTARGenerator
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
+
+gnns
+----
+
+lodestar
+--------
 
 models
 ------
@@ -79,26 +143,30 @@ models
 Module classes
 <<<<<<<<<<<<<<
 
-AutoMultiTracker
-^^^^^^^^^^^^^^^^
+LodeSTAR
+^^^^^^^^
 
-.. autoclass:: deeptrack.models.AutoMultiTracker
+.. autoclass:: deeptrack.models.LodeSTAR
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
-AutoTracker
-^^^^^^^^^^^
+LodeSTARBaseModel
+^^^^^^^^^^^^^^^^^
 
-.. autoclass:: deeptrack.models.AutoTracker
+.. autoclass:: deeptrack.models.LodeSTARBaseModel
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
-AutoTrackerBaseModel
-^^^^^^^^^^^^^^^^^^^^
+pcgan
+-----
 
-.. autoclass:: deeptrack.models.AutoTrackerBaseModel
-   :members:
-   :exclude-members: get
+Module functions
+<<<<<<<<<<<<<<<<
+
+PCGAN
+^^^^^
+
+.. autofunction:: deeptrack.models.PCGAN
 
 recurrent
 ---------
@@ -111,14 +179,14 @@ RNN
 
 .. autoclass:: deeptrack.models.RNN
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 rnn
 ^^^
 
 .. autoclass:: deeptrack.models.rnn
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 utils
 -----
@@ -131,14 +199,14 @@ KerasModel
 
 .. autoclass:: deeptrack.models.KerasModel
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 Model
 ^^^^^
 
 .. autoclass:: deeptrack.models.Model
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 Module functions
 <<<<<<<<<<<<<<<<
@@ -152,6 +220,16 @@ as_KerasModel
 ^^^^^^^^^^^^^
 
 .. autofunction:: deeptrack.models.as_KerasModel
+
+as_activation
+^^^^^^^^^^^^^
+
+.. autofunction:: deeptrack.models.as_activation
+
+as_normalization
+^^^^^^^^^^^^^^^^
+
+.. autofunction:: deeptrack.models.as_normalization
 
 compile
 ^^^^^^^
@@ -167,6 +245,11 @@ register_config
 ^^^^^^^^^^^^^^^
 
 .. autofunction:: deeptrack.models.register_config
+
+single_layer_call
+^^^^^^^^^^^^^^^^^
+
+.. autofunction:: deeptrack.models.single_layer_call
 
 with_citation
 ^^^^^^^^^^^^^

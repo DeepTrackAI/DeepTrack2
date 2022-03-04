@@ -86,7 +86,7 @@ for _, submodule in get_submodules(deeptrack):
                     + ".. autoclass:: "
                     + member_name
                     + "\n   :members:"
-                    + "\n   :exclude-members: get\n\n"
+                    + "\n   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store\n\n"
                 )
                 submodule_file.flush()
 

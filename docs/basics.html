@@ -166,7 +166,7 @@
                 
   <div class="section" id="basics">
 <h1>Basics<a class="headerlink" href="#basics" title="Permalink to this headline">¶</a></h1>
-<p>This section will explain core concepts about programming with DeepTrack 2.0. The section <cite>Tutorials</cite> introduces some notebooks which more directly solve problems with DeepTrack 2. Feel free to skip directly to those if you are not interested in customizing the examples.</p>
+<p>This section will explain core concepts about programming with DeepTrack 2.1. The section <cite>Tutorials</cite> introduces some notebooks which more directly solve problems with DeepTrack 2. Feel free to skip directly to those if you are not interested in customizing the examples.</p>
 <p>For the following subsections we assume the following imports:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">deeptrack</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -174,9 +174,12 @@
 </div>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
-<p>Features are the core computing blocks of DeepTrack 2, and operate mainly on numpy arrays. They have two special methods with which you can interact with them: <cite>resolve</cite> and <cite>update</cite>. For now, we only need to focus on <cite>resolve</cite>, which executes the feature. The first argument is the input of the feature, which does not always have to be specified. For example:</p>
+<p>Features are the core computing blocks of DeepTrack 2, and operate mainly on numpy arrays.
+They have two special methods with which you can interact with them: <cite>__call__</cite> and <cite>update</cite>.
+For now, we only need to focus on <cite>__call__</cite>, which executes the feature. We will refer to this as “resolving” the feature.
+The first argument is the input of the feature, which does not always have to be specified. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">add_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">add_one</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">11</span>
 </pre></div>
 </div>
@@ -184,12 +187,12 @@
 </div>
 <div class="section" id="chaining-features">
 <h2>Chaining features<a class="headerlink" href="#chaining-features" title="Permalink to this headline">¶</a></h2>
-<p>Features can be chained using the + operator. If two features are chained, the output of the first is passed as the input of the second.</p>
+<p>Features can be chained using the &gt;&gt; operator. If two features are chained, the output of the first is passed as the input of the second.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">multiply_two</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Multiply</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">add_and_multiply</span> <span class="o">=</span> <span class="n">add_one</span> <span class="o">+</span> <span class="n">multiply_two</span>
+<span class="n">add_and_multiply</span> <span class="o">=</span> <span class="n">add_one</span> <span class="o">&gt;&gt;</span> <span class="n">multiply_two</span>
 
-<span class="n">add_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">add_one</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">22</span>
 </pre></div>
 </div>
@@ -198,11 +201,11 @@ and then multiplies it with two. Resolving this feature on the input 10 gives (1
 </div>
 <div class="section" id="executing-a-feature-multiple-times">
 <h2>Executing a feature multiple times<a class="headerlink" href="#executing-a-feature-multiple-times" title="Permalink to this headline">¶</a></h2>
-<p>You will often find that you want to execute a single feature several times in a row. This is achieved using the ** operator. The integer on the right determines how many times to execute the feature on the left.</p>
+<p>You will often find that you want to execute a single feature several times in a row. This is achieved using the <a href="#id1"><span class="problematic" id="id2">*</span></a>^operator. The integer on the right determines how many times to execute the feature on the left.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">add_one_five_times</span> <span class="o">=</span> <span class="n">add_one</span> <span class="o">**</span> <span class="mi">5</span>
+<span class="n">add_one_five_times</span> <span class="o">=</span> <span class="n">add_one</span> <span class="o">^</span> <span class="mi">5</span>
 
-<span class="n">add_one_five_times</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">add_one_five_times</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">15</span>
 </pre></div>
 </div>
@@ -212,32 +215,32 @@ and then multiplies it with two. Resolving this feature on the input 10 gives (1
 <h2>Using functions as arguments<a class="headerlink" href="#using-functions-as-arguments" title="Permalink to this headline">¶</a></h2>
 <p>The magic of DeepTrack is that any argument used to create feature can be replaced with a function that returns a value to use. The easiet example is a function that always returns the same value:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">add_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">add_one</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">11</span>
 </pre></div>
 </div>
 <p>However, this is not very exciting. let’s do something more interesting:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_zero_or_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">add_zero_or_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">add_zero_or_one</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">10</span>
 </pre></div>
 </div>
 <p>Here, the value we add is randomly either 0 or 1. This time, it added zero. We can check this explicitly by running</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_zero_or_one</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">current_value</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_zero_or_one</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">0</span>
 </pre></div>
 </div>
 <p>The first input of the Add feature is <cite>value</cite>, which we access and request its current value. Other features may have different names for their arguments, and all arguments are named arguments.</p>
 <p>To request a new value, we call <cite>update</cite>. Until update is called, it will always use the same value.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_zero_or_one</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-<span class="n">add_zero_or_one</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">current_value</span>
+<span class="n">add_zero_or_one</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="done">
 <h2>Done!<a class="headerlink" href="#done" title="Permalink to this headline">¶</a></h2>
-<p>That’s it! You’re now ready to start playing with DeepTrack 2.0. However, you’re encouraged to look at the next section to learn more powerful interactions, such as dependencies between arguments or features!</p>
+<p>That’s it! You’re now ready to start playing with DeepTrack 2.1. However, you’re encouraged to look at the next section to learn more powerful interactions, such as dependencies between arguments or features!</p>
 </div>
 </div>
 

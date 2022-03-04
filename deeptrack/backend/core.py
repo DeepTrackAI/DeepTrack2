@@ -249,6 +249,7 @@ class DeepTrackNode:
             yield from dependency.recurse_dependencies(memory=memory)
 
     def get_citations(self):
+        """Gets a set of citations for all objects in a pipeline."""
         cites = {self.citation}
         for dep in self.recurse_dependencies():
             for obj in type(dep).mro():

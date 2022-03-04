@@ -10,6 +10,7 @@ Documentation
    elementwise
    features
    generators
+   holography
    image
    layers
    losses

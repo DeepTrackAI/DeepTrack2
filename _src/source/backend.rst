@@ -14,7 +14,7 @@ Config
 
 .. autoclass:: deeptrack.backend.Config
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 citations
 ---------
@@ -25,26 +25,26 @@ core
 Module classes
 <<<<<<<<<<<<<<
 
-DeepTrackDataList
+DeepTrackDataDict
 ^^^^^^^^^^^^^^^^^
 
-.. autoclass:: deeptrack.backend.DeepTrackDataList
+.. autoclass:: deeptrack.backend.DeepTrackDataDict
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 DeepTrackDataObject
 ^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: deeptrack.backend.DeepTrackDataObject
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 DeepTrackNode
 ^^^^^^^^^^^^^
 
 .. autoclass:: deeptrack.backend.DeepTrackNode
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 
 Module functions
 <<<<<<<<<<<<<<<<
@@ -161,5 +161,5 @@ ConversionTable
 
 .. autoclass:: deeptrack.backend.ConversionTable
    :members:
-   :exclude-members: get
+   :exclude-members: get, add_child, add_dependency, add_feature, invalidate, is_valid, recurse_children, recurse_dependencies, seed, set_value, valid_index, validate, sample, action, resolve, previous, current_value, store
 

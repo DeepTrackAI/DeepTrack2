@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>noises &#8212; DeepTrack 2.0 documentation</title>
+    <title>holography &#8212; DeepTrack 2.0 documentation</title>
     
   <link href="_static/css/theme.css" rel="stylesheet" />
   <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
@@ -33,8 +33,8 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="optics" href="optics.html" />
-    <link rel="prev" title="models" href="models.html" />
+    <link rel="next" title="image" href="image.html" />
+    <link rel="prev" title="generators" href="generators.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
   </head>
@@ -126,8 +126,8 @@
    generators
   </a>
  </li>
- <li class="toctree-l2">
-  <a class="reference internal" href="holography.html">
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
    holography
   </a>
  </li>
@@ -156,8 +156,8 @@
    models
   </a>
  </li>
- <li class="toctree-l2 current active">
-  <a class="current reference internal" href="#">
+ <li class="toctree-l2">
+  <a class="reference internal" href="noises.html">
    noises
   </a>
  </li>
@@ -218,43 +218,40 @@
 <nav id="bd-toc-nav">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#classes">
-   Classes
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#module-classes">
    Module classes
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#background">
-     Background
+    <a class="reference internal nav-link" href="#fouriertransform">
+     FourierTransform
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#complexgaussian">
-     ComplexGaussian
+    <a class="reference internal nav-link" href="#fouriertransformtransformation">
+     FourierTransformTransformation
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#gaussian">
-     Gaussian
+    <a class="reference internal nav-link" href="#inversefouriertransform">
+     InverseFourierTransform
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#noise">
-     Noise
+    <a class="reference internal nav-link" href="#rescale">
+     Rescale
     </a>
    </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-functions">
+   Module functions
+  </a>
+  <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#offset">
-     Offset
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#poisson">
-     Poisson
+    <a class="reference internal nav-link" href="#get-propagation-matrix">
+     get_propagation_matrix
     </a>
    </li>
   </ul>
@@ -276,36 +273,24 @@
               
               <div>
                 
-  <div class="section" id="module-deeptrack.noises">
-<span id="noises"></span><h1>noises<a class="headerlink" href="#module-deeptrack.noises" title="Permalink to this headline">¶</a></h1>
-<p>Features for introducing noise to images.</p>
-<div class="section" id="classes">
-<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt>Noise</dt><dd><p>Base abstract noise class.</p>
-</dd>
-<dt>Offset, Background</dt><dd><p>Adds a constant value to an image.</p>
-</dd>
-<dt>Gaussian</dt><dd><p>Adds IID Gaussian noise to an image.</p>
-</dd>
-<dt>Poisson</dt><dd><p>Adds Poisson-distributed noise to an image.</p>
-</dd>
-</dl>
-</div>
+  <div class="section" id="module-deeptrack.holography">
+<span id="holography"></span><h1>holography<a class="headerlink" href="#module-deeptrack.holography" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-classes">
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="background">
-<h3>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="fouriertransform">
+<h3>FourierTransform<a class="headerlink" href="#fouriertransform" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.noises.Background">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.noises.</code><code class="sig-name descname">Background</code><span class="sig-paren">(</span><em class="sig-param">offset</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.noises.Background" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a constant value to an image
-Parameters
-———-
-offset : float</p>
-<blockquote>
-<div><p>The value to add to the image</p>
-</div></blockquote>
+<dt id="deeptrack.holography.FourierTransform">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.holography.</code><code class="sig-name descname">FourierTransform</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.holography.FourierTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates matrices for propagating an optical field.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>index of z-propagator matrix</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -333,11 +318,11 @@ offset : float</p>
 </dd></dl>
 
 </div>
-<div class="section" id="complexgaussian">
-<h3>ComplexGaussian<a class="headerlink" href="#complexgaussian" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="fouriertransformtransformation">
+<h3>FourierTransformTransformation<a class="headerlink" href="#fouriertransformtransformation" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.noises.ComplexGaussian">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.noises.</code><code class="sig-name descname">ComplexGaussian</code><span class="sig-paren">(</span><em class="sig-param">mu=0</em>, <em class="sig-param">sigma=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.noises.ComplexGaussian" title="Permalink to this definition">¶</a></dt>
+<dt id="deeptrack.holography.FourierTransformTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.holography.</code><code class="sig-name descname">FourierTransformTransformation</code><span class="sig-paren">(</span><em class="sig-param">Tz</em>, <em class="sig-param">Tzinv</em>, <em class="sig-param">i</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.holography.FourierTransformTransformation" title="Permalink to this definition">¶</a></dt>
 <dd><p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
@@ -365,18 +350,16 @@ offset : float</p>
 </dd></dl>
 
 </div>
-<div class="section" id="gaussian">
-<h3>Gaussian<a class="headerlink" href="#gaussian" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="inversefouriertransform">
+<h3>InverseFourierTransform<a class="headerlink" href="#inversefouriertransform" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.noises.Gaussian">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.noises.</code><code class="sig-name descname">Gaussian</code><span class="sig-paren">(</span><em class="sig-param">mu=0</em>, <em class="sig-param">sigma=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.noises.Gaussian" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds IID Gaussian noise to an image</p>
+<dt id="deeptrack.holography.InverseFourierTransform">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.holography.</code><code class="sig-name descname">InverseFourierTransform</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.holography.InverseFourierTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates matrices for propagating an optical field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>mu</strong><span class="classifier">float</span></dt><dd><p>The mean of the distribution.</p>
-</dd>
-<dt><strong>sigma</strong><span class="classifier">float</span></dt><dd><p>The root of the variance of the distribution.</p>
+<dt><strong>i</strong><span class="classifier">int</span></dt><dd><p>index of z-propagator matrix</p>
 </dd>
 </dl>
 </dd>
@@ -408,62 +391,16 @@ offset : float</p>
 </dd></dl>
 
 </div>
-<div class="section" id="noise">
-<h3>Noise<a class="headerlink" href="#noise" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="rescale">
+<h3>Rescale<a class="headerlink" href="#rescale" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="deeptrack.noises.Noise">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.noises.</code><code class="sig-name descname">Noise</code><span class="sig-paren">(</span><em class="sig-param">_input=[]</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.noises.Noise" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base abstract noise class.</p>
-<p class="rubric">Methods</p>
-<table class="longtable table autosummary">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
-<td><p>See <cite>features.Arguments</cite></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_citations</span></code>()</p></td>
-<td><p>Gets a set of citations for all objects in a pipeline.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
-<td><p>Visualizes the output of the feature.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**_)</p></td>
-<td><p>Refresh the feature to create a new image.</p></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="offset">
-<h3>Offset<a class="headerlink" href="#offset" title="Permalink to this headline">¶</a></h3>
-<dl class="attribute">
-<dt id="deeptrack.noises.Offset">
-<code class="sig-prename descclassname">deeptrack.noises.</code><code class="sig-name descname">Offset</code><a class="headerlink" href="#deeptrack.noises.Offset" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#deeptrack.noises.Background" title="deeptrack.noises.Background"><code class="xref py py-class docutils literal notranslate"><span class="pre">deeptrack.noises.Background</span></code></a></p>
-</dd></dl>
-
-</div>
-<div class="section" id="poisson">
-<h3>Poisson<a class="headerlink" href="#poisson" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="deeptrack.noises.Poisson">
-<em class="property">class </em><code class="sig-prename descclassname">deeptrack.noises.</code><code class="sig-name descname">Poisson</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">snr=100</em>, <em class="sig-param">background=0</em>, <em class="sig-param">max_val=100000000.0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.noises.Poisson" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds Poisson-distributed noise to an image</p>
+<dt id="deeptrack.holography.Rescale">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.holography.</code><code class="sig-name descname">Rescale</code><span class="sig-paren">(</span><em class="sig-param">rescale=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.holography.Rescale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rescales an optical field by subtracting the real part of the field beofre multiplication.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>snr</strong><span class="classifier">float</span></dt><dd><p>Signal to noise ratio of the final image. The signal is determined
-by the peak value of the image.</p>
-</dd>
-<dt><strong>background</strong><span class="classifier">float</span></dt><dd><p>Value to be be used as the background. This is used to calculate the
-signal of the image.</p>
+<dt><strong>rescale</strong><span class="classifier">float</span></dt><dd><p>index of z-propagator matrix</p>
 </dd>
 </dl>
 </dd>
@@ -493,6 +430,17 @@ signal of the image.</p>
 </tbody>
 </table>
 </dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-functions">
+<h2>Module functions<a class="headerlink" href="#module-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="get-propagation-matrix">
+<h3>get_propagation_matrix<a class="headerlink" href="#get-propagation-matrix" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.holography.get_propagation_matrix">
+<code class="sig-prename descclassname">deeptrack.holography.</code><code class="sig-name descname">get_propagation_matrix</code><span class="sig-paren">(</span><em class="sig-param">shape</em>, <em class="sig-param">to_z</em>, <em class="sig-param">pixel_size</em>, <em class="sig-param">wavelength</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.holography.get_propagation_matrix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 </div>
@@ -504,8 +452,8 @@ signal of the image.</p>
               
               <div class='prev-next-bottom'>
                 
-    <a class='left-prev' id="prev-link" href="models.html" title="previous page">models</a>
-    <a class='right-next' id="next-link" href="optics.html" title="next page">optics</a>
+    <a class='left-prev' id="prev-link" href="generators.html" title="previous page">generators</a>
+    <a class='right-next' id="next-link" href="image.html" title="next page">image</a>
 
               </div>
               
