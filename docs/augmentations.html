@@ -218,11 +218,6 @@
 <nav id="bd-toc-nav">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#classes">
-   Classes
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#module-classes">
    Module classes
   </a>
@@ -303,26 +298,7 @@
                 
   <div class="section" id="module-deeptrack.augmentations">
 <span id="augmentations"></span><h1>augmentations<a class="headerlink" href="#module-deeptrack.augmentations" title="Permalink to this headline">¶</a></h1>
-<p>Features that augment images</p>
-<p>Augmentations are features that can resolve more than one image without
-calling <cite>.resolve()</cite> on the parent feature. Specifically, they create
-<cite>updates_per_reload</cite> images, while calling their parent feature
-<cite>load_size</cite> times.</p>
-<div class="section" id="classes">
-<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt>Augmentation</dt><dd><p>Base abstract augmentation class.</p>
-</dd>
-<dt>PreLoad</dt><dd><p>Simple storage with no augmentation.</p>
-</dd>
-<dt>FlipLR</dt><dd><p>Flips images left-right.</p>
-</dd>
-<dt>FlipUD</dt><dd><p>Flips images up-down.</p>
-</dd>
-<dt>FlipDiagonal</dt><dd><p>Flips images diagonally.</p>
-</dd>
-</dl>
-</div>
+<p>Features that augment images.</p>
 <div class="section" id="module-classes">
 <h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="affine">
@@ -382,7 +358,7 @@ image.</p>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
+<td><p>Execute the feature or pipeline.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
 <td><p>See <cite>features.Arguments</cite></p></td>
@@ -418,32 +394,10 @@ image.</p>
 <dt id="deeptrack.augmentations.Augmentation">
 <em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">Augmentation</code><span class="sig-paren">(</span><em class="sig-param">time_consistent=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.Augmentation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base abstract augmentation class.</p>
-<p>Augmentations are features that can resolve more than one image without
-calling <cite>.resolve()</cite> on the parent feature. Specifically, they create
-<cite>updates_per_reload</cite> images, while calling their parent feature
-<cite>load_size</cite> times. They achieve this by resolving <cite>load_size</cite> results
-from the parent feature at once, and randomly drawing one of these
-results as input to the method <cite>.get()</cite>. A new input is chosen
-every time <cite>.update()</cite> is called. Once <cite>.update()</cite> has been called
-<cite>updated_per_reload</cite> times, a new batch of <cite>load_size</cite> results are
-resolved from the parent feature.</p>
-<p>The method <cite>.get()</cite> of implementations of this class may accept the
-property <cite>number_of_updates</cite> as an argument. This number represents
-the number of times the <cite>.update()</cite> method has been called since the
-last time the parent feature was resolved.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>feature</strong><span class="classifier">Feature, optional, deprecated</span></dt><dd><p>DEPRECATED. The parent feature. If not passed, it acts like any other feature.</p>
-</dd>
-<dt><strong>load_size</strong><span class="classifier">int</span></dt><dd><p>Number of results to resolve from the parent feature.</p>
-</dd>
-<dt><strong>updates_per_reload</strong><span class="classifier">int</span></dt><dd><p>Number of times <cite>.update()</cite> is called before resolving new results
-from the parent feature.</p>
-</dd>
-<dt><strong>update_properties</strong><span class="classifier">Callable or None</span></dt><dd><p>Function called on the output of the method <cite>.get()</cite>. Overrides
-the default behaviour, allowing full control over how to update
-the properties of the output to account for the augmentation.</p>
+<dt><strong>time_consistend: boolean</strong></dt><dd><p>Whether to augment all images in a sequence equally.</p>
 </dd>
 </dl>
 </dd>
@@ -456,7 +410,7 @@ the properties of the output to account for the augmentation.</p>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
+<td><p>Execute the feature or pipeline.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
 <td><p>See <cite>features.Arguments</cite></p></td>
@@ -521,7 +475,7 @@ the modulo of the corner with the allowed region is used.</p>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
+<td><p>Execute the feature or pipeline.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
 <td><p>See <cite>features.Arguments</cite></p></td>
@@ -575,7 +529,7 @@ A value of None or -1 indicates to skip that axis.</p>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
+<td><p>Execute the feature or pipeline.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
 <td><p>See <cite>features.Arguments</cite></p></td>
@@ -665,7 +619,7 @@ i.e. <code class="docutils literal notranslate"><span class="pre">constant</span
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
+<td><p>Execute the feature or pipeline.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
 <td><p>See <cite>features.Arguments</cite></p></td>
@@ -710,7 +664,7 @@ i.e. <code class="docutils literal notranslate"><span class="pre">constant</span
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
+<td><p>Execute the feature or pipeline.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
 <td><p>See <cite>features.Arguments</cite></p></td>
@@ -755,7 +709,7 @@ i.e. <code class="docutils literal notranslate"><span class="pre">constant</span
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
+<td><p>Execute the feature or pipeline.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
 <td><p>See <cite>features.Arguments</cite></p></td>
@@ -800,7 +754,7 @@ i.e. <code class="docutils literal notranslate"><span class="pre">constant</span
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
+<td><p>Execute the feature or pipeline.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
 <td><p>See <cite>features.Arguments</cite></p></td>
@@ -854,7 +808,7 @@ and is defined as (left, right, up, down, before_axis_3, after_axis_3, …)</p>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
+<td><p>Execute the feature or pipeline.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
 <td><p>See <cite>features.Arguments</cite></p></td>
@@ -908,7 +862,7 @@ A value of None or -1 indicates to skip that axis.</p>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
+<td><p>Execute the feature or pipeline.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
 <td><p>See <cite>features.Arguments</cite></p></td>
@@ -943,7 +897,27 @@ A value of None or -1 indicates to skip that axis.</p>
 <dl class="class">
 <dt id="deeptrack.augmentations.Reuse">
 <em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">Reuse</code><span class="sig-paren">(</span><em class="sig-param">feature</em>, <em class="sig-param">uses=2</em>, <em class="sig-param">storage=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.Reuse" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
+<dd><p>Acts like cache.</p>
+<p><cite>Reuse</cite> stores the output of a feature and reuses it for subsequent calls, even if it is updated.
+This is can be used after a time-consuming feature to augment the output of the feature without
+recalculating it. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Reuse</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">uses</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">dt</span><span class="o">.</span><span class="n">FlipLR</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Here, the output of pipeline is used twice, augmented randomly by FlipLR.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>The feature to reuse.</p>
+</dd>
+<dt><strong>uses</strong><span class="classifier">int</span></dt><dd><p>Number of each stored image uses before evaluating <cite>feature</cite>. Note that the actual total number of uses is <cite>uses * storage</cite>. Should be constant.</p>
+</dd>
+<dt><strong>storage</strong><span class="classifier">int</span></dt><dd><p>Number of instances of the output of <cite>feature</cite> to cache. Should be constant.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
 <table class="longtable table autosummary">
 <colgroup>
 <col style="width: 10%" />
@@ -951,7 +925,7 @@ A value of None or -1 indicates to skip that axis.</p>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>([image_list, _ID])</p></td>
-<td><p>Call self as a function.</p></td>
+<td><p>Execute the feature or pipeline.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bind_arguments</span></code>(arguments)</p></td>
 <td><p>See <cite>features.Arguments</cite></p></td>
