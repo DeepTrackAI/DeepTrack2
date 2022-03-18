@@ -10,3 +10,4 @@ tensorflow-probability
 pydeepimagej
 pint
 pandas
+tqrm
