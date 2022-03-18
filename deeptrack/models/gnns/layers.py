@@ -1,7 +1,11 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 
-from ..layers import MultiHeadGatedSelfAttention, MultiHeadSelfAttention, register
+from ..layers import (
+    MultiHeadGatedSelfAttention,
+    MultiHeadSelfAttention,
+    register,
+)
 from ..utils import as_activation, as_normalization, single_layer_call, GELU
 
 
@@ -43,18 +47,12 @@ class FGNN(tf.keras.layers.Layer):
         self.filters = filters
         self.random_edge_dropout = random_edge_dropout
 
-        # self.message_layer = as_block(message_layer)(filters)
-        self.message_layer = tf.keras.Sequential(
-            [
-                layers.Dense(self.filters),
-                as_activation(activation),
-                as_normalization(normalization)(**norm_kwargs),
-            ]
-        )
-
         _multi_head_att_layer = (
-            MultiHeadGatedSelfAttention if use_gates else MultiHeadSelfAttention
+            MultiHeadGatedSelfAttention
+            if use_gates
+            else MultiHeadSelfAttention
         )
+        # node update layer
         self.update_layer = tf.keras.Sequential(
             [
                 _multi_head_att_layer(**att_layer_kwargs),
@@ -63,25 +61,17 @@ class FGNN(tf.keras.layers.Layer):
             ]
         )
 
-    def build(self, input_shape):
-        self.sigma = tf.Variable(
-            initial_value=tf.constant_initializer(value=0.005)(
-                shape=(1,), dtype="float32"
-            ),
-            name="sigma",
-            trainable=True,
-            constraint=lambda value: tf.clip_by_value(value, 0.002, 1),
-        )
-
-        self.beta = tf.Variable(
-            initial_value=tf.constant_initializer(value=4)(shape=(1,), dtype="float32"),
-            name="beta",
-            trainable=True,
-            constraint=lambda value: tf.clip_by_value(value, 1, 10),
+        # message layer
+        self.message_layer = tf.keras.Sequential(
+            [
+                layers.Dense(self.filters),
+                as_activation(activation),
+                as_normalization(normalization)(**norm_kwargs),
+            ]
         )
 
     def call(self, inputs):
-        nodes, edge_features, distance, edges = inputs
+        nodes, edge_features, edges, edge_weights, edge_dropout = inputs
 
         number_of_nodes = tf.shape(nodes)[1]
         number_of_edges = tf.shape(edges)[1]
@@ -113,30 +103,16 @@ class FGNN(tf.keras.layers.Layer):
         # Compute messages/update edges, shape = (batch, nOfedges, filters)
         messages = self.message_layer(reshaped)
 
-        if self.random_edge_dropout:
-            messages = tf.nn.dropout(
-                messages,
-                self.random_edge_dropout,
-                noise_shape=(1, number_of_edges, 1),
-            )
-
-        # Compute edge weights and apply them to the messages
+        # Compute weighted messages
         # shape = (batch, nOfedges, filters)
-        edge_weights = tf.math.exp(
-            -1
-            * tf.math.pow(
-                tf.math.square(distance) / (2 * tf.math.square(self.sigma)),
-                self.beta,
-            )
-        )
         weighted_messages = messages * edge_weights
 
         # Merge repeated edges, shape = (batch, nOfedges (before augmentation), filters)
         def aggregate(_, x):
-            message, edge = x
+            message, edge, dropout = x
 
             merged_edges = tf.math.unsorted_segment_sum(
-                message,
+                message * dropout[:, 1:2],
                 edge[:, 1],
                 number_of_nodes,
             )
@@ -146,7 +122,7 @@ class FGNN(tf.keras.layers.Layer):
         # Aggregate messages, shape = (batch, nOfnodes, filters)
         aggregated = tf.scan(
             aggregate,
-            (weighted_messages, edges),
+            (weighted_messages, edges, edge_dropout),
             initializer=tf.zeros((number_of_nodes, number_of_node_features)),
         )
 
@@ -154,7 +130,13 @@ class FGNN(tf.keras.layers.Layer):
         Combined = [nodes, aggregated]
         updated_nodes = self.update_layer(Combined)
 
-        return (updated_nodes, weighted_messages, distance, edges)
+        return (
+            updated_nodes,
+            weighted_messages,
+            edges,
+            edge_weights,
+            edge_dropout,
+        )
 
 
 @register("FGNN")
@@ -238,7 +220,7 @@ class ClassTokenFGNN(FGNN):
         )
 
     def call(self, inputs):
-        nodes, edge_features, distance, edges = inputs
+        nodes, edge_features, edges, edge_weights, edge_dropout = inputs
 
         # Split nodes and class-token embeddings
         class_token, nodes = nodes[:, 0:1, :], nodes[:, 1:, :]
@@ -273,30 +255,16 @@ class ClassTokenFGNN(FGNN):
         # Compute messages/update edges, shape = (batch, nOfedges, filters)
         messages = self.message_layer(reshaped)
 
-        if self.random_edge_dropout:
-            messages = tf.nn.dropout(
-                messages,
-                self.random_edge_dropout,
-                noise_shape=(1, number_of_edges, 1),
-            )
-
-        # Compute edge weights and apply them to the messages
+        # Compute weighted messages
         # shape = (batch, nOfedges, filters)
-        edge_weights = tf.math.exp(
-            -1
-            * tf.math.pow(
-                tf.math.square(distance) / (2 * tf.math.square(self.sigma)),
-                self.beta,
-            )
-        )
         weighted_messages = messages * edge_weights
 
         # Merge repeated edges, shape = (batch, nOfedges (before augmentation), filters)
         def aggregate(_, x):
-            message, edge = x
+            message, edge, dropout = x
 
             merged_edges = tf.math.unsorted_segment_sum(
-                message,
+                message * dropout[:, 1:2],
                 edge[:, 1],
                 number_of_nodes,
             )
@@ -306,7 +274,7 @@ class ClassTokenFGNN(FGNN):
         # Aggregate messages, shape = (batch, nOfnodes, filters)
         aggregated = tf.scan(
             aggregate,
-            (weighted_messages, edges),
+            (weighted_messages, edges, edge_dropout),
             initializer=tf.zeros((number_of_nodes, number_of_node_features)),
         )
 
@@ -316,7 +284,13 @@ class ClassTokenFGNN(FGNN):
         )
         updated_nodes = self.update_layer(Combined)
 
-        return (updated_nodes, weighted_messages, distance, edges)
+        return (
+            updated_nodes,
+            weighted_messages,
+            edges,
+            edge_weights,
+            edge_dropout,
+        )
 
 
 @register("CTFGNN")
