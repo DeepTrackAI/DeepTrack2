@@ -9,3 +9,4 @@ scikit-image
 tensorflow-probability
 pydeepimagej
 pint
+pandas
