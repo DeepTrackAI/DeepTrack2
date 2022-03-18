@@ -1,3 +1,4 @@
+from tkinter.tix import Tree
 import requests
 import os
 import zipfile
@@ -121,19 +122,24 @@ def download_file_from_google_drive(id, destination):
     response = session.get(URL, params={"id": id}, stream=True)
 
     token = get_confirm_token(response)
-
     if token:
-        params = {"id": id, "confirm": token}
+        params = {"id": id, "confirm": True}
         response = session.get(URL, params=params, stream=True)
-
+    else:
+        raise ValueError(
+            "Download token not confirmed, google drive might be unavailable"
+        )
     save_response_content(response, destination)
 
 
 def get_confirm_token(response):
+
     for key, value in response.cookies.items():
         if key.startswith("download_warning"):
             return value
 
+    if "download-link" in response.text:
+        return True
     return None
 
 
