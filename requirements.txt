@@ -8,6 +8,7 @@ numpydoc
 scikit-image
 tensorflow-probability
 pydeepimagej
+more_itertools
 pint
 pandas
 tqdm
