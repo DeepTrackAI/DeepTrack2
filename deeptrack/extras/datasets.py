@@ -2,7 +2,7 @@ import requests
 import os
 import zipfile
 
-import deeptrack as dt
+import math
 
 
 # (dataset, folder name, model)
@@ -43,6 +43,8 @@ _ID = {
         "1Qf5vIWEksKPHJ1CBK6GPEhsSCvFFHFrg",
     ),
     "CellData": ("1CJW7msDiI7xq7oMce4l9tRkNN6O5eKtj", "CellData", ""),
+    "CellMigData": ("1vRsWcxjbTz6rffCkrwOfs_ezPvUjPwGw", "CellMigData", ""),
+    "BFC2Cells": ("1lHgJdG5I3vRnU_DRFwTr_c69nx1Xkd3X", "BFC2Cells", ""),
 }
 
 
@@ -104,7 +106,8 @@ def load_model(id, force_overwrite=False):
 
     if not force_overwrite and os.path.exists(destination):
         print(
-            id, "already downloaded! Use force_overwrite=True to redownload the model."
+            id,
+            "already downloaded! Use force_overwrite=True to redownload the model.",
         )
         return destination
 
@@ -121,19 +124,24 @@ def download_file_from_google_drive(id, destination):
     response = session.get(URL, params={"id": id}, stream=True)
 
     token = get_confirm_token(response)
-
     if token:
-        params = {"id": id, "confirm": token}
+        params = {"id": id, "confirm": True}
         response = session.get(URL, params=params, stream=True)
-
+    else:
+        raise ValueError(
+            "Download token not confirmed, google drive might be unavailable"
+        )
     save_response_content(response, destination)
 
 
 def get_confirm_token(response):
+
     for key, value in response.cookies.items():
         if key.startswith("download_warning"):
             return value
 
+    if "download-link" in response.text:
+        return True
     return None
 
 
@@ -151,9 +159,6 @@ def save_response_content(response, destination):
                 f.write(chunk)
         print("")
         print("Download Complete!")
-
-
-import math
 
 
 def convert_size(size_bytes):
