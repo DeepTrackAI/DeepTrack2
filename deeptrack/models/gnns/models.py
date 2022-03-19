@@ -3,6 +3,7 @@ from tensorflow.keras import layers
 
 from ..utils import KerasModel, GELU
 from ..layers import as_block, DenseBlock
+from ..embeddings import LearnableDistanceEmbedding
 
 
 class MAGIK(KerasModel):
@@ -51,16 +52,22 @@ class MAGIK(KerasModel):
         number_of_edge_outputs=1,
         node_output_activation=None,
         edge_output_activation=None,
-        dense_block=DenseBlock(activation=GELU, normalization="LayerNormalization"),
+        encoder_dense_block=DenseBlock(
+            activation=GELU, normalization="LayerNormalization"
+        ),
+        decoder_dense_block=DenseBlock(
+            activation=GELU, normalization="LayerNormalization"
+        ),
         graph_block="FGNN",
         output_type="graph",
         **kwargs
     ):
 
-        dense_block = as_block(dense_block)
+        encoder_dense_block = as_block(encoder_dense_block)
+        decoder_dense_block = as_block(decoder_dense_block)
         graph_block = as_block(graph_block)
 
-        node_features, edge_features, edges, edge_weights = (
+        node_features, edge_features, edges, edge_dropout = (
             tf.keras.Input(shape=(None, number_of_node_features)),
             tf.keras.Input(shape=(None, number_of_edge_features)),
             tf.keras.Input(shape=(None, 2), dtype=tf.int32),
@@ -74,23 +81,25 @@ class MAGIK(KerasModel):
         for dense_layer_number, dense_layer_dimension in zip(
             range(len(dense_layer_dimensions)), dense_layer_dimensions
         ):
-            node_layer = dense_block(
+            node_layer = encoder_dense_block(
                 dense_layer_dimension,
                 name="node_ide" + str(dense_layer_number + 1),
                 **kwargs
             )(node_layer)
 
-            edge_layer = dense_block(
+            edge_layer = encoder_dense_block(
                 dense_layer_dimension,
                 name="edge_ide" + str(dense_layer_number + 1),
                 **kwargs
             )(edge_layer)
 
         # Extract distance matrix
-        distance = edge_features[..., 0]
+        edge_weights = LearnableDistanceEmbedding(name="LearnableDistanceEmb")(
+            edge_features[..., 0:1]
+        )
 
         # Bottleneck path, graph blocks
-        layer = (node_layer, edge_layer, distance, edges)
+        layer = (node_layer, edge_layer, edges, edge_weights, edge_dropout)
         for base_layer_number, base_layer_dimension in zip(
             range(len(base_layer_dimensions)), base_layer_dimensions
         ):
@@ -105,13 +114,13 @@ class MAGIK(KerasModel):
             range(len(dense_layer_dimensions)),
             reversed(dense_layer_dimensions),
         ):
-            node_layer = dense_block(
+            node_layer = decoder_dense_block(
                 dense_layer_dimension,
                 name="node_idd" + str(dense_layer_number + 1),
                 **kwargs
             )(node_layer)
 
-            edge_layer = dense_block(
+            edge_layer = decoder_dense_block(
                 dense_layer_dimension,
                 name="edge_idd" + str(dense_layer_number + 1),
                 **kwargs
@@ -141,7 +150,7 @@ class MAGIK(KerasModel):
             outputs = output_dict["graph"]
 
         model = tf.keras.models.Model(
-            [node_features, edge_features, edges, edge_weights],
+            [node_features, edge_features, edges, edge_dropout],
             outputs,
         )
 
@@ -205,7 +214,9 @@ class CTMAGIK(KerasModel):
         edge_output_activation=None,
         cls_layer_dimension=64,
         global_output_activation=None,
-        dense_block=DenseBlock(activation=GELU, normalization="LayerNormalization"),
+        dense_block=DenseBlock(
+            activation=GELU, normalization="LayerNormalization"
+        ),
         graph_block="CTFGNN",
         classtoken_block="ClassToken",
         output_type="graph",
@@ -216,7 +227,7 @@ class CTMAGIK(KerasModel):
         graph_block = as_block(graph_block)
         classtoken_block = as_block(classtoken_block)
 
-        node_features, edge_features, edges, edge_weights = (
+        node_features, edge_features, edges, edge_dropout = (
             tf.keras.Input(shape=(None, number_of_node_features)),
             tf.keras.Input(shape=(None, number_of_edge_features)),
             tf.keras.Input(shape=(None, 2), dtype=tf.int32),
@@ -243,14 +254,19 @@ class CTMAGIK(KerasModel):
             )(edge_layer)
 
         # Extract distance matrix
-        distance = edge_features[..., 0]
+        edge_weights = LearnableDistanceEmbedding(name="LearnableDistanceEmb")(
+            edge_features[..., 0:1]
+        )
 
         # Bottleneck path, graph blocks
         layer = (
-            classtoken_block(base_layer_dimensions, name="ClassTokenLayer")(node_layer),
+            classtoken_block(base_layer_dimensions, name="ClassTokenLayer")(
+                node_layer
+            ),
             edge_layer,
-            distance,
             edges,
+            edge_weights,
+            edge_dropout,
         )
         for base_layer_number, base_layer_dimension in zip(
             range(len(base_layer_dimensions)), base_layer_dimensions
@@ -264,10 +280,10 @@ class CTMAGIK(KerasModel):
         node_layer, edge_layer, *_ = layer
         # Split node and global features
         cls_layer, node_layer = (
-            tf.keras.layers.Lambda(lambda x: x[:, 0], name="RetrieveClassToken")(
-                node_layer
-            ),
-            node_layer[:1:],
+            tf.keras.layers.Lambda(
+                lambda x: x[:, 0], name="RetrieveClassToken"
+            )(node_layer),
+            node_layer[:, 1:],
         )
         for dense_layer_number, dense_layer_dimension in zip(
             range(len(dense_layer_dimensions)),
@@ -320,7 +336,7 @@ class CTMAGIK(KerasModel):
             outputs = output_dict["graph"]
 
         model = tf.keras.models.Model(
-            [node_features, edge_features, edges, edge_weights],
+            [node_features, edge_features, edges, edge_dropout],
             outputs,
         )
 

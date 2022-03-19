@@ -132,8 +132,9 @@ class TestModels(unittest.TestCase):
             input_layer=(
                 k_layers.Input(shape=(None, 96)),
                 k_layers.Input(shape=(None, 10)),
-                k_layers.Input(shape=(None, 1)),
                 k_layers.Input(shape=(None, 2), dtype=tf.int32),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2)),
             ),
         )
         self.assertTrue(model.layers[-1], layers.FGNN)
@@ -145,24 +146,30 @@ class TestModels(unittest.TestCase):
             input_layer=(
                 k_layers.Input(shape=(None, 96)),
                 k_layers.Input(shape=(None, 10)),
-                k_layers.Input(shape=(None, 1)),
                 k_layers.Input(shape=(None, 2), dtype=tf.int32),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2)),
             ),
         )
         self.assertTrue(model.layers[-1], layers.ClassTokenFGNN)
 
     def test_Class_Token_FGNN_update_layer(self):
-        block = layers.ClassTokenFGNNlayer(att_layer_kwargs={"number_of_heads": 6})
+        block = layers.ClassTokenFGNNlayer(
+            att_layer_kwargs={"number_of_heads": 6}
+        )
         model = makeMinimalModel(
             block(96),
             input_layer=(
                 k_layers.Input(shape=(None, 96)),
                 k_layers.Input(shape=(None, 10)),
-                k_layers.Input(shape=(None, 1)),
                 k_layers.Input(shape=(None, 2), dtype=tf.int32),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2)),
             ),
         )
-        self.assertEqual(model.layers[-1].update_layer.layers[0].number_of_heads, 6)
+        self.assertEqual(
+            model.layers[-1].update_layer.layers[0].number_of_heads, 6
+        )
 
     def test_Class_Token_FGNN_normalization(self):
         # By setting center=False, scale=False, the number of trainable parameters should be 0
@@ -174,11 +181,14 @@ class TestModels(unittest.TestCase):
             input_layer=(
                 k_layers.Input(shape=(None, 96)),
                 k_layers.Input(shape=(None, 10)),
-                k_layers.Input(shape=(None, 1)),
                 k_layers.Input(shape=(None, 2), dtype=tf.int32),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2)),
             ),
         )
-        self.assertEqual(model.layers[-1].update_layer.layers[-1].count_params(), 0)
+        self.assertEqual(
+            model.layers[-1].update_layer.layers[-1].count_params(), 0
+        )
 
     def test_Transformer_Encoder(self):
         block = layers.TransformerEncoderLayer()
@@ -192,7 +202,9 @@ class TestModels(unittest.TestCase):
     def test_Transformer_Encoder_bias(self):
         block = layers.TransformerEncoderLayer(use_bias=True)
         model = makeMinimalModel(block(300), shape=(50, 300))
-        self.assertTrue(model.layers[-1].MultiHeadAttLayer.key_dense.use_bias, True)
+        self.assertTrue(
+            model.layers[-1].MultiHeadAttLayer.key_dense.use_bias, True
+        )
 
 
 if __name__ == "__main__":
