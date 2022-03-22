@@ -195,7 +195,7 @@ def DataframeSplitter(df, props: tuple, to_array=True, **kwargs):
         features = df.filter(like=props[0])
     else:
         regex = ""
-        for prop in props[1:]:
+        for prop in props[0:]:
             regex += prop + "|"
         regex = regex[:-1]
         features = df.filter(regex=regex)
