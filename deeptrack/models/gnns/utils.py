@@ -116,7 +116,7 @@ def get_predictions(dfs, properties, model, graph_kwargs):
         np.expand_dims(grapht[0][2][:, 2:], 0),
         np.expand_dims(grapht[0][3], 0),
     ]
-    output_edge_f = model.predict(v)
+    output_edge_f = model(v).numpy()
     pred = (output_edge_f > 0.5)[0, ...]
     g = grapht[1][1]
 
