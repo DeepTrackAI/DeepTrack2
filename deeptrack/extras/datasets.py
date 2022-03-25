@@ -3,7 +3,7 @@ import requests
 import os
 import zipfile
 
-import deeptrack as dt
+import math
 
 
 # (dataset, folder name, model)
@@ -44,6 +44,8 @@ _ID = {
         "1Qf5vIWEksKPHJ1CBK6GPEhsSCvFFHFrg",
     ),
     "CellData": ("1CJW7msDiI7xq7oMce4l9tRkNN6O5eKtj", "CellData", ""),
+    "CellMigData": ("1vRsWcxjbTz6rffCkrwOfs_ezPvUjPwGw", "CellMigData", ""),
+    "BFC2Cells": ("1lHgJdG5I3vRnU_DRFwTr_c69nx1Xkd3X", "BFC2Cells", ""),
 }
 
 
@@ -105,7 +107,8 @@ def load_model(id, force_overwrite=False):
 
     if not force_overwrite and os.path.exists(destination):
         print(
-            id, "already downloaded! Use force_overwrite=True to redownload the model."
+            id,
+            "already downloaded! Use force_overwrite=True to redownload the model.",
         )
         return destination
 
@@ -157,9 +160,6 @@ def save_response_content(response, destination):
                 f.write(chunk)
         print("")
         print("Download Complete!")
-
-
-import math
 
 
 def convert_size(size_bytes):
