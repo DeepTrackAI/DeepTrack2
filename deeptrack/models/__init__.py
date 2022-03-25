@@ -5,6 +5,7 @@ from .recurrent import *
 from .layers import *
 from .lodestar import *
 from .gans import *
+from .gnns import *
 
 # from .mrcnn import *
 # from .yolov1 import *
