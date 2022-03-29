@@ -1,5 +1,4 @@
 import io
-from sympy import true
 from tensorflow.keras.callbacks import Callback
 import matplotlib.pyplot as plt
 
