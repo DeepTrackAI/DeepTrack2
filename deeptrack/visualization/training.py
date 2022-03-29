@@ -7,8 +7,8 @@ from deeptrack.visualization import colors
 
 class TrainingPlotter:
     def __init__(self, *args, **kwargs):
-        self.height = 5
-        self.width = 9
+        self.height = 4
+        self.width = 10
 
 
 class TrainingLossPlotter(TrainingPlotter):
@@ -60,10 +60,8 @@ class TrainingLossPlotter(TrainingPlotter):
 
             x = np.arange(len(datavec[0])) + 1
 
-            ax.fill_between(x, datavec[0], datavec[2], color=color, alpha=0.4)
-            ax.plot(x, datavec[0], color=color, label=loss_name)
-            ax.plot(x, datavec[1], color=color)
-            ax.plot(x, datavec[2], color=color)
+            ax.fill_between(x, datavec[0], datavec[2], color=color, ec=color, alpha=0.4)
+            ax.plot(x, datavec[1], color=color, label=loss_name)
 
         ax.set_xscale(self.xscale)
         ax.set_yscale(self.yscale)
@@ -74,32 +72,34 @@ class TrainingLossPlotter(TrainingPlotter):
 
 class TrainingSpeedPlotter(TrainingPlotter):
     """Plots the time it takes per batch on average."""
-    
-        def __init__(self):
-            super().__init__()
-            self.height = 4
-            self.time_data = []
-    
-        def plot(self, ax: plt.Axes, *_):
-            """Plot the training speed.
-            Parameters
-            ----------
-            ax : matplotlib.axes.Axes
-                The axes to plot on.
-            data : dict
-                The data to plot.
-            """
-            
-            # Add the current time to time_data
-            self.time_data.append(time.time())
 
-            # Calculate the difference between each timepoint in seconds
-            time_diffs = np.diff(self.time_data)
+    def __init__(self):
+        super().__init__()
+        self.height = 4
+        self.time_data = []
 
-            # Plot the time difference
-            ax.plot(time_diffs, color=colors[0])
+    def plot(self, ax: plt.Axes, data):
+        """Plot the training speed.
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            The axes to plot on.
+        data : dict
+            The data to plot.
+        """
 
-            ax.set_xlabel("Epoch")
-            ax.set_ylabel("Time per batch (s)")
-            ax.legend()
+        # Add the current time to time_data
+        self.time_data.append(time())
 
+        # Calculate the difference between each timepoint in seconds
+
+        dataitem = list(data.values())[0]
+        time_diffs = np.diff(self.time_data) / len(dataitem)
+
+        x = np.arange(len(time_diffs)) + 1
+
+        # Plot the time difference
+        ax.plot(x, time_diffs * 1e3, color=colors[0])
+
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Time per batch (ms)")
