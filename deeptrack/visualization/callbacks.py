@@ -1,9 +1,7 @@
 import io
-from operator import sub
 from sympy import true
 from tensorflow.keras.callbacks import Callback
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 class VisualizationCallback(Callback):
