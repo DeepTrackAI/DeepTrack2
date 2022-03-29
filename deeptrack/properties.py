@@ -228,7 +228,7 @@ class PropertyDict(DeepTrackNode, dict):
             self.add_dependency(val)
 
 
-def propagate_data_to_dependencies(X: features.Feature, **kwargs):
+def propagate_data_to_dependencies(X, **kwargs):
     """Iterates the dependencies of a feature and sets the value of their properties to the values in kwargs
 
     Parameters
