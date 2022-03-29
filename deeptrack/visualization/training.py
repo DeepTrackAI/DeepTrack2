@@ -1,3 +1,4 @@
+from time import time
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -69,3 +70,36 @@ class TrainingLossPlotter(TrainingPlotter):
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Value")
         ax.legend()
+
+
+class TrainingSpeedPlotter(TrainingPlotter):
+    """Plots the time it takes per batch on average."""
+    
+        def __init__(self):
+            super().__init__()
+            self.height = 4
+            self.time_data = []
+    
+        def plot(self, ax: plt.Axes, *_):
+            """Plot the training speed.
+            Parameters
+            ----------
+            ax : matplotlib.axes.Axes
+                The axes to plot on.
+            data : dict
+                The data to plot.
+            """
+            
+            # Add the current time to time_data
+            self.time_data.append(time.time())
+
+            # Calculate the difference between each timepoint in seconds
+            time_diffs = np.diff(self.time_data)
+
+            # Plot the time difference
+            ax.plot(time_diffs, color=colors[0])
+
+            ax.set_xlabel("Epoch")
+            ax.set_ylabel("Time per batch (s)")
+            ax.legend()
+
