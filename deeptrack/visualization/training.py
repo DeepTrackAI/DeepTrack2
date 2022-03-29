@@ -11,6 +11,18 @@ class TrainingPlotter:
 
 
 class TrainingLossPlotter(TrainingPlotter):
+    """Plots the training loss during training.
+
+    Parameters
+    ----------
+    loss_names : list of str
+        The names of the losses to plot.
+    quantiles : list of float
+        The lower and upper quantiles to fill the area between.
+    xscale, yscale : str
+        The scale of the x and y axes. One of "linear", "log", "symlog", "logit",
+    """
+
     def __init__(
         self, loss_names=["loss"], quantiles=[0, 1], xscale="log", yscale="log"
     ):
@@ -23,8 +35,14 @@ class TrainingLossPlotter(TrainingPlotter):
         self.epoch_data = dict(**{k: [[], [], []] for k in loss_names})
 
     def plot(self, ax: plt.Axes, data):
-
-        handles = []
+        """Plot the training loss.
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            The axes to plot on.
+        data : dict
+            The data to plot.
+        """
         for i, loss_name in enumerate(self.loss_names):
 
             color = colors[i % len(colors)]
@@ -42,16 +60,12 @@ class TrainingLossPlotter(TrainingPlotter):
             x = np.arange(len(datavec[0])) + 1
 
             ax.fill_between(x, datavec[0], datavec[2], color=color, alpha=0.4)
-
             ax.plot(x, datavec[0], color=color, label=loss_name)
-
-            handles.append(ax.plot(x, datavec[1], color=color))
-
+            ax.plot(x, datavec[1], color=color)
             ax.plot(x, datavec[2], color=color)
 
         ax.set_xscale(self.xscale)
         ax.set_yscale(self.yscale)
-
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Value")
         ax.legend()
