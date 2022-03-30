@@ -5,13 +5,13 @@ name: Python application
 
 on:
   push:
-    branches: [ develop, v2.1 ]
+    branches: [ develop, master ]
   pull_request:
-    branches: [ develop, v2.1 ]
+    branches: [ develop, master ]
 
 jobs:
   build:
-  
+
     strategy:
       matrix:
         tfa: [true, false]
@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Colab Badge Action
+      uses: trsvchn/colab-badge-action@v4
     - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
