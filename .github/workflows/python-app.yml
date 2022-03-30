@@ -23,7 +23,7 @@ jobs:
       uses: actions-js/push@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{github.ref}}
+        branch: ${GITHUB_HEAD_REF}
       
   build:
 
