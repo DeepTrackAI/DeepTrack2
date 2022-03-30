@@ -10,6 +10,13 @@ on:
     branches: [ develop, master ]
 
 jobs:
+  badges:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Colab Badge Action
+      uses: trsvchn/colab-badge-action@v4
+      
   build:
 
     strategy:
