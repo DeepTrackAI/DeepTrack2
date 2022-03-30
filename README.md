@@ -14,9 +14,7 @@ Applied Physics Reviews 8 (2021), 011310.
 https://doi.org/10.1063/5.0034891
 ```
 
-# Getting started
-
-## Installation
+# Installation
 
 DeepTrack 2.1 requires at least python 3.6.
 
@@ -26,7 +24,7 @@ To install DeepTrack 2.1, open a terminal or command prompt and run:
     
 If you have a very recent version of python, you may need to install numpy _before_ DeepTrack. This is a known issue with scikit-image.
 
-## Updating to 2.1 from 2.0
+### Updating to 2.1 from 2.0
 
 If you are already using DeepTrack 2.0 (pypi version 0.x.x), updating to DeepTrack 2.1 (pypi version 1.x.x) is painless. If you have followed deprecation warnings, no change to your code is needed. There are two breaking changes:
 
@@ -35,11 +33,20 @@ If you are already using DeepTrack 2.0 (pypi version 0.x.x), updating to DeepTra
 
 If you notice any other changes in behavior, please report it to us in the issues tab.
 
-## Learning DeepTrack 2.1
+# Using DeepTrack 
+
+DeepTrack is a general purpose deep learning framework for microscopy, meaning you can use it for any task you like. Here, we show some common applications!
+
+### Single particle tracking
+
+
+
+
+# Learning DeepTrack 2.1
 
 Everybody learns in different ways! Depending on your preferences, and what you want to do with DeepTrack, you may want to check out one or more of these resources.
 
-### Fundamentals
+## Fundamentals
 
 First, we have a very general walkthrough of [basic](https://softmatterlab.github.io/DeepTrack-2.0/basics.html) and [advanced](https://softmatterlab.github.io/DeepTrack-2.0/advanced.html) topics. This is a 5-10 minute read, that will get you well on your way to understand the unique interactions available in DeepTrack.
 
@@ -49,7 +56,7 @@ Similarly, you may find the [get-started notebooks](examples/get-started) a rewa
 
 The detailed documentation of DeepTrack 2.1 is available at the following link: https://softmatterlab.github.io/DeepTrack-2.0/deeptrack.html
 
-### DeepTrack 2.1 in action
+## DeepTrack 2.1 in action
 
 To see DeepTrack in action, we provide six well documented tutorial notebooks that create simulation pipelines and train models:
 
@@ -70,17 +77,17 @@ Additionally, we have seven more case studies which are less documented, but giv
 6. [cell counting](examples/paper-examples/6-cell_counting.ipynb) counts the number of cells in fluorescence images.
 7. [GAN image generation](examples/paper-examples/7-GAN_image_generation.ipynb) uses a GAN to create cell image from masks.
 
-### Model-specific examples
+## Model-specific examples
 
 We also have examples that are specific for certain models. This includes 
 - [*LodeSTAR*](examples/LodeSTAR) for label-free particle tracking.
 - [*MAGIK*](deeptrack/models/gnns/) for graph-based particle linking and trace characterization.
-
-### Video Tutorials
+- 
+## Video Tutorials
 
 Videos are currently being updated to match with the current version of DeepTrack.
 
-### In-depth dives
+## In-depth dives
 
 The examples folder contains notebooks which explains the different modules in more detail. These can be read in any order, but we provide a recommended order where more fundamental topics are introduced early.
 This order is as follows:
