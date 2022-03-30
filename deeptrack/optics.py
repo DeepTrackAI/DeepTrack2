@@ -56,31 +56,38 @@ class Microscope(StructuralFeature):
         additional_sample_kwargs = self._objective.properties()
         propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
 
+        # Creates a context for the unit conversions to know the size of a pixel.
         with u.context("dt", pixel_size=additional_sample_kwargs["voxel_size"][0]):
             list_of_scatterers = self._sample()
 
         if not isinstance(list_of_scatterers, list):
             list_of_scatterers = [list_of_scatterers]
 
+        # All scatterers that are defined as volumes.
         volume_samples = [
             scatterer
             for scatterer in list_of_scatterers
             if not scatterer.get_property("is_field", default=False)
         ]
+
+        # All scatterers that are defined as fields.
         field_samples = [
             scatterer
             for scatterer in list_of_scatterers
             if scatterer.get_property("is_field", default=False)
         ]
 
+        # Merge all volumes into a single volume.
         sample_volume, limits = _create_volume(
             volume_samples, **additional_sample_kwargs
         )
         sample_volume = Image(sample_volume)
 
+        # Merge all properties into the volume.
         for scatterer in volume_samples + field_samples:
             sample_volume.merge_properties_from(scatterer)
 
+        # Let the objective know about the limits of the volume and all the fields.
         propagate_data_to_dependencies(
             self._objective,
             limits=limits,
@@ -151,10 +158,12 @@ class Optics(Feature):
         illumination: Feature = None,
         **kwargs
     ):
+        # Calculate the voxel size.
         def get_voxel_size(resolution, magnification):
             props = self._normalize(resolution=resolution, magnification=magnification)
             return np.ones((3,)) * props["resolution"] / props["magnification"]
 
+        # Calculate the pixel size. It differs from the voxel size by only being a single value.
         def get_pixel_size(resolution, magnification):
             props = self._normalize(resolution=resolution, magnification=magnification)
             pixel_size = props["resolution"] / props["magnification"]
@@ -194,6 +203,33 @@ class Optics(Feature):
         defocus=0,
         **kwargs
     ):
+        """Calculates the pupil function at different focal points.
+
+        Parameters
+        ----------
+        shape : array_like[int, int]
+            The shape of the pupil function.
+        NA : float
+            The NA of the limiting aperature.
+        wavelength : float
+            The wavelength of the scattered light in meters.
+        refractive_index_medium : float
+            The refractive index of the medium.
+        voxel_size : array_like[float (, float, float)]
+            The distance between pixels in the camera. A third value can be
+            included to define the resolution in the z-direction.
+        include_aberration : bool
+            If True, the aberration is included in the pupil function.
+        defocus : float or list[float]
+            The defocus of the system. If a list is given, the pupil is calculated
+            for each focal point. Defocus is given in meters.
+
+        Returns
+        -------
+        pupil : array_like[complex]
+            The pupil function. Shape is (z, y, x).
+
+        """
         # Calculates the pupil at each z-position in defocus.
         shape = np.array(shape)
 
@@ -245,6 +281,19 @@ class Optics(Feature):
     def _pad_volume(
         self, volume, limits=None, padding=None, output_region=None, **kwargs
     ):
+        """Pads the volume with zeros to avoid edge effects.
+
+        Parameters
+        ----------
+        volume : array_like[complex]
+            The volume to pad.
+        limits : array_like[int, int]
+            The limits of the volume.
+        padding : array_like[int]
+            The padding to apply. Format is (left, right, top, bottom).
+        output_region : array_like[int, int]
+            The region of the volume to return. Used to remove regions of the volume that are
+            far outside the view. If None, the full volume is returned."""
         if limits is None:
             limits = np.zeros((3, 2))
 
@@ -339,6 +388,8 @@ class Fluorescence(Optics):
         # Extract indexes of the output region
         pad = kwargs.get("padding", (0, 0, 0, 0))
         output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+
+        # Calculate the how much to crop from the volume
         output_region[0] = (
             None
             if output_region[0] is None
@@ -359,7 +410,6 @@ class Fluorescence(Optics):
             if output_region[3] is None
             else int(output_region[3] - limits[1, 0] + pad[3])
         )
-
         padded_volume = padded_volume[
             output_region[0] : output_region[2],
             output_region[1] : output_region[3],
@@ -373,7 +423,7 @@ class Fluorescence(Optics):
 
         index_iterator = range(padded_volume.shape[2])
 
-        # Get planes in volume where not all values are 0.
+        # Find planes that are not empty for optimization
         z_iterator = np.linspace(
             z_limits[0],
             z_limits[1],
@@ -383,15 +433,13 @@ class Fluorescence(Optics):
         zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
         z_values = z_iterator[~zero_plane]
 
-        # Further pad image to speed up fft
+        # Further pad image to speed up fft (multiples of 2 and 3)
         volume = maybe_cupy(pad_image_to_fft(padded_volume, axes=(0, 1)))
-
         pupils = self._pupil(volume.shape[:2], defocus=z_values, **kwargs)
 
         z_index = 0
 
-        # Loop through voluma and convole sample with pupil function
-
+        # Loop through volumaeand convolve sample with pupil function
         for i, z in zip(index_iterator, z_iterator):
 
             if zero_plane[i]:
@@ -401,23 +449,17 @@ class Fluorescence(Optics):
             z_index += 1
 
             psf = np.square(np.abs(np.fft.ifft2(np.fft.fftshift(pupil))))
-
             optical_transfer_function = np.fft.fft2(psf)
-
             fourier_field = np.fft.fft2(volume[:, :, i])
             convolved_fourier_field = fourier_field * optical_transfer_function
-
             field = np.fft.ifft2(convolved_fourier_field)
-
             # # Discard remaining imaginary part (should be 0 up to rounding error)
             field = np.real(field)
-
             output_image._value[:, :, 0] += field[
                 : padded_volume.shape[0], : padded_volume.shape[1]
             ]
 
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
-
         output_image.properties = illuminated_volume.properties + pupils.properties
 
         return output_image

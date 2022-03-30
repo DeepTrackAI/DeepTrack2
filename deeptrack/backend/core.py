@@ -339,7 +339,7 @@ class DeepTrackNode:
 
 
 def equivalent(a, b):
-    # This is a bare-bones implementation.
+    # This is a bare-bones implementation to check if two objects are equivalent.
     # We can implement more cases to reduce updates.
 
     if a is b:
@@ -352,6 +352,7 @@ def equivalent(a, b):
 
 
 def create_node_with_operator(op, a, b):
+    """Creates a new node with the given operator and operands."""
 
     if not isinstance(a, DeepTrackNode):
         a = DeepTrackNode(a)
