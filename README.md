@@ -44,7 +44,8 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
   <img width="300" src=/assets/SPT-noisy.gif?raw=true>
 </p>
 
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/develop/examples/paper-examples/2-single_particle_tracking.ipynb)
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training a CNN-based single particle tracker using simulated data](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/2-single_particle_tracking.ipynb)
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training a single particler tracker label-free and single-shot using LodeSTAR](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/02.%20tracking_particles_of_various_shapes.ipynb)
 
 
 # Learning DeepTrack 2.1
