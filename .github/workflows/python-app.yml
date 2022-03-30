@@ -10,12 +10,20 @@ on:
     branches: [ develop, master ]
 
 jobs:
-  badges:
+  create-badges:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
     - name: Colab Badge Action
       uses: trsvchn/colab-badge-action@v4
+    - name: Commit & Push changes
+      uses: actions-js/push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{github.ref}}
       
   build:
 
