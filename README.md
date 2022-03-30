@@ -44,7 +44,7 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
   <img width="300" src=/assets/SPT-noisy.gif?raw=true>
 </p>
 
-- {{ badge /examples/paper-examples/2-single_particle_tracking.ipynb }}
+- {{ badge examples/paper-examples/2-single_particle_tracking.ipynb }}
 
 
 # Learning DeepTrack 2.1
