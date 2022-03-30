@@ -4,6 +4,24 @@ from .. import units as u
 
 
 class ConversionTable:
+    """Convert a dictionary of values to the desired units.
+
+    The conversions are specified in the constructor. Each key in the dictionary corresponds
+    to the name of a property. The value of the key is a tuple of two units. The first unit is
+    the default unit, and the second is the desired unit.
+
+    To convert a dictionary of values to the desired units, the `convert` method is called with the
+    dictionary as an argument. The dictionary is converted to a dictionary of quantities, and the
+    quantities are converted to the desired units. If any value is not a quantity, it is assumed to
+    be in the default unit. If a value with the same key is not in `self.conversions`, it is left unchanged.
+
+    Parameters
+    ----------
+    conversions : dict
+        The dictionary of conversions. Each key is the name of a property, and the value is a tuple of two
+        units. The first unit is the default unit, and the second is the desired unit.
+    """
+
     def __init__(self, **conversions):
 
         for value in conversions.values():

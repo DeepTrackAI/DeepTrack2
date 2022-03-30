@@ -30,4 +30,14 @@ from .holography import *
 
 from .image import strip
 
-from . import image, losses, generators, models, utils, layers, backend, test
+from . import (
+    image,
+    losses,
+    generators,
+    models,
+    utils,
+    layers,
+    backend,
+    test,
+    visualization,
+)
