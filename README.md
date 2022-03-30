@@ -39,7 +39,7 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 
 ### Single particle tracking
 
-<p align="center">
+<p align="left">
   <img width="300" src=/assets/SPT-ideal.gif?raw=true>
   <img width="300" src=/assets/SPT-noisy.gif?raw=true>
 </p>
@@ -49,12 +49,19 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 
 ### Multi-particle tracking
 
-<p align="center">
+<p align="left">
   <img width="350" src=/assets/MPT-packed.gif?raw=true>
 </p>
 
 - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training LodeSTAR to detect multiple cells from a single image](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb)
 - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training a UNet based multi-particle tracker using simulated data](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/4-multi-molecule-tracking.ipynb)
+
+### Particle tracing
+<p align="left">
+  <img width="350" src=/assets/Tracing.gif?raw=true>
+</p>
+
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training MAGIK to trace migrating cells](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/cell_migration_analysis.ipynb)
 
 # Learning DeepTrack 2.1
 
