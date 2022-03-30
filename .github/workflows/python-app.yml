@@ -5,13 +5,28 @@ name: Python application
 
 on:
   push:
-    branches: [ develop, v2.1 ]
+    branches: [ develop, master ]
   pull_request:
-    branches: [ develop, v2.1 ]
+    branches: [ develop, master ]
 
 jobs:
+  create-badges:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+    - name: Colab Badge Action
+      uses: trsvchn/colab-badge-action@v4
+    - name: Commit & Push changes
+      uses: actions-js/push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.head_ref }}
+      
   build:
-  
+
     strategy:
       matrix:
         tfa: [true, false]
@@ -19,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Colab Badge Action
+      uses: trsvchn/colab-badge-action@v4
     - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
