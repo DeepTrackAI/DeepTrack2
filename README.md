@@ -50,7 +50,7 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 ### Multi-particle tracking
 
 <p align="center">
-  <img width="300" src=/assets/MPT-packed.gif?raw=true>
+  <img width="350" src=/assets/MPT-packed.gif?raw=true>
 </p>
 
 - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training LodeSTAR to detect multiple cells from a single image](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb)
