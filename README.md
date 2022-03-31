@@ -4,7 +4,7 @@
 
 <h3 align="center">A comprehensive deep learning framework for digital microscopy.</h3>
 <p align="center">
-  <a href="/LICENCE" alt="licence">
+  <a href="/LICENSE" alt="licence">
     <img src="https://img.shields.io/github/license/softmatterlab/DeepTrack-2.0">
   </a>
   <a href="https://badge.fury.io/py/deeptrack"><img src="https://badge.fury.io/py/deeptrack.svg" alt="PyPI version"></a>
@@ -18,7 +18,7 @@
   <a href="#using-deeptrack">Examples</a> •
   <a href="#learning-deeptrack-21">Learn DeepTrack</a> •
   <a href="#cite-us">Cite us</a> •
-  <a href="/LICENCE">Licence</a> 
+  <a href="/LICENSE">License</a> 
 </p>
 
 
