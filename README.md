@@ -2,17 +2,27 @@
   <img width="350" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/develop/assets/logo.png?raw=true>
 </p>
 
-DeepTrack is a comprehensive deep learning framework for digital microscopy.
-We provide tools to create physical simulations of customizable optical systems, to generate and train neural network models, and to analyze experimental data.
+<h3 align="center">A comprehensive deep learning framework for digital microscopy.</h3>
+<p align="center">
+  <a href="/LICENCE" alt="licence">
+    <img src="https://img.shields.io/github/license/softmatterlab/DeepTrack-2.0">
+  </a>
+  <a href="https://badge.fury.io/py/deeptrack"><img src="https://badge.fury.io/py/deeptrack.svg" alt="PyPI version"></a>
+  <a href="https://badge.fury.io/py/deeptrack"><img src="https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue" alt="Python version"></a>
+  <a href="https://doi.org/10.1063/5.0034891" alt="DOI">
+    <img src="https://img.shields.io/badge/DOI-10.1063%2F5.0034891-blue">
+  </a>
+</p>
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#using-deeptrack">Examples</a> •
+  <a href="#learning-deeptrack-21">Learn DeepTrack</a> •
+  <a href="#cite-us">Cite us</a> •
+  <a href="/LICENCE">Licence</a> 
+</p>
 
-If you use DeepTrack 2.1 in your project, please cite our DeepTrack article:
 
-```
-Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe.
-"Quantitative Digital Microscopy with Deep Learning."
-Applied Physics Reviews 8 (2021), 011310.
-https://doi.org/10.1063/5.0034891
-```
+We provide tools to create physical simulations of optical systems, to generate and train neural network models, and to analyze experimental data.
 
 # Installation
 
