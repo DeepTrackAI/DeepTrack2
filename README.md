@@ -47,8 +47,8 @@ If you notice any other changes in behavior, please report it to us in the issue
 DeepTrack is a general purpose deep learning framework for microscopy, meaning you can use it for any task you like. Here, we show some common applications!
 
 <br/>
-<h3 align="center"> Single particle tracking </h3>
-<p align="center">
+<h3 align="left"> Single particle tracking </h3>
+<p align="left">
   <img width="33%" src=/assets/SPT-ideal.gif?raw=true>
   <img width="33%" src=/assets/SPT-noisy.gif?raw=true>
   <br/>
@@ -62,9 +62,9 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 </p>
 <br/>
 
-<h3 align="center"> Multi-particle tracking </h3>
+<h3 align="left"> Multi-particle tracking </h3>
 
-<p align="center">
+<p align="left">
   <img width="66%" src=/assets/MPT-packed.gif?raw=true>
   <br/>
   <a href="https://doi.org/10.48550/arXiv.2202.13546" alt="DOI lodestar">
@@ -75,9 +75,9 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 </p>
 <br/>
 
-<h3 align="center"> Particle tracing </h3>
+<h3 align="left"> Particle tracing </h3>
 
-<p align="center">
+<p align="left">
   <img width="66%" src=/assets/Tracing.gif?raw=true>
   <br/>
   <a href="https://doi.org/10.48550/arXiv.2202.06355" alt="DOI magik">
