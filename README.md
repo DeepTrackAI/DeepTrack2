@@ -4,9 +4,7 @@
 
 <h3 align="center">A comprehensive deep learning framework for digital microscopy.</h3>
 <p align="center">
-  <a href="/LICENSE" alt="licence">
-    <img src="https://img.shields.io/github/license/softmatterlab/DeepTrack-2.0">
-  </a>
+  <a href="/LICENSE" alt="licence"><img src="https://img.shields.io/github/license/softmatterlab/DeepTrack-2.0"></a>
   <a href="https://badge.fury.io/py/deeptrack"><img src="https://badge.fury.io/py/deeptrack.svg" alt="PyPI version"></a>
   <a href="https://badge.fury.io/py/deeptrack"><img src="https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue" alt="Python version"></a>
   <a href="https://doi.org/10.1063/5.0034891" alt="DOI">
@@ -55,7 +53,11 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
   <br/>
   <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/2-single_particle_tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a CNN-based single particle tracker using simulated data </a>
   <br/>
+  <a href="https://doi.org/10.48550/arXiv.2202.13546" alt="DOI lodestar">
+    <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.13546-blue">
+  </a> 
   <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/02.%20tracking_particles_of_various_shapes.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Unsupervised training of a single particle tracker using LodeSTAR </a> 
+  
 </p>
 <br/>
 
@@ -64,7 +66,9 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 <p align="center">
   <img width="66%" src=/assets/MPT-packed.gif?raw=true>
   <br/>
-  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training LodeSTAR to detect multiple cells from a single image </a>
+  <a href="https://doi.org/10.48550/arXiv.2202.13546" alt="DOI lodestar">
+    <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.13546-blue">
+  </a> <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training LodeSTAR to detect multiple cells from a single image </a>
   <br/>
   <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/4-multi-molecule-tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a UNet-based multi-particle tracker using simulated data </a> 
 </p>
@@ -75,7 +79,9 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 <p align="center">
   <img width="66%" src=/assets/Tracing.gif?raw=true>
   <br/>
-  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/cell_migration_analysis.ipynb"> <img     src="https://colab.research.google.com/assets/colab-badge.svg"> Training MAGIK to trace migrating cells </a>
+  <a href="https://doi.org/10.48550/arXiv.2202.06355" alt="DOI magik">
+    <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.0635-blue">
+  </a>  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/cell_migration_analysis.ipynb"> <img     src="https://colab.research.google.com/assets/colab-badge.svg"> Training MAGIK to trace migrating cells </a>
 </p>
 
 # Learning DeepTrack 2.1
