@@ -45,28 +45,36 @@ If you notice any other changes in behavior, please report it to us in the issue
 
 # Using DeepTrack 
 
+
+
 DeepTrack is a general purpose deep learning framework for microscopy, meaning you can use it for any task you like. Here, we show some common applications!
 
-### Single particle tracking
+<h3 align="center"> Single particle tracking </h3>
 
-<p align="left">
-  <img width="300" src=/assets/SPT-ideal.gif?raw=true>
-  <img width="300" src=/assets/SPT-noisy.gif?raw=true>
+<p align="center">
+  <img width="33%" src=/assets/SPT-ideal.gif?raw=true>
+  <img width="33%" src=/assets/SPT-noisy.gif?raw=true>
+  <br/>
+  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/2-single_particle_tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a CNN-based single particle tracker using simulated data </a>
+  <br/>
+  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/02.%20tracking_particles_of_various_shapes.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Unsupervised training of a single particle tracker using LodeSTAR </a> 
 </p>
 
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training a CNN-based single particle tracker using simulated data](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/2-single_particle_tracking.ipynb)
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training a single particler tracker label-free and single-shot using LodeSTAR](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/02.%20tracking_particles_of_various_shapes.ipynb)
 
-### Multi-particle tracking
+<h3 align="center"> Multi-particle tracking </h3>
 
-<p align="left">
+<p align="center">
   <img width="350" src=/assets/MPT-packed.gif?raw=true>
+  <br/>
+  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/2-single_particle_tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a CNN-based single particle tracker using simulated data </a>
+  <br/>
+  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/02.%20tracking_particles_of_various_shapes.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Unsupervised training of a single particle tracker using LodeSTAR </a> 
 </p>
 
 - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training LodeSTAR to detect multiple cells from a single image](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb)
 - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training a UNet based multi-particle tracker using simulated data](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/4-multi-molecule-tracking.ipynb)
 
-### Particle tracing
+
 <p align="left">
   <img width="350" src=/assets/Tracing.gif?raw=true>
 </p>
