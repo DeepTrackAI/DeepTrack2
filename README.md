@@ -75,10 +75,8 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 <p align="center">
   <img width="66%" src=/assets/Tracing.gif?raw=true>
   <br/>
-  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb"> <img     src="https://colab.research.google.com/assets/colab-badge.svg"> Training LodeSTAR to detect multiple cells from a single image </a>
+  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/cell_migration_analysis.ipynb"> <img     src="https://colab.research.google.com/assets/colab-badge.svg"> Training MAGIK to trace migrating cells </a>
 </p>
-
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training MAGIK to trace migrating cells](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/cell_migration_analysis.ipynb)
 
 # Learning DeepTrack 2.1
 
@@ -120,7 +118,7 @@ Additionally, we have seven more case studies which are less documented, but giv
 We also have examples that are specific for certain models. This includes 
 - [*LodeSTAR*](examples/LodeSTAR) for label-free particle tracking.
 - [*MAGIK*](deeptrack/models/gnns/) for graph-based particle linking and trace characterization.
-- 
+
 ## Video Tutorials
 
 Videos are currently being updated to match with the current version of DeepTrack.
