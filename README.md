@@ -2,17 +2,27 @@
   <img width="350" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/develop/assets/logo.png?raw=true>
 </p>
 
-DeepTrack is a comprehensive deep learning framework for digital microscopy.
-We provide tools to create physical simulations of customizable optical systems, to generate and train neural network models, and to analyze experimental data.
+<h3 align="center">A comprehensive deep learning framework for digital microscopy.</h3>
+<p align="center">
+  <a href="/LICENCE" alt="licence">
+    <img src="https://img.shields.io/github/license/softmatterlab/DeepTrack-2.0">
+  </a>
+  <a href="https://badge.fury.io/py/deeptrack"><img src="https://badge.fury.io/py/deeptrack.svg" alt="PyPI version"></a>
+  <a href="https://badge.fury.io/py/deeptrack"><img src="https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue" alt="Python version"></a>
+  <a href="https://doi.org/10.1063/5.0034891" alt="DOI">
+    <img src="https://img.shields.io/badge/DOI-10.1063%2F5.0034891-blue">
+  </a>
+</p>
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#using-deeptrack">Examples</a> •
+  <a href="#learning-deeptrack-21">Learn DeepTrack</a> •
+  <a href="#cite-us">Cite us</a> •
+  <a href="/LICENCE">Licence</a> 
+</p>
 
-If you use DeepTrack 2.1 in your project, please cite our DeepTrack article:
 
-```
-Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe.
-"Quantitative Digital Microscopy with Deep Learning."
-Applied Physics Reviews 8 (2021), 011310.
-https://doi.org/10.1063/5.0034891
-```
+We provide tools to create physical simulations of optical systems, to generate and train neural network models, and to analyze experimental data.
 
 # Installation
 
@@ -39,7 +49,7 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 
 ### Single particle tracking
 
-<p align="center">
+<p align="left">
   <img width="300" src=/assets/SPT-ideal.gif?raw=true>
   <img width="300" src=/assets/SPT-noisy.gif?raw=true>
 </p>
@@ -49,12 +59,19 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 
 ### Multi-particle tracking
 
-<p align="center">
+<p align="left">
   <img width="350" src=/assets/MPT-packed.gif?raw=true>
 </p>
 
 - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training LodeSTAR to detect multiple cells from a single image](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb)
 - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training a UNet based multi-particle tracker using simulated data](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/4-multi-molecule-tracking.ipynb)
+
+### Particle tracing
+<p align="left">
+  <img width="350" src=/assets/Tracing.gif?raw=true>
+</p>
+
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg) Training MAGIK to trace migrating cells](https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/cell_migration_analysis.ipynb)
 
 # Learning DeepTrack 2.1
 
