@@ -15,7 +15,7 @@
 <p align="center">
   <a href="#installation">Installation</a> •
   <a href="#using-deeptrack">Examples</a> •
-  <a href="#learning-deeptrack-21">Learn DeepTrack</a> •
+  <a href="#learning-deeptrack-21">Basics</a> •
   <a href="#cite-us">Cite us</a> •
   <a href="/LICENSE">License</a> 
 </p>
@@ -42,7 +42,7 @@ If you are already using DeepTrack 2.0 (pypi version 0.x.x), updating to DeepTra
 
 If you notice any other changes in behavior, please report it to us in the issues tab.
 
-# Using DeepTrack 
+# Examples of applications using DeepTrack 
 
 DeepTrack is a general purpose deep learning framework for microscopy, meaning you can use it for any task you like. Here, we show some common applications!
 
@@ -85,7 +85,7 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
   </a>  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/cell_migration_analysis.ipynb"> <img     src="https://colab.research.google.com/assets/colab-badge.svg"> Training MAGIK to trace migrating cells </a>
 </p>
 
-# Learning DeepTrack 2.1
+# Basics to learn DeepTrack 2.1
 
 Everybody learns in different ways! Depending on your preferences, and what you want to do with DeepTrack, you may want to check out one or more of these resources.
 
@@ -187,4 +187,4 @@ Saga Helgadottir, Aykut Argun, and Giovanni Volpe.
 
 ## Funding
 
-This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511) and the ERC Starting Grant MAPEI (101001267).
+This work was supported by the ERC Starting Grant ComplexSwimmers (Grant No. 677511), the ERC Starting Grant MAPEI (101001267), and the Knut and Alice Wallenberg Foundation.
