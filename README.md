@@ -89,26 +89,25 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 
 Everybody learns in different ways! Depending on your preferences, and what you want to do with DeepTrack, you may want to check out one or more of these resources.
 
-## Fundamentals
+## Getting-started guides
 
-First, we have a very general walkthrough of [basic](https://softmatterlab.github.io/DeepTrack-2.0/basics.html) and [advanced](https://softmatterlab.github.io/DeepTrack-2.0/advanced.html) topics. This is a 5-10 minute read, that will get you well on your way to understand the unique interactions available in DeepTrack.
+We have two separate series of notebooks which aims to teach you all you need to know to use DeepTrack to its fullest. The first is a set of six notebooks with a focus on the application.
 
-Similarly, you may find the [get-started notebooks](examples/get-started) a rewarding way to start learning DeepTrack
+1. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> deeptrack_introduction_tutorial </a>  gives an overview of how to use DeepTrack 2.1.
+2. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/tracking_particle_cnn_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> demonstrates how to track a point particle with a convolutional neural network (CNN).
+3. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorial/tracking_multiple_particles_unet_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> demonstrates how to track multiple particles using a U-net.
+4. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/characterizing_aberrations_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> characterizing_aberrations_tutorial </a> demonstrates how to add and characterize aberrations of an optical device. 
+5. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/distinguishing_particles_in_brightfield_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> distinguishing_particles_in_brightfield_tutorial </a> demonstrates how to use a U-net to track and distinguish particles of different sizes in brightfield microscopy. 
+6. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/analyzing_video_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> analyzing_video_tutorial </a> demonstrates how to create videos and how to train a neural network to analyze them.
 
-## Documentation
 
-The detailed documentation of DeepTrack 2.1 is available at the following link: https://softmatterlab.github.io/DeepTrack-2.0/deeptrack.html
+The second series focuses on individual topics, introducing them in a natural order. 
+
+1. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/get-started/01.%20deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Introducing how to create simulation pipelines and train models. </a>
+2. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/get-started/02.%20using_deeptrack_generators.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Demonstrating data generators. </a> 
+3. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/get-started/03.%20customizing_deeptrack_models.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Demonstrating how to customize models using layer-blocks. </a> 
 
 ## DeepTrack 2.1 in action
-
-To see DeepTrack in action, we provide six well documented tutorial notebooks that create simulation pipelines and train models:
-
-1. [deeptrack_introduction_tutorial](examples/tutorials/deeptrack_introduction_tutorial.ipynb) gives an overview of how to use DeepTrack 2.1.
-2. [tracking_particle_cnn_tutorial](examples/tutorials/tracking_particle_cnn_tutorial.ipynb) demonstrates how to track a point particle with a convolutional neural network (CNN).
-3. [tracking_multiple_particles_unet_tutorial](examples/tutorials/tracking_multiple_particles_unet_tutorial.ipynb) demonstrates how to track multiple particles using a U-net.
-4. [characterizing_aberrations_tutorial](examples/tutorials/characterizing_aberrations_tutorial.ipynb) demonstrates how to add and characterize aberrations of an optical device.
-5. [distinguishing_particles_in_brightfield_tutorial](examples/tutorials/distinguishing_particles_in_brightfield_tutorial.ipynb) demonstrates how to use a U-net to track and distinguish particles of different sizes in brightfield microscopy.
-6. [analyzing_video_tutorial](examples/tutorials/analyzing_video_tutorial.ipynb) demonstrates how to create videos and how to train a neural network to analyze them.
 
 Additionally, we have seven more case studies which are less documented, but gives additional insight in how to use DeepTrack with real datasets
 
@@ -126,34 +125,14 @@ We also have examples that are specific for certain models. This includes
 - [*LodeSTAR*](examples/LodeSTAR) for label-free particle tracking.
 - [*MAGIK*](deeptrack/models/gnns/) for graph-based particle linking and trace characterization.
 
+## Documentation
+The detailed documentation of DeepTrack 2.1 is available at the following link: https://softmatterlab.github.io/DeepTrack-2.0/deeptrack.html
+
 ## Video Tutorials
 
 Videos are currently being updated to match with the current version of DeepTrack.
 
-## In-depth dives
-
-The examples folder contains notebooks which explains the different modules in more detail. These can be read in any order, but we provide a recommended order where more fundamental topics are introduced early.
-This order is as follows:
-
-1. [features_example](examples/module-examples/features_example.ipynb)
-2. [properties_example](examples/module-examples/properties_example.ipynb)
-3. [scatterers_example](examples/module-examples/scatterers_example.ipynb)
-4. [optics_example](examples/module-examples/optics_example.ipynb)
-5. [aberrations_example](examples/module-examples/aberrations_example.ipynb)
-6. [noises_example](examples/module-examples/noises_example.ipynb)
-7. [augmentations_example](examples/module-examples/augmentations_example.ipynb)
-8. [image_example](examples/module-examples/image_example.ipynb)
-9. [generators_example](examples/module-examples/generators_example.ipynb)
-10. [models_example](examples/module-examples/models_example.ipynb)
-11. [losses_example](examples/module-examples/losses_example.ipynb)
-12. [utils_example](examples/module-examples/utils_example.ipynb)
-13. [sequences_example](examples/module-examples/sequences_example.ipynb)
-14. [math_example](examples/module-examples/math_example.ipynb)
-
-
-
 ## Cite us!
-
 If you use DeepTrack 2.1 in your project, please cite us here:
 
 ```
