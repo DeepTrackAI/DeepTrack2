@@ -13,7 +13,7 @@ class DeepTrackDataObject:
     """Atomic data container for deeptrack.
 
     The purpose of this is to store some data, and if that data is valid.
-    Data is not valid, if some dependency of the data has been changed or otherwise made not valid
+    Data is not valid, if some dependency of the data has been changed or otherwise made invalid
     since the last time the data was validated.
     """
 
@@ -127,6 +127,12 @@ class DeepTrackDataDict:
 
 
 class DeepTrackNode:
+    """Object corresponding to a node in a computation graph.
+
+    This is a base class for all nodes in a computation graph. It is used to store and compute data.
+    When evaluated, the node will call the `action` method. The action method defines a way to calculate the next data.
+    If the data is already present, it will not be recalculated.
+    """
 
     __nonelike_default = object()
 
@@ -333,7 +339,7 @@ class DeepTrackNode:
 
 
 def equivalent(a, b):
-    # This is a bare-bones implementation.
+    # This is a bare-bones implementation to check if two objects are equivalent.
     # We can implement more cases to reduce updates.
 
     if a is b:
@@ -346,6 +352,7 @@ def equivalent(a, b):
 
 
 def create_node_with_operator(op, a, b):
+    """Creates a new node with the given operator and operands."""
 
     if not isinstance(a, DeepTrackNode):
         a = DeepTrackNode(a)
