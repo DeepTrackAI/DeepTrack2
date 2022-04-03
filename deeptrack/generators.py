@@ -223,7 +223,9 @@ class ContinuousGenerator(keras.utils.Sequence):
         if batch_function is None:
             batch_function = lambda image: image
         if label_function is None:
-            raise ValueError("If batch_function is not None, then label_function cannot be None. Please define a valid label_function.")
+            raise ValueError(
+                "If batch_function is not None, then label_function cannot be None. Please define a valid label_function."
+            )
         if min_data_size is None:
             min_data_size = min(batch_size * 10, max_data_size - 1)
 
@@ -401,3 +403,15 @@ class ContinuousGenerator(keras.utils.Sequence):
         else:
             features.update()
             return features.resolve()
+
+
+class PyTorchContinuousGenerator(ContinuousGenerator):
+    """Extends the ContinuousGenerator to support PyTorch models.
+
+    This class is used to generate batches of data for PyTorch models."""
+
+    def __getitem__(self, idx):
+        import torch
+
+        X, y = super().__getitem__(idx)
+        return torch.from_numpy(X).to(torch.float), torch.from_numpy(y).to(torch.float)
