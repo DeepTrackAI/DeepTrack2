@@ -995,10 +995,11 @@ class Combine(StructuralFeature):
     __distributed__ = False
 
     def __init__(self, features: List[Feature], **kwargs):
-        super().__init__(features=features, **kwargs)
+        self.features = [self.add_feature(f) for f in features]
+        super().__init__(**kwargs)
 
-    def get(self, image_list, features, **kwargs):
-        return [feature.resolve(image_list, **kwargs) for feature in features]
+    def get(self, image_list, **kwargs):
+        return [f(image_list, **kwargs) for f in self.features]
 
 
 class Slice(Feature):
