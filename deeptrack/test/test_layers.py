@@ -198,6 +198,7 @@ class TestModels(unittest.TestCase):
     def test_Tranformer_Encoder_parameters(self):
         block = layers.TransformerEncoderLayer(number_of_heads=6)
         model = makeMinimalModel(block(300), shape=(50, 300))
+        self.assertEqual(model.layers[-1].MultiHeadAttLayer.number_of_heads, 6)
 
     def test_Transformer_Encoder_bias(self):
         block = layers.TransformerEncoderLayer(use_bias=True)
