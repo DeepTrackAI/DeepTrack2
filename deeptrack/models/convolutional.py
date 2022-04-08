@@ -1,7 +1,8 @@
 from tensorflow.keras import layers, models
 
 from ..backend.citations import unet_bibtex
-from .layers import as_block
+from .layers import as_block, TransformerEncoder
+from .embeddings import ClassToken, LearnablePositionEmbs
 from .utils import KerasModel, as_KerasModel, with_citation
 
 
@@ -40,7 +41,7 @@ class Convolutional(KerasModel):
         convolution_block="convolutional",
         pooling_block="pooling",
         dense_block="dense",
-        **kwargs
+        **kwargs,
     ):
         """Creates and compiles a convolutional neural network.
         A convolutional network with a dense top.
@@ -149,7 +150,7 @@ class UNet(KerasModel):
         output_convolution_block="convolutional",
         pooling_block="pooling",
         upsampling_block="deconvolutional",
-        **kwargs
+        **kwargs,
     ):
 
         """Creates and compiles a U-Net.
@@ -269,7 +270,7 @@ class EncoderDecoder(KerasModel):
         output_convolution_block="convolutional",
         pooling_block="pooling",
         upsampling_block="deconvolutional",
-        **kwargs
+        **kwargs,
     ):
 
         """Creates and compiles an EncoderDecoder.
@@ -353,4 +354,96 @@ class EncoderDecoder(KerasModel):
         )(layer)
 
         model = models.Model(unet_input, output_layer)
+        super().__init__(model, **kwargs)
+
+
+class ViT(KerasModel):
+    def __init__(
+        self,
+        input_shape=(224, 224, 3),
+        patch_shape=16,
+        num_layers=12,
+        hidden_size=768,
+        number_of_heads=12,
+        fwd_mlp_dim=3072,
+        dropout=0.1,
+        representation_size=None,
+        include_top=True,
+        output_size=1000,
+        output_activation="linear",
+        **kwargs,
+    ):
+        """
+        Creates and compiles a ViT model.
+        input_shape : tuple of ints
+            Size of the images to be analyzed.
+        patch_shape : int
+            Size of the patches to be extracted from the input images.
+        num_layers : int
+            Number of Transformer layers in the ViT model.
+        hidden_size : int
+            Size of the hidden layers in the ViT model.
+        number_of_heads : int
+            Number of attention heads in each Transformer layer.
+        fwd_mlp_dim : int
+            Size of the hidden layers in the forward MLP of the Transformer layers.
+        dropout : float
+            Dropout rate of the forward MLP in the Transformer layers.
+        representation_size : int
+            Size of the representation vector of the ViT head. By default, it is
+            equal to the hidden size of the last Transformer layer.
+        include_top : bool
+            Whether to include the top layer of the ViT model.
+        output_size : int
+            Size of the output layer of the ViT model.
+        output_activation : str or keras activation
+            The activation function of the output.
+        kwargs : dict
+            Additional arguments to be passed to the KerasModel constructor.
+        """
+
+        assert (
+            input_shape[0] % patch_shape == 0
+        ), "image_size must be a multiple of patch_size"
+
+        vit_input = layers.Input(shape=input_shape)
+        layer = layers.Conv2D(
+            filters=hidden_size,
+            kernel_size=patch_shape,
+            strides=patch_shape,
+            padding="valid",
+            name="embedding",
+        )(vit_input)
+        layer = layers.Reshape((layer.shape[1] * layer.shape[2], hidden_size))(
+            layer
+        )
+        layer = ClassToken(name="class_token")(layer)
+        layer = LearnablePositionEmbs(name="Transformer/posembed_input")(layer)
+        for n in range(num_layers):
+            layer, _ = TransformerEncoder(
+                number_of_heads=number_of_heads,
+                fwd_mlp_dim=fwd_mlp_dim,
+                dropout=dropout,
+                name=f"Transformer/encoderblock_{n}",
+            )(layer)
+        layer = layers.LayerNormalization(
+            epsilon=1e-6, name="Transformer/encoder_norm"
+        )(layer)
+        layer = layers.Lambda(lambda v: v[:, 0], name="ExtractToken")(layer)
+
+        if representation_size is not None:
+            layer = layers.Dense(
+                representation_size, name="pre_logits", activation="tanh"
+            )(layer)
+
+        if include_top:
+            output_layer = layers.Dense(
+                output_size, name="head", activation=output_activation
+            )(layer)
+        else:
+            output_layer = layer
+
+        model = models.Model(
+            inputs=vit_input, outputs=output_layer, name="ViT"
+        )
         super().__init__(model, **kwargs)
