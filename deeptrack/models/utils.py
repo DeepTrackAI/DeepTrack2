@@ -81,6 +81,7 @@ load_model = LoadModel
 
 
 def as_activation(x):
+    """Converts a string or a callable to a keras activation function."""
     if x is None:
         return layers.Layer()
     elif isinstance(x, str):
@@ -92,6 +93,7 @@ def as_activation(x):
 
 
 def _get_norm_by_name(x):
+    """Returns a normalization layer by name."""
     if hasattr(layers, x):
         return getattr(layers, x)
     elif "tensorflow-addons" in installed_pkg and hasattr(tfa.layers, x):
@@ -101,6 +103,7 @@ def _get_norm_by_name(x):
 
 
 def as_normalization(x):
+    """Converts a string or a callable to a keras normalization function."""
     if x is None:
         return layers.Layer()
     elif isinstance(x, str):
@@ -114,6 +117,7 @@ def as_normalization(x):
 def single_layer_call(
     x, layer, activation, normalization, norm_kwargs, activation_first=True
 ):
+    """Calls a layer with activation and normalization."""
     assert isinstance(norm_kwargs, dict), "norm_kwargs must be a dict. Got {0}".format(
         type(norm_kwargs)
     )
@@ -130,6 +134,8 @@ def single_layer_call(
 
 
 def with_citation(citation):
+    """Decorator to add a citation to a model."""
+
     def wrapper(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -147,23 +153,24 @@ def with_citation(citation):
 
 
 def as_KerasModel(func):
+    """Decorator to convert a model to a KerasModel."""
+
     @wraps(func)
     def inner(*args, **kwargs):
-
         model = func(*args, **kwargs)
-
         return KerasModel(model, **kwargs)
 
     return inner
 
 
 def register_config(config_name, cfg):
+    """Registers a config (set of arguments / hyperparameters) to be used by the KerasModel."""
+
     def wrapper(func):
         @wraps(func)
         def inner(*args, config=None, **kwargs):
             if config_name == config:
                 kwargs = {**cfg, **kwargs}
-
             return func(*args, config=config, **kwargs)
 
         return inner
@@ -172,6 +179,8 @@ def register_config(config_name, cfg):
 
 
 class Model(features.Feature):
+    """Base class wrapper for models."""
+
     def __init__(self, model, **kwargs):
         self.model = model
         super().__init__(**kwargs)
@@ -185,6 +194,12 @@ class Model(features.Feature):
 
 
 class KerasModel(Model):
+    """Wrapper for keras models.
+
+    Allows keras models to be used as features. I.e the model can be used as a feature in a pipeline.
+    Also wraps the fit method to automatically create a generator for training.
+    Compiles the model using the loss and optimizer defined in the constructor.
+    """
 
     data_generator = ContinuousGenerator
 
@@ -226,6 +241,7 @@ class KerasModel(Model):
             with generator:
                 h = self.model.fit(generator, *args, **kwargs)
                 return h
+            # Code is not actually unreachable if fit crashes.
             return None
 
         return self.model.fit(x, *args, **kwargs)
@@ -267,6 +283,7 @@ class KerasModel(Model):
         """
         from pydeepimagej.yaml import BioImageModelZooConfig
 
+        # TODO: Does not yet fully work as intended. Debugging proved to be hard.
         inp = layers.Input(shape=self.model.layers[0].input_shape)
         model = self.model
 
@@ -289,6 +306,7 @@ class KerasModel(Model):
 
     def add_preprocessing(self, other, input_shape="same"):
 
+        # TODO: Add tests for this.
         if input_shape == "same":
             input_shape = self.model.input_shape
 

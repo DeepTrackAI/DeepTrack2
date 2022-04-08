@@ -5,8 +5,8 @@ import zipfile
 
 import math
 
-
-# (dataset, folder name, model)
+# Dataset ids stored on google drive.
+# (dataset_id, folder name, model)
 _ID = {
     "CellCounting": (
         "18Afk9Fwe4y3FVLPYd7fr4sfNIW59KEGR",
@@ -49,101 +49,130 @@ _ID = {
 }
 
 
-def load(id, force_overwrite=False):
+def load(key):
+    """Downloads a dataset from google drive.
+    One of: "CellCounting", "MNIST", "QuantumDots", "ParticleTracking",
+    "ParticleSizing", "3DTracking", "MitoGAN", "CellData", "CellMigData", "BFC2Cells"
 
-    root = os.path.abspath("./datasets/")
+    Data will be stored in the "datasets" folder.
 
-    try:
+    Returns:
+        None
+
+    """
+    if key not in _ID:
+        raise ValueError("Invalid dataset key: {}".format(key))
+
+    # Get the dataset id and folder name.
+    dataset_id, folder_name, model_id = _ID[key]
+
+    # Create the datasets folder if it doesn't exist.
+    if not os.path.exists("datasets"):
         os.mkdir("datasets")
-    except FileExistsError:
-        pass
 
-    if id not in _ID:
-        print(
-            "Dataset",
-            id,
-            "not recognized. Available datasets are:",
-            ", ".join(_ID.keys()),
-        )
-        return
+    # Check if dataset is already downloaded.
+    if os.path.exists("datasets/{}".format(folder_name)):
+        # Check if folder content is non-empty.
+        if os.listdir("datasets/{}".format(folder_name)):
+            print("Dataset already downloaded.")
+            return
 
-    tag, folder, _ = _ID[id]
+    # Create the folder for the dataset if it doesn't exist.
+    if not os.path.exists("datasets/" + folder_name):
+        os.mkdir("datasets/" + folder_name)
 
-    if not force_overwrite and os.path.exists(os.path.join(root, folder)):
-        print(
-            id,
-            "already downloaded! Use force_overwrite=True to redownload the dataset.",
-        )
-        return
+    # Download zip file.
+    print(f"Downloading {key}...")
+    url = f"https://drive.google.com/uc?export=download&id={dataset_id}"
+    response = requests.get(url, stream=True, params={"confirm": "true"})
+    # Check that the response is ok.
 
-    destination = os.path.join(root, tag + ".zip")
-    download_file_from_google_drive(tag, destination)
-
-    if os.path.exists(destination):
-        with zipfile.ZipFile(destination) as file:
-            print("Extracting files...")
-            file.extractall(root)
-            print("Done")
-        print("Cleaning up...")
-        os.remove(destination)
-        print("...OK!")
-
-    else:
-        print("Unable to download dataset")
-
-
-def load_model(id, force_overwrite=False):
-
-    root = os.path.abspath("./models/")
-
-    try:
-        os.mkdir("models")
-    except FileExistsError:
-        pass
-
-    _, folder, tag = _ID[id]
-
-    destination = os.path.join(root, folder + ".h5")
-
-    if not force_overwrite and os.path.exists(destination):
-        print(
-            id,
-            "already downloaded! Use force_overwrite=True to redownload the model.",
-        )
-        return destination
-
-    download_file_from_google_drive(tag, destination)
-
-    return destination
-
-
-def download_file_from_google_drive(id, destination):
-    URL = "https://docs.google.com/uc?export=download"
-
-    session = requests.Session()
-
-    response = session.get(URL, params={"id": id}, stream=True)
-
-    token = get_confirm_token(response)
-    if token:
-        params = {"id": id, "confirm": True}
-        response = session.get(URL, params=params, stream=True)
-    else:
+    if response.status_code != 200:
         raise ValueError(
-            "Download token not confirmed, google drive might be unavailable"
+            "Error downloading dataset.",
+            response.status_code,
+            response.reason,
+            response.text,
         )
-    save_response_content(response, destination)
+
+    save_response_content(response, f"datasets/{key}.zip")
+
+    # Extract zip file.
+    print(f"Extracting {key}...")
+    zip_ref = zipfile.ZipFile(f"datasets/{key}.zip", "r")
+    zip_ref.extractall("datasets")
+    zip_ref.close()
+
+    # Delete zip file.
+    os.remove(f"datasets/{key}.zip")
+
+    # If the extracted folder is another folder with the same name, move it.
+    if os.path.isdir(f"datasets/{folder_name}/{folder_name}"):
+        os.rename(f"datasets/{folder_name}/{folder_name}", f"datasets/{folder_name}")
 
 
-def get_confirm_token(response):
+def load_model(key):
+    """Downloads a model from google drive.
+    One of: "CellCounting", "MNIST", "QuantumDots", "ParticleTracking",
+    "ParticleSizing", "3DTracking", "MitoGAN", "CellData", "CellMigData", "BFC2Cells"
 
-    for key, value in response.cookies.items():
-        if key.startswith("download_warning"):
-            return value
+    Data will be stored in the "models" folder.
 
-    if "download-link" in response.text:
-        return True
-    return None
+    Returns:
+        path to the model : str
+
+    """
+    if key not in _ID:
+        raise ValueError("Invalid dataset key: {}".format(key))
+
+    # Get the dataset id and folder name.
+    dataset_id, folder_name, model_id = _ID[key]
+
+    # Create the datasets folder if it doesn't exist.
+    if not os.path.exists("models"):
+        os.mkdir("models")
+
+    # Check if dataset is already downloaded.
+    if os.path.exists("models/{}".format(folder_name)):
+        # Check if folder content is non-empty.
+        if os.listdir("models/{}".format(folder_name)):
+            print("Model already downloaded.")
+            return
+
+    # Create the folder for the dataset if it doesn't exist.
+    if not os.path.exists("models/" + folder_name):
+        os.mkdir("models/" + folder_name)
+
+    # Download zip file.
+    print(f"Downloading {key}...")
+    url = f"https://drive.google.com/uc?export=download&id={model_id}"
+    response = requests.get(url, stream=True, params={"confirm": "true"})
+    # Check that the response is ok.
+
+    if response.status_code != 200:
+        raise ValueError(
+            "Error downloading model.",
+            response.status_code,
+            response.reason,
+            response.text,
+        )
+
+    save_response_content(response, f"models/{key}.zip")
+
+    # Extract zip file.
+    print(f"Extracting {key}...")
+    zip_ref = zipfile.ZipFile(f"models/{key}.zip", "r")
+    zip_ref.extractall("models")
+    zip_ref.close()
+
+    # Delete zip file.
+    os.remove(f"models/{key}.zip")
+
+    # If the extracted folder is another folder with the same name, move it.
+    if os.path.isdir(f"models/{folder_name}/{folder_name}"):
+        os.rename(f"models/{folder_name}/{folder_name}", f"models/{folder_name}")
+
+    return f"models/{folder_name}"
 
 
 def save_response_content(response, destination):

@@ -1,19 +1,6 @@
 """ Image class and relative functions
 
 Defines the Image class and functions that operate on it.
-
-CLASSES
----------
-Image
-    Subclass of numpy `ndarray`. Has the additional attribute properties
-    which contains the properties used to generate it as a `list` of
-    `dicts`.
-
-Functions
----------
-pad_image_to_fft(image: Image, axes = (0, 1))
-    Pads the image with zeros to optimize the speed of Fast Fourier
-    Transforms.
 """
 
 import numpy as np
@@ -97,6 +84,26 @@ def _unary_method(
 
 
 class Image:
+    """Wrapper of array-like values.
+
+    This class is used to wrap array-like values such as numpy arrays, lists, and tensors. It can also wrap
+    numbers and booleans. It has the same interface as numpy arrays, but it is not a numpy array. It has a two-fold
+    purpose:
+
+    1. To provide a unified interface for all array-like values, including tensors such as TensorFlow tensors or cupy arrays.
+       This means that numpy functions can be used on Image objects regardless of whether they are numpy arrays or tensors.
+    2. To store properties of `Feature`s used to create the image.
+
+
+
+    Parameters
+    ----------
+    value : array-like
+        The value to wrap. This can be a numpy array, list, or tensor.
+    copy : bool
+        Whether to copy the value or not. If False, the value is not copied.
+    """
+
     def __init__(self, value, copy=True):
         super().__init__()
 
@@ -127,7 +134,7 @@ class Image:
         Image
             Returns itself.
         """
-
+        # TODO: Check if we still need to make a copy of the list
         self.properties = [*self.properties, property_dict]
         return self
 
@@ -165,7 +172,7 @@ class Image:
         else:
             return [prop[key] for prop in self.properties if key in prop] or default
 
-    def merge_properties_from(self, other: "Image") -> "Image":
+    def merge_properties_from(self, other) -> "Image":
         """Merge properties with those from another Image.
 
         Appends properties from another images such that no property is duplicated.
@@ -178,64 +185,75 @@ class Image:
 
         Parameters
         ----------
-        other
-            The Image to retrieve properties from.
+        other : Image or list of Image or numpy array
+            The data to retrieve properties from.
 
         """
         if isinstance(other, Image):
             for new_prop in other.properties:
 
+                # Check if the property is already in the list
                 should_append = True
                 for my_prop in self.properties:
-
                     if my_prop is new_prop:
-
                         # Prop already added
                         should_append = False
                         break
 
                 if should_append:
                     self.append(new_prop)
+
         elif isinstance(other, np.ndarray):
+            # arrays can not contain properties
             return self
         else:
-            try:
-                for i in other:
-                    self.merge_properties_from(i)
-            except TypeError:
-                pass
+
+            # Ensure that the recursion is not infinite
+            if not isinstance(other, str):
+                # Check if other is iterable. If it is, recurse.
+                if hasattr(other, "__iter__"):
+                    for item in other:
+                        self.merge_properties_from(item)
+
         return self
 
     def _view(self, value):
+
+        # To ensure that we don't create nested Image objects.
         if isinstance(value, Image):
             return self._view(value._value)
         if isinstance(value, (np.ndarray, list, int, float, bool)):
             return np.array(value)
-        if isinstance(value, Tensor):
-            return value
 
         return value
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
 
+        # Allows to use numpy ufuncs on Image objects.
+
+        # Ensures all inputs are the same type
         args = coerce(inputs)
+
+        # Strips the Image object from the inputs
         args = tuple(strip(arg) for arg in args)
 
+        # Check if the ufunc is supported
         if isinstance(self._value, Tensor):
             if ufunc in TENSORFLOW_BINDINGS:
                 ufunc = TENSORFLOW_BINDINGS[ufunc]
             else:
                 return NotImplemented
 
+        # If an output array is defined and is an Image, we redirect the output to the value of that image.
         out = kwargs.get("out", ())
-
         if out:
             kwargs["out"] = tuple(x._value if isinstance(x, Image) else x for x in out)
 
+        # Call the ufunc
         results = getattr(ufunc, method)(*args, **kwargs)
 
         if type(results) is tuple:
-
+            # If the ufunc returns a tuple, we return a tuple of Image objects.
             outputs = []
             for result in results:
                 out = Image(result, copy=False)
@@ -244,28 +262,29 @@ class Image:
 
             return tuple(outputs)
         elif method == "at":
+            # does not have an output
             return None
         else:
+            # If the ufunc returns a single value, we return an Image object.
             result = Image(results, copy=False)
             result.merge_properties_from(inputs)
             return result
 
     def __array_function__(self, func, types, args, kwargs):
 
-        # # Note: this allows subclasses that don't override
-        # # __array_function__ to handle DiagonalArray objects.
-        # if not all(issubclass(t, Image) for t in types):
-        #     return NotImplemented
+        # Allows to use numpy functions on Image objects.
 
+        # Ensures all inputs are the same type
         values = coerce(args)
+        # Strips the Image object from the inputs
         values = [strip(arg) for arg in values]
 
+        # Check if the function is supported
         if isinstance(self._value, Tensor):
             if func in TENSORFLOW_BINDINGS:
                 func = TENSORFLOW_BINDINGS[func]
             else:
                 return NotImplemented
-
         elif not (
             isinstance(self._value, (np.ndarray, tuple, list))
             or np.isscalar(self._value)
@@ -274,21 +293,31 @@ class Image:
 
         out = func(*values, **kwargs)
 
+        # Constants are not wrapped as Image objects
         if isinstance(out, (bool, int, float)):
             return out
 
-        out = Image(out, copy=False)
-        for inp in args:
-            if isinstance(inp, Image):
-                out.merge_properties_from(inp)
+        # If the function returns a tuple, we return a tuple of Image objects.
+        if isinstance(out, tuple):
+            outputs = []
+            for result in out:
+                out = Image(result, copy=False)
+                out.merge_properties_from(args)
+                outputs.append(out)
 
-        return out
+            return tuple(outputs)
+        else:
+            # If the function returns a single value, we return an Image object.
+            result = Image(out, copy=False)
+            result.merge_properties_from(args)
+            return result
 
     def __array__(self, *args, **kwargs):
-
+        """Convert to numpy array."""
         return np.array(self.to_numpy()._value)
 
     def to_tf(self):
+        """Convert to tensorflow tensor."""
 
         if isinstance(self._value, np.ndarray):
             return Image(
@@ -303,6 +332,7 @@ class Image:
         return self
 
     def to_cupy(self):
+        """Convert to cupy array."""
 
         if isinstance(self._value, np.ndarray):
             return Image(cupy.array(self._value), copy=False).merge_properties_from(
@@ -312,6 +342,7 @@ class Image:
         return self
 
     def to_numpy(self):
+        """Convert to numpy array."""
         if isinstance(self._value, np.ndarray):
             return self
         if isinstance(self._value, cupy.ndarray):
@@ -322,9 +353,12 @@ class Image:
         return self
 
     def __getattr__(self, key):
+        # Allows to access properties of the value.
         return getattr(self._value, key)
 
     def __getitem__(self, idx):
+        # Allows indexing of the value.
+
         idx = strip(idx)
         out = self._value.__getitem__(idx)
         if isinstance(out, (bool, int, float, complex)):
@@ -335,6 +369,7 @@ class Image:
         return out
 
     def __setitem__(self, key, value):
+        # Allows indexing and assignment of the value.
         key = strip(key)
         value = strip(value)
         o = self._value.__setitem__(key, value)
@@ -397,6 +432,7 @@ class Image:
 
 
 def strip(v):
+    # Strip the Image object from the value.
     if isinstance(v, Image):
         return v._value
 
@@ -407,10 +443,8 @@ def strip(v):
 
 
 def coerce(images):
+    # Coerce the images to the same type.
     images = [Image(image, copy=False) for image in images]
-
-    # if any(isinstance(i._value, tensorflow.Tensor) for i in images):
-    #     return [i.to_tf() for i in images]
     if any(isinstance(i._value, cupy.ndarray) for i in images):
         return [i.to_cupy() for i in images]
     else:
@@ -454,6 +488,7 @@ def pad_image_to_fft(image: Image, axes=(0, 1)) -> Image:
 
 
 def maybe_cupy(array):
+    """Converts array to cupy if gpu is available and enabled."""
     from . import config
 
     if config.gpu_enabled:
