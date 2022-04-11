@@ -25,11 +25,14 @@ def GetSubSet(randset):
         edge_labels = labels[1][edgeidxs]
         glob_labels = labels[2][randset]
 
+        node_sets = sets[0][nodeidxs]
+        edge_sets = sets[1][edgeidxs]
+
         return (node_features, edge_features, edge_connections, weights), (
             node_labels,
             edge_labels,
             glob_labels,
-        )
+        ), (node_sets, edge_sets)
 
     return inner
 
@@ -171,6 +174,11 @@ def GetFeature(full_graph, **kwargs):
     return (
         dt.Value(full_graph)
         >> dt.Lambda(
+            GetSubSet,
+            randset=lambda: np.random.randint(
+                np.max(full_graph[-1][0][:, 0]) + 1),
+        )
+        >> dt.Lambda(
             GetSubGraphFromLabel,
             samples=lambda: np.array(
                 sorted(
@@ -198,7 +206,8 @@ def GetGlobalFeature(full_graph, **kwargs):
         dt.Value(full_graph)
         >> dt.Lambda(
             GetSubSet,
-            randset=lambda: np.random.randint(np.max(full_graph[-1][0])),
+            randset=lambda: np.random.randint(
+                np.max(full_graph[-1][0][:, 0]) + 1),
         )
         >> dt.Lambda(
             AugmentCentroids,
