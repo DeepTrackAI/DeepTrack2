@@ -12,8 +12,8 @@ def GetSubSet(randset):
     def inner(data):
         graph, labels, sets = data
 
-        nodeidxs = np.where(sets[0] == randset)[0]
-        edgeidxs = np.where(sets[1] == randset)[0]
+        nodeidxs = np.where(sets[0][:, 0] == randset)[0]
+        edgeidxs = np.where(sets[1][:, 0] == randset)[0]
 
         node_features = graph[0][nodeidxs]
         edge_features = graph[1][edgeidxs]
@@ -83,7 +83,7 @@ def NoisyNode(num_centroids=2, **kwargs):
     """
 
     def inner(data):
-        graph, labels = data
+        graph, labels, *_ = data
 
         features = graph[0][:, num_centroids:]
         features += np.random.randn(*features.shape) * np.random.rand() * 0.1
@@ -103,7 +103,7 @@ def NodeDropout(dropout_rate=0.02, **kwargs):
     """
 
     def inner(data):
-        graph, labels = data
+        graph, labels, *_ = data
 
         # Get indexes of randomly dropped nodes
         idxs = np.array(list(range(len(graph[0]))))
@@ -141,7 +141,7 @@ def AugmentCentroids(rotate, translate, flip_x, flip_y):
     """
 
     def inner(data):
-        graph, labels = data
+        graph, labels, *_ = data
 
         centroids = graph[0][:, :2]
 
