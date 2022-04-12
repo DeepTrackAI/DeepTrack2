@@ -13,6 +13,7 @@ required = [
     "pint",
     "scikit-image",
     "pydeepimagej",
+    "more_itertools"
 ]
 
 installed = [pkg.key for pkg in pkg_resources.working_set]
