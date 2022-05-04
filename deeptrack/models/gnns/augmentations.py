@@ -12,8 +12,8 @@ def GetSubSet(randset):
     def inner(data):
         graph, labels, sets = data
 
-        nodeidxs = np.where(sets[0] == randset)[0]
-        edgeidxs = np.where(sets[1] == randset)[0]
+        nodeidxs = np.where(sets[0][:, 0] == randset)[0]
+        edgeidxs = np.where(sets[1][:, 0] == randset)[0]
 
         node_features = graph[0][nodeidxs]
         edge_features = graph[1][edgeidxs]
@@ -25,11 +25,14 @@ def GetSubSet(randset):
         edge_labels = labels[1][edgeidxs]
         glob_labels = labels[2][randset]
 
+        node_sets = sets[0][nodeidxs]
+        edge_sets = sets[1][edgeidxs]
+
         return (node_features, edge_features, edge_connections, weights), (
             node_labels,
             edge_labels,
             glob_labels,
-        )
+        ), (node_sets, edge_sets)
 
     return inner
 
@@ -80,7 +83,7 @@ def NoisyNode(num_centroids=2, **kwargs):
     """
 
     def inner(data):
-        graph, labels = data
+        graph, labels, *_ = data
 
         features = graph[0][:, num_centroids:]
         features += np.random.randn(*features.shape) * np.random.rand() * 0.1
@@ -100,7 +103,7 @@ def NodeDropout(dropout_rate=0.02, **kwargs):
     """
 
     def inner(data):
-        graph, labels = data
+        graph, labels, *_ = data
 
         # Get indexes of randomly dropped nodes
         idxs = np.array(list(range(len(graph[0]))))
@@ -138,7 +141,7 @@ def AugmentCentroids(rotate, translate, flip_x, flip_y):
     """
 
     def inner(data):
-        graph, labels = data
+        graph, labels, *_ = data
 
         centroids = graph[0][:, :2]
 
@@ -171,6 +174,11 @@ def GetFeature(full_graph, **kwargs):
     return (
         dt.Value(full_graph)
         >> dt.Lambda(
+            GetSubSet,
+            randset=lambda: np.random.randint(
+                np.max(full_graph[-1][0][:, 0]) + 1),
+        )
+        >> dt.Lambda(
             GetSubGraphFromLabel,
             samples=lambda: np.array(
                 sorted(
@@ -198,7 +206,8 @@ def GetGlobalFeature(full_graph, **kwargs):
         dt.Value(full_graph)
         >> dt.Lambda(
             GetSubSet,
-            randset=lambda: np.random.randint(np.max(full_graph[-1][0])),
+            randset=lambda: np.random.randint(
+                np.max(full_graph[-1][0][:, 0]) + 1),
         )
         >> dt.Lambda(
             AugmentCentroids,
