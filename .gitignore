@@ -19,5 +19,3 @@ data/
 datasets/
 examples/**/*/models/
 **/node_modules/
-
-_newsrc/node_modules/
