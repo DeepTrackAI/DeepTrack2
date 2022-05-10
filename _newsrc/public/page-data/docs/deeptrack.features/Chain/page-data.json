@@ -1,5 +1,0 @@
-{
-    "componentChunkName": "component---src-templates-api-page-tsx",
-    "path": "/docs/deeptrack.features/Chain",
-    "result": {"pageContext":{"sections":{"body":[{"type":"paragraph","children":[{"type":"Text","content":"Resolves two features sequentially.\nPasses the output of the first to the input of the second.\nParameters\n----------\nfeature_1 : Feature\nfeature_2 : Feature"}]}]},"superclass":"StructuralFeature","superclass_module":"deeptrack.features","module":"deeptrack.features","name":"Chain","qualified_name":"deeptrack.features.Chain","signature":"(feature_1: deeptrack.features.Feature, feature_2: deeptrack.features.Feature, **kwargs)"}},
-    "staticQueryHashes": []}
