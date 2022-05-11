@@ -27,6 +27,7 @@ MERGE_STRATEGY_APPEND = 1
 
 class Feature(DeepTrackNode):
     """Base feature class.
+
     Features define the image generation process. All features operate
     on lists of images. Most features, such as noise, apply some
     tranformation to all images in the list. This transformation can

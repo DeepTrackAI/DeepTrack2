@@ -12,6 +12,7 @@ from ..utils import as_activation, as_normalization, single_layer_call, GELU
 class FGNN(tf.keras.layers.Layer):
     """
     Fingerprinting Graph Layer.
+
     Parameters
     ----------
     filters : int
@@ -150,6 +151,7 @@ def FGNNlayer(
     **kwargs,
 ):
     """Fingerprinting Graph Layer.
+
     Parameters
     ----------
     filters : int
@@ -190,6 +192,7 @@ def FGNNlayer(
 class ClassTokenFGNN(FGNN):
     """
     Fingerprinting Graph Layer with Class Token.
+
     Parameters
     ----------
     filters : int
@@ -304,6 +307,7 @@ def ClassTokenFGNNlayer(
     **kwargs,
 ):
     """Fingerprinting Graph Layer with Class Token.
+    
     Parameters
     ----------
     number_of_heads : int

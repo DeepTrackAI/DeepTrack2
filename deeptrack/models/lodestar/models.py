@@ -307,6 +307,7 @@ class LodeSTAR(KerasModel):
 
     def predict_and_pool(self, data, mask=1):
         """Evaluates the model on a batch of data, and pools the predictions in each frame to a single value.
+        
         Used when it's known a-priori that there is only one object per image.
 
         Parameters

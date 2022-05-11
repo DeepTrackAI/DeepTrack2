@@ -25,6 +25,35 @@ def center_crop(layer, target_layer):
 
 
 class Convolutional(KerasModel):
+    """Creates and compiles a convolutional neural network.
+
+    A convolutional network with a dense top.
+
+    Parameters
+    ----------
+    input_shape : tuple of ints
+        Size of the images to be analyzed.
+    conv_layers_dimensions : tuple of ints
+        Number of convolutions in each convolutional layer.
+    dense_layers_dimensions : tuple of ints
+        Number of units in each dense layer.
+    dropout : tuple of float
+        Adds a dropout between the convolutional layers
+    number_of_outputs : int
+        Number of units in the output layer.
+    output_activation : str or keras activation
+        The activation function of the output.
+    loss : str or keras loss function
+        The loss function of the network.
+    layer_function : Callable[int] -> keras layer
+        Function that returns a convolutional layer with convolutions
+        determined by the input argument. Can be use to futher customize the network.
+    Returns
+    -------
+    keras.models.Model
+        Deep learning network
+    """
+
     def __init__(
         self,
         input_shape=(51, 51, 1),
@@ -43,32 +72,6 @@ class Convolutional(KerasModel):
         dense_block="dense",
         **kwargs,
     ):
-        """Creates and compiles a convolutional neural network.
-        A convolutional network with a dense top.
-        Parameters
-        ----------
-        input_shape : tuple of ints
-            Size of the images to be analyzed.
-        conv_layers_dimensions : tuple of ints
-            Number of convolutions in each convolutional layer.
-        dense_layers_dimensions : tuple of ints
-            Number of units in each dense layer.
-        dropout : tuple of float
-            Adds a dropout between the convolutional layers
-        number_of_outputs : int
-            Number of units in the output layer.
-        output_activation : str or keras activation
-            The activation function of the output.
-        loss : str or keras loss function
-            The loss function of the network.
-        layer_function : Callable[int] -> keras layer
-            Function that returns a convolutional layer with convolutions
-            determined by the input argument. Can be use to futher customize the network.
-        Returns
-        -------
-        keras.models.Model
-            Deep learning network
-        """
 
         # Update layer functions
         dense_block = as_block(dense_block)
@@ -129,6 +132,38 @@ convolutional = Convolutional
 
 
 class UNet(KerasModel):
+    """Creates and compiles a U-Net.
+
+    Parameters
+    ----------
+    input_shape : tuple of ints
+        Size of the images to be analyzed.
+    conv_layers_dimensions : tuple of ints
+        Number of convolutions in each convolutional layer during down-
+        and upsampling.
+    base_conv_layers_dimensions : tuple of ints
+        Number of convolutions in each convolutional layer at the base
+        of the unet, where the image is the most downsampled.
+    output_conv_layers_dimensions : tuple of ints
+        Number of convolutions in each convolutional layer after the
+        upsampling.
+    steps_per_pooling : int
+        Number of convolutional layers between each pooling and upsampling
+        step.
+    number_of_outputs : int
+        Number of convolutions in output layer.
+    output_activation : str or keras activation
+        The activation function of the output.
+    loss : str or keras loss function
+        The loss function of the network.
+    layer_function : Callable[int] -> keras layer
+        Function that returns a convolutional layer with convolutions
+        determined by the input argument. Can be use to futher customize the network.
+    Returns
+    -------
+    keras.models.Model
+        Deep learning network.
+    """
 
     citation = unet_bibtex
 
@@ -152,38 +187,6 @@ class UNet(KerasModel):
         upsampling_block="deconvolutional",
         **kwargs,
     ):
-
-        """Creates and compiles a U-Net.
-        Parameters
-        ----------
-        input_shape : tuple of ints
-            Size of the images to be analyzed.
-        conv_layers_dimensions : tuple of ints
-            Number of convolutions in each convolutional layer during down-
-            and upsampling.
-        base_conv_layers_dimensions : tuple of ints
-            Number of convolutions in each convolutional layer at the base
-            of the unet, where the image is the most downsampled.
-        output_conv_layers_dimensions : tuple of ints
-            Number of convolutions in each convolutional layer after the
-            upsampling.
-        steps_per_pooling : int
-            Number of convolutional layers between each pooling and upsampling
-            step.
-        number_of_outputs : int
-            Number of convolutions in output layer.
-        output_activation : str or keras activation
-            The activation function of the output.
-        loss : str or keras loss function
-            The loss function of the network.
-        layer_function : Callable[int] -> keras layer
-            Function that returns a convolutional layer with convolutions
-            determined by the input argument. Can be use to futher customize the network.
-        Returns
-        -------
-        keras.models.Model
-            Deep learning network.
-        """
 
         # Update layer functions
 
@@ -252,6 +255,36 @@ unet = UNet
 
 
 class EncoderDecoder(KerasModel):
+    """Creates and compiles an EncoderDecoder.
+    Parameters
+    ----------
+    input_shape : tuple of ints
+        Size of the images to be analyzed.
+    conv_layers_dimensions : tuple of ints
+        Number of convolutions in each convolutional layer during down-
+        and upsampling.
+    base_conv_layers_dimensions : tuple of ints
+        Number of convolutions in each convolutional layer at the base
+        of the unet, where the image is the most downsampled.
+    output_conv_layers_dimensions : tuple of ints
+        Number of convolutions in each convolutional layer after the
+        upsampling.
+    steps_per_pooling : int
+        Number of convolutional layers between each pooling and upsampling
+        step.
+    number_of_outputs : int
+        Number of convolutions in output layer.
+    output_activation : str or keras activation
+        The activation function of the output.
+    loss : str or keras loss function
+        The loss function of the network.
+
+    Returns
+    -------
+    keras.models.Model
+        Deep learning network.
+    """
+
     def __init__(
         self,
         input_shape=(None, None, 1),
@@ -272,36 +305,6 @@ class EncoderDecoder(KerasModel):
         upsampling_block="deconvolutional",
         **kwargs,
     ):
-
-        """Creates and compiles an EncoderDecoder.
-        Parameters
-        ----------
-        input_shape : tuple of ints
-            Size of the images to be analyzed.
-        conv_layers_dimensions : tuple of ints
-            Number of convolutions in each convolutional layer during down-
-            and upsampling.
-        base_conv_layers_dimensions : tuple of ints
-            Number of convolutions in each convolutional layer at the base
-            of the unet, where the image is the most downsampled.
-        output_conv_layers_dimensions : tuple of ints
-            Number of convolutions in each convolutional layer after the
-            upsampling.
-        steps_per_pooling : int
-            Number of convolutional layers between each pooling and upsampling
-            step.
-        number_of_outputs : int
-            Number of convolutions in output layer.
-        output_activation : str or keras activation
-            The activation function of the output.
-        loss : str or keras loss function
-            The loss function of the network.
-
-        Returns
-        -------
-        keras.models.Model
-            Deep learning network.
-        """
 
         # Update layer functions
 
@@ -358,6 +361,35 @@ class EncoderDecoder(KerasModel):
 
 
 class ViT(KerasModel):
+    """
+    Creates and compiles a ViT model.
+    input_shape : tuple of ints
+        Size of the images to be analyzed.
+    patch_shape : int
+        Size of the patches to be extracted from the input images.
+    num_layers : int
+        Number of Transformer layers in the ViT model.
+    hidden_size : int
+        Size of the hidden layers in the ViT model.
+    number_of_heads : int
+        Number of attention heads in each Transformer layer.
+    fwd_mlp_dim : int
+        Size of the hidden layers in the forward MLP of the Transformer layers.
+    dropout : float
+        Dropout rate of the forward MLP in the Transformer layers.
+    representation_size : int
+        Size of the representation vector of the ViT head. By default, it is
+        equal to the hidden size of the last Transformer layer.
+    include_top : bool
+        Whether to include the top layer of the ViT model.
+    output_size : int
+        Size of the output layer of the ViT model.
+    output_activation : str or keras activation
+        The activation function of the output.
+    kwargs : dict
+        Additional arguments to be passed to the KerasModel constructor.
+    """
+
     def __init__(
         self,
         input_shape=(224, 224, 3),
@@ -373,34 +405,6 @@ class ViT(KerasModel):
         output_activation="linear",
         **kwargs,
     ):
-        """
-        Creates and compiles a ViT model.
-        input_shape : tuple of ints
-            Size of the images to be analyzed.
-        patch_shape : int
-            Size of the patches to be extracted from the input images.
-        num_layers : int
-            Number of Transformer layers in the ViT model.
-        hidden_size : int
-            Size of the hidden layers in the ViT model.
-        number_of_heads : int
-            Number of attention heads in each Transformer layer.
-        fwd_mlp_dim : int
-            Size of the hidden layers in the forward MLP of the Transformer layers.
-        dropout : float
-            Dropout rate of the forward MLP in the Transformer layers.
-        representation_size : int
-            Size of the representation vector of the ViT head. By default, it is
-            equal to the hidden size of the last Transformer layer.
-        include_top : bool
-            Whether to include the top layer of the ViT model.
-        output_size : int
-            Size of the output layer of the ViT model.
-        output_activation : str or keras activation
-            The activation function of the output.
-        kwargs : dict
-            Additional arguments to be passed to the KerasModel constructor.
-        """
 
         assert (
             input_shape[0] % patch_shape == 0
@@ -414,9 +418,7 @@ class ViT(KerasModel):
             padding="valid",
             name="embedding",
         )(vit_input)
-        layer = layers.Reshape((layer.shape[1] * layer.shape[2], hidden_size))(
-            layer
-        )
+        layer = layers.Reshape((layer.shape[1] * layer.shape[2], hidden_size))(layer)
         layer = ClassToken(name="class_token")(layer)
         layer = LearnablePositionEmbs(name="Transformer/posembed_input")(layer)
         for n in range(num_layers):
@@ -443,7 +445,5 @@ class ViT(KerasModel):
         else:
             output_layer = layer
 
-        model = models.Model(
-            inputs=vit_input, outputs=output_layer, name="ViT"
-        )
+        model = models.Model(inputs=vit_input, outputs=output_layer, name="ViT")
         super().__init__(model, **kwargs)

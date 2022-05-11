@@ -1,36 +1,4 @@
-""" Features that aberrate and modify pupil functions.
-
-Classes
--------
-Aberration
-    Base abstract class
-GaussianApodization
-    Introduces pupil apodization.
-Zernike
-    Introduces a Zernike phase aberration.
-Piston
-    Zernike polynomial with n=0, m=0.
-VerticalTilt
-    Zernike polynomial with n=1, m=-1.
-HorizontalTilt
-    Zernike polynomial with n=1, m=1.
-ObliqueAstigmatism
-    Zernike polynomial with n=2, m=-2.
-Defocus
-    Zernike polynomial with n=2, m=0.
-Astigmatism
-    Zernike polynomial with n=2, m=2.
-ObliqueTrefoil
-    Zernike polynomial with n=3, m=-3.
-VerticalComa
-    Zernike polynomial with n=3, m=-1.
-HorizontalComa
-    Zernike polynomial with n=3, m=1.
-Trefoil
-    Zernike polynomial with n=3, m=3.
-SphericalAberration
-    Zernike polynomial with n=4, m=0.
-"""
+""" Features that aberrate and modify pupil functions."""
 
 from typing import List, Tuple
 
@@ -85,6 +53,13 @@ class GaussianApodization(Aberration):
     offset : (float, float)
         Offsets the center of the gaussian.
 
+    Examples
+    --------
+    >>> particle = dt.PointParticle(z = 1 * dt.units.micrometer)
+    >>> aberrated_optics = dt.Fluorescence(aberration=dt.GaussianApodization(sigma=0.1))
+    >>> pipeline = aberrated_optics(particle)
+    >>> pipeline.plot()
+    >>> plt.show()
     """
 
     def __init__(

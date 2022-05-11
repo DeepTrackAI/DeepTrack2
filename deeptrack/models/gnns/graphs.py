@@ -20,6 +20,7 @@ def GetEdge(
 ):
     """
     Extracts the edges from a windowed sequence of frames
+
     Parameters
     ----------
     df: pd.DataFrame
@@ -108,6 +109,7 @@ def GetEdge(
 def EdgeExtractor(nodesdf, nofframes=3, **kwargs):
     """
     Extracts edges from a sequence of frames
+
     Parameters
     ----------
     nodesdf: pd.DataFrame
@@ -152,6 +154,7 @@ def EdgeExtractor(nodesdf, nofframes=3, **kwargs):
 def AppendSolution(df, func, **kwargs):
     """
     Appends a solution to the dataframe
+
     Parameters
     ----------
     df: pd.DataFrame
@@ -176,6 +179,7 @@ def AppendSolution(df, func, **kwargs):
 def DataframeSplitter(df, props: tuple, to_array=True, **kwargs):
     """
     Splits a dataframe into features and labels
+
     Parameters
     ----------
     dt: pd.DataFrame
@@ -232,6 +236,7 @@ def GraphExtractor(
 ):
     """
     Extracts the graph from a sequence of frames
+    
     Parameters
     ----------
     sequence: dt.Feature
