@@ -6,6 +6,7 @@ import pycocotools.mask as mask_util
 import skimage.io
 import skimage.morphology
 import tqdm
+import matplotlib.pyplot as plt
 
 
 def convert_dataset_to_coco(
@@ -30,13 +31,16 @@ def convert_dataset_to_coco(
     for i, (image_path, mask_path) in tqdm.tqdm(
         enumerate(zip(image_paths, mask_paths)), total=len(image_paths)
     ):
+
         image_tmp = skimage.io.imread(image_path)
         mask_tmp = skimage.io.imread(mask_path)
+        plt.figure(figsize=(10, 10))
+        plt.imshow(image_tmp)
 
-        image = np.zeros((1010, 1010), dtype=np.uint8) + np.mean(image_tmp, dtype=int)
+        image = np.zeros((1024, 1024), dtype=np.uint8) + np.mean(image_tmp, dtype=int)
         image[crop_slice] = image_tmp[crop_slice]
 
-        mask = np.zeros((1010, 1010), dtype=np.uint8)
+        mask = np.zeros((1024, 1024), dtype=np.uint8)
         mask[crop_slice] = mask_tmp[crop_slice]
 
         # change extension to .png
@@ -67,6 +71,9 @@ def convert_dataset_to_coco(
             w = w - x
             h = h - y
 
+            # plot bbox
+            plt.plot([y, y, y + h, y + h, y], [x, x + w, x + w, x, x], "r")
+
             rle = mask_to_coco_segmentation(mask == prop.label)
 
             annotations.append(
@@ -80,8 +87,10 @@ def convert_dataset_to_coco(
                     "id": len(annotations),
                 }
             )
+        plt.show()
 
     output_file = os.path.join(output_dir, dataset_name + ".json")
+    print(len(annotations))
     with open(output_file, "w") as f:
         json.dump(
             {
