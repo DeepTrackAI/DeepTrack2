@@ -18,6 +18,7 @@ Ellipsoid
 """
 
 
+from pint import Quantity
 from . import image
 from deeptrack.backend.units import ConversionTable
 from typing import Callable, Tuple
@@ -474,10 +475,14 @@ class MieScatterer(Scatterer):
     collection_angle : "auto" or float
         The maximum collection angle in radians. If "auto", this
         is calculated from the objective NA (which is true if the objective is
-        the limiting
-        aperature).
-    polarization_angle : float
-        Angle of the polarization of the incoming light relative to the x-axis.
+        the limiting aperature).
+    input_polarization: float or Quantity
+        Defines the polarization angle of the input. For simulating circularly
+        polarized light we recommend a coherent sum of two simulated fields. For
+        unpolarized light we recommend a incoherent sum of two simulated fields.
+    output_polarization: float or Quantity or None
+        If None, the output light is not polarized. Otherwise defines the angle of the
+        polarization filter after the sample. For off-axis, keep the same as input_polarization.
     L : int or str
         The number of terms used to evaluate the mie theory. If `"auto"`,
         it determines the number of terms automatically.
@@ -503,8 +508,9 @@ class MieScatterer(Scatterer):
     def __init__(
         self,
         coefficients: Callable[..., Callable[[int], Tuple[ArrayLike, ArrayLike]]],
+        input_polarization=0,
+        output_polarization=0,
         offset_z: PropertyLike[str] = "auto",
-        polarization_angle: PropertyLike[float] = 0,
         collection_angle: PropertyLike[str] = "auto",
         L: PropertyLike[str] = "auto",
         refractive_index_medium=None,
@@ -522,7 +528,8 @@ class MieScatterer(Scatterer):
             crop_empty=False,
             L=L,
             offset_z=offset_z,
-            polarization_angle=polarization_angle,
+            input_polarization=input_polarization,
+            output_polarization=output_polarization,
             collection_angle=collection_angle,
             coefficients=coefficients,
             refractive_index_medium=refractive_index_medium,
@@ -578,7 +585,8 @@ class MieScatterer(Scatterer):
         L,
         offset_z,
         collection_angle,
-        polarization_angle,
+        input_polarization,
+        output_polarization,
         coefficients,
         **kwargs
     ):
@@ -615,16 +623,30 @@ class MieScatterer(Scatterer):
         R3 = np.sqrt(R2 ** 2 + (offset_z) ** 2)
         ct = offset_z / R3
 
-        ANGLE = np.arctan2(Y, X) + polarization_angle
-        COS2 = np.square(np.cos(ANGLE))
-        SIN2 = 1 - COS2
+        angle = np.arctan2(Y, X)
+
+        if isinstance(input_polarization, (float, int, Quantity)):
+
+            if isinstance(input_polarization, Quantity):
+                input_polarization = input_polarization.to("rad")
+                input_polarization = input_polarization.magnitude
+
+            S1_coef = np.sin(angle + input_polarization)
+            S2_coef = np.cos(angle + input_polarization)
+
+        if isinstance(output_polarization, (float, int, Quantity)):
+            if isinstance(input_polarization, Quantity):
+                output_polarization = output_polarization.to("rad")
+                output_polarization = output_polarization.magnitude
+
+            S1_coef *= np.sin(angle + output_polarization)
+            S2_coef *= np.cos(angle + output_polarization)
 
         ct_max = np.cos(collection_angle)
 
         # Wave vector
         k = 2 * np.pi / wavelength * refractive_index_medium
 
-        print(L)
         # Harmonics
         A, B = coefficients(L)
         PI, TAU = D.mie_harmonics(ct, L)
@@ -641,13 +663,8 @@ class MieScatterer(Scatterer):
             * 1j
             / (k * R3)
             * np.exp(1j * k * (R3 - offset_z))
-            * (S2 * COS2 + S1 * SIN2)
+            * (S2 * S2_coef + S1 * S1_coef)
         )
-
-        import matplotlib.pyplot as plt
-
-        plt.imshow(np.abs(field.get()))
-        plt.show()
 
         return np.expand_dims(field, axis=-1)
 
@@ -687,8 +704,13 @@ class MieSphere(MieScatterer):
         The maximum collection angle in radians. If "auto", this
         is calculated from the objective NA (which is true if the objective
         is the limiting aperature).
-    polarization_angle : float
-        Angle of the polarization of the incoming light relative to the x-axis.
+    input_polarization: float or Quantity
+        Defines the polarization angle of the input. For simulating circularly
+        polarized light we recommend a coherent sum of two simulated fields. For
+        unpolarized light we recommend a incoherent sum of two simulated fields.
+    output_polarization: float or Quantity or None
+        If None, the output light is not polarized. Otherwise defines the angle of the
+        polarization filter after the sample. For off-axis, keep the same as input_polarization.
     """
 
     def __init__(
@@ -752,8 +774,13 @@ class MieStratifiedSphere(MieScatterer):
         The maximum collection angle in radians. If "auto", this
         is calculated from the objective NA (which is true if the objective
         is the limiting aperature).
-    polarization_angle : float
-        Angle of the polarization of the incoming light relative to the x-axis.
+    input_polarization: float or Quantity
+        Defines the polarization angle of the input. For simulating circularly
+        polarized light we recommend a coherent sum of two simulated fields. For
+        unpolarized light we recommend a incoherent sum of two simulated fields.
+    output_polarization: float or Quantity or None
+        If None, the output light is not polarized. Otherwise defines the angle of the
+        polarization filter after the sample. For off-axis, keep the same as input_polarization.
     """
 
     def __init__(
