@@ -518,8 +518,14 @@ class MieScatterer(Scatterer):
         NA=None,
         padding=(0,) * 4,
         output_region=None,
+        polarization_angle=None,
         **kwargs
     ):
+        if polarization_angle is not None:
+            warnings.warn(
+                "polarization_angle is deprecated. Please use input_polarization instead"
+            )
+            input_polarization = polarization_angle
         kwargs.pop("is_field", None)
         kwargs.pop("crop_empty", None)
 
@@ -537,6 +543,7 @@ class MieScatterer(Scatterer):
             NA=NA,
             padding=padding,
             output_region=output_region,
+            polarization_angle=polarization_angle,
             **kwargs,
         )
 
