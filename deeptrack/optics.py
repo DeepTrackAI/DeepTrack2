@@ -656,8 +656,6 @@ class Brightfield(Optics):
             import matplotlib.pyplot as plt
 
             pf = np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(propagation_matrix)
-            plt.imshow(np.abs(pf.get()))
-            plt.show()
             light_in += pf
 
         light_in_focus = light_in * np.fft.fftshift(pupils[-1])
