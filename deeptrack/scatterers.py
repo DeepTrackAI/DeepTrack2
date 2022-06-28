@@ -549,8 +549,18 @@ class MieScatterer(Scatterer):
             )
 
         if properties["offset_z"] == "auto":
+            print(
+                np.min(
+                    np.array(properties["output_region"][2:])
+                    - properties["output_region"][:2]
+                )
+            )
             properties["offset_z"] = (
-                32
+                np.min(
+                    np.array(properties["output_region"][2:])
+                    - properties["output_region"][:2]
+                )
+                / 2
                 * min(properties["voxel_size"][:2])
                 / np.sin(properties["collection_angle"])
             )
@@ -575,11 +585,27 @@ class MieScatterer(Scatterer):
 
         xSize = padding[2] + output_region[2] - output_region[0] + padding[0]
         ySize = padding[3] + output_region[3] - output_region[1] + padding[1]
-        arr = pad_image_to_fft(np.zeros((xSize, ySize)))
 
+        arr = pad_image_to_fft(np.zeros((xSize, ySize)))
+        position = np.array(position)
+        pos_floor = np.floor(position)
+        pos_digits = position - pos_floor
         # Evluation grid
-        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[0])
-        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[1])
+        x = (
+            np.arange(-padding[0], arr.shape[0] - padding[0])
+            - arr.shape[0] // 2
+            + padding[0]
+            - pos_digits[0]
+        )
+        y = (
+            np.arange(-padding[1], arr.shape[1] - padding[1])
+            - arr.shape[1] // 2
+            + padding[1]
+            - pos_digits[1]
+        )
+
+        x = np.roll(x, int(-arr.shape[0] // 2 + padding[0] + pos_floor[0]), 0)
+        y = np.roll(y, int(-arr.shape[1] // 2 + padding[1] + pos_floor[1]), 0)
         X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
 
         X = image.maybe_cupy(X)
@@ -598,8 +624,8 @@ class MieScatterer(Scatterer):
         # Wave vector
         k = 2 * np.pi / wavelength * refractive_index_medium
 
+        print(L)
         # Harmonics
-
         A, B = coefficients(L)
         PI, TAU = D.mie_harmonics(ct, L)
 
@@ -607,16 +633,21 @@ class MieScatterer(Scatterer):
         E = [(2 * i + 1) / (i * (i + 1)) for i in range(1, L + 1)]
 
         # Scattering terms
-        S1 = sum([E[i] * A[i] * TAU[i] + E[i] * B[i] * PI[i] for i in range(0, L)])
-        S2 = sum([E[i] * B[i] * TAU[i] + E[i] * A[i] * PI[i] for i in range(0, L)])
+        S1 = sum([E[i] * A[i] * PI[i] + E[i] * B[i] * TAU[i] for i in range(0, L)])
+        S2 = sum([E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)])
 
         field = (
             (ct > ct_max)
             * 1j
             / (k * R3)
             * np.exp(1j * k * (R3 - offset_z))
-            * (S1 * COS2 + S2 * SIN2)
+            * (S2 * COS2 + S1 * SIN2)
         )
+
+        import matplotlib.pyplot as plt
+
+        plt.imshow(np.abs(field.get()))
+        plt.show()
 
         return np.expand_dims(field, axis=-1)
 
