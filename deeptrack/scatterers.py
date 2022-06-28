@@ -540,7 +540,7 @@ class MieScatterer(Scatterer):
         if properties["L"] == "auto":
             try:
                 v = 2 * np.pi * np.max(properties["radius"]) / properties["wavelength"]
-                properties["L"] = int(np.ceil((v + 4 * (v ** (1 / 3)) + 2)))
+                properties["L"] = int(np.floor((v + 4 * (v ** (1 / 3)) + 1)))
             except (ValueError, TypeError):
                 pass
         if properties["collection_angle"] == "auto":
