@@ -52,6 +52,8 @@ def mie_coefficients(m: float or complex, a: float, L: int) -> Tuple[np.ndarray]
         A[l - 1] = (m * Smx * dSx - Sx * dSmx) / (m * Smx * dxix - xix * dSmx)
         B[l - 1] = (Smx * dSx - m * Sx * dSmx) / (Smx * dxix - m * xix * dSmx)
 
+    print("A", A)
+    print("B", B)
     return A, B
 
 
