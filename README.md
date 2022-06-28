@@ -49,8 +49,8 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 <br/>
 <h3 align="left"> Single particle tracking </h3>
 <p align="left">
-  <img width="33%" src=/assets/SPT-ideal.gif?raw=true>
-  <img width="33%" src=/assets/SPT-noisy.gif?raw=true>
+  <img width="300" src=/assets/SPT-ideal.gif?raw=true>
+  <img width="300" src=/assets/SPT-noisy.gif?raw=true>
   <br/>
   <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/2-single_particle_tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a CNN-based single particle tracker using simulated data </a>
   <br/>
@@ -65,7 +65,7 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 <h3 align="left"> Multi-particle tracking </h3>
 
 <p align="left">
-  <img width="66%" src=/assets/MPT-packed.gif?raw=true>
+  <img width="600" src=/assets/MPT-packed.gif?raw=true>
   <br/>
   <a href="https://doi.org/10.48550/arXiv.2202.13546" alt="DOI lodestar">
     <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.13546-blue">
@@ -78,7 +78,7 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 <h3 align="left"> Particle tracing </h3>
 
 <p align="left">
-  <img width="66%" src=/assets/Tracing.gif?raw=true>
+  <img width="600" src=/assets/Tracing.gif?raw=true>
   <br/>
   <a href="https://doi.org/10.48550/arXiv.2202.06355" alt="DOI magik">
     <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.0635-blue">
