@@ -11,9 +11,9 @@ required = [
     "numpy",
     "scipy",
     "pint",
-    "scikit-image",
+    "scikit-image>=0.18.0",
     "pydeepimagej",
-    "more_itertools"
+    "more_itertools",
 ]
 
 installed = [pkg.key for pkg in pkg_resources.working_set]
