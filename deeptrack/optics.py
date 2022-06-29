@@ -25,6 +25,7 @@ from .image import Image, pad_image_to_fft, maybe_cupy
 from .types import ArrayLike, PropertyLike
 from .backend._config import cupy
 from scipy.ndimage import convolve
+import warnings
 
 from . import units as u
 from deeptrack import image
@@ -156,8 +157,22 @@ class Optics(Feature):
         output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
         pupil: Feature = None,
         illumination: Feature = None,
-        **kwargs
+        **kwargs,
     ):
+
+        radius = NA / wavelength * resolution * magnification
+
+        if isinstance(radius, Quantity):
+            radius = radius.to_base_units()
+            radius = radius.magnitude
+
+        if radius > 0.5:
+            required_upscale = np.ceil(radius * 2)
+            warnings.warn(
+                f"""Likely bad optical parameters. NA / wavelength * resolution * magnification = {radius} should be at most 0.5
+To fix, set magnification to {required_upscale}, and downsample the resulting image with dt.AveragePooling(({required_upscale}, {required_upscale}, 1))
+"""
+            )
         # Calculate the voxel size.
         def get_voxel_size(resolution, magnification):
             props = self._normalize(resolution=resolution, magnification=magnification)
@@ -184,7 +199,7 @@ class Optics(Feature):
             pixel_size=get_pixel_size,
             limits=None,
             fields=None,
-            **kwargs
+            **kwargs,
         )
 
         self.pupil = self.add_feature(pupil) if pupil else DummyFeature()
@@ -201,7 +216,7 @@ class Optics(Feature):
         voxel_size,
         include_aberration=True,
         defocus=0,
-        **kwargs
+        **kwargs,
     ):
         """Calculates the pupil function at different focal points.
 
@@ -235,6 +250,8 @@ class Optics(Feature):
 
         # Pupil radius
         R = NA / wavelength * np.array(voxel_size)[:2]
+
+        print(R)
 
         x_radius = R[0] * shape[0]
         y_radius = R[1] * shape[1]
@@ -566,7 +583,7 @@ class Brightfield(Optics):
                 volume.shape[:2],
                 defocus=[-z_limits[1]],
                 include_aberration=True,
-                **kwargs
+                **kwargs,
             )[0],
         ]
 
@@ -592,7 +609,7 @@ class Brightfield(Optics):
                         fields[idx].shape,
                         defocus=[z - fz - field_offsets[idx] / voxel_size[-1]],
                         include_aberration=False,
-                        **kwargs
+                        **kwargs,
                     )[0]
 
                     propagation_matrix = propagation_matrix * np.exp(
@@ -604,9 +621,11 @@ class Brightfield(Optics):
                         * kwargs["refractive_index_medium"]
                         * (z - fz)
                     )
-                    light_in += np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(
+                    pf = np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(
                         propagation_matrix
                     )
+
+                    light_in += pf
                     to_remove.append(idx)
 
             for idx in reversed(to_remove):
@@ -629,21 +648,15 @@ class Brightfield(Optics):
                 fields[idx].shape,
                 defocus=[prop_dist],
                 include_aberration=False,
-                **kwargs
+                **kwargs,
             )[0]
 
-            propagation_matrix = propagation_matrix * np.exp(
-                -1j
-                * voxel_size[-1]
-                * 2
-                * np.pi
-                / kwargs["wavelength"]
-                * kwargs["refractive_index_medium"]
-                * prop_dist
-            )
-            light_in += np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(
-                propagation_matrix
-            )
+            propagation_matrix = propagation_matrix
+
+            import matplotlib.pyplot as plt
+
+            pf = np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(propagation_matrix)
+            light_in += pf
 
         light_in_focus = light_in * np.fft.fftshift(pupils[-1])
 
@@ -683,7 +696,7 @@ class IlluminationGradient(Feature):
         constant: PropertyLike[float] = 0,
         vmin: PropertyLike[float] = 0,
         vmax: PropertyLike[float] = np.inf,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             gradient=gradient, constant=constant, vmin=vmin, vmax=vmax, **kwargs
@@ -754,7 +767,7 @@ def _create_volume(
     pad=(0, 0, 0, 0),
     output_region=(None, None, None, None),
     refractive_index_medium=1.33,
-    **kwargs
+    **kwargs,
 ):
     # Converts a list of scatterers into a volume.
 

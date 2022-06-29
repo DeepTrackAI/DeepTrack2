@@ -98,7 +98,6 @@ def stratified_mie_coefficients(m, a, L):
 
                 if not ((p - q == 0) or (p - q == 1)):
                     continue
-                # print(p, q, i, j)
                 if np.mod(i, 2) == 0:
 
                     if (j < 2 * n_layers - 1) and ((j == 0) or (np.mod(j, 2) == 1)):
