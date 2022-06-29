@@ -251,8 +251,6 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
         # Pupil radius
         R = NA / wavelength * np.array(voxel_size)[:2]
 
-        print(R)
-
         x_radius = R[0] * shape[0]
         y_radius = R[1] * shape[1]
 

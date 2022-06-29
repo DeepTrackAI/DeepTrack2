@@ -563,12 +563,6 @@ class MieScatterer(Scatterer):
             )
 
         if properties["offset_z"] == "auto":
-            print(
-                np.min(
-                    np.array(properties["output_region"][2:])
-                    - properties["output_region"][:2]
-                )
-            )
             properties["offset_z"] = (
                 np.min(
                     np.array(properties["output_region"][2:])
@@ -631,7 +625,6 @@ class MieScatterer(Scatterer):
         ct = offset_z / R3
 
         angle = np.arctan2(Y, X)
-        print(input_polarization, output_polarization)
         if isinstance(input_polarization, (float, int, Quantity)):
 
             if isinstance(input_polarization, Quantity):
@@ -648,8 +641,6 @@ class MieScatterer(Scatterer):
 
             S1_coef *= np.sin(angle + output_polarization)
             S2_coef *= np.cos(angle + output_polarization)
-
-        print(S1_coef[0, 0], S2_coef[0, 0])
 
         ct_max = np.cos(collection_angle)
 
