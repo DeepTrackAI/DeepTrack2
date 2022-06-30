@@ -160,19 +160,6 @@ class Optics(Feature):
         **kwargs,
     ):
 
-        radius = NA / wavelength * resolution * magnification
-
-        if isinstance(radius, Quantity):
-            radius = radius.to_base_units()
-            radius = radius.magnitude
-
-        if radius > 0.5:
-            required_upscale = np.ceil(radius * 2)
-            warnings.warn(
-                f"""Likely bad optical parameters. NA / wavelength * resolution * magnification = {radius} should be at most 0.5
-To fix, set magnification to {required_upscale}, and downsample the resulting image with dt.AveragePooling(({required_upscale}, {required_upscale}, 1))
-"""
-            )
         # Calculate the voxel size.
         def get_voxel_size(resolution, magnification):
             props = self._normalize(resolution=resolution, magnification=magnification)
@@ -353,6 +340,22 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
         ] = volume
 
         return new_volume, new_limits
+
+    def _process_properties(self, propertydict) -> dict:
+        propertydict = super()._process_properties(propertydict)
+        NA = propertydict["NA"]
+        wavelength = propertydict["wavelength"]
+        resolution = propertydict["resolution"]
+        magnification = propertydict["magnification"]
+        radius = NA / wavelength * resolution * magnification
+
+        if radius > 0.5:
+            required_upscale = np.ceil(radius * 2)
+            warnings.warn(
+                f"""Likely bad optical parameters. NA / wavelength * resolution * magnification = {radius} should be at most 0.5
+To fix, set magnification to {required_upscale}, and downsample the resulting image with dt.AveragePooling(({required_upscale}, {required_upscale}, 1))
+"""
+            )
 
     def __call__(self, sample, **kwargs):
         return Microscope(sample, self, **kwargs)
