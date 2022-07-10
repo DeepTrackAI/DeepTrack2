@@ -932,10 +932,19 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
 @end
 
 pixel = [optical_unit] = px
+xpixel = [optical_unit_x] = xpx
+ypixel = [optical_unit_y] = ypx
+zpixel = [optical_unit_z] = zpx
 
-@context(pixel_size = 1) deeptrack = dt
+@context(pixel_size = 1, xpixel_size=1, ypixel_size=1, zpixel_size=1) deeptrack = dt
     [optical_unit] -> [length]: value * pixel_size * (meter / pixel)
     [length] -> [optical_unit]: value / pixel_size / (meter / pixel)
+    [optical_unit_x] -> [length]: value * xpixel_size * (meter / xpixel)
+    [length] -> [optical_unit_x]: value / xpixel_size / (meter / xpixel)
+    [optical_unit_y] -> [length]: value * ypixel_size * (meter / ypixel)
+    [length] -> [optical_unit_y]: value / ypixel_size / (meter / ypixel)
+    [optical_unit_z] -> [length]: value * zpixel_size * (meter / zpixel)
+    [length] -> [optical_unit_z]: value / zpixel_size / (meter / zpixel)
 @end
 
 """
