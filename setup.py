@@ -11,6 +11,8 @@ required = [
     "numpy",
     "scipy",
     "pint",
+    "pandas",
+    "tqdm",
     "scikit-image>=0.18.0",
     "pydeepimagej",
     "more_itertools",
@@ -26,7 +28,7 @@ if (
 
 setuptools.setup(
     name="deeptrack",  # Replace with your own username
-    version="1.1.0",
+    version="1.2.1",
     author="Benjamin Midtvedt",
     author_email="benjamin.midtvedt@physics.gu.se",
     description="A deep learning oriented microscopy image simulation package",
