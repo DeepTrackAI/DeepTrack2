@@ -799,7 +799,6 @@ def _get_position(image, mode="corner", return_z=False):
 
     elif len(position) == 2:
         if return_z:
-            print(image.get_property("z", default=0))
             outp = (
                 np.array([position[0], position[1], image.get_property("z", default=0)])
                 * scale
@@ -872,7 +871,6 @@ def _create_volume(
 
         scatterer = padded_scatterer
         position = _get_position(scatterer, mode="corner", return_z=True)
-        print(position)
         shape = np.array(scatterer.shape)
 
         if position is None:

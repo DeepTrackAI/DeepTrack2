@@ -420,7 +420,7 @@ class Ellipsoid(Scatterer):
 
     def get(self, image, radius, rotation, voxel_size, **kwargs):
 
-        radius_in_pixels = radius / voxel_size
+        radius_in_pixels = np.array(radius) / np.array(voxel_size)
 
         max_rad = np.max(radius)
         rad_ceil = np.ceil(max_rad)
@@ -602,7 +602,7 @@ class MieScatterer(Scatterer):
         scale = get_active_scale()
 
         arr = pad_image_to_fft(np.zeros((xSize, ySize)))
-        position = np.array(position) * scale[: len(scale)]
+        position = np.array(position) * scale[: len(position)]
         pos_floor = np.floor(position)
         pos_digits = position - pos_floor
         # Evluation grid
