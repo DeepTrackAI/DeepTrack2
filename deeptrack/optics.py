@@ -17,7 +17,13 @@ Brightfield
 
 
 from pint.quantity import Quantity
-from deeptrack.backend.units import ConversionTable, create_context
+from deeptrack.backend.units import (
+    ConversionTable,
+    create_context,
+    get_active_scale,
+    get_active_voxel_size,
+)
+from deeptrack.math import AveragePooling
 from deeptrack.properties import propagate_data_to_dependencies
 import numpy as np
 from .features import DummyFeature, Feature, StructuralFeature
@@ -77,6 +83,12 @@ class Microscope(StructuralFeature):
                 padding, (upscale[0], upscale[1], upscale[0], upscale[1])
             )
         ]
+
+        self._objective.output_region.set_value(
+            additional_sample_kwargs["output_region"]
+        )
+        self._objective.padding.set_value(additional_sample_kwargs["padding"])
+
         propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
 
         with u.context(
@@ -85,44 +97,45 @@ class Microscope(StructuralFeature):
 
             list_of_scatterers = self._sample()
 
-        if not isinstance(list_of_scatterers, list):
-            list_of_scatterers = [list_of_scatterers]
+            if not isinstance(list_of_scatterers, list):
+                list_of_scatterers = [list_of_scatterers]
 
-        # All scatterers that are defined as volumes.
-        volume_samples = [
-            scatterer
-            for scatterer in list_of_scatterers
-            if not scatterer.get_property("is_field", default=False)
-        ]
+            # All scatterers that are defined as volumes.
+            volume_samples = [
+                scatterer
+                for scatterer in list_of_scatterers
+                if not scatterer.get_property("is_field", default=False)
+            ]
 
-        # All scatterers that are defined as fields.
-        field_samples = [
-            scatterer
-            for scatterer in list_of_scatterers
-            if scatterer.get_property("is_field", default=False)
-        ]
+            # All scatterers that are defined as fields.
+            field_samples = [
+                scatterer
+                for scatterer in list_of_scatterers
+                if scatterer.get_property("is_field", default=False)
+            ]
 
-        # Merge all volumes into a single volume.
-        sample_volume, limits = _create_volume(
-            volume_samples,
-            output_region=output_region,
-            padding=padding,
-            **additional_sample_kwargs,
-        )
-        sample_volume = Image(sample_volume)
+            # Merge all volumes into a single volume.
+            sample_volume, limits = _create_volume(
+                volume_samples,
+                **additional_sample_kwargs,
+            )
+            sample_volume = Image(sample_volume)
 
-        # Merge all properties into the volume.
-        for scatterer in volume_samples + field_samples:
-            sample_volume.merge_properties_from(scatterer)
+            # Merge all properties into the volume.
+            for scatterer in volume_samples + field_samples:
+                sample_volume.merge_properties_from(scatterer)
 
-        # Let the objective know about the limits of the volume and all the fields.
-        propagate_data_to_dependencies(
-            self._objective,
-            limits=limits,
-            fields=field_samples,
-        )
+            # Let the objective know about the limits of the volume and all the fields.
+            propagate_data_to_dependencies(
+                self._objective,
+                limits=limits,
+                fields=field_samples,
+            )
 
-        imaged_sample = self._objective.resolve(sample_volume)
+            imaged_sample = self._objective.resolve(sample_volume)
+
+        if upscale != (1, 1, 1):
+            imaged_sample = AveragePooling((*upscale[:2], 1))(imaged_sample)
 
         # Merge with input
         if not image:
@@ -184,6 +197,7 @@ class Optics(Feature):
         output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
         pupil: Feature = None,
         illumination: Feature = None,
+        upscale=1,
         **kwargs,
     ):
 
@@ -211,6 +225,7 @@ class Optics(Feature):
             output_region=output_region,
             voxel_size=get_voxel_size,
             pixel_size=get_pixel_size,
+            upscale=upscale,
             limits=None,
             fields=None,
             **kwargs,
@@ -226,14 +241,13 @@ class Optics(Feature):
 
         NA = propertydict["NA"]
         wavelength = propertydict["wavelength"]
-        resolution = propertydict["resolution"]
-        magnification = propertydict["magnification"]
-        radius = NA / wavelength * resolution * magnification
+        voxel_size = get_active_voxel_size()
+        radius = NA / wavelength * np.array(voxel_size)
 
-        if np.any(radius > 0.5):
-            required_upscale = np.max(np.ceil(radius * 2))
+        if np.any(radius[:2] > 0.5):
+            required_upscale = np.max(np.ceil(radius[:2] * 2))
             warnings.warn(
-                f"""Likely bad optical parameters. NA / wavelength * resolution * magnification = {radius} should be at most 0.5
+                f"""Likely bad optical parameters. NA / wavelength * resolution / magnification = {radius} should be at most 0.5
 To fix, set magnification to {required_upscale}, and downsample the resulting image with dt.AveragePooling(({required_upscale}, {required_upscale}, 1))
 """
             )
@@ -246,7 +260,6 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
         NA,
         wavelength,
         refractive_index_medium,
-        voxel_size,
         include_aberration=True,
         defocus=0,
         **kwargs,
@@ -279,6 +292,7 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
 
         """
         # Calculates the pupil at each z-position in defocus.
+        voxel_size = get_active_voxel_size()
         shape = np.array(shape)
 
         # Pupil radius
@@ -604,7 +618,7 @@ class Brightfield(Optics):
 
         volume = pad_image_to_fft(padded_volume, axes=(0, 1))
 
-        voxel_size = kwargs["voxel_size"]
+        voxel_size = get_active_voxel_size()
 
         pupils = [
             self._pupil(
@@ -774,21 +788,26 @@ def _get_position(image, mode="corner", return_z=False):
     if position is None:
         return position
 
+    scale = get_active_scale()
+
     if len(position) == 3:
+        position = position * scale
         if return_z:
-            return position - shift
+            return position * scale - shift
         else:
             return position[0:2] - shift[0:2]
 
     elif len(position) == 2:
         if return_z:
+            print(image.get_property("z", default=0))
             outp = (
                 np.array([position[0], position[1], image.get_property("z", default=0)])
+                * scale
                 - shift
             )
             return outp
         else:
-            return position - shift[0:2]
+            return position * scale[:2] - shift[0:2]
 
     return position
 
@@ -853,6 +872,7 @@ def _create_volume(
 
         scatterer = padded_scatterer
         position = _get_position(scatterer, mode="corner", return_z=True)
+        print(position)
         shape = np.array(scatterer.shape)
 
         if position is None:

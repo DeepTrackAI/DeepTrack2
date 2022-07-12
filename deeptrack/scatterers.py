@@ -20,7 +20,11 @@ Ellipsoid
 
 from pint import Quantity
 from . import image
-from deeptrack.backend.units import ConversionTable
+from deeptrack.backend.units import (
+    ConversionTable,
+    get_active_scale,
+    get_active_voxel_size,
+)
 from typing import Callable, Tuple
 
 import numpy as np
@@ -74,8 +78,8 @@ class Scatterer(Feature):
     __list_merge_strategy__ = MERGE_STRATEGY_APPEND
     __distributed__ = False
     __conversion_table__ = ConversionTable(
-        position=(u.pixel, u.meter),
-        z=(u.zpixel, u.meter),
+        position=(u.pixel, u.pixel),
+        z=(u.zpixel, u.zpixel),
         voxel_size=(u.meter, u.meter),
     )
 
@@ -125,19 +129,7 @@ class Scatterer(Feature):
                 + "Optics.upscale != 1."
             )
 
-        grid_x = u.sxpx.to(u.m).magnitude
-        grid_y = u.sypx.to(u.m).magnitude
-        grid_z = u.sypx.to(u.m).magnitude
-
-        voxel_size = (grid_x, grid_y, grid_z)
-
-        # Calculates upsampled voxel_size
-        if upsample_axes is None:
-            upsample_axes = range(3)
-
-        voxel_size = np.array(voxel_size)
-        for axis in upsample_axes:
-            voxel_size[axis] /= upsample
+        voxel_size = get_active_voxel_size()
 
         # calls parent _process_and_get
         new_image = super()._process_and_get(
@@ -157,28 +149,28 @@ class Scatterer(Feature):
                 Warning,
             )
 
-        # Downsamples the image along the axes it was upsampled
-        if upsample != 1 and upsample_axes:
+        # # Downsamples the image along the axes it was upsampled
+        # if upsample != 1 and upsample_axes:
 
-            # Pad image to ensure it is divisible by upsample
-            increase = np.array(new_image.shape)
-            for axis in upsample_axes:
-                increase[axis] = upsample - (new_image.shape[axis] % upsample)
-            pad_width = [(0, inc) for inc in increase]
-            new_image = np.pad(new_image, pad_width, mode="constant")
+        #     # Pad image to ensure it is divisible by upsample
+        #     increase = np.array(new_image.shape)
+        #     for axis in upsample_axes:
+        #         increase[axis] = upsample - (new_image.shape[axis] % upsample)
+        #     pad_width = [(0, inc) for inc in increase]
+        #     new_image = np.pad(new_image, pad_width, mode="constant")
 
-            # Finds reshape size for downsampling
-            new_shape = []
-            for axis in range(new_image.ndim):
-                if axis in upsample_axes:
-                    new_shape += [new_image.shape[axis] // upsample, upsample]
-                else:
-                    new_shape += [new_image.shape[axis]]
+        #     # Finds reshape size for downsampling
+        #     new_shape = []
+        #     for axis in range(new_image.ndim):
+        #         if axis in upsample_axes:
+        #             new_shape += [new_image.shape[axis] // upsample, upsample]
+        #         else:
+        #             new_shape += [new_image.shape[axis]]
 
-            # Downsamples
-            new_image = np.reshape(new_image, new_shape).mean(
-                axis=tuple(np.array(upsample_axes, dtype=np.int32) * 2 + 1)
-            )
+        #     # Downsamples
+        #     new_image = np.reshape(new_image, new_shape).mean(
+        #         axis=tuple(np.array(upsample_axes, dtype=np.int32) * 2 + 1)
+        #     )
 
         # Crops empty slices
         if crop_empty:
@@ -211,11 +203,11 @@ class PointParticle(Scatterer):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(upsample=1, upsample_axes=() ** kwargs)
+        super().__init__(upsample=1, upsample_axes=(), **kwargs)
 
-    def get(self, image, voxel_size, **kwargs):
-        scale = (u.pixel.to(u.m) ** 3).magnitude / np.prod(voxel_size)
-        return np.ones((1, 1, 1)) * scale
+    def get(self, image, **kwargs):
+        scale = get_active_scale()
+        return np.ones((1, 1, 1)) * np.prod(scale)
 
 
 class Ellipse(Scatterer):
@@ -254,9 +246,7 @@ class Ellipse(Scatterer):
         rotation: PropertyLike[float] = 0,
         **kwargs,
     ):
-        super().__init__(
-            radius=radius, rotation=rotation, upsample_axes=(0, 1), **kwargs
-        )
+        super().__init__(radius=radius, rotation=rotation, **kwargs)
 
     def _process_properties(self, properties: dict) -> dict:
         """Preprocess the input to the method .get()
@@ -609,8 +599,10 @@ class MieScatterer(Scatterer):
         xSize = padding[2] + output_region[2] - output_region[0] + padding[0]
         ySize = padding[3] + output_region[3] - output_region[1] + padding[1]
 
+        scale = get_active_scale()
+
         arr = pad_image_to_fft(np.zeros((xSize, ySize)))
-        position = np.array(position)
+        position = np.array(position) * scale[: len(scale)]
         pos_floor = np.floor(position)
         pos_digits = position - pos_floor
         # Evluation grid

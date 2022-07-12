@@ -1,7 +1,22 @@
 from numpy import ndarray
 from pint import Quantity, Unit, Context
 from .. import units as u
-import pint
+
+
+def get_active_voxel_size():
+    """Gets the size of a voxel used for simulation."""
+    grid_x = (1 * u.sxpx).to(u.m).magnitude
+    grid_y = (1 * u.sypx).to(u.m).magnitude
+    grid_z = (1 * u.szpx).to(u.m).magnitude
+    return grid_x, grid_y, grid_z
+
+
+def get_active_scale():
+    """Gets the active scale difference between optical units and simulation units."""
+    current_xscale = (1 * u.xpx / u.sxpx).to_base_units().magnitude or 1
+    current_yscale = (1 * u.ypx / u.sypx).to_base_units().magnitude or 1
+    current_zscale = (1 * u.zpx / u.szpx).to_base_units().magnitude or 1
+    return (current_xscale, current_yscale, current_zscale)
 
 
 def create_context(
@@ -28,9 +43,7 @@ def create_context(
     current_xpixel = (1 * u.xpx).to(u.meter).magnitude
     current_ypixel = (1 * u.ypx).to(u.meter).magnitude
     current_zpixel = (1 * u.zpx).to(u.meter).magnitude
-    current_xscale = (1 * u.xpx / u.sxpx).to_base_units().magnitude or 1
-    current_yscale = (1 * u.xpx / u.sxpx).to_base_units().magnitude or 1
-    current_zscale = (1 * u.xpx / u.sxpx).to_base_units().magnitude or 1
+    current_xscale, current_yscale, current_zscale = get_active_scale()
 
     xpixel = xpixel if xpixel else current_xpixel
     ypixel = ypixel if ypixel else current_ypixel
