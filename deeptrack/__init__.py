@@ -3,7 +3,6 @@ from pint import UnitRegistry, Context
 from .backend.pint_definition import pint_definitions
 
 units = UnitRegistry(pint_definitions.split("\n"))
-units.enable_contexts("dt")
 
 import tensorflow as tf
 
