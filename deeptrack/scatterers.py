@@ -74,7 +74,9 @@ class Scatterer(Feature):
     __list_merge_strategy__ = MERGE_STRATEGY_APPEND
     __distributed__ = False
     __conversion_table__ = ConversionTable(
-        position=(u.pixel, u.pixel), z=(u.pixel, u.pixel), voxel_size=(u.meter, u.meter)
+        position=(u.pixel, u.meter),
+        z=(u.zpixel, u.meter),
+        voxel_size=(u.meter, u.meter),
     )
 
     def __init__(
@@ -86,8 +88,12 @@ class Scatterer(Feature):
         upsample: PropertyLike[int] = 1,
         voxel_size=None,
         pixel_size=None,
-        **kwargs
+        **kwargs,
     ):
+        if upsample is not 1:
+            warnings.warn(
+                f"Setting upsample != 1 is deprecated. Please, instead use dt.Upscale(f, factor={upsample})"
+            )
         self._processed_properties = False
         super().__init__(
             position=position,
@@ -119,6 +125,12 @@ class Scatterer(Feature):
                 + "Optics.upscale != 1."
             )
 
+        grid_x = u.sxpx.to(u.m).magnitude
+        grid_y = u.sypx.to(u.m).magnitude
+        grid_z = u.sypx.to(u.m).magnitude
+
+        voxel_size = (grid_x, grid_y, grid_z)
+
         # Calculates upsampled voxel_size
         if upsample_axes is None:
             upsample_axes = range(3)
@@ -129,7 +141,10 @@ class Scatterer(Feature):
 
         # calls parent _process_and_get
         new_image = super()._process_and_get(
-            *args, voxel_size=voxel_size, upsample=upsample, **kwargs
+            *args,
+            voxel_size=voxel_size,
+            upsample=upsample,
+            **kwargs,
         )
         new_image = new_image[0]
 
@@ -196,12 +211,11 @@ class PointParticle(Scatterer):
     """
 
     def __init__(self, **kwargs):
-        kwargs.pop("upsample", False)
-        kwargs.pop("upsample_axes", False)
-        super().__init__(upsample=1, upsample_axes=(), **kwargs)
+        super().__init__(upsample=1, upsample_axes=() ** kwargs)
 
-    def get(self, image, **kwargs):
-        return np.ones((1, 1, 1))
+    def get(self, image, voxel_size, **kwargs):
+        scale = (u.pixel.to(u.m) ** 3).magnitude / np.prod(voxel_size)
+        return np.ones((1, 1, 1)) * scale
 
 
 class Ellipse(Scatterer):
@@ -230,7 +244,7 @@ class Ellipse(Scatterer):
     """
 
     __conversion_table__ = ConversionTable(
-        radius=(u.meter, u.pixel),
+        radius=(u.meter, u.meter),
         rotation=(u.radian, u.radian),
     )
 
@@ -238,7 +252,7 @@ class Ellipse(Scatterer):
         self,
         radius: PropertyLike[float] = 1e-6,
         rotation: PropertyLike[float] = 0,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             radius=radius, rotation=rotation, upsample_axes=(0, 1), **kwargs
@@ -268,7 +282,7 @@ class Ellipse(Scatterer):
     def get(self, *ignore, radius, rotation, voxel_size, **kwargs):
 
         # Create a grid to calculate on
-        rad = radius[:2]
+        rad = radius[:2] / voxel_size[:2]
         ceil = int(np.max(np.ceil(rad)))
         X, Y = np.meshgrid(np.arange(-ceil, ceil), np.arange(-ceil, ceil))
 
@@ -308,7 +322,7 @@ class Sphere(Scatterer):
     """
 
     __conversion_table__ = ConversionTable(
-        radius=(u.meter, u.pixel),
+        radius=(u.meter, u.meter),
     )
 
     def __init__(self, radius: PropertyLike[float] = 1e-6, **kwargs):
@@ -317,7 +331,7 @@ class Sphere(Scatterer):
     def get(self, image, radius, voxel_size, **kwargs):
 
         # Create a grid to calculate on
-        rad = radius * np.ones(3)
+        rad = radius * np.ones(3) / voxel_size
         rad_ceil = np.ceil(rad)
         x = np.arange(-rad_ceil[0], rad_ceil[0])
         y = np.arange(-rad_ceil[1], rad_ceil[1])
@@ -355,7 +369,7 @@ class Ellipsoid(Scatterer):
     """
 
     __conversion_table__ = ConversionTable(
-        radius=(u.meter, u.pixel),
+        radius=(u.meter, u.meter),
         rotation=(u.radian, u.radian),
     )
 
@@ -363,7 +377,7 @@ class Ellipsoid(Scatterer):
         self,
         radius: PropertyLike[float] = 1e-6,
         rotation: PropertyLike[float] = 0,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(radius=radius, rotation=rotation, **kwargs)
 
@@ -416,7 +430,7 @@ class Ellipsoid(Scatterer):
 
     def get(self, image, radius, rotation, voxel_size, **kwargs):
 
-        radius_in_pixels = radius
+        radius_in_pixels = radius / voxel_size
 
         max_rad = np.max(radius)
         rad_ceil = np.ceil(max_rad)
@@ -519,7 +533,7 @@ class MieScatterer(Scatterer):
         padding=(0,) * 4,
         output_region=None,
         polarization_angle=None,
-        **kwargs
+        **kwargs,
     ):
         if polarization_angle is not None:
             warnings.warn(
@@ -589,7 +603,7 @@ class MieScatterer(Scatterer):
         input_polarization,
         output_polarization,
         coefficients,
-        **kwargs
+        **kwargs,
     ):
 
         xSize = padding[2] + output_region[2] - output_region[0] + padding[0]
@@ -717,7 +731,7 @@ class MieSphere(MieScatterer):
         self,
         radius: PropertyLike[float] = 1e-6,
         refractive_index: PropertyLike[float] = 1.45,
-        **kwargs
+        **kwargs,
     ):
         def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
             def inner(L):
@@ -787,7 +801,7 @@ class MieStratifiedSphere(MieScatterer):
         self,
         radius: PropertyLike[ArrayLike[float]] = [1e-6],
         refractive_index: PropertyLike[ArrayLike[float]] = [1.45],
-        **kwargs
+        **kwargs,
     ):
         def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
             assert np.all(

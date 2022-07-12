@@ -1,6 +1,53 @@
 from numpy import ndarray
 from pint import Quantity, Unit, Context
 from .. import units as u
+import pint
+
+
+def create_context(
+    xpixel=None,
+    ypixel=None,
+    zpixel=None,
+    xscale=None,
+    yscale=None,
+    zscale=None,
+):
+    """Creates a new context for unit conversions.
+
+    If a value is None, the active value is used.
+    If any (xyz)scale value is not none, they are multiplied with the active scale.
+
+    Parameters
+    ----------
+    xpixel, ypixel, zpixel : float
+        The size of pixels in each direction in meters
+    xscale, yscale, zscale : int
+        The upscale factor for internal simulations
+    """
+
+    current_xpixel = (1 * u.xpx).to(u.meter).magnitude
+    current_ypixel = (1 * u.ypx).to(u.meter).magnitude
+    current_zpixel = (1 * u.zpx).to(u.meter).magnitude
+    current_xscale = (1 * u.xpx / u.sxpx).to_base_units().magnitude or 1
+    current_yscale = (1 * u.xpx / u.sxpx).to_base_units().magnitude or 1
+    current_zscale = (1 * u.xpx / u.sxpx).to_base_units().magnitude or 1
+
+    xpixel = xpixel if xpixel else current_xpixel
+    ypixel = ypixel if ypixel else current_ypixel
+    zpixel = zpixel if zpixel else current_zpixel
+    xscale = xscale * current_xscale if xscale else current_xscale
+    yscale = yscale * current_yscale if yscale else current_yscale
+    zscale = zscale * current_zscale if zscale else current_zscale
+
+    ctx = Context()
+    ctx.redefine(f"pixel = {xpixel} meter")
+    ctx.redefine(f"xpixel = {xpixel} meter")
+    ctx.redefine(f"ypixel = {ypixel} meter")
+    ctx.redefine(f"zpixel = {zpixel} meter")
+    ctx.redefine(f"simulation_xpixel = {xpixel / xscale} meter")
+    ctx.redefine(f"simulation_ypixel = {ypixel / yscale} meter")
+    ctx.redefine(f"simulation_zpixel = {zpixel / zscale} meter")
+    return ctx
 
 
 class ConversionTable:

@@ -17,7 +17,7 @@ Brightfield
 
 
 from pint.quantity import Quantity
-from deeptrack.backend.units import ConversionTable
+from deeptrack.backend.units import ConversionTable, create_context
 from deeptrack.properties import propagate_data_to_dependencies
 import numpy as np
 from .features import DummyFeature, Feature, StructuralFeature
@@ -55,10 +55,34 @@ class Microscope(StructuralFeature):
 
         # Grab properties from the objective to pass to the sample
         additional_sample_kwargs = self._objective.properties()
+
+        # calculate required output image for the given upscale
+        upscale = additional_sample_kwargs["upscale"]
+        if np.array(upscale).size == 1:
+            upscale = (upscale,) * 3
+        additional_sample_kwargs["upscale"] = upscale
+
+        output_region = additional_sample_kwargs.pop("output_region")
+        additional_sample_kwargs["output_region"] = [
+            o * upsc
+            for o, upsc in zip(
+                output_region, (upscale[0], upscale[1], upscale[0], upscale[1])
+            )
+        ]
+
+        padding = additional_sample_kwargs.pop("padding")
+        additional_sample_kwargs["padding"] = [
+            p * upsc
+            for p, upsc in zip(
+                padding, (upscale[0], upscale[1], upscale[0], upscale[1])
+            )
+        ]
         propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
 
-        # Creates a context for the unit conversions to know the size of a pixel.
-        with u.context("dt", pixel_size=additional_sample_kwargs["voxel_size"][0]):
+        with u.context(
+            create_context(*additional_sample_kwargs["voxel_size"], *upscale)
+        ):
+
             list_of_scatterers = self._sample()
 
         if not isinstance(list_of_scatterers, list):
@@ -80,7 +104,10 @@ class Microscope(StructuralFeature):
 
         # Merge all volumes into a single volume.
         sample_volume, limits = _create_volume(
-            volume_samples, **additional_sample_kwargs
+            volume_samples,
+            output_region=output_region,
+            padding=padding,
+            **additional_sample_kwargs,
         )
         sample_volume = Image(sample_volume)
 
@@ -210,6 +237,7 @@ class Optics(Feature):
 To fix, set magnification to {required_upscale}, and downsample the resulting image with dt.AveragePooling(({required_upscale}, {required_upscale}, 1))
 """
             )
+
         return propertydict
 
     def _pupil(
