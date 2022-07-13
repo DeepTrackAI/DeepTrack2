@@ -48,9 +48,9 @@ def create_context(
     xpixel = xpixel if xpixel else current_xpixel
     ypixel = ypixel if ypixel else current_ypixel
     zpixel = zpixel if zpixel else current_zpixel
-    xscale = xscale * current_xscale if xscale else current_xscale
-    yscale = yscale * current_yscale if yscale else current_yscale
-    zscale = zscale * current_zscale if zscale else current_zscale
+    xscale = int(xscale * current_xscale) if xscale else int(current_xscale)
+    yscale = int(yscale * current_yscale) if yscale else int(current_yscale)
+    zscale = int(zscale * current_zscale) if zscale else int(current_zscale)
 
     ctx = Context()
     ctx.redefine(f"pixel = {xpixel} meter")
