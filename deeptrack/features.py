@@ -11,15 +11,16 @@ import warnings
 import numpy as np
 from pint.quantity import Quantity
 import tensorflow as tf
-
+import skimage
+import skimage.measure
 
 from .backend.core import DeepTrackNode
-from .backend.units import ConversionTable
+from .backend.units import ConversionTable, create_context
 from .backend import config
 from .image import Image
 from .properties import PropertyDict, propagate_data_to_dependencies
 from .types import ArrayLike, PropertyLike
-
+from . import units
 
 MERGE_STRATEGY_OVERRIDE = 0
 MERGE_STRATEGY_APPEND = 1
@@ -1730,6 +1731,7 @@ class AsType(Feature):
     ----------
     dtype : str
         dtype string. Same as numpy dtype.
+
     """
 
     def __init__(self, dtype: PropertyLike[Any] = "float64", **kwargs):
@@ -1737,3 +1739,44 @@ class AsType(Feature):
 
     def get(self, image, dtype, **kwargs):
         return image.astype(dtype)
+
+
+class Upscale(Feature):
+    """Performs the simulation at a higher resolution.
+
+    Redefines the sizes of internal units to scale up the simulation. The resulting image
+    is then downscaled back to the original size. Example::
+
+       optics = dt.Fluorescence()
+       particle = dt.Sphere()
+       pipeline = optics(particle)
+       upscaled_pipeline = dt.Upscale(pipeline, factor=4)
+
+    Parameters
+    ----------
+    feature : Feature
+        The pipeline to resolve at a higher resolution
+    factor : int or tuple of ints
+        The factor to scale up the simulation by. If a tuple of three integers,
+        each axis is scaled up individually.
+
+    """
+
+    __distributed__ = False
+
+    def __init__(self, feature, factor=1, **kwargs):
+        super().__init__(factor=factor, **kwargs)
+        self.feature = self.add_feature(feature)
+
+    def get(self, image, factor, **kwargs):
+        if np.size(factor) == 1:
+            factor = (factor,) * 3
+        ctx = create_context(None, None, None, *factor)
+        with units.context(ctx):
+            image = self.feature(image)
+
+        image = skimage.measure.block_reduce(
+            image, (factor[0], factor[1]) + (1,) * (image.ndim - 2), np.mean
+        )
+
+        return image

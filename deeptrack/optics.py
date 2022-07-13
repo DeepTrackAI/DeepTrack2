@@ -66,34 +66,36 @@ class Microscope(StructuralFeature):
         upscale = additional_sample_kwargs["upscale"]
         if np.array(upscale).size == 1:
             upscale = (upscale,) * 3
-        additional_sample_kwargs["upscale"] = upscale
-
-        output_region = additional_sample_kwargs.pop("output_region")
-        additional_sample_kwargs["output_region"] = [
-            o * upsc
-            for o, upsc in zip(
-                output_region, (upscale[0], upscale[1], upscale[0], upscale[1])
-            )
-        ]
-
-        padding = additional_sample_kwargs.pop("padding")
-        additional_sample_kwargs["padding"] = [
-            p * upsc
-            for p, upsc in zip(
-                padding, (upscale[0], upscale[1], upscale[0], upscale[1])
-            )
-        ]
-
-        self._objective.output_region.set_value(
-            additional_sample_kwargs["output_region"]
-        )
-        self._objective.padding.set_value(additional_sample_kwargs["padding"])
-
-        propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
 
         with u.context(
             create_context(*additional_sample_kwargs["voxel_size"], *upscale)
         ):
+
+            upscale = get_active_scale()
+            print(upscale)
+
+            output_region = additional_sample_kwargs.pop("output_region")
+            additional_sample_kwargs["output_region"] = [
+                int(o * upsc)
+                for o, upsc in zip(
+                    output_region, (upscale[0], upscale[1], upscale[0], upscale[1])
+                )
+            ]
+
+            padding = additional_sample_kwargs.pop("padding")
+            additional_sample_kwargs["padding"] = [
+                int(p * upsc)
+                for p, upsc in zip(
+                    padding, (upscale[0], upscale[1], upscale[0], upscale[1])
+                )
+            ]
+
+            self._objective.output_region.set_value(
+                additional_sample_kwargs["output_region"]
+            )
+            self._objective.padding.set_value(additional_sample_kwargs["padding"])
+
+            propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
 
             list_of_scatterers = self._sample()
 
@@ -134,7 +136,8 @@ class Microscope(StructuralFeature):
 
             imaged_sample = self._objective.resolve(sample_volume)
 
-        if upscale != (1, 1, 1):
+        upscale = additional_sample_kwargs["upscale"]
+        if upscale != (1, 1, 1) and upscale != 1:
             imaged_sample = AveragePooling((*upscale[:2], 1))(imaged_sample)
 
         # Merge with input
