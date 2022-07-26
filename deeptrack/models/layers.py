@@ -640,6 +640,8 @@ def MultiHeadSelfAttentionLayer(
         Whether to use bias in the dense layers.
     return_attention_weights : bool
         Whether to return attention weights for visualization.
+    clip_scores_by_value: tuple of float
+        Clipping values for attention scores.
     activation : str or activation function or layer
         Activation function of the layer. See keras docs for accepted strings.
     normalization : str or normalization function or layer
@@ -686,6 +688,8 @@ def MultiHeadGatedSelfAttentionLayer(
         Whether to use bias in the dense layers.
     return_attention_weights : bool
         Whether to return attention weights for visualization.
+    clip_scores_by_value: tuple of float
+        Clipping values for attention scores.
     activation : str or activation function or layer
         Activation function of the layer. See keras docs for accepted strings.
     normalization : str or normalization function or layer
