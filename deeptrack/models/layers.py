@@ -449,7 +449,7 @@ class MultiHeadSelfAttention(layers.Layer):
 
     def softmax(self, x, axis=-1):
         exp = tf.exp(x - tf.reduce_max(x, axis=axis, keepdims=True))
-        
+
         if self.clip_scores_by_value:
             exp = tf.clip_by_value(exp, *self.clip_scores_by_value)
 
@@ -560,7 +560,9 @@ class MultiHeadSelfAttention(layers.Layer):
 
 class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
     def build(self, input_shape):
-        """Build the layer."""
+        """
+        Build the layer.
+        """
         try:
             filters = input_shape[1][-1]
         except TypeError:
@@ -581,8 +583,8 @@ class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
         self.combine_dense = layers.Dense(filters)
 
     def compute_attention(self, x, **kwargs):
-        """Compute attention.
-
+        """
+        Compute attention.
         Parameters
         ----------
         x : tf.Tensor
@@ -607,7 +609,9 @@ class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
         gate = self.separate_heads(gate, batch_size)
 
         return (
-            self.SingleAttention(query, key, value, gate, **kwargs),
+            self.SingleAttention(
+                query, key, value, gate=gate, batch_size=batch_size, **kwargs
+            ),
             batch_size,
         )
 
