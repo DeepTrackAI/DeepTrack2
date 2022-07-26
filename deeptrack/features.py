@@ -1592,7 +1592,11 @@ class SampleToMasks(Feature):
 
         output_region = kwargs["output_region"]
         output = np.zeros(
-            (output_region[2], output_region[3], kwargs["number_of_masks"])
+            (
+                output_region[2] - output_region[0],
+                output_region[3] - output_region[1],
+                kwargs["number_of_masks"],
+            )
         )
 
         for label in list_of_labels:
