@@ -233,6 +233,10 @@ class Ellipse(Scatterer):
         for `Brightfield` and `intensity` for `Fluorescence`).
     upsample : int
         Upsamples the calculations of the pixel occupancy fraction.
+    transpose : bool
+        If True, the ellipse is transposed as to align the first axis of the radius with
+        the first axis of the created volume. This is applied before rotation.
+
     """
 
     __conversion_table__ = ConversionTable(
@@ -244,9 +248,12 @@ class Ellipse(Scatterer):
         self,
         radius: PropertyLike[float] = 1e-6,
         rotation: PropertyLike[float] = 0,
+        transpose: PropertyLike[bool] = False,
         **kwargs,
     ):
-        super().__init__(radius=radius, rotation=rotation, **kwargs)
+        super().__init__(
+            radius=radius, rotation=rotation, transpose=transpose, **kwargs
+        )
 
     def _process_properties(self, properties: dict) -> dict:
         """Preprocess the input to the method .get()
@@ -269,8 +276,11 @@ class Ellipse(Scatterer):
 
         return properties
 
-    def get(self, *ignore, radius, rotation, voxel_size, **kwargs):
+    def get(self, *ignore, radius, rotation, voxel_size, transpose, **kwargs):
 
+        if not transpose:
+            radius = radius[::-1]
+            # rotation = rotation[::-1]
         # Create a grid to calculate on
         rad = radius[:2] / voxel_size[:2]
         ceil = int(np.max(np.ceil(rad)))
@@ -326,10 +336,11 @@ class Sphere(Scatterer):
         x = np.arange(-rad_ceil[0], rad_ceil[0])
         y = np.arange(-rad_ceil[1], rad_ceil[1])
         z = np.arange(-rad_ceil[2], rad_ceil[2])
-        X, Y, Z = np.meshgrid((x / rad[0]) ** 2, (y / rad[1]) ** 2, (z / rad[2]) ** 2)
+        print(rad)
+        X, Y, Z = np.meshgrid((y / rad[1]) ** 2, (x / rad[0]) ** 2, (z / rad[2]) ** 2)
 
         mask = (X + Y + Z <= 1) * 1.0
-
+        print(mask.shape, "aaaa")
         return mask
 
 
@@ -356,6 +367,9 @@ class Ellipsoid(Scatterer):
         for `Brightfield` and `intensity` for `Fluorescence`).
     upsample : int
         Upsamples the calculations of the pixel occupancy fraction.
+    transpose : bool
+        If True, the ellipse is transposed as to align the first axis of the radius with
+        the first axis of the created volume. This is applied before rotation.
     """
 
     __conversion_table__ = ConversionTable(
@@ -367,9 +381,12 @@ class Ellipsoid(Scatterer):
         self,
         radius: PropertyLike[float] = 1e-6,
         rotation: PropertyLike[float] = 0,
+        transpose: PropertyLike[bool] = False,
         **kwargs,
     ):
-        super().__init__(radius=radius, rotation=rotation, **kwargs)
+        super().__init__(
+            radius=radius, rotation=rotation, transpose=transpose, **kwargs
+        )
 
     def _process_properties(self, propertydict):
         """Preprocess the input to the method .get()
@@ -418,18 +435,22 @@ class Ellipsoid(Scatterer):
 
         return propertydict
 
-    def get(self, image, radius, rotation, voxel_size, **kwargs):
+    def get(self, image, radius, rotation, voxel_size, transpose, **kwargs):
+        if not transpose:
+            # swap the first and second value of the radius vector
+            radius = (radius[1], radius[0], radius[2])
 
         radius_in_pixels = np.array(radius) / np.array(voxel_size)
+        print(radius_in_pixels)
 
-        max_rad = np.max(radius)
+        max_rad = np.max(radius_in_pixels)
         rad_ceil = np.ceil(max_rad)
 
         # Create grid to calculate on
         x = np.arange(-rad_ceil, rad_ceil)
         y = np.arange(-rad_ceil, rad_ceil)
         z = np.arange(-rad_ceil, rad_ceil)
-        X, Y, Z = np.meshgrid(x, y, z)
+        Y, X, Z = np.meshgrid(y, x, z)
 
         # Rotate the grid
         cos = np.cos(rotation)
@@ -452,7 +473,7 @@ class Ellipsoid(Scatterer):
             + (ZR / radius_in_pixels[2]) ** 2
             < 1
         ) * 1.0
-
+        print(np.sum(mask), mask.shape)
         return mask
 
 
