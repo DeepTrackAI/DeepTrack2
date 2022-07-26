@@ -52,6 +52,85 @@ class TestScatterers(unittest.TestCase):
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
+    def test_EllipseUpscale(self):
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=2,
+        )
+        scatterer = scatterers.Ellipse(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 0.5e-6),
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (19, 39, 1))
+
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=4,
+        )
+        scatterer = scatterers.Ellipse(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 0.5e-6),
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (39, 79, 1))
+
+    def test_EllipseUpscaleAsymmetric(self):
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=(2, 1, 1),
+        )
+        scatterer = scatterers.Ellipse(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 1e-6),
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (39, 19, 1))
+
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=(1, 2, 1),
+        )
+        scatterer = scatterers.Ellipse(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 1e-6),
+            asymmetric=True,
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (19, 39, 1))
+
     def test_Sphere(self):
         optics = Fluorescence(
             NA=0.7,

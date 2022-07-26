@@ -12,7 +12,7 @@ def get_propagation_matrix(shape, to_z, pixel_size, wavelength):
     KXk, KYk = np.meshgrid(x, y)
 
     K = np.real(
-        np.sqrt(np.array(1 - (KXk / k) ** 2 - (KYk / k) ** 2, dtype=np.complex64))
+        np.sqrt(np.array(1 - (KXk / k) ** 2 - (KYk / k) ** 2, dtype=complex))
     )
     C = np.fft.fftshift(((KXk / k) ** 2 + (KYk / k) ** 2 < 1) * 1.0)
 

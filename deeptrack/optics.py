@@ -76,7 +76,6 @@ class Microscope(StructuralFeature):
         ):
 
             upscale = get_active_scale()
-            print(upscale)
 
             output_region = additional_sample_kwargs.pop("output_region")
             additional_sample_kwargs["output_region"] = [
@@ -306,7 +305,6 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
 
         # Pupil radius
         R = NA / wavelength * np.array(voxel_size)[:2]
-        print(R)
 
         x_radius = R[0] * shape[0]
         y_radius = R[1] * shape[1]
@@ -317,7 +315,7 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
         W, H = np.meshgrid(y, x)
         W = maybe_cupy(W)
         H = maybe_cupy(H)
-        RHO = W ** 2 + H ** 2
+        RHO = (W ** 2 + H ** 2).astype(complex)
         pupil_function = Image((RHO < 1) + 0.0j, copy=False)
         # Defocus
         z_shift = Image(
@@ -398,7 +396,7 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
             )
         new_volume = np.zeros(
             np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
-            dtype=np.complex,
+            dtype=complex,
         )
 
         old_region = (limits - new_limits).astype(np.int32)
@@ -462,7 +460,6 @@ class Fluorescence(Optics):
         output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
 
         # Calculate the how much to crop from the volume
-        print(output_region, limits, pad)
         output_region[0] = (
             None
             if output_region[0] is None
@@ -646,7 +643,7 @@ class Brightfield(Optics):
 
         pupil_step = np.fft.fftshift(pupils[0])
 
-        light_in = image.maybe_cupy(np.ones(volume.shape[:2], dtype=np.complex))
+        light_in = image.maybe_cupy(np.ones(volume.shape[:2], dtype=complex))
         light_in = self.illumination.resolve(light_in)
         light_in = np.fft.fft2(light_in)
 
@@ -785,7 +782,7 @@ def _get_position(image, mode="corner", return_z=False):
     if mode == "corner" and image.size > 0:
         import scipy.ndimage
 
-        shift = scipy.ndimage.measurements.center_of_mass(np.abs(image))
+        shift = scipy.ndimage.center_of_mass(np.abs(image))
 
         if np.isnan(shift).any():
             shift = np.array(image.shape) / 2
@@ -836,7 +833,7 @@ def _create_volume(
     if not isinstance(list_of_scatterers, list):
         list_of_scatterers = [list_of_scatterers]
 
-    volume = np.zeros((1, 1, 1), dtype=np.complex)
+    volume = np.zeros((1, 1, 1), dtype=complex)
     limits = None
     OR = np.zeros((4,))
     OR[0] = np.inf if output_region[0] is None else int(output_region[0] - pad[0])
@@ -912,7 +909,7 @@ def _create_volume(
         )
 
         for z in range(scatterer.shape[2]):
-            if splined_scatterer.dtype == np.complex:
+            if splined_scatterer.dtype == complex:
                 splined_scatterer[:, :, z] = (
                     convolve(np.real(scatterer[:, :, z]), kernel, mode="constant")
                     + convolve(np.imag(scatterer[:, :, z]), kernel, mode="constant")
@@ -935,7 +932,7 @@ def _create_volume(
         if not (np.array(new_limits) == np.array(limits)).all():
             new_volume = np.zeros(
                 np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
-                dtype=np.complex,
+                dtype=complex,
             )
             old_region = (limits - new_limits).astype(np.int32)
             limits = limits.astype(np.int32)

@@ -282,9 +282,12 @@ class Ellipse(Scatterer):
             radius = radius[::-1]
             # rotation = rotation[::-1]
         # Create a grid to calculate on
-        rad = radius[:2] / voxel_size[:2]
-        ceil = int(np.max(np.ceil(rad)))
-        Y, X = np.meshgrid(np.arange(-ceil, ceil), np.arange(-ceil, ceil))
+        rad = radius[:2]
+        ceil = int(np.ceil(np.max(rad) / np.min(voxel_size[:2])))
+        Y, X = np.meshgrid(
+            np.arange(-ceil, ceil) * voxel_size[1],
+            np.arange(-ceil, ceil) * voxel_size[0],
+        )
 
         # Rotate the grid
         if rotation != 0:
@@ -293,6 +296,7 @@ class Ellipse(Scatterer):
             X = Xt
             Y = Yt
 
+        print(X[0, 0], Y[0, 0], rad)
         # Evaluate ellipse
         mask = ((X * X) / (rad[0] * rad[0]) + (Y * Y) / (rad[1] * rad[1]) < 1) * 1.0
         mask = np.expand_dims(mask, axis=-1)
@@ -336,11 +340,9 @@ class Sphere(Scatterer):
         x = np.arange(-rad_ceil[0], rad_ceil[0])
         y = np.arange(-rad_ceil[1], rad_ceil[1])
         z = np.arange(-rad_ceil[2], rad_ceil[2])
-        print(rad)
         X, Y, Z = np.meshgrid((y / rad[1]) ** 2, (x / rad[0]) ** 2, (z / rad[2]) ** 2)
 
         mask = (X + Y + Z <= 1) * 1.0
-        print(mask.shape, "aaaa")
         return mask
 
 
@@ -440,16 +442,15 @@ class Ellipsoid(Scatterer):
             # swap the first and second value of the radius vector
             radius = (radius[1], radius[0], radius[2])
 
-        radius_in_pixels = np.array(radius) / np.array(voxel_size)
-        print(radius_in_pixels)
+        # radius_in_pixels = np.array(radius) / np.array(voxel_size)
 
-        max_rad = np.max(radius_in_pixels)
-        rad_ceil = np.ceil(max_rad)
+        # max_rad = np.max(radius_in_pixels)
+        rad_ceil = np.ceil(np.max(radius) / np.min(voxel_size))
 
         # Create grid to calculate on
-        x = np.arange(-rad_ceil, rad_ceil)
-        y = np.arange(-rad_ceil, rad_ceil)
-        z = np.arange(-rad_ceil, rad_ceil)
+        x = np.arange(-rad_ceil, rad_ceil) * voxel_size[0]
+        y = np.arange(-rad_ceil, rad_ceil) * voxel_size[1]
+        z = np.arange(-rad_ceil, rad_ceil) * voxel_size[2]
         Y, X, Z = np.meshgrid(y, x, z)
 
         # Rotate the grid
@@ -468,12 +469,8 @@ class Ellipsoid(Scatterer):
         ZR = (-sin[1] * X) + cos[1] * sin[2] * Y + cos[1] * cos[2] * Z
 
         mask = (
-            (XR / radius_in_pixels[0]) ** 2
-            + (YR / radius_in_pixels[1]) ** 2
-            + (ZR / radius_in_pixels[2]) ** 2
-            < 1
+            (XR / radius[0]) ** 2 + (YR / radius[1]) ** 2 + (ZR / radius[2]) ** 2 < 1
         ) * 1.0
-        print(np.sum(mask), mask.shape)
         return mask
 
 
