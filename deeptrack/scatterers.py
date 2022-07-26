@@ -296,7 +296,6 @@ class Ellipse(Scatterer):
             X = Xt
             Y = Yt
 
-        print(X[0, 0], Y[0, 0], rad)
         # Evaluate ellipse
         mask = ((X * X) / (rad[0] * rad[0]) + (Y * Y) / (rad[1] * rad[1]) < 1) * 1.0
         mask = np.expand_dims(mask, axis=-1)
