@@ -16,12 +16,15 @@ class ElementwiseFeature(Feature):
 
     def __init__(self, function, feature=None, **kwargs):
         self.function = function
+        super().__init__(**kwargs)
+        self.feature = self.add_feature(feature) if feature else feature
+
         if feature:
-            super().__init__(_input=feature, **kwargs)
-        else:
-            super().__init__(**kwargs)
+            self.__distributed__ = False
 
     def get(self, image, **kwargs):
+        if self.feature:
+            image = self.feature()
         return self.function(image)
 
 

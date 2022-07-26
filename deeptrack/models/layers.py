@@ -362,6 +362,7 @@ def Identity(activation=None, normalization=False, norm_kwargs={}, **kwargs):
 
 class MultiHeadSelfAttention(layers.Layer):
     """Multi-head self-attention layer.
+
     Parameters
     ----------
     number_of_heads : int
@@ -406,8 +407,8 @@ class MultiHeadSelfAttention(layers.Layer):
         self.combine_dense = layers.Dense(filters, use_bias=self.use_bias)
 
     def SingleAttention(self, query, key, value, gate=None, **kwargs):
-        """
-        Single attention layer.
+        """Single attention layer.
+
         Parameters
         ----------
         query : tf.Tensor
@@ -433,6 +434,7 @@ class MultiHeadSelfAttention(layers.Layer):
 
     def separate_heads(self, x, batch_size):
         """
+
         Parameters
         ----------
         x : tf.Tensor
@@ -447,6 +449,7 @@ class MultiHeadSelfAttention(layers.Layer):
 
     def compute_attention(self, x, **kwargs):
         """
+
         Parameters
         ----------
         x : tf.Tensor
@@ -475,6 +478,7 @@ class MultiHeadSelfAttention(layers.Layer):
 
     def call(self, x, **kwargs):
         """
+
         Parameters
         ----------
         x : tuple of tf.Tensors
@@ -493,9 +497,7 @@ class MultiHeadSelfAttention(layers.Layer):
 
 class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
     def build(self, input_shape):
-        """
-        Build the layer.
-        """
+        """Build the layer."""
         try:
             filters = input_shape[1][-1]
         except TypeError:
@@ -516,8 +518,8 @@ class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
         self.combine_dense = layers.Dense(filters)
 
     def compute_attention(self, x, **kwargs):
-        """
-        Compute attention.
+        """Compute attention.
+
         Parameters
         ----------
         x : tf.Tensor
@@ -641,6 +643,7 @@ def MultiHeadGatedSelfAttentionLayer(
 
 class TransformerEncoder(tf.keras.layers.Layer):
     """Transformer Encoder.
+
     Parameters
     ----------
     fwd_mlp_dim : int
@@ -737,6 +740,7 @@ def TransformerEncoderLayer(
     **kwargs,
 ):
     """Transformer Encoder Layer.
+
     Parameters
     ----------
     number_of_heads : int

@@ -1,19 +1,26 @@
 import glob
 import os
 
+# HOW TO:
+# go to root and run pip install -e .
+# Run python examples/test_notebooks.py
+
 
 def test_notebooks():
     """
     Test all notebooks in the examples directory.
     """
 
-    notebooks = glob.glob(
-        os.path.join("examples", "tutorials", "*.ipynb"), recursive=True
-    )
+    notebooks = glob.glob(os.path.join("examples", "**", "*.ipynb"), recursive=True)
     failed_runs = []
     for notebook in notebooks:
-        print(f"Testing notebook: {notebook}")
+        print(f"Testing notebook: {notebook}...")
+
         # Allow errors to be raised.
+        out = os.popen(f'git diff --name-only "{notebook}"').read()
+        if out:
+            print("Notebook already ran since last git commit... skipping")
+            continue
         out = os.system(
             f'jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=None "{notebook}"'
         )

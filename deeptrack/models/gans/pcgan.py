@@ -9,6 +9,7 @@ class PCGAN(tf.keras.Model):
     """Creates and compiles a conditional generative adversarial
     neural network (CGAN) with an additional perceptual discriminator,
     which introduces perceptual criteria on the image generation process.
+
     Parameters
     ----------
     generator: keras model

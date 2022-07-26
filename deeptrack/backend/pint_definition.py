@@ -931,11 +931,12 @@ neper = 1 ; logbase: 2.71828182845904523536028747135266249775724709369995; logfa
     pound
 @end
 
-pixel = [optical_unit] = px
-
-@context(pixel_size = 1) deeptrack = dt
-    [optical_unit] -> [length]: value * pixel_size * (meter / pixel)
-    [length] -> [optical_unit]: value / pixel_size / (meter / pixel)
-@end
+pixel = 1 micrometer = px
+xpixel = 1 micrometer = xpx
+ypixel = 1 micrometer = ypx
+zpixel = 1 micrometer = zpx
+simulation_xpixel = 1 micrometer = sxpx
+simulation_ypixel = 1 micrometer = sypx
+simulation_zpixel = 1 micrometer = szpx
 
 """

@@ -92,6 +92,24 @@ class TestModels(unittest.TestCase):
 
         model.predict(np.zeros((1, 1, 64, 64, 1)))
 
+    def test_ViT(self):
+        model = models.ViT(
+            input_shape=(224, 224, 3),
+            patch_shape=16,
+            num_layers=12,
+            hidden_size=768,
+            number_of_heads=12,
+            fwd_mlp_dim=3072,
+            dropout=0.1,
+            representation_size=None,
+            include_top=True,
+            output_size=1000,
+            output_activation="linear",
+        )
+        self.assertIsInstance(model, models.KerasModel)
+
+        model.predict(np.zeros((1, 224, 224, 3)))
+
 
 if __name__ == "__main__":
     unittest.main()

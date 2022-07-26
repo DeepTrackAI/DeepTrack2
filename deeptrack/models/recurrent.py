@@ -4,6 +4,31 @@ from tensorflow.keras import layers, models
 
 
 class RNN(KerasModel):
+    """Creates and compiles a recurrent neural network.
+
+    Parameters
+    ----------
+    input_shape : tuple of ints
+        Size of the images to be analyzed.
+    conv_layers_dimensions : tuple of ints
+        Number of convolutions in each convolutional layer during down-
+        and upsampling.
+    dense_layers_dimensions : tuple of ints
+        Number of units in each dense layer.
+    rnn_layers_dimensions : tuple of ints
+        Number of units in each recurrent layer.
+    number_of_outputs : int
+        Number of convolutions in output layer.
+    output_activation : str or keras activation
+        The activation function of the output.
+    loss : str or keras loss function
+        The loss function of the network.
+    Returns
+    -------
+    keras.models.Model
+        Deep learning network.
+    """
+
     def __init__(
         self,
         input_shape=(51, 51, 1),
@@ -15,29 +40,6 @@ class RNN(KerasModel):
         number_of_outputs=3,
         **kwargs
     ):
-        """Creates and compiles a recurrent neural network.
-        Parameters
-        ----------
-        input_shape : tuple of ints
-            Size of the images to be analyzed.
-        conv_layers_dimensions : tuple of ints
-            Number of convolutions in each convolutional layer during down-
-            and upsampling.
-        dense_layers_dimensions : tuple of ints
-            Number of units in each dense layer.
-        rnn_layers_dimensions : tuple of ints
-            Number of units in each recurrent layer.
-        number_of_outputs : int
-            Number of convolutions in output layer.
-        output_activation : str or keras activation
-            The activation function of the output.
-        loss : str or keras loss function
-            The loss function of the network.
-        Returns
-        -------
-        keras.models.Model
-            Deep learning network.
-        """
 
         # INITIALIZE DEEP LEARNING NETWORK
         network = models.Sequential()

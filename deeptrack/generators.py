@@ -310,6 +310,10 @@ class ContinuousGenerator(keras.utils.Sequence):
             )
             time.sleep(0.1)
             current_data = list(self.data)
+            print(
+                "                                                                        ",
+                end="\r",
+            )
 
         self.new_epoch = True
         if self.augmentation and isinstance(self.augmentation, Feature):
@@ -334,7 +338,13 @@ class ContinuousGenerator(keras.utils.Sequence):
 
         batch_size = self._batch_size
 
-        subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
+        try:
+            subset = self.current_data[idx * batch_size : (idx + 1) * batch_size]
+        except IndexError:
+            return self[0]
+
+        if len(subset) < self.batch_size:
+            return self[0]
 
         for d in subset:
             d["usage"] += 1
@@ -345,7 +355,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         return np.array(data), np.array(labels)
 
     def __len__(self):
-        steps = int((len(self.current_data) // self._batch_size))
+        steps = int((self.min_data_size // self._batch_size))
         assert (
             steps > 0
         ), "There needs to be at least batch_size number of datapoints. Try increasing min_data_size."

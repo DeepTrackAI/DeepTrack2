@@ -21,6 +21,7 @@ def GraphGenerator(
 ):
     """
     Returns a generator that generates graphs asynchronously.
+
     Parameters
     ----------
     nodesdf: pd.DataFrame
@@ -63,6 +64,7 @@ def SelfDuplicateEdgeAugmentation(edges, w, maxnofedges=None, idxs=None):
     """
     Augments edges by randomly adding edges to the graph. The new edges
     are copies of the original edges, and their influence is set to 0.
+
     Parameters
     ----------
     edges : list of numpy arrays
@@ -114,6 +116,7 @@ class ContinuousGraphGenerator(ContinuousGenerator):
     the speed gained from reusing images. The generator will continuously
     create new trainingdata during training, until `max_data_size` is reached,
     at which point the oldest data point is replaced.
+    
     Parameters
     ----------
     feature : dt.Feature

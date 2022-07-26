@@ -49,8 +49,8 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 <br/>
 <h3 align="left"> Single particle tracking </h3>
 <p align="left">
-  <img width="33%" src=/assets/SPT-ideal.gif?raw=true>
-  <img width="33%" src=/assets/SPT-noisy.gif?raw=true>
+  <img width="300" src=/assets/SPT-ideal.gif?raw=true>
+  <img width="300" src=/assets/SPT-noisy.gif?raw=true>
   <br/>
   <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/2-single_particle_tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a CNN-based single particle tracker using simulated data </a>
   <br/>
@@ -65,7 +65,7 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 <h3 align="left"> Multi-particle tracking </h3>
 
 <p align="left">
-  <img width="66%" src=/assets/MPT-packed.gif?raw=true>
+  <img width="600" src=/assets/MPT-packed.gif?raw=true>
   <br/>
   <a href="https://doi.org/10.48550/arXiv.2202.13546" alt="DOI lodestar">
     <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.13546-blue">
@@ -78,7 +78,7 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 <h3 align="left"> Particle tracing </h3>
 
 <p align="left">
-  <img width="66%" src=/assets/Tracing.gif?raw=true>
+  <img width="600" src=/assets/Tracing.gif?raw=true>
   <br/>
   <a href="https://doi.org/10.48550/arXiv.2202.06355" alt="DOI magik">
     <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.0635-blue">
@@ -93,7 +93,7 @@ Everybody learns in different ways! Depending on your preferences, and what you 
 
 We have two separate series of notebooks which aims to teach you all you need to know to use DeepTrack to its fullest. The first is a set of six notebooks with a focus on the application.
 
-1. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> deeptrack_introduction_tutorial </a>  gives an overview of how to use DeepTrack 2.1.
+1. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/get-started/01.%20deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> deeptrack_introduction_tutorial </a>  gives an overview of how to use DeepTrack 2.1.
 2. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/tracking_particle_cnn_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> demonstrates how to track a point particle with a convolutional neural network (CNN).
 3. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorial/tracking_multiple_particles_unet_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> demonstrates how to track multiple particles using a U-net.
 4. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/characterizing_aberrations_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> characterizing_aberrations_tutorial </a> demonstrates how to add and characterize aberrations of an optical device. 

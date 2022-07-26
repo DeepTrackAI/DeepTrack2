@@ -9,6 +9,7 @@ from ..embeddings import LearnableDistanceEmbedding
 class MAGIK(KerasModel):
     """
     Message passing graph neural network.
+
     Parameters:
     -----------
     dense_layer_dimensions: list of ints
@@ -160,6 +161,7 @@ class MAGIK(KerasModel):
 class CTMAGIK(KerasModel):
     """
     Message passing graph neural network.
+    
     Parameters:
     -----------
     dense_layer_dimensions: list of ints

@@ -17,7 +17,13 @@ Brightfield
 
 
 from pint.quantity import Quantity
-from deeptrack.backend.units import ConversionTable
+from deeptrack.backend.units import (
+    ConversionTable,
+    create_context,
+    get_active_scale,
+    get_active_voxel_size,
+)
+from deeptrack.math import AveragePooling
 from deeptrack.properties import propagate_data_to_dependencies
 import numpy as np
 from .features import DummyFeature, Feature, StructuralFeature
@@ -25,6 +31,7 @@ from .image import Image, pad_image_to_fft, maybe_cupy
 from .types import ArrayLike, PropertyLike
 from .backend._config import cupy
 from scipy.ndimage import convolve
+import warnings
 
 from . import units as u
 from deeptrack import image
@@ -54,47 +61,89 @@ class Microscope(StructuralFeature):
 
         # Grab properties from the objective to pass to the sample
         additional_sample_kwargs = self._objective.properties()
-        propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
 
-        # Creates a context for the unit conversions to know the size of a pixel.
-        with u.context("dt", pixel_size=additional_sample_kwargs["voxel_size"][0]):
+        # calculate required output image for the given upscale
+        # This way of providing the upscale will be deprecated in the future
+        # in favor of dt.Upscale().
+        _upscale_given_by_optics = additional_sample_kwargs["upscale"]
+        if np.array(_upscale_given_by_optics).size == 1:
+            _upscale_given_by_optics = (_upscale_given_by_optics,) * 3
+
+        with u.context(
+            create_context(
+                *additional_sample_kwargs["voxel_size"], *_upscale_given_by_optics
+            )
+        ):
+
+            upscale = get_active_scale()
+
+            output_region = additional_sample_kwargs.pop("output_region")
+            additional_sample_kwargs["output_region"] = [
+                int(o * upsc)
+                for o, upsc in zip(
+                    output_region, (upscale[0], upscale[1], upscale[0], upscale[1])
+                )
+            ]
+
+            padding = additional_sample_kwargs.pop("padding")
+            additional_sample_kwargs["padding"] = [
+                int(p * upsc)
+                for p, upsc in zip(
+                    padding, (upscale[0], upscale[1], upscale[0], upscale[1])
+                )
+            ]
+
+            self._objective.output_region.set_value(
+                additional_sample_kwargs["output_region"]
+            )
+            self._objective.padding.set_value(additional_sample_kwargs["padding"])
+
+            propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
+
             list_of_scatterers = self._sample()
 
-        if not isinstance(list_of_scatterers, list):
-            list_of_scatterers = [list_of_scatterers]
+            if not isinstance(list_of_scatterers, list):
+                list_of_scatterers = [list_of_scatterers]
 
-        # All scatterers that are defined as volumes.
-        volume_samples = [
-            scatterer
-            for scatterer in list_of_scatterers
-            if not scatterer.get_property("is_field", default=False)
-        ]
+            # All scatterers that are defined as volumes.
+            volume_samples = [
+                scatterer
+                for scatterer in list_of_scatterers
+                if not scatterer.get_property("is_field", default=False)
+            ]
 
-        # All scatterers that are defined as fields.
-        field_samples = [
-            scatterer
-            for scatterer in list_of_scatterers
-            if scatterer.get_property("is_field", default=False)
-        ]
+            # All scatterers that are defined as fields.
+            field_samples = [
+                scatterer
+                for scatterer in list_of_scatterers
+                if scatterer.get_property("is_field", default=False)
+            ]
 
-        # Merge all volumes into a single volume.
-        sample_volume, limits = _create_volume(
-            volume_samples, **additional_sample_kwargs
-        )
-        sample_volume = Image(sample_volume)
+            # Merge all volumes into a single volume.
+            sample_volume, limits = _create_volume(
+                volume_samples,
+                **additional_sample_kwargs,
+            )
+            sample_volume = Image(sample_volume)
 
-        # Merge all properties into the volume.
-        for scatterer in volume_samples + field_samples:
-            sample_volume.merge_properties_from(scatterer)
+            # Merge all properties into the volume.
+            for scatterer in volume_samples + field_samples:
+                sample_volume.merge_properties_from(scatterer)
 
-        # Let the objective know about the limits of the volume and all the fields.
-        propagate_data_to_dependencies(
-            self._objective,
-            limits=limits,
-            fields=field_samples,
-        )
+            # Let the objective know about the limits of the volume and all the fields.
+            propagate_data_to_dependencies(
+                self._objective,
+                limits=limits,
+                fields=field_samples,
+            )
 
-        imaged_sample = self._objective.resolve(sample_volume)
+            imaged_sample = self._objective.resolve(sample_volume)
+
+        # Upscale given by the optics needs to be handled separately.
+        if _upscale_given_by_optics != (1, 1, 1):
+            imaged_sample = AveragePooling((*_upscale_given_by_optics[:2], 1))(
+                imaged_sample
+            )
 
         # Merge with input
         if not image:
@@ -156,8 +205,10 @@ class Optics(Feature):
         output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
         pupil: Feature = None,
         illumination: Feature = None,
-        **kwargs
+        upscale=1,
+        **kwargs,
     ):
+
         # Calculate the voxel size.
         def get_voxel_size(resolution, magnification):
             props = self._normalize(resolution=resolution, magnification=magnification)
@@ -182,9 +233,10 @@ class Optics(Feature):
             output_region=output_region,
             voxel_size=get_voxel_size,
             pixel_size=get_pixel_size,
+            upscale=upscale,
             limits=None,
             fields=None,
-            **kwargs
+            **kwargs,
         )
 
         self.pupil = self.add_feature(pupil) if pupil else DummyFeature()
@@ -192,16 +244,33 @@ class Optics(Feature):
             self.add_feature(illumination) if illumination else DummyFeature()
         )
 
+    def _process_properties(self, propertydict) -> dict:
+        propertydict = super()._process_properties(propertydict)
+
+        NA = propertydict["NA"]
+        wavelength = propertydict["wavelength"]
+        voxel_size = get_active_voxel_size()
+        radius = NA / wavelength * np.array(voxel_size)
+
+        if np.any(radius[:2] > 0.5):
+            required_upscale = np.max(np.ceil(radius[:2] * 2))
+            warnings.warn(
+                f"""Likely bad optical parameters. NA / wavelength * resolution / magnification = {radius} should be at most 0.5
+To fix, set magnification to {required_upscale}, and downsample the resulting image with dt.AveragePooling(({required_upscale}, {required_upscale}, 1))
+"""
+            )
+
+        return propertydict
+
     def _pupil(
         self,
         shape,
         NA,
         wavelength,
         refractive_index_medium,
-        voxel_size,
         include_aberration=True,
         defocus=0,
-        **kwargs
+        **kwargs,
     ):
         """Calculates the pupil function at different focal points.
 
@@ -231,6 +300,7 @@ class Optics(Feature):
 
         """
         # Calculates the pupil at each z-position in defocus.
+        voxel_size = get_active_voxel_size()
         shape = np.array(shape)
 
         # Pupil radius
@@ -245,7 +315,7 @@ class Optics(Feature):
         W, H = np.meshgrid(y, x)
         W = maybe_cupy(W)
         H = maybe_cupy(H)
-        RHO = W ** 2 + H ** 2
+        RHO = (W ** 2 + H ** 2).astype(complex)
         pupil_function = Image((RHO < 1) + 0.0j, copy=False)
         # Defocus
         z_shift = Image(
@@ -316,7 +386,7 @@ class Optics(Feature):
 
         for i in range(2):
             new_limits[i, :] = (
-                np.min([new_limits[i, 0], output_region[i] - padding[1]]),
+                np.min([new_limits[i, 0], output_region[i] - padding[i]]),
                 np.max(
                     [
                         new_limits[i, 1],
@@ -326,7 +396,7 @@ class Optics(Feature):
             )
         new_volume = np.zeros(
             np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
-            dtype=np.complex,
+            dtype=complex,
         )
 
         old_region = (limits - new_limits).astype(np.int32)
@@ -410,6 +480,7 @@ class Fluorescence(Optics):
             if output_region[3] is None
             else int(output_region[3] - limits[1, 0] + pad[3])
         )
+
         padded_volume = padded_volume[
             output_region[0] : output_region[2],
             output_region[1] : output_region[3],
@@ -556,7 +627,7 @@ class Brightfield(Optics):
 
         volume = pad_image_to_fft(padded_volume, axes=(0, 1))
 
-        voxel_size = kwargs["voxel_size"]
+        voxel_size = get_active_voxel_size()
 
         pupils = [
             self._pupil(
@@ -566,13 +637,13 @@ class Brightfield(Optics):
                 volume.shape[:2],
                 defocus=[-z_limits[1]],
                 include_aberration=True,
-                **kwargs
+                **kwargs,
             )[0],
         ]
 
         pupil_step = np.fft.fftshift(pupils[0])
 
-        light_in = image.maybe_cupy(np.ones(volume.shape[:2], dtype=np.complex))
+        light_in = image.maybe_cupy(np.ones(volume.shape[:2], dtype=complex))
         light_in = self.illumination.resolve(light_in)
         light_in = np.fft.fft2(light_in)
 
@@ -592,7 +663,7 @@ class Brightfield(Optics):
                         fields[idx].shape,
                         defocus=[z - fz - field_offsets[idx] / voxel_size[-1]],
                         include_aberration=False,
-                        **kwargs
+                        **kwargs,
                     )[0]
 
                     propagation_matrix = propagation_matrix * np.exp(
@@ -604,9 +675,11 @@ class Brightfield(Optics):
                         * kwargs["refractive_index_medium"]
                         * (z - fz)
                     )
-                    light_in += np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(
+                    pf = np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(
                         propagation_matrix
                     )
+
+                    light_in += pf
                     to_remove.append(idx)
 
             for idx in reversed(to_remove):
@@ -629,21 +702,15 @@ class Brightfield(Optics):
                 fields[idx].shape,
                 defocus=[prop_dist],
                 include_aberration=False,
-                **kwargs
+                **kwargs,
             )[0]
 
-            propagation_matrix = propagation_matrix * np.exp(
-                -1j
-                * voxel_size[-1]
-                * 2
-                * np.pi
-                / kwargs["wavelength"]
-                * kwargs["refractive_index_medium"]
-                * prop_dist
-            )
-            light_in += np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(
-                propagation_matrix
-            )
+            propagation_matrix = propagation_matrix
+
+            import matplotlib.pyplot as plt
+
+            pf = np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(propagation_matrix)
+            light_in += pf
 
         light_in_focus = light_in * np.fft.fftshift(pupils[-1])
 
@@ -683,7 +750,7 @@ class IlluminationGradient(Feature):
         constant: PropertyLike[float] = 0,
         vmin: PropertyLike[float] = 0,
         vmax: PropertyLike[float] = np.inf,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             gradient=gradient, constant=constant, vmin=vmin, vmax=vmax, **kwargs
@@ -715,7 +782,7 @@ def _get_position(image, mode="corner", return_z=False):
     if mode == "corner" and image.size > 0:
         import scipy.ndimage
 
-        shift = scipy.ndimage.measurements.center_of_mass(np.abs(image))
+        shift = scipy.ndimage.center_of_mass(np.abs(image))
 
         if np.isnan(shift).any():
             shift = np.array(image.shape) / 2
@@ -730,9 +797,12 @@ def _get_position(image, mode="corner", return_z=False):
     if position is None:
         return position
 
+    scale = np.array(get_active_scale())
+
     if len(position) == 3:
+        position = position * scale + 0.5 * (scale - 1)
         if return_z:
-            return position - shift
+            return position * scale - shift
         else:
             return position[0:2] - shift[0:2]
 
@@ -740,11 +810,13 @@ def _get_position(image, mode="corner", return_z=False):
         if return_z:
             outp = (
                 np.array([position[0], position[1], image.get_property("z", default=0)])
+                * scale
                 - shift
+                + 0.5 * (scale - 1)
             )
             return outp
         else:
-            return position - shift[0:2]
+            return position * scale[:2] - shift[0:2] + 0.5 * (scale[:2] - 1)
 
     return position
 
@@ -754,14 +826,14 @@ def _create_volume(
     pad=(0, 0, 0, 0),
     output_region=(None, None, None, None),
     refractive_index_medium=1.33,
-    **kwargs
+    **kwargs,
 ):
     # Converts a list of scatterers into a volume.
 
     if not isinstance(list_of_scatterers, list):
         list_of_scatterers = [list_of_scatterers]
 
-    volume = np.zeros((1, 1, 1), dtype=np.complex)
+    volume = np.zeros((1, 1, 1), dtype=complex)
     limits = None
     OR = np.zeros((4,))
     OR[0] = np.inf if output_region[0] is None else int(output_region[0] - pad[0])
@@ -769,12 +841,18 @@ def _create_volume(
     OR[2] = np.inf if output_region[2] is None else int(output_region[2] + pad[2])
     OR[3] = -np.inf if output_region[3] is None else int(output_region[3] + pad[3])
 
+    scale = np.array(get_active_scale())
+
+    # This accounts for upscale doing AveragePool instead of SumPool. This is
+    # a bit of a hack, but it works for now.
+    fudge_factor = scale[0] * scale[1] / scale[2]
+
     for scatterer in list_of_scatterers:
 
         position = _get_position(scatterer, mode="corner", return_z=True)
 
         if scatterer.get_property("intensity", None) is not None:
-            scatterer_value = scatterer.get_property("intensity")
+            scatterer_value = scatterer.get_property("intensity") * fudge_factor
         elif scatterer.get_property("refractive_index", None) is not None:
             scatterer_value = (
                 scatterer.get_property("refractive_index") - refractive_index_medium
@@ -831,7 +909,7 @@ def _create_volume(
         )
 
         for z in range(scatterer.shape[2]):
-            if splined_scatterer.dtype == np.complex:
+            if splined_scatterer.dtype == complex:
                 splined_scatterer[:, :, z] = (
                     convolve(np.real(scatterer[:, :, z]), kernel, mode="constant")
                     + convolve(np.imag(scatterer[:, :, z]), kernel, mode="constant")
@@ -854,7 +932,7 @@ def _create_volume(
         if not (np.array(new_limits) == np.array(limits)).all():
             new_volume = np.zeros(
                 np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
-                dtype=np.complex,
+                dtype=complex,
             )
             old_region = (limits - new_limits).astype(np.int32)
             limits = limits.astype(np.int32)

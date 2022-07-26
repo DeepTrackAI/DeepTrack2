@@ -18,8 +18,13 @@ Ellipsoid
 """
 
 
+from pint import Quantity
 from . import image
-from deeptrack.backend.units import ConversionTable
+from deeptrack.backend.units import (
+    ConversionTable,
+    get_active_scale,
+    get_active_voxel_size,
+)
 from typing import Callable, Tuple
 
 import numpy as np
@@ -73,7 +78,9 @@ class Scatterer(Feature):
     __list_merge_strategy__ = MERGE_STRATEGY_APPEND
     __distributed__ = False
     __conversion_table__ = ConversionTable(
-        position=(u.pixel, u.pixel), z=(u.pixel, u.pixel), voxel_size=(u.meter, u.meter)
+        position=(u.pixel, u.pixel),
+        z=(u.zpixel, u.zpixel),
+        voxel_size=(u.meter, u.meter),
     )
 
     def __init__(
@@ -85,8 +92,13 @@ class Scatterer(Feature):
         upsample: PropertyLike[int] = 1,
         voxel_size=None,
         pixel_size=None,
-        **kwargs
+        **kwargs,
     ):
+        # Ignore warning to help with comparison with arrays.
+        if upsample is not 1:  # noqa: F632
+            warnings.warn(
+                f"Setting upsample != 1 is deprecated. Please, instead use dt.Upscale(f, factor={upsample})"
+            )
         self._processed_properties = False
         super().__init__(
             position=position,
@@ -118,17 +130,14 @@ class Scatterer(Feature):
                 + "Optics.upscale != 1."
             )
 
-        # Calculates upsampled voxel_size
-        if upsample_axes is None:
-            upsample_axes = range(3)
-
-        voxel_size = np.array(voxel_size)
-        for axis in upsample_axes:
-            voxel_size[axis] /= upsample
+        voxel_size = get_active_voxel_size()
 
         # calls parent _process_and_get
         new_image = super()._process_and_get(
-            *args, voxel_size=voxel_size, upsample=upsample, **kwargs
+            *args,
+            voxel_size=voxel_size,
+            upsample=upsample,
+            **kwargs,
         )
         new_image = new_image[0]
 
@@ -141,28 +150,28 @@ class Scatterer(Feature):
                 Warning,
             )
 
-        # Downsamples the image along the axes it was upsampled
-        if upsample != 1 and upsample_axes:
+        # # Downsamples the image along the axes it was upsampled
+        # if upsample != 1 and upsample_axes:
 
-            # Pad image to ensure it is divisible by upsample
-            increase = np.array(new_image.shape)
-            for axis in upsample_axes:
-                increase[axis] = upsample - (new_image.shape[axis] % upsample)
-            pad_width = [(0, inc) for inc in increase]
-            new_image = np.pad(new_image, pad_width, mode="constant")
+        #     # Pad image to ensure it is divisible by upsample
+        #     increase = np.array(new_image.shape)
+        #     for axis in upsample_axes:
+        #         increase[axis] = upsample - (new_image.shape[axis] % upsample)
+        #     pad_width = [(0, inc) for inc in increase]
+        #     new_image = np.pad(new_image, pad_width, mode="constant")
 
-            # Finds reshape size for downsampling
-            new_shape = []
-            for axis in range(new_image.ndim):
-                if axis in upsample_axes:
-                    new_shape += [new_image.shape[axis] // upsample, upsample]
-                else:
-                    new_shape += [new_image.shape[axis]]
+        #     # Finds reshape size for downsampling
+        #     new_shape = []
+        #     for axis in range(new_image.ndim):
+        #         if axis in upsample_axes:
+        #             new_shape += [new_image.shape[axis] // upsample, upsample]
+        #         else:
+        #             new_shape += [new_image.shape[axis]]
 
-            # Downsamples
-            new_image = np.reshape(new_image, new_shape).mean(
-                axis=tuple(np.array(upsample_axes, dtype=np.int32) * 2 + 1)
-            )
+        #     # Downsamples
+        #     new_image = np.reshape(new_image, new_shape).mean(
+        #         axis=tuple(np.array(upsample_axes, dtype=np.int32) * 2 + 1)
+        #     )
 
         # Crops empty slices
         if crop_empty:
@@ -195,12 +204,11 @@ class PointParticle(Scatterer):
     """
 
     def __init__(self, **kwargs):
-        kwargs.pop("upsample", False)
-        kwargs.pop("upsample_axes", False)
         super().__init__(upsample=1, upsample_axes=(), **kwargs)
 
     def get(self, image, **kwargs):
-        return np.ones((1, 1, 1))
+        scale = get_active_scale()
+        return np.ones((1, 1, 1)) * np.prod(scale)
 
 
 class Ellipse(Scatterer):
@@ -226,10 +234,14 @@ class Ellipse(Scatterer):
         for `Brightfield` and `intensity` for `Fluorescence`).
     upsample : int
         Upsamples the calculations of the pixel occupancy fraction.
+    transpose : bool
+        If True, the ellipse is transposed as to align the first axis of the radius with
+        the first axis of the created volume. This is applied before rotation.
+
     """
 
     __conversion_table__ = ConversionTable(
-        radius=(u.meter, u.pixel),
+        radius=(u.meter, u.meter),
         rotation=(u.radian, u.radian),
     )
 
@@ -237,10 +249,11 @@ class Ellipse(Scatterer):
         self,
         radius: PropertyLike[float] = 1e-6,
         rotation: PropertyLike[float] = 0,
-        **kwargs
+        transpose: PropertyLike[bool] = False,
+        **kwargs,
     ):
         super().__init__(
-            radius=radius, rotation=rotation, upsample_axes=(0, 1), **kwargs
+            radius=radius, rotation=rotation, transpose=transpose, **kwargs
         )
 
     def _process_properties(self, properties: dict) -> dict:
@@ -264,12 +277,18 @@ class Ellipse(Scatterer):
 
         return properties
 
-    def get(self, *ignore, radius, rotation, voxel_size, **kwargs):
+    def get(self, *ignore, radius, rotation, voxel_size, transpose, **kwargs):
 
+        if not transpose:
+            radius = radius[::-1]
+            # rotation = rotation[::-1]
         # Create a grid to calculate on
         rad = radius[:2]
-        ceil = int(np.max(np.ceil(rad)))
-        X, Y = np.meshgrid(np.arange(-ceil, ceil), np.arange(-ceil, ceil))
+        ceil = int(np.ceil(np.max(rad) / np.min(voxel_size[:2])))
+        Y, X = np.meshgrid(
+            np.arange(-ceil, ceil) * voxel_size[1],
+            np.arange(-ceil, ceil) * voxel_size[0],
+        )
 
         # Rotate the grid
         if rotation != 0:
@@ -307,7 +326,7 @@ class Sphere(Scatterer):
     """
 
     __conversion_table__ = ConversionTable(
-        radius=(u.meter, u.pixel),
+        radius=(u.meter, u.meter),
     )
 
     def __init__(self, radius: PropertyLike[float] = 1e-6, **kwargs):
@@ -316,15 +335,14 @@ class Sphere(Scatterer):
     def get(self, image, radius, voxel_size, **kwargs):
 
         # Create a grid to calculate on
-        rad = radius * np.ones(3)
+        rad = radius * np.ones(3) / voxel_size
         rad_ceil = np.ceil(rad)
         x = np.arange(-rad_ceil[0], rad_ceil[0])
         y = np.arange(-rad_ceil[1], rad_ceil[1])
         z = np.arange(-rad_ceil[2], rad_ceil[2])
-        X, Y, Z = np.meshgrid((x / rad[0]) ** 2, (y / rad[1]) ** 2, (z / rad[2]) ** 2)
+        X, Y, Z = np.meshgrid((y / rad[1]) ** 2, (x / rad[0]) ** 2, (z / rad[2]) ** 2)
 
         mask = (X + Y + Z <= 1) * 1.0
-
         return mask
 
 
@@ -351,10 +369,13 @@ class Ellipsoid(Scatterer):
         for `Brightfield` and `intensity` for `Fluorescence`).
     upsample : int
         Upsamples the calculations of the pixel occupancy fraction.
+    transpose : bool
+        If True, the ellipse is transposed as to align the first axis of the radius with
+        the first axis of the created volume. This is applied before rotation.
     """
 
     __conversion_table__ = ConversionTable(
-        radius=(u.meter, u.pixel),
+        radius=(u.meter, u.meter),
         rotation=(u.radian, u.radian),
     )
 
@@ -362,9 +383,12 @@ class Ellipsoid(Scatterer):
         self,
         radius: PropertyLike[float] = 1e-6,
         rotation: PropertyLike[float] = 0,
-        **kwargs
+        transpose: PropertyLike[bool] = False,
+        **kwargs,
     ):
-        super().__init__(radius=radius, rotation=rotation, **kwargs)
+        super().__init__(
+            radius=radius, rotation=rotation, transpose=transpose, **kwargs
+        )
 
     def _process_properties(self, propertydict):
         """Preprocess the input to the method .get()
@@ -413,18 +437,21 @@ class Ellipsoid(Scatterer):
 
         return propertydict
 
-    def get(self, image, radius, rotation, voxel_size, **kwargs):
+    def get(self, image, radius, rotation, voxel_size, transpose, **kwargs):
+        if not transpose:
+            # swap the first and second value of the radius vector
+            radius = (radius[1], radius[0], radius[2])
 
-        radius_in_pixels = radius
+        # radius_in_pixels = np.array(radius) / np.array(voxel_size)
 
-        max_rad = np.max(radius)
-        rad_ceil = np.ceil(max_rad)
+        # max_rad = np.max(radius_in_pixels)
+        rad_ceil = np.ceil(np.max(radius) / np.min(voxel_size))
 
         # Create grid to calculate on
-        x = np.arange(-rad_ceil, rad_ceil)
-        y = np.arange(-rad_ceil, rad_ceil)
-        z = np.arange(-rad_ceil, rad_ceil)
-        X, Y, Z = np.meshgrid(x, y, z)
+        x = np.arange(-rad_ceil, rad_ceil) * voxel_size[0]
+        y = np.arange(-rad_ceil, rad_ceil) * voxel_size[1]
+        z = np.arange(-rad_ceil, rad_ceil) * voxel_size[2]
+        Y, X, Z = np.meshgrid(y, x, z)
 
         # Rotate the grid
         cos = np.cos(rotation)
@@ -442,12 +469,8 @@ class Ellipsoid(Scatterer):
         ZR = (-sin[1] * X) + cos[1] * sin[2] * Y + cos[1] * cos[2] * Z
 
         mask = (
-            (XR / radius_in_pixels[0]) ** 2
-            + (YR / radius_in_pixels[1]) ** 2
-            + (ZR / radius_in_pixels[2]) ** 2
-            < 1
+            (XR / radius[0]) ** 2 + (YR / radius[1]) ** 2 + (ZR / radius[2]) ** 2 < 1
         ) * 1.0
-
         return mask
 
 
@@ -474,10 +497,14 @@ class MieScatterer(Scatterer):
     collection_angle : "auto" or float
         The maximum collection angle in radians. If "auto", this
         is calculated from the objective NA (which is true if the objective is
-        the limiting
-        aperature).
-    polarization_angle : float
-        Angle of the polarization of the incoming light relative to the x-axis.
+        the limiting aperature).
+    input_polarization: float or Quantity
+        Defines the polarization angle of the input. For simulating circularly
+        polarized light we recommend a coherent sum of two simulated fields. For
+        unpolarized light we recommend a incoherent sum of two simulated fields.
+    output_polarization: float or Quantity or None
+        If None, the output light is not polarized. Otherwise defines the angle of the
+        polarization filter after the sample. For off-axis, keep the same as input_polarization.
     L : int or str
         The number of terms used to evaluate the mie theory. If `"auto"`,
         it determines the number of terms automatically.
@@ -503,8 +530,9 @@ class MieScatterer(Scatterer):
     def __init__(
         self,
         coefficients: Callable[..., Callable[[int], Tuple[ArrayLike, ArrayLike]]],
+        input_polarization=0,
+        output_polarization=0,
         offset_z: PropertyLike[str] = "auto",
-        polarization_angle: PropertyLike[float] = 0,
         collection_angle: PropertyLike[str] = "auto",
         L: PropertyLike[str] = "auto",
         refractive_index_medium=None,
@@ -512,8 +540,14 @@ class MieScatterer(Scatterer):
         NA=None,
         padding=(0,) * 4,
         output_region=None,
-        **kwargs
+        polarization_angle=None,
+        **kwargs,
     ):
+        if polarization_angle is not None:
+            warnings.warn(
+                "polarization_angle is deprecated. Please use input_polarization instead"
+            )
+            input_polarization = polarization_angle
         kwargs.pop("is_field", None)
         kwargs.pop("crop_empty", None)
 
@@ -522,7 +556,8 @@ class MieScatterer(Scatterer):
             crop_empty=False,
             L=L,
             offset_z=offset_z,
-            polarization_angle=polarization_angle,
+            input_polarization=input_polarization,
+            output_polarization=output_polarization,
             collection_angle=collection_angle,
             coefficients=coefficients,
             refractive_index_medium=refractive_index_medium,
@@ -530,6 +565,7 @@ class MieScatterer(Scatterer):
             NA=NA,
             padding=padding,
             output_region=output_region,
+            polarization_angle=polarization_angle,
             **kwargs,
         )
 
@@ -540,7 +576,7 @@ class MieScatterer(Scatterer):
         if properties["L"] == "auto":
             try:
                 v = 2 * np.pi * np.max(properties["radius"]) / properties["wavelength"]
-                properties["L"] = int(np.ceil((v + 4 * (v ** (1 / 3)) + 2) / 10))
+                properties["L"] = int(np.floor((v + 4 * (v ** (1 / 3)) + 1)))
             except (ValueError, TypeError):
                 pass
         if properties["collection_angle"] == "auto":
@@ -550,7 +586,11 @@ class MieScatterer(Scatterer):
 
         if properties["offset_z"] == "auto":
             properties["offset_z"] = (
-                32
+                np.min(
+                    np.array(properties["output_region"][2:])
+                    - properties["output_region"][:2]
+                )
+                / 2
                 * min(properties["voxel_size"][:2])
                 / np.sin(properties["collection_angle"])
             )
@@ -568,18 +608,37 @@ class MieScatterer(Scatterer):
         L,
         offset_z,
         collection_angle,
-        polarization_angle,
+        input_polarization,
+        output_polarization,
         coefficients,
-        **kwargs
+        **kwargs,
     ):
 
         xSize = padding[2] + output_region[2] - output_region[0] + padding[0]
         ySize = padding[3] + output_region[3] - output_region[1] + padding[1]
-        arr = pad_image_to_fft(np.zeros((xSize, ySize)))
 
+        scale = get_active_scale()
+
+        arr = pad_image_to_fft(np.zeros((xSize, ySize)))
+        position = np.array(position) * scale[: len(position)]
+        pos_floor = np.floor(position)
+        pos_digits = position - pos_floor
         # Evluation grid
-        x = np.arange(-padding[0], arr.shape[0] - padding[0]) - (position[0])
-        y = np.arange(-padding[1], arr.shape[1] - padding[1]) - (position[1])
+        x = (
+            np.arange(-padding[0], arr.shape[0] - padding[0])
+            - arr.shape[0] // 2
+            + padding[0]
+            - pos_digits[0]
+        )
+        y = (
+            np.arange(-padding[1], arr.shape[1] - padding[1])
+            - arr.shape[1] // 2
+            + padding[1]
+            - pos_digits[1]
+        )
+
+        x = np.roll(x, int(-arr.shape[0] // 2 + padding[0] + pos_floor[0]), 0)
+        y = np.roll(y, int(-arr.shape[1] // 2 + padding[1] + pos_floor[1]), 0)
         X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
 
         X = image.maybe_cupy(X)
@@ -589,9 +648,23 @@ class MieScatterer(Scatterer):
         R3 = np.sqrt(R2 ** 2 + (offset_z) ** 2)
         ct = offset_z / R3
 
-        ANGLE = np.arctan2(Y, X) + polarization_angle
-        COS2 = np.square(np.cos(ANGLE))
-        SIN2 = 1 - COS2
+        angle = np.arctan2(Y, X)
+        if isinstance(input_polarization, (float, int, Quantity)):
+
+            if isinstance(input_polarization, Quantity):
+                input_polarization = input_polarization.to("rad")
+                input_polarization = input_polarization.magnitude
+
+            S1_coef = np.sin(angle + input_polarization)
+            S2_coef = np.cos(angle + input_polarization)
+
+        if isinstance(output_polarization, (float, int, Quantity)):
+            if isinstance(input_polarization, Quantity):
+                output_polarization = output_polarization.to("rad")
+                output_polarization = output_polarization.magnitude
+
+            S1_coef *= np.sin(angle + output_polarization)
+            S2_coef *= np.cos(angle + output_polarization)
 
         ct_max = np.cos(collection_angle)
 
@@ -599,7 +672,6 @@ class MieScatterer(Scatterer):
         k = 2 * np.pi / wavelength * refractive_index_medium
 
         # Harmonics
-
         A, B = coefficients(L)
         PI, TAU = D.mie_harmonics(ct, L)
 
@@ -607,15 +679,15 @@ class MieScatterer(Scatterer):
         E = [(2 * i + 1) / (i * (i + 1)) for i in range(1, L + 1)]
 
         # Scattering terms
-        S1 = sum([E[i] * A[i] * TAU[i] + E[i] * B[i] * PI[i] for i in range(0, L)])
-        S2 = sum([E[i] * B[i] * TAU[i] + E[i] * A[i] * PI[i] for i in range(0, L)])
+        S1 = sum([E[i] * A[i] * PI[i] + E[i] * B[i] * TAU[i] for i in range(0, L)])
+        S2 = sum([E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)])
 
         field = (
             (ct > ct_max)
             * 1j
             / (k * R3)
             * np.exp(1j * k * (R3 - offset_z))
-            * (S1 * COS2 + S2 * SIN2)
+            * (S2 * S2_coef + S1 * S1_coef)
         )
 
         return np.expand_dims(field, axis=-1)
@@ -656,15 +728,20 @@ class MieSphere(MieScatterer):
         The maximum collection angle in radians. If "auto", this
         is calculated from the objective NA (which is true if the objective
         is the limiting aperature).
-    polarization_angle : float
-        Angle of the polarization of the incoming light relative to the x-axis.
+    input_polarization: float or Quantity
+        Defines the polarization angle of the input. For simulating circularly
+        polarized light we recommend a coherent sum of two simulated fields. For
+        unpolarized light we recommend a incoherent sum of two simulated fields.
+    output_polarization: float or Quantity or None
+        If None, the output light is not polarized. Otherwise defines the angle of the
+        polarization filter after the sample. For off-axis, keep the same as input_polarization.
     """
 
     def __init__(
         self,
         radius: PropertyLike[float] = 1e-6,
         refractive_index: PropertyLike[float] = 1.45,
-        **kwargs
+        **kwargs,
     ):
         def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
             def inner(L):
@@ -721,15 +798,20 @@ class MieStratifiedSphere(MieScatterer):
         The maximum collection angle in radians. If "auto", this
         is calculated from the objective NA (which is true if the objective
         is the limiting aperature).
-    polarization_angle : float
-        Angle of the polarization of the incoming light relative to the x-axis.
+    input_polarization: float or Quantity
+        Defines the polarization angle of the input. For simulating circularly
+        polarized light we recommend a coherent sum of two simulated fields. For
+        unpolarized light we recommend a incoherent sum of two simulated fields.
+    output_polarization: float or Quantity or None
+        If None, the output light is not polarized. Otherwise defines the angle of the
+        polarization filter after the sample. For off-axis, keep the same as input_polarization.
     """
 
     def __init__(
         self,
         radius: PropertyLike[ArrayLike[float]] = [1e-6],
         refractive_index: PropertyLike[ArrayLike[float]] = [1.45],
-        **kwargs
+        **kwargs,
     ):
         def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
             assert np.all(

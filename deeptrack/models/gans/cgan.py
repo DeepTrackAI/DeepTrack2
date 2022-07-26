@@ -8,6 +8,7 @@ layers = tf.keras.layers
 class CGAN(tf.keras.Model):
     """Creates and compiles a conditional generative adversarial
     neural network (CGAN).
+    
     Parameters
     ----------
     generator: keras model

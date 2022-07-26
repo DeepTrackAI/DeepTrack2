@@ -12,9 +12,7 @@ class ClassToken(tf.keras.layers.Layer):
         self.hidden_size = input_shape[-1]
         self.cls = tf.Variable(
             name="cls",
-            initial_value=cls_init(
-                shape=(1, 1, self.hidden_size), dtype="float32"
-            ),
+            initial_value=cls_init(shape=(1, 1, self.hidden_size), dtype="float32"),
             trainable=True,
         )
 
@@ -28,9 +26,7 @@ class ClassToken(tf.keras.layers.Layer):
 
 
 @register("ClassToken")
-def ClassTokenLayer(
-    activation=None, normalization=None, norm_kwargs={}, **kwargs
-):
+def ClassTokenLayer(activation=None, normalization=None, norm_kwargs={}, **kwargs):
     """ClassToken Layer that append a class token to the input.
 
     Can optionally perform normalization or some activation function.
@@ -62,6 +58,7 @@ def ClassTokenLayer(
 
 class LearnablePositionEmbs(tf.keras.layers.Layer):
     """Adds or concatenates positional embeddings to the inputs.
+
     Parameters
     ----------
     initializer : str or tf.keras.initializers.Initializer
@@ -165,9 +162,7 @@ class LearnableDistanceEmbedding(tf.keras.layers.Layer):
         )
 
         self.beta = tf.Variable(
-            initial_value=tf.constant_initializer(value=4)(
-                shape=(1,), dtype="float32"
-            ),
+            initial_value=tf.constant_initializer(value=4)(shape=(1,), dtype="float32"),
             name="beta",
             trainable=True,
             constraint=lambda value: tf.clip_by_value(value, 1, 10),
