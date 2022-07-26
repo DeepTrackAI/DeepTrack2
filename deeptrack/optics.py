@@ -63,12 +63,16 @@ class Microscope(StructuralFeature):
         additional_sample_kwargs = self._objective.properties()
 
         # calculate required output image for the given upscale
-        upscale = additional_sample_kwargs["upscale"]
-        if np.array(upscale).size == 1:
-            upscale = (upscale,) * 3
+        # This way of providing the upscale will be deprecated in the future
+        # in favor of dt.Upscale().
+        _upscale_given_by_optics = additional_sample_kwargs["upscale"]
+        if np.array(_upscale_given_by_optics).size == 1:
+            _upscale_given_by_optics = (_upscale_given_by_optics,) * 3
 
         with u.context(
-            create_context(*additional_sample_kwargs["voxel_size"], *upscale)
+            create_context(
+                *additional_sample_kwargs["voxel_size"], *_upscale_given_by_optics
+            )
         ):
 
             upscale = get_active_scale()
@@ -136,9 +140,11 @@ class Microscope(StructuralFeature):
 
             imaged_sample = self._objective.resolve(sample_volume)
 
-        upscale = additional_sample_kwargs["upscale"]
-        if upscale != (1, 1, 1) and upscale != 1:
-            imaged_sample = AveragePooling((*upscale[:2], 1))(imaged_sample)
+        # Upscale given by the optics needs to be handled separately.
+        if _upscale_given_by_optics != (1, 1, 1):
+            imaged_sample = AveragePooling((*_upscale_given_by_optics[:2], 1))(
+                imaged_sample
+            )
 
         # Merge with input
         if not image:
@@ -300,6 +306,7 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
 
         # Pupil radius
         R = NA / wavelength * np.array(voxel_size)[:2]
+        print(R)
 
         x_radius = R[0] * shape[0]
         y_radius = R[1] * shape[1]
@@ -520,6 +527,7 @@ class Fluorescence(Optics):
             field = np.fft.ifft2(convolved_fourier_field)
             # # Discard remaining imaginary part (should be 0 up to rounding error)
             field = np.real(field)
+            print(np.ptp(field), np.ptp(volume[:, :, i]), np.ptp(psf), np.sum(psf))
             output_image._value[:, :, 0] += field[
                 : padded_volume.shape[0], : padded_volume.shape[1]
             ]
@@ -791,10 +799,10 @@ def _get_position(image, mode="corner", return_z=False):
     if position is None:
         return position
 
-    scale = get_active_scale()
+    scale = np.array(get_active_scale())
 
     if len(position) == 3:
-        position = position * scale
+        position = position * scale + 0.5 * (scale - 1)
         if return_z:
             return position * scale - shift
         else:
@@ -806,10 +814,11 @@ def _get_position(image, mode="corner", return_z=False):
                 np.array([position[0], position[1], image.get_property("z", default=0)])
                 * scale
                 - shift
+                + 0.5 * (scale - 1)
             )
             return outp
         else:
-            return position * scale[:2] - shift[0:2]
+            return position * scale[:2] - shift[0:2] + 0.5 * (scale[:2] - 1)
 
     return position
 
@@ -834,12 +843,18 @@ def _create_volume(
     OR[2] = np.inf if output_region[2] is None else int(output_region[2] + pad[2])
     OR[3] = -np.inf if output_region[3] is None else int(output_region[3] + pad[3])
 
+    scale = np.array(get_active_scale())
+
+    # This accounts for upscale doing AveragePool instead of SumPool. This is
+    # a bit of a hack, but it works for now.
+    fudge_factor = scale[0] * scale[1] / scale[2]
+
     for scatterer in list_of_scatterers:
 
         position = _get_position(scatterer, mode="corner", return_z=True)
 
         if scatterer.get_property("intensity", None) is not None:
-            scatterer_value = scatterer.get_property("intensity")
+            scatterer_value = scatterer.get_property("intensity") * fudge_factor
         elif scatterer.get_property("refractive_index", None) is not None:
             scatterer_value = (
                 scatterer.get_property("refractive_index") - refractive_index_medium
