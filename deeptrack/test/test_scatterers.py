@@ -52,6 +52,84 @@ class TestScatterers(unittest.TestCase):
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
+    def test_EllipseUpscale(self):
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=2,
+        )
+        scatterer = scatterers.Ellipse(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 0.5e-6),
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (19, 39, 1))
+
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=4,
+        )
+        scatterer = scatterers.Ellipse(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 0.5e-6),
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (39, 79, 1))
+
+    def test_EllipseUpscaleAsymmetric(self):
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=(2, 1, 1),
+        )
+        scatterer = scatterers.Ellipse(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 1e-6),
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (39, 19, 1))
+
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=(1, 2, 1),
+        )
+        scatterer = scatterers.Ellipse(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 1e-6),
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (19, 39, 1))
+
     def test_Sphere(self):
         optics = Fluorescence(
             NA=0.7,
@@ -71,6 +149,27 @@ class TestScatterers(unittest.TestCase):
         output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
+
+    def test_SphereUpscale(self):
+
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=2,
+        )
+        scatterer = scatterers.Sphere(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=1e-6,
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (40, 40, 40))
 
     def test_Ellipsoid(self):
         optics = Fluorescence(
@@ -92,6 +191,88 @@ class TestScatterers(unittest.TestCase):
         output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
+
+    def test_EllipsoidUpscale(self):
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=2,
+        )
+        scatterer = scatterers.Ellipsoid(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 0.5e-6, 0.25e-6),
+            # rotation=(np.pi / 4, 0, 0),
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (19, 39, 9))
+
+    def test_EllipsoidUpscaleAsymmetric(self):
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=(4, 2, 2),
+        )
+        scatterer = scatterers.Ellipsoid(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 0.5e-6, 0.25e-6),
+            # rotation=(np.pi / 4, 0, 0),
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (39, 39, 9))
+
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=(2, 4, 2),
+        )
+        scatterer = scatterers.Ellipsoid(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 0.5e-6, 0.25e-6),
+            # rotation=(np.pi / 4, 0, 0),
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (19, 79, 9))
+
+        optics = Fluorescence(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            output_region=(0, 0, 64, 64),
+            upscale=(2, 2, 4),
+        )
+        scatterer = scatterers.Ellipsoid(
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
+            radius=(1e-6, 0.5e-6, 0.25e-6),
+            # rotation=(np.pi / 4, 0, 0),
+        )
+        imaged_scatterer = optics(scatterer)
+        imaged_scatterer.resolve()
+        scatterer_volume = scatterer()
+        self.assertEqual(scatterer_volume.shape, (19, 39, 19))
 
     def test_MieSphere(self):
         optics_1 = Brightfield(
