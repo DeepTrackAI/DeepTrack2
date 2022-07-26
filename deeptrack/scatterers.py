@@ -94,7 +94,8 @@ class Scatterer(Feature):
         pixel_size=None,
         **kwargs,
     ):
-        if upsample is not 1:
+        # Ignore warning to help with comparison with arrays.
+        if upsample is not 1:  # noqa: F632
             warnings.warn(
                 f"Setting upsample != 1 is deprecated. Please, instead use dt.Upscale(f, factor={upsample})"
             )
