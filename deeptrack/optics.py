@@ -388,7 +388,7 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
 
         for i in range(2):
             new_limits[i, :] = (
-                np.min([new_limits[i, 0], output_region[i] - padding[1]]),
+                np.min([new_limits[i, 0], output_region[i] - padding[i]]),
                 np.max(
                     [
                         new_limits[i, 1],
@@ -462,6 +462,7 @@ class Fluorescence(Optics):
         output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
 
         # Calculate the how much to crop from the volume
+        print(output_region, limits, pad)
         output_region[0] = (
             None
             if output_region[0] is None
@@ -482,6 +483,7 @@ class Fluorescence(Optics):
             if output_region[3] is None
             else int(output_region[3] - limits[1, 0] + pad[3])
         )
+
         padded_volume = padded_volume[
             output_region[0] : output_region[2],
             output_region[1] : output_region[3],
@@ -527,7 +529,6 @@ class Fluorescence(Optics):
             field = np.fft.ifft2(convolved_fourier_field)
             # # Discard remaining imaginary part (should be 0 up to rounding error)
             field = np.real(field)
-            print(np.ptp(field), np.ptp(volume[:, :, i]), np.ptp(psf), np.sum(psf))
             output_image._value[:, :, 0] += field[
                 : padded_volume.shape[0], : padded_volume.shape[1]
             ]
