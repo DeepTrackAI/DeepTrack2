@@ -274,7 +274,7 @@ class Ellipse(Scatterer):
         # Create a grid to calculate on
         rad = radius[:2] / voxel_size[:2]
         ceil = int(np.max(np.ceil(rad)))
-        X, Y = np.meshgrid(np.arange(-ceil, ceil), np.arange(-ceil, ceil))
+        Y, X = np.meshgrid(np.arange(-ceil, ceil), np.arange(-ceil, ceil))
 
         # Rotate the grid
         if rotation != 0:
