@@ -575,10 +575,12 @@ class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
         self.filters = filters
         self.projection_dim = filters // self.number_of_heads
 
-        self.query_dense = layers.Dense(filters)
-        self.key_dense = layers.Dense(filters)
-        self.value_dense = layers.Dense(filters)
-        self.gate_dense = layers.Dense(filters, activation="sigmoid")
+        self.query_dense = layers.Dense(filters, use_bias=self.use_bias)
+        self.key_dense = layers.Dense(filters, use_bias=self.use_bias)
+        self.value_dense = layers.Dense(filters, use_bias=self.use_bias)
+        self.gate_dense = layers.Dense(
+            filters, use_bias=self.use_bias, activation="sigmoid"
+        )
 
         self.combine_dense = layers.Dense(filters)
 
