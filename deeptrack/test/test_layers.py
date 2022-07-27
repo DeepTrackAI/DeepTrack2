@@ -168,6 +168,11 @@ class TestModels(unittest.TestCase):
         model = makeMinimalModel(block(1), shape=(100, 96))
         self.assertEqual(model.layers[1].filters, 96)
 
+    def test_Multi_Head_Gated_Attention_bias(self):
+        block = layers.MultiHeadGatedSelfAttentionLayer(use_bias=False)
+        model = makeMinimalModel(block(1), shape=(100, 96))
+        self.assertFalse(model.layers[1].gate_dense.use_bias)
+
     def test_FGNN_layer(self):
         block = layers.FGNNlayer()
         model = makeMinimalModel(
