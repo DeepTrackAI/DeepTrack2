@@ -622,7 +622,6 @@ class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
 def MultiHeadSelfAttentionLayer(
     number_of_heads=12,
     use_bias=True,
-    return_attention_weights=False,
     activation="relu",
     normalization="LayerNormalization",
     norm_kwargs={},
@@ -640,8 +639,6 @@ def MultiHeadSelfAttentionLayer(
         Number of attention heads.
     use_bias : bool
         Whether to use bias in the dense layers.
-    return_attention_weights : bool
-        Whether to return attention weights for visualization.
     clip_scores_by_value: tuple of float
         Clipping values for attention scores.
     activation : str or activation function or layer
@@ -657,7 +654,10 @@ def MultiHeadSelfAttentionLayer(
     def Layer(filters, **kwargs_inner):
         kwargs_inner.update(kwargs)
         layer = MultiHeadSelfAttention(
-            number_of_heads, use_bias, return_attention_weights, **kwargs_inner
+            number_of_heads,
+            use_bias,
+            return_attention_weights=False,
+            **kwargs_inner,
         )
         return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
@@ -670,7 +670,6 @@ def MultiHeadSelfAttentionLayer(
 def MultiHeadGatedSelfAttentionLayer(
     number_of_heads=12,
     use_bias=True,
-    return_attention_weights=False,
     activation="relu",
     normalization="LayerNormalization",
     norm_kwargs={},
@@ -688,8 +687,6 @@ def MultiHeadGatedSelfAttentionLayer(
         Number of attention heads.
     use_bias : bool
         Whether to use bias in the dense layers.
-    return_attention_weights : bool
-        Whether to return attention weights for visualization.
     clip_scores_by_value: tuple of float
         Clipping values for attention scores.
     activation : str or activation function or layer
@@ -705,7 +702,10 @@ def MultiHeadGatedSelfAttentionLayer(
     def Layer(filters, **kwargs_inner):
         kwargs_inner.update(kwargs)
         layer = MultiHeadGatedSelfAttention(
-            number_of_heads, use_bias, return_attention_weights, **kwargs_inner
+            number_of_heads,
+            use_bias,
+            return_attention_weights=False,
+            **kwargs_inner,
         )
         return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
