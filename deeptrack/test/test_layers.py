@@ -115,6 +115,49 @@ class TestModels(unittest.TestCase):
         model = makeMinimalModel(block(1), shape=(100, 96))
         self.assertEqual(model.layers[1].filters, 96)
 
+    def test_Multi_Head_Masked_Attention(self):
+        model = layers.MultiHeadSelfAttention(return_attention_weights=True)
+        edges = tf.constant(
+            [
+                [
+                    [0, 1],
+                    [0, 5],
+                    [1, 2],
+                    [1, 3],
+                    [1, 4],
+                    [2, 3],
+                    [2, 4],
+                    [3, 4],
+                    [4, 5],
+                    [5, 6],
+                    [5, 7],
+                    [6, 7],
+                    [7, 8],
+                    [8, 9],
+                    [9, 1],
+                    [9, 3],
+                ]
+            ]
+        )
+        *_, attention_weights = model(
+            tf.random.uniform((1, 10, 96)),
+            edges=edges,
+        )
+        number_of_heads = model.number_of_heads
+        head_dims = tf.repeat(
+            tf.range(number_of_heads)[tf.newaxis], edges.shape[1], axis=1
+        )
+        edges = tf.tile(edges, multiples=[1, number_of_heads, 1])
+        ind = tf.concat(
+            [
+                tf.zeros_like(tf.expand_dims(head_dims, -1)),
+                tf.expand_dims(head_dims, -1),
+                edges,
+            ],
+            axis=-1,
+        )
+        self.assertTrue(np.all(tf.where(attention_weights).numpy() == ind))
+
     def test_Multi_Head_Gated_Attention(self):
         block = layers.MultiHeadGatedSelfAttentionLayer()
         model = makeMinimalModel(block(1), shape=(100, 96))
