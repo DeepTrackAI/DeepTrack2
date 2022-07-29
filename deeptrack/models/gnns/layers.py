@@ -146,7 +146,6 @@ class MPN(tf.keras.layers.Layer):
 
 @register("MPN")
 def MPNLayer(
-    filters,
     activation=GELU,
     normalization="LayerNormalization",
     norm_kwargs={},
@@ -227,7 +226,6 @@ class GRUMPN(MPN):
 
 @register("GRUMPN")
 def GRUMPNLayer(
-    filters,
     activation=GELU,
     normalization="LayerNormalization",
     norm_kwargs={},
