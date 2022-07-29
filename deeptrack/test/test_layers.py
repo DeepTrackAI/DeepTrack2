@@ -173,6 +173,23 @@ class TestModels(unittest.TestCase):
         model = makeMinimalModel(block(1), shape=(100, 96))
         self.assertFalse(model.layers[1].gate_dense.use_bias)
 
+    def test_Transformer_Encoder(self):
+        block = layers.TransformerEncoderLayer()
+        model = makeMinimalModel(block(300), shape=(50, 300))
+        self.assertTrue(model.layers[-1], layers.TransformerEncoder)
+
+    def test_Tranformer_Encoder_parameters(self):
+        block = layers.TransformerEncoderLayer(number_of_heads=6)
+        model = makeMinimalModel(block(300), shape=(50, 300))
+        self.assertEqual(model.layers[-1].MultiHeadAttLayer.number_of_heads, 6)
+
+    def test_Transformer_Encoder_bias(self):
+        block = layers.TransformerEncoderLayer(use_bias=True)
+        model = makeMinimalModel(block(300), shape=(50, 300))
+        self.assertTrue(
+            model.layers[-1].MultiHeadAttLayer.key_dense.use_bias, True
+        )
+
     def test_FGNN_layer(self):
         block = layers.FGNNlayer()
         model = makeMinimalModel(
@@ -186,6 +203,22 @@ class TestModels(unittest.TestCase):
             ),
         )
         self.assertTrue(model.layers[-1], layers.FGNN)
+
+    def test_FGNN_layer_combine_layer(self):
+        block = layers.FGNNlayer(
+            combine_layer=tf.keras.layers.Lambda(lambda x: tf.math.add(*x))
+        )
+        model = makeMinimalModel(
+            block(96),
+            input_layer=(
+                k_layers.Input(shape=(None, 96)),
+                k_layers.Input(shape=(None, 10)),
+                k_layers.Input(shape=(None, 2), dtype=tf.int32),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2)),
+            ),
+        )
+        self.assertEqual(model.layers[-1].combine_layer([0.5, 0.5]), 1)
 
     def test_Class_Token_FGNN_layer(self):
         block = layers.ClassTokenFGNNlayer()
@@ -215,9 +248,7 @@ class TestModels(unittest.TestCase):
                 k_layers.Input(shape=(None, 2)),
             ),
         )
-        self.assertEqual(
-            model.layers[-1].update_layer.layers[0].number_of_heads, 6
-        )
+        self.assertEqual(model.layers[-1].update_layer.number_of_heads, 6)
 
     def test_Class_Token_FGNN_normalization(self):
         # By setting center=False, scale=False, the number of trainable parameters should be 0
@@ -235,25 +266,33 @@ class TestModels(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            model.layers[-1].update_layer.layers[-1].count_params(), 0
+            model.layers[-1].update_norm.layers[-1].count_params(), 0
         )
 
-    def test_Transformer_Encoder(self):
-        block = layers.TransformerEncoderLayer()
-        model = makeMinimalModel(block(300), shape=(50, 300))
-        self.assertTrue(model.layers[-1], layers.TransformerEncoder)
-
-    def test_Tranformer_Encoder_parameters(self):
-        block = layers.TransformerEncoderLayer(number_of_heads=6)
-        model = makeMinimalModel(block(300), shape=(50, 300))
-        self.assertEqual(model.layers[-1].MultiHeadAttLayer.number_of_heads, 6)
-
-    def test_Transformer_Encoder_bias(self):
-        block = layers.TransformerEncoderLayer(use_bias=True)
-        model = makeMinimalModel(block(300), shape=(50, 300))
-        self.assertTrue(
-            model.layers[-1].MultiHeadAttLayer.key_dense.use_bias, True
+    def test_Masked_FGNN_layer(self):
+        block = layers.MaskedFGNNlayer()
+        model = makeMinimalModel(
+            block(96),
+            input_layer=(
+                k_layers.Input(shape=(None, 96)),
+                k_layers.Input(shape=(None, 10)),
+                k_layers.Input(shape=(None, 2), dtype=tf.int32),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2)),
+            ),
         )
+        self.assertTrue(model.layers[-1], layers.MaskedFGNN)
+
+    def test_GraphTransformer(self):
+        block = layers.GraphTransformerLayer()
+        model = makeMinimalModel(
+            block(96),
+            input_layer=(
+                k_layers.Input(shape=(None, 96)),
+                k_layers.Input(shape=(None, 2), dtype=tf.int32),
+            ),
+        )
+        self.assertTrue(model.layers[-1], layers.GraphTransformer)
 
 
 if __name__ == "__main__":
