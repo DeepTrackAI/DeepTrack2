@@ -140,7 +140,7 @@ class TestModels(unittest.TestCase):
             ),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
-        model.predict(graph)
+        model(graph)
 
     def test_CTMAGIK(self):
         model = models.CTMAGIK(
@@ -170,7 +170,7 @@ class TestModels(unittest.TestCase):
             ),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
-        prediction = model.predict(graph)
+        prediction = model(graph)
 
         self.assertEqual(prediction.shape, (8, 1))
 
@@ -204,7 +204,7 @@ class TestModels(unittest.TestCase):
             ),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
-        model.predict(graph)
+        model(graph)
 
     def test_MPGNN(self):
         model = models.MPNGNN(
@@ -234,7 +234,7 @@ class TestModels(unittest.TestCase):
             ),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
-        model.predict(graph)
+        model(graph)
 
     def test_MPGNN_readout(self):
         model = models.MPNGNN(
@@ -268,7 +268,7 @@ class TestModels(unittest.TestCase):
             ),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
-        prediction = model.predict(graph)
+        prediction = model(graph)
 
         self.assertEqual(prediction.shape, (8, 1))
 
@@ -301,7 +301,7 @@ class TestModels(unittest.TestCase):
             ),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
-        model.predict(graph)
+        model(graph)
 
 
 if __name__ == "__main__":
