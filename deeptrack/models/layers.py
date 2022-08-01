@@ -43,7 +43,9 @@ def as_block(x):
                 + ", ".join(BLOCKS.keys())
             )
     if isinstance(x, layers.Layer) or not callable(x):
-        raise TypeError("Layer block should be a function that returns a keras Layer.")
+        raise TypeError(
+            "Layer block should be a function that returns a keras Layer."
+        )
     else:
         return x
 
@@ -97,7 +99,9 @@ def ConvolutionalBlock(
 
 
 @register("dense")
-def DenseBlock(activation="relu", normalization=False, norm_kwargs={}, **kwargs):
+def DenseBlock(
+    activation="relu", normalization=False, norm_kwargs={}, **kwargs
+):
     """A single dense layer.
 
     Accepts arguments of keras.layers.Dense.
@@ -159,7 +163,10 @@ def PoolingBlock(
     def Layer(filters=None, **kwargs_inner):
         kwargs_inner.update(kwargs)
         layer = layers.MaxPool2D(
-            pool_size=pool_size, padding=padding, strides=strides, **kwargs_inner
+            pool_size=pool_size,
+            padding=padding,
+            strides=strides,
+            **kwargs_inner,
         )
         return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
@@ -318,7 +325,9 @@ def ResidualBlock(
         )
 
         def call(x):
-            y = single_layer_call(x, conv, activation, normalization, norm_kwargs)
+            y = single_layer_call(
+                x, conv, activation, normalization, norm_kwargs
+            )
             y = single_layer_call(y, conv2, None, normalization, norm_kwargs)
             y = layers.Add()([identity(x), y])
             if activation:
@@ -362,7 +371,6 @@ def Identity(activation=None, normalization=False, norm_kwargs={}, **kwargs):
 
 class MultiHeadSelfAttention(layers.Layer):
     """Multi-head self-attention layer.
-
     Parameters
     ----------
     number_of_heads : int
@@ -371,6 +379,8 @@ class MultiHeadSelfAttention(layers.Layer):
         Whether to use bias in attention layer.
     return_attention_weights : bool
         Whether to return the attention weights for visualization.
+    clip_scores_by_value: tuple of float (Optional)
+        Clipping values for attention scores.
     kwargs
         Other arguments for the keras.layers.Layer
     """
@@ -380,12 +390,14 @@ class MultiHeadSelfAttention(layers.Layer):
         number_of_heads=12,
         use_bias=True,
         return_attention_weights=False,
+        clip_scores_by_value: tuple = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.number_of_heads = number_of_heads
         self.use_bias = use_bias
         self.return_attention_weights = return_attention_weights
+        self.clip_scores_by_value = clip_scores_by_value
 
     def build(self, input_shape):
         try:
@@ -406,9 +418,48 @@ class MultiHeadSelfAttention(layers.Layer):
 
         self.combine_dense = layers.Dense(filters, use_bias=self.use_bias)
 
-    def SingleAttention(self, query, key, value, gate=None, **kwargs):
-        """Single attention layer.
+    def compute_attention_mask(self, x, edges, batch_size=None, **kwargs):
+        """
+        Computes the attention mask. The mask prevents
+        attention to certain positions.
+        Parameters
+        ----------
+        edges : tf.Tensor
+            The edges of the graph.
+        Returns
+        -------
+        tf.Tensor
+            The attention mask.
+        """
+        number_of_edges = tf.shape(edges)[1]
 
+        batch_dims = tf.range(batch_size)
+        batch_dims = tf.repeat(batch_dims, number_of_edges)
+        batch_dims = tf.reshape(
+            batch_dims, shape=(batch_size, number_of_edges, 1)
+        )
+        indices = tf.concat(
+            [batch_dims, tf.zeros_like(batch_dims), edges], axis=-1
+        )
+
+        mask = tf.tensor_scatter_nd_update(
+            x, indices, tf.ones((batch_size, number_of_edges))
+        )
+        return -10e9 * (1.0 - mask)
+
+    def softmax(self, x, axis=-1):
+        exp = tf.exp(x - tf.reduce_max(x, axis=axis, keepdims=True))
+
+        if self.clip_scores_by_value:
+            exp = tf.clip_by_value(exp, *self.clip_scores_by_value)
+
+        return tf.math.divide(exp, tf.reduce_sum(exp, axis=-1, keepdims=True))
+
+    def SingleAttention(
+        self, query, key, value, gate=None, edges=None, **kwargs
+    ):
+        """
+        Single attention layer.
         Parameters
         ----------
         query : tf.Tensor
@@ -424,7 +475,14 @@ class MultiHeadSelfAttention(layers.Layer):
         dim_key = tf.cast(tf.shape(key)[-1], score.dtype)
         scaled_score = score / tf.math.sqrt(dim_key)
 
-        weights = tf.nn.softmax(scaled_score, axis=-1)
+        if edges is not None:
+            scaled_score += self.compute_attention_mask(
+                tf.zeros_like(scaled_score[:, 0:1]),
+                edges,
+                **kwargs,
+            )
+
+        weights = self.softmax(scaled_score, axis=-1)
         output = tf.matmul(weights, value)
 
         if gate is not None:
@@ -434,7 +492,6 @@ class MultiHeadSelfAttention(layers.Layer):
 
     def separate_heads(self, x, batch_size):
         """
-
         Parameters
         ----------
         x : tf.Tensor
@@ -444,12 +501,13 @@ class MultiHeadSelfAttention(layers.Layer):
         projection_dim : int
             Projection dimension.
         """
-        x = tf.reshape(x, (batch_size, -1, self.number_of_heads, self.projection_dim))
+        x = tf.reshape(
+            x, (batch_size, -1, self.number_of_heads, self.projection_dim)
+        )
         return tf.transpose(x, perm=[0, 2, 1, 3])
 
     def compute_attention(self, x, **kwargs):
         """
-
         Parameters
         ----------
         x : tf.Tensor
@@ -472,32 +530,39 @@ class MultiHeadSelfAttention(layers.Layer):
         value = self.separate_heads(value, batch_size)
 
         return (
-            self.SingleAttention(query, key, value, **kwargs),
+            self.SingleAttention(
+                query, key, value, batch_size=batch_size, **kwargs
+            ),
             batch_size,
         )
 
     def call(self, x, **kwargs):
         """
-
         Parameters
         ----------
         x : tuple of tf.Tensors
             Input tensors.
         """
-        (attention, weights), batch_size = self.compute_attention(x, **kwargs)
+        (attention, self.att_weights), batch_size = self.compute_attention(
+            x, **kwargs
+        )
         attention = tf.transpose(attention, perm=[0, 2, 1, 3])
-        concat_attention = tf.reshape(attention, (batch_size, -1, self.filters))
+        concat_attention = tf.reshape(
+            attention, (batch_size, -1, self.filters)
+        )
         output = self.combine_dense(concat_attention)
 
         if self.return_attention_weights:
-            return output, weights
+            return output, self.att_weights
         else:
             return output
 
 
 class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
     def build(self, input_shape):
-        """Build the layer."""
+        """
+        Build the layer.
+        """
         try:
             filters = input_shape[1][-1]
         except TypeError:
@@ -510,16 +575,18 @@ class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
         self.filters = filters
         self.projection_dim = filters // self.number_of_heads
 
-        self.query_dense = layers.Dense(filters)
-        self.key_dense = layers.Dense(filters)
-        self.value_dense = layers.Dense(filters)
-        self.gate_dense = layers.Dense(filters, activation="sigmoid")
+        self.query_dense = layers.Dense(filters, use_bias=self.use_bias)
+        self.key_dense = layers.Dense(filters, use_bias=self.use_bias)
+        self.value_dense = layers.Dense(filters, use_bias=self.use_bias)
+        self.gate_dense = layers.Dense(
+            filters, use_bias=self.use_bias, activation="sigmoid"
+        )
 
         self.combine_dense = layers.Dense(filters)
 
     def compute_attention(self, x, **kwargs):
-        """Compute attention.
-
+        """
+        Compute attention.
         Parameters
         ----------
         x : tf.Tensor
@@ -544,7 +611,9 @@ class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
         gate = self.separate_heads(gate, batch_size)
 
         return (
-            self.SingleAttention(query, key, value, gate, **kwargs),
+            self.SingleAttention(
+                query, key, value, gate=gate, batch_size=batch_size, **kwargs
+            ),
             batch_size,
         )
 
@@ -553,7 +622,6 @@ class MultiHeadGatedSelfAttention(MultiHeadSelfAttention):
 def MultiHeadSelfAttentionLayer(
     number_of_heads=12,
     use_bias=True,
-    return_attention_weights=False,
     activation="relu",
     normalization="LayerNormalization",
     norm_kwargs={},
@@ -571,8 +639,8 @@ def MultiHeadSelfAttentionLayer(
         Number of attention heads.
     use_bias : bool
         Whether to use bias in the dense layers.
-    return_attention_weights : bool
-        Whether to return attention weights for visualization.
+    clip_scores_by_value: tuple of float
+        Clipping values for attention scores.
     activation : str or activation function or layer
         Activation function of the layer. See keras docs for accepted strings.
     normalization : str or normalization function or layer
@@ -586,7 +654,10 @@ def MultiHeadSelfAttentionLayer(
     def Layer(filters, **kwargs_inner):
         kwargs_inner.update(kwargs)
         layer = MultiHeadSelfAttention(
-            number_of_heads, use_bias, return_attention_weights, **kwargs_inner
+            number_of_heads,
+            use_bias,
+            return_attention_weights=False,
+            **kwargs_inner,
         )
         return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
@@ -599,7 +670,6 @@ def MultiHeadSelfAttentionLayer(
 def MultiHeadGatedSelfAttentionLayer(
     number_of_heads=12,
     use_bias=True,
-    return_attention_weights=False,
     activation="relu",
     normalization="LayerNormalization",
     norm_kwargs={},
@@ -617,8 +687,8 @@ def MultiHeadGatedSelfAttentionLayer(
         Number of attention heads.
     use_bias : bool
         Whether to use bias in the dense layers.
-    return_attention_weights : bool
-        Whether to return attention weights for visualization.
+    clip_scores_by_value: tuple of float
+        Clipping values for attention scores.
     activation : str or activation function or layer
         Activation function of the layer. See keras docs for accepted strings.
     normalization : str or normalization function or layer
@@ -632,7 +702,10 @@ def MultiHeadGatedSelfAttentionLayer(
     def Layer(filters, **kwargs_inner):
         kwargs_inner.update(kwargs)
         layer = MultiHeadGatedSelfAttention(
-            number_of_heads, use_bias, return_attention_weights, **kwargs_inner
+            number_of_heads,
+            use_bias,
+            return_attention_weights=False,
+            **kwargs_inner,
         )
         return lambda x: single_layer_call(
             x, layer, activation, normalization, norm_kwargs
@@ -691,7 +764,9 @@ class TransformerEncoder(tf.keras.layers.Layer):
         self.normalization = normalization
 
         self.MultiHeadAttLayer = (
-            MultiHeadGatedSelfAttention if self.use_gates else MultiHeadSelfAttention
+            MultiHeadGatedSelfAttention
+            if self.use_gates
+            else MultiHeadSelfAttention
         )(
             number_of_heads=self.number_of_heads,
             use_bias=self.use_bias,

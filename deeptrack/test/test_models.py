@@ -4,8 +4,10 @@ import sys
 
 import unittest
 
-from .. import models
+from .. import models, layers
 import numpy as np
+
+import tensorflow as tf
 
 
 class TestModels(unittest.TestCase):
@@ -109,6 +111,197 @@ class TestModels(unittest.TestCase):
         self.assertIsInstance(model, models.KerasModel)
 
         model.predict(np.zeros((1, 224, 224, 3)))
+
+    def test_MAGIK(self):
+        model = models.MAGIK(
+            dense_layer_dimensions=(
+                64,
+                96,
+            ),  # number of features in each dense encoder layer
+            base_layer_dimensions=(
+                96,
+                96,
+                96,
+            ),  # Latent dimension throughout the message passing layers
+            number_of_node_features=7,  # Number of node features in the graphs
+            number_of_edge_features=1,  # Number of edge features in the graphs
+            number_of_edge_outputs=1,  # Number of predicted features
+            edge_output_activation="sigmoid",  # Activation function for the output layer
+            output_type="edges",
+        )
+
+        self.assertIsInstance(model, models.KerasModel)
+
+        graph = (
+            tf.random.uniform((8, 10, 7)),  # Node features
+            tf.random.uniform((8, 50, 1)),  # Edge features
+            tf.random.uniform(
+                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
+            ),  # Edges
+            tf.random.uniform((8, 50, 2)),  # Edge dropouts
+        )
+        model(graph)
+
+    def test_CTMAGIK(self):
+        model = models.CTMAGIK(
+            dense_layer_dimensions=(
+                32,
+                64,
+                96,
+            ),  # number of features in each dense encoder layer
+            base_layer_dimensions=(
+                96,
+                96,
+            ),  # Latent dimension throughout the message passing layers
+            number_of_node_features=7,  # Number of node features in the graphs
+            number_of_edge_features=1,  # Number of edge features in the graphs
+            number_of_global_outputs=1,  # Number of predicted features
+            global_output_activation="softmax",  # Activation function for the output layer
+            output_type="global",
+        )
+
+        self.assertIsInstance(model, models.KerasModel)
+
+        graph = (
+            tf.random.uniform((8, 10, 7)),  # Node features
+            tf.random.uniform((8, 50, 1)),  # Edge features
+            tf.random.uniform(
+                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
+            ),  # Edges
+            tf.random.uniform((8, 50, 2)),  # Edge dropouts
+        )
+        prediction = model(graph)
+
+        self.assertEqual(prediction.shape, (8, 1))
+
+    def test_MAGIK_with_MaskedFGNN(self):
+        model = models.MAGIK(
+            dense_layer_dimensions=(
+                64,
+                96,
+            ),  # number of features in each dense encoder layer
+            base_layer_dimensions=(
+                96,
+                96,
+                96,
+            ),  # Latent dimension throughout the message passing layers
+            number_of_node_features=7,  # Number of node features in the graphs
+            number_of_edge_features=1,  # Number of edge features in the graphs
+            number_of_edge_outputs=1,  # Number of predicted features
+            edge_output_activation="sigmoid",  # Activation function for the output layer
+            output_type="edges",
+            graph_block="MaskedFGNN",
+        )
+
+        self.assertIsInstance(model, models.KerasModel)
+        self.assertIsInstance(model.layers[15], layers.MaskedFGNN)
+
+        graph = (
+            tf.random.uniform((8, 10, 7)),  # Node features
+            tf.random.uniform((8, 50, 1)),  # Edge features
+            tf.random.uniform(
+                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
+            ),  # Edges
+            tf.random.uniform((8, 50, 2)),  # Edge dropouts
+        )
+        model(graph)
+
+    def test_MPGNN(self):
+        model = models.MPNGNN(
+            dense_layer_dimensions=(
+                64,
+                96,
+            ),  # number of features in each dense encoder layer
+            base_layer_dimensions=(
+                96,
+                96,
+                96,
+            ),  # Latent dimension throughout the message passing layers
+            number_of_node_features=7,  # Number of node features in the graphs
+            number_of_edge_features=1,  # Number of edge features in the graphs
+            number_of_edge_outputs=1,  # Number of predicted features
+            edge_output_activation="sigmoid",  # Activation function for the output layer
+            output_type="edges",
+        )
+
+        self.assertIsInstance(model, models.KerasModel)
+
+        graph = (
+            tf.random.uniform((8, 10, 7)),  # Node features
+            tf.random.uniform((8, 50, 1)),  # Edge features
+            tf.random.uniform(
+                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
+            ),  # Edges
+            tf.random.uniform((8, 50, 2)),  # Edge dropouts
+        )
+        model(graph)
+
+    def test_MPGNN_readout(self):
+        model = models.MPNGNN(
+            dense_layer_dimensions=(
+                32,
+                64,
+                96,
+            ),  # number of features in each dense encoder layer
+            base_layer_dimensions=(
+                96,
+                96,
+            ),  # Latent dimension throughout the message passing layers
+            number_of_node_features=7,  # Number of node features in the graphs
+            number_of_edge_features=1,  # Number of edge features in the graphs
+            number_of_global_outputs=1,  # Number of predicted features
+            global_output_activation="softmax",  # Activation function for the output layer
+            output_type="global",
+            readout_block=tf.keras.layers.GlobalAveragePooling1D(),
+        )
+
+        self.assertIsInstance(model, models.KerasModel)
+        self.assertIsInstance(
+            model.layers[-4], tf.keras.layers.GlobalAveragePooling1D
+        )
+
+        graph = (
+            tf.random.uniform((8, 10, 7)),  # Node features
+            tf.random.uniform((8, 50, 1)),  # Edge features
+            tf.random.uniform(
+                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
+            ),  # Edges
+            tf.random.uniform((8, 50, 2)),  # Edge dropouts
+        )
+        prediction = model(graph)
+
+        self.assertEqual(prediction.shape, (8, 1))
+
+    def test_GRU_MPGNN(self):
+        model = models.MPNGNN(
+            dense_layer_dimensions=(
+                64,
+                96,
+            ),  # number of features in each dense encoder layer
+            base_layer_dimensions=(
+                96,
+                96,
+                96,
+            ),  # Latent dimension throughout the message passing layers
+            number_of_node_features=7,  # Number of node features in the graphs
+            number_of_edge_features=1,  # Number of edge features in the graphs
+            number_of_edge_outputs=1,  # Number of predicted features
+            edge_output_activation="sigmoid",  # Activation function for the output layer
+            output_type="edges",
+            graph_block="GRUMPN",
+        )
+
+        self.assertIsInstance(model, models.KerasModel)
+
+        graph = (
+            tf.random.uniform((8, 10, 7)),  # Node features
+            tf.random.uniform((8, 50, 1)),  # Edge features
+            tf.random.uniform(
+                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
+            ),  # Edges
+            tf.random.uniform((8, 50, 2)),  # Edge dropouts
+        )
+        model(graph)
 
 
 if __name__ == "__main__":
