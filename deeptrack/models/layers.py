@@ -847,7 +847,7 @@ def TransformerEncoderLayer(
             use_gates,
             use_bias,
             norm_kwargs,
-            **kwargs,
+            **kwargs_inner,
         )
         return lambda x: single_layer_call(x, layer, None, None, {})
 
