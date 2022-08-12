@@ -360,7 +360,55 @@ class EncoderDecoder(KerasModel):
         super().__init__(model, **kwargs)
 
 
-class ViT(KerasModel):
+class TransformerBaseModel(KerasModel):
+    def __init__(
+        self,
+        inputs,
+        encoder,
+        num_layers=12,
+        base_fwd_mlp_dimensions=3072,
+        use_learnable_positional_embs=True,
+        transformer_block="TransformerEncoder",
+        representation_size=None,
+        include_top=True,
+        output_size=1000,
+        output_activation="linear",
+        **kwargs,
+    ):
+        transformer_block = as_block(transformer_block)
+
+        layer = ClassToken(name="class_token")(encoder)
+
+        if use_learnable_positional_embs:
+            layer = LearnablePositionEmbs(name="Transformer/posembed_input")(
+                layer
+            )
+
+        for n in range(num_layers):
+            layer, _ = transformer_block(
+                base_fwd_mlp_dimensions, name=f"Transformer/encoderblock_{n}"
+            )(layer)
+        layer = layers.Lambda(lambda v: v[:, 0], name="ExtractToken")(layer)
+
+        if representation_size is not None:
+            layer = layers.Dense(
+                representation_size, name="pre_logits", activation="tanh"
+            )(layer)
+
+        if include_top:
+            self.output_layer = layers.Dense(
+                output_size, name="head", activation=output_activation
+            )(layer)
+        else:
+            self.output_layer = layer
+
+        model = models.Model(
+            inputs=inputs, outputs=self.output_layer, name="ViT"
+        )
+        super().__init__(model, **kwargs)
+
+
+class ViT(TransformerBaseModel):
     """
     Creates and compiles a ViT model.
     input_shape : tuple of ints
@@ -394,15 +442,7 @@ class ViT(KerasModel):
         self,
         input_shape=(224, 224, 3),
         patch_shape=16,
-        num_layers=12,
         hidden_size=768,
-        number_of_heads=12,
-        fwd_mlp_dim=3072,
-        dropout=0.1,
-        representation_size=None,
-        include_top=True,
-        output_size=1000,
-        output_activation="linear",
         **kwargs,
     ):
 
@@ -411,39 +451,15 @@ class ViT(KerasModel):
         ), "image_size must be a multiple of patch_size"
 
         vit_input = layers.Input(shape=input_shape)
-        layer = layers.Conv2D(
+        encoder_layer = layers.Conv2D(
             filters=hidden_size,
             kernel_size=patch_shape,
             strides=patch_shape,
             padding="valid",
             name="embedding",
         )(vit_input)
-        layer = layers.Reshape((layer.shape[1] * layer.shape[2], hidden_size))(layer)
-        layer = ClassToken(name="class_token")(layer)
-        layer = LearnablePositionEmbs(name="Transformer/posembed_input")(layer)
-        for n in range(num_layers):
-            layer, _ = TransformerEncoder(
-                number_of_heads=number_of_heads,
-                fwd_mlp_dim=fwd_mlp_dim,
-                dropout=dropout,
-                name=f"Transformer/encoderblock_{n}",
-            )(layer)
-        layer = layers.LayerNormalization(
-            epsilon=1e-6, name="Transformer/encoder_norm"
-        )(layer)
-        layer = layers.Lambda(lambda v: v[:, 0], name="ExtractToken")(layer)
+        encoder_layer = layers.Reshape(
+            (encoder_layer.shape[1] * encoder_layer.shape[2], hidden_size)
+        )(encoder_layer)
 
-        if representation_size is not None:
-            layer = layers.Dense(
-                representation_size, name="pre_logits", activation="tanh"
-            )(layer)
-
-        if include_top:
-            output_layer = layers.Dense(
-                output_size, name="head", activation=output_activation
-            )(layer)
-        else:
-            output_layer = layer
-
-        model = models.Model(inputs=vit_input, outputs=output_layer, name="ViT")
-        super().__init__(model, **kwargs)
+        super().__init__(inputs=[vit_input], encoder=encoder_layer, **kwargs)
