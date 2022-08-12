@@ -361,6 +361,36 @@ class EncoderDecoder(KerasModel):
 
 
 class TransformerBaseModel(KerasModel):
+    """Base class for Transformer models.
+
+    Parameters
+    ----------
+    inputs : list of keras.layers.Input
+        Input layers of the network.
+    encoder : tf.Tensor
+        Encoded representation of the input.
+    num_layers : int
+        Number of Transformer layers in the model.
+    base_fwd_mlp_dimensions : int
+        Size of the hidden layers in the forward MLP of the Transformer layers.
+    use_learnable_positional_embs : bool
+        Whether to use learnable positional embeddings.
+    transformer_block : str or keras.layers.Layer
+        The Transformer layer to use. By default, uses the TransformerEncoder
+        block. See .layers for available Transformer layers.
+    representation_size : int
+        Size of the representation vector of the ViT head. By default, it is
+        equal to the hidden size of the last Transformer layer.
+    include_top : bool
+        Whether to include the top layer of the ViT model.
+    output_size : int
+        Size of the output layer of the ViT model.
+    output_activation : str or keras activation
+        The activation function of the output.
+    kwargs : dict
+        Additional arguments to be passed to the KerasModel constructor.
+    """
+
     def __init__(
         self,
         inputs,
@@ -415,16 +445,17 @@ class ViT(TransformerBaseModel):
         Size of the images to be analyzed.
     patch_shape : int
         Size of the patches to be extracted from the input images.
-    num_layers : int
-        Number of Transformer layers in the ViT model.
     hidden_size : int
         Size of the hidden layers in the ViT model.
-    number_of_heads : int
-        Number of attention heads in each Transformer layer.
-    fwd_mlp_dim : int
+    num_layers : int
+        Number of Transformer layers in the model.
+    base_fwd_mlp_dimensions : int
         Size of the hidden layers in the forward MLP of the Transformer layers.
-    dropout : float
-        Dropout rate of the forward MLP in the Transformer layers.
+    use_learnable_positional_embs : bool
+        Whether to use learnable positional embeddings.
+    transformer_block : str or keras.layers.Layer
+        The Transformer layer to use. By default, uses the TransformerEncoder
+        block. See .layers for available Transformer layers.
     representation_size : int
         Size of the representation vector of the ViT head. By default, it is
         equal to the hidden size of the last Transformer layer.
