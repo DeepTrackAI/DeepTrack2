@@ -46,6 +46,7 @@ _ID = {
     "CellData": ("1CJW7msDiI7xq7oMce4l9tRkNN6O5eKtj", "CellData", ""),
     "CellMigData": ("1vRsWcxjbTz6rffCkrwOfs_ezPvUjPwGw", "CellMigData", ""),
     "BFC2Cells": ("1lHgJdG5I3vRnU_DRFwTr_c69nx1Xkd3X", "BFC2Cells", ""),
+    "STrajCh": ("1wXCSzvHuLwz1dywxUu2aQXlqbgf2V8r3", "STrajCh", "")
 }
 
 
