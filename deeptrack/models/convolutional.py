@@ -1,9 +1,9 @@
 from tensorflow.keras import layers, models
 
 from ..backend.citations import unet_bibtex
-from .layers import as_block, TransformerEncoder
+from .layers import as_block, TransformerEncoderLayer, DenseBlock, Identity
 from .embeddings import ClassToken, LearnablePositionEmbs
-from .utils import KerasModel, as_KerasModel, with_citation
+from .utils import KerasModel, as_KerasModel, with_citation, GELU
 
 
 def center_crop(layer, target_layer):
@@ -369,24 +369,39 @@ class TransformerBaseModel(KerasModel):
         Input layers of the network.
     encoder : tf.Tensor
         Encoded representation of the input.
-    num_layers : int
+    number_of_transformer_layers : int
         Number of Transformer layers in the model.
     base_fwd_mlp_dimensions : int
         Size of the hidden layers in the forward MLP of the Transformer layers.
-    use_learnable_positional_embs : bool
-        Whether to use learnable positional embeddings.
     transformer_block : str or keras.layers.Layer
         The Transformer layer to use. By default, uses the TransformerEncoder
         block. See .layers for available Transformer layers.
-    representation_size : int
-        Size of the representation vector of the ViT head. By default, it is
-        equal to the hidden size of the last Transformer layer.
-    include_top : bool
-        Whether to include the top layer of the ViT model.
-    output_size : int
-        Size of the output layer of the ViT model.
-    output_activation : str or keras activation
-        The activation function of the output.
+    cls_layer_dimensions : int, optional
+        Size of the ClassToken layer. If None, no ClassToken layer is added.
+    node_decoder_layer_dimensions: list of ints
+        List of the number of units in each dense layer of the nodes' decoder. The
+        number of layers is inferred from the length of this list.
+    number_of_cls_outputs: int
+        Number of output cls features.
+    number_of_nodes_outputs: int
+        Number of output nodes features.
+    cls_output_activation: str or activation function or layer
+        Activation function for the output cls layer. See keras docs for accepted strings.
+    node_output_activation: str or activation function or layer
+        Activation function for the output node layer. See keras docs for accepted strings.
+    transformer_block: str, keras.layers.Layer, or callable
+        The transformer layer. See .layers for available transformer blocks.
+    dense_block: str, keras.layers.Layer, or callable
+        The dense block to use for the nodes' decoder.
+    cls_norm_block: str, keras.layers.Layer, or callable
+        The normalization block to use for the cls layer.
+    use_learnable_positional_embs : bool
+        Whether to use learnable positional embeddings.
+    output_type: str
+        Type of output. Either "cls", "cls_rep", "nodes" or
+        "full". If 'key' is not a supported output type, then
+        the model output will be the concatenation of the node
+        and cls predictions ("full").
     kwargs : dict
         Additional arguments to be passed to the KerasModel constructor.
     """
@@ -395,17 +410,35 @@ class TransformerBaseModel(KerasModel):
         self,
         inputs,
         encoder,
-        num_layers=12,
-        base_fwd_mlp_dimensions=3072,
-        use_learnable_positional_embs=True,
-        transformer_block="TransformerEncoder",
-        representation_size=None,
-        include_top=True,
-        output_size=1000,
-        output_activation="linear",
+        number_of_transformer_layers=12,
+        base_fwd_mlp_dimensions=256,
+        cls_layer_dimension=None,
+        node_decoder_layer_dimensions=(64, 32),
+        number_of_cls_outputs=1,
+        number_of_node_outputs=1,
+        cls_output_activation="linear",
+        node_output_activation="linear",
+        transformer_block=TransformerEncoderLayer(
+            normalization="LayerNormalization",
+            dropout=0.1,
+            norm_kwargs={"epsilon": 1e-6},
+        ),
+        dense_block=DenseBlock(
+            activation=GELU,
+            normalization="LayerNormalization",
+            norm_kwargs={"epsilon": 1e-6},
+        ),
+        cls_norm_block=Identity(
+            normalization="LayerNormalization",
+            norm_kwargs={"epsilon": 1e-6},
+        ),
+        use_learnable_positional_embs=False,
+        output_type="full",
         **kwargs,
     ):
         transformer_block = as_block(transformer_block)
+        dense_block = as_block(dense_block)
+        cls_norm_block = as_block(cls_norm_block)
 
         layer = ClassToken(name="class_token")(encoder)
 
@@ -414,27 +447,61 @@ class TransformerBaseModel(KerasModel):
                 layer
             )
 
-        for n in range(num_layers):
+        # Bottleneck path, Transformer layers
+        for n in range(number_of_transformer_layers):
             layer, _ = transformer_block(
                 base_fwd_mlp_dimensions, name=f"Transformer/encoderblock_{n}"
             )(layer)
-        layer = layers.Lambda(lambda v: v[:, 0], name="ExtractToken")(layer)
 
-        if representation_size is not None:
-            layer = layers.Dense(
-                representation_size, name="pre_logits", activation="tanh"
-            )(layer)
-
-        if include_top:
-            self.output_layer = layers.Dense(
-                output_size, name="head", activation=output_activation
-            )(layer)
-        else:
-            self.output_layer = layer
-
-        model = models.Model(
-            inputs=inputs, outputs=self.output_layer, name="ViT"
+        # Split node and global features
+        cls_rep, node_layer = (
+            layers.Lambda(lambda x: x[:, 0], name="RetrieveClassToken")(layer),
+            layer[:, 1:],
         )
+
+        # Process cls features
+        cls_layer = cls_norm_block("cls_norm")(cls_rep)
+        if cls_layer_dimension is not None:
+            cls_layer = dense_block(
+                cls_layer_dimension, name="cls_mlp", **kwargs
+            )(cls_layer)
+
+        # Decode node features
+        for dense_layer_number, dense_layer_dimension in enumerate(
+            node_decoder_layer_dimensions
+        ):
+            node_layer = dense_block(
+                dense_layer_dimension,
+                name=f"nodes/decoderblock_{dense_layer_number}",
+                **kwargs,
+            )(node_layer)
+
+        # Output layers
+        node_output = layers.Dense(
+            number_of_node_outputs,
+            activation=node_output_activation,
+            name="node_prediction",
+        )(node_layer)
+
+        cls_output = layers.Dense(
+            number_of_cls_outputs,
+            activation=cls_output_activation,
+            name="cls_prediction",
+        )(cls_layer)
+
+        output_dict = {
+            "nodes": node_output,
+            "cls": cls_output,
+            "cls_rep": cls_rep,
+            "full": [node_output, cls_output],
+        }
+        try:
+            outputs = output_dict[output_type]
+        except KeyError:
+            outputs = output_dict["full"]
+
+        model = models.Model(inputs=inputs, outputs=outputs)
+
         super().__init__(model, **kwargs)
 
 
@@ -447,33 +514,40 @@ class ViT(TransformerBaseModel):
         Size of the patches to be extracted from the input images.
     hidden_size : int
         Size of the hidden layers in the ViT model.
-    num_layers : int
+    number_of_transformer_layers : int
         Number of Transformer layers in the model.
     base_fwd_mlp_dimensions : int
         Size of the hidden layers in the forward MLP of the Transformer layers.
-    use_learnable_positional_embs : bool
-        Whether to use learnable positional embeddings.
     transformer_block : str or keras.layers.Layer
         The Transformer layer to use. By default, uses the TransformerEncoder
         block. See .layers for available Transformer layers.
-    representation_size : int
-        Size of the representation vector of the ViT head. By default, it is
-        equal to the hidden size of the last Transformer layer.
-    include_top : bool
-        Whether to include the top layer of the ViT model.
-    output_size : int
-        Size of the output layer of the ViT model.
-    output_activation : str or keras activation
-        The activation function of the output.
+    number_of_cls_outputs: int
+        Number of output cls features.
+    cls_output_activation: str or activation function or layer
+        Activation function for the output cls layer. See keras docs for accepted strings.
+    use_learnable_positional_embs : bool
+        Whether to use learnable positional embeddings.
+    output_type: str
+        Type of output. Either "cls", "cls_rep", "nodes" or
+        "full". If 'key' is not a supported output type, then
+        the model output will be the concatenation of the node
+        and cls predictions ("full").
     kwargs : dict
-        Additional arguments to be passed to the KerasModel constructor.
+        Additional arguments to be passed to the TransformerBaseModel contructor
+        for advanced configuration.
     """
 
     def __init__(
         self,
-        input_shape=(224, 224, 3),
-        patch_shape=16,
-        hidden_size=768,
+        input_shape=(28, 28, 1),
+        patch_shape=4,
+        hidden_size=72,
+        number_of_transformer_layers=4,
+        base_fwd_mlp_dimensions=256,
+        number_of_cls_outputs=10,
+        cls_output_activation="linear",
+        use_learnable_positional_embs=True,
+        output_type="cls",
         **kwargs,
     ):
 
@@ -493,4 +567,14 @@ class ViT(TransformerBaseModel):
             (encoder_layer.shape[1] * encoder_layer.shape[2], hidden_size)
         )(encoder_layer)
 
-        super().__init__(inputs=[vit_input], encoder=encoder_layer, **kwargs)
+        super().__init__(
+            inputs=vit_input,
+            encoder=encoder_layer,
+            number_of_transformer_layers=number_of_transformer_layers,
+            base_fwd_mlp_dimensions=base_fwd_mlp_dimensions,
+            number_of_cls_outputs=number_of_cls_outputs,
+            cls_output_activation=cls_output_activation,
+            use_learnable_positional_embs=use_learnable_positional_embs,
+            output_type=output_type,
+            **kwargs,
+        )
