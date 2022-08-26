@@ -706,7 +706,15 @@ class Brightfield(Optics):
                 **kwargs,
             )[0]
 
-            propagation_matrix = propagation_matrix
+            propagation_matrix = propagation_matrix * np.exp(
+                1j
+                * voxel_size[-1]
+                * 2
+                * np.pi
+                / kwargs["wavelength"]
+                * kwargs["refractive_index_medium"]
+                * (z - fz)
+            )
 
             pf = np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(propagation_matrix)
             light_in += pf
