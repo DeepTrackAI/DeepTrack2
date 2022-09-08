@@ -445,6 +445,7 @@ class MultiHeadSelfAttention(layers.Layer):
         mask = tf.tensor_scatter_nd_update(
             x, indices, tf.ones((batch_size, number_of_edges))
         )
+
         return -10e9 * (1.0 - mask)
 
     def softmax(self, x, axis=-1):
@@ -794,8 +795,8 @@ class TransformerEncoder(tf.keras.layers.Layer):
             name="feed_forward",
         )
 
-    def call(self, inputs, training):
-        x, weights = self.MultiHeadAttLayer(inputs)
+    def call(self, inputs, training, edges=None, **kwargs):
+        x, weights = self.MultiHeadAttLayer(inputs, edges=edges)
         x = self.dropout_layer(x, training=training)
         x = self.norm_0(inputs + x)
 
@@ -849,6 +850,8 @@ def TransformerEncoderLayer(
             norm_kwargs,
             **kwargs_inner,
         )
-        return lambda x: single_layer_call(x, layer, None, None, {})
+        return lambda x, **kwargs: single_layer_call(
+            x, layer, None, None, {}, **kwargs
+        )
 
     return Layer
