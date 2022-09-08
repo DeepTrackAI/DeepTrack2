@@ -592,7 +592,7 @@ class MieScatterer(Scatterer):
                 )
                 / 2
                 * min(properties["voxel_size"][:2])
-                / np.sin(properties["collection_angle"])
+                / np.tan(properties["collection_angle"])
             )
         return properties
 
@@ -611,6 +611,7 @@ class MieScatterer(Scatterer):
         input_polarization,
         output_polarization,
         coefficients,
+        z,
         **kwargs,
     ):
 
@@ -686,7 +687,7 @@ class MieScatterer(Scatterer):
             (ct > ct_max)
             * 1j
             / (k * R3)
-            * np.exp(1j * k * (R3 - offset_z))
+            * np.exp(1j * k * R3)
             * (S2 * S2_coef + S1 * S1_coef)
         )
 

@@ -75,7 +75,7 @@ class Microscope(StructuralFeature):
             )
         ):
 
-            upscale = get_active_scale()
+            upscale = np.round(get_active_scale())
 
             output_region = additional_sample_kwargs.pop("output_region")
             additional_sample_kwargs["output_region"] = [
@@ -328,6 +328,8 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
             copy=False,
         )
 
+        z_shift._value[z_shift._value.imag != 0] = 0
+
         try:
             z_shift = np.nan_to_num(z_shift, False, 0, 0, 0)
         except TypeError:
@@ -406,7 +408,6 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
             old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
             old_region[2, 0] : old_region[2, 0] + limits[2, 1] - limits[2, 0],
         ] = volume
-
         return new_volume, new_limits
 
     def __call__(self, sample, **kwargs):
@@ -705,9 +706,15 @@ class Brightfield(Optics):
                 **kwargs,
             )[0]
 
-            propagation_matrix = propagation_matrix
-
-            import matplotlib.pyplot as plt
+            propagation_matrix = propagation_matrix * np.exp(
+                1j
+                * voxel_size[-1]
+                * 2
+                * np.pi
+                / kwargs["wavelength"]
+                * kwargs["refractive_index_medium"]
+                * (z - fz)
+            )
 
             pf = np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(propagation_matrix)
             light_in += pf
