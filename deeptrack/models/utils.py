@@ -115,7 +115,7 @@ def as_normalization(x):
 
 
 def single_layer_call(
-    x, layer, activation, normalization, norm_kwargs, activation_first=True
+    x, layer, activation, normalization, norm_kwargs, activation_first=True, **kwargs
 ):
     """Calls a layer with activation and normalization."""
     assert isinstance(norm_kwargs, dict), "norm_kwargs must be a dict. Got {0}".format(
@@ -128,9 +128,10 @@ def single_layer_call(
         else x
     )
     a = lambda x: as_activation(activation)(x) if activation else x
-    fs = [layer, a, n] if activation_first else [layer, n, a]
+    fs = [(layer, kwargs)]
+    fs = fs + [(a, {}), (n, {})] if activation_first else fs + [(n, {}), (a, {})]
 
-    return reduce(lambda x, f: f(x), fs, x)
+    return reduce(lambda x, f: f[0](x, **f[1]), fs, x)
 
 
 def with_citation(citation):
