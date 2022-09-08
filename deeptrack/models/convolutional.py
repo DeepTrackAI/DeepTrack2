@@ -2,7 +2,7 @@ from tensorflow.keras import layers, models
 
 from ..backend.citations import unet_bibtex
 from .layers import as_block, TransformerEncoderLayer, DenseBlock, Identity
-from .embeddings import ClassToken, LearnablePositionEmbs
+from .embeddings import ClassToken, LearnablePositionEmbsLayer
 from .utils import KerasModel, as_KerasModel, with_citation, GELU
 
 
@@ -360,8 +360,8 @@ class EncoderDecoder(KerasModel):
         super().__init__(model, **kwargs)
 
 
-class TransformerBaseModel(KerasModel):
-    """Base class for Transformer models.
+class ClsTransformerBaseModel(KerasModel):
+    """Base class for Transformer models with classification heads.
 
     Parameters
     ----------
@@ -413,11 +413,8 @@ class TransformerBaseModel(KerasModel):
         number_of_transformer_layers=12,
         base_fwd_mlp_dimensions=256,
         cls_layer_dimension=None,
-        node_decoder_layer_dimensions=(64, 32),
         number_of_cls_outputs=1,
-        number_of_node_outputs=1,
         cls_output_activation="linear",
-        node_output_activation="linear",
         transformer_block=TransformerEncoderLayer(
             normalization="LayerNormalization",
             dropout=0.1,
@@ -428,60 +425,38 @@ class TransformerBaseModel(KerasModel):
             normalization="LayerNormalization",
             norm_kwargs={"epsilon": 1e-6},
         ),
-        cls_norm_block=Identity(
-            normalization="LayerNormalization",
-            norm_kwargs={"epsilon": 1e-6},
-        ),
-        use_learnable_positional_embs=False,
-        output_type="full",
+        positional_embedding_block=Identity(),
+        output_type="cls",
+        transformer_input_kwargs={},
         **kwargs,
     ):
         transformer_block = as_block(transformer_block)
         dense_block = as_block(dense_block)
-        cls_norm_block = as_block(cls_norm_block)
+        positional_embedding_block = as_block(positional_embedding_block)
 
         layer = ClassToken(name="class_token")(encoder)
 
-        if use_learnable_positional_embs:
-            layer = LearnablePositionEmbs(name="Transformer/posembed_input")(
-                layer
-            )
+        layer = positional_embedding_block(
+            layer.shape[-1], name="Transformer/posembed_input"
+        )(layer)
 
         # Bottleneck path, Transformer layers
         for n in range(number_of_transformer_layers):
             layer, _ = transformer_block(
                 base_fwd_mlp_dimensions, name=f"Transformer/encoderblock_{n}"
-            )(layer)
+            )(layer, **transformer_input_kwargs)
 
-        # Split node and global features
-        cls_rep, node_layer = (
-            layers.Lambda(lambda x: x[:, 0], name="RetrieveClassToken")(layer),
-            layer[:, 1:],
+        # Extract global representation
+        cls_rep = layers.Lambda(lambda x: x[:, 0], name="RetrieveClassToken")(
+            layer
         )
 
         # Process cls features
-        cls_layer = cls_norm_block("cls_norm")(cls_rep)
+        cls_layer = cls_rep
         if cls_layer_dimension is not None:
-            cls_layer = dense_block(
-                cls_layer_dimension, name="cls_mlp", **kwargs
-            )(cls_layer)
-
-        # Decode node features
-        for dense_layer_number, dense_layer_dimension in enumerate(
-            node_decoder_layer_dimensions
-        ):
-            node_layer = dense_block(
-                dense_layer_dimension,
-                name=f"nodes/decoderblock_{dense_layer_number}",
-                **kwargs,
-            )(node_layer)
-
-        # Output layers
-        node_output = layers.Dense(
-            number_of_node_outputs,
-            activation=node_output_activation,
-            name="node_prediction",
-        )(node_layer)
+            cls_layer = dense_block(cls_layer_dimension, name="cls_mlp")(
+                cls_layer
+            )
 
         cls_output = layers.Dense(
             number_of_cls_outputs,
@@ -490,22 +465,20 @@ class TransformerBaseModel(KerasModel):
         )(cls_layer)
 
         output_dict = {
-            "nodes": node_output,
-            "cls": cls_output,
             "cls_rep": cls_rep,
-            "full": [node_output, cls_output],
+            "cls": cls_output,
         }
         try:
             outputs = output_dict[output_type]
         except KeyError:
-            outputs = output_dict["full"]
+            outputs = output_dict["cls"]
 
         model = models.Model(inputs=inputs, outputs=outputs)
 
         super().__init__(model, **kwargs)
 
 
-class ViT(TransformerBaseModel):
+class ViT(ClsTransformerBaseModel):
     """
     Creates and compiles a ViT model.
     input_shape : tuple of ints
@@ -546,8 +519,8 @@ class ViT(TransformerBaseModel):
         base_fwd_mlp_dimensions=256,
         number_of_cls_outputs=10,
         cls_output_activation="linear",
-        use_learnable_positional_embs=True,
         output_type="cls",
+        positional_embedding_block=LearnablePositionEmbsLayer(),
         **kwargs,
     ):
 
@@ -574,7 +547,87 @@ class ViT(TransformerBaseModel):
             base_fwd_mlp_dimensions=base_fwd_mlp_dimensions,
             number_of_cls_outputs=number_of_cls_outputs,
             cls_output_activation=cls_output_activation,
-            use_learnable_positional_embs=use_learnable_positional_embs,
             output_type=output_type,
+            positional_embedding_block=positional_embedding_block,
             **kwargs,
         )
+
+
+class Transformer(KerasModel):
+    """
+    Creates and compiles a Transformer model.
+    """
+
+    def __init__(
+        self,
+        number_of_node_features=3,
+        dense_layer_dimensions=(64, 96),
+        number_of_transformer_layers=12,
+        base_fwd_mlp_dimensions=256,
+        number_of_node_outputs=1,
+        node_output_activation="linear",
+        transformer_block=TransformerEncoderLayer(
+            normalization="LayerNormalization",
+            dropout=0.1,
+            norm_kwargs={"epsilon": 1e-6},
+        ),
+        dense_block=DenseBlock(
+            activation=GELU,
+            normalization="LayerNormalization",
+            norm_kwargs={"epsilon": 1e-6},
+        ),
+        positional_embedding_block=Identity(),
+        **kwargs,
+    ):
+
+        dense_block = as_block(dense_block)
+
+        transformer_input, transformer_mask = (
+            layers.Input(shape=(None, number_of_node_features)),
+            layers.Input(shape=(None, 2), dtype="int32"),
+        )
+
+        layer = transformer_input
+        # Encoder for input features
+        for dense_layer_number, dense_layer_dimension in zip(
+            range(len(dense_layer_dimensions)), dense_layer_dimensions
+        ):
+            layer = dense_block(
+                dense_layer_dimension,
+                name="fencoder_" + str(dense_layer_number + 1),
+            )(layer)
+
+        layer = positional_embedding_block(
+            layer.shape[-1], name="Transformer/posembed_input"
+        )(layer)
+
+        # Bottleneck path, Transformer layers
+        for n in range(number_of_transformer_layers):
+            layer, _ = transformer_block(
+                base_fwd_mlp_dimensions, name=f"Transformer/encoderblock_{n}"
+            )(layer, edges=transformer_mask)
+
+        # Decoder for node and edge features
+        for dense_layer_number, dense_layer_dimension in zip(
+            range(len(dense_layer_dimensions)),
+            reversed(dense_layer_dimensions),
+        ):
+            layer = dense_block(
+                dense_layer_dimension,
+                name="fdecoder" + str(dense_layer_number + 1),
+                **kwargs,
+            )(layer)
+
+        # Output layers
+        output_layer = layers.Dense(
+            number_of_node_outputs,
+            activation=node_output_activation,
+            name="node_prediction",
+        )(layer)
+
+        model = models.Model(
+            [transformer_input, transformer_mask],
+            output_layer,
+        )
+
+        super().__init__(model, **kwargs)
