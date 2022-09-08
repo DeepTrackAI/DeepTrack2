@@ -5,9 +5,9 @@ from ..utils import as_KerasModel
 
 
 @as_KerasModel
-class vae(tf.keras.Model):
+class VAE(tf.keras.Model):
     def __init__(self, encoder=None, decoder=None, latent_dim=2):
-        super(vae, self).__init__()
+        super().__init__()
 
         # Dimensionality of the latent space
         self.latent_dim = latent_dim
