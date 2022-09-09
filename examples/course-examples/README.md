@@ -2,7 +2,7 @@
 
   **Introduction to MLPs**
   - [x] Image Classification using MLP (MNIST)
-  - [ ] Regression example using MLP ()
+  - [x] Regression example using MLP (Simulated data from deeptrack)
 
   **Introduction to CNNs**
   - [ ] Image Classification using CNN (MNIST)
