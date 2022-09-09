@@ -1,0 +1,3 @@
+- Day 1
+  - [x] Image Classification using MLP (on MNIST)
+  - [] Image Classification using CNN (on MNIST)
