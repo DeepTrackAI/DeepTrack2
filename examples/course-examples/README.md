@@ -1,4 +1,4 @@
-- Day 1
+- ## Day 1
 
   **Introduction to MLPs**
   - [x] Image Classification using MLP (MNIST)
