@@ -707,7 +707,7 @@ class Brightfield(Optics):
             )[0]
 
             propagation_matrix = propagation_matrix * np.exp(
-                1j
+                -1j
                 * voxel_size[-1]
                 * 2
                 * np.pi
