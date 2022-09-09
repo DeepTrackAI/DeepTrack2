@@ -20,3 +20,10 @@
   - [x] Multiple particle tracking
   - [x] Cell counting example
   - [ ] Image segmentation example (using the segmented anisotropic ssTEM dataset)
+ 
+ - ## Day 2
+ 
+ **Introduction to Transformers**
+ - [x] Estimation of diffusion properties from single-object tracking experiments
+ - [x] Image Classification using ViT (MNIST)
+
