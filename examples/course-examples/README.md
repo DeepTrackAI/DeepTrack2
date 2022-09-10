@@ -19,7 +19,7 @@
   **Introduction to U-Net**
   - [x] Multiple particle tracking
   - [x] Cell counting example
-  - [ ] Image segmentation example (using the segmented anisotropic ssTEM dataset)
+  - [x] Image segmentation example (using the segmented anisotropic ssTEM dataset)
  
  - ## Day 2
  
