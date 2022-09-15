@@ -647,7 +647,6 @@ class MieScatterer(Scatterer):
         self,
         inp,
         position,
-        output_region,
         voxel_size,
         padding,
         wavelength,
@@ -657,7 +656,6 @@ class MieScatterer(Scatterer):
         input_polarization,
         output_polarization,
         coefficients,
-        z,
         offset_z,
         working_distance,
         position_objective,
@@ -747,14 +745,9 @@ class MieScatterer(Scatterer):
             * np.exp(1j * k * R3_field)
             * (S2 * S2_coef + S1 * S1_coef)
         )
-        plt.figure(figsize=(10, 10))
-        plt.imshow(np.abs(arr).get())
-        plt.show()
 
         fourier_field = np.fft.fft2(arr)
-        plt.figure(figsize=(10, 10))
-        plt.imshow(np.fft.fftshift(np.abs(fourier_field).get()))
-        plt.show()
+
         propagation_matrix = get_propagation_matrix(
             fourier_field.shape,
             pixel_size=voxel_size[2],
