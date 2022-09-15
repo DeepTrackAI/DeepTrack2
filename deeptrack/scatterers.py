@@ -657,6 +657,7 @@ class MieScatterer(Scatterer):
         output_polarization,
         coefficients,
         offset_z,
+        z,
         working_distance,
         position_objective,
         return_fft,
@@ -752,7 +753,7 @@ class MieScatterer(Scatterer):
             fourier_field.shape,
             pixel_size=voxel_size[2],
             wavelength=wavelength,
-            to_z=-offset_z / refractive_index_medium,
+            to_z=(-offset_z - z * voxel_size[2]) / refractive_index_medium,
             dy=(
                 position_objective[0] * ratio
                 + position[0] * (1 - ratio)
