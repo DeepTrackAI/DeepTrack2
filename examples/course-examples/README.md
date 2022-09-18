@@ -2,7 +2,7 @@
 
   **Introduction to MLPs**
   - [x] Image Classification using MLP (MNIST)
-  - [ ] Regression example using MLP ()
+  - [x] Regression example using MLP (Simulated data from deeptrack)
 
   **Introduction to CNNs**
   - [ ] Image Classification using CNN (MNIST)
@@ -19,7 +19,7 @@
   **Introduction to U-Net**
   - [x] Multiple particle tracking
   - [x] Cell counting example
-  - [ ] Image segmentation example (using the segmented anisotropic ssTEM dataset)
+  - [x] Image segmentation example (using the segmented anisotropic ssTEM dataset)
  
  - ## Day 2
  
