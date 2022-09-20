@@ -474,7 +474,7 @@ class Feature(DeepTrackNode):
         # or
         # feature1 >> some_function
 
-        if isinstance(other, Feature):
+        if isinstance(other, DeepTrackNode):
             return Chain(self, other)
 
         # Import here to avoid circular import.
@@ -486,6 +486,19 @@ class Feature(DeepTrackNode):
             return NotImplemented
         if callable(other):
             return self >> Lambda(lambda: other)
+
+        return NotImplemented
+
+    def __rrshift__(self, other: "Feature") -> "Feature":
+        # Allows chaining of features. For example,
+        # some_function << feature1 << feature2
+        # or
+        # some_function << feature1
+
+        if isinstance(other, Feature):
+            return Chain(other, self)
+        if isinstance(other, DeepTrackNode):
+            return Chain(Value(other), self)
 
         return NotImplemented
 
@@ -1784,3 +1797,93 @@ class Upscale(Feature):
         )
 
         return image
+
+
+class TensorflowDataset(Feature):
+    """Loads a tensorflow dataset. Requires tensorflow_datasets to be installed.
+
+    This feature loads a tensorflow dataset from its name. Check the
+    `tensorflow datasets <https://www.tensorflow.org/datasets/catalog/overview>`_
+    for a list of available datasets.
+
+    This feature will download the dataset if it is not already present. Each key of
+    the dataset will be added as a property to the feature. As such, separate pipelines
+    can be created for each key::
+
+        dataset = dt.TensorflowDataset("mnist")
+        image_pipeline = dataset.image
+        label_pipeline = dataset.label
+
+    Alternatively, they can be loaded in conjunction::
+
+        dataset = dt.TensorflowDataset("mnist", keys=["image", "label"])
+        image, label = dataset()
+
+    Parameters
+    ----------
+    name : str
+        The name of the dataset to load
+    split : str
+        The split of the dataset to load. Defaults to "train".
+        See `tensorflow splits <https://www.tensorflow.org/datasets/splits>`_ for more information on splits.
+    shuffle_files : bool
+        Whether to shuffle the files. Defaults to True.
+    keys : list of str
+        The keys to load from the dataset. Only used when calling the feature directly.
+        Any key can be accessed as a property of the feature.
+
+    Examples
+    --------
+    >>> dataset = dt.TensorflowDataset("mnist", split="train")
+    >>> image_pipeline = dataset.image
+    >>> label_pipeline = dataset.label
+    """
+
+    __distributed__ = False
+
+    def __init__(
+        self,
+        dataset: str,
+        split="train",
+        shuffle_files=True,
+        keys=["image", "label"],
+        **kwargs
+    ):
+
+        tfds = None
+        try:
+            import tensorflow_datasets as tfds
+        except ImportError:
+            raise ImportError(
+                "Tensorflow Datasets is not installed. Install it with `pip install tensorflow_datasets`"
+            )
+
+        dataset_size = tfds.builder(dataset).info.splits[split].num_examples
+        dataset = tfds.load(dataset, split=split, shuffle_files=shuffle_files)
+
+        self.dataset = dataset
+        self.split = split
+        self.shuffle_files = shuffle_files
+        self.size = dataset_size
+
+        # get the keys of the dataset
+        keys = list(dataset.element_spec.keys())
+        attr_getters = {key: lambda output, key=key: output[key] for key in keys}
+
+        self.dataset_iterator = iter(tfds.as_numpy(self.dataset))
+
+        super().__init__(
+            output=self.get_next_output, keys=keys, **attr_getters, **kwargs
+        )
+
+    def get_next_output(self):
+        import tensorflow_datasets as tfds
+
+        try:
+            return next(self.dataset_iterator)
+        except StopIteration:
+            self.dataset_iterator = iter(tfds.as_numpy(self.dataset))
+            return next(self.dataset_iterator)
+
+    def get(self, _, keys, output, **kwargs):
+        return [output[key] for key in keys]
