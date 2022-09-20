@@ -663,6 +663,7 @@ class MieScatterer(Scatterer):
         return_fft,
         **kwargs,
     ):
+
         import matplotlib.pyplot as plt
 
         # Get size of the output
