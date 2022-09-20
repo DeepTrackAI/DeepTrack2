@@ -43,6 +43,10 @@ class Convolutional(KerasModel):
         Number of units in the output layer.
     output_activation : str or keras activation
         The activation function of the output.
+    flatten_method : str
+        The method used to flatten the output of the convolutional layers.
+        Must be one of 'flatten', 'global_average' or 'global_max'.
+        Only used if `dense_top` is True.
     loss : str or keras loss function
         The loss function of the network.
     layer_function : Callable[int] -> keras layer
@@ -62,6 +66,7 @@ class Convolutional(KerasModel):
         steps_per_pooling=1,
         dropout=(),
         dense_top=True,
+        flatten_method="flatten",
         number_of_outputs=3,
         output_activation=None,
         output_kernel_size=3,
@@ -108,7 +113,16 @@ class Convolutional(KerasModel):
         # DENSE TOP
 
         if dense_top:
-            layer = layers.Flatten()(layer)
+            if flatten_method == "flatten":
+                layer = layers.Flatten()(layer)
+            elif flatten_method == "global_average":
+                layer = layers.GlobalAveragePooling2D()(layer)
+            elif flatten_method == "global_max":
+                layer = layers.GlobalMaxPooling2D()(layer)
+            else:
+                raise ValueError(
+                    f"flatten_method must be one of 'flatten', 'global_average' or 'global_max', not {flatten_method}"
+                )
             for dense_layer_dimension in dense_layers_dimensions:
                 layer = dense_block(dense_layer_dimension)(layer)
             output_layer = layers.Dense(
@@ -447,16 +461,12 @@ class ClsTransformerBaseModel(KerasModel):
             )(layer, **transformer_input_kwargs)
 
         # Extract global representation
-        cls_rep = layers.Lambda(lambda x: x[:, 0], name="RetrieveClassToken")(
-            layer
-        )
+        cls_rep = layers.Lambda(lambda x: x[:, 0], name="RetrieveClassToken")(layer)
 
         # Process cls features
         cls_layer = cls_rep
         if cls_layer_dimension is not None:
-            cls_layer = dense_block(cls_layer_dimension, name="cls_mlp")(
-                cls_layer
-            )
+            cls_layer = dense_block(cls_layer_dimension, name="cls_mlp")(cls_layer)
 
         cls_output = layers.Dense(
             number_of_cls_outputs,
