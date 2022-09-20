@@ -674,14 +674,14 @@ class MieScatterer(Scatterer):
 
         pupil_physical_size = working_distance * np.tan(collection_angle) * 2
 
-        ratio = offset_z / working_distance
+        ratio = offset_z / (working_distance - z)
 
         # position of pbjective relative particle
         relative_position = np.array(
             (
                 position_objective[0] - position[0],
                 position_objective[1] - position[1],
-                offset_z / ratio,
+                working_distance - z,
             )
         )
 
@@ -704,6 +704,8 @@ class MieScatterer(Scatterer):
         pupil_mask = (x_farfield - position_objective[0]) ** 2 + (
             y_farfield - position_objective[1]
         ) ** 2 < (pupil_physical_size / 2) ** 2
+
+        import matplotlib.pyplot as plt
 
         R3_field = R3_field[pupil_mask]
         cos_theta_field = cos_theta_field[pupil_mask]
@@ -765,7 +767,7 @@ class MieScatterer(Scatterer):
                 + (padding[1] - arr.shape[1] / 2) * voxel_size[1]
             ),
         )
-        fourier_field = fourier_field * propagation_matrix
+        fourier_field = fourier_field * propagation_matrix * np.exp(-1j * k * offset_z)
         if return_fft:
             return fourier_field[..., np.newaxis]
         else:
