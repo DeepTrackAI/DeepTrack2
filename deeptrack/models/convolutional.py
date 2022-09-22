@@ -145,6 +145,105 @@ class Convolutional(KerasModel):
 convolutional = Convolutional
 
 
+class FullyConvolutional(KerasModel):
+    """A fully convolutional neural network.
+
+    Parameters
+    ----------
+    input_shape : tuple
+        The shape of the input.
+    conv_layers_dimensions : tuple of int or tuple of tuple of int
+        The number of filters in each convolutional layer. Examples:
+        - (32, 64, 128) results in
+         1. Conv2D(32, 3, activation='relu', padding='same')
+         2. MaxPooling2D()
+         3. Conv2D(64, 3, activation='relu', padding='same')
+         4. MaxPooling2D()
+         5. Conv2D(128, 3, activation='relu', padding='same')
+         6. MaxPooling2D()
+         7. Conv2D(number_of_outputs, 3, activation=output_activation, padding='same')
+
+        - ((32, 32), (64, 64), (128, 128)) results in
+         1. Conv2D(32, 3, activation='relu', padding='same')
+         2. Conv2D(32, 3, activation='relu', padding='same')
+         3. MaxPooling2D()
+         4. Conv2D(64, 3, activation='relu', padding='same')
+         5. Conv2D(64, 3, activation='relu', padding='same')
+         6. MaxPooling2D()
+         7. Conv2D(128, 3, activation='relu', padding='same')
+         8. Conv2D(128, 3, activation='relu', padding='same')
+         9. MaxPooling2D()
+         10. Conv2D(number_of_outputs, 3, activation=output_activation, padding='same')
+    omit_last_pooling : bool
+        If True, the last MaxPooling2D layer is omitted. Default is False
+    number_of_outputs : int
+        The number of output channels.
+    output_activation : str
+        The activation function of the output layer.
+    output_kernel_size : int
+        The kernel size of the output layer.
+    convolution_block : function or str
+        The function used to create the convolutional blocks. Defaults to
+        "convolutional"
+    pooling_block : function or str
+        The function used to create the pooling blocks. Defaults to "pooling"
+    """
+
+    def __init__(
+        self,
+        input_shape,
+        conv_layers_dimensions,
+        omit_last_pooling=False,
+        number_of_outputs=1,
+        output_activation="sigmoid",
+        output_kernel_size=3,
+        convolution_block="convolutional",
+        pooling_block="pooling",
+        **kwargs,
+    ):
+
+        # Update layer functions
+        convolution_block = as_block(convolution_block)
+        pooling_block = as_block(pooling_block)
+
+        # INITIALIZE DEEP LEARNING NETWORK
+
+        if isinstance(input_shape, list):
+            network_input = [layers.Input(shape) for shape in input_shape]
+            inputs = layers.Concatenate(axis=-1)(network_input)
+        else:
+            network_input = layers.Input(input_shape)
+            inputs = network_input
+
+        layer = inputs
+
+        # CONVOLUTIONAL BASIS
+        for idx, depth_dimensions in enumerate(conv_layers_dimensions):
+
+            if isinstance(depth_dimensions, int):
+                depth_dimensions = (depth_dimensions,)
+
+            for conv_layer_dimension in depth_dimensions:
+                layer = convolution_block(conv_layer_dimension)(layer)
+
+            # add pooling layer
+            if idx < len(conv_layers_dimensions) - 1 or not omit_last_pooling:
+                layer = pooling_block(conv_layer_dimension)(layer)
+
+        # OUTPUT
+        output_layer = layers.Conv2D(
+            number_of_outputs,
+            kernel_size=output_kernel_size,
+            activation=output_activation,
+            padding="same",
+            name="output",
+        )(layer)
+
+        model = models.Model(network_input, output_layer)
+
+        super().__init__(model, **kwargs)
+
+
 class UNet(KerasModel):
     """Creates and compiles a U-Net.
 
