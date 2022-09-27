@@ -1,8 +1,9 @@
+from deeptrack.image import maybe_cupy
 from .features import Feature
 import numpy as np
 
 
-def get_propagation_matrix(shape, to_z, pixel_size, wavelength):
+def get_propagation_matrix(shape, to_z, pixel_size, wavelength, dx=0, dy=0):
 
     k = 2 * np.pi / wavelength
     yr, xr, *_ = shape
@@ -10,13 +11,15 @@ def get_propagation_matrix(shape, to_z, pixel_size, wavelength):
     x = 2 * np.pi / pixel_size * np.arange(-(xr / 2 - 1 / 2), (xr / 2 + 1 / 2), 1) / xr
     y = 2 * np.pi / pixel_size * np.arange(-(yr / 2 - 1 / 2), (yr / 2 + 1 / 2), 1) / yr
     KXk, KYk = np.meshgrid(x, y)
+    KXk = maybe_cupy(KXk.astype(complex))
+    KYk = maybe_cupy(KYk.astype(complex))
 
-    K = np.real(
-        np.sqrt(np.array(1 - (KXk / k) ** 2 - (KYk / k) ** 2, dtype=complex))
-    )
+    K = np.real(np.sqrt(1 - (KXk / k) ** 2 - (KYk / k) ** 2))
     C = np.fft.fftshift(((KXk / k) ** 2 + (KYk / k) ** 2 < 1) * 1.0)
 
-    return C * np.fft.fftshift(np.exp(k * 1j * to_z * (K - 1)))
+    return C * np.fft.fftshift(
+        np.exp(k * 1j * (to_z * (K - 1) - dx * KXk / k - dy * KYk / k))
+    )
 
 
 class Rescale(Feature):
