@@ -245,7 +245,7 @@ class KerasModel(Model):
             # Code is not actually unreachable if fit crashes.
             return None
 
-        return self.model.fit(x, *args, batch_size=32, **kwargs)
+        return self.model.fit(x, *args, batch_size=batch_size, **kwargs)
 
     def export(
         self,
