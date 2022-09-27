@@ -1342,44 +1342,44 @@ class OneOfDict(Feature):
         return self.collection[key](image)
 
 
-class Dataset(Feature):
-    """Grabs data from a local set of data.
+# class Dataset(Feature):
+#     """Grabs data from a local set of data.
 
-    The first argument should be an iterator, function or constant,
-    which provides access to a single sample from a dataset. If it returns
-    a tuple, the first element should be an array-like and the second a
-    dictionary. The array-like will be returned as an image with the dictionary
-    added to the set of properties.
+#     The first argument should be an iterator, function or constant,
+#     which provides access to a single sample from a dataset. If it returns
+#     a tuple, the first element should be an array-like and the second a
+#     dictionary. The array-like will be returned as an image with the dictionary
+#     added to the set of properties.
 
-    Parameters
-    ----------
-    data : tuple or array_like
-        Any property that returns a single image or a tuple of two objects,
-        where the first is an array_like.
-    """
+#     Parameters
+#     ----------
+#     data : tuple or array_like
+#         Any property that returns a single image or a tuple of two objects,
+#         where the first is an array_like.
+#     """
 
-    __distributed__ = False
+#     __distributed__ = False
 
-    def __init__(
-        self, data: Iterator or PropertyLike[float or ArrayLike[float]], **kwargs
-    ):
-        super().__init__(data=data, **kwargs)
+#     def __init__(
+#         self, data: Iterator or PropertyLike[float or ArrayLike[float]], **kwargs
+#     ):
+#         super().__init__(data=data, **kwargs)
 
-    def get(self, *ignore, data, **kwargs):
-        return data
+#     def get(self, *ignore, data, **kwargs):
+#         return data
 
-    def _process_properties(self, properties):
-        properties = super()._process_properties(properties)
+#     def _process_properties(self, properties):
+#         properties = super()._process_properties(properties)
 
-        data = properties["data"]
+#         data = properties["data"]
 
-        if isinstance(data, tuple):
-            properties["data"] = data[0]
-            if isinstance(data[1], dict):
-                properties.update(data[1])
-            else:
-                properties["label"] = data[1]
-        return properties
+#         if isinstance(data, tuple):
+#             properties["data"] = data[0]
+#             if isinstance(data[1], dict):
+#                 properties.update(data[1])
+#             else:
+#                 properties["label"] = data[1]
+#         return properties
 
 
 class Label(Feature):
@@ -1850,9 +1850,11 @@ class TensorflowDataset(Feature):
         **kwargs
     ):
 
-        tfds = None
+        self.tfds = None
         try:
             import tensorflow_datasets as tfds
+
+            self.tfds = tfds
         except ImportError:
             raise ImportError(
                 "Tensorflow Datasets is not installed. Install it with `pip install tensorflow_datasets`"
@@ -1876,14 +1878,33 @@ class TensorflowDataset(Feature):
             output=self.get_next_output, keys=keys, **attr_getters, **kwargs
         )
 
-    def get_next_output(self):
-        import tensorflow_datasets as tfds
+    def take(self, n):
+        """Takes the n next elements of the dataset. Returns a dictionary of lists."""
 
+        # Prepare output
+        keys = self.dataset.element_spec.keys()
+        output_dict = {key: [] for key in keys}
+
+        for data in self.dataset.take(n):
+            for key in keys:
+                output_dict[key].append(data[key])
+
+        return output_dict
+
+    def reset_dataset(self):
+        """Resets the dataset iterator to the beginning of the dataset."""
+        self.dataset_iterator = iter(self.tfds.as_numpy(self.dataset))
+
+    def get_next_output(self):
         try:
             return next(self.dataset_iterator)
         except StopIteration:
-            self.dataset_iterator = iter(tfds.as_numpy(self.dataset))
+            self.reset_dataset()
             return next(self.dataset_iterator)
 
     def get(self, _, keys, output, **kwargs):
         return [output[key] for key in keys]
+
+
+# Alias
+Dataset = TensorflowDataset
