@@ -546,7 +546,7 @@ class MieScatterer(Scatterer):
         padding=(0,) * 4,
         output_region=None,
         polarization_angle=None,
-        working_distance=0.2e-3,
+        working_distance=1000000,  # large value to avoid numerical issues unless the user specifies a smaller value
         position_objective=(0, 0),
         return_fft=False,
         **kwargs,
@@ -601,7 +601,7 @@ class MieScatterer(Scatterer):
                     np.array(properties["output_region"][2:])
                     - properties["output_region"][:2]
                 )
-                / 2
+                * 0.75
                 * min(properties["voxel_size"][:2])
                 / np.tan(properties["collection_angle"])
             )
@@ -674,6 +674,8 @@ class MieScatterer(Scatterer):
         position = np.array(position) * voxel_size[: len(position)]
 
         pupil_physical_size = working_distance * np.tan(collection_angle) * 2
+
+        z = z * voxel_size[2]
 
         ratio = offset_z / (working_distance - z)
 
@@ -756,15 +758,15 @@ class MieScatterer(Scatterer):
             fourier_field.shape,
             pixel_size=voxel_size[2],
             wavelength=wavelength,
-            to_z=(-offset_z - z * voxel_size[2]) / refractive_index_medium,
+            to_z=(-offset_z - z) / refractive_index_medium,
             dy=(
-                position_objective[0] * ratio
-                + position[0] * (1 - ratio)
+                relative_position[0] * ratio
+                + position[0]
                 + (padding[0] - arr.shape[0] / 2) * voxel_size[0]
             ),
             dx=(
-                position_objective[1] * ratio
-                + position[1] * (1 - ratio)
+                relative_position[1] * ratio
+                + position[1]
                 + (padding[1] - arr.shape[1] / 2) * voxel_size[1]
             ),
         )

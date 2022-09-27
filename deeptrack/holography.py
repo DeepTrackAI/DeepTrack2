@@ -8,8 +8,12 @@ def get_propagation_matrix(shape, to_z, pixel_size, wavelength, dx=0, dy=0):
     k = 2 * np.pi / wavelength
     yr, xr, *_ = shape
 
-    x = 2 * np.pi / pixel_size * np.arange(-(xr / 2 - 1 / 2), (xr / 2 + 1 / 2), 1) / xr
-    y = 2 * np.pi / pixel_size * np.arange(-(yr / 2 - 1 / 2), (yr / 2 + 1 / 2), 1) / yr
+    x = np.arange(0, xr, 1) - xr / 2 + (xr % 2) / 2
+    y = np.arange(0, yr, 1) - yr / 2 + (yr % 2) / 2
+
+    x = 2 * np.pi / pixel_size * x / xr
+    y = 2 * np.pi / pixel_size * y / yr
+
     KXk, KYk = np.meshgrid(x, y)
     KXk = maybe_cupy(KXk.astype(complex))
     KYk = maybe_cupy(KYk.astype(complex))
