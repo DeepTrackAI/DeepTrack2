@@ -230,9 +230,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         if min_data_size is None:
             min_data_size = min(batch_size * 10, max_data_size - 1)
 
-        assert (
-            min_data_size < max_data_size
-        ), "max_data_size needs to be larger than min_data_size"
+        max_data_size = max(max_data_size, min_data_size + 1)
 
         self.min_data_size = min_data_size
         self.max_data_size = max_data_size
@@ -366,8 +364,6 @@ class ContinuousGenerator(keras.utils.Sequence):
             )
         else:
             return np.array(data), np.array(labels)
-
-
 
     def __len__(self):
         steps = int((self.min_data_size // self._batch_size))

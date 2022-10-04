@@ -98,7 +98,9 @@ class Microscope(StructuralFeature):
             )
             self._objective.padding.set_value(additional_sample_kwargs["padding"])
 
-            propagate_data_to_dependencies(self._sample, **additional_sample_kwargs)
+            propagate_data_to_dependencies(
+                self._sample, **{"return_fft": True, **additional_sample_kwargs}
+            )
 
             list_of_scatterers = self._sample()
 
@@ -575,6 +577,10 @@ class Brightfield(Optics):
 
     __gpu_compatible__ = True
 
+    __conversion_table__ = ConversionTable(
+        working_distance=(u.meter, u.meter),
+    )
+
     def get(self, illuminated_volume, limits, fields, **kwargs):
         """Convolves the image with a pupil function"""
         # Pad volume
@@ -650,43 +656,9 @@ class Brightfield(Optics):
 
         K = 2 * np.pi / kwargs["wavelength"]
 
-        field_z = [field.get_property("z") for field in fields]
-        field_offsets = [field.get_property("offset_z", default=0) for field in fields]
-
         z = z_limits[1]
         for i, z in zip(index_iterator, z_iterator):
             light_in = light_in * pupil_step
-
-            to_remove = []
-            for idx, fz in enumerate(field_z):
-                if fz < z:
-                    propagation_matrix = self._pupil(
-                        fields[idx].shape,
-                        defocus=[z - fz - field_offsets[idx] / voxel_size[-1]],
-                        include_aberration=False,
-                        **kwargs,
-                    )[0]
-
-                    propagation_matrix = propagation_matrix * np.exp(
-                        1j
-                        * voxel_size[-1]
-                        * 2
-                        * np.pi
-                        / kwargs["wavelength"]
-                        * kwargs["refractive_index_medium"]
-                        * (z - fz)
-                    )
-                    pf = np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(
-                        propagation_matrix
-                    )
-
-                    light_in += pf
-                    to_remove.append(idx)
-
-            for idx in reversed(to_remove):
-                fields.pop(idx)
-                field_z.pop(idx)
-                field_offsets.pop(idx)
 
             if zero_plane[i]:
                 continue
@@ -696,30 +668,16 @@ class Brightfield(Optics):
             light_out = light * np.exp(1j * ri_slice * voxel_size[-1] * K)
             light_in = np.fft.fft2(light_out)
 
-        # Add remaining fields
-        for idx, fz in enumerate(field_z):
-            prop_dist = z - fz - field_offsets[idx] / voxel_size[-1]
-            propagation_matrix = self._pupil(
-                fields[idx].shape,
-                defocus=[prop_dist],
-                include_aberration=False,
-                **kwargs,
-            )[0]
+        shifted_pupil = np.fft.fftshift(pupils[-1])
+        light_in_focus = light_in * shifted_pupil
 
-            propagation_matrix = propagation_matrix * np.exp(
-                -1j
-                * voxel_size[-1]
-                * 2
-                * np.pi
-                / kwargs["wavelength"]
-                * kwargs["refractive_index_medium"]
-                * (z - fz)
-            )
+        if len(fields) > 0:
+            field = np.sum(fields, axis=0)
+            light_in_focus += field[..., 0]
 
-            pf = np.fft.fft2(fields[idx][:, :, 0]) * np.fft.fftshift(propagation_matrix)
-            light_in += pf
-
-        light_in_focus = light_in * np.fft.fftshift(pupils[-1])
+        # Mask to remove light outside the pupil.
+        mask = np.abs(shifted_pupil) > 0
+        light_in_focus = light_in_focus * mask
 
         output_image = np.fft.ifft2(light_in_focus)[
             : padded_volume.shape[0], : padded_volume.shape[1]
@@ -729,10 +687,18 @@ class Brightfield(Optics):
 
         if not kwargs.get("return_field", False):
             output_image = np.square(np.abs(output_image))
+        else:
+            # Fudge factor. Not sure why this is needed.
+            output_image = output_image - 1
+            output_image = output_image * np.exp(1j * -np.pi / 4)
+            output_image = output_image + 1
 
         output_image.properties = illuminated_volume.properties
 
         return output_image
+
+
+Holography = Brightfield
 
 
 class IlluminationGradient(Feature):
@@ -788,6 +754,8 @@ def _get_position(image, mode="corner", return_z=False):
 
     if mode == "corner" and image.size > 0:
         import scipy.ndimage
+
+        image = image.to_numpy()
 
         shift = scipy.ndimage.center_of_mass(np.abs(image))
 

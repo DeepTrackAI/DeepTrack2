@@ -1,13 +1,12 @@
 **/.ipynb_checkpoints
 **/__pycache__
 deeptrack-app/*
-*/datasets/*
+
 paper-examples/models/*
 
 build/*
 dist/*
 *.egg-info/
-*/datasets/*
 */theory
 _src/build/**/*
 
@@ -16,6 +15,11 @@ ParticleSizing
 CellData
 ParticleTracking
 data/
-datasets/
 examples/**/*/models/
 **/node_modules/
+
+*.tif
+*.png 
+*.jpg
+*.jpeg
+*.npy
