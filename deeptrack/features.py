@@ -5,7 +5,7 @@ Provides classes and tools for creating and interacting with features.
 
 import itertools
 import operator
-from typing import Any, Callable, Iterable, Iterator, List
+from typing import Any, Callable, Iterable, List
 import warnings
 
 import numpy as np
@@ -474,7 +474,7 @@ class Feature(DeepTrackNode):
         # or
         # feature1 >> some_function
 
-        if isinstance(other, Feature):
+        if isinstance(other, DeepTrackNode):
             return Chain(self, other)
 
         # Import here to avoid circular import.
@@ -486,6 +486,19 @@ class Feature(DeepTrackNode):
             return NotImplemented
         if callable(other):
             return self >> Lambda(lambda: other)
+
+        return NotImplemented
+
+    def __rrshift__(self, other: "Feature") -> "Feature":
+        # Allows chaining of features. For example,
+        # some_function << feature1 << feature2
+        # or
+        # some_function << feature1
+
+        if isinstance(other, Feature):
+            return Chain(other, self)
+        if isinstance(other, DeepTrackNode):
+            return Chain(Value(other), self)
 
         return NotImplemented
 
@@ -1329,44 +1342,44 @@ class OneOfDict(Feature):
         return self.collection[key](image)
 
 
-class Dataset(Feature):
-    """Grabs data from a local set of data.
+# class Dataset(Feature):
+#     """Grabs data from a local set of data.
 
-    The first argument should be an iterator, function or constant,
-    which provides access to a single sample from a dataset. If it returns
-    a tuple, the first element should be an array-like and the second a
-    dictionary. The array-like will be returned as an image with the dictionary
-    added to the set of properties.
+#     The first argument should be an iterator, function or constant,
+#     which provides access to a single sample from a dataset. If it returns
+#     a tuple, the first element should be an array-like and the second a
+#     dictionary. The array-like will be returned as an image with the dictionary
+#     added to the set of properties.
 
-    Parameters
-    ----------
-    data : tuple or array_like
-        Any property that returns a single image or a tuple of two objects,
-        where the first is an array_like.
-    """
+#     Parameters
+#     ----------
+#     data : tuple or array_like
+#         Any property that returns a single image or a tuple of two objects,
+#         where the first is an array_like.
+#     """
 
-    __distributed__ = False
+#     __distributed__ = False
 
-    def __init__(
-        self, data: Iterator or PropertyLike[float or ArrayLike[float]], **kwargs
-    ):
-        super().__init__(data=data, **kwargs)
+#     def __init__(
+#         self, data: Iterator or PropertyLike[float or ArrayLike[float]], **kwargs
+#     ):
+#         super().__init__(data=data, **kwargs)
 
-    def get(self, *ignore, data, **kwargs):
-        return data
+#     def get(self, *ignore, data, **kwargs):
+#         return data
 
-    def _process_properties(self, properties):
-        properties = super()._process_properties(properties)
+#     def _process_properties(self, properties):
+#         properties = super()._process_properties(properties)
 
-        data = properties["data"]
+#         data = properties["data"]
 
-        if isinstance(data, tuple):
-            properties["data"] = data[0]
-            if isinstance(data[1], dict):
-                properties.update(data[1])
-            else:
-                properties["label"] = data[1]
-        return properties
+#         if isinstance(data, tuple):
+#             properties["data"] = data[0]
+#             if isinstance(data[1], dict):
+#                 properties.update(data[1])
+#             else:
+#                 properties["label"] = data[1]
+#         return properties
 
 
 class Label(Feature):
@@ -1784,3 +1797,329 @@ class Upscale(Feature):
         )
 
         return image
+
+
+class TensorflowDataset(Feature):
+    """Loads a tensorflow dataset. Requires tensorflow_datasets to be installed.
+
+    This feature loads a tensorflow dataset from its name. Check the
+    `tensorflow datasets <https://www.tensorflow.org/datasets/catalog/overview>`_
+    for a list of available datasets.
+
+    This feature will download the dataset if it is not already present. Each key of
+    the dataset will be added as a property to the feature. As such, separate pipelines
+    can be created for each key::
+
+        dataset = dt.TensorflowDataset("mnist")
+        image_pipeline = dataset.image
+        label_pipeline = dataset.label
+
+    Alternatively, they can be loaded in conjunction::
+
+        dataset = dt.TensorflowDataset("mnist", keys=["image", "label"])
+        image, label = dataset()
+
+    Parameters
+    ----------
+    dataset_name : str
+        The name of the dataset to load
+    split : str
+        The split of the dataset to load. Defaults to "train".
+        See `tensorflow splits <https://www.tensorflow.org/datasets/splits>`_ for more information on splits.
+    shuffle_files : bool
+        Whether to shuffle the files. Defaults to True.
+    keys : list of str
+        The keys to load from the dataset. Only used when calling the feature directly.
+        Any key can be accessed as a property of the feature.
+
+    Examples
+    --------
+    >>> dataset = dt.TensorflowDataset("mnist", split="train")
+    >>> image_pipeline = dataset.image
+    >>> label_pipeline = dataset.label
+    """
+
+    __distributed__ = False
+
+    def __init__(
+        self,
+        dataset_name: str,
+        split="train",
+        shuffle_files=True,
+        keys=["image", "label"],
+        **kwargs
+    ):
+
+        self.tfds = None
+        try:
+            import tensorflow_datasets as tfds
+
+            self.tfds = tfds
+        except ImportError:
+            raise ImportError(
+                "Tensorflow Datasets is not installed. Install it with `pip install tensorflow_datasets`"
+            )
+
+        dataset = tfds.load(dataset_name, split=split, shuffle_files=shuffle_files)
+        dataset_size = tfds.builder(dataset_name).info.splits[split].num_examples
+
+        self.dataset = dataset
+        self.split = split
+        self.shuffle_files = shuffle_files
+        self.size = dataset_size
+
+        # get the keys of the dataset
+        keys = list(dataset.element_spec.keys())
+        attr_getters = {key: lambda output, key=key: output[key] for key in keys}
+
+        self.dataset_iterator = iter(tfds.as_numpy(self.dataset))
+
+        super().__init__(
+            output=self.get_next_output, keys=keys, **attr_getters, **kwargs
+        )
+
+    def take(self, n):
+        """Takes the n next elements of the dataset. Returns a dictionary of lists."""
+
+        # Prepare output
+        keys = self.dataset.element_spec.keys()
+        output_dict = {key: [] for key in keys}
+
+        for data in self.dataset.take(n):
+            for key in keys:
+                output_dict[key].append(data[key])
+
+        return output_dict
+
+    def reset_dataset(self):
+        """Resets the dataset iterator to the beginning of the dataset."""
+        self.dataset_iterator = iter(self.tfds.as_numpy(self.dataset))
+
+    def get_next_output(self):
+        try:
+            return next(self.dataset_iterator)
+        except StopIteration:
+            self.reset_dataset()
+            return next(self.dataset_iterator)
+
+    def get(self, _, keys, output, **kwargs):
+        return [output[key] for key in keys]
+
+
+class NonOverlapping(Feature):
+
+    __distributed__ = False
+
+    def __init__(self, feature, min_distance=1, max_attempts=100, **kwargs):
+        """Places a list of volumes non-overlapping.
+
+        Ensures that the volumes are placed non-overlapping by resampling the position of the volumes until they are non-overlapping.
+        If the maximum number of attempts is exceeded, a new list of volumes is generated by updating feature.
+
+        Note: This feature does not work with non-volumetric scatterers, such as MieScatterers.
+
+        Parameters
+        ----------
+        feature : Feature
+            The feature that creates the list of volumes to be placed non-overlapping.
+        min_distance : float, optional
+            The minimum distance between volumes in pixels, by default 1
+        max_attempts : int, optional
+            The maximum number of attempts to place the volumes non-overlapping. If this number is exceeded, a new list of volumes is generated, by default 100.
+        """
+        super().__init__(min_distance=min_distance, max_attempts=max_attempts, **kwargs)
+        self.feature = self.add_feature(feature, **kwargs)
+
+    def get(self, _, min_distance, max_attempts, **kwargs):
+        """
+        Parameters
+        ----------
+        list_of_volumes : list of 3d arrays
+            The volumes to be placed non-overlapping
+        min_distance : float
+            The minimum distance between volumes in pixels.
+        max_attempts : int
+            The maximum number of attempts to place the volumes non-overlapping. If this number is exceeded, a new list of volumes is generated.
+        """
+        while True:
+            list_of_volumes = self.feature()
+
+            if not isinstance(list_of_volumes, list):
+                list_of_volumes = [list_of_volumes]
+
+            for attempt in range(max_attempts):
+
+                list_of_volumes = [
+                    self._resample_volume_position(volume) for volume in list_of_volumes
+                ]
+
+                if self._check_non_overlapping(list_of_volumes):
+                    return list_of_volumes
+
+            self.feature.update()
+
+    def _check_non_overlapping(self, list_of_volumes):
+        """
+        Checks that the non-zero voxels of the volumes in list_of_volumes are at least min_distance apart.
+        Each volume is a 3 dimnesional array. The first two dimensions are the x and y dimensions, and the third dimension is the z dimension.
+        The volumes are expected to have a position attribute.
+
+        Parameters
+        ----------
+        list_of_volumes : list of 3d arrays
+            The volumes to be checked for non-overlapping
+        """
+
+        from .optics import _get_position
+
+        min_distance = self.min_distance()
+
+        # The position of the top left corner of each volume (index (0, 0, 0))
+        volume_positions_1 = [
+            _get_position(volume, mode="corner", return_z=True).astype(int)
+            for volume in list_of_volumes
+        ]
+
+        # The position of the bottom right corner of each volume (index (-1, -1, -1))
+        volume_positions_2 = [
+            p0 + np.array(v.shape) for v, p0 in zip(list_of_volumes, volume_positions_1)
+        ]
+
+        # (x1, y1, z1, x2, y2, z2) for each volume
+        volume_bounding_cube = [
+            [*p0, *p1] for p0, p1 in zip(volume_positions_1, volume_positions_2)
+        ]
+
+        for i, j in itertools.combinations(range(len(list_of_volumes)), 2):
+            # If the bounding cubes do not overlap, the volumes do not overlap
+            if self._check_bounding_cubes_non_overlapping(
+                volume_bounding_cube[i], volume_bounding_cube[j], min_distance
+            ):
+                continue
+
+            # If the bounding cubes overlap, get the overlapping region of each volume
+            overlapping_cube = self._get_overlapping_cube(
+                volume_bounding_cube[i], volume_bounding_cube[j]
+            )
+            overlapping_volume_1 = self._get_overlapping_volume(
+                list_of_volumes[i], volume_bounding_cube[i], overlapping_cube
+            )
+            overlapping_volume_2 = self._get_overlapping_volume(
+                list_of_volumes[j], volume_bounding_cube[j], overlapping_cube
+            )
+
+            # If either the overlapping regions are empty, the volumes do not overlap (done for speed)
+            if np.all(overlapping_volume_1 == 0) or np.all(overlapping_volume_2 == 0):
+                continue
+
+            # If the products of the overlapping regions are non-zero, return False
+            if np.any(overlapping_volume_1 * overlapping_volume_2):
+                return False
+
+            # Finally, check that the non-zero voxels of the volumes are at least min_distance apart
+            if not self._check_volumes_non_overlapping(
+                overlapping_volume_1, overlapping_volume_2, min_distance
+            ):
+                return False
+
+        return True
+
+    def _check_bounding_cubes_non_overlapping(
+        self, bounding_cube_1, bounding_cube_2, min_distance
+    ):
+
+        # bounding_cube_1 and bounding_cube_2 are (x1, y1, z1, x2, y2, z2)
+        # Check that the bounding cubes are non-overlapping
+        return (
+            bounding_cube_1[0] > bounding_cube_2[3] + min_distance
+            or bounding_cube_1[1] > bounding_cube_2[4] + min_distance
+            or bounding_cube_1[2] > bounding_cube_2[5] + min_distance
+            or bounding_cube_1[3] < bounding_cube_2[0] - min_distance
+            or bounding_cube_1[4] < bounding_cube_2[1] - min_distance
+            or bounding_cube_1[5] < bounding_cube_2[2] - min_distance
+        )
+
+    def _get_overlapping_cube(self, bounding_cube_1, bounding_cube_2):
+        """
+        Returns the overlapping region of the two bounding cubes.
+        """
+        return [
+            max(bounding_cube_1[0], bounding_cube_2[0]),
+            max(bounding_cube_1[1], bounding_cube_2[1]),
+            max(bounding_cube_1[2], bounding_cube_2[2]),
+            min(bounding_cube_1[3], bounding_cube_2[3]),
+            min(bounding_cube_1[4], bounding_cube_2[4]),
+            min(bounding_cube_1[5], bounding_cube_2[5]),
+        ]
+
+    def _get_overlapping_volume(self, volume, bounding_cube, overlapping_cube):
+        """
+        Returns the overlapping region of the volume and the overlapping cube.
+
+        Parameters
+        ----------
+        volume : 3d array
+            The volume to be checked for non-overlapping
+        bounding_cube : list of 6 floats
+            The bounding cube of the volume.
+            The first three elements are the position of the top left corner of the volume, and the last three elements are the position of the bottom right corner of the volume.
+        overlapping_cube : list of 6 floats
+            The overlapping cube of the volume and the other volume.
+        """
+        # The position of the top left corner of the overlapping cube in the volume
+        overlapping_cube_position = np.array(overlapping_cube[:3]) - np.array(
+            bounding_cube[:3]
+        )
+
+        # The position of the bottom right corner of the overlapping cube in the volume
+        overlapping_cube_end_position = np.array(overlapping_cube[3:]) - np.array(
+            bounding_cube[:3]
+        )
+
+        # cast to int
+        overlapping_cube_position = overlapping_cube_position.astype(int)
+        overlapping_cube_end_position = overlapping_cube_end_position.astype(int)
+
+        return volume[
+            overlapping_cube_position[0] : overlapping_cube_end_position[0],
+            overlapping_cube_position[1] : overlapping_cube_end_position[1],
+            overlapping_cube_position[2] : overlapping_cube_end_position[2],
+        ]
+
+    def _check_volumes_non_overlapping(self, volume_1, volume_2, min_distance):
+        """
+        Checks that the non-zero voxels of the volumes are at least min_distance apart.
+        """
+        # Get the positions of the non-zero voxels of each volume
+        positions_1 = np.argwhere(volume_1)
+        positions_2 = np.argwhere(volume_2)
+
+        # If the volumes are not the same size, the positions of the non-zero voxels of each volume need to be scaled
+        if volume_1.shape != volume_2.shape:
+            positions_1 = (
+                positions_1 * np.array(volume_2.shape) / np.array(volume_1.shape)
+            )
+            positions_1 = positions_1.astype(int)
+
+        # Check that the non-zero voxels of the volumes are at least min_distance apart
+        import scipy.spatial.distance
+
+        return np.all(
+            scipy.spatial.distance.cdist(positions_1, positions_2) > min_distance
+        )
+
+    def _resample_volume_position(self, volume):
+        """ Draws a new position for the volume. """
+
+        for pdict in volume.properties:
+            if "position" in pdict and "_position_sampler" in pdict:
+                new_position = pdict["_position_sampler"]()
+                if isinstance(new_position, Quantity):
+                    new_position = new_position.to("pixel").magnitude
+                pdict["position"] = new_position
+
+        return volume
+
+
+# Alias
+Dataset = TensorflowDataset

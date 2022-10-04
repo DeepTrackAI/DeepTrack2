@@ -115,7 +115,7 @@ def as_normalization(x):
 
 
 def single_layer_call(
-    x, layer, activation, normalization, norm_kwargs, activation_first=True
+    x, layer, activation, normalization, norm_kwargs, activation_first=True, **kwargs
 ):
     """Calls a layer with activation and normalization."""
     assert isinstance(norm_kwargs, dict), "norm_kwargs must be a dict. Got {0}".format(
@@ -128,9 +128,10 @@ def single_layer_call(
         else x
     )
     a = lambda x: as_activation(activation)(x) if activation else x
-    fs = [layer, a, n] if activation_first else [layer, n, a]
+    fs = [(layer, kwargs)]
+    fs = fs + [(a, {}), (n, {})] if activation_first else fs + [(n, {}), (a, {})]
 
-    return reduce(lambda x, f: f(x), fs, x)
+    return reduce(lambda x, f: f[0](x, **f[1]), fs, x)
 
 
 def with_citation(citation):
@@ -244,7 +245,7 @@ class KerasModel(Model):
             # Code is not actually unreachable if fit crashes.
             return None
 
-        return self.model.fit(x, *args, **kwargs)
+        return self.model.fit(x, *args, batch_size=batch_size, **kwargs)
 
     def export(
         self,
@@ -320,8 +321,78 @@ class KerasModel(Model):
 
         return self
 
-    def __rrshift__(self, other):
-        return self.add_preprocessing(other)
+    @staticmethod
+    def append_layer_to_sequential(model, layer):
+        """Append a layer to a sequential model.
+
+        Parameters
+        ----------
+        model : Sequential
+            Model to append layer to.
+        layer : Layer
+            Layer to append.
+        """
+        new_model = models.Sequential()
+        for l in model.layers:
+            new_model.add(l)
+        new_model.add(layer)
+
+        return new_model
+
+    @staticmethod
+    def append_layer_to_functional(model, layer):
+        """Append a layer to a functional model.
+
+        Parameters
+        ----------
+        model : Model
+            Model to append layer to.
+        layer : Layer
+            Layer to append.
+        """
+        i = layers.Input(model.input_shape[1:])
+        o = model(i)
+        o = layer(o)
+        new_model = models.Model(i, o)
+        return new_model
+
+    @staticmethod
+    def append_model_to_model(model, other):
+        """Append a model to a another model.
+
+        Parameters
+        ----------
+        model : Model
+            Model to append layer to.
+        other : Model
+            Model to append.
+        """
+        i = layers.Input(model.input_shape[1:])
+        o = model(i)
+        o = other(o)
+        new_model = models.Model(i, o)
+        return new_model
+
+    def __rshift__(self, other):
+        """Create a new model by adding a layer or model to the end of the current model."""
+
+        if isinstance(other, KerasModel):
+            other = other.model
+
+        if isinstance(other, models.Model):
+            return KerasModel(self.append_model_to_model(self.model, other))
+
+        if isinstance(other, layers.Layer) and isinstance(
+            self.model, models.Sequential
+        ):
+            return KerasModel(self.append_layer_to_sequential(self.model, other))
+
+        if isinstance(other, layers.Layer) and isinstance(self.model, models.Model):
+            return KerasModel(self.append_layer_to_functional(self.model, other))
+
+        raise ValueError(
+            "Can only add a layer or model to a model. Got {}".format(type(other))
+        )
 
     def __call__(self, *args, **kwargs):
         return self.model(*args, **kwargs)

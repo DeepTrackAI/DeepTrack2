@@ -1,9 +1,9 @@
 from tensorflow.keras import layers, models
 
 from ..backend.citations import unet_bibtex
-from .layers import as_block, TransformerEncoder
-from .embeddings import ClassToken, LearnablePositionEmbs
-from .utils import KerasModel, as_KerasModel, with_citation
+from .layers import as_block, TransformerEncoderLayer, DenseBlock, Identity
+from .embeddings import ClassToken, LearnablePositionEmbsLayer
+from .utils import KerasModel, as_KerasModel, with_citation, GELU
 
 
 def center_crop(layer, target_layer):
@@ -43,6 +43,10 @@ class Convolutional(KerasModel):
         Number of units in the output layer.
     output_activation : str or keras activation
         The activation function of the output.
+    flatten_method : str
+        The method used to flatten the output of the convolutional layers.
+        Must be one of 'flatten', 'global_average' or 'global_max'.
+        Only used if `dense_top` is True.
     loss : str or keras loss function
         The loss function of the network.
     layer_function : Callable[int] -> keras layer
@@ -62,6 +66,7 @@ class Convolutional(KerasModel):
         steps_per_pooling=1,
         dropout=(),
         dense_top=True,
+        flatten_method="flatten",
         number_of_outputs=3,
         output_activation=None,
         output_kernel_size=3,
@@ -108,7 +113,16 @@ class Convolutional(KerasModel):
         # DENSE TOP
 
         if dense_top:
-            layer = layers.Flatten()(layer)
+            if flatten_method == "flatten":
+                layer = layers.Flatten()(layer)
+            elif flatten_method == "global_average":
+                layer = layers.GlobalAveragePooling2D()(layer)
+            elif flatten_method == "global_max":
+                layer = layers.GlobalMaxPooling2D()(layer)
+            else:
+                raise ValueError(
+                    f"flatten_method must be one of 'flatten', 'global_average' or 'global_max', not {flatten_method}"
+                )
             for dense_layer_dimension in dense_layers_dimensions:
                 layer = dense_block(dense_layer_dimension)(layer)
             output_layer = layers.Dense(
@@ -129,6 +143,105 @@ class Convolutional(KerasModel):
 
 
 convolutional = Convolutional
+
+
+class FullyConvolutional(KerasModel):
+    """A fully convolutional neural network.
+
+    Parameters
+    ----------
+    input_shape : tuple
+        The shape of the input.
+    conv_layers_dimensions : tuple of int or tuple of tuple of int
+        The number of filters in each convolutional layer. Examples:
+        - (32, 64, 128) results in
+         1. Conv2D(32, 3, activation='relu', padding='same')
+         2. MaxPooling2D()
+         3. Conv2D(64, 3, activation='relu', padding='same')
+         4. MaxPooling2D()
+         5. Conv2D(128, 3, activation='relu', padding='same')
+         6. MaxPooling2D()
+         7. Conv2D(number_of_outputs, 3, activation=output_activation, padding='same')
+
+        - ((32, 32), (64, 64), (128, 128)) results in
+         1. Conv2D(32, 3, activation='relu', padding='same')
+         2. Conv2D(32, 3, activation='relu', padding='same')
+         3. MaxPooling2D()
+         4. Conv2D(64, 3, activation='relu', padding='same')
+         5. Conv2D(64, 3, activation='relu', padding='same')
+         6. MaxPooling2D()
+         7. Conv2D(128, 3, activation='relu', padding='same')
+         8. Conv2D(128, 3, activation='relu', padding='same')
+         9. MaxPooling2D()
+         10. Conv2D(number_of_outputs, 3, activation=output_activation, padding='same')
+    omit_last_pooling : bool
+        If True, the last MaxPooling2D layer is omitted. Default is False
+    number_of_outputs : int
+        The number of output channels.
+    output_activation : str
+        The activation function of the output layer.
+    output_kernel_size : int
+        The kernel size of the output layer.
+    convolution_block : function or str
+        The function used to create the convolutional blocks. Defaults to
+        "convolutional"
+    pooling_block : function or str
+        The function used to create the pooling blocks. Defaults to "pooling"
+    """
+
+    def __init__(
+        self,
+        input_shape,
+        conv_layers_dimensions,
+        omit_last_pooling=False,
+        number_of_outputs=1,
+        output_activation="sigmoid",
+        output_kernel_size=3,
+        convolution_block="convolutional",
+        pooling_block="pooling",
+        **kwargs,
+    ):
+
+        # Update layer functions
+        convolution_block = as_block(convolution_block)
+        pooling_block = as_block(pooling_block)
+
+        # INITIALIZE DEEP LEARNING NETWORK
+
+        if isinstance(input_shape, list):
+            network_input = [layers.Input(shape) for shape in input_shape]
+            inputs = layers.Concatenate(axis=-1)(network_input)
+        else:
+            network_input = layers.Input(input_shape)
+            inputs = network_input
+
+        layer = inputs
+
+        # CONVOLUTIONAL BASIS
+        for idx, depth_dimensions in enumerate(conv_layers_dimensions):
+
+            if isinstance(depth_dimensions, int):
+                depth_dimensions = (depth_dimensions,)
+
+            for conv_layer_dimension in depth_dimensions:
+                layer = convolution_block(conv_layer_dimension)(layer)
+
+            # add pooling layer
+            if idx < len(conv_layers_dimensions) - 1 or not omit_last_pooling:
+                layer = pooling_block(conv_layer_dimension)(layer)
+
+        # OUTPUT
+        output_layer = layers.Conv2D(
+            number_of_outputs,
+            kernel_size=output_kernel_size,
+            activation=output_activation,
+            padding="same",
+            name="output",
+        )(layer)
+
+        model = models.Model(network_input, output_layer)
+
+        super().__init__(model, **kwargs)
 
 
 class UNet(KerasModel):
@@ -360,49 +473,163 @@ class EncoderDecoder(KerasModel):
         super().__init__(model, **kwargs)
 
 
-class ViT(KerasModel):
-    """
-    Creates and compiles a ViT model.
-    input_shape : tuple of ints
-        Size of the images to be analyzed.
-    patch_shape : int
-        Size of the patches to be extracted from the input images.
-    num_layers : int
-        Number of Transformer layers in the ViT model.
-    hidden_size : int
-        Size of the hidden layers in the ViT model.
-    number_of_heads : int
-        Number of attention heads in each Transformer layer.
-    fwd_mlp_dim : int
+class ClsTransformerBaseModel(KerasModel):
+    """Base class for Transformer models with classification heads.
+
+    Parameters
+    ----------
+    inputs : list of keras.layers.Input
+        Input layers of the network.
+    encoder : tf.Tensor
+        Encoded representation of the input.
+    number_of_transformer_layers : int
+        Number of Transformer layers in the model.
+    base_fwd_mlp_dimensions : int
         Size of the hidden layers in the forward MLP of the Transformer layers.
-    dropout : float
-        Dropout rate of the forward MLP in the Transformer layers.
-    representation_size : int
-        Size of the representation vector of the ViT head. By default, it is
-        equal to the hidden size of the last Transformer layer.
-    include_top : bool
-        Whether to include the top layer of the ViT model.
-    output_size : int
-        Size of the output layer of the ViT model.
-    output_activation : str or keras activation
-        The activation function of the output.
+    transformer_block : str or keras.layers.Layer
+        The Transformer layer to use. By default, uses the TransformerEncoder
+        block. See .layers for available Transformer layers.
+    cls_layer_dimensions : int, optional
+        Size of the ClassToken layer. If None, no ClassToken layer is added.
+    node_decoder_layer_dimensions: list of ints
+        List of the number of units in each dense layer of the nodes' decoder. The
+        number of layers is inferred from the length of this list.
+    number_of_cls_outputs: int
+        Number of output cls features.
+    number_of_nodes_outputs: int
+        Number of output nodes features.
+    cls_output_activation: str or activation function or layer
+        Activation function for the output cls layer. See keras docs for accepted strings.
+    node_output_activation: str or activation function or layer
+        Activation function for the output node layer. See keras docs for accepted strings.
+    transformer_block: str, keras.layers.Layer, or callable
+        The transformer layer. See .layers for available transformer blocks.
+    dense_block: str, keras.layers.Layer, or callable
+        The dense block to use for the nodes' decoder.
+    cls_norm_block: str, keras.layers.Layer, or callable
+        The normalization block to use for the cls layer.
+    use_learnable_positional_embs : bool
+        Whether to use learnable positional embeddings.
+    output_type: str
+        Type of output. Either "cls", "cls_rep", "nodes" or
+        "full". If 'key' is not a supported output type, then
+        the model output will be the concatenation of the node
+        and cls predictions ("full").
     kwargs : dict
         Additional arguments to be passed to the KerasModel constructor.
     """
 
     def __init__(
         self,
-        input_shape=(224, 224, 3),
-        patch_shape=16,
-        num_layers=12,
-        hidden_size=768,
-        number_of_heads=12,
-        fwd_mlp_dim=3072,
-        dropout=0.1,
-        representation_size=None,
-        include_top=True,
-        output_size=1000,
-        output_activation="linear",
+        inputs,
+        encoder,
+        number_of_transformer_layers=12,
+        base_fwd_mlp_dimensions=256,
+        cls_layer_dimension=None,
+        number_of_cls_outputs=1,
+        cls_output_activation="linear",
+        transformer_block=TransformerEncoderLayer(
+            normalization="LayerNormalization",
+            dropout=0.1,
+            norm_kwargs={"epsilon": 1e-6},
+        ),
+        dense_block=DenseBlock(
+            activation=GELU,
+            normalization="LayerNormalization",
+            norm_kwargs={"epsilon": 1e-6},
+        ),
+        positional_embedding_block=Identity(),
+        output_type="cls",
+        transformer_input_kwargs={},
+        **kwargs,
+    ):
+        transformer_block = as_block(transformer_block)
+        dense_block = as_block(dense_block)
+        positional_embedding_block = as_block(positional_embedding_block)
+
+        layer = ClassToken(name="class_token")(encoder)
+
+        layer = positional_embedding_block(
+            layer.shape[-1], name="Transformer/posembed_input"
+        )(layer)
+
+        # Bottleneck path, Transformer layers
+        for n in range(number_of_transformer_layers):
+            layer, _ = transformer_block(
+                base_fwd_mlp_dimensions, name=f"Transformer/encoderblock_{n}"
+            )(layer, **transformer_input_kwargs)
+
+        # Extract global representation
+        cls_rep = layers.Lambda(lambda x: x[:, 0], name="RetrieveClassToken")(layer)
+
+        # Process cls features
+        cls_layer = cls_rep
+        if cls_layer_dimension is not None:
+            cls_layer = dense_block(cls_layer_dimension, name="cls_mlp")(cls_layer)
+
+        cls_output = layers.Dense(
+            number_of_cls_outputs,
+            activation=cls_output_activation,
+            name="cls_prediction",
+        )(cls_layer)
+
+        output_dict = {
+            "cls_rep": cls_rep,
+            "cls": cls_output,
+        }
+        try:
+            outputs = output_dict[output_type]
+        except KeyError:
+            outputs = output_dict["cls"]
+
+        model = models.Model(inputs=inputs, outputs=outputs)
+
+        super().__init__(model, **kwargs)
+
+
+class ViT(ClsTransformerBaseModel):
+    """
+    Creates and compiles a ViT model.
+    input_shape : tuple of ints
+        Size of the images to be analyzed.
+    patch_shape : int
+        Size of the patches to be extracted from the input images.
+    hidden_size : int
+        Size of the hidden layers in the ViT model.
+    number_of_transformer_layers : int
+        Number of Transformer layers in the model.
+    base_fwd_mlp_dimensions : int
+        Size of the hidden layers in the forward MLP of the Transformer layers.
+    transformer_block : str or keras.layers.Layer
+        The Transformer layer to use. By default, uses the TransformerEncoder
+        block. See .layers for available Transformer layers.
+    number_of_cls_outputs: int
+        Number of output cls features.
+    cls_output_activation: str or activation function or layer
+        Activation function for the output cls layer. See keras docs for accepted strings.
+    use_learnable_positional_embs : bool
+        Whether to use learnable positional embeddings.
+    output_type: str
+        Type of output. Either "cls", "cls_rep", "nodes" or
+        "full". If 'key' is not a supported output type, then
+        the model output will be the concatenation of the node
+        and cls predictions ("full").
+    kwargs : dict
+        Additional arguments to be passed to the TransformerBaseModel contructor
+        for advanced configuration.
+    """
+
+    def __init__(
+        self,
+        input_shape=(28, 28, 1),
+        patch_shape=4,
+        hidden_size=72,
+        number_of_transformer_layers=4,
+        base_fwd_mlp_dimensions=256,
+        number_of_cls_outputs=10,
+        cls_output_activation="linear",
+        output_type="cls",
+        positional_embedding_block=LearnablePositionEmbsLayer(),
         **kwargs,
     ):
 
@@ -411,39 +638,105 @@ class ViT(KerasModel):
         ), "image_size must be a multiple of patch_size"
 
         vit_input = layers.Input(shape=input_shape)
-        layer = layers.Conv2D(
+        encoder_layer = layers.Conv2D(
             filters=hidden_size,
             kernel_size=patch_shape,
             strides=patch_shape,
             padding="valid",
             name="embedding",
         )(vit_input)
-        layer = layers.Reshape((layer.shape[1] * layer.shape[2], hidden_size))(layer)
-        layer = ClassToken(name="class_token")(layer)
-        layer = LearnablePositionEmbs(name="Transformer/posembed_input")(layer)
-        for n in range(num_layers):
-            layer, _ = TransformerEncoder(
-                number_of_heads=number_of_heads,
-                fwd_mlp_dim=fwd_mlp_dim,
-                dropout=dropout,
-                name=f"Transformer/encoderblock_{n}",
+        encoder_layer = layers.Reshape(
+            (encoder_layer.shape[1] * encoder_layer.shape[2], hidden_size)
+        )(encoder_layer)
+
+        super().__init__(
+            inputs=vit_input,
+            encoder=encoder_layer,
+            number_of_transformer_layers=number_of_transformer_layers,
+            base_fwd_mlp_dimensions=base_fwd_mlp_dimensions,
+            number_of_cls_outputs=number_of_cls_outputs,
+            cls_output_activation=cls_output_activation,
+            output_type=output_type,
+            positional_embedding_block=positional_embedding_block,
+            **kwargs,
+        )
+
+
+class Transformer(KerasModel):
+    """
+    Creates and compiles a Transformer model.
+    """
+
+    def __init__(
+        self,
+        number_of_node_features=3,
+        dense_layer_dimensions=(64, 96),
+        number_of_transformer_layers=12,
+        base_fwd_mlp_dimensions=256,
+        number_of_node_outputs=1,
+        node_output_activation="linear",
+        transformer_block=TransformerEncoderLayer(
+            normalization="LayerNormalization",
+            dropout=0.1,
+            norm_kwargs={"epsilon": 1e-6},
+        ),
+        dense_block=DenseBlock(
+            activation=GELU,
+            normalization="LayerNormalization",
+            norm_kwargs={"epsilon": 1e-6},
+        ),
+        positional_embedding_block=Identity(),
+        **kwargs,
+    ):
+
+        dense_block = as_block(dense_block)
+
+        transformer_input, transformer_mask = (
+            layers.Input(shape=(None, number_of_node_features)),
+            layers.Input(shape=(None, 2), dtype="int32"),
+        )
+
+        layer = transformer_input
+        # Encoder for input features
+        for dense_layer_number, dense_layer_dimension in zip(
+            range(len(dense_layer_dimensions)), dense_layer_dimensions
+        ):
+            layer = dense_block(
+                dense_layer_dimension,
+                name="fencoder_" + str(dense_layer_number + 1),
             )(layer)
-        layer = layers.LayerNormalization(
-            epsilon=1e-6, name="Transformer/encoder_norm"
+
+        layer = positional_embedding_block(
+            layer.shape[-1], name="Transformer/posembed_input"
         )(layer)
-        layer = layers.Lambda(lambda v: v[:, 0], name="ExtractToken")(layer)
 
-        if representation_size is not None:
-            layer = layers.Dense(
-                representation_size, name="pre_logits", activation="tanh"
+        # Bottleneck path, Transformer layers
+        for n in range(number_of_transformer_layers):
+            layer, _ = transformer_block(
+                base_fwd_mlp_dimensions, name=f"Transformer/encoderblock_{n}"
+            )(layer, edges=transformer_mask)
+
+        # Decoder for node and edge features
+        for dense_layer_number, dense_layer_dimension in zip(
+            range(len(dense_layer_dimensions)),
+            reversed(dense_layer_dimensions),
+        ):
+            layer = dense_block(
+                dense_layer_dimension,
+                name="fdecoder" + str(dense_layer_number + 1),
+                **kwargs,
             )(layer)
 
-        if include_top:
-            output_layer = layers.Dense(
-                output_size, name="head", activation=output_activation
-            )(layer)
-        else:
-            output_layer = layer
+        # Output layers
+        output_layer = layers.Dense(
+            number_of_node_outputs,
+            activation=node_output_activation,
+            name="node_prediction",
+        )(layer)
 
-        model = models.Model(inputs=vit_input, outputs=output_layer, name="ViT")
+        model = models.Model(
+            [transformer_input, transformer_mask],
+            output_layer,
+        )
+
         super().__init__(model, **kwargs)
