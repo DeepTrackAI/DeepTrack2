@@ -42,10 +42,11 @@ doi = "10.6084/m9.figshare.856713.v1"
 class SegmentationSstemDrosophila(tfds.core.GeneratorBasedBuilder):
     """DatasetBuilder for segmentation_ssTEM_drosophila dataset."""
 
-    VERSION = tfds.core.Version("1.0.1")
+    VERSION = tfds.core.Version("1.0.2")
     RELEASE_NOTES = {
         "1.0.0": "Initial release.",
         "1.0.1": "Fix loading of tif images.",
+        "1.0.2": "Fix ordering on unix systems.",
     }
 
     def _info(self) -> tfds.core.DatasetInfo:
@@ -89,6 +90,10 @@ class SegmentationSstemDrosophila(tfds.core.GeneratorBasedBuilder):
 
         raw_paths = list(raws.glob("*.tif"))
         label_paths = list(labels.glob("*.png"))
+
+        # sort paths by name of file
+        raw_paths.sort(key=lambda x: x.name)
+        label_paths.sort(key=lambda x: x.name)
 
         for r, l in zip(raw_paths, label_paths):
             assert r.stem[-2:] == l.stem[-2:], "Mismatched raw and label files"

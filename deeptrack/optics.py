@@ -577,6 +577,10 @@ class Brightfield(Optics):
 
     __gpu_compatible__ = True
 
+    __conversion_table__ = ConversionTable(
+        working_distance=(u.meter, u.meter),
+    )
+
     def get(self, illuminated_volume, limits, fields, **kwargs):
         """Convolves the image with a pupil function"""
         # Pad volume
@@ -683,10 +687,18 @@ class Brightfield(Optics):
 
         if not kwargs.get("return_field", False):
             output_image = np.square(np.abs(output_image))
+        else:
+            # Fudge factor. Not sure why this is needed.
+            output_image = output_image - 1
+            output_image = output_image * np.exp(1j * -np.pi / 4)
+            output_image = output_image + 1
 
         output_image.properties = illuminated_volume.properties
 
         return output_image
+
+
+Holography = Brightfield
 
 
 class IlluminationGradient(Feature):
@@ -742,6 +754,8 @@ def _get_position(image, mode="corner", return_z=False):
 
     if mode == "corner" and image.size > 0:
         import scipy.ndimage
+
+        image = image.to_numpy()
 
         shift = scipy.ndimage.center_of_mass(np.abs(image))
 

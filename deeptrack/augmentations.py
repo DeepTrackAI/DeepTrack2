@@ -681,6 +681,30 @@ class CropToMultiplesOf(Crop):
         )
 
 
+class CropTight(Feature):
+    def __init__(self, eps=1e-10, **kwargs):
+        """Crops input array to remove empty space.
+
+        Removes indices from the start and end of the array, where all values are below eps.
+
+        Currently only works for 3D arrays.
+
+        Parameters
+        ----------
+        eps : float, optional
+            The threshold for considering a pixel to be empty, by default 1e-10"""
+        super().__init__(eps=eps, **kwargs)
+
+    def get(self, image, eps, **kwargs):
+        image = np.asarray(image)
+
+        image = image[..., np.any(image > eps, axis=(0, 1))]
+        image = image[np.any(image > eps, axis=(1, 2)), ...]
+        image = image[:, np.any(image > eps, axis=(0, 2)), :]
+
+        return image
+
+
 class Pad(Augmentation):
     """Pads the image.
 

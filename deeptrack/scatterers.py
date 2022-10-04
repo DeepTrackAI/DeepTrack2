@@ -110,6 +110,7 @@ class Scatterer(Feature):
             upsample=upsample,
             voxel_size=voxel_size,
             pixel_size=pixel_size,
+            _position_sampler=lambda: position,
             **kwargs,
         )
 
@@ -151,29 +152,6 @@ class Scatterer(Feature):
                 + " or upscale on the optics.",
                 Warning,
             )
-
-        # # Downsamples the image along the axes it was upsampled
-        # if upsample != 1 and upsample_axes:
-
-        #     # Pad image to ensure it is divisible by upsample
-        #     increase = np.array(new_image.shape)
-        #     for axis in upsample_axes:
-        #         increase[axis] = upsample - (new_image.shape[axis] % upsample)
-        #     pad_width = [(0, inc) for inc in increase]
-        #     new_image = np.pad(new_image, pad_width, mode="constant")
-
-        #     # Finds reshape size for downsampling
-        #     new_shape = []
-        #     for axis in range(new_image.ndim):
-        #         if axis in upsample_axes:
-        #             new_shape += [new_image.shape[axis] // upsample, upsample]
-        #         else:
-        #             new_shape += [new_image.shape[axis]]
-
-        #     # Downsamples
-        #     new_image = np.reshape(new_image, new_shape).mean(
-        #         axis=tuple(np.array(upsample_axes, dtype=np.int32) * 2 + 1)
-        #     )
 
         # Crops empty slices
         if crop_empty:
@@ -664,8 +642,6 @@ class MieScatterer(Scatterer):
         **kwargs,
     ):
 
-        import matplotlib.pyplot as plt
-
         # Get size of the output
         xSize, ySize = self.get_xy_size()
         voxel_size = get_active_voxel_size()
@@ -707,8 +683,6 @@ class MieScatterer(Scatterer):
         pupil_mask = (x_farfield - position_objective[0]) ** 2 + (
             y_farfield - position_objective[1]
         ) ** 2 < (pupil_physical_size / 2) ** 2
-
-        import matplotlib.pyplot as plt
 
         R3_field = R3_field[pupil_mask]
         cos_theta_field = cos_theta_field[pupil_mask]
@@ -828,6 +802,12 @@ class MieSphere(MieScatterer):
         **kwargs,
     ):
         def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
+
+            if isinstance(radius, Quantity):
+                radius = radius.to("m").magnitude
+            if isinstance(wavelength, Quantity):
+                wavelength = wavelength.to("m").magnitude
+
             def inner(L):
                 return D.mie_coefficients(
                     refractive_index / refractive_index_medium,
