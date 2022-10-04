@@ -2,6 +2,7 @@
 from pint import UnitRegistry, Context
 from .backend.pint_definition import pint_definitions
 
+
 units = UnitRegistry(pint_definitions.split("\n"))
 
 import tensorflow as tf
@@ -27,6 +28,7 @@ from .elementwise import *
 from .statistics import *
 from .holography import *
 
+
 from .image import strip
 
 from . import (
@@ -39,4 +41,5 @@ from . import (
     backend,
     test,
     visualization,
+    datasets,
 )

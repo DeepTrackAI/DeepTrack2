@@ -17,7 +17,7 @@ import skimage.measure
 
 from . import utils
 from .features import Feature
-from .image import Image
+from .image import Image, strip
 from .types import PropertyLike
 
 
@@ -277,6 +277,80 @@ class AveragePooling(Pool):
 
     def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
         super().__init__(np.mean, ksize=ksize, **kwargs)
+
+
+class MaxPooling(Pool):
+    """Apply max pooling to images.
+
+    Parameters
+    ----------
+    ksize : int
+        Size of the pooling kernel.
+    cval : number
+        Value to pad edges with if necessary. Default 0.
+    func_kwargs : dict
+        Additional parameters sent to the pooling function.
+    """
+
+    def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
+        super().__init__(np.max, ksize=ksize, **kwargs)
+
+
+class MinPooling(Pool):
+    """Apply min pooling to images.
+
+    Parameters
+    ----------
+    ksize : int
+        Size of the pooling kernel.
+    cval : number
+        Value to pad edges with if necessary. Default 0.
+    func_kwargs : dict
+        Additional parameters sent to the pooling function.
+    """
+
+    def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
+        super().__init__(np.min, ksize=ksize, **kwargs)
+
+
+class MedianPooling(Pool):
+    """Apply median pooling to images.
+
+    Parameters
+    ----------
+    ksize : int
+        Size of the pooling kernel.
+    cval : number
+        Value to pad edges with if necessary. Default 0.
+    func_kwargs : dict
+        Additional parameters sent to the pooling function.
+    """
+
+    def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
+        super().__init__(np.median, ksize=ksize, **kwargs)
+
+
+class Resize(Feature):
+    """Resize an image. This is a wrapper around cv2.resize and takes the same arguments.
+    Note that the order of the axes is different in cv2 and numpy. In cv2, the first axis is the
+    vertical axis, while in numpy it is the horizontal axis. This is reflected in the default
+    values of the arguments.
+
+    Parameters
+    ----------
+    size : tuple
+        Size to resize to.
+    """
+
+    def __init__(self, dsize: PropertyLike[tuple] = (256, 256), **kwargs):
+        super().__init__(dsize=dsize, **kwargs)
+
+    def get(self, image, dsize, **kwargs):
+        import cv2
+
+        return utils.safe_call(
+            cv2.resize, positional_args=[strip(image), dsize], **kwargs
+        )
 
 
 # OPENCV2 blur

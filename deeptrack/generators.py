@@ -215,6 +215,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         shuffle_batch=True,
         ndim=4,
         max_epochs_per_sample=np.inf,
+        use_multi_inputs=False,
         verbose=1,
     ):
         if label_function is None and batch_function is None:
@@ -229,9 +230,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         if min_data_size is None:
             min_data_size = min(batch_size * 10, max_data_size - 1)
 
-        assert (
-            min_data_size < max_data_size
-        ), "max_data_size needs to be larger than min_data_size"
+        max_data_size = max(max_data_size, min_data_size + 1)
 
         self.min_data_size = min_data_size
         self.max_data_size = max_data_size
@@ -242,6 +241,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         self.batch_size = batch_size
         self.shuffle_batch = shuffle_batch
         self.max_epochs_per_sample = max_epochs_per_sample
+        self.use_multi_inputs = use_multi_inputs
         self.ndim = ndim
         self.augmentation = augmentation
 
@@ -352,7 +352,18 @@ class ContinuousGenerator(keras.utils.Sequence):
         data = [self.batch_function(d["data"]) for d in subset]
         labels = [self.label_function(d["data"]) for d in subset]
 
-        return np.array(data), np.array(labels)
+        if self.use_multi_inputs:
+            return (
+                tuple(
+                    [
+                        np.stack(list(map(np.array, _data)), axis=0)
+                        for _data in list(zip(*data))
+                    ]
+                ),
+                np.array(labels),
+            )
+        else:
+            return np.array(data), np.array(labels)
 
     def __len__(self):
         steps = int((self.min_data_size // self._batch_size))

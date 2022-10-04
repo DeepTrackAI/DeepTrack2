@@ -9,7 +9,10 @@ from numpy.core.numeric import array_equal
 
 from numpy.testing._private.utils import assert_almost_equal
 
+from deeptrack import scatterers
+
 from .. import features, Image, properties, utils
+from .. import units
 
 
 import numpy as np
@@ -912,6 +915,324 @@ class TestFeatures(unittest.TestCase):
         self.assertEquals(values.update().resolve(key="3"), 3)
 
         self.assertRaises(KeyError, lambda: values.update().resolve(key="4"))
+
+    def test_NonOverlapping_resample_volume_position(self):
+
+        # setup
+        nonOverlapping = features.NonOverlapping(
+            features.Value(value=1),
+        )
+
+        positions_no_unit = [1, 2]
+        positions_with_unit = [1 * units.px, 2 * units.px]
+
+        positions_no_unit_iter = iter(positions_no_unit)
+        positions_with_unit_iter = iter(positions_with_unit)
+
+        volume_1 = scatterers.PointParticle(
+            position=lambda: next(positions_no_unit_iter)
+        )()
+        volume_2 = scatterers.PointParticle(
+            position=lambda: next(positions_with_unit_iter)
+        )()
+
+        # test
+
+        self.assertEqual(volume_1.get_property("position"), positions_no_unit[0])
+        self.assertEqual(
+            volume_2.get_property("position"),
+            positions_with_unit[0].to("px").magnitude,
+        )
+
+        nonOverlapping._resample_volume_position(volume_1)
+        nonOverlapping._resample_volume_position(volume_2)
+
+        self.assertEqual(volume_1.get_property("position"), positions_no_unit[1])
+        self.assertEqual(
+            volume_2.get_property("position"),
+            positions_with_unit[1].to("px").magnitude,
+        )
+
+    def test_NonOverlapping_check_volumes_non_overlapping(self):
+
+        # setup
+        nonOverlapping = features.NonOverlapping(
+            features.Value(value=1),
+        )
+
+        volume_test0_a = np.zeros((5, 5, 5))
+        volume_test0_b = np.zeros((5, 5, 5))
+
+        volume_test1_a = np.zeros((5, 5, 5))
+        volume_test1_b = np.zeros((5, 5, 5))
+        volume_test1_a[0, 0, 0] = 1
+        volume_test1_b[0, 0, 0] = 1
+
+        volume_test2_a = np.zeros((5, 5, 5))
+        volume_test2_b = np.zeros((5, 5, 5))
+        volume_test2_a[0, 0, 0] = 1
+        volume_test2_b[0, 0, 1] = 1
+
+        volume_test3_a = np.zeros((5, 5, 5))
+        volume_test3_b = np.zeros((5, 5, 5))
+        volume_test3_a[0, 0, 0] = 1
+        volume_test3_b[0, 1, 0] = 1
+
+        volume_test4_a = np.zeros((5, 5, 5))
+        volume_test4_b = np.zeros((5, 5, 5))
+        volume_test4_a[0, 0, 0] = 1
+        volume_test4_b[1, 0, 0] = 1
+
+        volume_test5_a = np.zeros((5, 5, 5))
+        volume_test5_b = np.zeros((5, 5, 5))
+        volume_test5_a[0, 0, 0] = 1
+        volume_test5_b[0, 1, 1] = 1
+
+        volume_test6_a = np.zeros((5, 5, 5))
+        volume_test6_b = np.zeros((5, 5, 5))
+        volume_test6_a[1:3, 1:3, 1:3] = 1
+        volume_test6_b[0:2, 0:2, 0:2] = 1
+
+        volume_test7_a = np.zeros((5, 5, 5))
+        volume_test7_b = np.zeros((5, 5, 5))
+        volume_test7_a[2:4, 2:4, 2:4] = 1
+        volume_test7_b[0:2, 0:2, 0:2] = 1
+
+        volume_test8_a = np.zeros((5, 5, 5))
+        volume_test8_b = np.zeros((5, 5, 5))
+        volume_test8_a[3:, 3:, 3:] = 1
+        volume_test8_b[:2, :2, :2] = 1
+
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test0_a,
+                volume_test0_b,
+                min_distance=0,
+            ),
+        )
+
+        self.assertFalse(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test1_a,
+                volume_test1_b,
+                min_distance=0,
+            )
+        )
+
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test2_a,
+                volume_test2_b,
+                min_distance=0,
+            )
+        )
+        self.assertFalse(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test2_a,
+                volume_test2_b,
+                min_distance=1,
+            )
+        )
+
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test3_a,
+                volume_test3_b,
+                min_distance=0,
+            )
+        )
+        self.assertFalse(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test3_a,
+                volume_test3_b,
+                min_distance=1,
+            )
+        )
+
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test4_a,
+                volume_test4_b,
+                min_distance=0,
+            )
+        )
+        self.assertFalse(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test4_a,
+                volume_test4_b,
+                min_distance=1,
+            )
+        )
+
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test5_a,
+                volume_test5_b,
+                min_distance=0,
+            )
+        )
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test5_a,
+                volume_test5_b,
+                min_distance=1,
+            )
+        )
+
+        self.assertFalse(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test6_a,
+                volume_test6_b,
+                min_distance=0,
+            )
+        )
+
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test7_a,
+                volume_test7_b,
+                min_distance=0,
+            )
+        )
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test7_a,
+                volume_test7_b,
+                min_distance=1,
+            )
+        )
+
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test8_a,
+                volume_test8_b,
+                min_distance=0,
+            )
+        )
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test8_a,
+                volume_test8_b,
+                min_distance=1,
+            )
+        )
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test8_a,
+                volume_test8_b,
+                min_distance=2,
+            )
+        )
+        self.assertTrue(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test8_a,
+                volume_test8_b,
+                min_distance=3,
+            )
+        )
+        self.assertFalse(
+            nonOverlapping._check_volumes_non_overlapping(
+                volume_test8_a,
+                volume_test8_b,
+                min_distance=4,
+            )
+        )
+
+    def test_NonOverlapping_check_non_overlapping(self):
+
+        # setup
+        nonOverlapping = features.NonOverlapping(
+            features.Value(value=1),
+            min_distance=1,
+        )
+
+        # Two spheres at the same position
+        volume_test0_a = scatterers.Sphere(
+            radius=5 * units.px, position=(0, 0, 0) * units.px
+        )()
+        volume_test0_b = scatterers.Sphere(
+            radius=5 * units.px, position=(0, 0, 0) * units.px
+        )()
+
+        # Two spheres of the same size, one under the other
+        volume_test1_a = scatterers.Sphere(
+            radius=5 * units.px, position=(0, 0, 0) * units.px
+        )()
+        volume_test1_b = scatterers.Sphere(
+            radius=5 * units.px, position=(0, 0, 10) * units.px
+        )()
+
+        # Two spheres of the same size, one under the other, but with a
+        # spacing of 1
+        volume_test2_a = scatterers.Sphere(
+            radius=5 * units.px, position=(0, 0, 0) * units.px
+        )()
+        volume_test2_b = scatterers.Sphere(
+            radius=5 * units.px, position=(0, 0, 11) * units.px
+        )()
+
+        # Two spheres of the same size, one under the other, but with a
+        # spacing of -1
+        volume_test3_a = scatterers.Sphere(
+            radius=5 * units.px, position=(0, 0, 0) * units.px
+        )()
+        volume_test3_b = scatterers.Sphere(
+            radius=5 * units.px, position=(0, 0, 9) * units.px
+        )()
+
+        # Two spheres of the same size, diagonally next to each other
+        volume_test4_a = scatterers.Sphere(
+            radius=5 * units.px, position=(0, 0, 0) * units.px
+        )()
+        volume_test4_b = scatterers.Sphere(
+            radius=5 * units.px, position=(6, 6, 6) * units.px
+        )()
+
+        # Two spheres of the same size, diagonally next to each other, but
+        # with a spacing of 1
+        volume_test5_a = scatterers.Sphere(
+            radius=5 * units.px, position=(0, 0, 0) * units.px
+        )()
+        volume_test5_b = scatterers.Sphere(
+            radius=5 * units.px, position=(7, 7, 7) * units.px
+        )()
+
+        # Run tests
+        self.assertFalse(
+            nonOverlapping._check_non_overlapping(
+                [volume_test0_a, volume_test0_b],
+            )
+        )
+
+        self.assertFalse(
+            nonOverlapping._check_non_overlapping(
+                [volume_test1_a, volume_test1_b],
+            )
+        )
+
+        self.assertTrue(
+            nonOverlapping._check_non_overlapping(
+                [volume_test2_a, volume_test2_b],
+            )
+        )
+
+        self.assertFalse(
+            nonOverlapping._check_non_overlapping(
+                [volume_test3_a, volume_test3_b],
+            )
+        )
+
+        self.assertFalse(
+            nonOverlapping._check_non_overlapping(
+                [volume_test4_a, volume_test4_b],
+            )
+        )
+
+        self.assertTrue(
+            nonOverlapping._check_non_overlapping(
+                [volume_test5_a, volume_test5_b],
+            )
+        )
 
 
 if __name__ == "__main__":
