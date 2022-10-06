@@ -7,6 +7,10 @@ with open("README.md", "r") as fh:
 with open("requirements.txt", "r") as fh:
     required = fh.read().splitlines()
 
+# Remove sphinx from requirements
+required = [x for x in required if not x.startswith("Sphinx")]
+required = [x for x in required if not x.startswith("pydata-sphinx-theme")]
+
 
 installed = [pkg.key for pkg in pkg_resources.working_set]
 if (
