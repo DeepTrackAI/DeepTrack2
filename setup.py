@@ -1,27 +1,16 @@
 import setuptools
-import subprocess
 import pkg_resources
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-required = [
-    "tensorflow",
-    "tensorflow-probability",
-    "tensorflow_datasets",
-    "numpy",
-    "scipy",
-    "pint",
-    "pandas",
-    "tqdm",
-    "scikit-image>=0.18.0",
-    "pydeepimagej",
-    "more_itertools",
-]
+with open("requirements.txt", "r") as fh:
+    required = fh.read().splitlines()
+
 
 installed = [pkg.key for pkg in pkg_resources.working_set]
 if (
-    not "tensorflow" in installed
+    "tensorflow" not in installed
     or pkg_resources.working_set.by_key["tensorflow"].version[0] == "2"
 ):
     required.append("tensorflow_addons")
