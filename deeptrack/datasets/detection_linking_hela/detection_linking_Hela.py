@@ -6,7 +6,7 @@ import tensorflow_datasets as tfds
 import pandas as pd
 
 _DESCRIPTION = """
-This dataset includes tracking data from DICC2DH-HELA (provided by the sixth edition of the Cell Tracking Challenge).
+This dataset includes tracking data from DIC-C2DH-HELA (provided by the sixth edition of the Cell Tracking Challenge).
 It consists of two dataframes: ``nodes`` and ``parenthood``. ``nodes`` contains information about the individual 
 cells, while "parenthood" includes information on the lineage of the cells.
 """
