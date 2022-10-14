@@ -47,7 +47,9 @@ def to_trajectories(
             solutions["frame_diff"] == solutions["frame_diff"].min(), :
         ]
         if _type == "prediction":
-            solutions = solutions.loc[solutions["score"] == solutions["score"].max(), :]
+            solutions = solutions.loc[
+                solutions["score"] == solutions["score"].max(), :
+            ]
         for i in range(len(solutions)):
             alpha = 0.1 + d_alpha * int(solutions[i : i + 1]["frame_y"])
 
@@ -87,7 +89,7 @@ def to_trajectories(
     return trajectories
 
 
-def get_predictions(dfs, properties, model, graph_kwargs):
+def get_predictions(dfs, properties, model, **graph_kwargs):
     """
     Get predictions from nodes dataframe.
 
@@ -103,7 +105,7 @@ def get_predictions(dfs, properties, model, graph_kwargs):
         Extra arguments to be passed to the graph extractor.
     """
     grapht = GraphExtractor(
-        nodesdf=dfs, properties=properties, validation=True, **graph_kwargs.properties()
+        nodesdf=dfs, properties=properties, validation=True, **graph_kwargs
     )
 
     v = [
