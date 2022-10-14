@@ -3,6 +3,7 @@
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
+import numpy as np
 import pandas as pd
 
 _DESCRIPTION = """
@@ -57,6 +58,9 @@ class DetectionLinkingHela(tfds.core.GeneratorBasedBuilder):
                             ),
                         }
                     ),
+                    "images": tfds.features.Tensor(
+                        shape=(84, 512, 512, 1), dtype=tf.float64
+                    ),
                 }
             ),
             supervised_keys=None,
@@ -85,14 +89,16 @@ class DetectionLinkingHela(tfds.core.GeneratorBasedBuilder):
         """Yields examples."""
 
         # Load data
-        nodes, parenthood = (
+        nodes, parenthood, images = (
             pd.read_csv(path / split / "nodesdf.csv"),
             pd.read_csv(path / split / "parenthood.csv"),
+            np.load(path / split / "images.npy"),
         )
-        # Yields (key, example) tuples from the dataset
+
         yield "_", {
             "nodes": {**nodes.to_dict("list")},
             "parenthood": {**parenthood.to_dict("list")},
+            "images": images * 1.0,
         }
 
     def get_node_features(self):
