@@ -28,11 +28,42 @@ def GetSubSet(randset):
         node_sets = sets[0][nodeidxs]
         edge_sets = sets[1][edgeidxs]
 
+        return (
+            (node_features, edge_features, edge_connections, weights),
+            (
+                node_labels,
+                edge_labels,
+                glob_labels,
+            ),
+            (node_sets, edge_sets),
+        )
+
+    return inner
+
+
+def GetSubGraph(num_nodes, node_start):
+    def inner(data):
+        graph, labels, *_ = data
+
+        edge_connects_removed_node = np.any(
+            (graph[2] < node_start) | (graph[2] >= node_start + num_nodes),
+            axis=-1,
+        )
+
+        node_features = graph[0][node_start : node_start + num_nodes]
+        edge_features = graph[1][~edge_connects_removed_node]
+        edge_connections = graph[2][~edge_connects_removed_node] - node_start
+        weights = graph[3][~edge_connects_removed_node]
+
+        node_labels = labels[0][node_start : node_start + num_nodes]
+        edge_labels = labels[1][~edge_connects_removed_node]
+        global_labels = labels[2]
+
         return (node_features, edge_features, edge_connections, weights), (
             node_labels,
             edge_labels,
-            glob_labels,
-        ), (node_sets, edge_sets)
+            global_labels,
+        )
 
     return inner
 
@@ -176,7 +207,8 @@ def GetFeature(full_graph, **kwargs):
         >> dt.Lambda(
             GetSubSet,
             randset=lambda: np.random.randint(
-                np.max(full_graph[-1][0][:, 0]) + 1),
+                np.max(full_graph[-1][0][:, 0]) + 1
+            ),
         )
         >> dt.Lambda(
             GetSubGraphFromLabel,
@@ -207,7 +239,8 @@ def GetGlobalFeature(full_graph, **kwargs):
         >> dt.Lambda(
             GetSubSet,
             randset=lambda: np.random.randint(
-                np.max(full_graph[-1][0][:, 0]) + 1),
+                np.max(full_graph[-1][0][:, 0]) + 1
+            ),
         )
         >> dt.Lambda(
             AugmentCentroids,
