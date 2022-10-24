@@ -1,0 +1,51 @@
+{
+    "creators": [
+        {
+            "orcid": "0000-0001-9386-4753",
+            "affiliation": "Gothenburg University",
+            "name": "Midtvedt, Benjamin"
+        }, 
+        {
+            "orcid": "0000-0002-9197-3451",
+            "affiliation": "Gothenburg University",
+            "name": "Pineda, Jesus"
+        }, 
+        {
+            "orcid": "0000-0001-7275-6921",
+            "affiliation": "Chalmers University of Technology",
+            "name": "Klein Morberg, Henrik"
+        }, 
+        {
+            "orcid": "0000-0002-8625-0996",
+            "affiliation": "University of Vic",
+            "name": "Manzo, Carlo"
+        }, 
+        {
+            "orcid": "0000-0001-5057-1846",
+            "affiliation": "Gothenburg University",
+            "name": "Volpe, Giovanni"
+        }
+    ],
+
+    "title": "DeepTrack2",
+
+    "related_identifiers": [
+        {
+            "scheme": "doi",
+            "identifier": "10.1063/5.0034891",
+            "relation": "isDocumentedBy",
+            "resource_type": "publication-article"
+        }
+    ],
+    
+    "description": "A Python software platform for microscopy enhanced by deep learning." ,
+
+    "keywords": ["Deep Learning", "Software", "Microscopy", "Particle Tracking", "Python"],
+
+    "upload_type": "software",
+
+    "communities": [
+        {"identifier": "www.deeptrack.org"},
+        {"identifier": "https://github.com/softmatterlab/DeepTrack2"}
+    ]
+}
