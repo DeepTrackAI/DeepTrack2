@@ -306,7 +306,8 @@ counts_per_second = count / second = cps
 reciprocal_centimeter = 1 / cm = cm_1 = kayser
 
 # Velocity
-[velocity] = [length] / [time] = [speed]
+[velocity] = [length] / [time]
+[speed] = [velocity]
 knot = nautical_mile / hour = kt = knot_international = international_knot
 mile_per_hour = mile / hour = mph = MPH
 kilometer_per_hour = kilometer / hour = kph = KPH
