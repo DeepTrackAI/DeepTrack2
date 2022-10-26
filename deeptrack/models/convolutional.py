@@ -560,12 +560,16 @@ class ClsTransformerBaseModel(KerasModel):
             )(layer, **transformer_input_kwargs)
 
         # Extract global representation
-        cls_rep = layers.Lambda(lambda x: x[:, 0], name="RetrieveClassToken")(layer)
+        cls_rep = layers.Lambda(lambda x: x[:, 0], name="RetrieveClassToken")(
+            layer
+        )
 
         # Process cls features
         cls_layer = cls_rep
         if cls_layer_dimension is not None:
-            cls_layer = dense_block(cls_layer_dimension, name="cls_mlp")(cls_layer)
+            cls_layer = dense_block(cls_layer_dimension, name="cls_mlp")(
+                cls_layer
+            )
 
         cls_output = layers.Dense(
             number_of_cls_outputs,
@@ -686,15 +690,20 @@ class Transformer(KerasModel):
             norm_kwargs={"epsilon": 1e-6},
         ),
         positional_embedding_block=Identity(),
+        use_transformer_mask=False,
         **kwargs,
     ):
 
         dense_block = as_block(dense_block)
 
-        transformer_input, transformer_mask = (
-            layers.Input(shape=(None, number_of_node_features)),
-            layers.Input(shape=(None, 2), dtype="int32"),
-        )
+        transformer_input = layers.Input(shape=(None, number_of_node_features))
+        Inputs = [transformer_input]
+
+        if use_transformer_mask:
+            transformer_mask = layers.Input(shape=(None, 2), dtype="int32")
+            Inputs.append(transformer_mask)
+        else:
+            transformer_mask = None
 
         layer = transformer_input
         # Encoder for input features
@@ -735,7 +744,7 @@ class Transformer(KerasModel):
         )(layer)
 
         model = models.Model(
-            [transformer_input, transformer_mask],
+            Inputs,
             output_layer,
         )
 
