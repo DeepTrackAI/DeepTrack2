@@ -730,12 +730,16 @@ class TransformerEncoder(tf.keras.layers.Layer):
         Activation function of the layer. See keras docs for accepted strings.
     normalization : str or normalization function or layer
         Normalization function of the layer. See keras and tfa docs for accepted strings.
-    use_gates : bool, optional
+    use_gates : bool, optional [Deprecated]
         Whether to use gated self-attention layers as update layer. Defaults to False.
     use_bias: bool, optional
         Whether to use bias in the dense layers of the attention layers. Defaults to False.
     norm_kwargs : dict
         Arguments for the normalization function.
+    multi_head_attention_layer : tf.keras.layers.Layer
+        Layer to use for the multi-head attention. Defaults to dt.layers.MultiHeadSelfAttention.
+    multi_head_attention_kwargs : dict
+        Arguments for the multi-head attention layer.
     kwargs : dict
         Additional arguments.
     """
@@ -750,6 +754,10 @@ class TransformerEncoder(tf.keras.layers.Layer):
         use_gates=False,
         use_bias=False,
         norm_kwargs={},
+        multi_head_attention_layer: layers.Layer = None,
+        multi_head_attention_kwargs={},
+        fwd_mlp_layer: layers.Layer = None,
+        fwd_mlp_kwargs={},
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -764,16 +772,37 @@ class TransformerEncoder(tf.keras.layers.Layer):
 
         self.normalization = normalization
 
-        self.MultiHeadAttLayer = (
-            MultiHeadGatedSelfAttention
-            if self.use_gates
-            else MultiHeadSelfAttention
-        )(
-            number_of_heads=self.number_of_heads,
-            use_bias=self.use_bias,
-            return_attention_weights=True,
-            name="MultiHeadAttLayer",
-        )
+        if multi_head_attention_layer is None:
+            # Raise deprecation warning
+            warnings.warn(
+                "The use_gates argument is deprecated and will be removed in a future version. "
+                "Please use the multi_head_attention_layer argument instead.",
+                DeprecationWarning,
+            )
+
+            self.MultiHeadAttLayer = (
+                MultiHeadGatedSelfAttention
+                if self.use_gates
+                else MultiHeadSelfAttention
+            )(
+                number_of_heads=self.number_of_heads,
+                use_bias=self.use_bias,
+                return_attention_weights=True,
+                name="MultiHeadAttLayer",
+            )
+        else:
+            self.MultiHeadAttLayer = multi_head_attention_layer(
+                **multi_head_attention_kwargs
+            )
+
+        if fwd_mlp_layer is None:
+            self.FwdMlpLayer = layers.Dense(
+                self.fwd_mlp_dim,
+                name=f"{self.name}/Dense_0",
+            )
+        else:
+            self.FwdMlpLayer = fwd_mlp_layer(**fwd_mlp_kwargs)
+
         self.norm_0, self.norm_1 = (
             as_normalization(normalization)(**norm_kwargs),
             as_normalization(normalization)(**norm_kwargs),
@@ -783,10 +812,7 @@ class TransformerEncoder(tf.keras.layers.Layer):
     def build(self, input_shape):
         self.feed_forward_layer = tf.keras.Sequential(
             [
-                layers.Dense(
-                    self.fwd_mlp_dim,
-                    name=f"{self.name}/Dense_0",
-                ),
+                self.FwdMlpLayer,
                 as_activation(self.activation),
                 layers.Dropout(self.dropout),
                 layers.Dense(input_shape[-1], name=f"{self.name}/Dense_1"),
@@ -827,7 +853,7 @@ def TransformerEncoderLayer(
         Activation function of the layer. See keras docs for accepted strings.
     normalization : str or normalization function or layer
         Normalization function of the layer. See keras and tfa docs for accepted strings.
-    use_gates : bool, optional
+    use_gates : bool, optional [Deprecated]
         Whether to use gated self-attention layers as update layer. Defaults to False.
     use_bias: bool, optional
         Whether to use bias in the dense layers of the attention layers. Defaults to True.
