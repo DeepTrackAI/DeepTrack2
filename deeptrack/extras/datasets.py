@@ -46,7 +46,12 @@ _ID = {
     "CellData": ("1CJW7msDiI7xq7oMce4l9tRkNN6O5eKtj", "CellData", ""),
     "CellMigData": ("1vRsWcxjbTz6rffCkrwOfs_ezPvUjPwGw", "CellMigData", ""),
     "BFC2Cells": ("1lHgJdG5I3vRnU_DRFwTr_c69nx1Xkd3X", "BFC2Cells", ""),
-    "STrajCh": ("1wXCSzvHuLwz1dywxUu2aQXlqbgf2V8r3", "STrajCh", "")
+    "STrajCh": ("1wXCSzvHuLwz1dywxUu2aQXlqbgf2V8r3", "STrajCh", ""),
+    "TrajectoryDiffusion": (
+        "1YhECLQrWPZgc_TVY2Sl2OwDcNxmA_jR5",
+        "TrajectoryDiffusion",
+        "",
+    ),
 }
 
 
@@ -109,7 +114,9 @@ def load(key):
 
     # If the extracted folder is another folder with the same name, move it.
     if os.path.isdir(f"datasets/{folder_name}/{folder_name}"):
-        os.rename(f"datasets/{folder_name}/{folder_name}", f"datasets/{folder_name}")
+        os.rename(
+            f"datasets/{folder_name}/{folder_name}", f"datasets/{folder_name}"
+        )
 
 
 def load_model(key):
@@ -171,7 +178,9 @@ def load_model(key):
 
     # If the extracted folder is another folder with the same name, move it.
     if os.path.isdir(f"models/{folder_name}/{folder_name}"):
-        os.rename(f"models/{folder_name}/{folder_name}", f"models/{folder_name}")
+        os.rename(
+            f"models/{folder_name}/{folder_name}", f"models/{folder_name}"
+        )
 
     return f"models/{folder_name}"
 
