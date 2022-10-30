@@ -3,4 +3,5 @@ from deeptrack.datasets import (
     segmentation_ssTEM_drosophila,
     regression_holography_nanoparticles,
     segmentation_fluorescence_u2os,
+    detection_holography_nanoparticles,
 )
