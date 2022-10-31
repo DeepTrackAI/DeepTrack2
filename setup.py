@@ -22,7 +22,7 @@ if (
 
 setuptools.setup(
     name="deeptrack",  # Replace with your own username
-    version="1.4.1",
+    version="1.5.0a5",
     author="Benjamin Midtvedt",
     author_email="benjamin.midtvedt@physics.gu.se",
     description="A deep learning oriented microscopy image simulation package",
