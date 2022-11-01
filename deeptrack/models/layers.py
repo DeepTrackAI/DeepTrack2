@@ -450,7 +450,7 @@ class MultiHeadSelfAttention(layers.Layer):
 
     def softmax(self, x, axis=-1):
         exp = tf.exp(x - tf.reduce_max(x, axis=axis, keepdims=True))
-
+        
         if self.clip_scores_by_value:
             exp = tf.clip_by_value(exp, *self.clip_scores_by_value)
 
@@ -802,6 +802,7 @@ class TransformerEncoder(tf.keras.layers.Layer):
             )
         else:
             self.FwdMlpLayer = fwd_mlp_layer(**fwd_mlp_kwargs)
+
 
         self.norm_0, self.norm_1 = (
             as_normalization(normalization)(**norm_kwargs),
