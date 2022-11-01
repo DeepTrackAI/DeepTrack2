@@ -282,7 +282,7 @@ class LodeSTAR(KerasModel):
         return model
 
     def predict_and_detect(
-        self, data, alpha=0.5, beta=0.5, cutoff=0.98, mode="quantile"
+        self, data, alpha=0.5, beta=0.5, cutoff=0.98, mode="quantile", **predict_kwargs
     ):
         """Evaluates the model on a batch of data, and detects objects in each frame
 
@@ -296,9 +296,11 @@ class LodeSTAR(KerasModel):
             Treshholding parameters. Mode can be either "quantile" or "ratio" or "constant". If "quantile", then
             `ratio` defines the quantile of scores to accept. If "ratio", then cutoff defines the ratio of the max
             score as threshhold. If constant, the cutoff is used directly as treshhold.
+        predict_kwargs: dict
+            Additional arguments to pass to the predict method.
 
         """
-        pred, weight = self.predict(data)
+        pred, weight = self.predict(data, **predict_kwargs)
         detections = [
             self.detect(p, w, alpha=alpha, beta=beta, cutoff=cutoff, mode=mode)
             for p, w in zip(pred, weight)
@@ -307,7 +309,7 @@ class LodeSTAR(KerasModel):
 
     def predict_and_pool(self, data, mask=1):
         """Evaluates the model on a batch of data, and pools the predictions in each frame to a single value.
-        
+
         Used when it's known a-priori that there is only one object per image.
 
         Parameters

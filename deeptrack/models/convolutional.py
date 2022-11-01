@@ -244,6 +244,123 @@ class FullyConvolutional(KerasModel):
         super().__init__(model, **kwargs)
 
 
+class TimeDistributedFullyConvolutional(KerasModel):
+    """A fully convolutional neural network.
+
+    Parameters
+    ----------
+    input_shape : tuple
+        The shape of the input.
+    conv_layers_dimensions : tuple of int or tuple of tuple of int
+        The number of filters in each convolutional layer. Examples:
+        - (32, 64, 128) results in
+         1. Conv2D(32, 3, activation='relu', padding='same')
+         2. MaxPooling2D()
+         3. Conv2D(64, 3, activation='relu', padding='same')
+         4. MaxPooling2D()
+         5. Conv2D(128, 3, activation='relu', padding='same')
+         6. MaxPooling2D()
+         7. Conv2D(number_of_outputs, 3, activation=output_activation, padding='same')
+
+        - ((32, 32), (64, 64), (128, 128)) results in
+         1. Conv2D(32, 3, activation='relu', padding='same')
+         2. Conv2D(32, 3, activation='relu', padding='same')
+         3. MaxPooling2D()
+         4. Conv2D(64, 3, activation='relu', padding='same')
+         5. Conv2D(64, 3, activation='relu', padding='same')
+         6. MaxPooling2D()
+         7. Conv2D(128, 3, activation='relu', padding='same')
+         8. Conv2D(128, 3, activation='relu', padding='same')
+         9. MaxPooling2D()
+         10. Conv2D(number_of_outputs, 3, activation=output_activation, padding='same')
+    omit_last_pooling : bool
+        If True, the last MaxPooling2D layer is omitted. Default is False
+    number_of_outputs : int
+        The number of output channels.
+    output_activation : str
+        The activation function of the output layer.
+    output_kernel_size : int
+        The kernel size of the output layer.
+    return_sequences : bool
+        If True, the output of the last layer is flattened and returned as a
+        sequence with shape (batch_size, timesteps, flattened_output_dim).
+    conv_layers_kwargs : dict
+        Keyword arguments passed to the convolutional layers.
+    flatten_block : tf.keras.layers.Layer
+        The layer used to flatten the output of the last convolutional layer
+        if return_sequences is True. By default, a Flatten layer is used.
+    Returns
+    -------
+    model : tf.keras.models.Model
+        The compiled model.
+    """
+
+    def __init__(
+        self,
+        input_shape,
+        conv_layers_dimensions,
+        omit_last_pooling=False,
+        number_of_outputs=1,
+        output_activation="sigmoid",
+        output_kernel_size=3,
+        return_sequences=False,
+        conv_layers_kwargs={},
+        flatten_block: layers.Layer = layers.Flatten(),
+        **kwargs,
+    ):
+
+        # INITIALIZE DEEP LEARNING NETWORK
+        if isinstance(input_shape, list):
+            network_input = [layers.Input(shape) for shape in input_shape]
+            inputs = layers.Concatenate(axis=-1)(network_input)
+        else:
+            network_input = layers.Input(input_shape)
+            inputs = network_input
+
+        layer = inputs
+
+        # CONVOLUTIONAL BASIS
+        convolutional_kwargs = {
+            "kernel_size": 3,
+            "activation": "relu",
+            "padding": "same",
+        }
+        convolutional_kwargs.update(conv_layers_kwargs)
+        for idx, depth_dimensions in enumerate(conv_layers_dimensions):
+
+            if isinstance(depth_dimensions, int):
+                depth_dimensions = (depth_dimensions,)
+
+            for conv_layer_dimension in depth_dimensions:
+                layer = layers.TimeDistributed(
+                    layers.Conv2D(conv_layer_dimension, **convolutional_kwargs)
+                )(layer)
+
+            # add pooling layer
+            if idx < len(conv_layers_dimensions) - 1 or not omit_last_pooling:
+                layer = layers.TimeDistributed(layers.MaxPooling2D(2, 2))(
+                    layer
+                )
+
+        # OUTPUT
+        if return_sequences:
+            output_layer = layers.TimeDistributed(flatten_block)(layer)
+        else:
+            output_layer = layers.TimeDistributed(
+                layers.Conv2D(
+                    number_of_outputs,
+                    kernel_size=output_kernel_size,
+                    activation=output_activation,
+                    padding="same",
+                    name="output",
+                )
+            )(layer)
+
+        model = models.Model(network_input, output_layer)
+
+        super().__init__(model, **kwargs)
+
+
 class UNet(KerasModel):
     """Creates and compiles a U-Net.
 
@@ -560,12 +677,16 @@ class ClsTransformerBaseModel(KerasModel):
             )(layer, **transformer_input_kwargs)
 
         # Extract global representation
-        cls_rep = layers.Lambda(lambda x: x[:, 0], name="RetrieveClassToken")(layer)
+        cls_rep = layers.Lambda(lambda x: x[:, 0], name="RetrieveClassToken")(
+            layer
+        )
 
         # Process cls features
         cls_layer = cls_rep
         if cls_layer_dimension is not None:
-            cls_layer = dense_block(cls_layer_dimension, name="cls_mlp")(cls_layer)
+            cls_layer = dense_block(cls_layer_dimension, name="cls_mlp")(
+                cls_layer
+            )
 
         cls_output = layers.Dense(
             number_of_cls_outputs,
@@ -686,15 +807,21 @@ class Transformer(KerasModel):
             norm_kwargs={"epsilon": 1e-6},
         ),
         positional_embedding_block=Identity(),
+        use_transformer_mask=False,
+
         **kwargs,
     ):
 
         dense_block = as_block(dense_block)
 
-        transformer_input, transformer_mask = (
-            layers.Input(shape=(None, number_of_node_features)),
-            layers.Input(shape=(None, 2), dtype="int32"),
-        )
+        transformer_input = layers.Input(shape=(None, number_of_node_features))
+        Inputs = [transformer_input]
+
+        if use_transformer_mask:
+            transformer_mask = layers.Input(shape=(None, 2), dtype="int32")
+            Inputs.append(transformer_mask)
+        else:
+            transformer_mask = None
 
         layer = transformer_input
         # Encoder for input features
@@ -735,7 +862,7 @@ class Transformer(KerasModel):
         )(layer)
 
         model = models.Model(
-            [transformer_input, transformer_mask],
+            Inputs,
             output_layer,
         )
 

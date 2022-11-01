@@ -1,0 +1,30 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: DeepTrack2
+message: >-
+  If you use this software, please cite it through
+  this publication: Benjamin Midtvedt, Saga
+  Helgadottir, Aykut Argun, Jesús Pineda, Daniel
+  Midtvedt, Giovanni Volpe. "Quantitative Digital
+  Microscopy with Deep Learning." Applied Physics
+  Reviews 8 (2021), 011310.
+  https://doi.org/10.1063/5.0034891
+type: software
+authors:
+  - given-names: Benjamin
+    family-names: Midtvedt
+    orcid: 'https://orcid.org/0000-0001-9386-4753'
+  - given-names: Jesus
+    family-names: Pineda
+    orcid: 'https://orcid.org/0000-0002-9197-3451'
+  - given-names: Henrik
+    family-names: Klein Morberg
+    orcid: 'https://orcid.org/0000-0001-7275-6921'
+  - given-names: Carlo
+    family-names: Manzo
+    orcid: 'https://orcid.org/0000-0002-8625-0996'
+  - given-names: Giovanni
+    family-names: Volpe
+    orcid: 'https://orcid.org/0000-0001-5057-1846'
