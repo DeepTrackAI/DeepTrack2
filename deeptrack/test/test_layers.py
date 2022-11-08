@@ -282,6 +282,20 @@ class TestModels(unittest.TestCase):
             ),
         )
         self.assertTrue(model.layers[-1], layers.MaskedFGNN)
+    
+    def test_GRUMPN_layer(self):
+        block = layers.GRUMPNLayer()
+        model = makeMinimalModel(
+            block(96),
+            input_layer=(
+                k_layers.Input(shape=(None, 96)),
+                k_layers.Input(shape=(None, 10)),
+                k_layers.Input(shape=(None, 2), dtype=tf.int32),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2)),
+            ),
+        )
+        self.assertTrue(model.layers[-1], layers.GRUMPN)
 
     def test_GraphTransformer(self):
         block = layers.GraphTransformerLayer()
