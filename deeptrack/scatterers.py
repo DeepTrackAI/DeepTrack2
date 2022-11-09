@@ -585,9 +585,7 @@ class MieScatterer(Scatterer):
             )
         return properties
 
-    def get_xy_size(self):
-        output_region = self.properties["output_region"]()
-        padding = self.properties["padding"]()
+    def get_xy_size(self, output_region, padding):
         return (
             output_region[2] - output_region[0] + padding[0] + padding[2],
             output_region[3] - output_region[1] + padding[1] + padding[3],
@@ -639,11 +637,12 @@ class MieScatterer(Scatterer):
         working_distance,
         position_objective,
         return_fft,
+        output_region,
         **kwargs,
     ):
 
         # Get size of the output
-        xSize, ySize = self.get_xy_size()
+        xSize, ySize = self.get_xy_size(output_region, padding)
         voxel_size = get_active_voxel_size()
         arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
         arr = image.maybe_cupy(arr)
