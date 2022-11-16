@@ -499,7 +499,7 @@ class MieScatterer(Scatterer):
         If True, the feature returns the fft of the field, rather than the
         field itself.
     coherence_length : float
-        The coherence length of the light source given in pixels. If None, the light is
+        The temporal coherence length of a partially coherent light given in meters. If None, the illumination is
         assumed to be coherent.
     """
 
@@ -511,6 +511,7 @@ class MieScatterer(Scatterer):
         collection_angle=(u.radian, u.radian),
         wavelength=(u.meter, u.meter),
         offset_z=(u.meter, u.meter),
+        coherence_length=(u.meter, u.pixel),
     )
 
     def __init__(
