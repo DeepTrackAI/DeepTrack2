@@ -574,12 +574,16 @@ class MieScatterer(Scatterer):
             )
 
         if properties["offset_z"] == "auto":
+            size = (
+                np.array(properties["output_region"][2:])
+                - properties["output_region"][:2]
+            )
+            xSize, ySize = size
+            arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
+            min_edge_size = np.min(arr.shape)
             properties["offset_z"] = (
-                np.min(
-                    np.array(properties["output_region"][2:])
-                    - properties["output_region"][:2]
-                )
-                * 0.75
+                min_edge_size
+                * 0.45
                 * min(properties["voxel_size"][:2])
                 / np.tan(properties["collection_angle"])
             )
@@ -719,19 +723,19 @@ class MieScatterer(Scatterer):
         S2 = sum([E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)])
 
         arr[pupil_mask] = (
-            1j
+            -1j
             / (k * R3_field)
             * np.exp(1j * k * R3_field)
             * (S2 * S2_coef + S1 * S1_coef)
         )
-
+        # arr = np.conj(arr)
         fourier_field = np.fft.fft2(arr)
 
         propagation_matrix = get_propagation_matrix(
             fourier_field.shape,
             pixel_size=voxel_size[2],
-            wavelength=wavelength,
-            to_z=(-offset_z - z) / refractive_index_medium,
+            wavelength=wavelength / refractive_index_medium,
+            to_z=(-offset_z - z),
             dy=(
                 relative_position[0] * ratio
                 + position[0]

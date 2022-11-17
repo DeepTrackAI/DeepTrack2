@@ -687,11 +687,11 @@ class Brightfield(Optics):
 
         if not kwargs.get("return_field", False):
             output_image = np.square(np.abs(output_image))
-        else:
-            # Fudge factor. Not sure why this is needed.
-            output_image = output_image - 1
-            output_image = output_image * np.exp(1j * -np.pi / 4)
-            output_image = output_image + 1
+        # else:
+        # Fudge factor. Not sure why this is needed.
+        # output_image = output_image - 1
+        # output_image = output_image * np.exp(1j * -np.pi / 4)
+        # output_image = output_image + 1
 
         output_image.properties = illuminated_volume.properties
 
