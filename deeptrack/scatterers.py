@@ -498,6 +498,9 @@ class MieScatterer(Scatterer):
     return_fft : bool
         If True, the feature returns the fft of the field, rather than the
         field itself.
+    coherence_length : float
+        The temporal coherence length of a partially coherent light given in meters. If None, the illumination is
+        assumed to be coherent.
     """
 
     __gpu_compatible__ = True
@@ -508,6 +511,7 @@ class MieScatterer(Scatterer):
         collection_angle=(u.radian, u.radian),
         wavelength=(u.meter, u.meter),
         offset_z=(u.meter, u.meter),
+        coherence_length=(u.meter, u.pixel),
     )
 
     def __init__(
@@ -527,6 +531,7 @@ class MieScatterer(Scatterer):
         working_distance=1000000,  # large value to avoid numerical issues unless the user specifies a smaller value
         position_objective=(0, 0),
         return_fft=False,
+        coherence_length=None,
         **kwargs,
     ):
         if polarization_angle is not None:
@@ -555,6 +560,7 @@ class MieScatterer(Scatterer):
             working_distance=working_distance,
             position_objective=position_objective,
             return_fft=return_fft,
+            coherence_length=coherence_length,
             **kwargs,
         )
 
@@ -601,7 +607,7 @@ class MieScatterer(Scatterer):
         return np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
 
     def get_detector_mask(self, X, Y, radius):
-        return np.sqrt(X ** 2 + Y ** 2) < radius
+        return np.sqrt(X**2 + Y**2) < radius
 
     def get_plane_in_polar_coords(self, shape, voxel_size, plane_position):
 
@@ -614,8 +620,8 @@ class MieScatterer(Scatterer):
         Y = Y + plane_position[1]
         Z = plane_position[2]  # might be +z or -z
 
-        R2_squared = X ** 2 + Y ** 2
-        R3 = np.sqrt(R2_squared + Z ** 2)  # might be +z instead of -z
+        R2_squared = X**2 + Y**2
+        R3 = np.sqrt(R2_squared + Z**2)  # might be +z instead of -z
 
         # get the angles
         cos_theta = Z / R3
@@ -641,6 +647,7 @@ class MieScatterer(Scatterer):
         working_distance,
         position_objective,
         return_fft,
+        coherence_length,
         output_region,
         **kwargs,
     ):
@@ -675,11 +682,11 @@ class MieScatterer(Scatterer):
         # x and y position of a beam passing through field evaluation plane on the objective
         x_farfield = (
             position[0]
-            + R3_field * np.sqrt(1 - cos_theta_field ** 2) * cos_phi_field / ratio
+            + R3_field * np.sqrt(1 - cos_theta_field**2) * cos_phi_field / ratio
         )
         y_farfield = (
             position[1]
-            + R3_field * np.sqrt(1 - cos_theta_field ** 2) * sin_phi_field / ratio
+            + R3_field * np.sqrt(1 - cos_theta_field**2) * sin_phi_field / ratio
         )
 
         # if the beam is within the pupil
@@ -728,7 +735,21 @@ class MieScatterer(Scatterer):
             * np.exp(1j * k * R3_field)
             * (S2 * S2_coef + S1 * S1_coef)
         )
-        # arr = np.conj(arr)
+
+        # For partially coherent illumination
+        if coherence_length:
+            sigma = z * np.sqrt((coherence_length / z + 1) ** 2 - 1)
+            sigma = sigma * (offset_z / z)
+
+            mask = np.zeros_like(arr)
+            y, x = np.ogrid[
+                -mask.shape[0] // 2 : mask.shape[0] // 2,
+                -mask.shape[1] // 2 : mask.shape[1] // 2,
+            ]
+            mask = np.exp(-0.5 * (x**2 + y**2) / ((sigma) ** 2))
+
+            arr = arr * mask
+
         fourier_field = np.fft.fft2(arr)
 
         propagation_matrix = get_propagation_matrix(
