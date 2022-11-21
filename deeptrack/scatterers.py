@@ -580,20 +580,22 @@ class MieScatterer(Scatterer):
             )
 
         if properties["offset_z"] == "auto":
+            size = (
+                np.array(properties["output_region"][2:])
+                - properties["output_region"][:2]
+            )
+            xSize, ySize = size
+            arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
+            min_edge_size = np.min(arr.shape)
             properties["offset_z"] = (
-                np.min(
-                    np.array(properties["output_region"][2:])
-                    - properties["output_region"][:2]
-                )
-                * 0.75
+                min_edge_size
+                * 0.45
                 * min(properties["voxel_size"][:2])
                 / np.tan(properties["collection_angle"])
             )
         return properties
 
-    def get_xy_size(self):
-        output_region = self.properties["output_region"]()
-        padding = self.properties["padding"]()
+    def get_xy_size(self, output_region, padding):
         return (
             output_region[2] - output_region[0] + padding[0] + padding[2],
             output_region[3] - output_region[1] + padding[1] + padding[3],
@@ -646,11 +648,12 @@ class MieScatterer(Scatterer):
         position_objective,
         return_fft,
         coherence_length,
+        output_region,
         **kwargs,
     ):
 
         # Get size of the output
-        xSize, ySize = self.get_xy_size()
+        xSize, ySize = self.get_xy_size(output_region, padding)
         voxel_size = get_active_voxel_size()
         arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
         arr = image.maybe_cupy(arr)
@@ -727,7 +730,7 @@ class MieScatterer(Scatterer):
         S2 = sum([E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)])
 
         arr[pupil_mask] = (
-            1j
+            -1j
             / (k * R3_field)
             * np.exp(1j * k * R3_field)
             * (S2 * S2_coef + S1 * S1_coef)
@@ -752,8 +755,8 @@ class MieScatterer(Scatterer):
         propagation_matrix = get_propagation_matrix(
             fourier_field.shape,
             pixel_size=voxel_size[2],
-            wavelength=wavelength,
-            to_z=(-offset_z - z) / refractive_index_medium,
+            wavelength=wavelength / refractive_index_medium,
+            to_z=(-offset_z - z),
             dy=(
                 relative_position[0] * ratio
                 + position[0]
