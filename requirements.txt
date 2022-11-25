@@ -8,7 +8,6 @@ numpydoc
 scikit-image
 tensorflow-probability
 tensorflow-datasets
-pydeepimagej
 more_itertools
 pint<0.20
 pandas

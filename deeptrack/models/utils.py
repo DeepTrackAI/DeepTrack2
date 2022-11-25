@@ -247,57 +247,57 @@ class KerasModel(Model):
 
         return self.model.fit(x, *args, batch_size=batch_size, **kwargs)
 
-    def export(
-        self,
-        path,
-        minimum_size,
-        preprocessing=None,
-        dij_config=None,
-    ):
-        """Export model unto the BioImage Model Zoo format for use with Fiji and ImageJ.
+    # def export(
+    #     self,
+    #     path,
+    #     minimum_size,
+    #     preprocessing=None,
+    #     dij_config=None,
+    # ):
+    #     """Export model unto the BioImage Model Zoo format for use with Fiji and ImageJ.
 
-        Uses pyDeepImageJ by E. Gómez-de-Mariscal, C. García-López-de-Haro, L. Donati, M. Unser,
-        A. Muñoz-Barrutia and D. Sage for exporting.
+    #     Uses pyDeepImageJ by E. Gómez-de-Mariscal, C. García-López-de-Haro, L. Donati, M. Unser,
+    #     A. Muñoz-Barrutia and D. Sage for exporting.
 
-        DeepImageJ, used for loading the models into ImageJ, is only compatible with
-        tensorflow==2.2.1. Models using newer features may not load correctly.
+    #     DeepImageJ, used for loading the models into ImageJ, is only compatible with
+    #     tensorflow==2.2.1. Models using newer features may not load correctly.
 
-        Pre-processing of the data should be defined when creating the model using the preprocess
-        keyword. Post-processing should be left to other imageJ functionality. If this is not
-        sufficient, see `https://github.com/deepimagej/pydeepimagej` for what to pass to the
-        preprocessing and postprocessing arguments.
+    #     Pre-processing of the data should be defined when creating the model using the preprocess
+    #     keyword. Post-processing should be left to other imageJ functionality. If this is not
+    #     sufficient, see `https://github.com/deepimagej/pydeepimagej` for what to pass to the
+    #     preprocessing and postprocessing arguments.
 
-        Parameters
-        ----------
-        path : str
-           Path to store exported files.
-        minimum_size : int
-           For models where the input size is not fixed (e.g. (None, None 1)), the input
-           is required to be a multiple of this value.
-        preprocessing : Feature or Layer
-           Additional preprocessing. Will be saved as a part of the network, and as
-           such need to be compatible with tensorflow tensor operations. Assumed to have the
-           same input shape as the first layer of the network.
-        dij_config : BioImageModelZooConfig, optional
-            Configuration used for deployment. See `https://github.com/deepimagej/pydeepimagej` for
-            list of options. If None, a basic config is created for you.
-        """
-        from pydeepimagej.yaml import BioImageModelZooConfig
+    #     Parameters
+    #     ----------
+    #     path : str
+    #        Path to store exported files.
+    #     minimum_size : int
+    #        For models where the input size is not fixed (e.g. (None, None 1)), the input
+    #        is required to be a multiple of this value.
+    #     preprocessing : Feature or Layer
+    #        Additional preprocessing. Will be saved as a part of the network, and as
+    #        such need to be compatible with tensorflow tensor operations. Assumed to have the
+    #        same input shape as the first layer of the network.
+    #     dij_config : BioImageModelZooConfig, optional
+    #         Configuration used for deployment. See `https://github.com/deepimagej/pydeepimagej` for
+    #         list of options. If None, a basic config is created for you.
+    #     """
+    #     from pydeepimagej.yaml import BioImageModelZooConfig
 
-        # TODO: Does not yet fully work as intended. Debugging proved to be hard.
-        inp = layers.Input(shape=self.model.layers[0].input_shape)
-        model = self.model
+    #     # TODO: Does not yet fully work as intended. Debugging proved to be hard.
+    #     inp = layers.Input(shape=self.model.layers[0].input_shape)
+    #     model = self.model
 
-        if preprocessing:
-            processed_inp = preprocessing(inp)
-            model = model(processed_inp)
-            model = models.Model(inp, model)
+    #     if preprocessing:
+    #         processed_inp = preprocessing(inp)
+    #         model = model(processed_inp)
+    #         model = models.Model(inp, model)
 
-        dij_config = BioImageModelZooConfig(model, minimum_size)
-        dij_config.Name = "DeepTrack 2.1 model"
+    #     dij_config = BioImageModelZooConfig(model, minimum_size)
+    #     dij_config.Name = "DeepTrack 2.1 model"
 
-        dij_config.add_weights_formats(model, "Tensorflow", authors=dij_config.Authors)
-        dij_config.export_model(path)
+    #     dij_config.add_weights_formats(model, "Tensorflow", authors=dij_config.Authors)
+    #     dij_config.export_model(path)
 
     def get(self, image, add_batch_dimension_on_resolve, **kwargs):
         if add_batch_dimension_on_resolve:
