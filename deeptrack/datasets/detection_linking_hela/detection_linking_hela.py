@@ -1,5 +1,3 @@
-"""detection_linking_Hela dataset."""
-
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
@@ -61,6 +59,9 @@ class DetectionLinkingHela(tfds.core.GeneratorBasedBuilder):
                     "images": tfds.features.Tensor(
                         shape=(84, 512, 512, 1), dtype=tf.float64
                     ),
+                    "masks": tfds.features.Tensor(
+                        shape=(84, 512, 512, 1), dtype=tf.float64
+                    ),
                 }
             ),
             supervised_keys=None,
@@ -72,7 +73,7 @@ class DetectionLinkingHela(tfds.core.GeneratorBasedBuilder):
         """Returns SplitGenerators."""
         # Downloads the data and defines the splits
         path = dl_manager.download_and_extract(
-            "https://drive.google.com/u/1/uc?id=1tMKjRPutjKGf7YVs5aPrQ625CxcvnC9C&export=download"
+            "https://drive.google.com/u/1/uc?id=1itHz4KmrUqDCKpGNyHUiHE4AFhwiJ5XR&export=download"
         )
 
         # Returns the Dict[split names, Iterator[Key, Example]]
@@ -89,16 +90,18 @@ class DetectionLinkingHela(tfds.core.GeneratorBasedBuilder):
         """Yields examples."""
 
         # Load data
-        nodes, parenthood, images = (
+        nodes, parenthood, images, masks = (
             pd.read_csv(path / split / "nodesdf.csv"),
             pd.read_csv(path / split / "parenthood.csv"),
             np.load(path / split / "images.npy"),
+            np.load(path / split / "masks.npy"),
         )
 
         yield "_", {
             "nodes": {**nodes.to_dict("list")},
             "parenthood": {**parenthood.to_dict("list")},
             "images": images * 1.0,
+            "masks": masks * 1.0,
         }
 
     def get_node_features(self):
