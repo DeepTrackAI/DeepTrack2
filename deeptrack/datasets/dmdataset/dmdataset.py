@@ -97,7 +97,6 @@ class Dmdataset(tfds.core.GeneratorBasedBuilder):
         data = [{}, {}, {}]
         for i, subdict in enumerate(self.get_features().values()):
             files = (*subdict.keys(),)
-            print(files)
 
             for file in files:
                 data_elem = scipy.sparse.load_npz(
