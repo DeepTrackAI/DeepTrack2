@@ -6,4 +6,5 @@ from deeptrack.datasets import (
     detection_holography_nanoparticles,
     detection_linking_hela,
     dmdataset,
+    regression_diffusion_landscape,
 )
