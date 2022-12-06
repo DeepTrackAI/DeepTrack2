@@ -305,7 +305,7 @@ class TestScatterers(unittest.TestCase):
         )
 
         scatterer = scatterers.MieSphere(
-            position=(128,128)
+            position=(128, 128),
             radius=3e-6,
             refractive_index=1.45 + 0.1j,
             z=2612 * 1e-6,
