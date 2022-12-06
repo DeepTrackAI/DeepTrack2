@@ -296,20 +296,19 @@ class TestScatterers(unittest.TestCase):
 
     def test_MieSphere_Coherence_length(self):
         optics_1 = Brightfield(
-            NA=0.7,
-            wavelength=680e-9,
-            resolution=1e-6,
+            NA=0.15,
+            wavelength=633e-9,
+            resolution=2e-6,
             magnification=1,
-            output_region=(0, 0, 64, 128),
-            padding=(10, 10, 10, 10),
+            output_region=(0, 0, 256, 256),
             return_field=True,
-            upscale=4,
         )
 
         scatterer = scatterers.MieSphere(
-            radius=0.5e-6,
+            position=(128,128)
+            radius=3e-6,
             refractive_index=1.45 + 0.1j,
-            aperature_angle=0.1,
+            z=2612 * 1e-6,
             coherence_length=5.9e-05,
         )
 
