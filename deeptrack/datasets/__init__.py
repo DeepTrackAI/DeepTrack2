@@ -7,4 +7,5 @@ from deeptrack.datasets import (
     detection_linking_hela,
     dmdataset,
     regression_diffusion_landscape,
+    endothelial_vs,
 )
