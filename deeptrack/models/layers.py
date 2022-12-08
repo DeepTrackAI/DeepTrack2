@@ -58,6 +58,7 @@ def ConvolutionalBlock(
     strides=1,
     normalization=False,
     norm_kwargs={},
+    activation_first=True,
     **kwargs,
 ):
     """A single 2d convolutional layer.
@@ -92,7 +93,7 @@ def ConvolutionalBlock(
             **kwargs_inner,
         )
         return lambda x: single_layer_call(
-            x, layer, activation, normalization, norm_kwargs
+            x, layer, activation, normalization, norm_kwargs, activation_first
         )
 
     return Layer
@@ -183,6 +184,7 @@ def DeconvolutionalBlock(
     strides=2,
     normalization=False,
     norm_kwargs={},
+    activation_first=True,
     **kwargs,
 ):
     """A single 2d deconvolutional layer.
@@ -217,7 +219,7 @@ def DeconvolutionalBlock(
             **kwargs_inner,
         )
         return lambda x: single_layer_call(
-            x, layer, activation, normalization, norm_kwargs
+            x, layer, activation, normalization, norm_kwargs, activation_first
         )
 
     return Layer
@@ -234,6 +236,7 @@ def StaticUpsampleBlock(
     padding="same",
     with_conv=True,
     norm_kwargs={},
+    activation_first=True,
     **kwargs,
 ):
     """A single no-trainable 2d deconvolutional layer.
@@ -270,7 +273,12 @@ def StaticUpsampleBlock(
             y = layer(x)
             if with_conv:
                 return single_layer_call(
-                    y, conv, activation, normalization, norm_kwargs
+                    y,
+                    conv,
+                    activation,
+                    normalization,
+                    norm_kwargs,
+                    activation_first,
                 )
             else:
                 return layer(x)
@@ -287,6 +295,7 @@ def ResidualBlock(
     strides=1,
     normalization="BatchNormalization",
     norm_kwargs={},
+    activation_first=True,
     **kwargs,
 ):
     """A 2d residual layer with two convolutional steps.
@@ -326,7 +335,12 @@ def ResidualBlock(
 
         def call(x):
             y = single_layer_call(
-                x, conv, activation, normalization, norm_kwargs
+                x,
+                conv,
+                activation,
+                normalization,
+                norm_kwargs,
+                activation_first,
             )
             y = single_layer_call(y, conv2, None, normalization, norm_kwargs)
             y = layers.Add()([identity(x), y])
@@ -450,7 +464,7 @@ class MultiHeadSelfAttention(layers.Layer):
 
     def softmax(self, x, axis=-1):
         exp = tf.exp(x - tf.reduce_max(x, axis=axis, keepdims=True))
-        
+
         if self.clip_scores_by_value:
             exp = tf.clip_by_value(exp, *self.clip_scores_by_value)
 
@@ -802,7 +816,6 @@ class TransformerEncoder(tf.keras.layers.Layer):
             )
         else:
             self.FwdMlpLayer = fwd_mlp_layer(**fwd_mlp_kwargs)
-
 
         self.norm_0, self.norm_1 = (
             as_normalization(normalization)(**norm_kwargs),
