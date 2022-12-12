@@ -2,7 +2,7 @@
   <img width="350" src=https://github.com/softmatterlab/DeepTrack2/blob/develop/assets/logo.png?raw=true>
 </p>
 
-<h3 align="center">A comprehensive deep learning framework for digital microscopy.</h3>https://drive.google.com/file/d/1OfJKFU57ffVIoBy1sIDdTup5wEotJ9jf/view?usp=sharing
+<h3 align="center">A comprehensive deep learning framework for digital microscopy.</h3>
 <p align="center">
   <a href="/LICENSE" alt="licence"><img src="https://img.shields.io/github/license/softmatterlab/DeepTrack-2.0"></a>
   <a href="https://badge.fury.io/py/deeptrack"><img src="https://badge.fury.io/py/deeptrack.svg" alt="PyPI version"></a>
