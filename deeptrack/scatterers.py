@@ -748,6 +748,7 @@ class MieScatterer(Scatterer):
             ]
             mask = np.exp(-0.5 * (x**2 + y**2) / ((sigma) ** 2))
 
+            mask = image.maybe_cupy(mask)
             arr = arr * mask
 
         fourier_field = np.fft.fft2(arr)

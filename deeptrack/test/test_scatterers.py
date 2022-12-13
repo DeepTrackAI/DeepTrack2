@@ -294,6 +294,28 @@ class TestScatterers(unittest.TestCase):
 
         imaged_scatterer_1.update().resolve()
 
+    def test_MieSphere_Coherence_length(self):
+        optics_1 = Brightfield(
+            NA=0.15,
+            wavelength=633e-9,
+            resolution=2e-6,
+            magnification=1,
+            output_region=(0, 0, 256, 256),
+            return_field=True,
+        )
+
+        scatterer = scatterers.MieSphere(
+            position=(128, 128),
+            radius=3e-6,
+            refractive_index=1.45 + 0.1j,
+            z=2612 * 1e-6,
+            coherence_length=5.9e-05,
+        )
+
+        imaged_scatterer_1 = optics_1(scatterer)
+
+        imaged_scatterer_1.update().resolve()
+
     def test_MieStratifiedSphere(self):
         optics_1 = Brightfield(
             NA=0.7,

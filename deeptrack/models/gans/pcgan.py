@@ -64,7 +64,7 @@ class PCGAN(tf.keras.Model):
         metrics=[],
         **kwargs
     ):
-        super(PCGAN).__init__()
+        super().__init__()
 
         # Build and compile the discriminator
         self.discriminator = discriminator
@@ -146,8 +146,8 @@ class PCGAN(tf.keras.Model):
             shape = tf.shape(disc_pred_1)
             valid, fake = tf.ones(shape), tf.zeros(shape)
             d_loss = (
-                self.discriminator.compiled_loss(disc_pred_1, valid)
-                + self.discriminator.compiled_loss(disc_pred_2, fake)
+                self.discriminator.compiled_loss(valid, disc_pred_1)
+                + self.discriminator.compiled_loss(fake, disc_pred_2)
             ) / 2
 
         # Compute gradient and apply gradient
@@ -168,12 +168,12 @@ class PCGAN(tf.keras.Model):
             batch_y_copies = [batch_y] * (self.num_losses - 1)
 
             g_loss = self.assemble.compiled_loss(
+                [valid, perceptual_valid, *batch_y_copies],
                 [
                     assemble_output[0],
                     assemble_output[1],
                     *generated_image_copies,
                 ],
-                [valid, perceptual_valid, *batch_y_copies],
             )
 
         # Compute gradient and apply gradient

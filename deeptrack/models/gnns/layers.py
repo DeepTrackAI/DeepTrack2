@@ -215,7 +215,8 @@ class GRUMPN(MPN):
 
         # node update layer
         self.update_layer = layers.GRU(filters, time_major=True)
-
+        self.update_norm = tf.keras.layers.Layer()
+    
     def update_node_features(self, nodes, aggregated, learnable_embs, edges):
         Combined = tf.reshape(
             tf.stack([nodes, aggregated], axis=0), (2, -1, nodes.shape[-1])

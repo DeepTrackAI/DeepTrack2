@@ -104,8 +104,8 @@ class CGAN(tf.keras.Model):
             shape = tf.shape(disc_pred_real)
             valid, fake = tf.ones(shape), tf.zeros(shape)
             d_loss = (
-                self.discriminator.compiled_loss(disc_pred_real, valid)
-                + self.discriminator.compiled_loss(disc_pred_fake, fake)
+                self.discriminator.compiled_loss(valid, disc_pred_real)
+                + self.discriminator.compiled_loss(fake, disc_pred_fake)
             ) / 2
 
         # Compute gradient and apply gradient
@@ -124,8 +124,8 @@ class CGAN(tf.keras.Model):
             batch_y_copies = [batch_y] * (self.num_losses - 1)
 
             g_loss = self.assemble.compiled_loss(
-                [assemble_output[0], *generated_image_copies],
                 [valid, *batch_y_copies],
+                [assemble_output[0], *generated_image_copies],
             )
 
         # Compute gradient and apply gradient
