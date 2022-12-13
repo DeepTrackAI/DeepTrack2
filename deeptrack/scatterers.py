@@ -747,6 +747,7 @@ class MieScatterer(Scatterer):
                 -mask.shape[1] // 2 : mask.shape[1] // 2,
             ]
             mask = np.exp(-0.5 * (x**2 + y**2) / ((sigma) ** 2))
+
             mask = image.maybe_cupy(mask)
             arr = arr * mask
 

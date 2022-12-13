@@ -464,7 +464,7 @@ class MultiHeadSelfAttention(layers.Layer):
 
     def softmax(self, x, axis=-1):
         exp = tf.exp(x - tf.reduce_max(x, axis=axis, keepdims=True))
-
+        
         if self.clip_scores_by_value:
             exp = tf.clip_by_value(exp, *self.clip_scores_by_value)
 
