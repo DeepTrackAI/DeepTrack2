@@ -54,8 +54,8 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
   <br/>
   <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/2-single_particle_tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a CNN-based single particle tracker using simulated data </a>
   <br/>
-  <a href="https://doi.org/10.48550/arXiv.2202.13546" alt="DOI lodestar">
-    <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.13546-blue">
+  <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="DOI lodestar">
+    <img src="https://img.shields.io/badge/DOI-10.1038%2Fs41467--022--35004--y-blue">
   </a> 
   <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/02.%20tracking_particles_of_various_shapes.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Unsupervised training of a single particle tracker using LodeSTAR </a> 
   
@@ -67,8 +67,8 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 <p align="left">
   <img width="600" src=/assets/MPT-packed.gif?raw=true>
   <br/>
-  <a href="https://doi.org/10.48550/arXiv.2202.13546" alt="DOI lodestar">
-    <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.13546-blue">
+  <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="DOI lodestar">
+    <img src="https://img.shields.io/badge/DOI-10.1038%2Fs41467--022--35004--y-blue">
   </a> <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training LodeSTAR to detect multiple cells from a single image </a>
   <br/>
   <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/4-multi-molecule-tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a UNet-based multi-particle tracker using simulated data </a> 
@@ -143,6 +143,13 @@ https://doi.org/10.1063/5.0034891
 ```
 
 See also:
+
+<https://www.nature.com/articles/s41467-022-35004-y>:
+```
+Midtvedt, B., Pineda, J., Skärberg, F. et al. 
+"Single-shot self-supervised object detection in microscopy." 
+Nat Commun 13, 7492 (2022).
+```
 
 <https://arxiv.org/abs/2202.06355>:
 ```
