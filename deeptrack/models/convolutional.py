@@ -808,6 +808,7 @@ class Transformer(KerasModel):
         ),
         positional_embedding_block=Identity(),
         use_transformer_mask=False,
+
         **kwargs,
     ):
 

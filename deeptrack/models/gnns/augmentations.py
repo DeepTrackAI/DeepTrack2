@@ -37,6 +37,33 @@ def GetSubSet(randset):
     return inner
 
 
+def GetSubGraph(num_nodes, node_start):
+    def inner(data):
+        graph, labels, *_ = data
+
+        edge_connects_removed_node = np.any(
+            (graph[2] < node_start) | (graph[2] >= node_start + num_nodes),
+            axis=-1,
+        )
+
+        node_features = graph[0][node_start : node_start + num_nodes]
+        edge_features = graph[1][~edge_connects_removed_node]
+        edge_connections = graph[2][~edge_connects_removed_node] - node_start
+        weights = graph[3][~edge_connects_removed_node]
+
+        node_labels = labels[0][node_start : node_start + num_nodes]
+        edge_labels = labels[1][~edge_connects_removed_node]
+        global_labels = labels[2]
+
+        return (node_features, edge_features, edge_connections, weights), (
+            node_labels,
+            edge_labels,
+            global_labels,
+        )
+
+    return inner
+
+    
 def GetSubGraphFromLabel(samples):
     """
     Returns a function that takes a graph and returns a subgraph
