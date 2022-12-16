@@ -126,7 +126,7 @@ We also have examples that are specific for certain models. This includes
 - [*MAGIK*](deeptrack/models/gnns/) for graph-based particle linking and trace characterization.
 
 ## Documentation
-The detailed documentation of DeepTrack 2.1 is available at the following link: https://softmatterlab.github.io/DeepTrack-2.0/deeptrack.html
+The detailed documentation of DeepTrack 2.1 is available at the following link: https://softmatterlab.github.io/DeepTrack2/deeptrack.html
 
 ## Video Tutorials
 
