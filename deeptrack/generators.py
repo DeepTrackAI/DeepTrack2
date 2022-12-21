@@ -363,7 +363,7 @@ class ContinuousGenerator(keras.utils.Sequence):
                 np.array(labels),
             )
         else:
-            return np.array(data), np.array(labels)
+            return np.array(data, dtype="object"), np.array(labels, dtype="object")
 
     def __len__(self):
         steps = int((self.min_data_size // self._batch_size))
