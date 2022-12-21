@@ -8,8 +8,9 @@ from .. import features
 from .. import generators
 from ..optics import Fluorescence
 from ..scatterers import PointParticle
+from ..models import gnns
 import numpy as np
-
+import pandas as pd
 
 class TestGenerators(unittest.TestCase):
     def test_Generator(self):
@@ -154,7 +155,41 @@ class TestGenerators(unittest.TestCase):
         #             a = generator[idx]
 
         #         [self.assertLess(d[-1], 8) for d in generator.data]
+    
 
+    def test_GraphGenerator(self):
+        frame = np.arange(10)
+        centroid = np.random.normal(0.5, 0.1, (10, 2))
+
+        df = pd.DataFrame(
+            {
+                'frame': frame, 
+                'centroid-0': centroid[:, 0], 
+                'centroid-1': centroid[:, 1], 
+                'label': 0, 
+                'set': 0, 
+                'solution': 0.0
+            }
+        )
+        # remove consecutive frames
+        df = df[~df["frame"].isin([3, 4, 5])]
+
+        generator = gnns.generators.GraphGenerator(
+	        nodesdf=df, 
+	        properties=["centroid"], 
+	        min_data_size=8,
+	        max_data_size=9,
+	        batch_size=8,
+	        feature_function=gnns.augmentations.GetGlobalFeature,
+	        radius=0.2,
+            nofframes=3,
+            output_type="edges"
+        )
+
+        with generator:
+            graphs, _ = generator[0]
+            self.assertEqual(graphs[0].shape[0], 8)
+            self.assertEqual(graphs[0].shape[2], 2)
 
 if __name__ == "__main__":
     unittest.main()
