@@ -30,7 +30,7 @@ class VAE(tf.keras.Model):
 
             # Sample a random point in the latent space
             epsilon = tf.random.normal(shape=tf.shape(z_mean))
-            z = z_mean + tf.exp(z_log_var) * epsilon
+            z = z_mean + tf.exp(0.5 * z_log_var) * epsilon
 
             # Reconstruct the input image
             rdata = self.decoder(z)
