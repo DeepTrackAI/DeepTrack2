@@ -16,6 +16,7 @@ def GetEdge(
     end: int,
     radius: int,
     parenthood: pd.DataFrame,
+    columns = [],
     **kwargs,
 ):
     """
@@ -79,7 +80,7 @@ def GetEdge(
         edges.append(combdf)
     # Concatenate the dataframes in a single
     # dataframe for the whole set of edges
-    edgedf = pd.concat(edges)
+    edgedf = pd.concat(edges) if len(edges) > 0 else pd.DataFrame(columns=columns)
 
     # Merge columns contaning the labels into a single column
     # of numpy arrays, i.e., label = [label_x, label_y]
@@ -120,6 +121,7 @@ def EdgeExtractor(nodesdf, nofframes=3, **kwargs):
     """
     # Create a copy of the dataframe to avoid overwriting
     df = nodesdf.copy()
+    columns = df.columns
 
     edgedfs = []
     sets = np.unique(df["set"])
@@ -140,7 +142,7 @@ def EdgeExtractor(nodesdf, nofframes=3, **kwargs):
             window = [elem for elem in window if elem <= df_set["frame"].max()]
 
             # Compute the edges for each frames window
-            edgedf = GetEdge(df_set, start=window[0], end=window[-1], **kwargs)
+            edgedf = GetEdge(df_set, start=window[0], end=window[-1], columns=columns, **kwargs)
             edgedf["set"] = setid
             edgedfs.append(edgedf)
 
