@@ -2,6 +2,7 @@
 
 import tensorflow_datasets as tfds
 import numpy as np
+import tensorflow as tf
 
 _DESCRIPTION = """
 """
@@ -34,10 +35,10 @@ class EndothelialVs(tfds.core.GeneratorBasedBuilder):
             features=tfds.features.FeaturesDict(
                 {
                     "image": tfds.features.Image(
-                        shape=(None, None, 1), dtype="uint16"
+                        shape=(None, None, 1), dtype=tf.uint16
                     ),
                     "label": tfds.features.Image(
-                        shape=(None, None, 1), dtype="uint16"
+                        shape=(None, None, 1), dtype=tf.uint16
                     ),
                 }
             ),
