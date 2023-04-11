@@ -1307,8 +1307,8 @@ class OneOf(Feature):
 
         return propertydict
 
-    def get(self, image, key, **kwargs):
-        return self.collection[key](image)
+    def get(self, image, key, _ID=(), **kwargs):
+        return self.collection[key](image, _ID=_ID)
 
 
 class OneOfDict(Feature):
@@ -1338,8 +1338,8 @@ class OneOfDict(Feature):
 
         return propertydict
 
-    def get(self, image, key, **kwargs):
-        return self.collection[key](image)
+    def get(self, image, key, _ID=(), **kwargs):
+        return self.collection[key](image, _ID=_ID)
 
 
 # class Dataset(Feature):
@@ -2109,7 +2109,7 @@ class NonOverlapping(Feature):
         )
 
     def _resample_volume_position(self, volume):
-        """ Draws a new position for the volume. """
+        """Draws a new position for the volume."""
 
         for pdict in volume.properties:
             if "position" in pdict and "_position_sampler" in pdict:
