@@ -3,11 +3,13 @@ from tensorflow.keras import layers
 
 from ..utils import as_KerasModel
 
-
 @as_KerasModel
 class VAE(tf.keras.Model):
-    def __init__(self, encoder=None, decoder=None, latent_dim=2, **kwargs):
+    def __init__(self, input_shape = (28, 28, 1), encoder=None, decoder=None, latent_dim=2, **kwargs):
         super().__init__(**kwargs)
+
+        # encoder input size
+        self.input_enc = input_shape
 
         # Dimensionality of the latent space
         self.latent_dim = latent_dim
@@ -70,7 +72,7 @@ class VAE(tf.keras.Model):
     def default_encoder(self):
         return tf.keras.Sequential(
             [
-                tf.keras.Input(shape=(28, 28, 1)),
+                tf.keras.Input(shape=self.input_enc),
                 layers.Conv2D(
                     32,
                     kernel_size=3,
