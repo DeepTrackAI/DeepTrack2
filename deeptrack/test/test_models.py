@@ -79,6 +79,28 @@ class TestModels(unittest.TestCase):
 
         model.predict(np.zeros((1, 64, 64, 1)))
 
+    def test_GAN(self):
+        model = models.GAN(
+            discriminator=None,
+            generator=None,
+            latent_dim=128,
+        )
+        self.assertIsInstance(model, models.KerasModel)
+
+        model.compile()
+        
+        model.predict(np.zeros((1, 64, 64, 3)))
+
+    def test_VAE(self):
+    model = models.VAE(
+        input_shape=(28, 28, 1),
+        encoder=None,
+        decoder=None,
+        latent_dim=2,
+    )
+    self.assertIsInstance(model, models.KerasModel)
+    model.predict(np.zeros((1, 28, 28, 1)))
+
     def test_RNN(self):
         model = models.rnn(
             input_shape=(None, 64, 64, 1),
@@ -135,9 +157,7 @@ class TestModels(unittest.TestCase):
         graph = (
             tf.random.uniform((8, 10, 7)),  # Node features
             tf.random.uniform((8, 50, 1)),  # Edge features
-            tf.random.uniform(
-                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
-            ),  # Edges
+            tf.random.uniform((8, 50, 2), minval=0, maxval=10, dtype=tf.int32),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
         model(graph)
@@ -165,9 +185,7 @@ class TestModels(unittest.TestCase):
         graph = (
             tf.random.uniform((8, 10, 7)),  # Node features
             tf.random.uniform((8, 50, 1)),  # Edge features
-            tf.random.uniform(
-                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
-            ),  # Edges
+            tf.random.uniform((8, 50, 2), minval=0, maxval=10, dtype=tf.int32),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
         prediction = model(graph)
@@ -199,9 +217,7 @@ class TestModels(unittest.TestCase):
         graph = (
             tf.random.uniform((8, 10, 7)),  # Node features
             tf.random.uniform((8, 50, 1)),  # Edge features
-            tf.random.uniform(
-                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
-            ),  # Edges
+            tf.random.uniform((8, 50, 2), minval=0, maxval=10, dtype=tf.int32),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
         model(graph)
@@ -229,9 +245,7 @@ class TestModels(unittest.TestCase):
         graph = (
             tf.random.uniform((8, 10, 7)),  # Node features
             tf.random.uniform((8, 50, 1)),  # Edge features
-            tf.random.uniform(
-                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
-            ),  # Edges
+            tf.random.uniform((8, 50, 2), minval=0, maxval=10, dtype=tf.int32),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
         model(graph)
@@ -256,16 +270,12 @@ class TestModels(unittest.TestCase):
         )
 
         self.assertIsInstance(model, models.KerasModel)
-        self.assertIsInstance(
-            model.layers[-4], tf.keras.layers.GlobalAveragePooling1D
-        )
+        self.assertIsInstance(model.layers[-4], tf.keras.layers.GlobalAveragePooling1D)
 
         graph = (
             tf.random.uniform((8, 10, 7)),  # Node features
             tf.random.uniform((8, 50, 1)),  # Edge features
-            tf.random.uniform(
-                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
-            ),  # Edges
+            tf.random.uniform((8, 50, 2), minval=0, maxval=10, dtype=tf.int32),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
         prediction = model(graph)
@@ -296,9 +306,7 @@ class TestModels(unittest.TestCase):
         graph = (
             tf.random.uniform((8, 10, 7)),  # Node features
             tf.random.uniform((8, 50, 1)),  # Edge features
-            tf.random.uniform(
-                (8, 50, 2), minval=0, maxval=10, dtype=tf.int32
-            ),  # Edges
+            tf.random.uniform((8, 50, 2), minval=0, maxval=10, dtype=tf.int32),  # Edges
             tf.random.uniform((8, 50, 2)),  # Edge dropouts
         )
         model(graph)
