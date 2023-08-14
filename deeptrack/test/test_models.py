@@ -88,18 +88,33 @@ class TestModels(unittest.TestCase):
         self.assertIsInstance(model, models.KerasModel)
 
         model.compile()
-        
         model.predict(np.zeros((1, 64, 64, 3)))
 
     def test_VAE(self):
-    model = models.VAE(
-        input_shape=(28, 28, 1),
-        encoder=None,
-        decoder=None,
-        latent_dim=2,
-    )
-    self.assertIsInstance(model, models.KerasModel)
-    model.predict(np.zeros((1, 28, 28, 1)))
+        model = models.VAE(
+            input_shape=(28, 28, 1),
+            encoder=None,
+            decoder=None,
+            latent_dim=2,
+        )
+        self.assertIsInstance(model, models.KerasModel)
+
+        model.predict(np.zeros((1, 28, 28, 1)))
+
+    def test_WAE_GAN(self):
+        model = WAE_GAN(
+            input_shape=(28, 28, 1),
+            encoder=None,
+            decoder=None,
+            discriminator=None,
+            latent_dim=2,
+            lambda_=10.0,
+            sigma_z=1.0,
+        )
+        self.assertIsInstance(model, models.KerasModel)
+
+        model.compile()
+        model.predict(np.zeros((1, 28, 28, 1)))
 
     def test_RNN(self):
         model = models.rnn(
