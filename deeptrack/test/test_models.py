@@ -102,7 +102,7 @@ class TestModels(unittest.TestCase):
         model.predict(np.zeros((1, 28, 28, 1)))
 
     def test_WAE_GAN(self):
-        model = WAE_GAN(
+        model = models.WAE_GAN(
             input_shape=(28, 28, 1),
             encoder=None,
             decoder=None,
