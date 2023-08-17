@@ -6,8 +6,6 @@ class VAE(tf.keras.Model):
     """Variational Autoencoder (VAE) model.
 
     Parameters:
-    input_shape: tuple, optional
-        Shape of the input data.
     encoder: keras model, optional
         The encoder network.
     decoder: keras model, optional
@@ -18,7 +16,6 @@ class VAE(tf.keras.Model):
 
     def __init__(
         self,
-        input_shape=(28, 28, 1),
         encoder=None,
         decoder=None,
         latent_dim=2,
@@ -26,8 +23,7 @@ class VAE(tf.keras.Model):
     ):
         super(VAE, self).__init__(**kwargs)
 
-        # Define encoder input shape and latent dimension
-        self.input_enc = input_shape
+        # Define encoder latent dimension
         self.latent_dim = latent_dim
 
         # Initialize encoder and decoder, or use defaults

@@ -6,8 +6,6 @@ class WAE_GAN(tf.keras.Model):
     """Wasserstein Autoencoder Generative Adversarial Network (WAE-GAN) model.
 
     Parameters:
-    input_shape: tuple, optional
-        Shape of the input data.
     encoder: keras model, optional
         The encoder network.
     decoder: keras model, optional
@@ -24,7 +22,6 @@ class WAE_GAN(tf.keras.Model):
 
     def __init__(
         self,
-        input_shape=(28, 28, 1),
         encoder=None,
         decoder=None,
         discriminator=None,
@@ -35,8 +32,7 @@ class WAE_GAN(tf.keras.Model):
     ):
         super(WAE_GAN, self).__init__(**kwargs)
 
-        # Define input shape, latent dimension, and hyperparameters
-        self.input_enc = input_shape
+        # Define latent dimension, and hyperparameters
         self.latent_dim = latent_dim
         self.lambda_ = lambda_
         self.sigma_z = sigma_z
@@ -67,7 +63,8 @@ class WAE_GAN(tf.keras.Model):
             self.disc_optim = tf.keras.optimizers.Adam(learning_rate=5e-4)
 
         if loss_fn is None:
-            self.loss_fn = tf.keras.metrics.Mean(name="mse")
+            self.loss_fn = tf.keras.losses.MeanSquaredError()
+
 
     def train_step(self, data):
         data, _ = data
@@ -137,7 +134,7 @@ class WAE_GAN(tf.keras.Model):
         # Define the default encoder architecture
         return tf.keras.Sequential(
             [
-                tf.keras.Input(shape=self.input_enc),
+                tf.keras.Input(shape=(28, 28, 1)),
                 layers.Conv2D(
                     32,
                     kernel_size=3,

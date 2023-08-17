@@ -92,7 +92,6 @@ class TestModels(unittest.TestCase):
 
     def test_VAE(self):
         model = models.VAE(
-            input_shape=(28, 28, 1),
             encoder=None,
             decoder=None,
             latent_dim=2,
@@ -103,7 +102,6 @@ class TestModels(unittest.TestCase):
 
     def test_WAE_GAN(self):
         model = models.WAE_GAN(
-            input_shape=(28, 28, 1),
             encoder=None,
             decoder=None,
             discriminator=None,
