@@ -100,8 +100,12 @@ class TestModels(unittest.TestCase):
         self.assertIsInstance(model.encoder, tf.keras.Sequential)
         self.assertIsInstance(model.decoder, tf.keras.Sequential)
 
-        prediction = model.predict(np.zeros((1, 28, 28, 1)))
-        self.assertEqual(prediction.shape, (1, 28, 28, 1))
+        pred_enc = model.encoder.predict(np.zeros((1, 28, 28, 1)))
+        self.assertEqual(pred_enc.shape, (1, 4))
+        
+        pred_dec = model.decoder.predict(np.zeros((1,2)))
+        self.assertEqual(pred_dec.shape, (1, 28, 28, 1))
+
 
     def test_WAE(self):
         model = models.WAE(
@@ -116,8 +120,11 @@ class TestModels(unittest.TestCase):
         self.assertIsInstance(model.encoder, tf.keras.Sequential)
         self.assertIsInstance(model.decoder, tf.keras.Sequential)
 
-        prediction = model.predict(np.zeros((1, 28, 28, 1)))
-        self.assertEqual(prediction.shape, (1, 28, 28, 1))
+        pred_enc = model.encoder.predict(np.zeros((1, 28, 28, 1)))
+        self.assertEqual(pred_enc.shape, (1, 2))
+        
+        pred_dec = model.decoder.predict(pred_enc)
+        self.assertEqual(pred_dec.shape, (1, 28, 28, 1))
 
     def test_RNN(self):
         model = models.rnn(
