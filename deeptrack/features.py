@@ -1637,7 +1637,7 @@ class SampleToMasks(Feature):
                 p0[0] = np.max([p0[0], 0])
                 p0[1] = np.max([p0[1], 0])
 
-                p0 = p0.astype(np.int)
+                p0 = p0.astype(int)
 
                 output_slice = output[
                     p0[0] : p0[0] + labelarg.shape[0],
