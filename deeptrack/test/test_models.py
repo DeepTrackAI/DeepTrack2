@@ -88,7 +88,7 @@ class TestModels(unittest.TestCase):
         self.assertIsInstance(model.discriminator, models.KerasModel)
         self.assertIsInstance(model.generator, models.KerasModel)
 
-        predictin = model.predict(np.zeros((1, 64, 64, 3)))
+        prediction = model.predict(np.zeros((1, 64, 64, 3)))
         self.assertEqual(prediction.shape, (1, 64, 64, 3))
 
     def test_VAE(self):
