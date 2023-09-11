@@ -85,6 +85,11 @@ class TestModels(unittest.TestCase):
             generator=None,
             latent_dim=128,
         )
+        model.compile(
+            d_optimizer=tf.keras.optimizers.Adam(),
+            g_optimizer=tf.keras.optimizers.Adam(),
+            loss_fn=tf.keras.losses.MeanAbsoluteError(),
+        )
         self.assertIsInstance(model.discriminator, tf.keras.Sequential)
         self.assertIsInstance(model.generator, tf.keras.Sequential)
 
@@ -102,14 +107,13 @@ class TestModels(unittest.TestCase):
 
         pred_enc = model.encoder.predict(np.zeros((1, 28, 28, 1)))
         self.assertEqual(pred_enc.shape, (1, 4))
-        
-        pred_dec = model.decoder.predict(np.zeros((1,2)))
-        self.assertEqual(pred_dec.shape, (1, 28, 28, 1))
 
+        pred_dec = model.decoder.predict(np.zeros((1, 2)))
+        self.assertEqual(pred_dec.shape, (1, 28, 28, 1))
 
     def test_WAE(self):
         model = models.WAE(
-            regularizer = 'mmd',
+            regularizer="mmd",
             encoder=None,
             decoder=None,
             discriminator=None,
@@ -117,12 +121,13 @@ class TestModels(unittest.TestCase):
             lambda_=10.0,
             sigma_z=1.0,
         )
+        model.compile()
         self.assertIsInstance(model.encoder, tf.keras.Sequential)
         self.assertIsInstance(model.decoder, tf.keras.Sequential)
 
         pred_enc = model.encoder.predict(np.zeros((1, 28, 28, 1)))
         self.assertEqual(pred_enc.shape, (1, 2))
-        
+
         pred_dec = model.decoder.predict(pred_enc)
         self.assertEqual(pred_dec.shape, (1, 28, 28, 1))
 
