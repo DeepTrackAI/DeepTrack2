@@ -93,7 +93,7 @@ class TestModels(unittest.TestCase):
         self.assertIsInstance(model.discriminator, tf.keras.Sequential)
         self.assertIsInstance(model.generator, tf.keras.Sequential)
 
-        prediction = model.predict(np.zeros((1, 64, 64, 3)))
+        prediction = model.predict(np.zeros((1, 128)))
         self.assertEqual(prediction.shape, (1, 64, 64, 3))
 
     def test_VAE(self):
