@@ -85,8 +85,8 @@ class TestModels(unittest.TestCase):
             generator=None,
             latent_dim=128,
         )
-        self.assertIsInstance(model.discriminator, models.KerasModel)
-        self.assertIsInstance(model.generator, models.KerasModel)
+        self.assertIsInstance(model.discriminator, tf.keras.Sequential)
+        self.assertIsInstance(model.generator, tf.keras.Sequential)
 
         prediction = model.predict(np.zeros((1, 64, 64, 3)))
         self.assertEqual(prediction.shape, (1, 64, 64, 3))
@@ -97,8 +97,8 @@ class TestModels(unittest.TestCase):
             decoder=None,
             latent_dim=2,
         )
-        self.assertIsInstance(model.encoder, models.KerasModel)
-        self.assertIsInstance(model.decoder, models.KerasModel)
+        self.assertIsInstance(model.encoder, tf.keras.Sequential)
+        self.assertIsInstance(model.decoder, tf.keras.Sequential)
 
         prediction = model.predict(np.zeros((1, 28, 28, 1)))
         self.assertEqual(prediction.shape, (1, 28, 28, 1))
@@ -113,8 +113,8 @@ class TestModels(unittest.TestCase):
             lambda_=10.0,
             sigma_z=1.0,
         )
-        self.assertIsInstance(model.encoder, models.KerasModel)
-        self.assertIsInstance(model.decoder, models.KerasModel)
+        self.assertIsInstance(model.encoder, tf.keras.Sequential)
+        self.assertIsInstance(model.decoder, tf.keras.Sequential)
 
         prediction = model.predict(np.zeros((1, 28, 28, 1)))
         self.assertEqual(prediction.shape, (1, 28, 28, 1))
