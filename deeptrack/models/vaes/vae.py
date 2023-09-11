@@ -76,7 +76,7 @@ class VAE(tf.keras.Model):
         # Define the default encoder architecture
         return tf.keras.Sequential(
             [
-                tf.keras.Input(shape=self.input_enc),
+                tf.keras.Input(shape=(28, 28, 1)),
                 layers.Conv2D(
                     32,
                     kernel_size=3,
