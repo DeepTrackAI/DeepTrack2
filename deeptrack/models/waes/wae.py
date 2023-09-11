@@ -48,10 +48,9 @@ class WAE(tf.keras.Model):
         if decoder is None:
             decoder = self.default_decoder()
 
-        match self.regularizer:
-            case "gan":
-                if discriminator is None:
-                    discriminator = self.default_discriminator()
+        if self.regularizer=="gan":
+            if discriminator is None:
+                discriminator = self.default_discriminator()
 
         self.encoder = encoder
         self.decoder = decoder
@@ -73,12 +72,11 @@ class WAE(tf.keras.Model):
                 learning_rate=1e-3, beta_1=0.5, beta_2=0.999
             )
 
-        match self.regularizer:
-            case "gan":
-                if disc_optimizer is None:
-                    disc_optimizer = tf.keras.optimizers.Adam(
-                        learning_rate=5e-4, beta_1=0.5, beta_2=0.999
-                    )
+        if self.regularizer=="gan":
+            if disc_optimizer is None:
+                disc_optimizer = tf.keras.optimizers.Adam(
+                    learning_rate=5e-4, beta_1=0.5, beta_2=0.999
+                )
 
         if loss_fn is None:
             loss_fn = tf.keras.losses.MeanSquaredError()
@@ -146,18 +144,17 @@ class WAE(tf.keras.Model):
             rloss = self.loss_fn(data, x_hat)
 
             # Compute penalty for regularization
-            match self.regularizer:
-                case "gan":
-                    d_qz = self.discriminator(q_z)
-                    penalty = tf.keras.losses.binary_crossentropy(
-                        tf.ones_like(d_qz), d_qz
-                    )
-                case "mmd":
-                    p_z = tf.random.normal(
-                        shape=(batch_size, self.latent_dim),
-                        stddev=tf.sqrt(self.sigma_z),
-                    )
-                    penalty = self.mmd_penalty(p_z, q_z, batch_size)
+            if self.regularizer=="gan":
+                d_qz = self.discriminator(q_z)
+                penalty = tf.keras.losses.binary_crossentropy(
+                    tf.ones_like(d_qz), d_qz
+                )
+            elif self.regularizer=="mmd":
+                p_z = tf.random.normal(
+                    shape=(batch_size, self.latent_dim),
+                    stddev=tf.sqrt(self.sigma_z),
+                )
+                penalty = self.mmd_penalty(p_z, q_z, batch_size)
             loss = rloss + tf.reduce_mean(self.lambda_ * penalty)
 
         # Compute gradients and update encoder and decoder weights
@@ -167,57 +164,55 @@ class WAE(tf.keras.Model):
         self.dec_optim.apply_gradients(zip(dec_grads, self.decoder.trainable_weights))
 
         # Sample points from the latent space for the discriminator
-        match self.regularizer:
-            case "gan":
-                with tf.GradientTape() as tape:
-                    p_z = tf.random.normal(
-                        shape=(batch_size, self.latent_dim),
-                        stddev=tf.sqrt(self.sigma_z),
-                    )
-                    d_pz = self.discriminator(p_z)
-
-                    q_z = self.encoder(data)
-                    # For probabilistic encoder sample from latent space
-                    # z_mean, z_log_var = tf.split(self.encoder(data), 2, axis=1)
-                    # epsilon = tf.random.normal(shape=tf.shape(z_mean))
-                    # q_z = z_mean + tf.exp(0.5 * z_log_var) * epsilon
-                    d_qz = self.discriminator(q_z)
-
-                    # Compute losses for real and fake samples and discriminator loss
-                    real_loss = tf.keras.losses.binary_crossentropy(
-                        tf.ones_like(d_pz), d_pz
-                    )
-                    fake_loss = tf.keras.losses.binary_crossentropy(
-                        tf.zeros_like(d_qz), d_qz
-                    )
-                    disc_loss = self.lambda_ * (
-                        tf.reduce_mean(real_loss) + tf.reduce_mean(fake_loss)
-                    )
-
-                # Compute gradients and update discriminator weights
-                disc_grads = tape.gradient(
-                    disc_loss, self.discriminator.trainable_weights
+        if self.regularizer=="gan":
+            with tf.GradientTape() as tape:
+                p_z = tf.random.normal(
+                    shape=(batch_size, self.latent_dim),
+                    stddev=tf.sqrt(self.sigma_z),
                 )
-                self.disc_optim.apply_gradients(
-                    zip(disc_grads, self.discriminator.trainable_weights)
+                d_pz = self.discriminator(p_z)
+
+                q_z = self.encoder(data)
+                # For probabilistic encoder sample from latent space
+                # z_mean, z_log_var = tf.split(self.encoder(data), 2, axis=1)
+                # epsilon = tf.random.normal(shape=tf.shape(z_mean))
+                # q_z = z_mean + tf.exp(0.5 * z_log_var) * epsilon
+                d_qz = self.discriminator(q_z)
+
+                # Compute losses for real and fake samples and discriminator loss
+                real_loss = tf.keras.losses.binary_crossentropy(
+                    tf.ones_like(d_pz), d_pz
                 )
+                fake_loss = tf.keras.losses.binary_crossentropy(
+                    tf.zeros_like(d_qz), d_qz
+                )
+                disc_loss = self.lambda_ * (
+                    tf.reduce_mean(real_loss) + tf.reduce_mean(fake_loss)
+                )
+
+            # Compute gradients and update discriminator weights
+            disc_grads = tape.gradient(
+                disc_loss, self.discriminator.trainable_weights
+            )
+            self.disc_optim.apply_gradients(
+                zip(disc_grads, self.discriminator.trainable_weights)
+            )
 
         # Update metrics for visualization
         self.compiled_metrics.update_state(data, x_hat)
 
         # Return various loss values for monitoring
-        match self.regularizer:
-            case "gan":
-                return {
-                    "loss": loss,
-                    "reconstruction_loss": rloss,
-                    "discriminator_loss": disc_loss,
-                }
-            case "mmd":
-                return {
-                    "loss": loss,
-                    "reconstruction_loss": rloss,
-                }
+        if self.regularizer=="gan":
+            return {
+                "loss": loss,
+                "reconstruction_loss": rloss,
+                "discriminator_loss": disc_loss,
+            }
+        elif self.regularizer=="mmd":
+            return {
+                "loss": loss,
+                "reconstruction_loss": rloss,
+            }
 
     def call(self, inputs):
         # Use encoder to obtain latent representation
