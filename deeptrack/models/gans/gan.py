@@ -95,6 +95,10 @@ class GAN(tf.keras.Model):
             "g_loss": self.g_loss_metric.result(),
         }
 
+    def call(self, inputs):
+        # Run generator
+        return self.generator(inputs)
+
     def default_generator(self, latent_dim=128):
         # Define the default generator architecture
         return tf.keras.Sequential(
