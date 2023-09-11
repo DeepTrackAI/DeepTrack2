@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow.keras import layers
 from ..utils import as_KerasModel
 
+
 class VAE(tf.keras.Model):
     """Variational Autoencoder (VAE) model.
 
@@ -14,13 +15,7 @@ class VAE(tf.keras.Model):
         Dimension of the latent space.
     """
 
-    def __init__(
-        self,
-        encoder=None,
-        decoder=None,
-        latent_dim=2,
-        **kwargs
-    ):
+    def __init__(self, encoder=None, decoder=None, latent_dim=2, **kwargs):
         super(VAE, self).__init__(**kwargs)
 
         # Define encoder latent dimension
@@ -38,8 +33,13 @@ class VAE(tf.keras.Model):
 
         # Gradient tape for automatic differentiation
         with tf.GradientTape() as tape:
-            # Encode input data and sample from latent space
+            # Encode input data and sample from latent space.
+            # The encoder outputs the mean and log of the variance of the
+            # Gaussian distribution. The log of the variance is computed
+            # instead of the variance for numerical stability.
             z_mean, z_log_var = tf.split(self.encoder(data), 2, axis=1)
+
+            # Sample a random point in the latent space
             epsilon = tf.random.normal(shape=tf.shape(z_mean))
             z = z_mean + tf.exp(0.5 * z_log_var) * epsilon
 

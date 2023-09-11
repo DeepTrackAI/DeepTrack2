@@ -85,10 +85,11 @@ class TestModels(unittest.TestCase):
             generator=None,
             latent_dim=128,
         )
-        self.assertIsInstance(model, models.KerasModel)
+        self.assertIsInstance(model.discriminator, models.KerasModel)
+        self.assertIsInstance(model.generator, models.KerasModel)
 
-        model.compile()
-        model.predict(np.zeros((1, 64, 64, 3)))
+        predictin = model.predict(np.zeros((1, 64, 64, 3)))
+        self.assertEqual(prediction.shape, (1, 64, 64, 3))
 
     def test_VAE(self):
         model = models.VAE(
@@ -96,12 +97,15 @@ class TestModels(unittest.TestCase):
             decoder=None,
             latent_dim=2,
         )
-        self.assertIsInstance(model, models.KerasModel)
+        self.assertIsInstance(model.encoder, models.KerasModel)
+        self.assertIsInstance(model.decoder, models.KerasModel)
 
-        model.predict(np.zeros((1, 28, 28, 1)))
+        prediction = model.predict(np.zeros((1, 28, 28, 1)))
+        self.assertEqual(prediction.shape, (1, 28, 28, 1))
 
-    def test_WAE_GAN(self):
-        model = models.WAE_GAN(
+    def test_WAE(self):
+        model = models.WAE(
+            regularizer = 'mmd',
             encoder=None,
             decoder=None,
             discriminator=None,
@@ -109,10 +113,11 @@ class TestModels(unittest.TestCase):
             lambda_=10.0,
             sigma_z=1.0,
         )
-        self.assertIsInstance(model, models.KerasModel)
+        self.assertIsInstance(model.encoder, models.KerasModel)
+        self.assertIsInstance(model.decoder, models.KerasModel)
 
-        model.compile()
-        model.predict(np.zeros((1, 28, 28, 1)))
+        prediction = model.predict(np.zeros((1, 28, 28, 1)))
+        self.assertEqual(prediction.shape, (1, 28, 28, 1))
 
     def test_RNN(self):
         model = models.rnn(
