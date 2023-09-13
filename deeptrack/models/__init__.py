@@ -7,6 +7,7 @@ from .lodestar import *
 from .gans import *
 from .gnns import *
 from .vaes import *
+from .waes import *
 
 # from .mrcnn import *
 # from .yolov1 import *
