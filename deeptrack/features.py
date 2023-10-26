@@ -10,7 +10,7 @@ import warnings
 
 import numpy as np
 from pint.quantity import Quantity
-import tensorflow as tf
+# import tensorflow as tf
 import skimage
 import skimage.measure
 
@@ -297,8 +297,6 @@ class Feature(DeepTrackNode):
 
     def _coerce_inputs(self, inputs, **kwargs):
         # Coerces inputs to the correct type (numpy array or tensor or cupyy array).
-        if any(isinstance(i._value, tf.Tensor) for i in inputs):
-            return inputs
         if config.gpu_enabled:
 
             return [

@@ -14,13 +14,17 @@ import numpy as np
 from typing import List
 
 import numpy as np
-import tensorflow.keras as keras
+
+
+import tensorflow as tf
 
 from .features import Feature
 from .image import Image, strip
 import threading
 import random
 import time
+
+
 
 
 class DataList(list):
@@ -35,7 +39,7 @@ class DataList(list):
         return items
 
 
-class Generator(keras.utils.Sequence):
+class Generator(tf.keras.utils.Sequence):
     """Base class for a generator.
 
     Generators continously update and resolve features, and allow other
@@ -167,7 +171,7 @@ class Generator(keras.utils.Sequence):
             yield self._get(features, feature_kwargs)
 
 
-class ContinuousGenerator(keras.utils.Sequence):
+class ContinuousGenerator(tf.keras.utils.Sequence):
 
     """Generator that asynchronously expands the dataset.
 

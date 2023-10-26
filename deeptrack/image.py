@@ -5,9 +5,6 @@ Defines the Image class and functions that operate on it.
 
 import numpy as np
 import operator as ops
-from tensorflow import Tensor
-import tensorflow
-from .backend.tensorflow_bindings import TENSORFLOW_BINDINGS
 import numpy as np
 
 from .backend._config import cupy
@@ -81,6 +78,15 @@ def _unary_method(
 
     func.__name__ = "__{}__".format(op)
     return func
+
+def is_tensorflow_object(value):
+    """Checks if value is a tensorflow tensor without importing tensorflow."""
+    
+    # module starts with tensorflow
+    if hasattr(value, "__module__") and value.__module__.startswith("tensorflow"):
+        return True
+    
+
 
 
 class Image:
@@ -238,7 +244,8 @@ class Image:
         args = tuple(strip(arg) for arg in args)
 
         # Check if the ufunc is supported
-        if isinstance(self._value, Tensor):
+        if is_tensorflow_object(self._value):
+            from deeptrack.backend.tensorflow_bindings import TENSORFLOW_BINDINGS
             if ufunc in TENSORFLOW_BINDINGS:
                 ufunc = TENSORFLOW_BINDINGS[ufunc]
             else:
@@ -280,7 +287,8 @@ class Image:
         values = [strip(arg) for arg in values]
 
         # Check if the function is supported
-        if isinstance(self._value, Tensor):
+        if is_tensorflow_object(self._value):
+            from deeptrack.backend.tensorflow_bindings import TENSORFLOW_BINDINGS
             if func in TENSORFLOW_BINDINGS:
                 func = TENSORFLOW_BINDINGS[func]
             else:
@@ -318,6 +326,7 @@ class Image:
 
     def to_tf(self):
         """Convert to tensorflow tensor."""
+        import tensorflow
 
         if isinstance(self._value, np.ndarray):
             return Image(
@@ -347,7 +356,7 @@ class Image:
             return self
         if isinstance(self._value, cupy.ndarray):
             return Image(self._value.get(), copy=False).merge_properties_from(self)
-        if isinstance(self._value, tensorflow.Tensor):
+        if is_tensorflow_object(self._value):
             return Image(self._value.numpy(), copy=False).merge_properties_from(self)
 
         return self
