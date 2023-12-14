@@ -303,7 +303,6 @@ class ContinuousGenerator(keras.utils.Sequence):
         current_data = list(self.data)
 
         while len(current_data) < self.min_data_size:
-
             print(
                 f"Waiting for dataset to reach minimum size: {len(current_data)} / {self.min_data_size}",
                 end="\r",
@@ -335,7 +334,6 @@ class ContinuousGenerator(keras.utils.Sequence):
             self._batch_size = self.batch_size
 
     def __getitem__(self, idx):
-
         batch_size = self._batch_size
 
         try:
@@ -392,7 +390,6 @@ class ContinuousGenerator(keras.utils.Sequence):
             index += 1
 
             if index % self.max_data_size == 0:
-
                 while (
                     len(self.data) > self.min_data_size
                     and not self.new_epoch
@@ -403,7 +400,6 @@ class ContinuousGenerator(keras.utils.Sequence):
             self.new_epoch = False
 
     def construct_datapoint(self, image):
-
         return {"data": image, "usage": 0}
 
     def cleanup(self):
@@ -416,7 +412,6 @@ class ContinuousGenerator(keras.utils.Sequence):
     def _get(self, features: Feature or List[Feature]) -> Image:
         # Updates and resolves a feature or list of features.
         if isinstance(features, list):
-
             for feature in features:
                 feature.update()
 
@@ -429,10 +424,20 @@ class ContinuousGenerator(keras.utils.Sequence):
 class PyTorchContinuousGenerator(ContinuousGenerator):
     """Extends the ContinuousGenerator to support PyTorch models.
 
-    This class is used to generate batches of data for PyTorch models."""
+    This class is used to generate batches of data for PyTorch models.
+    For images, it changes the order of the channel axis using the flip argument.
+    """
+
+    def __init__(self, *args, flip=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.flip = flip
 
     def __getitem__(self, idx):
         import torch
 
         X, y = super().__getitem__(idx)
+        if self.flip:
+            X = np.transpose(X, (0, 3, 1, 2)) if len(X.shape) == 4 else X
+            y = np.transpose(y, (0, 3, 1, 2)) if len(y.shape) == 4 else y
+
         return torch.from_numpy(X).to(torch.float), torch.from_numpy(y).to(torch.float)
