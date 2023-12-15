@@ -234,12 +234,8 @@ class Feature(DeepTrackNode):
         # to the __distributed__ attribute
         new_list = self._process_and_get(image_list, **feature_input)
 
-        for index, image in enumerate(new_list):
+        self._process_output(new_list, feature_input)
 
-            if self.arguments:
-                image.append(self.arguments.properties())
-
-            image.append(feature_input)
 
         # Merge input and new_list
         if self.__list_merge_strategy__ == MERGE_STRATEGY_OVERRIDE:
@@ -561,6 +557,12 @@ class Feature(DeepTrackNode):
         else:
             return self._no_wrap_process_and_get
 
+    @property
+    def _process_output(self):
+        if config.image_wrapper:
+            return self._image_wrapped_process_output
+        else:
+            return self._no_wrap_process_output
 
     def _image_wrapped_format_input(self, image_list, **kwargs) -> List[Image]:
         # Ensures the input is a list of Image.
@@ -630,7 +632,17 @@ class Feature(DeepTrackNode):
                 if not isinstance(image, Image):
                     new_list[idx] = Image(image)
             return new_list
-        
+    
+    def _image_wrapped_process_output(self, image_list, feature_input):
+        for index, image in enumerate(image_list):
+
+            if self.arguments:
+                image.append(self.arguments.properties())
+
+            image.append(feature_input)
+
+    def _no_wrap_process_output(self, image_list, feature_input):
+        pass
     
     def _coerce_inputs(self, inputs, **kwargs):
         # Coerces inputs to the correct type (numpy array or tensor or cupyy array).
