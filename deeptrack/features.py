@@ -141,6 +141,7 @@ class Feature(DeepTrackNode):
         Image or List[Image]
             The transformed image or list of images
         """
+        raise NotImplementedError
 
     def __call__(self, image_list: Image or List[Image] = None, _ID=(), **kwargs):
 
