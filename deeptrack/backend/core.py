@@ -138,10 +138,20 @@ class DeepTrackNode:
 
     citation = deeptrack_bibtex
 
+    @property
+    def action(self):
+        return self._action
+    
+    @action.setter
+    def action(self, value):
+        self._action = value
+        self._accepts_ID = utils.get_kwarg_names(value).__contains__("_ID")
+
     def __init__(self, action=__nonelike_default, **kwargs):
         self.data = DeepTrackDataDict()
         self.children = WeakSet()
         self.dependencies = WeakSet()
+        self._action = lambda: None
 
         if action is not self.__nonelike_default:
             if callable(action):
@@ -149,6 +159,7 @@ class DeepTrackNode:
             else:
                 self.action = lambda: action
 
+        self._accepts_ID = utils.get_kwarg_names(self.action).__contains__("_ID")
         super().__init__(**kwargs)
 
         self._all_subchildren = set()
@@ -287,8 +298,12 @@ class DeepTrackNode:
                 return self.current_value(_ID)
             except KeyError:
                 pass
+        
+        if self._accepts_ID:
+            new_value = self.action(_ID=_ID)
+        else:
+            new_value = self.action()
 
-        new_value = utils.safe_call(self.action, _ID=_ID)
         self.store(new_value, _ID=_ID)
         return self.current_value(_ID)
 
