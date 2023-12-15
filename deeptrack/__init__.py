@@ -17,7 +17,7 @@ if "tensorflow" in installed:
 else:
     HAS_TENSORFLOW = False
 
-
+from deeptrack.sources import *
 from deeptrack.features import *
 from deeptrack.aberrations import *
 from deeptrack.augmentations import *
@@ -34,14 +34,13 @@ from deeptrack.holography import *
 
 from deeptrack.image import strip
 
-tf = lazy_import.lazy_module("tensorflow")
-
 # Lazy imports to avoid overhead of importing tensorflow
 generators = lazy_import.lazy_module("deeptrack.generators")
 models = lazy_import.lazy_module("deeptrack.models")
 datasets = lazy_import.lazy_module("deeptrack.datasets")
 losses = lazy_import.lazy_module("deeptrack.losses")
 layers = lazy_import.lazy_module("deeptrack.layers")
+pytorch = lazy_import.lazy_module("deeptrack.pytorch")
 
 
 from deeptrack import (
