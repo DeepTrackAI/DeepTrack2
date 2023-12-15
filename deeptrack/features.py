@@ -304,19 +304,7 @@ class Feature(DeepTrackNode):
                 properties[key] = val.magnitude
         return properties
 
-    def _coerce_inputs(self, inputs, **kwargs):
-        # Coerces inputs to the correct type (numpy array or tensor or cupyy array).
-        if config.gpu_enabled:
 
-            return [
-                i.to_cupy()
-                if (not self.__distributed__) and self.__use_gpu__(i, **kwargs)
-                else i.to_numpy()
-                for i in inputs
-            ]
-
-        else:
-            return [i.to_numpy() for i in inputs]
 
     def plot(
         self,
@@ -350,15 +338,15 @@ class Feature(DeepTrackNode):
         import matplotlib.pyplot as plt
         from IPython.display import HTML, display
 
-        if input_image is not None:
-            input_image = [Image(input_image)]
+        # if input_image is not None:
+        #     input_image = [Image(input_image)]
 
         output_image = self.resolve(input_image, **(resolve_kwargs or {}))
 
         # If a list, assume video
-        if isinstance(output_image, Image):
+        if not isinstance(output_image, list):
             # Single image
-            plt.imshow(output_image[:, :, 0], **kwargs)
+            plt.imshow(output_image, **kwargs)
             return plt.gca()
 
         else:
@@ -367,7 +355,7 @@ class Feature(DeepTrackNode):
             images = []
             plt.axis("off")
             for image in output_image:
-                images.append([plt.imshow(image[:, :, 0], **kwargs)])
+                images.append([plt.imshow(image, **kwargs)])
 
             interval = (
                 interval or output_image[0].get_property("interval") or (1 / 30 * 1000)
@@ -390,10 +378,6 @@ class Feature(DeepTrackNode):
                 # In notebook, but animation failed
                 import ipywidgets as widgets
 
-                Warning(
-                    "Javascript animation failed. This is a non-performant fallback."
-                )
-
                 def plotter(frame=0):
                     plt.imshow(output_image[frame][:, :, 0], **kwargs)
                     plt.show()
@@ -405,47 +389,6 @@ class Feature(DeepTrackNode):
                     ),
                 )
 
-    def _process_and_get(self, image_list, **feature_input) -> List[Image]:
-        # Controls how the get function is called
-
-        if self.__distributed__:
-            # Call get on each image in list, and merge properties from corresponding image
-
-            results = []
-
-            for image in image_list:
-                output = self.get(image, **feature_input)
-                if not isinstance(output, Image):
-                    output = Image(output)
-
-                output.merge_properties_from(image)
-                results.append(output)
-
-            return results
-
-        else:
-            # Call get on entire list.
-            new_list = self.get(image_list, **feature_input)
-
-            if not isinstance(new_list, list):
-                new_list = [new_list]
-
-            for idx, image in enumerate(new_list):
-                if not isinstance(image, Image):
-                    new_list[idx] = Image(image)
-            return new_list
-
-    def _format_input(self, image_list, **kwargs) -> List[Image]:
-        # Ensures the input is a list of Image.
-
-        if image_list is None:
-            return []
-
-        if not isinstance(image_list, list):
-            image_list = [image_list]
-
-        inputs = [(Image(image)) for image in image_list]
-        return self._coerce_inputs(inputs, **kwargs)
 
     def _process_properties(self, propertydict) -> dict:
         # Optional hook for subclasses to preprocess input before calling
@@ -602,6 +545,110 @@ class Feature(DeepTrackNode):
         slices = list(slices)
 
         return self >> Slice(slices)
+
+    # private properties to dispatch based on config
+    @property
+    def _format_input(self):
+        if config.image_wrapper:
+            return self._image_wrapped_format_input
+        else:
+            return self._no_wrap_format_input
+        
+    @property
+    def _process_and_get(self):
+        if config.image_wrapper:
+            return self._image_wrapped_process_and_get
+        else:
+            return self._no_wrap_process_and_get
+
+
+    def _image_wrapped_format_input(self, image_list, **kwargs) -> List[Image]:
+        # Ensures the input is a list of Image.
+
+        if image_list is None:
+            return []
+
+        if not isinstance(image_list, list):
+            image_list = [image_list]
+
+        inputs = [(Image(image)) for image in image_list]
+        return self._coerce_inputs(inputs, **kwargs)
+    
+    def _no_wrap_format_input(self, image_list, **kwargs) -> list:
+        # Ensures the input is a list of Image.
+
+        if image_list is None:
+            return []
+
+        if not isinstance(image_list, list):
+            image_list = [image_list]
+
+        return image_list
+
+    def _no_wrap_process_and_get(self, image_list, **feature_input) -> list:
+        # Controls how the get function is called
+
+        if self.__distributed__:
+            # Call get on each image in list, and merge properties from corresponding image
+            return [x for x in self.get(image_list, **feature_input)]
+
+        else:
+            # Call get on entire list.
+            new_list = self.get(image_list, **feature_input)
+
+            if not isinstance(new_list, list):
+                new_list = [new_list]
+
+            return new_list
+        
+    def _image_wrapped_process_and_get(self, image_list, **feature_input) -> List[Image]:
+        # Controls how the get function is called
+
+        if self.__distributed__:
+            # Call get on each image in list, and merge properties from corresponding image
+
+            results = []
+
+            for image in image_list:
+                output = self.get(image, **feature_input)
+                if not isinstance(output, Image):
+                    output = Image(output)
+
+                output.merge_properties_from(image)
+                results.append(output)
+
+            return results
+
+        else:
+            # Call get on entire list.
+            new_list = self.get(image_list, **feature_input)
+
+            if not isinstance(new_list, list):
+                new_list = [new_list]
+
+            for idx, image in enumerate(new_list):
+                if not isinstance(image, Image):
+                    new_list[idx] = Image(image)
+            return new_list
+        
+    
+    def _coerce_inputs(self, inputs, **kwargs):
+        # Coerces inputs to the correct type (numpy array or tensor or cupyy array).
+        if config.gpu_enabled:
+
+            return [
+                i.to_cupy()
+                if (not self.__distributed__) and self.__use_gpu__(i, **kwargs)
+                else i.to_numpy()
+                for i in inputs
+            ]
+
+        else:
+            return [i.to_numpy() for i in inputs]
+        
+    
+
+    
 
 
 class StructuralFeature(Feature):
