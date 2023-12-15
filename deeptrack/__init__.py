@@ -17,7 +17,6 @@ if "tensorflow" in installed:
 else:
     HAS_TENSORFLOW = False
 
-from deeptrack.sources import *
 from deeptrack.features import *
 from deeptrack.aberrations import *
 from deeptrack.augmentations import *
@@ -56,4 +55,5 @@ from deeptrack import (
     losses,
     layers,
     pytorch,
+    sources
 )
