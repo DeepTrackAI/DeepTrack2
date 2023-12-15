@@ -31,17 +31,16 @@ from deeptrack.elementwise import *
 from deeptrack.statistics import *
 from deeptrack.holography import *
 
-
 from deeptrack.image import strip
 
-# Lazy imports to avoid overhead of importing tensorflow
-generators = lazy_import.lazy_module("deeptrack.generators")
-models = lazy_import.lazy_module("deeptrack.models")
-datasets = lazy_import.lazy_module("deeptrack.datasets")
-losses = lazy_import.lazy_module("deeptrack.losses")
-layers = lazy_import.lazy_module("deeptrack.layers")
-pytorch = lazy_import.lazy_module("deeptrack.pytorch")
-
+if HAS_TENSORFLOW:
+    # Lazy imports to avoid overhead of importing tensorflow
+    generators = lazy_import.lazy_module("deeptrack.generators")
+    models = lazy_import.lazy_module("deeptrack.models")
+    datasets = lazy_import.lazy_module("deeptrack.datasets")
+    losses = lazy_import.lazy_module("deeptrack.losses")
+    layers = lazy_import.lazy_module("deeptrack.layers")
+    pytorch = lazy_import.lazy_module("deeptrack.pytorch")
 
 from deeptrack import (
     image,
@@ -49,4 +48,12 @@ from deeptrack import (
     backend,
     test,
     visualization,
+    # Fake imports for IDE autocomplete
+    # Does not actually import anything
+    generators,
+    models,
+    datasets,
+    losses,
+    layers,
+    pytorch,
 )
