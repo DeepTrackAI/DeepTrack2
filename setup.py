@@ -12,12 +12,6 @@ required = [x for x in required if not x.startswith("Sphinx")]
 required = [x for x in required if not x.startswith("pydata-sphinx-theme")]
 
 
-installed = [pkg.key for pkg in pkg_resources.working_set]
-if (
-    "tensorflow" not in installed
-    or pkg_resources.working_set.by_key["tensorflow"].version[0] == "2"
-):
-    required.append("tensorflow_addons")
 
 
 setuptools.setup(
@@ -36,5 +30,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    extras_requires={"tensorflow": ["tensorflow<=2.10", "tensorflow-probability", "tensorflow-datasets", "tensorflow_addons"]},
     python_requires=">=3.6",
 )
