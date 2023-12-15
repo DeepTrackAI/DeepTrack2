@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+from deeptrack.image import Image
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, pipeline, inputs=None, length=None, replace=False):
@@ -19,16 +20,18 @@ class Dataset(torch.utils.data.Dataset):
             res =  self.pipeline(self.inputs[index])
             if not isinstance(res, (tuple, list)):
                 res = (res, )
+            res = tuple(res._value if isinstance(res, Image) else res for res in res)
+            res = tuple(self._as_tensor(res) for res in res)
 
             # Convert all numpy arrays to torch tensors
-            res = (self._as_tensor(r) for r in res)
+            # res = tuple(self._as_tensor(r) for r in res)
 
             self.data[index] = res
 
         return self.data[index]
     
     def _as_tensor(self, x):
-        if isinstance(x, torch.Tensor):
+        if isinstance(x, (torch.Tensor, int, float, bool)):
             return x
         if isinstance(x, np.ndarray):
             return torch.from_numpy(x)
