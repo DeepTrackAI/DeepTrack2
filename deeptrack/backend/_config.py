@@ -2,30 +2,64 @@ __all__ = ["config", "cupy", "CUPY_AVAILABLE"]
 
 import warnings
 import numpy as cupy
+from typing import *
 
 CUPY_AVAILABLE = True
 try:
     import cupy
 except ImportError:
     CUPY_AVAILABLE = False
-    warnings.warn(
-        "cupy not installed. GPU-accelerated simulations will not be possible"
-    )
+
 
 
 class Config:
+
+    @property
+    def gpu_enabled(self):
+        return self.device == "gpu"
+    
+
     def __init__(self):
-        self.disable_gpu()
-        self.enable_gpu()
+        self.set_device("cpu")
+        self.set_backend_numpy()
+        self.enable_image_wrapper()
 
     def enable_gpu(self):
+        warnings.warn("(enable/disable)_gpu is deprecated. Use set_device instead", DeprecationWarning, stacklevel=2)
         if CUPY_AVAILABLE:
-            self.gpu_enabled = True
+            self.device = "gpu"
         else:
             warnings.warn("cupy not installed, CPU acceleration not enabled")
 
     def disable_gpu(self):
-        self.gpu_enabled = False
+        warnings.warn("(enable/disable)_gpu is deprecated. Use set_device instead", DeprecationWarning, stacklevel=2)
+        self.device = "cpu"
 
+    def set_device(self, device):
+        self.device = device
+
+    def get_device(self):
+        return self.device
+    
+    def set_backend_numpy(self):
+        self.set_backend("numpy")
+    
+    def set_backend_cupy(self):
+        self.set_backend("cupy")
+
+    def set_backend_torch(self):
+        self.set_backend("torch")
+
+    def set_backend(self, backend: Literal["numpy", "cupy", "torch"]):
+        self.backend = backend
+
+    def get_backend(self):
+        return self.backend
+    
+    def disable_image_wrapper(self):
+        self.image_wrapper = False
+
+    def enable_image_wrapper(self):
+        self.image_wrapper = True
 
 config = Config()
