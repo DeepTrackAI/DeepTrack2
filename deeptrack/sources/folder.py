@@ -4,7 +4,7 @@ from deeptrack.sources.base import  Source
 
 known_extensions = ["png", "jpg", "jpeg", "tif", "tiff", "bmp", "gif"]
 
-class ImageFolderSource(Source):
+class ImageFolder(Source):
     """Data source for images in a directory structure.
 
     Assumes that the directory structure is as follows:

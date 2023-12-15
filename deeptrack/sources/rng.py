@@ -8,7 +8,7 @@ from deeptrack.sources.base import Source
 from deeptrack.backend.core import DeepTrackNode
 
 
-class NumpyRNGSource(Source, np.random.RandomState):
+class NumpyRNG(Source, np.random.RandomState):
 
     rng: list
 
@@ -54,7 +54,7 @@ class NumpyRNGSource(Source, np.random.RandomState):
         return super().set_index(index)
     
 
-class PythonRNGSource(Source, random.Random):
+class PythonRNG(Source, random.Random):
 
     
     rng: list
