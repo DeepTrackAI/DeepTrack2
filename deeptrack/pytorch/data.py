@@ -1,30 +1,56 @@
 import torch
 import torch.nn as nn
+import numpy as np
 
-class TorchDataset(torch.utils.data.Dataset):
-    def __init__(self, pipline, inputs=None, length=None, replace=False):
-        # self.dataset = dataset
-
-
+class Dataset(torch.utils.data.Dataset):
+    def __init__(self, pipeline, inputs=None, length=None, replace=False):
+        self.pipeline = pipeline
+        self.replace = replace
         if inputs is None:
             if length is None:
                 raise ValueError("Either inputs or length must be specified.")
             else:
-                self._inp
                 inputs = [{}] * length
-
-        self.data = [None for _ in range(self.length)]
+        self.inputs = inputs
+        self.data = [None for _ in inputs]
 
     def __getitem__(self, index):
-        if self.data[index] is None:
-            res =  self.dataset.resolve(**self.inputs[index])
+        if self._should_replace(index):
+            res =  self.pipeline(self.inputs[index])
             if not isinstance(res, (tuple, list)):
                 res = (res, )
-            res = (torch.tensor(r) for r in res)
+
+            # Convert all numpy arrays to torch tensors
+            res = (self._as_tensor(r) for r in res)
 
             self.data[index] = res
 
         return self.data[index]
-
+    
+    def _as_tensor(self, x):
+        if isinstance(x, torch.Tensor):
+            return x
+        if isinstance(x, np.ndarray):
+            return torch.from_numpy(x)
+        else:
+            return torch.Tensor(x)
+    
+    def _should_replace(self, index):
+        if self.data[index] is None:
+            return True
+        
+        if isinstance(self.replace, bool):
+            return self.replace
+        elif callable(self.replace):
+            try:
+                return self.replace()
+            except TypeError:
+                return self.replace(index)
+        elif isinstance(self.replace, float) and 0 <= self.replace <= 1:
+            return np.random.rand() < self.replace
+        else:
+            raise TypeError("replace must be a boolean, a float between 0 and 1, or a callable.")
+        
     def __len__(self):
-        return len(self.dataset)
+        return len(self.inputs)
+    
