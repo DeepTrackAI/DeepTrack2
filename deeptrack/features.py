@@ -273,6 +273,9 @@ class Feature(DeepTrackNode):
             )
         super()._update()
         return self
+    
+    # def to(self, device):
+        
 
     def add_feature(self, feature):
         """Adds a feature to the dependecy graph."""
@@ -592,7 +595,7 @@ class Feature(DeepTrackNode):
 
         if self.__distributed__:
             # Call get on each image in list, and merge properties from corresponding image
-            return [x for x in self.get(image_list, **feature_input)]
+            return [self.get(x, **feature_input) for x in image_list]
 
         else:
             # Call get on entire list.
