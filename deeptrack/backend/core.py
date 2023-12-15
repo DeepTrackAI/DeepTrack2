@@ -151,13 +151,26 @@ class DeepTrackNode:
 
         super().__init__(**kwargs)
 
+        self._all_subchildren = set()
+        self._all_subchildren.add(self)
+
     def add_child(self, other):
         self.children.add(other)
+        if not self in other.dependencies:
+            other.add_dependency(self)
+        
+        subchildren = other._all_subchildren.copy()
+        subchildren.add(other)
+
+        self._all_subchildren = self._all_subchildren.union(subchildren)
+        for parent in self.recurse_dependencies():
+            parent._all_subchildren = parent._all_subchildren.union(subchildren)
 
         return self
 
     def add_dependency(self, other):
         self.dependencies.add(other)
+        other.add_child(self)
 
         return self
 
@@ -218,7 +231,10 @@ class DeepTrackNode:
     def previous(self, _ID=()):
         return self.data[_ID].current_value()
 
-    def recurse_children(self, memory=None):
+    def recurse_children(self, memory=set()):
+        yield from self._all_subchildren - set(memory)
+
+    def old_recurse_children(self, memory=None):
         # On first call, instantiate memory
         if memory is None:
             memory = []
