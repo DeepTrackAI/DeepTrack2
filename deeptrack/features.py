@@ -14,6 +14,8 @@ from pint.quantity import Quantity
 import skimage
 import skimage.measure
 
+from deeptrack.sources import SourceItem
+
 from .backend.core import DeepTrackNode
 from .backend.units import ConversionTable, create_context
 from .backend import config
@@ -154,10 +156,16 @@ class Feature(DeepTrackNode):
            to 4. In a pipeline, all features will be affected by this.
 
         """
+
+        # if image_list is as Source, activate it.
+        self._activate_sources(image_list)
+
         # Potentially fragile. Maybe a special variable dt._last_input instead?
         # If the input is not empty, we set the value of the input.
-        if image_list is not None and not (
-            isinstance(image_list, list) and len(image_list) == 0
+        if (
+            image_list is not None 
+            and not (isinstance(image_list, list) and len(image_list) == 0)
+            and not (isinstance(image_list, tuple) and any(isinstance(x, SourceItem) for x in image_list))
         ):
             self._input.set_value(image_list, _ID=_ID)
 
@@ -444,6 +452,17 @@ class Feature(DeepTrackNode):
 
         propertydict = self._normalize(**propertydict)
         return propertydict
+    
+    def _activate_sources(self, x):
+        if isinstance(x, SourceItem):
+            x()
+        else:
+            try:
+                for source in x:
+                    if isinstance(source, SourceItem):
+                        source()
+            except TypeError:
+                pass
 
     def __getattr__(self, key):
         # Allows easier access to properties. For example,
@@ -622,12 +641,12 @@ Branch = Chain
 
 
 class Value(Feature):
-    """Multiplies the input with a value.
+    """Represents a constant (per evaluation) value.
 
     Parameters
     ----------
     value : number
-        The value to multiply with.
+        The value of the feature.
     """
 
     __distributed__ = False
@@ -1478,14 +1497,14 @@ class LoadImage(Feature):
         if load_options is None:
             load_options = {}
 
+        
         try:
-            image = [np.load(file, **load_options) for file in path]
-        except (IOError, ValueError):
+            import imageio
+            image = [imageio.v3.imread(file) for file in path]
+        except (IOError, ImportError, AttributeError):
             try:
-                from skimage import io
-
-                image = [io.imread(file) for file in path]
-            except (IOError, ImportError, AttributeError):
+                image = [np.load(file, **load_options) for file in path]
+            except (IOError, ValueError):
                 try:
                     import PIL.Image
 
@@ -1755,6 +1774,24 @@ class AsType(Feature):
     def get(self, image, dtype, **kwargs):
         return image.astype(dtype)
 
+class ChannelFirst2d(Feature):
+    """Converts a 3d image to channel first format.
+
+    Parameters
+    ----------
+    axis : int
+        The axis to move to the first position. Defaults to -1.
+    """
+
+    def __init__(self, axis=-1, **kwargs):
+        super().__init__(axis=axis, **kwargs)
+    def get(self, image, axis, **kwargs):
+        ndim = image.ndim
+
+        if ndim == 2:
+            return image[None]
+        elif ndim == 3:
+            return np.moveaxis(image, axis, 0)
 
 class Upscale(Feature):
     """Performs the simulation at a higher resolution.
@@ -1857,6 +1894,14 @@ class TensorflowDataset(Feature):
             raise ImportError(
                 "Tensorflow Datasets is not installed. Install it with `pip install tensorflow_datasets`"
             )
+        
+        try:
+            import deeptrack.datasets as dtd
+            dtd.register_tfds()
+        except:
+            pass
+
+        
 
         dataset = tfds.load(dataset_name, split=split, shuffle_files=shuffle_files)
         dataset_size = tfds.builder(dataset_name).info.splits[split].num_examples
@@ -2119,5 +2164,24 @@ class NonOverlapping(Feature):
         return volume
 
 
+
 # Alias
 Dataset = TensorflowDataset
+
+
+class Store(Feature):
+
+    __distributed__ = False
+
+    def __init__(self, feature, key, replace=False, **kwargs):
+        super().__init__(feature=feature, key=key, replace=replace, **kwargs)
+
+        self.feature = self.add_feature(feature, **kwargs)
+
+        self._store: dict[Any, Image] = {}
+
+    def get(self, _, key, replace, **kwargs):
+        if replace or not (key in self._store):
+            self._store[key] = self.feature()
+        return Image(self._store[key], copy=False)
+        # return self._store[key] 
