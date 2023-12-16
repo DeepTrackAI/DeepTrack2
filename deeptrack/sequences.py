@@ -51,6 +51,7 @@ class Sequence(Feature):
 
         outputs = input_list or []
         for sequence_step in range(sequence_length):
+            print(sequence_step)
             propagate_sequential_data(
                 self.feature,
                 sequence_step=sequence_step,

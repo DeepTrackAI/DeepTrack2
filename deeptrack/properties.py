@@ -168,9 +168,9 @@ class SequentialProperty(Property):
             self.initialization = None
 
         self.current = lambda: None
-        self.action = self._action
+        self.action = self._action_override
 
-    def _action(self, _ID=()):
+    def _action_override(self, _ID=()):
         return (
             self.initialization(_ID=_ID)
             if self.sequence_step(_ID=_ID) == 0
@@ -219,6 +219,7 @@ class PropertyDict(DeepTrackNode, dict):
                     pass
 
         def action(_ID=()):
+            # SLOW
             return dict((key, val(_ID=_ID)) for key, val in self.items())
 
         super().__init__(action, **dependencies)

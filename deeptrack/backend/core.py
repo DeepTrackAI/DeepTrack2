@@ -241,7 +241,10 @@ class DeepTrackNode:
         return self
 
     def previous(self, _ID=()):
-        return self.data[_ID].current_value()
+        if self.data.valid_index(_ID):
+            return self.data[_ID].current_value()
+        else:
+            return []
 
     def recurse_children(self, memory=set()):
         return self._all_subchildren
