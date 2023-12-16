@@ -72,9 +72,9 @@ class DeepTrackDataDict:
         self.dict = {}
 
     def invalidate(self):
-        self.dict = {}
-        # for d in self.dict.values():
-        #     d.invalidate()
+        # self.dict = {}
+        for d in self.dict.values():
+            d.invalidate()
 
     def validate(self):
         for d in self.dict.values():
