@@ -27,7 +27,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 pytest numpy
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install tensorflow==2.10.0 tensorflow-datasets==4.6.0 torch
+          pip install tensorflow==2.10.0 tensorflow-datasets==4.6.0 torch tensorflow_probability==0.17.0
       - name: Conditionally install tfa
         if: ${{ matrix.tfa }}
         run: |
