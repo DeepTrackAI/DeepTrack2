@@ -28,7 +28,7 @@ class Augmentation(Feature):
     def __init__(self, time_consistent=False, **kwargs):
         super().__init__(time_consistent=time_consistent, **kwargs)
 
-    def _process_and_get(self, image_list, time_consistent, **kwargs):
+    def _image_wrap_process_and_get(self, image_list, time_consistent, **kwargs):
 
         if not isinstance(image_list, list):
             wrap_depth = 2
@@ -61,6 +61,7 @@ class Augmentation(Feature):
             new_list_of_lists = new_list_of_lists[0]
 
         return new_list_of_lists
+
 
     def update_properties(self, *args, **kwargs):
         pass
@@ -746,7 +747,7 @@ class Pad(Augmentation):
             padding,
         )
 
-    def _process_and_get(self, images, **kwargs):
+    def _image_wrap_process_and_get(self, images, **kwargs):
         results = [self.get(image, **kwargs) for image in images]
         for idx, result in enumerate(results):
             if isinstance(result, tuple):
