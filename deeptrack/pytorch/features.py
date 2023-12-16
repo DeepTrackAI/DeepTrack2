@@ -22,13 +22,16 @@ class ToTensor(Feature):
         super().__init__(dtype=dtype, device=device, add_dim_to_number=add_dim_to_number)
 
     def get(self, x, dtype, device, add_dim_to_number, **kwargs):
+        dtype = dtype or x.dtype
         if isinstance(x, torch.Tensor):
             return x
         elif isinstance(x, np.ndarray):
-            return torch.from_numpy(x)
+            if any(stride < 0 for stride in x.strides):
+                x = x.copy()
+            return torch.from_numpy(x).to(dtype=dtype)
         elif isinstance(x, (int, float, bool, complex)):
             if add_dim_to_number:
-                return torch.tensor([x], dtype=dtype, device=device)
+                return torch.tensor([x], dtype=dtype)
             else:
                 return x
         else:
