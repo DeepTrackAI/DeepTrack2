@@ -72,8 +72,9 @@ class DeepTrackDataDict:
         self.dict = {}
 
     def invalidate(self):
-        for d in self.dict.values():
-            d.invalidate()
+        self.dict = {}
+        # for d in self.dict.values():
+        #     d.invalidate()
 
     def validate(self):
         for d in self.dict.values():
@@ -112,15 +113,15 @@ class DeepTrackDataDict:
 
         if self.keylength is None:
             raise KeyError("Indexing an empty dict")
+        
+        if len(_ID) == self.keylength:
+            return self.dict[_ID]
 
         elif len(_ID) > self.keylength:
             return self[_ID[: self.keylength]]
 
-        elif len(_ID) < self.keylength:
-            return {k: v for k, v in self.dict.items() if k[: len(_ID)] == _ID}
-
         else:
-            return self.dict[_ID]
+            return {k: v for k, v in self.dict.items() if k[: len(_ID)] == _ID}
 
     def __contains__(self, _ID):
         return _ID in self.dict
@@ -232,7 +233,7 @@ class DeepTrackNode:
         # If set to same value, no need to invalidate
 
         if not (
-            self.is_valid(_ID=_ID) and equivalent(value, self.data[_ID].current_value())
+           self.is_valid(_ID=_ID) and equivalent(value, self.data[_ID].current_value())
         ):
             self.invalidate(_ID=_ID)
             self.store(value, _ID=_ID)
@@ -243,7 +244,7 @@ class DeepTrackNode:
         return self.data[_ID].current_value()
 
     def recurse_children(self, memory=set()):
-        yield from self._all_subchildren - set(memory)
+        return self._all_subchildren
 
     def old_recurse_children(self, memory=None):
         # On first call, instantiate memory
