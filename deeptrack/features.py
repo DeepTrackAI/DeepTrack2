@@ -400,12 +400,10 @@ class Feature(DeepTrackNode):
         if isinstance(x, SourceItem):
             x()
         else:
-            try:
+            if isinstance(x, list):
                 for source in x:
                     if isinstance(source, SourceItem):
                         source()
-            except TypeError:
-                pass
 
     def __getattr__(self, key):
         # Allows easier access to properties. For example,
@@ -660,11 +658,6 @@ class Feature(DeepTrackNode):
 
         else:
             return [i.to_numpy() for i in inputs]
-        
-    
-
-    
-
 
 class StructuralFeature(Feature):
     """Provides the structure of a feature-set
@@ -2246,5 +2239,8 @@ class Store(Feature):
     def get(self, _, key, replace, **kwargs):
         if replace or not (key in self._store):
             self._store[key] = self.feature()
-        return Image(self._store[key], copy=False)
+        if config.image_wrapper:
+            return Image(self._store[key], copy=False)
+        else:
+            return self._store[key]
         # return self._store[key] 
