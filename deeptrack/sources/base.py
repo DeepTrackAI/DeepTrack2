@@ -43,6 +43,9 @@ class Source:
 
     def product(self, **kwargs):
         return Product(self, **kwargs)
+    
+    def constants(self, **kwargs):
+        return Product(self, **{k: [v] for k, v in kwargs.items()}) 
 
     def validate_all_same_length(self, kwargs):
         lengths = [len(v) for v in kwargs.values()]
