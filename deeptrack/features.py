@@ -2244,3 +2244,70 @@ class Store(Feature):
         else:
             return self._store[key]
         # return self._store[key] 
+
+
+class Squeeze(Feature):
+    """Squeezes the input image to the smallest possible dimension.
+
+    Parameters
+    ----------
+    axis : int or tuple of ints
+        The axis to squeeze. Defaults to None, which squeezes all axes.
+    """
+
+    def __init__(self, axis=None, **kwargs):
+        super().__init__(axis=axis, **kwargs)
+
+    def get(self, image, axis, **kwargs):
+        return np.squeeze(image, axis=axis)
+    
+class Unsqueeze(Feature):
+    """Unsqueezes the input image to the smallest possible dimension.
+
+    Parameters
+    ----------
+    axis : int or tuple of ints
+        The axis to unsqueeze. Defaults to None, which unsqueezes all axes.
+    """
+
+    def __init__(self, axis=None, **kwargs):
+        super().__init__(axis=axis, **kwargs)
+
+    def get(self, image, axis, **kwargs):
+        return np.expand_dims(image, axis=axis)
+    
+ExpandDims = Unsqueeze
+
+class MoveAxis(Feature):
+    """Moves the axis of the input image.
+
+    Parameters
+    ----------
+    source : int
+        The axis to move.
+    destination : int
+        The destination of the axis.
+    """
+
+    def __init__(self, source, destination, **kwargs):
+        super().__init__(source=source, destination=destination, **kwargs)
+
+    def get(self, image, source, destination, **kwargs):
+        return np.moveaxis(image, source, destination)
+    
+class Transpose(Feature):
+    """Transposes the input image.
+
+    Parameters
+    ----------
+    axes : tuple of ints
+        The axes to transpose.
+    """
+
+    def __init__(self, axes, **kwargs):
+        super().__init__(axes=axes, **kwargs)
+
+    def get(self, image, axes, **kwargs):
+        return np.transpose(image, axes)
+    
+Permute = Transpose
