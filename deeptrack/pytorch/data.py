@@ -4,19 +4,24 @@ import numpy as np
 from deeptrack.image import Image
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, pipeline, inputs=None, length=None, replace=False):
+    def __init__(self,
+                 pipeline,
+                 inputs=None,
+                 length=None,
+                 replace=False):
         self.pipeline = pipeline
         self.replace = replace
         if inputs is None:
             if length is None:
                 raise ValueError("Either inputs or length must be specified.")
             else:
-                inputs = [{}] * length
+                inputs = [[]] * length
         self.inputs = inputs
         self.data = [None for _ in inputs]
 
     def __getitem__(self, index):
         if self._should_replace(index):
+            self.pipeline.update()
             res =  self.pipeline(self.inputs[index])
             if not isinstance(res, (tuple, list)):
                 res = (res, )
@@ -57,4 +62,3 @@ class Dataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.inputs)
     
-
