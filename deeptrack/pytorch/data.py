@@ -8,7 +8,7 @@ class Dataset(torch.utils.data.Dataset):
                  pipeline,
                  inputs=None,
                  length=None,
-                 replace=False):
+                 replace: bool | float = False):
         self.pipeline = pipeline
         self.replace = replace
         if inputs is None:

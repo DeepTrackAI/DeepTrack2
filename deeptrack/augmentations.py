@@ -624,15 +624,16 @@ class Crop(Augmentation):
         cropped_image = image[slices]
 
         # Update positions
-        cropped_image.properties = [dict(prop) for prop in image.properties]
-        for prop in cropped_image.properties:
-            if "position" in prop:
-                position = np.array(prop["position"])
-                try:
-                    position[..., 0:2] -= np.array(slice_start)[0:2]
-                    prop["position"] = position
-                except IndexError:
-                    pass
+        if hasattr(image, "properties"):
+            cropped_image.properties = [dict(prop) for prop in image.properties]
+            for prop in cropped_image.properties:
+                if "position" in prop:
+                    position = np.array(prop["position"])
+                    try:
+                        position[..., 0:2] -= np.array(slice_start)[0:2]
+                        prop["position"] = position
+                    except IndexError:
+                        pass
 
         return cropped_image
 
