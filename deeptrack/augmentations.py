@@ -28,8 +28,7 @@ class Augmentation(Feature):
     def __init__(self, time_consistent=False, **kwargs):
         super().__init__(time_consistent=time_consistent, **kwargs)
 
-    def _image_wrap_process_and_get(self, image_list, time_consistent, **kwargs):
-
+    def _image_wrapped_process_and_get (self, image_list, time_consistent, **kwargs):
         if not isinstance(image_list, list):
             wrap_depth = 2
             image_list_of_lists = [[image_list]]
@@ -53,6 +52,37 @@ class Augmentation(Feature):
                 augmented_image = Image(self.get(image, **kwargs))
                 augmented_image.merge_properties_from(image)
                 self.update_properties(augmented_image, **kwargs)
+                augmented_list.append(augmented_image)
+
+            new_list_of_lists.append(augmented_list)
+
+        for _ in range(wrap_depth):
+            new_list_of_lists = new_list_of_lists[0]
+
+        return new_list_of_lists
+    
+    def _no_wrap_process_and_get(self, image_list, time_consistent, **kwargs) -> list:
+        if not isinstance(image_list, list):
+            wrap_depth = 2
+            image_list_of_lists = [[image_list]]
+        elif len(image_list) == 0 or not isinstance(image_list[0], list):
+            wrap_depth = 1
+            image_list_of_lists = [image_list]
+        else:
+            wrap_depth = 0
+            image_list_of_lists = image_list
+
+        new_list_of_lists = []
+
+        for image_list in image_list_of_lists:
+
+            if time_consistent:
+                self.seed()
+
+            augmented_list = []
+            for image in image_list:
+                self.seed()
+                augmented_image = self.get(image, **kwargs)
                 augmented_list.append(augmented_image)
 
             new_list_of_lists.append(augmented_list)
