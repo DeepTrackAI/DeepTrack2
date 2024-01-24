@@ -735,7 +735,7 @@ class Pad(Augmentation):
         if callable(px):
             px = px(image)
         elif isinstance(px, int):
-            padding = [(px, px)] * image.ndom
+            padding = [(px, px)] * image.ndim
 
         for idx in range(0, len(px), 2):
             padding.append((px[idx], px[idx + 1]))
@@ -743,19 +743,17 @@ class Pad(Augmentation):
         while len(padding) < image.ndim:
             padding.append((0, 0))
 
-        return (
-            utils.safe_call(np.pad, positional_args=(image, padding), **kwargs),
-            padding,
-        )
+        return utils.safe_call(np.pad, positional_args=(image, padding), **kwargs)
+ 
 
     def _image_wrap_process_and_get(self, images, **kwargs):
         results = [self.get(image, **kwargs) for image in images]
-        for idx, result in enumerate(results):
-            if isinstance(result, tuple):
+        # for idx, result in enumerate(results):
+        #     if isinstance(result, tuple):
 
-                results[idx] = Image(result[0]).merge_properties_from(images[idx])
-            else:
-                Image(results[idx]).merge_properties_from(images[idx])
+        #         results[idx] = Image(result[0]).merge_properties_from(images[idx])
+        #     else:
+        #         Image(results[idx]).merge_properties_from(images[idx])
         return results
 
 

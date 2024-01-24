@@ -228,7 +228,7 @@ class Feature(DeepTrackNode):
         image_list = self._format_input(image_list, **feature_input)
 
         # Set the seed from the hash_key. Ensures equal results
-        # self.seed(_ID=_ID)
+        self.seed(_ID=_ID)
 
         # _process_and_get calls the get function correctly according
         # to the __distributed__ attribute
