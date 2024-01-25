@@ -8,12 +8,11 @@ import functools
 
 class SourceDeepTrackNode(DeepTrackNode):
 
-    def __init__(self, function, source):
-        
-        super().__init__(function)
-
-        for key, value in source._dict.items():
-            setattr(self, key, value)
+    def __getattr__(self, name):
+        node = SourceDeepTrackNode(lambda: self()[name])
+        node.add_dependency(self)
+        self.add_child(node)
+        return node
 
 class SourceItem(dict):
 
@@ -64,36 +63,20 @@ class Source:
 
     def _wrap(self, key):
         value = self._dict[key]
-        if isinstance(value, Source):
-            return self._wrap_source(key)
         if hasattr(value, "__getitem__"):
             return self._wrap_indexable(key)
         
         return self._wrap_iterable(key)
 
     def _wrap_indexable(self, key):
-        value_getter = DeepTrackNode(lambda: self._dict[key][self._current_index()])
+        value_getter = SourceDeepTrackNode(lambda: self._dict[key][self._current_index()])
         value_getter.add_dependency(self._current_index)
         self._current_index.add_child(value_getter)
         return value_getter
     
     def _wrap_iterable(self, key):
-        value_getter = DeepTrackNode(lambda: list(self._dict[key])[self._current_index()])
+        value_getter = SourceDeepTrackNode(lambda: list(self._dict[key])[self._current_index()])
         value_getter.add_dependency(self._current_index)
-        self._current_index.add_child(value_getter)
-        return value_getter
-
-    def _wrap_source(self, key):
-        source = self._dict[key]
-        value_getter = SourceDeepTrackNode(
-            lambda: self._dict[key][self._current_index()],
-            source
-        )
-        value_getter.add_dependency(self._current_index)
-
-        for subkey, val in source._dict.items():
-            setattr(value_getter, subkey, getattr(source, subkey))
-
         self._current_index.add_child(value_getter)
         return value_getter
 
@@ -180,7 +163,7 @@ class Sources:
         self._dict = dict.fromkeys(keys)
 
         for key in keys:
-            node = DeepTrackNode(
+            node = SourceDeepTrackNode(
                 functools.partial(lambda key: self._dict[key], key)
             )
 
