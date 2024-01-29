@@ -7,6 +7,7 @@ import itertools
 import operator
 from typing import Any, Callable, Iterable, List
 import warnings
+import random
 
 import numpy as np
 from pint.quantity import Quantity
@@ -116,7 +117,7 @@ class Feature(DeepTrackNode):
 
         # A random seed can be set to make the feature deterministic.
         # A non-deterministic feature does not need to be recalculated if the seed is the same.
-        self._random_seed = DeepTrackNode(lambda: np.random.randint(2147483648))
+        self._random_seed = DeepTrackNode(lambda: random.randint(0, 2147483648))
         self.add_dependency(self._random_seed)
         self._random_seed.add_child(self)
 
