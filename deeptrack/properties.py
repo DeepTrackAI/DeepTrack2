@@ -227,7 +227,9 @@ class PropertyDict(DeepTrackNode, dict):
         for val in dependencies.values():
             val.add_child(self)
             self.add_dependency(val)
-
+    
+    def __getitem__(self, key):
+        return dict.__getitem__(self, key)
 
 def propagate_data_to_dependencies(X, **kwargs):
     """Iterates the dependencies of a feature and sets the value of their properties to the values in kwargs

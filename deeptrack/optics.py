@@ -157,6 +157,15 @@ class Microscope(StructuralFeature):
             image[i].merge_properties_from(imaged_sample)
         return image
 
+    def _no_wrap_format_input(self, *args, **kwargs) -> list:
+        return self._image_wrapped_format_input(*args, **kwargs)
+    
+    def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
+        return self._image_wrapped_process_and_get(*args, **feature_input)
+    
+    def _no_wrap_process_output(self, *args, **feature_input):
+        return self._image_wrapped_process_output(*args, **feature_input)
+
 
 # OPTICAL SYSTEMS
 
@@ -414,6 +423,15 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
 
     def __call__(self, sample, **kwargs):
         return Microscope(sample, self, **kwargs)
+
+    def _no_wrap_format_input(self, *args, **kwargs) -> list:
+        return self._image_wrapped_format_input(*args, **kwargs)
+    
+    def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
+        return self._image_wrapped_process_and_get(*args, **feature_input)
+    
+    def _no_wrap_process_output(self, *args, **feature_input):
+        return self._image_wrapped_process_output(*args, **feature_input)
 
 
 class Fluorescence(Optics):

@@ -357,9 +357,12 @@ class Feature(DeepTrackNode):
             for image in output_image:
                 images.append([plt.imshow(image, **kwargs)])
 
-            interval = (
-                interval or output_image[0].get_property("interval") or (1 / 30 * 1000)
-            )
+
+            if not interval:
+                if isinstance(output_image[0], Image):
+                    interval = output_image[0].get_property("interval") or (1 / 30 * 1000)
+                else:
+                    interval = (1 / 30 * 1000)
 
             anim = animation.ArtistAnimation(
                 fig, images, interval=interval, blit=True, repeat_delay=0
