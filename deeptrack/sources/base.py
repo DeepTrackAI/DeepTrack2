@@ -105,6 +105,10 @@ class Source:
     def on_activate(self, callback: callable):
         self._callbacks.add(callback)
 
+    def filter(self, predicate):
+        indices = [i for i, item in enumerate(self) if predicate(**item)]
+        return Subset(self, indices)
+
 class Product(Source):
 
     def __init__(self, __source=[{}], **kwargs):
@@ -176,7 +180,8 @@ class Sources:
         for key in item:
             getattr(self, key).invalidate()
             getattr(self, key).set_value(item[key])
-    
+
+Join = Sources
 
 def random_split(source, lengths, generator=np.random.default_rng()):
     import math 
