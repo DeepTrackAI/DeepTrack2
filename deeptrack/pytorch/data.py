@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+from typing import Union
 from deeptrack.image import Image
 
 class Dataset(torch.utils.data.Dataset):
@@ -8,7 +9,7 @@ class Dataset(torch.utils.data.Dataset):
                  pipeline,
                  inputs=None,
                  length=None,
-                 replace: bool | float = False):
+                 replace: Union[bool, float] = False):
         self.pipeline = pipeline
         self.replace = replace
         if inputs is None:
