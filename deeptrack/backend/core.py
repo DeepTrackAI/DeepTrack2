@@ -317,6 +317,12 @@ class DeepTrackNode:
     def __hash__(self):
         return id(self)
 
+    def __getitem__(self, idx):
+        node = DeepTrackNode(lambda _ID=None: self(_ID=_ID)[idx])
+        node.add_dependency(self)
+        self.add_child(node)
+        return node
+
     # node-node operators
     def __add__(self, other):
         return create_node_with_operator(operator.__add__, self, other)
