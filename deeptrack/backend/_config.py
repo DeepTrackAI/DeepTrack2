@@ -22,7 +22,7 @@ class Config:
     def __init__(self):
         self.set_device("cpu")
         self.set_backend_numpy()
-        self.enable_image_wrapper()
+        self.disable_image_wrapper()
 
     def enable_gpu(self):
         warnings.warn("(enable/disable)_gpu is deprecated. Use set_device instead", DeprecationWarning, stacklevel=2)
