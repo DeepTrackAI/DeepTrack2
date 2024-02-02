@@ -34,6 +34,7 @@ from scipy.ndimage import convolve
 import warnings
 
 from . import units as u
+from .backend import config
 from deeptrack import image
 
 
@@ -102,7 +103,8 @@ class Microscope(StructuralFeature):
                 self._sample, **{"return_fft": True, **additional_sample_kwargs}
             )
 
-            list_of_scatterers = self._sample()
+            with config.wrapper_enabled_context() as context:
+                list_of_scatterers = self._sample()
 
             if not isinstance(list_of_scatterers, list):
                 list_of_scatterers = [list_of_scatterers]
@@ -149,7 +151,10 @@ class Microscope(StructuralFeature):
 
         # Merge with input
         if not image:
-            return imaged_sample
+            if not config.image_wrapper:
+                return imaged_sample._value
+            else:
+                return imaged_sample
 
         if not isinstance(image, list):
             image = [image]
@@ -157,14 +162,14 @@ class Microscope(StructuralFeature):
             image[i].merge_properties_from(imaged_sample)
         return image
 
-    def _no_wrap_format_input(self, *args, **kwargs) -> list:
-        return self._image_wrapped_format_input(*args, **kwargs)
+    # def _no_wrap_format_input(self, *args, **kwargs) -> list:
+    #     return self._image_wrapped_format_input(*args, **kwargs)
     
-    def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
-        return self._image_wrapped_process_and_get(*args, **feature_input)
+    # def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
+    #     return self._image_wrapped_process_and_get(*args, **feature_input)
     
-    def _no_wrap_process_output(self, *args, **feature_input):
-        return self._image_wrapped_process_output(*args, **feature_input)
+    # def _no_wrap_process_output(self, *args, **feature_input):
+    #     return self._image_wrapped_process_output(*args, **feature_input)
 
 
 # OPTICAL SYSTEMS
@@ -424,14 +429,14 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
     def __call__(self, sample, **kwargs):
         return Microscope(sample, self, **kwargs)
 
-    def _no_wrap_format_input(self, *args, **kwargs) -> list:
-        return self._image_wrapped_format_input(*args, **kwargs)
+    # def _no_wrap_format_input(self, *args, **kwargs) -> list:
+    #     return self._image_wrapped_format_input(*args, **kwargs)
     
-    def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
-        return self._image_wrapped_process_and_get(*args, **feature_input)
+    # def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
+    #     return self._image_wrapped_process_and_get(*args, **feature_input)
     
-    def _no_wrap_process_output(self, *args, **feature_input):
-        return self._image_wrapped_process_output(*args, **feature_input)
+    # def _no_wrap_process_output(self, *args, **feature_input):
+    #     return self._image_wrapped_process_output(*args, **feature_input)
 
 
 class Fluorescence(Optics):

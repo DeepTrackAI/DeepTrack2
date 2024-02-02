@@ -62,4 +62,20 @@ class Config:
     def enable_image_wrapper(self):
         self.image_wrapper = True
 
+    def wrapper_enabled_context(self):
+        class NullContext:
+            def __enter__(self):
+                pass
+            def __exit__(self, *args):
+                pass
+
+        class ImageWrapperContext:
+            def __enter__(_):
+                self.enable_image_wrapper()
+            def __exit__(_, *args):
+                self.disable_image_wrapper()
+        
+        return ImageWrapperContext() if not self.image_wrapper else NullContext()
+        
+
 config = Config()
