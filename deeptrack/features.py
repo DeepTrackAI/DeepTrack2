@@ -1667,6 +1667,9 @@ class SampleToMasks(Feature):
     def _process_and_get(self, images, **kwargs):
         if isinstance(images, list) and len(images) != 1:
             list_of_labels = super()._process_and_get(images, **kwargs)
+            if not config.image_wrapper:
+                for idx, (label, image) in enumerate(zip(list_of_labels, images)):
+                    list_of_labels[idx] = Image(label, copy=False).merge_properties_from(image)
         else:
             if isinstance(images, list):
                 images = images[0]
@@ -1771,6 +1774,9 @@ class SampleToMasks(Feature):
                             output_slice[..., label_index],
                             labelarg[..., label_index],
                         )
+
+        if not config.image_wrapper:
+            return output
         output = Image(output)
         for label in list_of_labels:
             output.merge_properties_from(label)
@@ -2072,10 +2078,18 @@ class NonOverlapping(Feature):
         list_of_volumes : list of 3d arrays
             The volumes to be checked for non-overlapping
         """
-
+        from skimage.morphology import isotropic_erosion
         from .optics import _get_position
+        from .augmentations import CropTight
 
         min_distance = self.min_distance()
+        if min_distance < 0:
+            crop = CropTight()
+            # print([np.sum(volume != 0) for volume in list_of_volumes])
+            list_of_volumes = [Image(crop(isotropic_erosion(volume != 0, -min_distance/2)), copy=False).merge_properties_from(volume) for volume in list_of_volumes]
+            # print([np.sum(volume != 0) for volume in list_of_volumes])
+
+            min_distance = 1
 
         # The position of the top left corner of each volume (index (0, 0, 0))
         volume_positions_1 = [
@@ -2116,8 +2130,8 @@ class NonOverlapping(Feature):
                 continue
 
             # If the products of the overlapping regions are non-zero, return False
-            if np.any(overlapping_volume_1 * overlapping_volume_2):
-                return False
+            # if np.any(overlapping_volume_1 * overlapping_volume_2):
+            #     return False
 
             # Finally, check that the non-zero voxels of the volumes are at least min_distance apart
             if not self._check_volumes_non_overlapping(
@@ -2315,3 +2329,20 @@ class Transpose(Feature):
         return np.transpose(image, axes)
     
 Permute = Transpose
+
+class OneHot(Feature):
+    """Converts the input to a one-hot encoded array.
+
+    Parameters
+    ----------
+    num_classes : int
+        The number of classes to encode.
+    """
+    def __init__(self, num_classes, **kwargs):
+        super().__init__(num_classes=num_classes, **kwargs)
+
+    def get(self, image, num_classes, **kwargs):
+        if image.shape[-1] == 1:
+            image = image[..., 0]
+        return np.eye(num_classes)[image]
+        
