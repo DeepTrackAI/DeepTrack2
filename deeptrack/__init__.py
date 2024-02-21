@@ -40,6 +40,7 @@ datasets = lazy_import.lazy_module("deeptrack.datasets")
 losses = lazy_import.lazy_module("deeptrack.losses")
 layers = lazy_import.lazy_module("deeptrack.layers")
 pytorch = lazy_import.lazy_module("deeptrack.pytorch")
+deeplay = lazy_import.lazy_module("deeptrack.deeplay")
 visualization = lazy_import.lazy_module("deeptrack.visualization")
 
 from deeptrack import (
@@ -57,4 +58,5 @@ from deeptrack import (
     pytorch,
     sources,
     visualization,
+    deeplay
 )

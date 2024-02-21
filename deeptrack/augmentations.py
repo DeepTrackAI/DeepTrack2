@@ -146,6 +146,9 @@ class Reuse(Feature):
         if not isinstance(output, list):
             output = [output]
 
+        if not self._wrap_array_with_image:
+            return output
+        
         outputs = []
         for image in output:
             image_copy = Image(image)

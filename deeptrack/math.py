@@ -349,7 +349,7 @@ class Resize(Feature):
         import cv2
         from deeptrack import config
 
-        if config.image_wrapper:
+        if self._wrap_array_with_image:
             image = strip(image)
 
         return utils.safe_call(

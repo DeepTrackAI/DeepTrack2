@@ -57,6 +57,7 @@ class Microscope(StructuralFeature):
         super().__init__(**kwargs)
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
+        self._sample.store_properties()
 
     def get(self, image, **kwargs):
 
@@ -103,8 +104,7 @@ class Microscope(StructuralFeature):
                 self._sample, **{"return_fft": True, **additional_sample_kwargs}
             )
 
-            with config.wrapper_enabled_context() as context:
-                list_of_scatterers = self._sample()
+            list_of_scatterers = self._sample()
 
             if not isinstance(list_of_scatterers, list):
                 list_of_scatterers = [list_of_scatterers]
@@ -151,7 +151,7 @@ class Microscope(StructuralFeature):
 
         # Merge with input
         if not image:
-            if not config.image_wrapper:
+            if not self._wrap_array_with_image:
                 return imaged_sample._value
             else:
                 return imaged_sample

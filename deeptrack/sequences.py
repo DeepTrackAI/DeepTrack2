@@ -14,7 +14,8 @@ Sequential
 from .features import Feature
 from .properties import SequentialProperty
 from .types import PropertyLike
-
+import random
+import numpy as np
 
 class Sequence(Feature):
     """Resolves a feature as a sequence.
@@ -51,6 +52,8 @@ class Sequence(Feature):
 
         outputs = input_list or []
         for sequence_step in range(sequence_length):
+            np.random.seed(random.randint(0, 1000000))
+
             propagate_sequential_data(
                 self.feature,
                 sequence_step=sequence_step,

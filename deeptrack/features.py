@@ -89,9 +89,12 @@ class Feature(DeepTrackNode):
     __property_memorability__ = 1
     __conversion_table__ = ConversionTable()
     __gpu_compatible__ = False
+    
 
     # A None-safe default value to compare against
     __nonelike_default = object()
+
+    _wrap_array_with_image = False
 
     def __init__(self, _input=[], **kwargs):
 
@@ -196,6 +199,83 @@ class Feature(DeepTrackNode):
 
     resolve = __call__
 
+    def store_properties(self, x=True, recursive=True):
+        """Store properties to the Image.
+
+        Parameters
+        ----------
+        x : bool
+            Whether to store properties to the Image. If False, properties will not be stored.
+        recursive : bool
+            Whether to store properties to all dependencies of the feature.
+        """
+        self._wrap_array_with_image = x
+        if recursive:
+            for dep in self.dependencies:
+                if isinstance(dep, Feature):
+                    dep.store_properties(x, recursive)
+
+    def torch(self, dtype=None, device=None):
+        """Convert the feature to a PyTorch feature.
+
+        Parameters
+        ----------
+        dtype : torch.dtype
+            The dtype of the output.
+        device : torch.device
+            The device of the output.
+
+        Returns
+        -------
+        Feature
+            A PyTorch feature.
+        """
+        from .pytorch import ToTensor
+        tensor_feature = ToTensor(dtype=dtype, device=device)
+        tensor_feature.store_properties(False, recursive=False)
+        return self >> tensor_feature
+
+    def numpy(self):
+        """Convert the feature to a numpy feature.
+
+        Returns
+        -------
+        Feature
+            A numpy feature.
+        """
+        return self >> ToNumpy()
+    
+    def batch(self, batch_size=32):
+        """Batch the feature.
+
+        Parameters
+        ----------
+        batch_size : int
+            The size of the batch.
+
+        Returns
+        -------
+        Feature
+            A batched feature.
+        """
+        res = [self.update()() for _ in range(batch_size)]
+        res = list(zip(*res))
+
+        for idx, r in enumerate(res):
+            
+            if isinstance(r[0], np.ndarray):
+                res[idx] = np.stack(r)
+                break
+
+            import torch
+            if isinstance(r[0], torch.Tensor):
+                res[idx] = torch.stack(r)
+        
+        return tuple(res)
+            
+        
+
+
     def action(self, _ID=()):
         """Creates the image.
         Transforms the input image by calling the method `get()` with the
@@ -229,7 +309,7 @@ class Feature(DeepTrackNode):
         image_list = self._format_input(image_list, **feature_input)
 
         # Set the seed from the hash_key. Ensures equal results
-        self.seed(_ID=_ID)
+        # self.seed(_ID=_ID)
 
         # _process_and_get calls the get function correctly according
         # to the __distributed__ attribute
@@ -550,21 +630,21 @@ class Feature(DeepTrackNode):
     # private properties to dispatch based on config
     @property
     def _format_input(self):
-        if config.image_wrapper:
+        if self._wrap_array_with_image:
             return self._image_wrapped_format_input
         else:
             return self._no_wrap_format_input
         
     @property
     def _process_and_get(self):
-        if config.image_wrapper:
+        if self._wrap_array_with_image:
             return self._image_wrapped_process_and_get
         else:
             return self._no_wrap_process_and_get
 
     @property
     def _process_output(self):
-        if config.image_wrapper:
+        if self._wrap_array_with_image:
             return self._image_wrapped_process_output
         else:
             return self._no_wrap_process_output
@@ -1667,7 +1747,7 @@ class SampleToMasks(Feature):
     def _process_and_get(self, images, **kwargs):
         if isinstance(images, list) and len(images) != 1:
             list_of_labels = super()._process_and_get(images, **kwargs)
-            if not config.image_wrapper:
+            if not self._wrap_array_with_image:
                 for idx, (label, image) in enumerate(zip(list_of_labels, images)):
                     list_of_labels[idx] = Image(label, copy=False).merge_properties_from(image)
         else:
@@ -1775,7 +1855,7 @@ class SampleToMasks(Feature):
                             labelarg[..., label_index],
                         )
 
-        if not config.image_wrapper:
+        if not self._wrap_array_with_image:
             return output
         output = Image(output)
         for label in list_of_labels:
@@ -2257,7 +2337,7 @@ class Store(Feature):
     def get(self, _, key, replace, **kwargs):
         if replace or not (key in self._store):
             self._store[key] = self.feature()
-        if config.image_wrapper:
+        if self._wrap_array_with_image:
             return Image(self._store[key], copy=False)
         else:
             return self._store[key]

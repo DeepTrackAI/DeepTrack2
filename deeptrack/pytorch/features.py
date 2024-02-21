@@ -24,15 +24,21 @@ class ToTensor(Feature):
     def get(self, x, dtype, device, add_dim_to_number, **kwargs):
         dtype = dtype or x.dtype
         if isinstance(x, torch.Tensor):
-            return x
+            ...
         elif isinstance(x, np.ndarray):
             if any(stride < 0 for stride in x.strides):
                 x = x.copy()
-            return torch.from_numpy(x).to(dtype=dtype)
+            x = torch.from_numpy(x)
         elif isinstance(x, (int, float, bool, complex)):
             if add_dim_to_number:
-                return torch.tensor([x], dtype=dtype)
+                x = torch.tensor([x])
             else:
                 return x
         else:
-            return torch.Tensor(x)
+            x = torch.Tensor(x)
+
+        if dtype:
+            x = x.to(dtype)
+        if device:
+            x = x.to(device)
+        return x
