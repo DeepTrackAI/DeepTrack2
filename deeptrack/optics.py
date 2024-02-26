@@ -151,7 +151,7 @@ class Microscope(StructuralFeature):
 
         # Merge with input
         if not image:
-            if not self._wrap_array_with_image:
+            if not self._wrap_array_with_image and isinstance(imaged_sample, Image):
                 return imaged_sample._value
             else:
                 return imaged_sample
