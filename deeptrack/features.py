@@ -211,9 +211,9 @@ class Feature(DeepTrackNode):
         """
         self._wrap_array_with_image = x
         if recursive:
-            for dep in self.dependencies:
+            for dep in self.recurse_dependencies():
                 if isinstance(dep, Feature):
-                    dep.store_properties(x, recursive)
+                    dep.store_properties(x, False)
 
     def torch(self, dtype=None, device=None):
         """Convert the feature to a PyTorch feature.
@@ -265,11 +265,10 @@ class Feature(DeepTrackNode):
             
             if isinstance(r[0], np.ndarray):
                 res[idx] = np.stack(r)
-                break
-
-            import torch
-            if isinstance(r[0], torch.Tensor):
-                res[idx] = torch.stack(r)
+            else:
+                import torch
+                if isinstance(r[0], torch.Tensor):
+                    res[idx] = torch.stack(r)
         
         return tuple(res)
             
@@ -727,7 +726,10 @@ class Feature(DeepTrackNode):
             image.append(feature_input)
 
     def _no_wrap_process_output(self, image_list, feature_input):
-        pass
+        for index, image in enumerate(image_list):
+
+            if isinstance(image, Image):
+                image_list[index] = image._value
     
     def _coerce_inputs(self, inputs, **kwargs):
         # Coerces inputs to the correct type (numpy array or tensor or cupyy array).

@@ -10,3 +10,4 @@ pint<0.20
 pandas
 tqdm
 lazy_import
+rich

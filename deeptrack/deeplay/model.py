@@ -1,6 +1,7 @@
 import deeplay as dl
 from ..features import Feature
 from ..pytorch import Dataset
+from lightning.pytorch.callbacks import RichProgressBar
 
 import numpy as np
 import torch
@@ -8,20 +9,111 @@ import lightning as L
 from typing import Union, Optional, Literal
 import tqdm
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+import logging
+logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
+logging.getLogger("lightning.pytorch.accelerators.cuda").setLevel(logging.WARNING)
+
 class LogHistory(L.Callback):
-    def __init__(self):
-        self.history = {}
-        self.step_history = {}
 
-    def on_train_epoch_end(self, trainer: dl.Trainer, pl_module: L.LightningModule) -> None:
-        for key, value in trainer.callback_metrics.items():
-            self.history.setdefault(key, []).append(value.item())
+    @property
+    def history(self):
+        return {key: 
+                {
+                    "value": [item["value"] for item in value],
+                    "epoch": [item["epoch"] for item in value],
+                    "step": [item["step"] for item in value]
+                }
+                for key, value in self._history.items()}
+
+    @property
+    def step_history(self):
+        return {key: 
+                {
+                    "value": [item["value"] for item in value],
+                    "epoch": [item["epoch"] for item in value],
+                    "step": [item["step"] for item in value]
+                }
+                for key, value in self._step_history.items()}
     
-    def on_validation_epoch_end(self, trainer: dl.Trainer, pl_module: L.LightningModule) -> None:
+    def __init__(self):
+        self._history = {}
+        self._step_history = {}
+
+    def on_train_batch_end(self, trainer: dl.Trainer, *args, **kwargs) -> None:
         for key, value in trainer.callback_metrics.items():
-            self.history.setdefault(key, []).append(value.item())
+            if key.endswith("_step"):
+                self._step_history.setdefault(key, []).append(self._logitem(trainer, value))
 
+    def on_train_epoch_end(self, trainer: dl.Trainer, *args, **kwargs) -> None:
+        for key, value in trainer.callback_metrics.items():
+            if key.startswith("train") and key.endswith("_epoch"):
+                self._history.setdefault(key, []).append(self._logitem(trainer, value))
+    
+    def on_validation_epoch_end(self, trainer: dl.Trainer, *args, **kwargs) -> None:
+        for key, value in trainer.callback_metrics.items():
+            if key.startswith("val") and key.endswith("_epoch"):
+                self._history.setdefault(key, []).append(self._logitem(trainer, value))
 
+    def _logitem(self, trainer, value):
+        if isinstance(value, torch.Tensor):
+            value = value.item()
+        return {
+            "epoch": trainer.current_epoch,
+            "step": trainer.global_step,
+            "value": value
+        }
+
+    def plot(self, *args, yscale="log", **kwargs):
+
+        history = self.history
+        step_history = self.step_history
+        
+        keys = list(history.keys())
+        keys = [key.replace("val", "").replace("train", "") for key in keys]
+        unique_keys = list(set(keys))
+        # sort unique keys same as keys
+        unique_keys.sort(key=lambda x: keys.index(x))
+        keys = unique_keys
+
+        max_width = 3
+        rows = len(keys) // max_width + 1
+        width = min(len(keys), max_width)
+
+        fig, axes = plt.subplots(rows, width, figsize=(15, 5 * rows))
+
+        if len(keys) == 1:
+            axes = np.array([[axes]])
+
+        for ax, key in zip(axes.ravel(), keys):
+            train_key = "train" + key
+            val_key = "val" + key
+            step_key = ("train" + key).replace("epoch", "step")
+
+            
+            if step_key in step_history:
+                ax.plot(step_history[step_key]["step"], step_history[step_key]["value"], label=step_key, color="C1", alpha=0.25)
+            if train_key in history:
+                step = np.array(history[train_key]["step"])
+                step[1:] = step[1:] - (step[1:] - step[:-1]) / 2
+                step[0] /= 2
+                marker_kwargs = dict(marker="o", markerfacecolor="white", markeredgewidth=1.5) if len(step) < 20 else {}
+                ax.plot(step, history[train_key]["value"], label=train_key, color="C1", **marker_kwargs)
+
+            if val_key in history:
+                marker_kwargs = dict(marker="d", markerfacecolor="white", markeredgewidth=1.5) if len(step) < 20 else {}
+                ax.plot(history[val_key]["step"], history[val_key]["value"], label=val_key, color="C3", linestyle="--", **marker_kwargs)
+            
+            ax.set_title(key.replace("_", " ").replace("epoch", "").strip().capitalize())
+            ax.set_xlabel("Step")
+
+            ax.legend()
+            ax.set_yscale(yscale)
+        
+        return fig, axes
+    
 class Model(dl.Application):
 
     def __init__(self, 
@@ -29,6 +121,7 @@ class Model(dl.Application):
                  train_data=None,
                  val_data=None,
                  test_data=None,
+                 data_channel_position: Literal["first", "last"] = "last",
                  loss=None,
                  metrics=None,
                  train_metrics=None,
@@ -50,10 +143,17 @@ class Model(dl.Application):
         self.train_data = train_data
         self.val_data = val_data
         self.test_data = test_data
+        self.data_channel_position = data_channel_position
 
     def forward(self, x):
-        return self.model(x)
+        return self.model(self._maybe_to_channel_first(x))
     
+    def _maybe_to_channel_first(self, x, other=None):
+        if (self.data_channel_position == "last" and 
+            x.ndim > 2 and
+            x.dtype not in [torch.int8, torch.int16, torch.int32, torch.int64]):
+            return x.permute(0, -1, *range(1, x.ndim-1))
+        return x
     
     def create_data(self, data, batch_size=32, steps_per_epoch=100, replace=False, **kwargs):
         if isinstance(data, Feature):
@@ -76,14 +176,22 @@ class Model(dl.Application):
             steps_per_epoch=100,
             replace=False, 
             val_batch_size=None, 
+            val_steps_per_epoch=None,
             callbacks=[], 
+            permute_target_channels: Union[bool, Literal["auto"]] = "auto",
             **kwargs) -> LogHistory:
+        
+        self.permute_target_channels = permute_target_channels
+
         val_batch_size = val_batch_size or batch_size
+        val_steps_per_epoch = val_steps_per_epoch or steps_per_epoch
         train_data = self.create_data(self.train_data, batch_size, steps_per_epoch, replace)
-        val_data = self.create_data(self.val_data, val_batch_size, steps_per_epoch, replace) if self.val_data else None
+        val_data = self.create_data(self.val_data, val_batch_size, val_steps_per_epoch, False) if self.val_data else None
         
         history = LogHistory()
-        callbacks = callbacks + [history]
+        progressbar = RichProgressBar()
+        
+        callbacks = callbacks + [history, progressbar]
         trainer = dl.Trainer(max_epochs=max_epochs, callbacks=callbacks, **kwargs)
 
         train_dataloader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
@@ -92,7 +200,7 @@ class Model(dl.Application):
             self.build()
 
         if val_data:
-            val_dataloader = torch.utils.data.DataLoader(val_data, batch_size=val_batch_size, shuffle=True) if val_data else None
+            val_dataloader = torch.utils.data.DataLoader(val_data, batch_size=val_batch_size, shuffle=False) if val_data else None
             trainer.fit(self, train_dataloader, val_dataloader)
         else:
             trainer.fit(self, train_dataloader)
@@ -117,3 +225,14 @@ class Model(dl.Application):
         if isinstance(self.loss, (torch.nn.BCELoss, torch.nn.BCEWithLogitsLoss)):
             y = y.float()
         return super().compute_loss(y_hat, y)
+
+    def train_preprocess(self, batch):
+        x, y = super().train_preprocess(batch)
+        if self.permute_target_channels == "auto":
+            y = self._maybe_to_channel_first(y)
+        elif self.permute_target_channels is True:
+            y = y.permute(0, -1, *range(1, x.ndim-1))
+        return x, y
+    
+    val_preprocess = train_preprocess
+    test_preprocess = train_preprocess

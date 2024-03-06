@@ -57,6 +57,8 @@ class Dataset(torch.utils.data.Dataset):
         # if float, convert to torch default float
         if self.float_dtype and x.dtype in [torch.float16, torch.float32, torch.float64]:
             x = x.to(self.float_dtype)
+        if x.dtype in [torch.int8, torch.int16, torch.int32, torch.int64]:
+            x = x.to(torch.long)
 
         if self.permute_channels and x.dim() > 2:
             x = x.permute(-1, *range(0, x.dim() - 1))
