@@ -215,7 +215,7 @@ class Feature(DeepTrackNode):
                 if isinstance(dep, Feature):
                     dep.store_properties(x, False)
 
-    def torch(self, dtype=None, device=None):
+    def torch(self, dtype=None, device=None, permute_mode="never"):
         """Convert the feature to a PyTorch feature.
 
         Parameters
@@ -231,19 +231,19 @@ class Feature(DeepTrackNode):
             A PyTorch feature.
         """
         from .pytorch import ToTensor
-        tensor_feature = ToTensor(dtype=dtype, device=device)
+        tensor_feature = ToTensor(dtype=dtype, device=device, permute_mode=permute_mode)
         tensor_feature.store_properties(False, recursive=False)
         return self >> tensor_feature
 
-    def numpy(self):
-        """Convert the feature to a numpy feature.
+    # def numpy(self):
+    #     """Convert the feature to a numpy feature.
 
-        Returns
-        -------
-        Feature
-            A numpy feature.
-        """
-        return self >> ToNumpy()
+    #     Returns
+    #     -------
+    #     Feature
+    #         A numpy feature.
+    #     """
+    #     return self >> ToNumpy()
     
     def batch(self, batch_size=32):
         """Batch the feature.
