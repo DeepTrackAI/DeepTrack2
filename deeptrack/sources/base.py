@@ -7,6 +7,21 @@ import weakref
 import functools
 
 class SourceDeepTrackNode(DeepTrackNode):
+    """A node that creates child nodes when attributes are accessed.
+    
+    This class is used to create a node that creates child nodes when attributes are accessed.
+    Assumes the value of the node is dict-like (i.e. has a __getitem__ method that takes a string).
+
+    Example:
+    >>> node = SourceDeepTrackNode(lambda: {"a": 1, "b": 2})
+    >>> child = node.a
+    >>> child() # returns 1
+
+    Parameters
+    ----------
+    action : callable
+        The action that returns the value of the node.    
+    """
 
     def __getattr__(self, name):
         node = SourceDeepTrackNode(lambda: self()[name])
@@ -15,6 +30,24 @@ class SourceDeepTrackNode(DeepTrackNode):
         return node
 
 class SourceItem(dict):
+    """ A dict-like object that calls a list of callbacks when called.
+
+    Used in conjunction with the Source class to call a list of callbacks when called.
+    These callbacks are used to activate a certain item in the source, ensuring all 
+    DeepTrackNodes are updated.
+
+    Example:
+    >>> source = Source(a=[1, 2], b=[3, 4])
+    >>> @source.on_activate
+    >>> def callback(item):
+    >>>     print(item)
+    >>> source[0]() # prints SourceItem({'a': 1, 'b': 3})
+
+    Parameters
+    ----------
+    callbacks : list
+        A list of callables that are called when the SourceItem is called.
+    """
 
     def __init__(self, callbacks, **kwargs):
         self._callbacks = callbacks
@@ -29,6 +62,27 @@ class SourceItem(dict):
         return f"SourceItem({super().__repr__()})"
 
 class Source:
+    """ A class that represents one or more sources of data.
+
+    This class is used to represent one or more sources of data. When accessed,
+    it returns a deeptrack object that can be passed as properties to features.
+
+    The feature can then be called with an item from the source to get the value of the feature
+    for that item. 
+
+    Example:
+    >>> source = Source(a=[1, 2], b=[3, 4])
+    >>> feature_a = dt.Value(source.a)
+    >>> feature_b = dt.Value(source.b)
+    >>> sum_feature = feature_a + feature_b
+    >>> sum_feature(source[0]) # returns 4
+    >>> sum_feature(source[1]) # returns 6
+
+    Parameters
+    ----------
+    kwargs : dict
+        A dictionary of lists or arrays. The keys of the dictionary are the names of the sources, and the values are the sources themselves.
+    """
     
     def __init__(self, **kwargs):
         self.validate_all_same_length(kwargs)
@@ -50,10 +104,48 @@ class Source:
             return self._get_item(index)
 
     def product(self, **kwargs):
+        """Return the product of the source with the given sources.
+
+        Returns a new source that is the product of the source with the given sources.
+
+        Example:
+        >>> source = Source(a=[1, 2], b=[3, 4])
+        >>> new_source = source.product(c=[5, 6])
+        >>> new_source # returns Source(c=[5, 6, 5, 6], a=[1, 1, 2, 2], b=[3, 3, 4, 4])
+
+        Parameters
+        ----------
+        kwargs : dict
+            A dictionary of lists or arrays. The keys of the dictionary are the names of the sources, and the values are the sources themselves.
+        """
         return Product(self, **kwargs)
     
     def constants(self, **kwargs):
+        """Return a new source where the given values are constant.
+
+        Example:
+        >>> source = Source(a=[1, 2], b=[3, 4])
+        >>> new_source = source.constants(c=5)
+        >>> new_source # returns Source(c=[5, 5], a=[1, 2], b=[3, 4])
+
+        Parameters
+        ----------
+        kwargs : dict
+            A dictionary of values. The keys of the dictionary are the names of the sources, and the values are the values themselves.
+        """
         return Product(self, **{k: [v] for k, v in kwargs.items()}) 
+    
+    def filter(self, predicate):
+        """Return a new source with only the items that satisfy the predicate.
+
+        Example:
+        >>> source = Source(a=[1, 2], b=[3, 4])
+        >>> new_source = source.filter(lambda a, b: a > 1)
+        >>> new_source # returns Source(a=[2], b=[4])
+        """
+        indices = [i for i, item in enumerate(self) if predicate(**item)]
+        return Subset(self, indices)
+
 
     def validate_all_same_length(self, kwargs):
         lengths = [len(v) for v in kwargs.values()]
@@ -105,11 +197,15 @@ class Source:
     def on_activate(self, callback: callable):
         self._callbacks.add(callback)
 
-    def filter(self, predicate):
-        indices = [i for i, item in enumerate(self) if predicate(**item)]
-        return Subset(self, indices)
-
 class Product(Source):
+    """ A class that represents the product of a source with one or more sources.
+
+    This class is used to represent the product of a source with one or more sources. When accessed,
+    it returns a deeptrack object that can be passed as properties to features.
+
+    The feature can then be called with an item from the source to get the value of the feature
+    for that item.
+    """
 
     def __init__(self, __source=[{}], **kwargs):
 
@@ -156,6 +252,26 @@ class Subset(Source):
 
 
 class Sources:
+    """ Joins multiple sources into a single access point.
+
+    Used when one of multiple sources can be passed to a feature. For example the sources
+    are split into training and validation sets, and the user can choose which one to use.
+
+    Example:
+    >>> source1 = Source(a=[1, 2], b=[3, 4])
+    >>> source2 = Source(a=[5, 6], b=[7, 8])
+    >>> joined_source = Sources(source1, source2)
+    >>> feature_a = dt.Value(joined_source.a)
+    >>> feature_b = dt.Value(joined_source.b)
+    >>> sum_feature = feature_a + feature_b
+    >>> sum_feature(source1[0]) # returns (1 + 3) = 4
+    >>> sum_feature(source2[0]) # returns (5 + 7) = 12
+
+    Parameters
+    ----------
+    sources : Source
+        The sources to join.
+    """
 
     def __init__(self, *sources: Source):
         self.sources = sources
@@ -184,6 +300,18 @@ class Sources:
 Join = Sources
 
 def random_split(source, lengths, generator=np.random.default_rng()):
+    """Randomly split a source into non-overlapping new sources of given lengths.
+
+    Parameters
+    ----------
+    source : Source
+        The source to split.
+    lengths : list of int or float
+        The lengths of the new sources. If the lengths are floats, they are interpreted as fractions of the source.
+    generator : numpy.random.Generator, optional
+        The random number generator to use.
+    """
+
     import math 
     import warnings
     if math.isclose(sum(lengths), 1) and sum(lengths) <= 1:

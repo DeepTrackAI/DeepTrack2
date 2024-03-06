@@ -6,17 +6,28 @@ from lightning.pytorch.callbacks import RichProgressBar
 import numpy as np
 import torch
 import lightning as L
-from typing import Union, Optional, Literal
+from typing import Union, Optional, Literal, Tuple, Callable, Sequence, Dict
 import tqdm
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+import torchmetrics as tm
+
+Optimizer = dl.Optimizer
 
 import logging
 logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
 logging.getLogger("lightning.pytorch.accelerators.cuda").setLevel(logging.WARNING)
 
 class LogHistory(L.Callback):
+    """A keras-like history callback for lightning. Keeps track of metrics and losses during training and validation.
+    
+    Example:
+    >>> history = LogHistory()
+    >>> trainer = dl.Trainer(callbacks=[history])
+    >>> trainer.fit(model, train_dataloader, val_dataloader)
+    >>> history.history {"train_loss_epoch": {"value": [0.1, 0.2, 0.3], "epoch": [0, 1, 2], "step": [0, 100, 200]}}
+    """
 
     @property
     def history(self):
@@ -67,6 +78,8 @@ class LogHistory(L.Callback):
         }
 
     def plot(self, *args, yscale="log", **kwargs):
+        """Plot the history of the metrics and losses.
+        """
 
         history = self.history
         step_history = self.step_history
@@ -115,19 +128,25 @@ class LogHistory(L.Callback):
         return fig, axes
     
 class Model(dl.Application):
+    """A wrapper for a pytorch model for easy integration with deeptrack pipelines.
+    
+    A lightning model with convenience methods for training, validation and testing.
+    Intended for use with deeptrack pipelines. For more advanced use cases, consider 
+    using deeplay or lightning directly. 
+    """
 
     def __init__(self, 
-                 model, 
-                 train_data=None,
-                 val_data=None,
-                 test_data=None,
+                 model: torch.nn.Module, 
+                 train_data: Union[Feature, torch.utils.data.Dataset, Tuple[np.ndarray, ...], Tuple[torch.Tensor, ...], torch.Tensor, np.ndarray, None] = None,
+                 val_data: Union[Feature, torch.utils.data.Dataset, Tuple[np.ndarray, ...], Tuple[torch.Tensor, ...], torch.Tensor, np.ndarray, None] = None,
+                 test_data: Union[Feature, torch.utils.data.Dataset, Tuple[np.ndarray, ...], Tuple[torch.Tensor, ...], torch.Tensor, np.ndarray, None] = None,
                  data_channel_position: Literal["first", "last"] = "last",
-                 loss=None,
-                 metrics=None,
-                 train_metrics=None,
-                 val_metrics=None,
-                 test_metrics=None,
-                 optimizer=None,
+                 loss: Union[torch.nn.Module, Callable[..., torch.Tensor], None] = None,
+                 optimizer: Optional[dl.Optimizer] = None,
+                 metrics: Optional[Sequence[tm.Metric]] = None,
+                 train_metrics: Optional[Sequence[tm.Metric]] = None,
+                 val_metrics: Optional[Sequence[tm.Metric]] = None,
+                 test_metrics: Optional[Sequence[tm.Metric]] = None,
                  **kwargs):
         
         super().__init__(
@@ -176,15 +195,42 @@ class Model(dl.Application):
             steps_per_epoch=100,
             replace=False, 
             val_batch_size=None, 
-            val_steps_per_epoch=None,
+            val_steps_per_epoch=10,
             callbacks=[], 
             permute_target_channels: Union[bool, Literal["auto"]] = "auto",
             **kwargs) -> LogHistory:
+        """Train the model on the training data.
+
+        Train the model on the training data, with optional validation data.
+
+        Parameters
+        ----------
+        max_epochs : int
+            The maximum number of epochs to train the model.
+        batch_size : int
+            The batch size to use for training.
+        steps_per_epoch : int
+            The number of steps per epoch (used if train_data is a Feature).
+        replace : bool or float
+            Whether to replace the data after each epoch (used if train_data is a Feature).
+            If a float, the data is replaced with the given probability.
+        val_batch_size : int
+            The batch size to use for validation. If None, the training batch size is used.
+        val_steps_per_epoch : int
+            The number of steps per epoch for validation.
+        callbacks : list
+            A list of callbacks to use during training.
+        permute_target_channels : bool or "auto"
+            Whether to permute the target channels to channel first. If "auto", the model will
+            attempt to infer the correct permutation based on the input and target shapes.
+        **kwargs
+            Additional keyword arguments to pass to the trainer.
+        """        
         
         self.permute_target_channels = permute_target_channels
 
         val_batch_size = val_batch_size or batch_size
-        val_steps_per_epoch = val_steps_per_epoch or steps_per_epoch
+        val_steps_per_epoch = val_steps_per_epoch or 10
         train_data = self.create_data(self.train_data, batch_size, steps_per_epoch, replace)
         val_data = self.create_data(self.val_data, val_batch_size, val_steps_per_epoch, False) if self.val_data else None
         
@@ -207,7 +253,28 @@ class Model(dl.Application):
 
         return history
     
-    def test(self, data, metrics, batch_size=32, **kwargs):
+    def test(self, 
+             data: Union[Feature, torch.utils.data.Dataset, Tuple[np.ndarray, ...], Tuple[torch.Tensor, ...], torch.Tensor, np.ndarray], 
+             metrics: Union[tm.Metric, Tuple[str, tm.Metric], Sequence[Union[tm.Metric, Tuple[str, tm.Metric]]], Dict[str, tm.Metric]],
+             batch_size: int = 32):
+        """Test the model on the given data.
+
+        Test the model on the given data, using the given metrics. Metrics can be
+        given as a single metric, a tuple of name and metric, a sequence of metrics
+        (or tuples of name and metric) or a dictionary of metrics. In the case of
+        tuples, the name is used as the key in the returned dictionary. In the case
+        of metrics, the name of the metric is used as the key in the returned dictionary.
+
+        Parameters
+        ----------
+        data : data-like
+            The data to test the model on. Can be a Feature, a torch.utils.data.Dataset, a tuple of tensors, a tensor or a numpy array.
+        metrics : metric-like
+            The metrics to use for testing. Can be a single metric, a tuple of name and metric, a sequence of metrics (or tuples of name and metric) or a dictionary of metrics.
+        batch_size : int
+            The batch size to use for testing.
+        """
+
         device = self.trainer.strategy.root_device
         self.to(device)
         test_data = self.create_data(data)
