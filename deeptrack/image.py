@@ -322,7 +322,7 @@ class Image:
 
     def __array__(self, *args, **kwargs):
         """Convert to numpy array."""
-        return np.array(self.to_numpy()._value)
+        return np.array(self.to_numpy()._value, *args)
 
     def to_tf(self):
         """Convert to tensorflow tensor."""
