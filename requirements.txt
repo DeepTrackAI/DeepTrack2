@@ -11,3 +11,4 @@ pandas
 tqdm
 lazy_import
 rich
+gdown
