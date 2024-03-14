@@ -7,8 +7,6 @@ import unittest
 from .. import math
 
 import numpy as np
-import tensorflow as tf
-
 
 class TestMath(unittest.TestCase):
     def test_Clip(self):
