@@ -41,7 +41,7 @@ jobs:
       - name: Install tensorflow
         if: ${{ matrix.install-tensorflow == 'tensorflow' }}
         run: |
-          python -m pip install tensorflow tensorflow-probability
+          python -m pip install tensorflow==2.10 tensorflow-probability
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
