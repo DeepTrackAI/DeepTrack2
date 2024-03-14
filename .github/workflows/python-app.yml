@@ -19,7 +19,10 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         install-deeplay: ["", "deeplay"]
         install-tensorflow: ["", "tensorflow"]
-
+        exclude:
+          - python-version: "3.11"
+            install-tensorflow: "tensorflow"
+    if:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
