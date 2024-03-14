@@ -21,6 +21,7 @@ class TestAugmentations(unittest.TestCase):
     def test_FlipLR(self):
         feature = self.DummyFeature()
         augmented_feature = augmentations.FlipLR(feature)
+
         augmented_feature.update()
         output_1 = augmented_feature.resolve()
         augmented_feature.update()
@@ -64,6 +65,7 @@ class TestAugmentations(unittest.TestCase):
         )
 
         pipe = opt(particle) >> augmentation
+        pipe.store_properties(True)
 
         for _ in range(10):
             image = pipe.update().resolve()

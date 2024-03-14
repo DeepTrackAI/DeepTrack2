@@ -41,6 +41,7 @@ def grid_test_features(
         f_a = feature_a(**f_a_input)
         f_b = feature_b(**f_b_input)
         f = merge_operator(f_a, f_b)
+        f.store_properties()
 
         tester.assertIsInstance(f, features.Feature)
 
@@ -97,13 +98,16 @@ def test_operator(self, operator, emulated_operator=None):
 
     value = features.Value(value=2)
     f = operator(value, 3)
+    f.store_properties()
     self.assertEqual(f(), operator(2, 3))
     self.assertListEqual(f().get_property("value", get_one=False), [2, 3])
 
     f = operator(3, value)
+    f.store_properties()
     self.assertEqual(f(), operator(3, 2))
 
     f = operator(value, lambda: 3)
+    f.store_properties()
     self.assertEqual(f(), operator(2, 3))
     self.assertListEqual(f().get_property("value", get_one=False), [2, 3])
 
@@ -351,6 +355,7 @@ class TestFeatures(unittest.TestCase):
                 return image
 
         feature = FeatureAddValue(value_to_add=1)
+        feature.store_properties()
         feature.update()
         input_image = np.zeros((1, 1))
         output_image = feature.resolve(input_image)
@@ -373,6 +378,7 @@ class TestFeatures(unittest.TestCase):
                 return image
 
         feature = FeatureConcreteClass(dummy_property="foo")
+        feature.store_properties()
         feature.update()
         output_image = feature.resolve()
         self.assertListEqual(
@@ -388,6 +394,7 @@ class TestFeatures(unittest.TestCase):
         feature1 = FeatureAddValue(value_to_add=1)
         feature2 = FeatureAddValue(value_to_add=2)
         feature = feature1 >> feature2
+        feature.store_properties()
         feature.update()
         input_image = np.zeros((1, 1))
         output_image = feature.resolve(input_image)
@@ -434,8 +441,8 @@ class TestFeatures(unittest.TestCase):
         feature12.update()
         output_image = feature12.resolve()
         self.assertIsInstance(output_image, list)
-        self.assertIsInstance(output_image[0], Image)
-        self.assertIsInstance(output_image[1], Image)
+        self.assertIsInstance(output_image[0], np.ndarray)
+        self.assertIsInstance(output_image[1], np.ndarray)
         self.assertEqual(output_image[0].shape, (1, 1))
         self.assertEqual(output_image[1].shape, (2, 2))
 
@@ -463,7 +470,7 @@ class TestFeatures(unittest.TestCase):
         feature = features.Value(value=0) >> (
             features.Add(value=lambda: np.random.randint(100)) ^ 100
         )
-
+        feature.store_properties()
         feature.update()
         output_image = feature()
         values = output_image.get_property("value", get_one=False)[1:]
@@ -503,6 +510,7 @@ class TestFeatures(unittest.TestCase):
         sub = features.Subtract(1)
 
         feature = value >> (((add ^ 2) >> (sub ^ 3)) ^ 4)
+        feature.store_properties()
 
         feature.update()
 
@@ -540,6 +548,7 @@ class TestFeatures(unittest.TestCase):
         for _ in range(5):
 
             AB = A >> (B >> (C >> D ^ 2) ^ 3) ^ 4
+            AB.store_properties()
 
             output = AB.update().resolve(0)
             al = output.get_property("a", get_one=False)
@@ -569,6 +578,7 @@ class TestFeatures(unittest.TestCase):
         )
 
         AB = A >> (B ^ 5)
+        AB.store_properties()
 
         for _ in range(5):
             AB.update()

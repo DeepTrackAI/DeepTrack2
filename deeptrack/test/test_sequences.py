@@ -35,6 +35,8 @@ class TestSequences(unittest.TestCase):
         imaged_rotating_ellipse_sequence = sequences.Sequence(
             imaged_rotating_ellipse, sequence_length=5
         )
+        imaged_rotating_ellipse_sequence.store_properties()
+
         self.assertIsInstance(imaged_rotating_ellipse_sequence, sequences.Sequence)
 
         outputs = imaged_rotating_ellipse_sequence()
@@ -69,6 +71,8 @@ class TestSequences(unittest.TestCase):
         imaged_rotating_ellipse_sequence = sequences.Sequence(
             imaged_rotating_ellipse, sequence_length=5
         )
+        imaged_rotating_ellipse_sequence.store_properties()
+
         self.assertIsInstance(imaged_rotating_ellipse_sequence, sequences.Sequence)
 
         outputs = imaged_rotating_ellipse_sequence()
@@ -103,6 +107,8 @@ class TestSequences(unittest.TestCase):
         imaged_rotating_ellipse_sequence = sequences.Sequence(
             imaged_rotating_ellipse, sequence_length=5
         )
+        imaged_rotating_ellipse_sequence.store_properties()
+
         self.assertIsInstance(imaged_rotating_ellipse_sequence, sequences.Sequence)
         imaged_rotating_ellipse_sequence.update()
         outputs = imaged_rotating_ellipse_sequence()
@@ -149,6 +155,8 @@ class TestSequences(unittest.TestCase):
         imaged_rotating_ellipse_sequence = sequences.Sequence(
             imaged_rotating_ellipse, sequence_length=5
         )
+        imaged_rotating_ellipse_sequence.store_properties()
+
         self.assertIsInstance(imaged_rotating_ellipse_sequence, sequences.Sequence)
         imaged_rotating_ellipse_sequence.update()
         outputs = imaged_rotating_ellipse_sequence()

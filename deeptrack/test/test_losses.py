@@ -7,7 +7,14 @@ import unittest
 from .. import losses
 
 import numpy as np
-from tensorflow.keras import backend as K
+
+has_required_modules = True
+
+try:
+    import tensorflow as tf
+    from tensorflow.keras import backend as K
+except ImportError:
+    has_required_modules = False
 
 
 class TestLosses(unittest.TestCase):
@@ -104,6 +111,10 @@ class TestLosses(unittest.TestCase):
         self.assertAlmostEqual(loss, 1000000000, 3)
         loss = K.eval(loss_function(self.falsely, self.falsely))
         self.assertAlmostEqual(loss, 0, 3)
+
+if not has_required_modules:
+    TestLosses = None
+    del TestLosses
 
 
 if __name__ == "__main__":

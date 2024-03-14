@@ -4,13 +4,18 @@ import sys
 # sys.path.append(".")  # Adds the module to path
 
 import unittest
-
-from .. import layers
-import tensorflow as tf
-import tensorflow.keras.layers as k_layers
-import tensorflow.keras.models as k_models
-
 import numpy as np
+
+has_required_modules = True
+try:
+    from .. import layers
+    import tensorflow as tf
+    import tensorflow.keras.layers as k_layers
+    import tensorflow.keras.models as k_models
+except ImportError:
+    has_required_modules = False
+
+
 
 
 def makeMinimalModel(
@@ -308,6 +313,9 @@ class TestModels(unittest.TestCase):
         )
         self.assertTrue(model.layers[-1], layers.GraphTransformer)
 
+if not has_required_modules:
+    TestModels = None
+    del TestModels
 
 if __name__ == "__main__":
     unittest.main()

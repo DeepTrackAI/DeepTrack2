@@ -27,6 +27,7 @@ class TestGenerators(unittest.TestCase):
             position=lambda: np.random.rand(2) * 128,
         )
         imaged_scatterer = optics(scatterer)
+        imaged_scatterer.store_properties()
 
         def get_particle_position(result):
             for property in result.properties:
@@ -57,6 +58,7 @@ class TestGenerators(unittest.TestCase):
             position=lambda: np.random.rand(2) * 128,
         )
         imaged_scatterer = optics(scatterer)
+        imaged_scatterer.store_properties()
 
         def get_particle_position(result):
             for property in result.properties:
@@ -100,6 +102,7 @@ class TestGenerators(unittest.TestCase):
                     return property["position"]
         
         imaged_scatterers = imaged_scatterer_A & imaged_scatterer_B
+        imaged_scatterers.store_properties()
 
         generator = generators.ContinuousGenerator(
             imaged_scatterers, 
