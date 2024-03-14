@@ -17,9 +17,9 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
         os: [ubuntu-latest, macos-latest, windows-latest]
-        install-deeplay: [true, false]
-        install-tensorflow: [true, false]
-        install-tensorflow-probability: [true, false]
+        install-deeplay: ["nothing", "deeplay"]
+        install-tensorflow: ["nothing", "tensorflow"]
+        install-tensorflow-probability: ["nothing", "tensorflow-probability"]
 
     steps:
       - uses: actions/checkout@v3
