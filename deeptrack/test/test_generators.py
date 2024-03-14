@@ -195,6 +195,57 @@ class TestGenerators(unittest.TestCase):
         )
         self.assertIsInstance(generator, gnns.generators.ContinuousGraphGenerator)
 
+
+
+    def test_training(self):
+        from deeptrack.extras import datasets
+        import tensorflow as tf
+
+        datasets.load("BFC2Cells")
+        nodesdf = pd.read_csv("datasets/BFC2DLMuSCTra/nodesdf.csv")
+
+        # normalize centroids between 0 and 1
+        nodesdf.loc[:, nodesdf.columns.str.contains("centroid")] = (
+            nodesdf.loc[:, nodesdf.columns.str.contains("centroid")]
+            / np.array([1000.0, 1000.0])
+        )
+        parenthood = pd.read_csv("datasets/BFC2DLMuSCTra/parenthood.csv")
+        variables = features.DummyFeature(
+            radius=0.2,
+            output_type="edges",
+            nofframes=3, # time window to associate nodes (in frames)
+        )
+        model = gnns.MAGIK(
+            dense_layer_dimensions=(64, 96,),      # number of features in each dense encoder layer
+            base_layer_dimensions=(96, 96, 96),    # Latent dimension throughout the message passing layers
+            number_of_node_features=2,             # Number of node features in the graphs
+            number_of_edge_features=1,             # Number of edge features in the graphs
+            number_of_edge_outputs=1,              # Number of predicted features
+            edge_output_activation="sigmoid",      # Activation function for the output layer
+            output_type="edges",              # Output type. Either "edges", "nodes", or "graph"
+        )
+
+        # Compile model
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+            loss = 'binary_crossentropy',
+            metrics=['accuracy'],
+        )
+
+        generator = gnns.generators.GraphGenerator(
+                nodesdf=nodesdf,
+                properties=["centroid"],
+                parenthood=parenthood,
+                min_data_size=8,#511,
+                max_data_size=9,#512,
+                batch_size=8,
+                **variables.properties()
+            )
+        
+        with generator:
+            model.fit(generator, epochs=1)
+
+
 if not has_required_modules:
     TestGenerators = None
     del TestGenerators
