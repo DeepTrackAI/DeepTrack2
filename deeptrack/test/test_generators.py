@@ -4,13 +4,18 @@ import sys
 
 import unittest
 
-from .. import features
-from .. import generators
-from ..optics import Fluorescence
-from ..scatterers import PointParticle
-from ..models import gnns
-import numpy as np
-import pandas as pd
+has_required_modules = True
+
+try:
+    from .. import features
+    from .. import generators
+    from ..optics import Fluorescence
+    from ..scatterers import PointParticle
+    from ..models import gnns
+    import numpy as np
+    import pandas as pd
+except ImportError:
+    has_required_modules = False
 
 class TestGenerators(unittest.TestCase):
     def test_Generator(self):
@@ -189,6 +194,10 @@ class TestGenerators(unittest.TestCase):
             output_type="edges"
         )
         self.assertIsInstance(generator, gnns.generators.ContinuousGraphGenerator)
+
+if not has_required_modules:
+    TestGenerators = None
+    del TestGenerators
 
 if __name__ == "__main__":
     unittest.main()
