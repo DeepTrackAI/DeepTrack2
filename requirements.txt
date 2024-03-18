@@ -12,6 +12,6 @@ tqdm
 lazy_import
 rich
 gdown
-tensorflow
+tensorflow<=2.10
 tensorflow-probability
 tensorflow-datasets
