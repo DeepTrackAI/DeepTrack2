@@ -40,18 +40,18 @@ from deeptrack.holography import *
 
 from deeptrack.image import strip
 
-if not HAS_TENSORFLOW:
+# if not HAS_TENSORFLOW:
     # Lazy imports to avoid overhead of importing tensorflow
-    generators = lazy_import.lazy_module("deeptrack.generators")
-    models = lazy_import.lazy_module("deeptrack.models")
-    datasets = lazy_import.lazy_module("deeptrack.datasets")
-    losses = lazy_import.lazy_module("deeptrack.losses")
-    layers = lazy_import.lazy_module("deeptrack.layers")
-    visualization = lazy_import.lazy_module("deeptrack.visualization")
+generators = lazy_import.lazy_module("deeptrack.generators")
+models = lazy_import.lazy_module("deeptrack.models")
+datasets = lazy_import.lazy_module("deeptrack.datasets")
+losses = lazy_import.lazy_module("deeptrack.losses")
+layers = lazy_import.lazy_module("deeptrack.layers")
+visualization = lazy_import.lazy_module("deeptrack.visualization")
 
-if not HAS_TORCH:
-    pytorch = lazy_import.lazy_module("deeptrack.pytorch")
-    deeplay = lazy_import.lazy_module("deeptrack.deeplay")
+# if not HAS_TORCH:
+pytorch = lazy_import.lazy_module("deeptrack.pytorch")
+deeplay = lazy_import.lazy_module("deeptrack.deeplay")
 
 from deeptrack import (
     image,
