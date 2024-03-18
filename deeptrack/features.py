@@ -94,7 +94,7 @@ class Feature(DeepTrackNode):
     # A None-safe default value to compare against
     __nonelike_default = object()
 
-    _wrap_array_with_image = False
+    _wrap_array_with_image = True
 
     def __init__(self, _input=[], **kwargs):
 
