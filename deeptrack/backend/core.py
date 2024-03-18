@@ -196,7 +196,7 @@ class DeepTrackNode:
     def is_valid(self, _ID=()):
         try:
             return self.data[_ID].is_valid()
-        except KeyError:
+        except (KeyError, AttributeError):
             return False
 
     def valid_index(self, _ID):
