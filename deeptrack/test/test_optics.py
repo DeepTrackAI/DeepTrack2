@@ -35,7 +35,7 @@ class TestOptics(unittest.TestCase):
         )
         imaged_scatterer = microscope(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_Brightfield(self):
@@ -57,7 +57,7 @@ class TestOptics(unittest.TestCase):
         )
         imaged_scatterer = microscope(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_IlluminationGradient(self):
@@ -81,7 +81,7 @@ class TestOptics(unittest.TestCase):
         )
         imaged_scatterer = microscope(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, Image)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_upscale_fluorescence(self):

@@ -31,7 +31,7 @@ class TestAberrations(unittest.TestCase):
 
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
         
         aberrated_particle.store_properties(True)
@@ -53,7 +53,7 @@ class TestAberrations(unittest.TestCase):
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
 
         aberrated_particle.store_properties(True)
@@ -75,7 +75,7 @@ class TestAberrations(unittest.TestCase):
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
 
         aberrated_particle.store_properties(True)
@@ -97,7 +97,7 @@ class TestAberrations(unittest.TestCase):
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
 
         aberrated_particle.store_properties(True)
@@ -119,7 +119,7 @@ class TestAberrations(unittest.TestCase):
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
 
         aberrated_particle.store_properties(True)
@@ -141,7 +141,7 @@ class TestAberrations(unittest.TestCase):
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
 
         aberrated_particle.store_properties(True)
@@ -163,7 +163,7 @@ class TestAberrations(unittest.TestCase):
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
 
         aberrated_particle.store_properties(True)
@@ -185,7 +185,7 @@ class TestAberrations(unittest.TestCase):
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
 
         aberrated_particle.store_properties(True)
@@ -207,7 +207,7 @@ class TestAberrations(unittest.TestCase):
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
 
         aberrated_particle.store_properties(True)
@@ -229,7 +229,7 @@ class TestAberrations(unittest.TestCase):
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
 
         aberrated_particle.store_properties(True)
@@ -251,7 +251,7 @@ class TestAberrations(unittest.TestCase):
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
 
         aberrated_particle.store_properties(True)
@@ -273,7 +273,7 @@ class TestAberrations(unittest.TestCase):
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
-            self.assertIsInstance(im, np.ndarray)
+            self.assertIsInstance(im, Image)
             self.assertEqual(im.shape, (64, 48, 1))
 
         aberrated_particle.store_properties(True)

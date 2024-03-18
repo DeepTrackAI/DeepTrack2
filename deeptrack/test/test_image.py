@@ -275,7 +275,7 @@ class TestImage(unittest.TestCase):
         particle = self.Particle(position=(128, 128))
         input_image = Image(np.zeros((256, 256)))
         output_image = particle.resolve(input_image)
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, Image)
 
     def test_Image_properties(self):
         particle = self.Particle(position=(128, 128))
