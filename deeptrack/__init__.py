@@ -69,7 +69,6 @@ from deeptrack import (
     image,
     utils,
     backend,
-    test,
     # Fake imports for IDE autocomplete
     # Does not actually import anything
 )
