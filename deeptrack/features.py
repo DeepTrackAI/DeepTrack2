@@ -2428,3 +2428,50 @@ class OneHot(Feature):
             image = image[..., 0]
         return np.eye(num_classes)[image]
         
+class TakeProperties(Feature):
+    """Extracts all instances of a set of properties from a pipeline
+
+    Only extracts the properties if the feature contains all given property-names.
+    Order of the properties is not guaranteed to be the same as the evaluation order.
+
+    If there is only a single property name, this will return a list of the property values.
+    If there are multiple property names, this will return a tuple of lists of the property values.
+
+    Parameters
+    ----------
+    feature : Feature
+        The feature to extract the properties from
+    names : list of str
+        The names of the properties to extract
+    """
+    __distributed__ = False
+    __list_merge_strategy__ = MERGE_STRATEGY_APPEND
+
+    def __init__(self, feature, *names, **kwargs):
+        super().__init__(names=names, **kwargs)
+        self.feature = self.add_feature(feature)
+
+    def get(self, image, names, _ID=(), **kwargs):
+
+        if not self.feature.is_valid(_ID=_ID):
+            self.feature(_ID=_ID)
+
+        res = {}
+        for name in names:
+            res[name] = []
+
+        for dep in self.feature.recurse_dependencies():
+            if isinstance(dep, PropertyDict) and all(name in dep for name in names):
+                # if all names are in dep, 
+                
+                for name in names:
+                    data = dep[name].data.dict
+                    for key, value in data.items():
+                        
+                        if key[:len(_ID)] == _ID:
+                            res[name].append(value.current_value())
+
+        res = tuple([np.array(res[name]) for name in names])
+        if len(res) == 1:
+            res = res[0]
+        return res
