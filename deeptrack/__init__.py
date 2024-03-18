@@ -17,6 +17,14 @@ if "tensorflow" in installed:
 else:
     HAS_TENSORFLOW = False
 
+if "torch" in installed:
+    HAS_TORCH = True
+else:
+    HAS_TORCH = False
+
+if HAS_TENSORFLOW and HAS_TORCH:
+    import torch # torch must be imported before tensorflow
+
 from deeptrack.features import *
 from deeptrack.aberrations import *
 from deeptrack.augmentations import *
@@ -39,9 +47,11 @@ if not HAS_TENSORFLOW:
     datasets = lazy_import.lazy_module("deeptrack.datasets")
     losses = lazy_import.lazy_module("deeptrack.losses")
     layers = lazy_import.lazy_module("deeptrack.layers")
+    visualization = lazy_import.lazy_module("deeptrack.visualization")
+
+if not HAS_TORCH:
     pytorch = lazy_import.lazy_module("deeptrack.pytorch")
     deeplay = lazy_import.lazy_module("deeptrack.deeplay")
-    visualization = lazy_import.lazy_module("deeptrack.visualization")
 
 from deeptrack import (
     image,
@@ -50,12 +60,12 @@ from deeptrack import (
     test,
     # Fake imports for IDE autocomplete
     # Does not actually import anything
+    pytorch,
     generators,
     models,
     datasets,
     losses,
     layers,
-    pytorch,
     sources,
     visualization,
     deeplay
