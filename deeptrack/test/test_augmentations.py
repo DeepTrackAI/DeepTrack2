@@ -78,6 +78,9 @@ class TestAugmentations(unittest.TestCase):
             self.assertLess(dist, 3)
 
     def test_ElasticTransformation(self):
+        np.random.seed(1000)
+        import random
+        random.seed(1000)
         # 3D input
         im = np.zeros((10, 8, 2))
         transformer = augmentations.ElasticTransformation(
