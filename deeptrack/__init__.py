@@ -61,6 +61,7 @@ if should_import:
     from . import visualization
     from . import pytorch
     from . import deeplay
+del should_import
 
 from deeptrack import (
     image,
@@ -69,5 +70,3 @@ from deeptrack import (
     # Fake imports for IDE autocomplete
     # Does not actually import anything
 )
-
-__all__ = ()
