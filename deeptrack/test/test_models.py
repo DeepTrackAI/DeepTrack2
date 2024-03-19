@@ -7,7 +7,11 @@ import unittest
 from .. import models, layers
 import numpy as np
 
-import tensorflow as tf
+has_required_modules = True
+try:
+    import tensorflow as tf
+except ImportError:
+    has_required_modules = False
 
 
 class TestModels(unittest.TestCase):
@@ -341,6 +345,9 @@ class TestModels(unittest.TestCase):
         )
         model(graph)
 
+if not has_required_modules:
+    TestModels = None 
+    del TestModels
 
 if __name__ == "__main__":
     unittest.main()

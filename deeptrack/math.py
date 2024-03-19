@@ -347,9 +347,13 @@ class Resize(Feature):
 
     def get(self, image, dsize, **kwargs):
         import cv2
+        from deeptrack import config
+
+        if self._wrap_array_with_image:
+            image = strip(image)
 
         return utils.safe_call(
-            cv2.resize, positional_args=[strip(image), dsize], **kwargs
+            cv2.resize, positional_args=[image, dsize], **kwargs
         )
 
 

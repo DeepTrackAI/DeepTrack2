@@ -161,6 +161,14 @@ class Scatterer(Feature):
 
         return [Image(new_image)]
 
+    def _no_wrap_format_input(self, *args, **kwargs) -> list:
+        return self._image_wrapped_format_input(*args, **kwargs)
+    
+    def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
+        return self._image_wrapped_process_and_get(*args, **feature_input)
+    
+    def _no_wrap_process_output(self, *args, **feature_input):
+        return self._image_wrapped_process_output(*args, **feature_input)
 
 class PointParticle(Scatterer):
     """Generates a point particle

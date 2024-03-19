@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow.keras import layers, models
 
 from .. import features
-from ..generators import ContinuousGenerator
+import deeptrack.generators as generators
 
 
 try:
@@ -202,7 +202,7 @@ class KerasModel(Model):
     Compiles the model using the loss and optimizer defined in the constructor.
     """
 
-    data_generator = ContinuousGenerator
+    data_generator = generators.ContinuousGenerator
 
     def __init__(
         self,

@@ -3,17 +3,22 @@ import sys
 # sys.path.append(".")  # Adds the module to path
 
 import unittest
-
-from .. import losses
-
 import numpy as np
-from tensorflow.keras import backend as K
+
+has_required_modules = True
+
+try:
+    import tensorflow as tf
+    from .. import losses
+    from tensorflow.keras import backend as K
+except ImportError:
+    has_required_modules = False
 
 
 class TestLosses(unittest.TestCase):
 
-    truthly = K.constant(np.ones((2, 2, 1)))
-    falsely = K.constant(np.zeros((2, 2, 1)))
+    truthly = K.constant(np.ones((2, 2, 1))) if has_required_modules else None
+    falsely = K.constant(np.zeros((2, 2, 1))) if has_required_modules else None
 
     def test_flatten(self):
         from tensorflow.keras.losses import mse
@@ -104,6 +109,10 @@ class TestLosses(unittest.TestCase):
         self.assertAlmostEqual(loss, 1000000000, 3)
         loss = K.eval(loss_function(self.falsely, self.falsely))
         self.assertAlmostEqual(loss, 0, 3)
+
+if not has_required_modules:
+    TestLosses = None
+    del TestLosses
 
 
 if __name__ == "__main__":

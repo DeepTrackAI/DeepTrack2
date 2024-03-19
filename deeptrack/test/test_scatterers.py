@@ -28,7 +28,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_Ellipse(self):
@@ -49,7 +49,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_EllipseUpscale(self):
@@ -147,7 +147,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_SphereUpscale(self):
@@ -189,7 +189,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_EllipsoidUpscale(self):

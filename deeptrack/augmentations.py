@@ -28,8 +28,7 @@ class Augmentation(Feature):
     def __init__(self, time_consistent=False, **kwargs):
         super().__init__(time_consistent=time_consistent, **kwargs)
 
-    def _process_and_get(self, image_list, time_consistent, **kwargs):
-
+    def _image_wrapped_process_and_get (self, image_list, time_consistent, **kwargs):
         if not isinstance(image_list, list):
             wrap_depth = 2
             image_list_of_lists = [[image_list]]
@@ -61,6 +60,38 @@ class Augmentation(Feature):
             new_list_of_lists = new_list_of_lists[0]
 
         return new_list_of_lists
+    
+    def _no_wrap_process_and_get(self, image_list, time_consistent, **kwargs) -> list:
+        if not isinstance(image_list, list):
+            wrap_depth = 2
+            image_list_of_lists = [[image_list]]
+        elif len(image_list) == 0 or not isinstance(image_list[0], list):
+            wrap_depth = 1
+            image_list_of_lists = [image_list]
+        else:
+            wrap_depth = 0
+            image_list_of_lists = image_list
+
+        new_list_of_lists = []
+
+        for image_list in image_list_of_lists:
+
+            if time_consistent:
+                self.seed()
+
+            augmented_list = []
+            for image in image_list:
+                self.seed()
+                augmented_image = self.get(image, **kwargs)
+                augmented_list.append(augmented_image)
+
+            new_list_of_lists.append(augmented_list)
+
+        for _ in range(wrap_depth):
+            new_list_of_lists = new_list_of_lists[0]
+
+        return new_list_of_lists
+
 
     def update_properties(self, *args, **kwargs):
         pass
@@ -115,6 +146,9 @@ class Reuse(Feature):
         if not isinstance(output, list):
             output = [output]
 
+        if not self._wrap_array_with_image:
+            return output
+        
         outputs = []
         for image in output:
             image_copy = Image(image)
@@ -623,15 +657,16 @@ class Crop(Augmentation):
         cropped_image = image[slices]
 
         # Update positions
-        cropped_image.properties = [dict(prop) for prop in image.properties]
-        for prop in cropped_image.properties:
-            if "position" in prop:
-                position = np.array(prop["position"])
-                try:
-                    position[..., 0:2] -= np.array(slice_start)[0:2]
-                    prop["position"] = position
-                except IndexError:
-                    pass
+        if hasattr(image, "properties"):
+            cropped_image.properties = [dict(prop) for prop in image.properties]
+            for prop in cropped_image.properties:
+                if "position" in prop:
+                    position = np.array(prop["position"])
+                    try:
+                        position[..., 0:2] -= np.array(slice_start)[0:2]
+                        prop["position"] = position
+                    except IndexError:
+                        pass
 
         return cropped_image
 
@@ -733,7 +768,7 @@ class Pad(Augmentation):
         if callable(px):
             px = px(image)
         elif isinstance(px, int):
-            padding = [(px, px)] * image.ndom
+            padding = [(px, px)] * image.ndim
 
         for idx in range(0, len(px), 2):
             padding.append((px[idx], px[idx + 1]))
@@ -741,19 +776,17 @@ class Pad(Augmentation):
         while len(padding) < image.ndim:
             padding.append((0, 0))
 
-        return (
-            utils.safe_call(np.pad, positional_args=(image, padding), **kwargs),
-            padding,
-        )
+        return utils.safe_call(np.pad, positional_args=(image, padding), **kwargs)
+ 
 
-    def _process_and_get(self, images, **kwargs):
+    def _image_wrap_process_and_get(self, images, **kwargs):
         results = [self.get(image, **kwargs) for image in images]
-        for idx, result in enumerate(results):
-            if isinstance(result, tuple):
+        # for idx, result in enumerate(results):
+        #     if isinstance(result, tuple):
 
-                results[idx] = Image(result[0]).merge_properties_from(images[idx])
-            else:
-                Image(results[idx]).merge_properties_from(images[idx])
+        #         results[idx] = Image(result[0]).merge_properties_from(images[idx])
+        #     else:
+        #         Image(results[idx]).merge_properties_from(images[idx])
         return results
 
 

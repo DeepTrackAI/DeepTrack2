@@ -7,12 +7,15 @@ import itertools
 import operator
 from typing import Any, Callable, Iterable, List
 import warnings
+import random
 
 import numpy as np
 from pint.quantity import Quantity
-import tensorflow as tf
+# import tensorflow as tf
 import skimage
 import skimage.measure
+
+from deeptrack.sources import SourceItem
 
 from .backend.core import DeepTrackNode
 from .backend.units import ConversionTable, create_context
@@ -86,9 +89,12 @@ class Feature(DeepTrackNode):
     __property_memorability__ = 1
     __conversion_table__ = ConversionTable()
     __gpu_compatible__ = False
+    
 
     # A None-safe default value to compare against
     __nonelike_default = object()
+
+    _wrap_array_with_image = False
 
     def __init__(self, _input=[], **kwargs):
 
@@ -114,7 +120,7 @@ class Feature(DeepTrackNode):
 
         # A random seed can be set to make the feature deterministic.
         # A non-deterministic feature does not need to be recalculated if the seed is the same.
-        self._random_seed = DeepTrackNode(lambda: np.random.randint(2147483648))
+        self._random_seed = DeepTrackNode(lambda: random.randint(0, 2147483648))
         self.add_dependency(self._random_seed)
         self._random_seed.add_child(self)
 
@@ -139,6 +145,7 @@ class Feature(DeepTrackNode):
         Image or List[Image]
             The transformed image or list of images
         """
+        raise NotImplementedError
 
     def __call__(self, image_list: Image or List[Image] = None, _ID=(), **kwargs):
 
@@ -154,10 +161,16 @@ class Feature(DeepTrackNode):
            to 4. In a pipeline, all features will be affected by this.
 
         """
+
+        # if image_list is as Source, activate it.
+        self._activate_sources(image_list)
+
         # Potentially fragile. Maybe a special variable dt._last_input instead?
         # If the input is not empty, we set the value of the input.
-        if image_list is not None and not (
-            isinstance(image_list, list) and len(image_list) == 0
+        if (
+            image_list is not None 
+            and not (isinstance(image_list, list) and len(image_list) == 0)
+            and not (isinstance(image_list, tuple) and any(isinstance(x, SourceItem) for x in image_list))
         ):
             self._input.set_value(image_list, _ID=_ID)
 
@@ -185,6 +198,82 @@ class Feature(DeepTrackNode):
         return output
 
     resolve = __call__
+
+    def store_properties(self, x=True, recursive=True):
+        """Store properties to the Image.
+
+        Parameters
+        ----------
+        x : bool
+            Whether to store properties to the Image. If False, properties will not be stored.
+        recursive : bool
+            Whether to store properties to all dependencies of the feature.
+        """
+        self._wrap_array_with_image = x
+        if recursive:
+            for dep in self.recurse_dependencies():
+                if isinstance(dep, Feature):
+                    dep.store_properties(x, False)
+
+    def torch(self, dtype=None, device=None, permute_mode="never"):
+        """Convert the feature to a PyTorch feature.
+
+        Parameters
+        ----------
+        dtype : torch.dtype
+            The dtype of the output.
+        device : torch.device
+            The device of the output.
+
+        Returns
+        -------
+        Feature
+            A PyTorch feature.
+        """
+        from .pytorch import ToTensor
+        tensor_feature = ToTensor(dtype=dtype, device=device, permute_mode=permute_mode)
+        tensor_feature.store_properties(False, recursive=False)
+        return self >> tensor_feature
+
+    # def numpy(self):
+    #     """Convert the feature to a numpy feature.
+
+    #     Returns
+    #     -------
+    #     Feature
+    #         A numpy feature.
+    #     """
+    #     return self >> ToNumpy()
+    
+    def batch(self, batch_size=32):
+        """Batch the feature.
+
+        Parameters
+        ----------
+        batch_size : int
+            The size of the batch.
+
+        Returns
+        -------
+        Feature
+            A batched feature.
+        """
+        res = [self.update()() for _ in range(batch_size)]
+        res = list(zip(*res))
+
+        for idx, r in enumerate(res):
+            
+            if isinstance(r[0], np.ndarray):
+                res[idx] = np.stack(r)
+            else:
+                import torch
+                if isinstance(r[0], torch.Tensor):
+                    res[idx] = torch.stack(r)
+        
+        return tuple(res)
+            
+        
+
 
     def action(self, _ID=()):
         """Creates the image.
@@ -225,12 +314,8 @@ class Feature(DeepTrackNode):
         # to the __distributed__ attribute
         new_list = self._process_and_get(image_list, **feature_input)
 
-        for index, image in enumerate(new_list):
+        self._process_output(new_list, feature_input)
 
-            if self.arguments:
-                image.append(self.arguments.properties())
-
-            image.append(feature_input)
 
         # Merge input and new_list
         if self.__list_merge_strategy__ == MERGE_STRATEGY_OVERRIDE:
@@ -268,6 +353,9 @@ class Feature(DeepTrackNode):
             )
         super()._update()
         return self
+    
+    # def to(self, device):
+        
 
     def add_feature(self, feature):
         """Adds a feature to the dependecy graph."""
@@ -295,21 +383,7 @@ class Feature(DeepTrackNode):
                 properties[key] = val.magnitude
         return properties
 
-    def _coerce_inputs(self, inputs, **kwargs):
-        # Coerces inputs to the correct type (numpy array or tensor or cupyy array).
-        if any(isinstance(i._value, tf.Tensor) for i in inputs):
-            return inputs
-        if config.gpu_enabled:
 
-            return [
-                i.to_cupy()
-                if (not self.__distributed__) and self.__use_gpu__(i, **kwargs)
-                else i.to_numpy()
-                for i in inputs
-            ]
-
-        else:
-            return [i.to_numpy() for i in inputs]
 
     def plot(
         self,
@@ -343,15 +417,15 @@ class Feature(DeepTrackNode):
         import matplotlib.pyplot as plt
         from IPython.display import HTML, display
 
-        if input_image is not None:
-            input_image = [Image(input_image)]
+        # if input_image is not None:
+        #     input_image = [Image(input_image)]
 
         output_image = self.resolve(input_image, **(resolve_kwargs or {}))
 
         # If a list, assume video
-        if isinstance(output_image, Image):
+        if not isinstance(output_image, list):
             # Single image
-            plt.imshow(output_image[:, :, 0], **kwargs)
+            plt.imshow(output_image, **kwargs)
             return plt.gca()
 
         else:
@@ -360,11 +434,14 @@ class Feature(DeepTrackNode):
             images = []
             plt.axis("off")
             for image in output_image:
-                images.append([plt.imshow(image[:, :, 0], **kwargs)])
+                images.append([plt.imshow(image, **kwargs)])
 
-            interval = (
-                interval or output_image[0].get_property("interval") or (1 / 30 * 1000)
-            )
+
+            if not interval:
+                if isinstance(output_image[0], Image):
+                    interval = output_image[0].get_property("interval") or (1 / 30 * 1000)
+                else:
+                    interval = (1 / 30 * 1000)
 
             anim = animation.ArtistAnimation(
                 fig, images, interval=interval, blit=True, repeat_delay=0
@@ -383,10 +460,6 @@ class Feature(DeepTrackNode):
                 # In notebook, but animation failed
                 import ipywidgets as widgets
 
-                Warning(
-                    "Javascript animation failed. This is a non-performant fallback."
-                )
-
                 def plotter(frame=0):
                     plt.imshow(output_image[frame][:, :, 0], **kwargs)
                     plt.show()
@@ -398,47 +471,6 @@ class Feature(DeepTrackNode):
                     ),
                 )
 
-    def _process_and_get(self, image_list, **feature_input) -> List[Image]:
-        # Controls how the get function is called
-
-        if self.__distributed__:
-            # Call get on each image in list, and merge properties from corresponding image
-
-            results = []
-
-            for image in image_list:
-                output = self.get(image, **feature_input)
-                if not isinstance(output, Image):
-                    output = Image(output)
-
-                output.merge_properties_from(image)
-                results.append(output)
-
-            return results
-
-        else:
-            # Call get on entire list.
-            new_list = self.get(image_list, **feature_input)
-
-            if not isinstance(new_list, list):
-                new_list = [new_list]
-
-            for idx, image in enumerate(new_list):
-                if not isinstance(image, Image):
-                    new_list[idx] = Image(image)
-            return new_list
-
-    def _format_input(self, image_list, **kwargs) -> List[Image]:
-        # Ensures the input is a list of Image.
-
-        if image_list is None:
-            return []
-
-        if not isinstance(image_list, list):
-            image_list = [image_list]
-
-        inputs = [(Image(image)) for image in image_list]
-        return self._coerce_inputs(inputs, **kwargs)
 
     def _process_properties(self, propertydict) -> dict:
         # Optional hook for subclasses to preprocess input before calling
@@ -446,6 +478,15 @@ class Feature(DeepTrackNode):
 
         propertydict = self._normalize(**propertydict)
         return propertydict
+    
+    def _activate_sources(self, x):
+        if isinstance(x, SourceItem):
+            x()
+        else:
+            if isinstance(x, list):
+                for source in x:
+                    if isinstance(source, SourceItem):
+                        source()
 
     def __getattr__(self, key):
         # Allows easier access to properties. For example,
@@ -585,6 +626,124 @@ class Feature(DeepTrackNode):
 
         return self >> Slice(slices)
 
+    # private properties to dispatch based on config
+    @property
+    def _format_input(self):
+        if self._wrap_array_with_image:
+            return self._image_wrapped_format_input
+        else:
+            return self._no_wrap_format_input
+        
+    @property
+    def _process_and_get(self):
+        if self._wrap_array_with_image:
+            return self._image_wrapped_process_and_get
+        else:
+            return self._no_wrap_process_and_get
+
+    @property
+    def _process_output(self):
+        if self._wrap_array_with_image:
+            return self._image_wrapped_process_output
+        else:
+            return self._no_wrap_process_output
+
+    def _image_wrapped_format_input(self, image_list, **kwargs) -> List[Image]:
+        # Ensures the input is a list of Image.
+
+        if image_list is None:
+            return []
+
+        if not isinstance(image_list, list):
+            image_list = [image_list]
+
+        inputs = [(Image(image)) for image in image_list]
+        return self._coerce_inputs(inputs, **kwargs)
+    
+    def _no_wrap_format_input(self, image_list, **kwargs) -> list:
+        # Ensures the input is a list of Image.
+
+        if image_list is None:
+            return []
+
+        if not isinstance(image_list, list):
+            image_list = [image_list]
+
+        return image_list
+
+    def _no_wrap_process_and_get(self, image_list, **feature_input) -> list:
+        # Controls how the get function is called
+
+        if self.__distributed__:
+            # Call get on each image in list, and merge properties from corresponding image
+            return [self.get(x, **feature_input) for x in image_list]
+
+        else:
+            # Call get on entire list.
+            new_list = self.get(image_list, **feature_input)
+
+            if not isinstance(new_list, list):
+                new_list = [new_list]
+
+            return new_list
+        
+    def _image_wrapped_process_and_get(self, image_list, **feature_input) -> List[Image]:
+        # Controls how the get function is called
+
+        if self.__distributed__:
+            # Call get on each image in list, and merge properties from corresponding image
+
+            results = []
+
+            for image in image_list:
+                output = self.get(image, **feature_input)
+                if not isinstance(output, Image):
+                    output = Image(output)
+
+                output.merge_properties_from(image)
+                results.append(output)
+
+            return results
+
+        else:
+            # Call get on entire list.
+            new_list = self.get(image_list, **feature_input)
+
+            if not isinstance(new_list, list):
+                new_list = [new_list]
+
+            for idx, image in enumerate(new_list):
+                if not isinstance(image, Image):
+                    new_list[idx] = Image(image)
+            return new_list
+    
+    def _image_wrapped_process_output(self, image_list, feature_input):
+        for index, image in enumerate(image_list):
+
+            if self.arguments:
+                image.append(self.arguments.properties())
+
+            image.append(feature_input)
+
+    def _no_wrap_process_output(self, image_list, feature_input):
+        for index, image in enumerate(image_list):
+
+            if isinstance(image, Image):
+                image_list[index] = image._value
+    
+    def _coerce_inputs(self, inputs, **kwargs):
+        # Coerces inputs to the correct type (numpy array or tensor or cupyy array).
+        if config.gpu_enabled:
+
+            return [
+                i.to_cupy()
+                if (not self.__distributed__) and self.__use_gpu__(i, **kwargs)
+                else i.to_numpy()
+                for i in inputs
+            ]
+
+        else:
+            return [i.to_numpy() for i in inputs]
 
 class StructuralFeature(Feature):
     """Provides the structure of a feature-set
@@ -624,12 +783,12 @@ Branch = Chain
 
 
 class Value(Feature):
-    """Multiplies the input with a value.
+    """Represents a constant (per evaluation) value.
 
     Parameters
     ----------
     value : number
-        The value to multiply with.
+        The value of the feature.
     """
 
     __distributed__ = False
@@ -1480,14 +1639,14 @@ class LoadImage(Feature):
         if load_options is None:
             load_options = {}
 
+        
         try:
-            image = [np.load(file, **load_options) for file in path]
-        except (IOError, ValueError):
+            import imageio
+            image = [imageio.v3.imread(file) for file in path]
+        except (IOError, ImportError, AttributeError):
             try:
-                from skimage import io
-
-                image = [io.imread(file) for file in path]
-            except (IOError, ImportError, AttributeError):
+                image = [np.load(file, **load_options) for file in path]
+            except (IOError, ValueError):
                 try:
                     import PIL.Image
 
@@ -1590,6 +1749,9 @@ class SampleToMasks(Feature):
     def _process_and_get(self, images, **kwargs):
         if isinstance(images, list) and len(images) != 1:
             list_of_labels = super()._process_and_get(images, **kwargs)
+            if not self._wrap_array_with_image:
+                for idx, (label, image) in enumerate(zip(list_of_labels, images)):
+                    list_of_labels[idx] = Image(label, copy=False).merge_properties_from(image)
         else:
             if isinstance(images, list):
                 images = images[0]
@@ -1694,6 +1856,9 @@ class SampleToMasks(Feature):
                             output_slice[..., label_index],
                             labelarg[..., label_index],
                         )
+
+        if not self._wrap_array_with_image:
+            return output
         output = Image(output)
         for label in list_of_labels:
             output.merge_properties_from(label)
@@ -1757,6 +1922,24 @@ class AsType(Feature):
     def get(self, image, dtype, **kwargs):
         return image.astype(dtype)
 
+class ChannelFirst2d(Feature):
+    """Converts a 3d image to channel first format.
+
+    Parameters
+    ----------
+    axis : int
+        The axis to move to the first position. Defaults to -1.
+    """
+
+    def __init__(self, axis=-1, **kwargs):
+        super().__init__(axis=axis, **kwargs)
+    def get(self, image, axis, **kwargs):
+        ndim = image.ndim
+
+        if ndim == 2:
+            return image[None]
+        elif ndim == 3:
+            return np.moveaxis(image, axis, 0)
 
 class Upscale(Feature):
     """Performs the simulation at a higher resolution.
@@ -1859,6 +2042,14 @@ class TensorflowDataset(Feature):
             raise ImportError(
                 "Tensorflow Datasets is not installed. Install it with `pip install tensorflow_datasets`"
             )
+        
+        try:
+            import deeptrack.datasets as dtd
+            dtd.register_tfds()
+        except:
+            pass
+
+        
 
         dataset = tfds.load(dataset_name, split=split, shuffle_files=shuffle_files)
         dataset_size = tfds.builder(dataset_name).info.splits[split].num_examples
@@ -1969,10 +2160,18 @@ class NonOverlapping(Feature):
         list_of_volumes : list of 3d arrays
             The volumes to be checked for non-overlapping
         """
-
+        from skimage.morphology import isotropic_erosion
         from .optics import _get_position
+        from .augmentations import CropTight
 
         min_distance = self.min_distance()
+        if min_distance < 0:
+            crop = CropTight()
+            # print([np.sum(volume != 0) for volume in list_of_volumes])
+            list_of_volumes = [Image(crop(isotropic_erosion(volume != 0, -min_distance/2)), copy=False).merge_properties_from(volume) for volume in list_of_volumes]
+            # print([np.sum(volume != 0) for volume in list_of_volumes])
+
+            min_distance = 1
 
         # The position of the top left corner of each volume (index (0, 0, 0))
         volume_positions_1 = [
@@ -2013,8 +2212,8 @@ class NonOverlapping(Feature):
                 continue
 
             # If the products of the overlapping regions are non-zero, return False
-            if np.any(overlapping_volume_1 * overlapping_volume_2):
-                return False
+            # if np.any(overlapping_volume_1 * overlapping_volume_2):
+            #     return False
 
             # Finally, check that the non-zero voxels of the volumes are at least min_distance apart
             if not self._check_volumes_non_overlapping(
@@ -2121,5 +2320,158 @@ class NonOverlapping(Feature):
         return volume
 
 
+
 # Alias
 Dataset = TensorflowDataset
+
+
+class Store(Feature):
+
+    __distributed__ = False
+
+    def __init__(self, feature, key, replace=False, **kwargs):
+        super().__init__(feature=feature, key=key, replace=replace, **kwargs)
+
+        self.feature = self.add_feature(feature, **kwargs)
+
+        self._store: dict[Any, Image] = {}
+
+    def get(self, _, key, replace, **kwargs):
+        if replace or not (key in self._store):
+            self._store[key] = self.feature()
+        if self._wrap_array_with_image:
+            return Image(self._store[key], copy=False)
+        else:
+            return self._store[key]
+        # return self._store[key] 
+
+
+class Squeeze(Feature):
+    """Squeezes the input image to the smallest possible dimension.
+
+    Parameters
+    ----------
+    axis : int or tuple of ints
+        The axis to squeeze. Defaults to None, which squeezes all axes.
+    """
+
+    def __init__(self, axis=None, **kwargs):
+        super().__init__(axis=axis, **kwargs)
+
+    def get(self, image, axis, **kwargs):
+        return np.squeeze(image, axis=axis)
+    
+class Unsqueeze(Feature):
+    """Unsqueezes the input image to the smallest possible dimension.
+
+    Parameters
+    ----------
+    axis : int or tuple of ints
+        The axis to unsqueeze. Defaults to None, which unsqueezes all axes.
+    """
+
+    def __init__(self, axis=None, **kwargs):
+        super().__init__(axis=axis, **kwargs)
+
+    def get(self, image, axis, **kwargs):
+        return np.expand_dims(image, axis=axis)
+    
+ExpandDims = Unsqueeze
+
+class MoveAxis(Feature):
+    """Moves the axis of the input image.
+
+    Parameters
+    ----------
+    source : int
+        The axis to move.
+    destination : int
+        The destination of the axis.
+    """
+
+    def __init__(self, source, destination, **kwargs):
+        super().__init__(source=source, destination=destination, **kwargs)
+
+    def get(self, image, source, destination, **kwargs):
+        return np.moveaxis(image, source, destination)
+    
+class Transpose(Feature):
+    """Transposes the input image.
+
+    Parameters
+    ----------
+    axes : tuple of ints
+        The axes to transpose.
+    """
+
+    def __init__(self, axes, **kwargs):
+        super().__init__(axes=axes, **kwargs)
+
+    def get(self, image, axes, **kwargs):
+        return np.transpose(image, axes)
+    
+Permute = Transpose
+
+class OneHot(Feature):
+    """Converts the input to a one-hot encoded array.
+
+    Parameters
+    ----------
+    num_classes : int
+        The number of classes to encode.
+    """
+    def __init__(self, num_classes, **kwargs):
+        super().__init__(num_classes=num_classes, **kwargs)
+
+    def get(self, image, num_classes, **kwargs):
+        if image.shape[-1] == 1:
+            image = image[..., 0]
+        return np.eye(num_classes)[image]
+        
+class TakeProperties(Feature):
+    """Extracts all instances of a set of properties from a pipeline
+
+    Only extracts the properties if the feature contains all given property-names.
+    Order of the properties is not guaranteed to be the same as the evaluation order.
+
+    If there is only a single property name, this will return a list of the property values.
+    If there are multiple property names, this will return a tuple of lists of the property values.
+
+    Parameters
+    ----------
+    feature : Feature
+        The feature to extract the properties from
+    names : list of str
+        The names of the properties to extract
+    """
+    __distributed__ = False
+    __list_merge_strategy__ = MERGE_STRATEGY_APPEND
+
+    def __init__(self, feature, *names, **kwargs):
+        super().__init__(names=names, **kwargs)
+        self.feature = self.add_feature(feature)
+
+    def get(self, image, names, _ID=(), **kwargs):
+
+        if not self.feature.is_valid(_ID=_ID):
+            self.feature(_ID=_ID)
+
+        res = {}
+        for name in names:
+            res[name] = []
+
+        for dep in self.feature.recurse_dependencies():
+            if isinstance(dep, PropertyDict) and all(name in dep for name in names):
+                # if all names are in dep, 
+                
+                for name in names:
+                    data = dep[name].data.dict
+                    for key, value in data.items():
+                        
+                        if key[:len(_ID)] == _ID:
+                            res[name].append(value.current_value())
+
+        res = tuple([np.array(res[name]) for name in names])
+        if len(res) == 1:
+            res = res[0]
+        return res

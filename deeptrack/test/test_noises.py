@@ -15,7 +15,7 @@ class TestNoises(unittest.TestCase):
         noise = noises.Offset(offset=0.5)
         input_image = Image(np.zeros((256, 256)))
         output_image = noise.resolve(input_image)
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (256, 256))
         self.assertTrue(np.all(np.array(output_image) == 0.5))
 
@@ -23,7 +23,7 @@ class TestNoises(unittest.TestCase):
         noise = noises.Background(offset=0.5)
         input_image = Image(np.zeros((256, 256)))
         output_image = noise.resolve(input_image)
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (256, 256))
         self.assertTrue(np.all(np.array(output_image) == 0.5))
 
@@ -31,14 +31,14 @@ class TestNoises(unittest.TestCase):
         noise = noises.Gaussian(mu=0.1, sigma=0.05)
         input_image = Image(np.zeros((256, 256)))
         output_image = noise.resolve(input_image)
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (256, 256))
 
     def test_Poisson(self):
         noise = noises.Poisson(snr=20)
         input_image = Image(np.ones((256, 256)) * 0.1)
         output_image = noise.resolve(input_image)
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (256, 256))
 
 

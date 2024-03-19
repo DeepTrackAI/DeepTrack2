@@ -2,6 +2,8 @@
 **/__pycache__
 deeptrack-app/*
 
+lightning_logs
+
 paper-examples/models/*
 
 build/*
@@ -23,3 +25,4 @@ examples/**/*/models/
 *.jpg
 *.jpeg
 *.npy
+*.db
