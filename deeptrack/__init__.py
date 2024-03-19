@@ -72,5 +72,3 @@ from deeptrack import (
     # Fake imports for IDE autocomplete
     # Does not actually import anything
 )
-
-__all__ = ()
