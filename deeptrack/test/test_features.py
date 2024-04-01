@@ -458,6 +458,18 @@ class TestFeatures(unittest.TestCase):
         input_2 = [10, 20]
         self.assertListEqual(pipeline(input_2), [-input_2[0], -input_2[1]])
 
+    def test_Features_chain_lambda(self):
+            
+        value = features.Value(value=1)
+        func = lambda x: x + 1
+
+        feature = value >> func
+        feature.store_properties()
+
+        feature.update()
+        output_image = feature()
+        self.assertEqual(output_image, 2)
+
     def test_Feature_repeat(self):
         feature = features.Value(value=0) >> (features.Add(1) ^ iter(range(10)))
 

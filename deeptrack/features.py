@@ -508,7 +508,7 @@ class Feature(DeepTrackNode):
     def __next__(self):
         yield self.update().resolve()
 
-    def __rshift__(self, other: "Feature") -> "Feature":
+    def __rshift__(self, other) -> "Feature":
 
         # Allows chaining of features. For example,
         # feature1 >> feature2 >> feature3
@@ -519,12 +519,11 @@ class Feature(DeepTrackNode):
             return Chain(self, other)
 
         # Import here to avoid circular import.
-        from . import models
+        
 
         # If other is a function, call it on the output of the feature.
         # For example, feature >> some_function
-        if isinstance(other, models.KerasModel):
-            return NotImplemented
+
         if callable(other):
             return self >> Lambda(lambda: other)
 
