@@ -540,6 +540,9 @@ class MieScatterer(Scatterer):
         position_objective=(0, 0),
         return_fft=False,
         coherence_length=None,
+        illumination_angle=0,
+        is_iscat=False,
+        epsilon_iscat=1,
         **kwargs,
     ):
         if polarization_angle is not None:
@@ -569,6 +572,9 @@ class MieScatterer(Scatterer):
             position_objective=position_objective,
             return_fft=return_fft,
             coherence_length=coherence_length,
+            illumination_angle=illumination_angle,
+            is_iscat = is_iscat,
+            epsilon_iscat = epsilon_iscat,
             **kwargs,
         )
 
@@ -617,7 +623,7 @@ class MieScatterer(Scatterer):
     def get_detector_mask(self, X, Y, radius):
         return np.sqrt(X**2 + Y**2) < radius
 
-    def get_plane_in_polar_coords(self, shape, voxel_size, plane_position):
+    def get_plane_in_polar_coords(self, shape, voxel_size, plane_position, illumination_angle):
 
         X, Y = self.get_XY(shape, voxel_size)
         X = image.maybe_cupy(X)
@@ -633,9 +639,10 @@ class MieScatterer(Scatterer):
 
         # get the angles
         cos_theta = Z / R3
+        illumination_cos_theta=np.cos(np.arccos(cos_theta)+illumination_angle)
         phi = np.arctan2(Y, X)
 
-        return R3, cos_theta, phi
+        return R3, cos_theta, illumination_cos_theta, phi
 
     def get(
         self,
@@ -657,6 +664,9 @@ class MieScatterer(Scatterer):
         return_fft,
         coherence_length,
         output_region,
+        illumination_angle,
+        is_iscat,
+        epsilon_iscat,
         **kwargs,
     ):
 
@@ -683,9 +693,10 @@ class MieScatterer(Scatterer):
         )
 
         # get field evaluation plane at offset_z
-        R3_field, cos_theta_field, phi_field = self.get_plane_in_polar_coords(
-            arr.shape, voxel_size, relative_position * ratio
+        R3_field, cos_theta_field, illumination_angle_field, phi_field = self.get_plane_in_polar_coords(
+            arr.shape, voxel_size, relative_position * ratio, illumination_angle
         )
+        
         cos_phi_field, sin_phi_field = np.cos(phi_field), np.sin(phi_field)
         # x and y position of a beam passing through field evaluation plane on the objective
         x_farfield = (
@@ -706,29 +717,30 @@ class MieScatterer(Scatterer):
         cos_theta_field = cos_theta_field[pupil_mask]
         phi_field = phi_field[pupil_mask]
 
+        illumination_angle_field=illumination_angle_field[pupil_mask]
         if isinstance(input_polarization, (float, int, Quantity)):
 
             if isinstance(input_polarization, Quantity):
                 input_polarization = input_polarization.to("rad")
                 input_polarization = input_polarization.magnitude
 
-            S1_coef = np.sin(phi_field + input_polarization)
-            S2_coef = np.cos(phi_field + input_polarization)
+            S1_coef = np.sin(phi_field + input_polarization) if not is_iscat else 1/2
+            S2_coef = np.cos(phi_field + input_polarization) if not is_iscat else 1/2
 
         if isinstance(output_polarization, (float, int, Quantity)):
             if isinstance(input_polarization, Quantity):
                 output_polarization = output_polarization.to("rad")
                 output_polarization = output_polarization.magnitude
 
-            S1_coef *= np.sin(phi_field + output_polarization)
-            S2_coef *= np.cos(phi_field + output_polarization)
+            S1_coef *= np.sin(phi_field + output_polarization) if not is_iscat else 1
+            S2_coef *= np.cos(phi_field + output_polarization) * illumination_angle_field if not is_iscat else 1
 
         # Wave vector
         k = 2 * np.pi / wavelength * refractive_index_medium
 
         # Harmonics
         A, B = coefficients(L)
-        PI, TAU = D.mie_harmonics(cos_theta_field, L)
+        PI, TAU = D.mie_harmonics(illumination_angle_field, L)
 
         # Normalization factor
         E = [(2 * i + 1) / (i * (i + 1)) for i in range(1, L + 1)]
@@ -736,7 +748,7 @@ class MieScatterer(Scatterer):
         # Scattering terms
         S1 = sum([E[i] * A[i] * PI[i] + E[i] * B[i] * TAU[i] for i in range(0, L)])
         S2 = sum([E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)])
-
+        
         arr[pupil_mask] = (
             -1j
             / (k * R3_field)
@@ -759,6 +771,12 @@ class MieScatterer(Scatterer):
             mask = image.maybe_cupy(mask)
             arr = arr * mask
 
+        #Perform iscat. This is a multiplication of the field by exp(1j * k * z) to simulate a plane wave
+        if is_iscat and illumination_angle == np.pi:
+            arr = np.exp(1j * k * z) * arr
+            arr = (1/epsilon_iscat * arr) * np.exp(1j * np.pi/2)
+
+
         fourier_field = np.fft.fft2(arr)
 
         propagation_matrix = get_propagation_matrix(
@@ -778,6 +796,7 @@ class MieScatterer(Scatterer):
             ),
         )
         fourier_field = fourier_field * propagation_matrix * np.exp(-1j * k * offset_z)
+
         if return_fft:
             return fourier_field[..., np.newaxis]
         else:

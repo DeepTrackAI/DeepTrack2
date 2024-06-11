@@ -27,7 +27,7 @@ def get_propagation_matrix(shape, to_z, pixel_size, wavelength, dx=0, dy=0):
 
 
 class Rescale(Feature):
-    """Rescales an optical field by subtracting the real part of the field beofre multiplication.
+    """Rescales an optical field by subtracting the real part of the field before multiplication.
 
     Parameters
     ----------

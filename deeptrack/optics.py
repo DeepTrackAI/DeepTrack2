@@ -353,12 +353,13 @@ To fix, set magnification to {required_upscale}, and downsample the resulting im
 
         defocus = np.reshape(defocus, (-1, 1, 1))
         z_shift = defocus * np.expand_dims(z_shift, axis=0)
-
+        #print(self.pupil)
         if include_aberration:
             pupil = self.pupil
             if isinstance(pupil, Feature):
 
                 pupil_function = pupil(pupil_function)
+
             elif isinstance(pupil, np.ndarray):
                 pupil_function *= pupil
 
@@ -669,6 +670,12 @@ class Brightfield(Optics):
                 include_aberration=True,
                 **kwargs,
             )[0],
+            self._pupil(
+                volume.shape[:2],
+                defocus=[0],
+                include_aberration=True,
+                **kwargs,
+            )[0]
         ]
 
         pupil_step = np.fft.fftshift(pupils[0])
@@ -677,7 +684,7 @@ class Brightfield(Optics):
         light_in = self.illumination.resolve(light_in)
         light_in = np.fft.fft2(light_in)
 
-        K = 2 * np.pi / kwargs["wavelength"]
+        K = 2 * np.pi / kwargs["wavelength"]*kwargs["refractive_index_medium"]
 
         z = z_limits[1]
         for i, z in zip(index_iterator, z_iterator):
@@ -690,14 +697,17 @@ class Brightfield(Optics):
             light = np.fft.ifft2(light_in)
             light_out = light * np.exp(1j * ri_slice * voxel_size[-1] * K)
             light_in = np.fft.fft2(light_out)
-
-        shifted_pupil = np.fft.fftshift(pupils[-1])
+  
+        shifted_pupil = np.fft.fftshift(pupils[1])
         light_in_focus = light_in * shifted_pupil
-
+        #import matplotlib.pyplot as plt
+        #plt.imshow(light_in_focus.imag)
+        #plt.show()
         if len(fields) > 0:
             field = np.sum(fields, axis=0)
             light_in_focus += field[..., 0]
-
+        shifted_pupil = np.fft.fftshift(pupils[-1])
+        light_in_focus = light_in_focus * shifted_pupil
         # Mask to remove light outside the pupil.
         mask = np.abs(shifted_pupil) > 0
         light_in_focus = light_in_focus * mask
@@ -722,6 +732,96 @@ class Brightfield(Optics):
 
 
 Holography = Brightfield
+
+class ISCAT(Brightfield):
+    """Images coherently illuminated samples using ISCAT.
+
+    Images samples by creating a discretized volume, where each pixel
+    represents the effective refractive index of that pixel. Light is
+    propagated through the sample iteratively by first propagating the
+    light in the fourier space, followed by a refractive index correction
+    in the real space.
+
+    Parameters
+    ----------
+    illumination : Feature
+        Feature-set resolving the complex field entering the sample. Default
+        is a field with all values 1.
+    NA : float
+        The NA of the limiting aperature.
+    wavelength : float
+        The wavelength of the scattered light in meters.
+    magnification : float
+        The magnification of the optical system.
+    resolution : array_like[float (, float, float)]
+        The distance between pixels in the camera. A third value can be
+        included to define the resolution in the z-direction.
+    refractive_index_medium : float
+        The refractive index of the medium.
+    padding : array_like[int, int, int, int]
+        Pads the sample volume with zeros to avoid edge effects.
+    output_region : array_like[int, int, int, int]
+        The region of the image to output (x,y,width,height). Default
+        None returns entire image.
+    pupil : Feature
+        A feature-set resolving the pupil function at focus. The feature-set
+        receive an unaberrated pupil as input.
+
+    """
+
+    def __init__(self, epsilon_iscat=1, illumination_angle = np.pi, **kwargs):
+
+        super().__init__(
+            is_iscat = True, 
+            illumination_angle = illumination_angle,
+            epsilon_iscat = epsilon_iscat,
+            **kwargs)
+        
+class Darkfield(Brightfield):
+    """Images coherently illuminated samples using Darkfield.
+
+    Images samples by creating a discretized volume, where each pixel
+    represents the effective refractive index of that pixel. Light is
+    propagated through the sample iteratively by first propagating the
+    light in the fourier space, followed by a refractive index correction
+    in the real space.
+
+    Parameters
+    ----------
+    illumination : Feature
+        Feature-set resolving the complex field entering the sample. Default
+        is a field with all values 1.
+    NA : float
+        The NA of the limiting aperature.
+    wavelength : float
+        The wavelength of the scattered light in meters.
+    magnification : float
+        The magnification of the optical system.
+    resolution : array_like[float (, float, float)]
+        The distance between pixels in the camera. A third value can be
+        included to define the resolution in the z-direction.
+    refractive_index_medium : float
+        The refractive index of the medium.
+    padding : array_like[int, int, int, int]
+        Pads the sample volume with zeros to avoid edge effects.
+    output_region : array_like[int, int, int, int]
+        The region of the image to output (x,y,width,height). Default
+        None returns entire image.
+    pupil : Feature
+        A feature-set resolving the pupil function at focus. The feature-set
+        receive an unaberrated pupil as input.
+
+    """
+
+    def __init__(self, illumination_angle = np.pi/2, **kwargs):
+        super().__init__(
+            illumination_angle = illumination_angle,
+            **kwargs)
+
+    #Retrieve get as super
+    def get(self, illuminated_volume, limits, fields, **kwargs):
+        field = super().get(illuminated_volume, limits, fields, return_field = True, **kwargs)
+        return np.square(np.abs(field-1))
 
 
 class IlluminationGradient(Feature):
