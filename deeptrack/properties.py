@@ -168,9 +168,9 @@ class SequentialProperty(Property):
             self.initialization = None
 
         self.current = lambda: None
-        self.action = self._action
+        self.action = self._action_override
 
-    def _action(self, _ID=()):
+    def _action_override(self, _ID=()):
         return (
             self.initialization(_ID=_ID)
             if self.sequence_step(_ID=_ID) == 0
@@ -219,6 +219,7 @@ class PropertyDict(DeepTrackNode, dict):
                     pass
 
         def action(_ID=()):
+            # SLOW
             return dict((key, val(_ID=_ID)) for key, val in self.items())
 
         super().__init__(action, **dependencies)
@@ -226,7 +227,9 @@ class PropertyDict(DeepTrackNode, dict):
         for val in dependencies.values():
             val.add_child(self)
             self.add_dependency(val)
-
+    
+    def __getitem__(self, key):
+        return dict.__getitem__(self, key)
 
 def propagate_data_to_dependencies(X, **kwargs):
     """Iterates the dependencies of a feature and sets the value of their properties to the values in kwargs

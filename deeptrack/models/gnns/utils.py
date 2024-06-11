@@ -87,10 +87,9 @@ def to_trajectories(
     return trajectories
 
 
-def get_predictions(dfs, properties, model, graph_kwargs):
+def get_predictions(dfs, properties, model, **graph_kwargs):
     """
     Get predictions from nodes dataframe.
-
     Parameters
     ----------
     dfs: DataFrame
@@ -103,7 +102,7 @@ def get_predictions(dfs, properties, model, graph_kwargs):
         Extra arguments to be passed to the graph extractor.
     """
     grapht = GraphExtractor(
-        nodesdf=dfs, properties=properties, validation=True, **graph_kwargs.properties()
+        nodesdf=dfs, properties=properties, validation=True, **graph_kwargs
     )
 
     v = [

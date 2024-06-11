@@ -19,6 +19,8 @@ Ellipsoid
 
 
 from pint import Quantity
+
+from deeptrack.holography import get_propagation_matrix
 from . import image
 from deeptrack.backend.units import (
     ConversionTable,
@@ -108,6 +110,7 @@ class Scatterer(Feature):
             upsample=upsample,
             voxel_size=voxel_size,
             pixel_size=pixel_size,
+            _position_sampler=lambda: position,
             **kwargs,
         )
 
@@ -150,29 +153,6 @@ class Scatterer(Feature):
                 Warning,
             )
 
-        # # Downsamples the image along the axes it was upsampled
-        # if upsample != 1 and upsample_axes:
-
-        #     # Pad image to ensure it is divisible by upsample
-        #     increase = np.array(new_image.shape)
-        #     for axis in upsample_axes:
-        #         increase[axis] = upsample - (new_image.shape[axis] % upsample)
-        #     pad_width = [(0, inc) for inc in increase]
-        #     new_image = np.pad(new_image, pad_width, mode="constant")
-
-        #     # Finds reshape size for downsampling
-        #     new_shape = []
-        #     for axis in range(new_image.ndim):
-        #         if axis in upsample_axes:
-        #             new_shape += [new_image.shape[axis] // upsample, upsample]
-        #         else:
-        #             new_shape += [new_image.shape[axis]]
-
-        #     # Downsamples
-        #     new_image = np.reshape(new_image, new_shape).mean(
-        #         axis=tuple(np.array(upsample_axes, dtype=np.int32) * 2 + 1)
-        #     )
-
         # Crops empty slices
         if crop_empty:
             new_image = new_image[~np.all(new_image == 0, axis=(1, 2))]
@@ -181,6 +161,14 @@ class Scatterer(Feature):
 
         return [Image(new_image)]
 
+    def _no_wrap_format_input(self, *args, **kwargs) -> list:
+        return self._image_wrapped_format_input(*args, **kwargs)
+    
+    def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
+        return self._image_wrapped_process_and_get(*args, **feature_input)
+    
+    def _no_wrap_process_output(self, *args, **feature_input):
+        return self._image_wrapped_process_output(*args, **feature_input)
 
 class PointParticle(Scatterer):
     """Generates a point particle
@@ -515,6 +503,12 @@ class MieScatterer(Scatterer):
     z : float
         The position in the direction normal to the
         camera plane. Used if `position` is of length 2.
+    return_fft : bool
+        If True, the feature returns the fft of the field, rather than the
+        field itself.
+    coherence_length : float
+        The temporal coherence length of a partially coherent light given in meters. If None, the illumination is
+        assumed to be coherent.
     """
 
     __gpu_compatible__ = True
@@ -525,6 +519,7 @@ class MieScatterer(Scatterer):
         collection_angle=(u.radian, u.radian),
         wavelength=(u.meter, u.meter),
         offset_z=(u.meter, u.meter),
+        coherence_length=(u.meter, u.pixel),
     )
 
     def __init__(
@@ -541,6 +536,10 @@ class MieScatterer(Scatterer):
         padding=(0,) * 4,
         output_region=None,
         polarization_angle=None,
+        working_distance=1000000,  # large value to avoid numerical issues unless the user specifies a smaller value
+        position_objective=(0, 0),
+        return_fft=False,
+        coherence_length=None,
         **kwargs,
     ):
         if polarization_angle is not None:
@@ -566,6 +565,10 @@ class MieScatterer(Scatterer):
             padding=padding,
             output_region=output_region,
             polarization_angle=polarization_angle,
+            working_distance=working_distance,
+            position_objective=position_objective,
+            return_fft=return_fft,
+            coherence_length=coherence_length,
             **kwargs,
         )
 
@@ -585,96 +588,147 @@ class MieScatterer(Scatterer):
             )
 
         if properties["offset_z"] == "auto":
+            size = (
+                np.array(properties["output_region"][2:])
+                - properties["output_region"][:2]
+            )
+            xSize, ySize = size
+            arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
+            min_edge_size = np.min(arr.shape)
             properties["offset_z"] = (
-                np.min(
-                    np.array(properties["output_region"][2:])
-                    - properties["output_region"][:2]
-                )
-                / 2
+                min_edge_size
+                * 0.45
                 * min(properties["voxel_size"][:2])
                 / np.tan(properties["collection_angle"])
             )
         return properties
 
+    def get_xy_size(self, output_region, padding):
+        return (
+            output_region[2] - output_region[0] + padding[0] + padding[2],
+            output_region[3] - output_region[1] + padding[1] + padding[3],
+        )
+
+    def get_XY(self, shape, voxel_size):
+        x = np.arange(shape[0]) - shape[0] / 2
+        y = np.arange(shape[1]) - shape[1] / 2
+        return np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
+
+    def get_detector_mask(self, X, Y, radius):
+        return np.sqrt(X**2 + Y**2) < radius
+
+    def get_plane_in_polar_coords(self, shape, voxel_size, plane_position):
+
+        X, Y = self.get_XY(shape, voxel_size)
+        X = image.maybe_cupy(X)
+        Y = image.maybe_cupy(Y)
+
+        # the X, Y coordinates of the pupil relative to the particle
+        X = X + plane_position[0]
+        Y = Y + plane_position[1]
+        Z = plane_position[2]  # might be +z or -z
+
+        R2_squared = X**2 + Y**2
+        R3 = np.sqrt(R2_squared + Z**2)  # might be +z instead of -z
+
+        # get the angles
+        cos_theta = Z / R3
+        phi = np.arctan2(Y, X)
+
+        return R3, cos_theta, phi
+
     def get(
         self,
         inp,
         position,
-        output_region,
         voxel_size,
         padding,
         wavelength,
         refractive_index_medium,
         L,
-        offset_z,
         collection_angle,
         input_polarization,
         output_polarization,
         coefficients,
+        offset_z,
         z,
+        working_distance,
+        position_objective,
+        return_fft,
+        coherence_length,
+        output_region,
         **kwargs,
     ):
 
-        xSize = padding[2] + output_region[2] - output_region[0] + padding[0]
-        ySize = padding[3] + output_region[3] - output_region[1] + padding[1]
+        # Get size of the output
+        xSize, ySize = self.get_xy_size(output_region, padding)
+        voxel_size = get_active_voxel_size()
+        arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
+        arr = image.maybe_cupy(arr)
+        position = np.array(position) * voxel_size[: len(position)]
 
-        scale = get_active_scale()
+        pupil_physical_size = working_distance * np.tan(collection_angle) * 2
 
-        arr = pad_image_to_fft(np.zeros((xSize, ySize)))
-        position = np.array(position) * scale[: len(position)]
-        pos_floor = np.floor(position)
-        pos_digits = position - pos_floor
-        # Evluation grid
-        x = (
-            np.arange(-padding[0], arr.shape[0] - padding[0])
-            - arr.shape[0] // 2
-            + padding[0]
-            - pos_digits[0]
+        z = z * voxel_size[2]
+
+        ratio = offset_z / (working_distance - z)
+
+        # position of pbjective relative particle
+        relative_position = np.array(
+            (
+                position_objective[0] - position[0],
+                position_objective[1] - position[1],
+                working_distance - z,
+            )
         )
-        y = (
-            np.arange(-padding[1], arr.shape[1] - padding[1])
-            - arr.shape[1] // 2
-            + padding[1]
-            - pos_digits[1]
+
+        # get field evaluation plane at offset_z
+        R3_field, cos_theta_field, phi_field = self.get_plane_in_polar_coords(
+            arr.shape, voxel_size, relative_position * ratio
+        )
+        cos_phi_field, sin_phi_field = np.cos(phi_field), np.sin(phi_field)
+        # x and y position of a beam passing through field evaluation plane on the objective
+        x_farfield = (
+            position[0]
+            + R3_field * np.sqrt(1 - cos_theta_field**2) * cos_phi_field / ratio
+        )
+        y_farfield = (
+            position[1]
+            + R3_field * np.sqrt(1 - cos_theta_field**2) * sin_phi_field / ratio
         )
 
-        x = np.roll(x, int(-arr.shape[0] // 2 + padding[0] + pos_floor[0]), 0)
-        y = np.roll(y, int(-arr.shape[1] // 2 + padding[1] + pos_floor[1]), 0)
-        X, Y = np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
+        # if the beam is within the pupil
+        pupil_mask = (x_farfield - position_objective[0]) ** 2 + (
+            y_farfield - position_objective[1]
+        ) ** 2 < (pupil_physical_size / 2) ** 2
 
-        X = image.maybe_cupy(X)
-        Y = image.maybe_cupy(Y)
+        R3_field = R3_field[pupil_mask]
+        cos_theta_field = cos_theta_field[pupil_mask]
+        phi_field = phi_field[pupil_mask]
 
-        R2 = np.sqrt(X ** 2 + Y ** 2)
-        R3 = np.sqrt(R2 ** 2 + (offset_z) ** 2)
-        ct = offset_z / R3
-
-        angle = np.arctan2(Y, X)
         if isinstance(input_polarization, (float, int, Quantity)):
 
             if isinstance(input_polarization, Quantity):
                 input_polarization = input_polarization.to("rad")
                 input_polarization = input_polarization.magnitude
 
-            S1_coef = np.sin(angle + input_polarization)
-            S2_coef = np.cos(angle + input_polarization)
+            S1_coef = np.sin(phi_field + input_polarization)
+            S2_coef = np.cos(phi_field + input_polarization)
 
         if isinstance(output_polarization, (float, int, Quantity)):
             if isinstance(input_polarization, Quantity):
                 output_polarization = output_polarization.to("rad")
                 output_polarization = output_polarization.magnitude
 
-            S1_coef *= np.sin(angle + output_polarization)
-            S2_coef *= np.cos(angle + output_polarization)
-
-        ct_max = np.cos(collection_angle)
+            S1_coef *= np.sin(phi_field + output_polarization)
+            S2_coef *= np.cos(phi_field + output_polarization)
 
         # Wave vector
         k = 2 * np.pi / wavelength * refractive_index_medium
 
         # Harmonics
         A, B = coefficients(L)
-        PI, TAU = D.mie_harmonics(ct, L)
+        PI, TAU = D.mie_harmonics(cos_theta_field, L)
 
         # Normalization factor
         E = [(2 * i + 1) / (i * (i + 1)) for i in range(1, L + 1)]
@@ -683,15 +737,51 @@ class MieScatterer(Scatterer):
         S1 = sum([E[i] * A[i] * PI[i] + E[i] * B[i] * TAU[i] for i in range(0, L)])
         S2 = sum([E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)])
 
-        field = (
-            (ct > ct_max)
-            * 1j
-            / (k * R3)
-            * np.exp(1j * k * R3)
+        arr[pupil_mask] = (
+            -1j
+            / (k * R3_field)
+            * np.exp(1j * k * R3_field)
             * (S2 * S2_coef + S1 * S1_coef)
         )
 
-        return np.expand_dims(field, axis=-1)
+        # For partially coherent illumination
+        if coherence_length:
+            sigma = z * np.sqrt((coherence_length / z + 1) ** 2 - 1)
+            sigma = sigma * (offset_z / z)
+
+            mask = np.zeros_like(arr)
+            y, x = np.ogrid[
+                -mask.shape[0] // 2 : mask.shape[0] // 2,
+                -mask.shape[1] // 2 : mask.shape[1] // 2,
+            ]
+            mask = np.exp(-0.5 * (x**2 + y**2) / ((sigma) ** 2))
+
+            mask = image.maybe_cupy(mask)
+            arr = arr * mask
+
+        fourier_field = np.fft.fft2(arr)
+
+        propagation_matrix = get_propagation_matrix(
+            fourier_field.shape,
+            pixel_size=voxel_size[2],
+            wavelength=wavelength / refractive_index_medium,
+            to_z=(-offset_z - z),
+            dy=(
+                relative_position[0] * ratio
+                + position[0]
+                + (padding[0] - arr.shape[0] / 2) * voxel_size[0]
+            ),
+            dx=(
+                relative_position[1] * ratio
+                + position[1]
+                + (padding[1] - arr.shape[1] / 2) * voxel_size[1]
+            ),
+        )
+        fourier_field = fourier_field * propagation_matrix * np.exp(-1j * k * offset_z)
+        if return_fft:
+            return fourier_field[..., np.newaxis]
+        else:
+            return np.fft.ifft2(fourier_field)[..., np.newaxis]
 
 
 class MieSphere(MieScatterer):
@@ -745,6 +835,12 @@ class MieSphere(MieScatterer):
         **kwargs,
     ):
         def coeffs(radius, refractive_index, refractive_index_medium, wavelength):
+
+            if isinstance(radius, Quantity):
+                radius = radius.to("m").magnitude
+            if isinstance(wavelength, Quantity):
+                wavelength = wavelength.to("m").magnitude
+
             def inner(L):
                 return D.mie_coefficients(
                     refractive_index / refractive_index_medium,

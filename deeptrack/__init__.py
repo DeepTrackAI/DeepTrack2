@@ -1,42 +1,74 @@
 # flake8: noqa
 from pint import UnitRegistry, Context
 from .backend.pint_definition import pint_definitions
+import lazy_import
+import importlib
+
 
 units = UnitRegistry(pint_definitions.split("\n"))
 
-import tensorflow as tf
+# Check if tensorflow is installed without importing it
+import pkg_resources
 
-physical_devices = tf.config.list_physical_devices("GPU")
-try:
-    tf.config.experimental.set_memory_growth(physical_devices[0], True)
-except Exception:
-    # Invalid device or cannot modify virtual devices once initialized.
-    pass
+installed = [pkg.key for pkg in pkg_resources.working_set]
 
+if "tensorflow" in installed:
+    HAS_TENSORFLOW = True
+else:
+    HAS_TENSORFLOW = False
 
-from .features import *
-from .aberrations import *
-from .augmentations import *
+if "torch" in installed:
+    HAS_TORCH = True
+else:
+    HAS_TORCH = False
 
-from .math import *
-from .noises import *
-from .optics import *
-from .scatterers import *
-from .sequences import *
-from .elementwise import *
-from .statistics import *
-from .holography import *
+if HAS_TENSORFLOW and HAS_TORCH:
+    import torch # torch must be imported before tensorflow
 
-from .image import strip
+from deeptrack.features import *
+from deeptrack.aberrations import *
+from deeptrack.augmentations import *
 
-from . import (
+from deeptrack.math import *
+from deeptrack.noises import *
+from deeptrack.optics import *
+from deeptrack.scatterers import *
+from deeptrack.sequences import *
+from deeptrack.elementwise import *
+from deeptrack.statistics import *
+from deeptrack.holography import *
+
+from deeptrack.image import strip
+
+# if not HAS_TENSORFLOW:
+    # Lazy imports to avoid overhead of importing tensorflow
+
+generators = lazy_import.lazy_module("deeptrack.generators")
+models = lazy_import.lazy_module("deeptrack.models")
+datasets = lazy_import.lazy_module("deeptrack.datasets")
+losses = lazy_import.lazy_module("deeptrack.losses")
+layers = lazy_import.lazy_module("deeptrack.layers")
+visualization = lazy_import.lazy_module("deeptrack.visualization")
+
+# if not HAS_TORCH:
+pytorch = lazy_import.lazy_module("deeptrack.pytorch")
+deeplay = lazy_import.lazy_module("deeptrack.deeplay")
+
+should_import = False
+if should_import:
+    from . import generators
+    from . import models
+    from . import datasets
+    from . import losses
+    from . import layers
+    from . import visualization
+    from . import pytorch
+    from . import deeplay
+
+from deeptrack import (
     image,
-    losses,
-    generators,
-    models,
     utils,
-    layers,
     backend,
-    test,
-    visualization,
+    # Fake imports for IDE autocomplete
+    # Does not actually import anything
 )

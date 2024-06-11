@@ -14,13 +14,17 @@ import numpy as np
 from typing import List
 
 import numpy as np
-import tensorflow.keras as keras
+
+
+import tensorflow as tf
 
 from .features import Feature
 from .image import Image, strip
 import threading
 import random
 import time
+
+
 
 
 class DataList(list):
@@ -35,7 +39,7 @@ class DataList(list):
         return items
 
 
-class Generator(keras.utils.Sequence):
+class Generator(tf.keras.utils.Sequence):
     """Base class for a generator.
 
     Generators continously update and resolve features, and allow other
@@ -167,7 +171,7 @@ class Generator(keras.utils.Sequence):
             yield self._get(features, feature_kwargs)
 
 
-class ContinuousGenerator(keras.utils.Sequence):
+class ContinuousGenerator(tf.keras.utils.Sequence):
 
     """Generator that asynchronously expands the dataset.
 
@@ -230,9 +234,7 @@ class ContinuousGenerator(keras.utils.Sequence):
         if min_data_size is None:
             min_data_size = min(batch_size * 10, max_data_size - 1)
 
-        assert (
-            min_data_size < max_data_size
-        ), "max_data_size needs to be larger than min_data_size"
+        max_data_size = max(max_data_size, min_data_size + 1)
 
         self.min_data_size = min_data_size
         self.max_data_size = max_data_size
@@ -365,9 +367,7 @@ class ContinuousGenerator(keras.utils.Sequence):
                 np.array(labels),
             )
         else:
-            return np.array(data), np.array(labels)
-
-
+            return np.array(data, dtype=object), np.array(labels, dtype=object)
 
     def __len__(self):
         steps = int((self.min_data_size // self._batch_size))

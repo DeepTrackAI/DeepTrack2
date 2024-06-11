@@ -1,4 +1,3 @@
-tensorflow
 numpy
 matplotlib
 scipy
@@ -6,9 +5,10 @@ Sphinx==2.2.0
 pydata-sphinx-theme
 numpydoc
 scikit-image
-tensorflow-probability
-pydeepimagej
 more_itertools
-pint
+pint<0.20
 pandas
 tqdm
+lazy_import
+rich
+gdown

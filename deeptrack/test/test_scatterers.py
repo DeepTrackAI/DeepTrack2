@@ -28,7 +28,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_Ellipse(self):
@@ -49,7 +49,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_EllipseUpscale(self):
@@ -147,7 +147,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_SphereUpscale(self):
@@ -189,7 +189,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, Image)
+        self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_EllipsoidUpscale(self):
@@ -288,6 +288,28 @@ class TestScatterers(unittest.TestCase):
 
         scatterer = scatterers.MieSphere(
             radius=0.5e-6, refractive_index=1.45 + 0.1j, aperature_angle=0.1
+        )
+
+        imaged_scatterer_1 = optics_1(scatterer)
+
+        imaged_scatterer_1.update().resolve()
+
+    def test_MieSphere_Coherence_length(self):
+        optics_1 = Brightfield(
+            NA=0.15,
+            wavelength=633e-9,
+            resolution=2e-6,
+            magnification=1,
+            output_region=(0, 0, 256, 256),
+            return_field=True,
+        )
+
+        scatterer = scatterers.MieSphere(
+            position=(128, 128),
+            radius=3e-6,
+            refractive_index=1.45 + 0.1j,
+            z=2612 * 1e-6,
+            coherence_length=5.9e-05,
         )
 
         imaged_scatterer_1 = optics_1(scatterer)

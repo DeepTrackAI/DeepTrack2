@@ -21,22 +21,32 @@ class Equivariance(Feature):
         Multiplicative equivariance
     add : float, array-like
         Additive equivariance
-    indexes : optional, int or slice
+    indices : optional, int or slice
         Index of related predicted value(s)
 
     """
 
-    def __init__(self, mul, add, indexes=slice(None, None, 1), **kwargs):
-        super().__init__(mul=mul, add=add, indexes=indexes, **kwargs)
+    def __init__(self, mul, add, indices=slice(None, None, 1), indexes=None, **kwargs):
+        if indexes is not None:
+            indices = indexes
 
-    def get(self, matvec, mul, add, indexes, **kwargs):
+        super().__init__(mul=mul, add=add, indices=indices, **kwargs)
+
+    def get(self, matvec, mul, add, indices, **kwargs):
 
         A, b = matvec._value
 
         mulf = np.eye(len(b))
         addf = np.zeros((len(b), 1))
-        mulf[indexes, indexes] = mul
-        addf[indexes] = add
+
+        addf[indices] = add
+
+        if isinstance(indices, (slice, int)):
+            mulf[indices, indices] = mul
+        else:
+            for i in indices:
+                for j in indices:
+                    mulf[i, j] = mul[i, j]
 
         A = mulf @ A
         b = mulf @ b
@@ -54,11 +64,11 @@ class TranslationalEquivariance(Equivariance):
 
     """
 
-    def __init__(self, translation, indexes=None):
-        if indexes is None:
-            indexes = self.get_indexes
+    def __init__(self, translation, indices=None):
+        if indices is None:
+            indices = self.get_indices
         super().__init__(
-            translation=translation, add=self.get_add, mul=self.get_mul, indexes=indexes
+            translation=translation, add=self.get_add, mul=self.get_mul, indices=indices
         )
 
     def get_add(self, translation):
@@ -67,7 +77,7 @@ class TranslationalEquivariance(Equivariance):
     def get_mul(self, translation):
         return np.eye(len(translation))
 
-    def get_indexes(self, translation):
+    def get_indices(self, translation):
         return slice(len(translation))
 
 
@@ -81,11 +91,11 @@ class Rotational2DEquivariance(Equivariance):
 
     """
 
-    def __init__(self, rotate, indexes=None):
-        if indexes is None:
-            indexes = self.get_indexes
+    def __init__(self, rotate, indices=None):
+        if indices is None:
+            indices = self.get_indices
         super().__init__(
-            rotate=rotate, add=self.get_add, mul=self.get_mul, indexes=indexes
+            rotate=rotate, add=self.get_add, mul=self.get_mul, indices=indices
         )
 
     def get_add(self):
@@ -95,7 +105,7 @@ class Rotational2DEquivariance(Equivariance):
         s, c = np.sin(rotate), np.cos(rotate)
         return np.array([[c, s], [-s, c]])
 
-    def get_indexes(self):
+    def get_indices(self):
         return slice(2)
 
 
@@ -109,11 +119,11 @@ class ScaleEquivariance(Equivariance):
 
     """
 
-    def __init__(self, scale, indexes=None):
-        if indexes is None:
-            indexes = self.get_indexes
+    def __init__(self, scale, indices=None):
+        if indices is None:
+            indices = self.get_indices
         super().__init__(
-            scale=scale, add=self.get_add, mul=self.get_mul, indexes=indexes
+            scale=scale, add=self.get_add, mul=self.get_mul, indices=indices
         )
 
     def get_add(self, scale):
@@ -122,7 +132,7 @@ class ScaleEquivariance(Equivariance):
     def get_mul(self, scale):
         return np.diag(scale)
 
-    def get_indexes(self, scale):
+    def get_indices(self, scale):
         return slice(len(scale))
 
 
@@ -138,11 +148,11 @@ class LogScaleEquivariance(Equivariance):
 
     """
 
-    def __init__(self, scale, indexes=None):
-        if indexes is None:
-            indexes = self.get_indexes
+    def __init__(self, scale, indices=None):
+        if indices is None:
+            indices = self.get_indices
         super().__init__(
-            scale=scale, add=self.get_add, mul=self.get_mul, indexes=indexes
+            scale=scale, add=self.get_add, mul=self.get_mul, indices=indices
         )
 
     def get_add(self, scale):
@@ -151,5 +161,5 @@ class LogScaleEquivariance(Equivariance):
     def get_mul(self, scale):
         return np.eye(len(scale))
 
-    def get_indexes(self, scale):
+    def get_indices(self, scale):
         return slice(len(scale))

@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow.keras import layers, models
 
 from .. import features
-from ..generators import ContinuousGenerator
+import deeptrack.generators as generators
 
 
 try:
@@ -115,7 +115,7 @@ def as_normalization(x):
 
 
 def single_layer_call(
-    x, layer, activation, normalization, norm_kwargs, activation_first=True
+    x, layer, activation, normalization, norm_kwargs, activation_first=True, **kwargs
 ):
     """Calls a layer with activation and normalization."""
     assert isinstance(norm_kwargs, dict), "norm_kwargs must be a dict. Got {0}".format(
@@ -128,9 +128,10 @@ def single_layer_call(
         else x
     )
     a = lambda x: as_activation(activation)(x) if activation else x
-    fs = [layer, a, n] if activation_first else [layer, n, a]
+    fs = [(layer, kwargs)]
+    fs = fs + [(a, {}), (n, {})] if activation_first else fs + [(n, {}), (a, {})]
 
-    return reduce(lambda x, f: f(x), fs, x)
+    return reduce(lambda x, f: f[0](x, **f[1]), fs, x)
 
 
 def with_citation(citation):
@@ -201,7 +202,7 @@ class KerasModel(Model):
     Compiles the model using the loss and optimizer defined in the constructor.
     """
 
-    data_generator = ContinuousGenerator
+    data_generator = generators.ContinuousGenerator
 
     def __init__(
         self,
@@ -244,59 +245,59 @@ class KerasModel(Model):
             # Code is not actually unreachable if fit crashes.
             return None
 
-        return self.model.fit(x, *args, **kwargs)
+        return self.model.fit(x, *args, batch_size=batch_size, **kwargs)
 
-    def export(
-        self,
-        path,
-        minimum_size,
-        preprocessing=None,
-        dij_config=None,
-    ):
-        """Export model unto the BioImage Model Zoo format for use with Fiji and ImageJ.
+    # def export(
+    #     self,
+    #     path,
+    #     minimum_size,
+    #     preprocessing=None,
+    #     dij_config=None,
+    # ):
+    #     """Export model unto the BioImage Model Zoo format for use with Fiji and ImageJ.
 
-        Uses pyDeepImageJ by E. Gómez-de-Mariscal, C. García-López-de-Haro, L. Donati, M. Unser,
-        A. Muñoz-Barrutia and D. Sage for exporting.
+    #     Uses pyDeepImageJ by E. Gómez-de-Mariscal, C. García-López-de-Haro, L. Donati, M. Unser,
+    #     A. Muñoz-Barrutia and D. Sage for exporting.
 
-        DeepImageJ, used for loading the models into ImageJ, is only compatible with
-        tensorflow==2.2.1. Models using newer features may not load correctly.
+    #     DeepImageJ, used for loading the models into ImageJ, is only compatible with
+    #     tensorflow==2.2.1. Models using newer features may not load correctly.
 
-        Pre-processing of the data should be defined when creating the model using the preprocess
-        keyword. Post-processing should be left to other imageJ functionality. If this is not
-        sufficient, see `https://github.com/deepimagej/pydeepimagej` for what to pass to the
-        preprocessing and postprocessing arguments.
+    #     Pre-processing of the data should be defined when creating the model using the preprocess
+    #     keyword. Post-processing should be left to other imageJ functionality. If this is not
+    #     sufficient, see `https://github.com/deepimagej/pydeepimagej` for what to pass to the
+    #     preprocessing and postprocessing arguments.
 
-        Parameters
-        ----------
-        path : str
-           Path to store exported files.
-        minimum_size : int
-           For models where the input size is not fixed (e.g. (None, None 1)), the input
-           is required to be a multiple of this value.
-        preprocessing : Feature or Layer
-           Additional preprocessing. Will be saved as a part of the network, and as
-           such need to be compatible with tensorflow tensor operations. Assumed to have the
-           same input shape as the first layer of the network.
-        dij_config : BioImageModelZooConfig, optional
-            Configuration used for deployment. See `https://github.com/deepimagej/pydeepimagej` for
-            list of options. If None, a basic config is created for you.
-        """
-        from pydeepimagej.yaml import BioImageModelZooConfig
+    #     Parameters
+    #     ----------
+    #     path : str
+    #        Path to store exported files.
+    #     minimum_size : int
+    #        For models where the input size is not fixed (e.g. (None, None 1)), the input
+    #        is required to be a multiple of this value.
+    #     preprocessing : Feature or Layer
+    #        Additional preprocessing. Will be saved as a part of the network, and as
+    #        such need to be compatible with tensorflow tensor operations. Assumed to have the
+    #        same input shape as the first layer of the network.
+    #     dij_config : BioImageModelZooConfig, optional
+    #         Configuration used for deployment. See `https://github.com/deepimagej/pydeepimagej` for
+    #         list of options. If None, a basic config is created for you.
+    #     """
+    #     from pydeepimagej.yaml import BioImageModelZooConfig
 
-        # TODO: Does not yet fully work as intended. Debugging proved to be hard.
-        inp = layers.Input(shape=self.model.layers[0].input_shape)
-        model = self.model
+    #     # TODO: Does not yet fully work as intended. Debugging proved to be hard.
+    #     inp = layers.Input(shape=self.model.layers[0].input_shape)
+    #     model = self.model
 
-        if preprocessing:
-            processed_inp = preprocessing(inp)
-            model = model(processed_inp)
-            model = models.Model(inp, model)
+    #     if preprocessing:
+    #         processed_inp = preprocessing(inp)
+    #         model = model(processed_inp)
+    #         model = models.Model(inp, model)
 
-        dij_config = BioImageModelZooConfig(model, minimum_size)
-        dij_config.Name = "DeepTrack 2.1 model"
+    #     dij_config = BioImageModelZooConfig(model, minimum_size)
+    #     dij_config.Name = "DeepTrack 2.1 model"
 
-        dij_config.add_weights_formats(model, "Tensorflow", authors=dij_config.Authors)
-        dij_config.export_model(path)
+    #     dij_config.add_weights_formats(model, "Tensorflow", authors=dij_config.Authors)
+    #     dij_config.export_model(path)
 
     def get(self, image, add_batch_dimension_on_resolve, **kwargs):
         if add_batch_dimension_on_resolve:
@@ -320,8 +321,78 @@ class KerasModel(Model):
 
         return self
 
-    def __rrshift__(self, other):
-        return self.add_preprocessing(other)
+    @staticmethod
+    def append_layer_to_sequential(model, layer):
+        """Append a layer to a sequential model.
+
+        Parameters
+        ----------
+        model : Sequential
+            Model to append layer to.
+        layer : Layer
+            Layer to append.
+        """
+        new_model = models.Sequential()
+        for l in model.layers:
+            new_model.add(l)
+        new_model.add(layer)
+
+        return new_model
+
+    @staticmethod
+    def append_layer_to_functional(model, layer):
+        """Append a layer to a functional model.
+
+        Parameters
+        ----------
+        model : Model
+            Model to append layer to.
+        layer : Layer
+            Layer to append.
+        """
+        i = layers.Input(model.input_shape[1:])
+        o = model(i)
+        o = layer(o)
+        new_model = models.Model(i, o)
+        return new_model
+
+    @staticmethod
+    def append_model_to_model(model, other):
+        """Append a model to a another model.
+
+        Parameters
+        ----------
+        model : Model
+            Model to append layer to.
+        other : Model
+            Model to append.
+        """
+        i = layers.Input(model.input_shape[1:])
+        o = model(i)
+        o = other(o)
+        new_model = models.Model(i, o)
+        return new_model
+
+    def __rshift__(self, other):
+        """Create a new model by adding a layer or model to the end of the current model."""
+
+        if isinstance(other, KerasModel):
+            other = other.model
+
+        if isinstance(other, models.Model):
+            return KerasModel(self.append_model_to_model(self.model, other))
+
+        if isinstance(other, layers.Layer) and isinstance(
+            self.model, models.Sequential
+        ):
+            return KerasModel(self.append_layer_to_sequential(self.model, other))
+
+        if isinstance(other, layers.Layer) and isinstance(self.model, models.Model):
+            return KerasModel(self.append_layer_to_functional(self.model, other))
+
+        raise ValueError(
+            "Can only add a layer or model to a model. Got {}".format(type(other))
+        )
 
     def __call__(self, *args, **kwargs):
         return self.model(*args, **kwargs)

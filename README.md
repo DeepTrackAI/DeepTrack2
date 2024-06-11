@@ -1,12 +1,12 @@
 <p align="center">
-  <img width="350" src=https://github.com/softmatterlab/DeepTrack-2.0/blob/develop/assets/logo.png?raw=true>
+  <img width="350" src=https://github.com/softmatterlab/DeepTrack2/blob/develop/assets/logo.png?raw=true>
 </p>
 
 <h3 align="center">A comprehensive deep learning framework for digital microscopy.</h3>
 <p align="center">
   <a href="/LICENSE" alt="licence"><img src="https://img.shields.io/github/license/softmatterlab/DeepTrack-2.0"></a>
   <a href="https://badge.fury.io/py/deeptrack"><img src="https://badge.fury.io/py/deeptrack.svg" alt="PyPI version"></a>
-  <a href="https://softmatterlab.github.io/DeepTrack-2.0/deeptrack.html"><img src="https://img.shields.io/badge/docs-passing-green" alt="PyPI version"></a>
+  <a href="https://softmatterlab.github.io/DeepTrack2/deeptrack.html"><img src="https://img.shields.io/badge/docs-passing-green" alt="PyPI version"></a>
   <a href="https://badge.fury.io/py/deeptrack"><img src="https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue" alt="Python version"></a>
   <a href="https://doi.org/10.1063/5.0034891" alt="DOI">
     <img src="https://img.shields.io/badge/DOI-10.1063%2F5.0034891-blue">
@@ -54,8 +54,8 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
   <br/>
   <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/2-single_particle_tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a CNN-based single particle tracker using simulated data </a>
   <br/>
-  <a href="https://doi.org/10.48550/arXiv.2202.13546" alt="DOI lodestar">
-    <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.13546-blue">
+  <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="DOI lodestar">
+    <img src="https://img.shields.io/badge/DOI-10.1038%2Fs41467--022--35004--y-blue">
   </a> 
   <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/02.%20tracking_particles_of_various_shapes.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Unsupervised training of a single particle tracker using LodeSTAR </a> 
   
@@ -67,8 +67,8 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
 <p align="left">
   <img width="600" src=/assets/MPT-packed.gif?raw=true>
   <br/>
-  <a href="https://doi.org/10.48550/arXiv.2202.13546" alt="DOI lodestar">
-    <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.13546-blue">
+  <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="DOI lodestar">
+    <img src="https://img.shields.io/badge/DOI-10.1038%2Fs41467--022--35004--y-blue">
   </a> <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training LodeSTAR to detect multiple cells from a single image </a>
   <br/>
   <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/4-multi-molecule-tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a UNet-based multi-particle tracker using simulated data </a> 
@@ -111,7 +111,7 @@ The second series focuses on individual topics, introducing them in a natural or
 
 Additionally, we have seven more case studies which are less documented, but gives additional insight in how to use DeepTrack with real datasets
 
-1. [MNIST](examples/paper-examples/1_MNIST.ipynb) classifies handwritted digits.
+1. [MNIST](examples/paper-examples/1-MNIST.ipynb) classifies handwritted digits.
 2. [single particle tracking](examples/paper-examples/2-single_particle_tracking.ipynb) tracks experimentally captured videos of a single particle. (Requires opencv-python compiled with ffmpeg to open and read a video.)
 3. [single particle sizing](examples/paper-examples/3-particle_sizing.ipynb) extracts the radius and refractive index of particles.
 4. [multi-particle tracking](examples/paper-examples/4-multi-molecule-tracking.ipynb) detects quantum dots in a low SNR image.
@@ -126,7 +126,7 @@ We also have examples that are specific for certain models. This includes
 - [*MAGIK*](deeptrack/models/gnns/) for graph-based particle linking and trace characterization.
 
 ## Documentation
-The detailed documentation of DeepTrack 2.1 is available at the following link: https://softmatterlab.github.io/DeepTrack-2.0/deeptrack.html
+The detailed documentation of DeepTrack 2.1 is available at the following link: https://softmatterlab.github.io/DeepTrack2/deeptrack.html
 
 ## Video Tutorials
 
@@ -143,6 +143,13 @@ https://doi.org/10.1063/5.0034891
 ```
 
 See also:
+
+<https://www.nature.com/articles/s41467-022-35004-y>:
+```
+Midtvedt, B., Pineda, J., Skärberg, F. et al. 
+"Single-shot self-supervised object detection in microscopy." 
+Nat Commun 13, 7492 (2022).
+```
 
 <https://arxiv.org/abs/2202.06355>:
 ```

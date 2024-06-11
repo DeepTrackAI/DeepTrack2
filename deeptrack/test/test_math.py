@@ -7,8 +7,6 @@ import unittest
 from .. import math
 
 import numpy as np
-import tensorflow as tf
-
 
 class TestMath(unittest.TestCase):
     def test_Clip(self):
@@ -24,11 +22,6 @@ class TestMath(unittest.TestCase):
         input_image = np.array([[10, 4], [4, -10]])
         normalized_image = feature(input_image)
         self.assertTrue(np.all(normalized_image == [[5, 2], [2, -5]]))
-
-        input_image = tf.constant(np.array([[10, 4], [4, -10]]))
-        normalized_image = feature(input_image)
-        self.assertTrue(np.all(normalized_image.numpy() == [[5, 2], [2, -5]]))
-
 
 if __name__ == "__main__":
     unittest.main()

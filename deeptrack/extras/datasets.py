@@ -2,6 +2,10 @@ from tkinter.tix import Tree
 import requests
 import os
 import zipfile
+import contextlib
+import re
+import warnings
+import itertools
 
 import math
 
@@ -46,6 +50,12 @@ _ID = {
     "CellData": ("1CJW7msDiI7xq7oMce4l9tRkNN6O5eKtj", "CellData", ""),
     "CellMigData": ("1vRsWcxjbTz6rffCkrwOfs_ezPvUjPwGw", "CellMigData", ""),
     "BFC2Cells": ("1lHgJdG5I3vRnU_DRFwTr_c69nx1Xkd3X", "BFC2Cells", ""),
+    "STrajCh": ("1wXCSzvHuLwz1dywxUu2aQXlqbgf2V8r3", "STrajCh", ""),
+    "TrajectoryDiffusion": (
+        "1YhECLQrWPZgc_TVY2Sl2OwDcNxmA_jR5",
+        "TrajectoryDiffusion",
+        "",
+    ),
 }
 
 
@@ -83,32 +93,22 @@ def load(key):
 
     # Download zip file.
     print(f"Downloading {key}...")
-    url = f"https://drive.google.com/uc?export=download&id={dataset_id}"
-    response = requests.get(url, stream=True, params={"confirm": "true"})
-    # Check that the response is ok.
-
-    if response.status_code != 200:
-        raise ValueError(
-            "Error downloading dataset.",
-            response.status_code,
-            response.reason,
-            response.text,
-        )
-
-    save_response_content(response, f"datasets/{key}.zip")
+    fpath = download_file_from_google_drive(dataset_id, "datasets")
 
     # Extract zip file.
     print(f"Extracting {key}...")
-    zip_ref = zipfile.ZipFile(f"datasets/{key}.zip", "r")
+    zip_ref = zipfile.ZipFile(fpath, "r")
     zip_ref.extractall("datasets")
     zip_ref.close()
 
     # Delete zip file.
-    os.remove(f"datasets/{key}.zip")
+    os.remove(fpath)
 
     # If the extracted folder is another folder with the same name, move it.
     if os.path.isdir(f"datasets/{folder_name}/{folder_name}"):
-        os.rename(f"datasets/{folder_name}/{folder_name}", f"datasets/{folder_name}")
+        os.rename(
+            f"datasets/{folder_name}/{folder_name}", f"datasets/{folder_name}"
+        )
 
 
 def load_model(key):
@@ -170,18 +170,19 @@ def load_model(key):
 
     # If the extracted folder is another folder with the same name, move it.
     if os.path.isdir(f"models/{folder_name}/{folder_name}"):
-        os.rename(f"models/{folder_name}/{folder_name}", f"models/{folder_name}")
+        os.rename(
+            f"models/{folder_name}/{folder_name}", f"models/{folder_name}"
+        )
 
     return f"models/{folder_name}"
 
 
-def save_response_content(response, destination):
-    CHUNK_SIZE = 32768 * 4
+def save_response_content(response, destination, chunk_size):
     idx = 0
     with open(destination, "wb") as f:
 
-        for idx, chunk in enumerate(response.iter_content(CHUNK_SIZE)):
-            download_counter = convert_size(CHUNK_SIZE * idx)
+        for idx, chunk in enumerate(response):
+            download_counter = convert_size(chunk_size * idx)
             if idx % 40 == 0:
                 print("Downloading file:", download_counter, end="\r")
 
@@ -199,3 +200,33 @@ def convert_size(size_bytes):
     p = math.pow(1024, i)
     s = round(size_bytes / p, 2)
     return "%s\t%s" % (s, size_name[i])
+
+def download_file_from_google_drive(
+    file_id: str,
+    root,
+):
+    """Download a Google Drive file from  and place it in root.
+
+    Args:
+        file_id (str): id of file to be downloaded
+        root (str): Directory to place downloaded file in
+        filename (str, optional): Name to save the file under. If None, use the id of the file.
+        md5 (str, optional): MD5 checksum of the download. If None, do not check
+    """
+    try:
+        import gdown
+    except ModuleNotFoundError:
+        raise RuntimeError(
+            "To download files from GDrive, 'gdown' is required. You can install it with 'pip install gdown'."
+        )
+
+    root = os.path.expanduser(root)
+    filename = file_id + ".zip"
+    fpath = os.fspath(os.path.join(root, filename))
+
+    os.makedirs(root, exist_ok=True)
+
+
+    gdown.download(id=file_id, output=fpath, quiet=False)
+
+    return fpath

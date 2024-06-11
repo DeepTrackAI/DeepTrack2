@@ -4,18 +4,23 @@ import sys
 # sys.path.append(".")  # Adds the module to path
 
 import unittest
-
-from .. import layers
-import tensorflow as tf
-import tensorflow.keras.layers as k_layers
-import tensorflow.keras.models as k_models
-
 import numpy as np
+
+has_required_modules = True
+try:
+    from .. import layers
+    import tensorflow as tf
+    import tensorflow.keras.layers as k_layers
+    import tensorflow.keras.models as k_models
+except ImportError:
+    has_required_modules = False
+
+
 
 
 def makeMinimalModel(
     layer, shape=(None, None, 1), input_layer=None, **kwargs
-) -> k_models.Model:
+):
     if input_layer is None:
         input_layer = k_layers.Input(shape=shape)
 
@@ -282,6 +287,20 @@ class TestModels(unittest.TestCase):
             ),
         )
         self.assertTrue(model.layers[-1], layers.MaskedFGNN)
+    
+    def test_GRUMPN_layer(self):
+        block = layers.GRUMPNLayer()
+        model = makeMinimalModel(
+            block(96),
+            input_layer=(
+                k_layers.Input(shape=(None, 96)),
+                k_layers.Input(shape=(None, 10)),
+                k_layers.Input(shape=(None, 2), dtype=tf.int32),
+                k_layers.Input(shape=(None, 1)),
+                k_layers.Input(shape=(None, 2)),
+            ),
+        )
+        self.assertTrue(model.layers[-1], layers.GRUMPN)
 
     def test_GraphTransformer(self):
         block = layers.GraphTransformerLayer()
@@ -294,6 +313,9 @@ class TestModels(unittest.TestCase):
         )
         self.assertTrue(model.layers[-1], layers.GraphTransformer)
 
+if not has_required_modules:
+    TestModels = None
+    del TestModels
 
 if __name__ == "__main__":
     unittest.main()

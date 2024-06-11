@@ -3,15 +3,24 @@ from ..utils import as_KerasModel
 
 layers = tf.keras.layers
 
-
-@as_KerasModel
 class GAN(tf.keras.Model):
+    """Generative Adversarial Network (GAN) model.
+
+    Parameters:
+    discriminator: keras model, optional
+        The discriminator network.
+    generator: keras model, optional
+        The generator network.
+    latent_dim: int, optional
+        Dimension of the latent space for random vectors.
+    """
+
     def __init__(self, discriminator=None, generator=None, latent_dim=128):
         super(GAN, self).__init__()
 
+        # Initialize discriminator and generator, or use default if not provided
         if discriminator is None:
             discriminator = self.default_discriminator()
-
         if generator is None:
             generator = self.default_generator()
 
@@ -21,9 +30,13 @@ class GAN(tf.keras.Model):
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
         super(GAN, self).compile()
+
+        # Set optimizers and loss function for training
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.loss_fn = loss_fn
+
+        # Define metrics to track during training
         self.d_loss_metric = tf.keras.metrics.Mean(name="d_loss")
         self.g_loss_metric = tf.keras.metrics.Mean(name="g_loss")
 
@@ -36,17 +49,18 @@ class GAN(tf.keras.Model):
         batch_size = tf.shape(real_images)[0]
         random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
 
-        # Decode them to fake images
+        # Generate fake images using the generator
         generated_images = self.generator(random_latent_vectors)
 
-        # Combine them with real images
+        # Combine real and fake images
         combined_images = tf.concat([generated_images, real_images], axis=0)
 
-        # Assemble labels discriminating real from fake images
+        # Create labels for real and fake images
         labels = tf.concat(
             [tf.ones((batch_size, 1)), tf.zeros((batch_size, 1))], axis=0
         )
-        # Add random noise to the labels - important trick!
+
+        # Add random noise to labels to improve stability
         labels += 0.05 * tf.random.uniform(tf.shape(labels))
 
         # Train the discriminator
@@ -58,14 +72,13 @@ class GAN(tf.keras.Model):
             zip(grads, self.discriminator.trainable_weights)
         )
 
-        # Sample random points in the latent space
+        # Generate new random latent vectors
         random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
 
-        # Assemble labels that say "all real images"
+        # Create labels indicating "all real images" for generator training
         misleading_labels = tf.zeros((batch_size, 1))
 
-        # Train the generator (note that we should *not* update the weights
-        # of the discriminator)!
+        # Train the generator while keeping discriminator weights fixed
         with tf.GradientTape() as tape:
             predictions = self.discriminator(self.generator(random_latent_vectors))
             g_loss = self.loss_fn(misleading_labels, predictions)
@@ -75,12 +88,19 @@ class GAN(tf.keras.Model):
         # Update metrics
         self.d_loss_metric.update_state(d_loss)
         self.g_loss_metric.update_state(g_loss)
+
+        # Return updated loss metrics
         return {
             "d_loss": self.d_loss_metric.result(),
             "g_loss": self.g_loss_metric.result(),
         }
 
+    def call(self, inputs):
+        # Run generator
+        return self.generator(inputs)
+
     def default_generator(self, latent_dim=128):
+        # Define the default generator architecture
         return tf.keras.Sequential(
             [
                 tf.keras.Input(shape=(latent_dim,)),
@@ -98,6 +118,7 @@ class GAN(tf.keras.Model):
         )
 
     def default_discriminator(self):
+        # Define the default discriminator architecture
         return tf.keras.Sequential(
             [
                 tf.keras.Input(shape=(64, 64, 3)),

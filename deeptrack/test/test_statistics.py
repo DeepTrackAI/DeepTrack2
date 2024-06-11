@@ -22,6 +22,7 @@ def grid_test_features(
     feature_inputs,
     expected_result_function,
 ):
+    
 
     for f_a_input in feature_inputs:
 
@@ -40,6 +41,8 @@ def grid_test_features(
                     distributed=distributed,
                     q=lambda: np.random.rand(),
                 )
+                f_a.store_properties()
+                f_b.store_properties()
 
                 for f in [f_a, f_b]:
                     try:

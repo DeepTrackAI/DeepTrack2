@@ -188,7 +188,7 @@ class ContinuousGraphGenerator(ContinuousGenerator):
             # Clips node and edge solutions
             nodesol = labels[i][0][:cropTo]
             edgesol = labels[i][1][~edge_dropouts]
-            globsol = labels[i][2].astype(np.float)
+            globsol = labels[i][2].astype(float)
 
             inputs[0].append(nodef)
             inputs[1].append(edgef)

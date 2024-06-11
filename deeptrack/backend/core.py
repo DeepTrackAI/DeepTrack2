@@ -72,6 +72,7 @@ class DeepTrackDataDict:
         self.dict = {}
 
     def invalidate(self):
+        # self.dict = {}
         for d in self.dict.values():
             d.invalidate()
 
@@ -112,15 +113,15 @@ class DeepTrackDataDict:
 
         if self.keylength is None:
             raise KeyError("Indexing an empty dict")
+        
+        if len(_ID) == self.keylength:
+            return self.dict[_ID]
 
         elif len(_ID) > self.keylength:
             return self[_ID[: self.keylength]]
 
-        elif len(_ID) < self.keylength:
-            return {k: v for k, v in self.dict.items() if k[: len(_ID)] == _ID}
-
         else:
-            return self.dict[_ID]
+            return {k: v for k, v in self.dict.items() if k[: len(_ID)] == _ID}
 
     def __contains__(self, _ID):
         return _ID in self.dict
@@ -138,10 +139,20 @@ class DeepTrackNode:
 
     citation = deeptrack_bibtex
 
+    @property
+    def action(self):
+        return self._action
+    
+    @action.setter
+    def action(self, value):
+        self._action = value
+        self._accepts_ID = utils.get_kwarg_names(value).__contains__("_ID")
+
     def __init__(self, action=__nonelike_default, **kwargs):
         self.data = DeepTrackDataDict()
         self.children = WeakSet()
         self.dependencies = WeakSet()
+        self._action = lambda: None
 
         if action is not self.__nonelike_default:
             if callable(action):
@@ -149,15 +160,29 @@ class DeepTrackNode:
             else:
                 self.action = lambda: action
 
+        self._accepts_ID = utils.get_kwarg_names(self.action).__contains__("_ID")
         super().__init__(**kwargs)
+
+        self._all_subchildren = set()
+        self._all_subchildren.add(self)
 
     def add_child(self, other):
         self.children.add(other)
+        if not self in other.dependencies:
+            other.add_dependency(self)
+        
+        subchildren = other._all_subchildren.copy()
+        subchildren.add(other)
+
+        self._all_subchildren = self._all_subchildren.union(subchildren)
+        for parent in self.recurse_dependencies():
+            parent._all_subchildren = parent._all_subchildren.union(subchildren)
 
         return self
 
     def add_dependency(self, other):
         self.dependencies.add(other)
+        other.add_child(self)
 
         return self
 
@@ -171,7 +196,7 @@ class DeepTrackNode:
     def is_valid(self, _ID=()):
         try:
             return self.data[_ID].is_valid()
-        except KeyError:
+        except (KeyError, AttributeError):
             return False
 
     def valid_index(self, _ID):
@@ -208,7 +233,7 @@ class DeepTrackNode:
         # If set to same value, no need to invalidate
 
         if not (
-            self.is_valid(_ID=_ID) and equivalent(value, self.data[_ID].current_value())
+           self.is_valid(_ID=_ID) and equivalent(value, self.data[_ID].current_value())
         ):
             self.invalidate(_ID=_ID)
             self.store(value, _ID=_ID)
@@ -216,9 +241,15 @@ class DeepTrackNode:
         return self
 
     def previous(self, _ID=()):
-        return self.data[_ID].current_value()
+        if self.data.valid_index(_ID):
+            return self.data[_ID].current_value()
+        else:
+            return []
 
-    def recurse_children(self, memory=None):
+    def recurse_children(self, memory=set()):
+        return self._all_subchildren
+
+    def old_recurse_children(self, memory=None):
         # On first call, instantiate memory
         if memory is None:
             memory = []
@@ -271,8 +302,12 @@ class DeepTrackNode:
                 return self.current_value(_ID)
             except KeyError:
                 pass
+        
+        if self._accepts_ID:
+            new_value = self.action(_ID=_ID)
+        else:
+            new_value = self.action()
 
-        new_value = utils.safe_call(self.action, _ID=_ID)
         self.store(new_value, _ID=_ID)
         return self.current_value(_ID)
 
@@ -281,6 +316,12 @@ class DeepTrackNode:
 
     def __hash__(self):
         return id(self)
+
+    def __getitem__(self, idx):
+        node = DeepTrackNode(lambda _ID=None: self(_ID=_ID)[idx])
+        node.add_dependency(self)
+        self.add_child(node)
+        return node
 
     # node-node operators
     def __add__(self, other):

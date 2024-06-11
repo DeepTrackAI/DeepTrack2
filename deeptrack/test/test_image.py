@@ -10,7 +10,13 @@ from ..features import Feature
 import numpy as np
 import itertools
 import operator as ops
-import tensorflow as tf
+
+TF_BINDINGS_AVAILABLE = True
+try:
+    from ..backend import tensorflow_bindings
+    tensorflow_bindings.implements_tf
+except ImportError:
+    TF_BINDINGS_AVAILABLE = False
 
 
 class TestImage(unittest.TestCase):
@@ -228,6 +234,10 @@ class TestImage(unittest.TestCase):
         self.assertEqual(a.shape, (2, 2, 2))
 
     def test_square_Tensor(self):
+
+        if not TF_BINDINGS_AVAILABLE:
+            return
+        import tensorflow as tf
         a = tf.constant([-1, 0, 2])
         A = Image(a)
         A.append({"name": a})
@@ -240,6 +250,9 @@ class TestImage(unittest.TestCase):
         np.testing.assert_array_almost_equal(B.numpy(), np.array([1, 0, 4]))
 
     def test_reducer_Tensor(self):
+        if not TF_BINDINGS_AVAILABLE:
+            return
+        import tensorflow as tf
         a = tf.constant([[-1, 1], [4, 4]])
         A = Image(a)
         A.append({"name": a})
@@ -253,12 +266,20 @@ class TestImage(unittest.TestCase):
 
     def test_Image(self):
         particle = self.Particle(position=(128, 128))
+        particle.store_properties()
         input_image = Image(np.zeros((256, 256)))
         output_image = particle.resolve(input_image)
         self.assertIsInstance(output_image, Image)
 
+    def test_Image_not_store(self):
+        particle = self.Particle(position=(128, 128))
+        input_image = Image(np.zeros((256, 256)))
+        output_image = particle.resolve(input_image)
+        self.assertIsInstance(output_image, np.ndarray)
+
     def test_Image_properties(self):
         particle = self.Particle(position=(128, 128))
+        particle.store_properties()
         input_image = Image(np.zeros((256, 256)))
         output_image = particle.resolve(input_image)
         properties = output_image.properties
@@ -269,6 +290,7 @@ class TestImage(unittest.TestCase):
 
     def test_Image_get_property(self):
         particle = self.Particle(position=(128, 128))
+        particle.store_properties()
         input_image = Image(np.zeros((256, 256)))
         output_image = particle.resolve(input_image)
 
@@ -280,6 +302,7 @@ class TestImage(unittest.TestCase):
 
     def test_Image_append(self):
         particle = self.Particle(position=(128, 128))
+        particle.store_properties()
         input_image = Image(np.zeros((256, 256)))
         output_image = particle.resolve(input_image)
 
@@ -300,6 +323,7 @@ class TestImage(unittest.TestCase):
 
     def test_Image_merge_properties_from(self):
         particle = self.Particle(position=(128, 128))
+        particle.store_properties()
         input_image = Image(np.zeros((256, 256)))
         output_image1 = particle.resolve(input_image)
         output_image2 = particle.resolve(input_image)

@@ -21,6 +21,7 @@ class TestAugmentations(unittest.TestCase):
     def test_FlipLR(self):
         feature = self.DummyFeature()
         augmented_feature = augmentations.FlipLR(feature)
+
         augmented_feature.update()
         output_1 = augmented_feature.resolve()
         augmented_feature.update()
@@ -64,6 +65,7 @@ class TestAugmentations(unittest.TestCase):
         )
 
         pipe = opt(particle) >> augmentation
+        pipe.store_properties(True)
 
         for _ in range(10):
             image = pipe.update().resolve()
@@ -76,6 +78,9 @@ class TestAugmentations(unittest.TestCase):
             self.assertLess(dist, 3)
 
     def test_ElasticTransformation(self):
+        np.random.seed(1000)
+        import random
+        random.seed(1000)
         # 3D input
         im = np.zeros((10, 8, 2))
         transformer = augmentations.ElasticTransformation(
