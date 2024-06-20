@@ -733,6 +733,7 @@ class Brightfield(Optics):
 
 Holography = Brightfield
 
+
 class ISCAT(Brightfield):
     """Images coherently illuminated samples using ISCAT.
 
@@ -767,15 +768,40 @@ class ISCAT(Brightfield):
         A feature-set resolving the pupil function at focus. The feature-set
         receive an unaberrated pupil as input.
 
+    Attributes
+    ----------
+    illumination_angle : float
+        The angle of illumination for ISCAT imaging. Default is π radians.
+
+    amp_factor : float
+        The amplitude factor of the field. Default is 1.
+
+    input_polarization : str
+        The polarization of the input field. For ISCAT, this should be 'circular'.
+    
+    output_polarization : str
+        The polarization of the output field. For ISCAT, this should be 'circular'.
+    
+    phase_shift_correction : bool
+        If True, the phase shift correction is applied. For ISCAT, this should be True.
+
     """
 
-    def __init__(self, epsilon_iscat=1, illumination_angle = np.pi, **kwargs):
+    def __init__(
+            self,
+            illumination_angle = np.pi,
+            amp_factor = 1, 
+            **kwargs
+            ):
 
         super().__init__(
-            is_iscat = True, 
-            illumination_angle = illumination_angle,
-            epsilon_iscat = epsilon_iscat,
-            **kwargs)
+            input_polarization="circular",
+            output_polarization="circular",
+            phase_shift_correction=True,
+            illumination_angle=illumination_angle,
+            amp_factor=amp_factor,
+            **kwargs
+            )
         
 class Darkfield(Brightfield):
     """Images coherently illuminated samples using Darkfield.
@@ -811,16 +837,45 @@ class Darkfield(Brightfield):
         A feature-set resolving the pupil function at focus. The feature-set
         receive an unaberrated pupil as input.
 
+    Attributes
+    ----------
+    illumination_angle : float
+        The angle of illumination for darkfield imaging. Default is π/2 radians.
+
     """
 
-    def __init__(self, illumination_angle = np.pi/2, **kwargs):
+    def __init__(
+            self, 
+            illumination_angle = np.pi/2, 
+            **kwargs
+            ):
         super().__init__(
-            illumination_angle = illumination_angle,
+            illumination_angle=illumination_angle,
             **kwargs)
 
     #Retrieve get as super
     def get(self, illuminated_volume, limits, fields, **kwargs):
-        field = super().get(illuminated_volume, limits, fields, return_field = True, **kwargs)
+        """Retrieve the darkfield image of the illuminated volume.
+
+        Parameters
+        ----------
+        illuminated_volume : array_like
+            The volume of the sample being illuminated.
+        limits : array_like
+            The spatial limits of the volume.
+        fields : array_like
+            The fields interacting with the sample.
+        **kwargs : dict
+            Additional parameters passed to the super class's get method.
+
+        Returns
+        -------
+        numpy.ndarray
+            The darkfield image obtained by calculating the squared absolute
+            difference from 1.
+        """
+
+        field = super().get(illuminated_volume, limits, fields, return_field=True, **kwargs)
         return np.square(np.abs(field-1))
 
 
