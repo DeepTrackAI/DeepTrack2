@@ -767,23 +767,11 @@ class ISCAT(Brightfield):
     pupil : Feature
         A feature-set resolving the pupil function at focus. The feature-set
         receive an unaberrated pupil as input.
-
-    Attributes
-    ----------
     illumination_angle : float
-        The angle of illumination for ISCAT imaging. Default is π radians.
-
+        The angle relative to the optical axis. Default is π radians in ISCAT.
     amp_factor : float
-        The amplitude factor of the field. Default is 1.
-
-    input_polarization : str
-        The polarization of the input field. For ISCAT, this should be 'circular'.
-    
-    output_polarization : str
-        The polarization of the output field. For ISCAT, this should be 'circular'.
-    
-    phase_shift_correction : bool
-        If True, the phase shift correction is applied. For ISCAT, this should be True.
+        The amplitude factor of the field. Default is 1. 
+        The relative amplitude off the illuminating field and the reference field.
 
     """
 
@@ -795,11 +783,11 @@ class ISCAT(Brightfield):
             ):
 
         super().__init__(
+            illumination_angle=illumination_angle,
+            amp_factor=amp_factor,
             input_polarization="circular",
             output_polarization="circular",
             phase_shift_correction=True,
-            illumination_angle=illumination_angle,
-            amp_factor=amp_factor,
             **kwargs
             )
         
@@ -836,11 +824,8 @@ class Darkfield(Brightfield):
     pupil : Feature
         A feature-set resolving the pupil function at focus. The feature-set
         receive an unaberrated pupil as input.
-
-    Attributes
-    ----------
     illumination_angle : float
-        The angle of illumination for darkfield imaging. Default is π/2 radians.
+        The angle relative to the optical axis. Default is π/2 radians.
 
     """
 
