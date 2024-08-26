@@ -489,10 +489,12 @@ class MieScatterer(Scatterer):
     input_polarization: float or Quantity
         Defines the polarization angle of the input. For simulating circularly
         polarized light we recommend a coherent sum of two simulated fields. For
-        unpolarized light we recommend a incoherent sum of two simulated fields.
+        unpolarized light we recommend a incoherent sum of two simulated fields. 
+        If defined as "circular", the coefficients are set to 1/2.
     output_polarization: float or Quantity or None
         If None, the output light is not polarized. Otherwise defines the angle of the
         polarization filter after the sample. For off-axis, keep the same as input_polarization.
+        If defined as "circular", the coefficients are multiplied by 1. I.e. no change.
     L : int or str
         The number of terms used to evaluate the mie theory. If `"auto"`,
         it determines the number of terms automatically.
@@ -507,8 +509,16 @@ class MieScatterer(Scatterer):
         If True, the feature returns the fft of the field, rather than the
         field itself.
     coherence_length : float
-        The temporal coherence length of a partially coherent light given in meters. If None, the illumination is
-        assumed to be coherent.
+        The temporal coherence length of a partially coherent light given in meters. 
+        If None, the illumination is assumed to be coherent.
+    amp_factor : float
+        A factor that scales the amplification of the field. 
+        This is useful for scaling the field to the correct intensity. Default is 1.
+    phase_shift_correction : bool
+        If True, the feature applies a phase shift correction to the output field. 
+        This is necessary for ISCAT simulations. 
+        The correction depends on the k-vector and z according to the formula: 
+        arr*=np.exp(1j * k * z + 1j * np.pi / 2)
     """
 
     __gpu_compatible__ = True
@@ -540,6 +550,9 @@ class MieScatterer(Scatterer):
         position_objective=(0, 0),
         return_fft=False,
         coherence_length=None,
+        illumination_angle=0,
+        amp_factor=1,
+        phase_shift_correction=False,
         **kwargs,
     ):
         if polarization_angle is not None:
@@ -569,6 +582,9 @@ class MieScatterer(Scatterer):
             position_objective=position_objective,
             return_fft=return_fft,
             coherence_length=coherence_length,
+            illumination_angle=illumination_angle,
+            amp_factor=amp_factor,
+            phase_shift_correction=phase_shift_correction,
             **kwargs,
         )
 
@@ -617,7 +633,7 @@ class MieScatterer(Scatterer):
     def get_detector_mask(self, X, Y, radius):
         return np.sqrt(X**2 + Y**2) < radius
 
-    def get_plane_in_polar_coords(self, shape, voxel_size, plane_position):
+    def get_plane_in_polar_coords(self, shape, voxel_size, plane_position, illumination_angle):
 
         X, Y = self.get_XY(shape, voxel_size)
         X = image.maybe_cupy(X)
@@ -633,9 +649,10 @@ class MieScatterer(Scatterer):
 
         # get the angles
         cos_theta = Z / R3
+        illumination_cos_theta=np.cos(np.arccos(cos_theta)+illumination_angle)
         phi = np.arctan2(Y, X)
 
-        return R3, cos_theta, phi
+        return R3, cos_theta, illumination_cos_theta, phi
 
     def get(
         self,
@@ -657,9 +674,11 @@ class MieScatterer(Scatterer):
         return_fft,
         coherence_length,
         output_region,
+        illumination_angle,
+        amp_factor,
+        phase_shift_correction,
         **kwargs,
     ):
-
         # Get size of the output
         xSize, ySize = self.get_xy_size(output_region, padding)
         voxel_size = get_active_voxel_size()
@@ -683,9 +702,10 @@ class MieScatterer(Scatterer):
         )
 
         # get field evaluation plane at offset_z
-        R3_field, cos_theta_field, phi_field = self.get_plane_in_polar_coords(
-            arr.shape, voxel_size, relative_position * ratio
+        R3_field, cos_theta_field, illumination_angle_field, phi_field = self.get_plane_in_polar_coords(
+            arr.shape, voxel_size, relative_position * ratio, illumination_angle
         )
+        
         cos_phi_field, sin_phi_field = np.cos(phi_field), np.sin(phi_field)
         # x and y position of a beam passing through field evaluation plane on the objective
         x_farfield = (
@@ -706,14 +726,22 @@ class MieScatterer(Scatterer):
         cos_theta_field = cos_theta_field[pupil_mask]
         phi_field = phi_field[pupil_mask]
 
-        if isinstance(input_polarization, (float, int, Quantity)):
-
+        illumination_angle_field=illumination_angle_field[pupil_mask]
+        
+        if isinstance(input_polarization, (float, int, str, Quantity)):
             if isinstance(input_polarization, Quantity):
                 input_polarization = input_polarization.to("rad")
                 input_polarization = input_polarization.magnitude
 
-            S1_coef = np.sin(phi_field + input_polarization)
-            S2_coef = np.cos(phi_field + input_polarization)
+            if isinstance(input_polarization, (float, int)): 
+                S1_coef = np.sin(phi_field + input_polarization) 
+                S2_coef = np.cos(phi_field + input_polarization)
+
+            # If the input polarization is circular set the coefficients to 1/2.
+            elif isinstance(input_polarization, (str)):
+                if input_polarization == "circular":
+                    S1_coef = 1/2
+                    S2_coef = 1/2
 
         if isinstance(output_polarization, (float, int, Quantity)):
             if isinstance(input_polarization, Quantity):
@@ -721,14 +749,14 @@ class MieScatterer(Scatterer):
                 output_polarization = output_polarization.magnitude
 
             S1_coef *= np.sin(phi_field + output_polarization)
-            S2_coef *= np.cos(phi_field + output_polarization)
+            S2_coef *= np.cos(phi_field + output_polarization) * illumination_angle_field
 
         # Wave vector
         k = 2 * np.pi / wavelength * refractive_index_medium
 
         # Harmonics
         A, B = coefficients(L)
-        PI, TAU = D.mie_harmonics(cos_theta_field, L)
+        PI, TAU = D.mie_harmonics(illumination_angle_field, L)
 
         # Normalization factor
         E = [(2 * i + 1) / (i * (i + 1)) for i in range(1, L + 1)]
@@ -736,13 +764,17 @@ class MieScatterer(Scatterer):
         # Scattering terms
         S1 = sum([E[i] * A[i] * PI[i] + E[i] * B[i] * TAU[i] for i in range(0, L)])
         S2 = sum([E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)])
-
+        
         arr[pupil_mask] = (
             -1j
             / (k * R3_field)
             * np.exp(1j * k * R3_field)
             * (S2 * S2_coef + S1 * S1_coef)
-        )
+        ) / amp_factor
+        
+        # For phase shift correction (a multiplication of the field by exp(1j * k * z)).
+        if phase_shift_correction:
+            arr *= np.exp(1j * k * z + 1j * np.pi / 2)
 
         # For partially coherent illumination
         if coherence_length:
@@ -778,6 +810,7 @@ class MieScatterer(Scatterer):
             ),
         )
         fourier_field = fourier_field * propagation_matrix * np.exp(-1j * k * offset_z)
+
         if return_fft:
             return fourier_field[..., np.newaxis]
         else:
