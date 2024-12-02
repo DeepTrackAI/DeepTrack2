@@ -177,7 +177,8 @@ class Piston(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
     ):
         super().__init__(*args, n=0, m=0, coefficient=coefficient, **kwargs)
 
@@ -192,7 +193,8 @@ class VerticalTilt(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
     ):
         super().__init__(*args, n=1, m=-1, coefficient=coefficient, **kwargs)
 
@@ -207,7 +209,8 @@ class HorizontalTilt(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
     ):
         super().__init__(*args, n=1, m=1, coefficient=coefficient, **kwargs)
 
@@ -222,7 +225,8 @@ class ObliqueAstigmatism(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
     ):
         super().__init__(*args, n=2, m=-2, coefficient=coefficient, **kwargs)
 
@@ -237,7 +241,8 @@ class Defocus(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
     ):
         super().__init__(*args, n=2, m=0, coefficient=coefficient, **kwargs)
 
@@ -252,7 +257,8 @@ class Astigmatism(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
     ):
         super().__init__(*args, n=2, m=2, coefficient=coefficient, **kwargs)
 
@@ -267,7 +273,8 @@ class ObliqueTrefoil(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
     ):
         super().__init__(*args, n=3, m=-3, coefficient=coefficient, **kwargs)
 
@@ -282,7 +289,8 @@ class VerticalComa(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
     ):
         super().__init__(*args, n=3, m=-1, coefficient=coefficient, **kwargs)
 
@@ -297,7 +305,8 @@ class HorizontalComa(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
     ):
         super().__init__(*args, n=3, m=1, coefficient=coefficient, **kwargs)
 
@@ -312,7 +321,8 @@ class Trefoil(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
     ):
         super().__init__(*args, n=3, m=3, coefficient=coefficient, **kwargs)
 
@@ -327,6 +337,7 @@ class SphericalAberration(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1, **kwargs
+        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        **kwargs
     ):
         super().__init__(*args, n=4, m=0, coefficient=coefficient, **kwargs)
