@@ -20,6 +20,10 @@ DEFAULT_EQUIVARIANCE = Rotational2DEquivariance(b.rotate) >> TranslationalEquiva
     a.translate
 )
 
+DEFAULT_TRANSFORMATION_FUNCTION.store_properties()
+DEFAULT_EQUIVARIANCE.store_properties()
+
+
 
 class LodeSTARGenerator(ContinuousGenerator):
     """Data generator for use with an LodeSTARer.
