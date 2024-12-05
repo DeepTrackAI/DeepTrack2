@@ -1,4 +1,4 @@
-""" Type declarations for internal use.
+"""Type declarations for internal use.
 
 This module defines type aliases and utility types to standardize the type 
 annotations used throughout the codebase. It enhances code readability, 
