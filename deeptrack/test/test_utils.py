@@ -21,7 +21,6 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(utils.isiterable(iterable_obj))
 
     def test_as_list(self):
-
         obj = 1
         self.assertEqual(utils.as_list(obj), [obj])
 
