@@ -1,11 +1,16 @@
-""" Mathematical oprations and structures
+"""Mathematical operations and structures.
 
-Classses
---------
+This module provides classes and utilities to perform common mathematical 
+operations and transformations on images, including clipping, normalization, 
+blurring, and pooling. These are implemented as subclasses of `Feature` for 
+seamless integration with the  feature-based design of the library.
+
+Classes
+-------
 Clip
-    Clip the input within a minimum and a maximum value.
+    Clip the input values within a specified minimum and maximum range.
 NormalizeMinMax
-    Min-max image normalization.
+    Perform min-max normalization on images.
 """
 
 from typing import Callable, List
