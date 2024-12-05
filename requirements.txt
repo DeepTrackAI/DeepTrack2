@@ -6,7 +6,7 @@ pydata-sphinx-theme
 numpydoc
 scikit-image
 more_itertools
-pint<0.20
+pint
 pandas
 tqdm
 lazy_import
