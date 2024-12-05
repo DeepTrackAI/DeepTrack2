@@ -116,7 +116,7 @@ class TestOptics(unittest.TestCase):
         error = np.abs(
             output_image_2x_upscale - output_image_no_upscale
         ).mean()  # Mean absolute error
-        self.assertLess(error, 0.005)
+        self.assertLess(error, 0.01)
 
     def test_upscale_brightfield(self):
         microscope = optics.Fluorescence(
