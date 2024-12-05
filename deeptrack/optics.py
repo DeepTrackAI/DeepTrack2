@@ -16,7 +16,7 @@ Brightfield
 """
 
 
-from pint.quantity import Quantity
+from pint import Quantity
 from deeptrack.backend.units import (
     ConversionTable,
     create_context,
