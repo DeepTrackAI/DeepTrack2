@@ -1,13 +1,10 @@
-import sys
-
-# sys.path.append(".")  # Adds the module to path
-
 import unittest
 
 from .. import utils
 
 
 class TestUtils(unittest.TestCase):
+    
     def test_hasmethod(self):
         self.assertTrue(utils.hasmethod(utils, "hasmethod"))
         self.assertFalse(
