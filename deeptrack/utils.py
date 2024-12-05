@@ -1,20 +1,24 @@
-""" Utility functions
+"""Utility functions.
 
-Defines a set of utility functions used throughout the code
-to make it more readable.
+This module defines utility functions that enhance code readability, 
+streamline common operations, and ensure type and argument consistency.
 
 Functions
 ---------
-hasfunction(obj: any, function_name: str) -> bool
-    Return True if the object has a field named function_name
-    that is callable. Otherwise, return False.
-isiterable(obj: any)
+hasmethod(obj: any, method_name: str) -> bool
+    Return True if the object has a field named `function_name` that is 
+    callable. Otherwise, return False.
+isiterable(obj: any) -> bool
     Return True if the object is iterable. Else, return False.
-as_list(obj: any)
-    If the input is iterable, convert it to list.
+as_list(obj: any) -> list
+    If the input is iterable, convert it to list. 
     Otherwise, wrap the input in a list.
-get_kwarg_names(function: Callable)
-    Return the names of the keyword arguments the function accepts.
+get_kwarg_names(function: Callable) -> List[str]
+    Retrieves the names of the keyword arguments accepted by a function.
+kwarg_has_default(function: Callable, argument: str) -> bool
+    Checks if a specific argument of a function has a default value.
+safe_call(function, positional_args=[], **kwargs)
+    Calls a function, passing only valid arguments from the provided kwargs.
 """
 
 import inspect
