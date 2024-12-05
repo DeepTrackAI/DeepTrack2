@@ -52,12 +52,12 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
   <img width="300" src=/assets/SPT-ideal.gif?raw=true>
   <img width="300" src=/assets/SPT-noisy.gif?raw=true>
   <br/>
-  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/2-single_particle_tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a CNN-based single particle tracker using simulated data </a>
+  <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/paper-examples/2-single_particle_tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a CNN-based single particle tracker using simulated data </a>
   <br/>
   <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="DOI lodestar">
     <img src="https://img.shields.io/badge/DOI-10.1038%2Fs41467--022--35004--y-blue">
   </a> 
-  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/02.%20tracking_particles_of_various_shapes.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Unsupervised training of a single particle tracker using LodeSTAR </a> 
+  <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/LodeSTAR/02.%20tracking_particles_of_various_shapes.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Unsupervised training of a single particle tracker using LodeSTAR </a> 
   
 </p>
 <br/>
@@ -69,9 +69,9 @@ DeepTrack is a general purpose deep learning framework for microscopy, meaning y
   <br/>
   <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="DOI lodestar">
     <img src="https://img.shields.io/badge/DOI-10.1038%2Fs41467--022--35004--y-blue">
-  </a> <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training LodeSTAR to detect multiple cells from a single image </a>
+  </a> <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training LodeSTAR to detect multiple cells from a single image </a>
   <br/>
-  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/paper-examples/4-multi-molecule-tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a UNet-based multi-particle tracker using simulated data </a> 
+  <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/paper-examples/4-multi-molecule-tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a UNet-based multi-particle tracker using simulated data </a> 
 </p>
 <br/>
 
@@ -93,19 +93,19 @@ Everybody learns in different ways! Depending on your preferences, and what you 
 
 We have two separate series of notebooks which aims to teach you all you need to know to use DeepTrack to its fullest. The first is a set of six notebooks with a focus on the application.
 
-1. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/get-started/01.%20deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> deeptrack_introduction_tutorial </a>  gives an overview of how to use DeepTrack 2.1.
-2. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/tracking_particle_cnn_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> demonstrates how to track a point particle with a convolutional neural network (CNN).
-3. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorial/tracking_multiple_particles_unet_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> demonstrates how to track multiple particles using a U-net.
-4. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/characterizing_aberrations_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> characterizing_aberrations_tutorial </a> demonstrates how to add and characterize aberrations of an optical device. 
-5. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/distinguishing_particles_in_brightfield_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> distinguishing_particles_in_brightfield_tutorial </a> demonstrates how to use a U-net to track and distinguish particles of different sizes in brightfield microscopy. 
-6. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/tutorials/analyzing_video_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> analyzing_video_tutorial </a> demonstrates how to create videos and how to train a neural network to analyze them.
+1. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/get-started/01.%20deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> deeptrack_introduction_tutorial </a>  gives an overview of how to use DeepTrack 2.1.
+2. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorials/tracking_particle_cnn_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> demonstrates how to track a point particle with a convolutional neural network (CNN).
+3. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorial/tracking_multiple_particles_unet_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> demonstrates how to track multiple particles using a U-net.
+4. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorials/characterizing_aberrations_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> characterizing_aberrations_tutorial </a> demonstrates how to add and characterize aberrations of an optical device. 
+5. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorials/distinguishing_particles_in_brightfield_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> distinguishing_particles_in_brightfield_tutorial </a> demonstrates how to use a U-net to track and distinguish particles of different sizes in brightfield microscopy. 
+6. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorials/analyzing_video_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> analyzing_video_tutorial </a> demonstrates how to create videos and how to train a neural network to analyze them.
 
 
 The second series focuses on individual topics, introducing them in a natural order. 
 
-1. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/get-started/01.%20deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Introducing how to create simulation pipelines and train models. </a>
-2. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/get-started/02.%20using_deeptrack_generators.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Demonstrating data generators. </a> 
-3. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/master/examples/get-started/03.%20customizing_deeptrack_models.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Demonstrating how to customize models using layer-blocks. </a> 
+1. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/get-started/01.%20deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Introducing how to create simulation pipelines and train models. </a>
+2. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/get-started/02.%20using_deeptrack_generators.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Demonstrating data generators. </a> 
+3. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/get-started/03.%20customizing_deeptrack_models.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Demonstrating how to customize models using layer-blocks. </a> 
 
 ## DeepTrack 2.1 in action
 
