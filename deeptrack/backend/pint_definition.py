@@ -38,6 +38,15 @@ This file is derived from the default Pint files with the adjustments:
 2. Final Variables Added: Defines constants and variables required for the 
     project-specific context (e.g., pixel-related units).
 
+Usage:
+------
+To create a unit registry with custom pixel-related units:
+
+>>> from pint import UnitRegistry
+>>> from .backend.pint_definition import pint_definition
+>>>
+>>> units = UnitRegistry(pint_definition.split("\n"))
+
 """
 
 
