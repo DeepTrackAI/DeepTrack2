@@ -1,9 +1,6 @@
 numpy
 matplotlib
 scipy
-Sphinx==2.2.0
-pydata-sphinx-theme
-numpydoc
 scikit-image
 more_itertools
 pint
