@@ -1,27 +1,13 @@
 # flake8: noqa
 import lazy_import
-from pint import UnitRegistry
 
-from .backend.pint_definition import pint_definitions
+from pint import UnitRegistry
+from .backend.pint_definitions import pint_definitions
+
+# Create a unit registry with custom pixel-related units.
 units = UnitRegistry(pint_definitions.split("\n"))
 
-'''# Create a UnitRegistry and add custom units.
-units = UnitRegistry()
-del units._units["pixel"]
-del units._units["px"]
-custom_units = [
-    "pixel = 1 micrometer = px",
-    "xpixel = 1 micrometer = xpx",
-    "ypixel = 1 micrometer = ypx",
-    "zpixel = 1 micrometer = zpx",
-    "simulation_xpixel = 1 micrometer = sxpx",
-    "simulation_ypixel = 1 micrometer = sypx",
-    "simulation_zpixel = 1 micrometer = szpx",
-]
-for unit in custom_units:
-    units.define(unit)'''
-
-'''# Check if tensorflow is installed without importing it
+'''# Check if tensorflow is installed without importing it #TBE
 import pkg_resources
 
 installed = [pkg.key for pkg in pkg_resources.working_set]
