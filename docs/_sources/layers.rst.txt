@@ -1,5 +1,0 @@
-layers
-======
-
-.. automodule:: deeptrack.layers
-
