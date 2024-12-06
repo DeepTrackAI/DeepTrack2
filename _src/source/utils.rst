@@ -21,11 +21,6 @@ hasmethod
 
 .. autofunction:: deeptrack.utils.hasmethod
 
-isiterable
-^^^^^^^^^^
-
-.. autofunction:: deeptrack.utils.isiterable
-
 kwarg_has_default
 ^^^^^^^^^^^^^^^^^
 
