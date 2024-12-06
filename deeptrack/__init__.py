@@ -1,11 +1,22 @@
 # flake8: noqa
-from pint import UnitRegistry, Context
-from .backend.pint_definition import pint_definitions
 import lazy_import
-import importlib
+from pint import UnitRegistry
 
+'''units = UnitRegistry(pint_definitions.split("\n"))'''#TBE
 
-units = UnitRegistry(pint_definitions.split("\n"))
+# Create a UnitRegistry and add custom units.
+units = UnitRegistry()
+custom_units = [
+    "pixel = 1 micrometer = px",  ### Can this be erased?
+    "xpixel = 1 micrometer = xpx",  ### why these are defined as 1 um?
+    "ypixel = 1 micrometer = ypx",
+    "zpixel = 1 micrometer = zpx",
+    "simulation_xpixel = 1 micrometer = sxpx",
+    "simulation_ypixel = 1 micrometer = sypx",
+    "simulation_zpixel = 1 micrometer = szpx"
+]
+for unit in custom_units:
+    units.define(unit)
 
 '''# Check if tensorflow is installed without importing it
 import pkg_resources
