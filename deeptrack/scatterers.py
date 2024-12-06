@@ -65,7 +65,7 @@ class Scatterer(Feature):
         A default value of the characteristic of the particle. Used by
         optics unless a more direct property is set (eg. `refractive_index`
         for `Brightfield` and `intensity` for `Fluorescence`).
-    position_unit : "meter" or "pixel"
+    position_unit : "meter" or "img_pixel"
         The unit of the provided position property.
 
     Other Parameters
@@ -90,7 +90,7 @@ class Scatterer(Feature):
         position: PropertyLike[ArrayLike[float]] = (32, 32),
         z: PropertyLike[float] = 0.0,
         value: PropertyLike[float] = 1.0,
-        position_unit: PropertyLike[str] = "pixel",
+        position_unit: PropertyLike[str] = "img_pixel",
         upsample: PropertyLike[int] = 1,
         voxel_size=None,
         pixel_size=None,

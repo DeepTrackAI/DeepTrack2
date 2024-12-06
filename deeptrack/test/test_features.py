@@ -963,7 +963,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(volume_1.get_property("position"), positions_no_unit[0])
         self.assertEqual(
             volume_2.get_property("position"),
-            positions_with_unit[0].to("px").magnitude,
+            positions_with_unit[0].to("ipx").magnitude,
         )
 
         nonOverlapping._resample_volume_position(volume_1)
@@ -972,7 +972,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(volume_1.get_property("position"), positions_no_unit[1])
         self.assertEqual(
             volume_2.get_property("position"),
-            positions_with_unit[1].to("px").magnitude,
+            positions_with_unit[1].to("ipx").magnitude,
         )
 
     def test_NonOverlapping_check_volumes_non_overlapping(self):

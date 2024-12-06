@@ -2313,7 +2313,7 @@ class NonOverlapping(Feature):
             if "position" in pdict and "_position_sampler" in pdict:
                 new_position = pdict["_position_sampler"]()
                 if isinstance(new_position, Quantity):
-                    new_position = new_position.to("pixel").magnitude
+                    new_position = new_position.to("img_pixel").magnitude
                 pdict["position"] = new_position
 
         return volume
