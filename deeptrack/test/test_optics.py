@@ -30,7 +30,7 @@ class TestOptics(unittest.TestCase):
         )
         scatterer = PointParticle(
             intensity=100,  # Squared magnitude of the field.
-            position_unit="pixel",  # Units of position (default meter)
+            position_unit="img_pixel",  # Units of position (default meter)
             position=(32, 32),  # Position of the particle
         )
         imaged_scatterer = microscope(scatterer)
@@ -52,7 +52,7 @@ class TestOptics(unittest.TestCase):
         )
         scatterer = PointParticle(
             refractive_index=1.45 + 0.1j,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
         )
         imaged_scatterer = microscope(scatterer)
@@ -76,7 +76,7 @@ class TestOptics(unittest.TestCase):
         )
         scatterer = PointParticle(
             refractive_index=1.45 + 0.1j,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
         )
         imaged_scatterer = microscope(scatterer)
@@ -100,7 +100,7 @@ class TestOptics(unittest.TestCase):
             refractive_index=1.45,
             radius=1e-6,
             z=2 * u.um,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
         )
 
@@ -134,7 +134,7 @@ class TestOptics(unittest.TestCase):
             intensity=100,
             radius=1e-6,
             z=2 * u.um,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
         )
 

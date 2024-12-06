@@ -23,7 +23,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.PointParticle(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
         )
         imaged_scatterer = optics(scatterer)
@@ -41,7 +41,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Ellipse(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=(1e-6, 0.5e-6),
             rotation=np.pi / 4,
@@ -63,7 +63,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Ellipse(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=(1e-6, 0.5e-6),
         )
@@ -82,7 +82,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Ellipse(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=(1e-6, 0.5e-6),
         )
@@ -102,7 +102,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Ellipse(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=(1e-6, 1e-6),
         )
@@ -121,7 +121,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Ellipse(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=(1e-6, 1e-6),
         )
@@ -140,7 +140,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Sphere(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=1e-6,
             upsample=4,
@@ -162,7 +162,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Sphere(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=1e-6,
         )
@@ -181,7 +181,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Ellipsoid(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=(1e-6, 0.5e-6, 0.25e-6),
             rotation=(np.pi / 4, 0, 0),
@@ -203,7 +203,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Ellipsoid(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=(1e-6, 0.5e-6, 0.25e-6),
             # rotation=(np.pi / 4, 0, 0),
@@ -224,7 +224,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Ellipsoid(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=(1e-6, 0.5e-6, 0.25e-6),
             # rotation=(np.pi / 4, 0, 0),
@@ -244,7 +244,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Ellipsoid(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=(1e-6, 0.5e-6, 0.25e-6),
             # rotation=(np.pi / 4, 0, 0),
@@ -264,7 +264,7 @@ class TestScatterers(unittest.TestCase):
         )
         scatterer = scatterers.Ellipsoid(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(32, 32),
             radius=(1e-6, 0.5e-6, 0.25e-6),
             # rotation=(np.pi / 4, 0, 0),

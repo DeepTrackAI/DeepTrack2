@@ -15,7 +15,7 @@ from ..image import Image
 
 class TestAberrations(unittest.TestCase):
 
-    particle = PointParticle(position=(32, 32), position_unit="pixel", intensity=1)
+    particle = PointParticle(position=(32, 32), position_unit="img_pixel", intensity=1)
 
     def testGaussianApodization(self):
         aberrated_optics = Fluorescence(

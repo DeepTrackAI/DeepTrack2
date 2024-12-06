@@ -19,7 +19,7 @@ class TestSequences(unittest.TestCase):
             output_region=(0, 0, 32, 32),
         )
         ellipse = Ellipse(
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(16, 16),
             intensity=1,
             radius=(1.5e-6, 1e-6),
@@ -51,7 +51,7 @@ class TestSequences(unittest.TestCase):
             output_region=(0, 0, 32, 32),
         )
         ellipse = Ellipse(
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=(16, 16),
             radius=(1.5e-6, 1e-6),
             rotation=0,  # This will be the value at time 0.
@@ -87,7 +87,7 @@ class TestSequences(unittest.TestCase):
             output_region=(0, 0, 32, 32),
         )
         ellipse = Ellipse(
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=lambda: np.random.randn(2) * 4 + (16, 16),
             radius=(1.5e-6, 1e-6),
             rotation=0,  # This will be the value at time 0.
@@ -135,7 +135,7 @@ class TestSequences(unittest.TestCase):
             output_region=(0, 0, 32, 32),
         )
         ellipse = Ellipse(
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=lambda _ID: positions[_ID[-1]],
             radius=(1.5e-6, 1e-6),
             rotation=0,  # This will be the value at time 0.

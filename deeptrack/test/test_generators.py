@@ -28,7 +28,7 @@ class TestGenerators(unittest.TestCase):
         )
         scatterer = PointParticle(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=lambda: np.random.rand(2) * 128,
         )
         imaged_scatterer = optics(scatterer)
@@ -59,7 +59,7 @@ class TestGenerators(unittest.TestCase):
         )
         scatterer = PointParticle(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=lambda: np.random.rand(2) * 128,
         )
         imaged_scatterer = optics(scatterer)
@@ -89,12 +89,12 @@ class TestGenerators(unittest.TestCase):
         )
         scatterer_A = PointParticle(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=lambda: np.random.rand(2) * 128,
         )
         scatterer_B = PointParticle(
             intensity=10,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=lambda: np.random.rand(2) * 128,
         )
         imaged_scatterer_A = optics(scatterer_A)
@@ -135,7 +135,7 @@ class TestGenerators(unittest.TestCase):
         )
         scatterer = PointParticle(
             intensity=100,
-            position_unit="pixel",
+            position_unit="img_pixel",
             position=lambda: np.random.rand(2) * 128,
         )
         imaged_scatterer = optics(scatterer)
