@@ -34,7 +34,7 @@ jobs:
       - name: Install deeplay
         if: ${{ matrix.install-deeplay == 'deeplay' }}
         run: |
-          python -m pip install deeplay
+          python -m pip install setuptools
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
