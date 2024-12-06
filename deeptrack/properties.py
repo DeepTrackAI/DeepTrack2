@@ -3,7 +3,6 @@
 
 import numpy as np
 from .utils import get_kwarg_names
-)
 
 
 from .backend.core import DeepTrackNode
