@@ -7,7 +7,7 @@ import deeptrack as dt
 import numpy as np
 
 # Centered particle with random radius
-particle = dt.Sphere(position=(14, 14), radius=5 * dt.units.px, z=0)
+particle = dt.Sphere(position=(14, 14), radius=5 * dt.units.ipx, z=0)
 
 particle = dt.Sequential(
     particle, z=lambda previous_value: previous_value + np.random.randn() * 3

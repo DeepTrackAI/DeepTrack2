@@ -946,7 +946,7 @@ class TestFeatures(unittest.TestCase):
         )
 
         positions_no_unit = [1, 2]
-        positions_with_unit = [1 * units.px, 2 * units.px]
+        positions_with_unit = [1 * units.ipx, 2 * units.ipx]
 
         positions_no_unit_iter = iter(positions_no_unit)
         positions_with_unit_iter = iter(positions_with_unit)
@@ -1170,53 +1170,53 @@ class TestFeatures(unittest.TestCase):
 
         # Two spheres at the same position
         volume_test0_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * units.ipx, position=(0, 0, 0) * units.ipx
         )()
         volume_test0_b = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * units.ipx, position=(0, 0, 0) * units.ipx
         )()
 
         # Two spheres of the same size, one under the other
         volume_test1_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * units.ipx, position=(0, 0, 0) * units.ipx
         )()
         volume_test1_b = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 10) * units.px
+            radius=5 * units.ipx, position=(0, 0, 10) * units.ipx
         )()
 
         # Two spheres of the same size, one under the other, but with a
         # spacing of 1
         volume_test2_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * units.ipx, position=(0, 0, 0) * units.ipx
         )()
         volume_test2_b = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 11) * units.px
+            radius=5 * units.ipx, position=(0, 0, 11) * units.ipx
         )()
 
         # Two spheres of the same size, one under the other, but with a
         # spacing of -1
         volume_test3_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * units.ipx, position=(0, 0, 0) * units.ipx
         )()
         volume_test3_b = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 9) * units.px
+            radius=5 * units.ipx, position=(0, 0, 9) * units.ipx
         )()
 
         # Two spheres of the same size, diagonally next to each other
         volume_test4_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * units.ipx, position=(0, 0, 0) * units.ipx
         )()
         volume_test4_b = scatterers.Sphere(
-            radius=5 * units.px, position=(6, 6, 6) * units.px
+            radius=5 * units.ipx, position=(6, 6, 6) * units.ipx
         )()
 
         # Two spheres of the same size, diagonally next to each other, but
         # with a spacing of 1
         volume_test5_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * units.ipx, position=(0, 0, 0) * units.ipx
         )()
         volume_test5_b = scatterers.Sphere(
-            radius=5 * units.px, position=(7, 7, 7) * units.px
+            radius=5 * units.ipx, position=(7, 7, 7) * units.ipx
         )()
 
         # Run tests

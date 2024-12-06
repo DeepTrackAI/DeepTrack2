@@ -7,7 +7,7 @@ import deeptrack as dt
 import numpy as np
 
 # Centered particle with random radius
-particle = dt.Sphere(position=lambda: np.random.rand(2) * 32, radius=5 * dt.units.px)
+particle = dt.Sphere(position=lambda: np.random.rand(2) * 32, radius=5 * dt.units.ipx)
 
 optics = dt.Fluorescence(output_region=(0, 0, 32, 32))
 

@@ -8,7 +8,7 @@ import numpy as np
 
 # Centered particle with random radius
 particle = dt.Sphere(
-    position=(14, 14), radius=lambda: (3 + np.random.rand() * 3) * dt.units.px
+    position=(14, 14), radius=lambda: (3 + np.random.rand() * 3) * dt.units.ipx
 )
 
 optics = dt.Fluorescence(output_region=(0, 0, 28, 28))
