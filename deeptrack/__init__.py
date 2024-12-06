@@ -7,7 +7,7 @@ import importlib
 
 units = UnitRegistry(pint_definitions.split("\n"))
 
-# Check if tensorflow is installed without importing it
+'''# Check if tensorflow is installed without importing it
 import pkg_resources
 
 installed = [pkg.key for pkg in pkg_resources.working_set]
@@ -23,7 +23,7 @@ else:
     HAS_TORCH = False
 
 if HAS_TENSORFLOW and HAS_TORCH:
-    import torch # torch must be imported before tensorflow
+    import torch # torch must be imported before tensorflow'''
 
 from deeptrack.features import *
 from deeptrack.aberrations import *
