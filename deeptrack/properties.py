@@ -2,9 +2,7 @@
 """
 
 import numpy as np
-from .utils import (
-    isiterable,
-    get_kwarg_names,
+from .utils import get_kwarg_names
 )
 
 
