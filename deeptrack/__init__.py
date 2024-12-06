@@ -2,24 +2,18 @@
 import lazy_import
 from pint import UnitRegistry
 
-from .backend.pint_definition import pint_definitions
-units = UnitRegistry(pint_definitions.split("\n"))
+'''from .backend.pint_definition import pint_definitions
+units = UnitRegistry(pint_definitions.split("\n"))'''#TBE
 
-'''# Create a UnitRegistry and add custom units.
+# Create a UnitRegistry and add custom units.
 units = UnitRegistry()
-del units._units["pixel"]
-del units._units["px"]
-custom_units = [
-    "pixel = 1 micrometer = px",
-    "xpixel = 1 micrometer = xpx",
-    "ypixel = 1 micrometer = ypx",
-    "zpixel = 1 micrometer = zpx",
-    "simulation_xpixel = 1 micrometer = sxpx",
-    "simulation_ypixel = 1 micrometer = sypx",
-    "simulation_zpixel = 1 micrometer = szpx",
-]
-for unit in custom_units:
-    units.define(unit)'''
+units.define("img_pixel = 1 * micrometer = ipx")
+units.define("xpixel = 1 * micrometer = xpx")
+units.define("ypixel = 1 * micrometer = ypx")
+units.define("zpixel = 1 * micrometer = zpx")
+units.define("simulation_xpixel = 1 * micrometer = sxpx")
+units.define("simulation_ypixel = 1 * micrometer = sypx")
+units.define("simulation_zpixel = 1 * micrometer = szpx")
 
 '''# Check if tensorflow is installed without importing it
 import pkg_resources
