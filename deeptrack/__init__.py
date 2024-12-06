@@ -23,7 +23,7 @@ else:
     HAS_TORCH = False
 
 if HAS_TENSORFLOW and HAS_TORCH:
-    import torch # torch must be imported before tensorflow'''
+    import torch # torch must be imported before tensorflow'''#TBE
 
 from deeptrack.features import *
 from deeptrack.aberrations import *
