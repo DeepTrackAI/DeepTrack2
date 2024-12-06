@@ -6,14 +6,16 @@ from pint import UnitRegistry
 
 # Create a UnitRegistry and add custom units.
 units = UnitRegistry()
+del units._units["pixel"]
+del units._units["px"]
 custom_units = [
-    "pixel = 1 micrometer = px",  ### Can this be erased?
-    "xpixel = 1 micrometer = xpx",  ### why these are defined as 1 um?
+    "pixel = 1 micrometer = px",
+    "xpixel = 1 micrometer = xpx",
     "ypixel = 1 micrometer = ypx",
     "zpixel = 1 micrometer = zpx",
     "simulation_xpixel = 1 micrometer = sxpx",
     "simulation_ypixel = 1 micrometer = sypx",
-    "simulation_zpixel = 1 micrometer = szpx"
+    "simulation_zpixel = 1 micrometer = szpx",
 ]
 for unit in custom_units:
     units.define(unit)
