@@ -10,15 +10,7 @@ class TestUtils(unittest.TestCase):
         self.assertFalse(
             utils.hasmethod(utils, "this_is_definetely_not_a_method_of_utils")
         )
-
-    def test_isiterable(self):
-        self.assertFalse(utils.isiterable(1))
-
-        non_iterable_obj = ("apple", "banana", "cherry")
-        self.assertFalse(utils.isiterable(non_iterable_obj))
-
-        iterable_obj = iter(("apple", "banana", "cherry"))
-        self.assertTrue(utils.isiterable(iterable_obj))
+    
 
     def test_as_list(self):
         obj = 1
@@ -26,6 +18,7 @@ class TestUtils(unittest.TestCase):
 
         list_obj = [1, 2, 3]
         self.assertEqual(utils.as_list(list_obj), list_obj)
+
 
     def test_get_kwarg_names(self):
         def func1():
@@ -62,6 +55,7 @@ class TestUtils(unittest.TestCase):
             pass
 
         self.assertEqual(utils.get_kwarg_names(func7), ["key1", "key2", "key3"])
+
 
     def test_safe_call(self):
 

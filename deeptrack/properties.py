@@ -58,7 +58,7 @@ class Property(DeepTrackNode):
         if isinstance(sampling_rule, (tuple, np.ndarray)):
             return lambda _ID=(): sampling_rule
 
-        if isiterable(sampling_rule):
+        if hasattr(sampling_rule, "__next__"):
             # If it's iterable, return the next value
             def wrapped_iterator():
                 while True:

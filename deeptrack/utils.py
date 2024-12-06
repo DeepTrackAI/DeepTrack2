@@ -48,27 +48,6 @@ def hasmethod(obj: any, method_name: str) -> bool:
             and callable(getattr(obj, method_name, None)))
 
 
-def isiterable(obj: any) -> bool:
-    """Determine if the input object is iterable.
-    
-    Note that this checks for the presence of a `.__next__()` method, which may 
-    not cover all iterable objects. It could be updated if edge cases arise.
-
-    Parameters
-    ----------
-    obj : any
-        The object to check.
-
-    Returns
-    -------
-    bool
-        True if the object has `.__next__()` method.
-
-    """
-
-    return hasattr(obj, "__next__")
-
-
 def as_list(obj: any) -> list:
     """Ensure that the input is a list.
 
