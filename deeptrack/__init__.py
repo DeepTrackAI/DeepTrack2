@@ -2,10 +2,10 @@
 import lazy_import
 
 from pint import UnitRegistry
-from .backend.pint_definition import pint_definition
+from .backend.pint_definition import pint_definitions
 
 # Create a unit registry with custom pixel-related units.
-units = UnitRegistry(pint_definition.split("\n"))
+units = UnitRegistry(pint_definitions.split("\n"))
 
 '''# Check if tensorflow is installed without importing it #TBE
 import pkg_resources

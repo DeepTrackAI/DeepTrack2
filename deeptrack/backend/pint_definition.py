@@ -43,9 +43,9 @@ Usage:
 To create a unit registry with custom pixel-related units:
 
 >>> from pint import UnitRegistry
->>> from .backend.pint_definition import pint_definition
+>>> from .backend.pint_definition import pint_definitions
 >>>
->>> units = UnitRegistry(pint_definition.split("\n"))
+>>> units = UnitRegistry(pint_definitions.split("\n"))
 
 """
 
