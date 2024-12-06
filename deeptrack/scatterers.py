@@ -80,7 +80,7 @@ class Scatterer(Feature):
     __list_merge_strategy__ = MERGE_STRATEGY_APPEND
     __distributed__ = False
     __conversion_table__ = ConversionTable(
-        position=(u.pixel, u.pixel),
+        position=(u.img_pixel, u.img_pixel),
         z=(u.zpixel, u.zpixel),
         voxel_size=(u.meter, u.meter),
     )
@@ -529,7 +529,7 @@ class MieScatterer(Scatterer):
         collection_angle=(u.radian, u.radian),
         wavelength=(u.meter, u.meter),
         offset_z=(u.meter, u.meter),
-        coherence_length=(u.meter, u.pixel),
+        coherence_length=(u.meter, u.img_pixel),
     )
 
     def __init__(
