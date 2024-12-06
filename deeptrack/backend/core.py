@@ -1,12 +1,23 @@
-from copy import copy, deepcopy
-import re
-from weakref import WeakSet
-import numpy as np
 import operator
+from weakref import WeakSet
 
-from .. import utils, image
-from .citations import deeptrack_bibtex
+import numpy as np
 
+from .. import utils
+
+citation_Midtvet2021Quantitative = """
+@article{Midtvet2021Quantitative,
+    author  = {Midtvedt, Benjamin and Helgadottir, Saga and Argun, Aykut and 
+               Pineda, Jesús and Midtvedt, Daniel and Volpe, Giovanni},
+    title   = {Quantitative digital microscopy with deep learning},
+    journal = {Applied Physics Reviews},
+    volume  = {8},
+    number  = {1},
+    pages   = {011310},
+    year    = {2021},
+    doi     = {10.1063/5.0034891}
+}
+"""
 
 class DeepTrackDataObject:
 
@@ -137,7 +148,7 @@ class DeepTrackNode:
 
     __nonelike_default = object()
 
-    citation = deeptrack_bibtex
+    citations = [citation_Midtvet2021Quantitative]
 
     @property
     def action(self):
@@ -286,14 +297,22 @@ class DeepTrackNode:
             yield from dependency.recurse_dependencies(memory=memory)
 
     def get_citations(self):
-        """Gets a set of citations for all objects in a pipeline."""
-        cites = {self.citation}
+        """Get citations for all objects in a pipeline."""
+
+        # Initialize citations as a set of elements from self.citations.
+        citations = set(self.citations) if self.citations else set()
+
+        # Recurse through dependencies to collect all citations.
         for dep in self.recurse_dependencies():
             for obj in type(dep).mro():
-                if hasattr(obj, "citation"):
-                    cites.add(obj.citation)
+                if hasattr(obj, "citations"):
+                    # Add the citations of the current object.
+                    citations.update(
+                        obj.citations if isinstance(obj.citations, list)
+                        else [obj.citations]
+                    )
 
-        return cites
+        return citations
 
     def __call__(self, _ID=()):
 
