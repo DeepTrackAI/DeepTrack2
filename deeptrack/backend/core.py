@@ -1,9 +1,74 @@
+"""DeepTrack2 core package.
+
+This package provides the core classes and functionality required for managing, 
+processing, and evaluating data within the DeepTrack framework. It is designed 
+to support building flexible pipelines for scientific data analysis and machine 
+learning applications.
+
+Main Features
+-------------
+1. **Data Management**:
+   - `DeepTrackDataObject` and `DeepTrackDataDict` provide tools to store, validate, and manage data with dependency tracking.
+   - Enables nested structures and flexible indexing for complex data hierarchies.
+
+2. **Computational Graphs**:
+   - `DeepTrackNode` forms the backbone of computation pipelines, representing nodes in a computation graph.
+   - Nodes support lazy evaluation, dependency tracking, and caching to optimize performance.
+   - Implements mathematical operators for easy composition of computational graphs.
+
+3. **Citations**:
+   - Supports citing the relevant publication (`Midtvedt et al., 2021`) to ensure proper attribution.
+
+4. **Utilities**:
+   - Includes helper functions like `equivalent` and `create_node_with_operator` to streamline graph operations.
+
+Package Structure
+-----------------
+- **Data Containers**:
+  - `DeepTrackDataObject`: A basic container for data with validation status.
+  - `DeepTrackDataDict`: Stores multiple data objects indexed by unique access IDs, enabling nested data storage.
+
+- **Computation Nodes**:
+  - `DeepTrackNode`: Represents a node in a computation graph, capable of lazy evaluation, caching, and dependency management.
+
+- **Citation Management**:
+  - Provides support for including citations in pipelines for academic and scientific use.
+
+- **Utilities**:
+  - Functions for equivalence checking and operator-based node creation simplify working with computation graphs.
+
+Dependencies
+------------
+- `numpy`: Provides efficient numerical operations.
+- `operator`: Enables operator overloading for computation nodes.
+- `weakref.WeakSet`: Manages relationships between nodes without creating circular dependencies.
+
+Usage
+-----
+This package is the core component of the DeepTrack framework. It enables users to:
+- Construct flexible and efficient computational pipelines.
+- Manage data and dependencies in a hierarchical structure.
+- Perform lazy evaluations for performance optimization.
+
+Example
+-------
+```python
+# Create a DeepTrackNode with an action
+node = DeepTrackNode(lambda x: x**2)
+node.store(5)
+
+# Retrieve the stored value
+print(node.current_value())  # Output: 25
+
+"""
+
 import operator
 from weakref import WeakSet
 
 import numpy as np
 
 from .. import utils
+
 
 citation_Midtvet2021Quantitative = """
 @article{Midtvet2021Quantitative,
@@ -19,33 +84,97 @@ citation_Midtvet2021Quantitative = """
 }
 """
 
+
 class DeepTrackDataObject:
+    """Basic data container for DeepTrack2.
 
-    """Atomic data container for deeptrack.
+    This class serves as a simple container for storing data and managing its 
+    validity. It is designed to track whether the data remains valid, based on 
+    changes in dependencies or other external factors that might invalidate the 
+    data since it was last updated.
 
-    The purpose of this is to store some data, and if that data is valid.
-    Data is not valid, if some dependency of the data has been changed or otherwise made invalid
-    since the last time the data was validated.
+    Attributes
+    ----------
+    data : any
+        The stored data. Default is `None`.
+    valid : bool
+        A flag indicating whether the stored data is valid. Default is `False`.
+
+    Methods
+    -------
+    store(data)
+        Stores data in the container and marks it as valid.
+    current_value()
+        Returns the currently stored data.
+    is_valid()
+        Checks if the stored data is valid.
+    invalidate()
+        Marks the data as invalid.
+    validate()
+        Marks the data as valid.
+    
     """
 
     def __init__(self):
+        """Initialize the container without data.
+
+        The `data` attribute is set to `None`, and the `valid` attribute is set 
+        to `False` by default.
+        
+        """
         self.data = None
         self.valid = False
 
     def store(self, data):
-        self.valid = True
+        """Store data in the container and mark it as valid.
+
+        Parameters
+        ----------
+        data : any
+            The data to be stored in the container.
+        
+        """
         self.data = data
+        self.valid = True
 
     def current_value(self):
+        """Retrieve the currently stored data.
+
+        Returns
+        -------
+        any
+            The data stored in the container.
+        
+        """
         return self.data
 
     def is_valid(self):
+        """Check if the stored data is valid.
+
+        Returns
+        -------
+        bool
+            `True` if the data is valid, `False` otherwise.
+        
+        """
         return self.valid
 
     def invalidate(self):
+        """Mark the stored data as invalid.
+
+        This method sets the `valid` attribute to `False`, indicating that the 
+        data is no longer reliable.
+        
+        """
         self.valid = False
 
     def validate(self):
+        """Mark the stored data as valid.
+
+        This method sets the `valid` attribute to `True`, indicating that the 
+        data is considered up-to-date and reliable.
+        
+        """
         self.valid = True
 
 
