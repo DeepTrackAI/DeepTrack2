@@ -8,8 +8,6 @@ Functions
 hasmethod(obj: any, method_name: str) -> bool
     Return True if the object has a field named `function_name` that is 
     callable. Otherwise, return False.
-isiterable(obj: any) -> bool
-    Return True if the object is iterable. Else, return False.
 as_list(obj: any) -> list
     If the input is iterable, convert it to list. 
     Otherwise, wrap the input in a list.
