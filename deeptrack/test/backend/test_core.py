@@ -1,3 +1,6 @@
+# import sys
+# sys.path.append(".")  # Adds the module to path.
+
 import unittest
 
 from deeptrack.backend.core import DeepTrackDataObject
