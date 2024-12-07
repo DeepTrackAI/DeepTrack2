@@ -1262,12 +1262,18 @@ def _create_node_with_operator(op, a, b):
     """
     
     # Ensure `a` is a `DeepTrackNode`. Wrap it if necessary.
-    if not isinstance(a, DeepTrackNode):
+    if not isinstance(a, DeepTrackNode) and callable(a):
         a = DeepTrackNode(a)
+    else:
+        raise TypeError("Operand 'a' must be callable or a DeepTrackNode, "
+                        + f"got {type(a).__name__}.")
 
     # Ensure `b` is a `DeepTrackNode`. Wrap it if necessary.
-    if not isinstance(b, DeepTrackNode):
+    if not isinstance(b, DeepTrackNode) and callable(a):
         b = DeepTrackNode(b)
+    else:
+        raise TypeError("Operand 'b' must be callable or a DeepTrackNode, "
+                        + f"got {type(b).__name__}.")
 
     # New node that applies the operator `op` to the outputs of `a` and `b`.
     new_node = DeepTrackNode(lambda _ID=(): op(a(_ID=_ID), b(_ID=_ID)))
