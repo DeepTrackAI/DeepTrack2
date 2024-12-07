@@ -1,3 +1,5 @@
+from .backend.test_core import *
+
 from .test_aberrations import *
 from .test_augmentations import *
 from .test_elementwise import *
