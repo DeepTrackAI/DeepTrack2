@@ -7,63 +7,66 @@ learning applications.
 
 Main Features
 -------------
-1. **Data Management**:
-   - `DeepTrackDataObject` and `DeepTrackDataDict` provide tools to store, validate, and manage data with dependency tracking.
-   - Enables nested structures and flexible indexing for complex data hierarchies.
+1. Data Management:
+   - `DeepTrackDataObject` and `DeepTrackDataDict` provide tools to store, 
+     validate, and manage data with dependency tracking.
+   - Enables nested structures and flexible indexing for complex data 
+     hierarchies.
 
-2. **Computational Graphs**:
-   - `DeepTrackNode` forms the backbone of computation pipelines, representing nodes in a computation graph.
-   - Nodes support lazy evaluation, dependency tracking, and caching to optimize performance.
-   - Implements mathematical operators for easy composition of computational graphs.
+2. Computational Graphs:
+   - `DeepTrackNode` forms the backbone of computation pipelines, representing 
+     nodes in a computation graph.
+   - Nodes support lazy evaluation, dependency tracking, and caching to 
+     optimize performance.
+   - Implements mathematical operators for easy composition of computational 
+     graphs.
 
-3. **Citations**:
-   - Supports citing the relevant publication (`Midtvedt et al., 2021`) to ensure proper attribution.
+3. Citations:
+   - Supports citing the relevant publication (`Midtvedt et al., 2021`) to 
+     ensure proper attribution.
 
-4. **Utilities**:
-   - Includes helper functions like `_equivalent` and `_create_node_with_operator` to streamline graph operations.
+4. Utilities:
+   - Includes helper functions like `_equivalent` and 
+     `_create_node_with_operator` to streamline graph operations.
 
 Package Structure
 -----------------
-- **Data Containers**:
+- Data Containers:
   - `DeepTrackDataObject`: A basic container for data with validation status.
-  - `DeepTrackDataDict`: Stores multiple data objects indexed by unique access IDs, enabling nested data storage.
+  - `DeepTrackDataDict`: Stores multiple data objects indexed by unique access 
+                         IDs, enabling nested data storage.
 
-- **Computation Nodes**:
-  - `DeepTrackNode`: Represents a node in a computation graph, capable of lazy evaluation, caching, and dependency management.
+- Computation Nodes:
+  - `DeepTrackNode`: Represents a node in a computation graph, capable of lazy 
+                     evaluation, caching, and dependency management.
 
-- **Citation Management**:
-  - Provides support for including citations in pipelines for academic and scientific use.
-
-- **Utilities**:
-  - Functions for equivalence checking and operator-based node creation simplify working with computation graphs.
-
-Dependencies
-------------
-- `numpy`: Provides efficient numerical operations.
-- `operator`: Enables operator overloading for computation nodes.
-- `weakref.WeakSet`: Manages relationships between nodes without creating circular dependencies.
+- Citation Management:
+  - Provides support for including citations in pipelines for academic and 
+    scientific use.
 
 Usage
 -----
-This package is the core component of the DeepTrack framework. It enables users to:
+This package is the core component of the DeepTrack2 framework. It enables to:
 - Construct flexible and efficient computational pipelines.
 - Manage data and dependencies in a hierarchical structure.
 - Perform lazy evaluations for performance optimization.
 
 Example
 -------
-```python
-# Create a DeepTrackNode with an action
-node = DeepTrackNode(lambda x: x**2)
-node.store(5)
+Create a DeepTrackNode with an action:
 
-# Retrieve the stored value
-print(node.current_value())  # Output: 25
+>>> node = DeepTrackNode(lambda x: x**2)
+>>> node.store(5)
+
+Retrieve the stored value:
+
+>>> print(node.current_value())  # Output: 25
 
 """
 
-import operator
-from weakref import WeakSet
+import operator  # Operator overloading for computation nodes.
+from weakref import WeakSet  # Manages relationships between nodes without 
+                             # creating circular dependencies.
 
 import numpy as np
 from typing import Any, Dict, Iterator, Optional, Set, Tuple, Union
