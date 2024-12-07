@@ -15,7 +15,7 @@
 <p align="center">
   <a href="#installation">Installation</a> •
   <a href="#examples-of-applications-using-deeptrack"> Examples</a> •
-  <a href="#learning-deeptrack-21">Basics</a> •
+  <a href="#getting-started-guides">Basics</a> •
   <a href="#cite-us">Cite us</a> •
   <a href="/LICENSE">License</a> 
 </p>
