@@ -1048,148 +1048,394 @@ class DeepTrackNode:
     # and `other`. The operators are applied lazily and will be computed only 
     # when the resulting node is evaluated.
 
-    def __add__(self, other):
-        """Add node to other node or value.
+    def __add__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+        """Add node to another node or value.
+
+        Creates a new `DeepTrackNode` representing the addition of the values
+        produced by this node (`self`) and another node or value (`other`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The node or value to add.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the addition operation (`self + other`).
         
-        Operation performed:
-            result = self + other
         """
+        
         return _create_node_with_operator(operator.__add__, self, other)
 
-    def __radd__(self, other):
+    def __radd__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
         """Add other value to node (right-hand).
+
+        Creates a new `DeepTrackNode` representing the addition of another
+        node or value (`other`) to the value produced by this node (`self`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The value or node to add.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the addition operation (`other + self`).
         
-        Operation performed:
-            result = other + self
         """
+        
         return _create_node_with_operator(operator.__add__, other, self)
 
-    def __sub__(self, other):
-        """Subtract other node or value from node.
+    def __sub__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+        """Subtract another node or value from node.
+
+        Creates a new `DeepTrackNode` representing the subtraction of the 
+        values produced by another node or value (`other`) from this node 
+        (`self`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The node or value to subtract.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the subtraction operation 
+            (`self - other`).
         
-        Operation performed:
-            result = self - other
         """
+        
         return _create_node_with_operator(operator.__sub__, self, other)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
         """Subtract node from other value (right-hand).
+
+        Creates a new `DeepTrackNode` representing the subtraction of the value
+        produced by this node (`self`) from another node or value (`other`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The value or node to subtract from.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the subtraction operation 
+                `other - self`).
         
-        Operation performed:
-            result = other - self
         """
+        
         return _create_node_with_operator(operator.__sub__, other, self)
 
-    def __mul__(self, other):
-        """Multiply node by other node or value.
+    def __mul__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+        """Multiply node by another node or value.
+
+        Creates a new `DeepTrackNode` representing the multiplication of the 
+        values produced by this node (`self`) and another node or value 
+        (`other`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The node or value to multiply by.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the multiplication operation 
+            (`self * other`).
         
-        Operation performed:
-            result = self * other
         """
+        
         return _create_node_with_operator(operator.__mul__, self, other)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
         """Multiply other value by node (right-hand).
-        
-        Operation performed:
-            result = other * self
+
+        Creates a new `DeepTrackNode` representing the multiplication of 
+        another node or value (`other`) by the value produced by this node 
+        (`self`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The value or node to multiply.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the multiplication operation 
+            (`other * self`).
         """
         return _create_node_with_operator(operator.__mul__, other, self)
 
-    def __truediv__(self, other):
-        """Divide node by other node or value.
+    def __truediv__(
+        self, 
+        other: Union['DeepTrackNode', Any],
+    ) -> 'DeepTrackNode':
+        """Divide node by another node or value.
+
+        Creates a new `DeepTrackNode` representing the division of the value
+        produced by this node (`self`) by another node or value (`other`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The node or value to divide by.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the division operation (`self / other`).
         
-        Operation performed:
-            result = self / other
         """
+        
         return _create_node_with_operator(operator.__truediv__, self, other)
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(
+        self, 
+        other: Union['DeepTrackNode', Any],
+    ) -> 'DeepTrackNode':
         """Divide other value by node (right-hand).
+
+        Creates a new `DeepTrackNode` representing the division of another
+        node or value (`other`) by the value produced by this node (`self`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The value or node to divide.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the division operation (`other / self`).
         
-        Operation performed:
-            result = other / self
         """
+        
         return _create_node_with_operator(operator.__truediv__, other, self)
 
-    def __floordiv__(self, other):
-        """Perform floor division of node by other node or value.
+    def __floordiv__(
+        self, 
+        other: Union['DeepTrackNode', Any],
+    ) -> 'DeepTrackNode':
+        """Perform floor division of node by another node or value.
+
+        Creates a new `DeepTrackNode` representing the floor division of the
+        value produced by this node (`self`) by another node or value 
+        (`other`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The node or value to divide by.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the floor division operation 
+            (`self // other`).
         
-        Operation performed:
-            result = self // other
         """
+        
         return _create_node_with_operator(operator.__floordiv__, self, other)
 
-    def __rfloordiv__(self, other):
+    def __rfloordiv__(
+        self, 
+        other: Union['DeepTrackNode', Any],
+    ) -> 'DeepTrackNode':
         """Perform floor division of other value by node (right-hand).
+
+        Creates a new `DeepTrackNode` representing the floor division of 
+        another node or value (`other`) by the value produced by this node 
+        (`self`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The value or node to divide.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the floor division operation 
+            (`other // self`).
         
-        Operation performed:
-            result = other // self
         """
+        
         return _create_node_with_operator(operator.__floordiv__, other, self)
 
-    def __lt__(self, other):
-        """Check if node is less than other node or value.
+    def __lt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+        """Check if node is less than another node or value.
+
+        Creates a new `DeepTrackNode` representing the comparison of this node
+        (`self`) being less than another node or value (`other`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The node or value to compare with.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the comparison operation (`self < other`).
         
-        Operation performed:
-            result = self < other
         """
+        
         return _create_node_with_operator(operator.__lt__, self, other)
 
-    def __rlt__(self, other):
+    def __rlt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
         """Check if other value is less than node (right-hand).
+
+        Creates a new `DeepTrackNode` representing the comparison of another
+        node or value (`other`) being less than this node (`self`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The value or node to compare.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the comparison operation 
+            (`other < self`).
         
-        Operation performed:
-            result = other < self
         """
+        
         return _create_node_with_operator(operator.__lt__, other, self)
 
-    def __gt__(self, other):
-        """Check if node is greater than other node or value.
+    def __gt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+        """Check if node is greater than another node or value.
+
+        Creates a new `DeepTrackNode` representing the comparison of this node
+        (`self`) being greater than another node or value (`other`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The node or value to compare with.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the comparison operation 
+            (`self > other`).
         
-        Operation performed:
-            result = self > other
         """
+        
         return _create_node_with_operator(operator.__gt__, self, other)
 
-    def __rgt__(self, other):
+    def __rgt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
         """Check if other value is greater than node (right-hand).
+
+        Creates a new `DeepTrackNode` representing the comparison of another
+        node or value (`other`) being greater than this node (`self`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The value or node to compare.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the comparison operation 
+            (`other > self`).
         
-        Operation performed:
-            result = other > self
         """
+        
         return _create_node_with_operator(operator.__gt__, other, self)
 
-    def __le__(self, other):
-        """Check if node is less than or equal to other node or value.
+    def __le__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+        """Check if node is less than or equal to another node or value.
+
+        Creates a new `DeepTrackNode` representing the comparison of this node
+        (`self`) being less than or equal to another node or value (`other`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The node or value to compare with.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the comparison operation 
+            (`self <= other`).
         
-        Operation performed:
-            result = self <= other
         """
+        
         return _create_node_with_operator(operator.__le__, self, other)
 
-    def __rle__(self, other):
+    def __rle__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
         """Check if other value is less than or equal to node (right-hand).
+
+        Creates a new `DeepTrackNode` representing the comparison of another
+        node or value (`other`) being less than or equal to this node (`self`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The value or node to compare.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the comparison operation 
+            (`other <= self`).
         
-        Operation performed:
-            result = other <= self
         """
+        
         return _create_node_with_operator(operator.__le__, other, self)
 
-    def __ge__(self, other):
-        """Check if node is greater than or equal to other node or value.
+    def __ge__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+        """Check if node is greater than or equal to another node or value.
+
+        Creates a new `DeepTrackNode` representing the comparison of this node
+        (`self`) being greater than or equal to another node or value 
+        (`other`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The node or value to compare with.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the comparison operation 
+            (`self >= other`).
         
-        Operation performed:
-            result = self >= other
         """
+        
         return _create_node_with_operator(operator.__ge__, self, other)
 
-    def __rge__(self, other):
+    def __rge__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
         """Check if other value is greater than or equal to node (right-hand).
+
+        Creates a new `DeepTrackNode` representing the comparison of another
+        node or value (`other`) being greater than or equal to this node 
+        (`self`).
+
+        Parameters
+        ----------
+        other : DeepTrackNode or Any
+            The value or node to compare.
+
+        Returns
+        -------
+        DeepTrackNode
+            A new node that represents the comparison operation 
+            (`other >= self`).
         
-        Operation performed:
-            result = other >= self
         """
+        
         return _create_node_with_operator(operator.__ge__, other, self)
 
 
@@ -1269,7 +1515,7 @@ def _create_node_with_operator(op, a, b):
                         + f"got {type(a).__name__}.")
 
     # Ensure `b` is a `DeepTrackNode`. Wrap it if necessary.
-    if not isinstance(b, DeepTrackNode) and callable(a):
+    if not isinstance(b, DeepTrackNode) and callable(b):
         b = DeepTrackNode(b)
     else:
         raise TypeError("Operand 'b' must be callable or a DeepTrackNode, "
