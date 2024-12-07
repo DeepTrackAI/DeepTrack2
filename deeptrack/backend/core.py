@@ -510,8 +510,10 @@ class DeepTrackNode:
 
     # Attributes.
     data: DeepTrackDataDict
-    children: WeakSet['DeepTrackNode']
-    dependencies: WeakSet['DeepTrackNode']
+    children: WeakSet  #TODO 
+                       # From Python 3.9, change to WeakSet['DeepTrackNode']
+    dependencies: WeakSet #TODO
+                          # From Python 3.9, change to WeakSet['DeepTrackNode']
     _action: Callable[..., Any]
     _accepts_ID: bool
     _all_subchildren: Set['DeepTrackNode']
