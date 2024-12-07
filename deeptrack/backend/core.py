@@ -5,51 +5,50 @@ processing, and evaluating data within the DeepTrack framework. It is designed
 to support building flexible pipelines for scientific data analysis and machine 
 learning applications.
 
-Main Features
--------------
-1. Data Management:
-   - `DeepTrackDataObject` and `DeepTrackDataDict` provide tools to store, 
-     validate, and manage data with dependency tracking.
-   - Enables nested structures and flexible indexing for complex data 
-     hierarchies.
-
-2. Computational Graphs:
-   - `DeepTrackNode` forms the backbone of computation pipelines, representing 
-     nodes in a computation graph.
-   - Nodes support lazy evaluation, dependency tracking, and caching to 
-     optimize performance.
-   - Implements mathematical operators for easy composition of computational 
-     graphs.
-
-3. Citations:
-   - Supports citing the relevant publication (`Midtvedt et al., 2021`) to 
-     ensure proper attribution.
-
-4. Utilities:
-   - Includes helper functions like `_equivalent` and 
-     `_create_node_with_operator` to streamline graph operations.
-
-Package Structure
------------------
-- Data Containers:
-  - `DeepTrackDataObject`: A basic container for data with validation status.
-  - `DeepTrackDataDict`: Stores multiple data objects indexed by unique access 
-                         IDs, enabling nested data storage.
-
-- Computation Nodes:
-  - `DeepTrackNode`: Represents a node in a computation graph, capable of lazy 
-                     evaluation, caching, and dependency management.
-
-- Citation Management:
-  - Provides support for including citations in pipelines for academic and 
-    scientific use.
-
-Usage
------
-This package is the core component of the DeepTrack2 framework. It enables to:
+This package is the core component of the DeepTrack2 framework. It enables 
+users to:
 - Construct flexible and efficient computational pipelines.
 - Manage data and dependencies in a hierarchical structure.
 - Perform lazy evaluations for performance optimization.
+
+Main Features
+-------------
+Data Management:
+- `DeepTrackDataObject` and `DeepTrackDataDict` provide tools to store, 
+  validate, and manage data with dependency tracking.
+- Enables nested structures and flexible indexing for complex data 
+  hierarchies.
+
+Computational Graphs:
+- `DeepTrackNode` forms the backbone of computation pipelines, representing 
+  nodes in a computation graph.
+- Nodes support lazy evaluation, dependency tracking, and caching to 
+  optimize performance.
+- Implements mathematical operators for easy composition of computational 
+  graphs.
+
+Citations:
+- Supports citing the relevant publication (`Midtvedt et al., 2021`) to 
+  ensure proper attribution.
+
+Utilities:
+- Includes helper functions like `_equivalent` and 
+  `_create_node_with_operator` to streamline graph operations.
+
+Package Structure
+-----------------
+Data Containers:
+- `DeepTrackDataObject`: A basic container for data with validation status.
+- `DeepTrackDataDict`: Stores multiple data objects indexed by unique access 
+                       IDs, enabling nested data storage.
+
+Computation Nodes:
+- `DeepTrackNode`: Represents a node in a computation graph, capable of lazy 
+                   evaluation, caching, and dependency management.
+
+Citation Management:
+- Provides support for including citations in pipelines for academic and 
+  scientific use.
 
 Example
 -------
