@@ -123,7 +123,7 @@ Additionally, we have seven more case studies which are less documented, but giv
 
 We also have examples that are specific for certain models. This includes 
 - [*LodeSTAR*](examples/LodeSTAR) for label-free particle tracking.
-- [*MAGIK*](deeptrack/models/gnns/) for graph-based particle linking and trace characterization.
+- [*MAGIK*](examples/MAGIK) for graph-based particle linking and trace characterization.
 
 ## Documentation
 The detailed documentation of DeepTrack 2.1 is available at the following link: https://softmatterlab.github.io/DeepTrack2/deeptrack.html
