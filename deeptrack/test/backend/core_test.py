@@ -7,7 +7,8 @@ from deeptrack.backend.core import DeepTrackNode
 
 class TestCore(unittest.TestCase):
     
-    pass
+    def test_trial(self):
+        self.assetTrue(1 == 1)
 
 
 if __name__ == "__main__":
