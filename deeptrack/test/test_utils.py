@@ -1,3 +1,7 @@
+# Use this only when running the test locally.
+# import sys
+# sys.path.append(".")  # Adds the module to path.
+
 import unittest
 
 from .. import utils
