@@ -6,7 +6,7 @@
 <p align="center">
   <a href="/LICENSE" alt="licence"><img src="https://img.shields.io/github/license/softmatterlab/DeepTrack-2.0"></a>
   <a href="https://badge.fury.io/py/deeptrack"><img src="https://badge.fury.io/py/deeptrack.svg" alt="PyPI version"></a>
-  <a href="https://softmatterlab.github.io/DeepTrack2/deeptrack.html"><img src="https://img.shields.io/badge/docs-passing-green" alt="PyPI version"></a>
+  <a href="https://deeptrackai.github.io/DeepTrack2"><img src="https://img.shields.io/badge/docs-passing-green" alt="PyPI version"></a>
   <a href="https://badge.fury.io/py/deeptrack"><img src="https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue" alt="Python version"></a>
   <a href="https://doi.org/10.1063/5.0034891" alt="DOI">
     <img src="https://img.shields.io/badge/DOI-10.1063%2F5.0034891-blue">
@@ -91,12 +91,12 @@ Everybody learns in different ways! Depending on your preferences, and what you 
 
 ## Getting-started guides
 
-We have two separate series of notebooks which aims to teach you all you need to know to use DeepTrack to its fullest. The first is a set of four notebooks with a focus on the application.
+We have a set of four notebooks which aims to teach you all you need to know to use DeepTrack to its fullest with a focus on the application.
 
-1. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/get-started/01.%20deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> deeptrack_introduction_tutorial </a>  gives an overview of how to use DeepTrack 2.1.
-2. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorials/01.%20tracking_particle_cnn_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> demonstrates how to track a point particle with a convolutional neural network (CNN).
-3. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorial/02.%20tracking_multiple_particles_unet_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_multiple_particles_unet_tutorial </a> demonstrates how to track multiple particles using a U-net.
-4. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorials/03.%20distinguishing_particles_in_brightfield_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> distinguishing_particles_in_brightfield_tutorial </a> demonstrates how to use a U-net to track and distinguish particles of different sizes in brightfield microscopy. 
+1. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/get-started/01.%20deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> deeptrack_introduction_tutorial </a>  Gives an overview of how to use DeepTrack 2.1.
+2. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorials/01.%20tracking_particle_cnn_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> Demonstrates how to track a point particle with a convolutional neural network (CNN).
+3. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorial/02.%20tracking_multiple_particles_unet_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_multiple_particles_unet_tutorial </a> Demonstrates how to track multiple particles using a U-net.
+4. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorials/03.%20distinguishing_particles_in_brightfield_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> distinguishing_particles_in_brightfield_tutorial </a> Demonstrates how to use a U-net to track and distinguish particles of different sizes in brightfield microscopy. 
 
 
 
@@ -119,7 +119,7 @@ We also have examples that are specific for certain models. This includes
 - [*MAGIK*](examples/MAGIK) for graph-based particle linking and trace characterization.
 
 ## Documentation
-The detailed documentation of DeepTrack 2.1 is available at the following link: https://softmatterlab.github.io/DeepTrack2/deeptrack.html
+The detailed documentation of DeepTrack 2.1 is available at the following link: [https://deeptrackai.github.io/DeepTrack2](https://deeptrackai.github.io/DeepTrack2)
 
 ## Video Tutorials
 
