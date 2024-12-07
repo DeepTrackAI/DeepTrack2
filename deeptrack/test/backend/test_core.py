@@ -4,9 +4,7 @@
 
 import unittest
 
-from deeptrack.backend.core import DeepTrackDataObject
-from deeptrack.backend.core import DeepTrackDataDict
-from deeptrack.backend.core import DeepTrackNode
+from deeptrack.backend import core
 
 
 class TestCore(unittest.TestCase):
