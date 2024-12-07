@@ -508,8 +508,16 @@ class DeepTrackNode:
 
     """
 
+    # Attributes.
+    data: DeepTrackDataDict
+    children: WeakSet['DeepTrackNode']
+    dependencies: WeakSet['DeepTrackNode']
+    _action: Callable[..., Any]
+    _accepts_ID: bool
+    _all_subchildren: Set['DeepTrackNode']
+
     # Citations associated with this DeepTrack2.
-    citations = [citation_Midtvet2021Quantitative]
+    citations: List[str] = [citation_Midtvet2021Quantitative]
 
     @property
     def action(self) -> Callable[..., Any]:
