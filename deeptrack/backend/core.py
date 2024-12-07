@@ -66,7 +66,7 @@ import operator
 from weakref import WeakSet
 
 import numpy as np
-from typing import Any
+from typing import Any, Dict, Optional, Tuple, Union
 
 from .. import utils
 
@@ -169,91 +169,266 @@ class DeepTrackDataObject:
 
 
 class DeepTrackDataDict:
+    """Stores multiple data objects indexed by a tuple of integers (access ID).
 
-    """Stores multiple data objects indexed by an access id.
+    This class allows a single object to store multiple `DeepTrackDataObject` 
+    instances concurrently, each associated with a unique tuple of integers 
+    (the access ID). This is particularly useful for handling sequences of data 
+    or nested structures, as required by features like `Repeat`.
 
-    The purpose of this class is to allow a single object to store multiple
-    data objects at once. This is necessary for sequences and the feature `Repeat`.
+    The default access ID is an empty tuple `()`. The length of the IDs stored 
+    must be consistent once an entry is created. If an ID longer than the 
+    stored length is requested, the request is trimmed. If an ID shorter than 
+    what is stored is requested, a dictionary slice containing all matching 
+    entries is returned. This mechanism supports flexible indexing of nested 
+    data and ensures that dependencies at various nesting depths can be 
+    correctly handled.
 
-    The access id is a tuple of integers. Consider the following example::
+    Example
+    -------
+    Consider the following structure, where `Repeat` is a feature that creates
+    multiple instances of another feature:
 
-        F = Repeat(
-            Repeat(DummyFeature(prop = np.random.rand), 2),
-            2
-        )
+    >>> F = Repeat(Repeat(DummyFeature(prop=np.random.rand), 2), 2)
 
-    `F` contains 2*2=4 instances of the feature prop. They would be accessed using the IDs
-    (0, 0), (0, 1), (1, 0), and (1, 1). In this way nested structures are resolved.
+    Here, `F` contains 2 * 2 = 4 instances of the feature `prop`. 
+    These can be accessed using the IDs:
+    (0, 0), (0, 1), (1, 0), and (1, 1).
 
-    The default is an empty tuple.
+    In this nested structure:
+    - (0, 0) refers to the first repeat of the outer feature and the first 
+        repeat of the inner feature.
+    - (0, 1) refers to the first repeat of the outer feature and the second 
+        repeat of the inner feature.
+    And so forth, resolving nested structures via tuples of indices.
+    
+    Attributes
+    ----------
+    keylength : int or None
+        The length of the IDs currently stored. Set when the first entry is 
+        created. If `None`, no entries have been created yet, and any ID length 
+        is valid.
+    dict : Dict[Tuple[int, ...], DeepTrackDataObject]
+        A dictionary mapping tuples of integers (IDs) to `DeepTrackDataObject` 
+        instances.
 
-    All IDs of a DataDict need to be of the same length. If a DataDict has value stored to the None ID, it can not store any other IDs.
-    If a longer ID is requested than what is stored, the request is trimmed to the length of the stored IDs. This is important to
-    correctly handle dependencies to lower depths of nested structures.
-
-    If a shorter ID is requested than what is stored, the a slice of the DataDict is returned with all IDs matching the request.
-
-
-
+    Methods
+    -------
+    invalidate()
+        Marks all stored data objects as invalid.
+    validate()
+        Marks all stored data objects as valid.
+    valid_index(_ID : tuple) -> bool
+        Checks if the given ID is valid for the current configuration.
+    create_index(_ID : tuple = ())
+        Creates an entry for the given ID if it does not exist.
+    __getitem__(_ID : tuple) -> DeepTrackDataObject' 
+                                | Dict[Tuple[int, ...], 'DeepTrackDataObject']
+        Retrieves data associated with the ID. Can return a 
+        `DeepTrackDataObject` or a dict of matching entries if `_ID` is shorter 
+        than `keylength`.
+    __contains__(_ID : tuple) -> bool
+        Checks if the given ID exists in the dictionary.
+    
     """
 
+    # Attributes.
+    keylength: Optional[int]
+    dict: Dict[Tuple[int, ...], DeepTrackDataObject]
+
     def __init__(self):
+        """Initialize the data dictionary.
+
+        Initializes `keylength` to `None` and `dict` to an empty dictionary,
+        indicating no data objects are currently stored.
+        
+        """
+        
         self.keylength = None
         self.dict = {}
 
-    def invalidate(self):
-        # self.dict = {}
-        for d in self.dict.values():
-            d.invalidate()
+    def invalidate(self) -> None:
+        """Mark all stored data objects as invalid.
 
-    def validate(self):
-        for d in self.dict.values():
-            d.validate()
+        Calls `invalidate()` on every `DeepTrackDataObject` in the dictionary.
+        
+        """
+        
+        for dataobject in self.dict.values():
+            dataobject.invalidate()
 
-    def valid_index(self, _ID):
-        assert isinstance(_ID, tuple), f"Data index {_ID} is not a tuple"
+    def validate(self) -> None:
+        """Mark all stored data objects as valid.
 
+        Calls `validate()` on every `DeepTrackDataObject` in the dictionary.
+        
+        """
+        
+        for dataobject in self.dict.values():
+            dataobject.validate()
+
+    def valid_index(self, _ID: Tuple[int, ...]) -> bool:
+        """Check if a given ID is valid for this data dictionary.
+
+        Parameters
+        ----------
+        _ID : Tuple[int, ...]
+            The index to check, consisting of a tuple of integers.
+
+        Returns
+        -------
+        bool
+            `True` if the ID is valid given the current configuration, `False` 
+            otherwise.
+
+        Raises
+        ------
+        AssertionError
+            If `_ID` is not a tuple of integers. The error message includes the 
+            actual `_ID` value and the types of its elements for easier 
+            debugging.
+
+        Notes
+        -----
+        - If `keylength` is `None`, any tuple ID is considered valid since no 
+            entries have been created yet.
+        - If `_ID` already exists in `dict`, it is automatically valid.
+        - Otherwise, `_ID` must have the same length as `keylength` to be 
+            considered valid.
+        
+        """
+        
+        assert (
+            isinstance(_ID, tuple) and all(isinstance(i, int) for i in _ID)
+        ), (
+            f"Data index {_ID} is not a tuple of integers. "
+            f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
+        )
+
+        # If keylength has not yet been set, all indexes are valid.
         if self.keylength is None:
-            # If keylength has not yet been set, all indexes are valid
             return True
 
+        # If index is already stored, always valid.
         if _ID in self.dict:
-            # If index is a key, always valid
             return True
 
-        # Otherwise, check key is correct length
+        # Otherwise, the ID length must match the established keylength.
         return len(_ID) == self.keylength
 
-    def create_index(self, _ID=()):
+    def create_index(self, _ID: Tuple[int, ...] = ()) -> None:
+        """Create a new data entry for the given ID if not already existing.
 
-        assert isinstance(_ID, tuple), f"Data index {_ID} is not a tuple"
+        Parameters
+        ----------
+        _ID : Tuple[int, ...], optional
+            A tuple of integers representing the ID for the data entry. 
+            Default is `()`, which represents a root-level data entry with no 
+            nesting.
+        
+        Raises
+        ------
+        AssertionError
+            - If `_ID` is not a tuple of integers. The error message includes 
+                the value of `_ID` and the types of its elements.
+            - If `_ID` is not a valid index according to the current 
+                configuration.
 
+        Notes
+        -----
+        - If `keylength` is `None`, it is set to the length of `_ID`. Once 
+            established, all subsequently created IDs must have this same length.
+        - If `_ID` is already in `dict`, no new entry is created.
+        - Each newly created index is associated with a fresh 
+            `DeepTrackDataObject`.
+            
+        """
+        
+        # Ensure `_ID` is a tuple of integers.
+        assert (
+            isinstance(_ID, tuple) and all(isinstance(i, int) for i in _ID)
+        ), (
+            f"Data index {_ID} is not a tuple of integers. "
+            f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
+        )
+
+        # If `_ID` already exists, do nothing.
         if _ID in self.dict:
             return
 
-        assert self.valid_index(_ID), f"{_ID} is not a valid index for dict {self.dict}"
+        # Check if the given `_ID` is valid.
+        assert self.valid_index(_ID), (
+            f"{_ID} is not a valid index for current dictionary configuration."
+        )
 
+        # If `keylength` is not set, initialize it with current ID's length.
         if self.keylength is None:
             self.keylength = len(_ID)
 
+        # Create a new DeepTrackDataObject for this ID.
         self.dict[_ID] = DeepTrackDataObject()
 
-    def __getitem__(self, _ID):
-        assert isinstance(_ID, tuple), f"Data index {_ID} is not a tuple"
+    def __getitem__(
+        self, 
+        _ID: Tuple[int, ...],
+    ) -> Union['DeepTrackDataObject', 
+               Dict[Tuple[int, ...], 'DeepTrackDataObject']]:
+        """Retrieve data associated with a given ID.
+
+        Parameters
+        ----------
+        _ID : Tuple[int, ...]
+            The ID for the requested data.
+
+        Returns
+        -------
+        DeepTrackDataObject or dict
+            If `_ID` matches `keylength`, returns the corresponding 
+            `DeepTrackDataObject`.
+            If `_ID` is longer than `keylength`, the request is trimmed to 
+            match `keylength`.
+            If `_ID` is shorter than `keylength`, returns a dict of all entries 
+            whose IDs match the given `_ID` prefix.
+
+        Raises
+        ------
+        AssertionError
+            If `_ID` is not a tuple of integers.
+        KeyError
+            If the dictionary is empty (`keylength` is `None`).
+        """
+        assert (
+            isinstance(_ID, tuple) and all(isinstance(i, int) for i in _ID)
+        ), (
+            f"Data index {_ID} is not a tuple of integers. "
+            f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
+        )
 
         if self.keylength is None:
-            raise KeyError("Indexing an empty dict")
-        
+            raise KeyError("Indexing an empty dict.")
+
         if len(_ID) == self.keylength:
             return self.dict[_ID]
-
         elif len(_ID) > self.keylength:
+            # Trim the requested ID to match keylength.
             return self[_ID[: self.keylength]]
-
         else:
+            # Return a slice of all items matching the shorter ID prefix.
             return {k: v for k, v in self.dict.items() if k[: len(_ID)] == _ID}
 
-    def __contains__(self, _ID):
+    def __contains__(self, _ID: Tuple[int, ...]) -> bool:
+        """Check if a given ID exists in the dictionary.
+
+        Parameters
+        ----------
+        _ID : Tuple[int, ...]
+            The ID to check.
+
+        Returns
+        -------
+        bool
+            `True` if the ID exists, `False` otherwise.
+        """
         return _ID in self.dict
 
 
