@@ -636,60 +636,157 @@ class DeepTrackNode:
         self.add_child(node)
         return node
 
-    # node-node operators
+    # Node-node operators.
+    # These methods define arithmetic and comparison operations for 
+    # DeepTrackNode objects. Each operation creates a new DeepTrackNode that 
+    # represents the result of applying the corresponding operator to `self` 
+    # and `other`. The operators are applied lazily and will be computed only 
+    # when the resulting node is evaluated.
+
     def __add__(self, other):
+        """Add node to other node or value.
+        
+        Operation performed:
+            result = self + other
+        """
         return _create_node_with_operator(operator.__add__, self, other)
 
     def __radd__(self, other):
+        """Add other value to node (right-hand).
+        
+        Operation performed:
+            result = other + self
+        """
         return _create_node_with_operator(operator.__add__, other, self)
 
     def __sub__(self, other):
+        """Subtract other node or value from node.
+        
+        Operation performed:
+            result = self - other
+        """
         return _create_node_with_operator(operator.__sub__, self, other)
 
     def __rsub__(self, other):
+        """Subtract node from other value (right-hand).
+        
+        Operation performed:
+            result = other - self
+        """
         return _create_node_with_operator(operator.__sub__, other, self)
 
     def __mul__(self, other):
+        """Multiply node by other node or value.
+        
+        Operation performed:
+            result = self * other
+        """
         return _create_node_with_operator(operator.__mul__, self, other)
 
     def __rmul__(self, other):
+        """Multiply other value by node (right-hand).
+        
+        Operation performed:
+            result = other * self
+        """
         return _create_node_with_operator(operator.__mul__, other, self)
 
     def __truediv__(self, other):
+        """Divide node by other node or value.
+        
+        Operation performed:
+            result = self / other
+        """
         return _create_node_with_operator(operator.__truediv__, self, other)
 
     def __rtruediv__(self, other):
+        """Divide other value by node (right-hand).
+        
+        Operation performed:
+            result = other / self
+        """
         return _create_node_with_operator(operator.__truediv__, other, self)
 
     def __floordiv__(self, other):
+        """Perform floor division of node by other node or value.
+        
+        Operation performed:
+            result = self // other
+        """
         return _create_node_with_operator(operator.__floordiv__, self, other)
 
     def __rfloordiv__(self, other):
+        """Perform floor division of other value by node (right-hand).
+        
+        Operation performed:
+            result = other // self
+        """
         return _create_node_with_operator(operator.__floordiv__, other, self)
 
     def __lt__(self, other):
+        """Check if node is less than other node or value.
+        
+        Operation performed:
+            result = self < other
+        """
         return _create_node_with_operator(operator.__lt__, self, other)
 
     def __rlt__(self, other):
+        """Check if other value is less than node (right-hand).
+        
+        Operation performed:
+            result = other < self
+        """
         return _create_node_with_operator(operator.__lt__, other, self)
 
     def __gt__(self, other):
+        """Check if node is greater than other node or value.
+        
+        Operation performed:
+            result = self > other
+        """
         return _create_node_with_operator(operator.__gt__, self, other)
 
     def __rgt__(self, other):
+        """Check if other value is greater than node (right-hand).
+        
+        Operation performed:
+            result = other > self
+        """
         return _create_node_with_operator(operator.__gt__, other, self)
 
     def __le__(self, other):
+        """Check if node is less than or equal to other node or value.
+        
+        Operation performed:
+            result = self <= other
+        """
         return _create_node_with_operator(operator.__le__, self, other)
 
     def __rle__(self, other):
+        """Check if other value is less than or equal to node (right-hand).
+        
+        Operation performed:
+            result = other <= self
+        """
         return _create_node_with_operator(operator.__le__, other, self)
 
     def __ge__(self, other):
+        """Check if node is greater than or equal to other node or value.
+        
+        Operation performed:
+            result = self >= other
+        """
         return _create_node_with_operator(operator.__ge__, self, other)
 
     def __rge__(self, other):
+        """Check if other value is greater than or equal to node (right-hand).
+        
+        Operation performed:
+            result = other >= self
+        """
         return _create_node_with_operator(operator.__ge__, other, self)
+
 
 
 def _equivalent(a, b):
