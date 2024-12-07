@@ -179,8 +179,8 @@ class DeepTrackDataDict:
     (the access ID). This is particularly useful for handling sequences of data 
     or nested structures, as required by features like `Repeat`.
 
-    The default access ID is an empty tuple `()`. The length of the IDs stored 
-    must be consistent once an entry is created. If an ID longer than the 
+    The default access ID is an empty tuple `()`. Once an entry is created, all 
+    IDs must match the established key length. If an ID longer than the 
     stored length is requested, the request is trimmed. If an ID shorter than 
     what is stored is requested, a dictionary slice containing all matching 
     entries is returned. This mechanism supports flexible indexing of nested 
@@ -221,16 +221,18 @@ class DeepTrackDataDict:
         Marks all stored data objects as invalid.
     validate()
         Marks all stored data objects as valid.
-    valid_index(_ID : tuple) -> bool
+    valid_index(_ID : Tuple[int, ...]) -> bool
         Checks if the given ID is valid for the current configuration.
-    create_index(_ID : tuple = ())
+    create_index(_ID : Tuple[int, ...] = ())
         Creates an entry for the given ID if it does not exist.
-    __getitem__(_ID : tuple) -> DeepTrackDataObject' 
-                                | Dict[Tuple[int, ...], 'DeepTrackDataObject']
+    __getitem__(_ID : tuple) -> Union[
+            DeepTrackDataObject, 
+            Dict[Tuple[int, ...], DeepTrackDataObject]
+        ]
         Retrieves data associated with the ID. Can return a 
         `DeepTrackDataObject` or a dict of matching entries if `_ID` is shorter 
         than `keylength`.
-    __contains__(_ID : tuple) -> bool
+    __contains__(_ID : Tuple[int, ...]) -> bool
         Checks if the given ID exists in the dictionary.
     
     """
@@ -374,8 +376,8 @@ class DeepTrackDataDict:
     def __getitem__(
         self, 
         _ID: Tuple[int, ...],
-    ) -> Union['DeepTrackDataObject', 
-               Dict[Tuple[int, ...], 'DeepTrackDataObject']]:
+    ) -> Union[DeepTrackDataObject, 
+               Dict[Tuple[int, ...], DeepTrackDataObject]]:
         """Retrieve data associated with a given ID.
 
         Parameters
