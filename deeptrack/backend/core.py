@@ -508,9 +508,6 @@ class DeepTrackNode:
 
     """
 
-    # A unique sentinel object for default action.
-    __nonelike_default = object() 
-
     # Citations associated with this DeepTrack2.
     citations = [citation_Midtvet2021Quantitative]
 
@@ -540,7 +537,11 @@ class DeepTrackNode:
         self._action = value
         self._accepts_ID = utils.get_kwarg_names(value).__contains__("_ID")
 
-    def __init__(self, action: Any =__nonelike_default, **kwargs: Any):
+    def __init__(
+        self, 
+        action: Optional[Callable[..., Any]] = None, 
+        **kwargs: Any,
+    ):
         """Initialize a new DeepTrackNode.
 
         Parameters
@@ -560,7 +561,7 @@ class DeepTrackNode:
 
         # If action is provided, set it. If it's callable, use it directly; 
         # otherwise, wrap it in a lambda.
-        if action is not self.__nonelike_default:
+        if action is not None:
             if callable(action):
                 self.action = action
             else:
