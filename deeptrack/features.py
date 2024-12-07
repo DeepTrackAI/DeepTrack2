@@ -92,7 +92,7 @@ class Feature(DeepTrackNode):
     
 
     # A None-safe default value to compare against
-    __none_like_default = object()
+    __nonelike_default = object()
 
     _wrap_array_with_image = False
 
