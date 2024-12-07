@@ -20,7 +20,7 @@ Main Features
    - Supports citing the relevant publication (`Midtvedt et al., 2021`) to ensure proper attribution.
 
 4. **Utilities**:
-   - Includes helper functions like `equivalent` and `create_node_with_operator` to streamline graph operations.
+   - Includes helper functions like `_equivalent` and `_create_node_with_operator` to streamline graph operations.
 
 Package Structure
 -----------------
@@ -538,7 +538,7 @@ class DeepTrackNode:
         # If set to same value, no need to invalidate
 
         if not (
-           self.is_valid(_ID=_ID) and equivalent(value, self.data[_ID].current_value())
+           self.is_valid(_ID=_ID) and _equivalent(value, self.data[_ID].current_value())
         ):
             self.invalidate(_ID=_ID)
             self.store(value, _ID=_ID)
@@ -638,64 +638,86 @@ class DeepTrackNode:
 
     # node-node operators
     def __add__(self, other):
-        return create_node_with_operator(operator.__add__, self, other)
+        return _create_node_with_operator(operator.__add__, self, other)
 
     def __radd__(self, other):
-        return create_node_with_operator(operator.__add__, other, self)
+        return _create_node_with_operator(operator.__add__, other, self)
 
     def __sub__(self, other):
-        return create_node_with_operator(operator.__sub__, self, other)
+        return _create_node_with_operator(operator.__sub__, self, other)
 
     def __rsub__(self, other):
-        return create_node_with_operator(operator.__sub__, other, self)
+        return _create_node_with_operator(operator.__sub__, other, self)
 
     def __mul__(self, other):
-        return create_node_with_operator(operator.__mul__, self, other)
+        return _create_node_with_operator(operator.__mul__, self, other)
 
     def __rmul__(self, other):
-        return create_node_with_operator(operator.__mul__, other, self)
+        return _create_node_with_operator(operator.__mul__, other, self)
 
     def __truediv__(self, other):
-        return create_node_with_operator(operator.__truediv__, self, other)
+        return _create_node_with_operator(operator.__truediv__, self, other)
 
     def __rtruediv__(self, other):
-        return create_node_with_operator(operator.__truediv__, other, self)
+        return _create_node_with_operator(operator.__truediv__, other, self)
 
     def __floordiv__(self, other):
-        return create_node_with_operator(operator.__floordiv__, self, other)
+        return _create_node_with_operator(operator.__floordiv__, self, other)
 
     def __rfloordiv__(self, other):
-        return create_node_with_operator(operator.__floordiv__, other, self)
+        return _create_node_with_operator(operator.__floordiv__, other, self)
 
     def __lt__(self, other):
-        return create_node_with_operator(operator.__lt__, self, other)
+        return _create_node_with_operator(operator.__lt__, self, other)
 
     def __rlt__(self, other):
-        return create_node_with_operator(operator.__lt__, other, self)
+        return _create_node_with_operator(operator.__lt__, other, self)
 
     def __gt__(self, other):
-        return create_node_with_operator(operator.__gt__, self, other)
+        return _create_node_with_operator(operator.__gt__, self, other)
 
     def __rgt__(self, other):
-        return create_node_with_operator(operator.__gt__, other, self)
+        return _create_node_with_operator(operator.__gt__, other, self)
 
     def __le__(self, other):
-        return create_node_with_operator(operator.__le__, self, other)
+        return _create_node_with_operator(operator.__le__, self, other)
 
     def __rle__(self, other):
-        return create_node_with_operator(operator.__le__, other, self)
+        return _create_node_with_operator(operator.__le__, other, self)
 
     def __ge__(self, other):
-        return create_node_with_operator(operator.__ge__, self, other)
+        return _create_node_with_operator(operator.__ge__, self, other)
 
     def __rge__(self, other):
-        return create_node_with_operator(operator.__ge__, other, self)
+        return _create_node_with_operator(operator.__ge__, other, self)
 
 
-def equivalent(a, b):
-    # This is a bare-bones implementation to check if two objects are equivalent.
-    # We can implement more cases to reduce updates.
+def _equivalent(a, b):
+    """Check if two objects are equivalent (internal function).
 
+    This is a basic implementation to determine equivalence between two 
+    objects. Additional cases can be implemented as needed to refine this 
+    behavior.
+
+    Parameters
+    ----------
+    a : Any
+        The first object to compare.
+    b : Any
+        The second object to compare.
+
+    Returns
+    -------
+    bool
+        `True` if the objects are equivalent, `False` otherwise.
+
+    Notes
+    -----
+    - If `a` and `b` are the same object (identity check), they are considered 
+      equivalent.
+    - If both `a` and `b` are empty lists, they are considered equivalent.
+    """
+    
     if a is b:
         return True
 
@@ -705,19 +727,56 @@ def equivalent(a, b):
     return False
 
 
-def create_node_with_operator(op, a, b):
-    """Creates a new node with the given operator and operands."""
+def _create_node_with_operator(op, a, b):
+    """Create a new computation node using a given operator and operands.
 
+    This internal helper function constructs a `DeepTrackNode` that represents 
+    the application of the specified operator to two operands. If the operands 
+    are not already `DeepTrackNode` instances, they are converted to nodes.
+
+    Parameters
+    ----------
+    op : Callable
+        The operator function to apply.
+    a : Any
+        First operand. If not a `DeepTrackNode`, it will be wrapped in one.
+    b : Any
+        Second operand. If not a `DeepTrackNode`, it will be wrapped in one.
+
+    Returns
+    -------
+    DeepTrackNode
+        A new `DeepTrackNode` that applies the operator `op` to the values of 
+        nodes `a` and `b`.
+
+    Notes
+    -----
+    - This function establishes bidirectional relationships between the new 
+        node and its operands:
+        - The new node is added as a child of both `a` and `b`.
+        - The operands are added as dependencies of the new node.
+    - The operator `op` is applied lazily, meaning it will be evaluated when 
+        the new node is called.
+
+    """
+    
+    # Ensure `a` is a `DeepTrackNode`. Wrap it if necessary.
     if not isinstance(a, DeepTrackNode):
         a = DeepTrackNode(a)
 
+    # Ensure `b` is a `DeepTrackNode`. Wrap it if necessary.
     if not isinstance(b, DeepTrackNode):
         b = DeepTrackNode(b)
 
-    new = DeepTrackNode(lambda _ID=(): op(a(_ID=_ID), b(_ID=_ID)))
-    new.add_dependency(a)
-    new.add_dependency(b)
-    a.add_child(new)
-    b.add_child(new)
+    # New node that applies the operator `op` to the outputs of `a` and `b`.
+    new_node = DeepTrackNode(lambda _ID=(): op(a(_ID=_ID), b(_ID=_ID)))
+    
+    # Establish dependency relationships between the nodes.
+    new_node.add_dependency(a)
+    new_node.add_dependency(b)
+    
+    # Set the new node as a child of both `a` and `b`.
+    a.add_child(new_node)
+    b.add_child(new_node)
 
-    return new
+    return new_node
