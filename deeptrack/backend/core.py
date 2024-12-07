@@ -66,6 +66,7 @@ import operator
 from weakref import WeakSet
 
 import numpy as np
+from typing import Any
 
 from .. import utils
 
@@ -95,86 +96,75 @@ class DeepTrackDataObject:
 
     Attributes
     ----------
-    data : any
-        The stored data. Default is `None`.
+    data : Any
+        The stored data. Default is `None`. Can hold any data type.
     valid : bool
         A flag indicating whether the stored data is valid. Default is `False`.
 
     Methods
     -------
-    store(data)
+    store(data : Any)
         Stores data in the container and marks it as valid.
-    current_value()
+    current_value() -> Any
         Returns the currently stored data.
-    is_valid()
+    is_valid() -> bool
         Checks if the stored data is valid.
     invalidate()
         Marks the data as invalid.
     validate()
         Marks the data as valid.
-    
     """
+
+    # Attributes.
+    data: Any
+    valid: bool
 
     def __init__(self):
         """Initialize the container without data.
 
         The `data` attribute is set to `None`, and the `valid` attribute is set 
         to `False` by default.
-        
         """
         self.data = None
         self.valid = False
 
-    def store(self, data):
+    def store(self, data: Any) -> None:
         """Store data in the container and mark it as valid.
 
         Parameters
         ----------
-        data : any
+        data : Any
             The data to be stored in the container.
-        
         """
         self.data = data
         self.valid = True
 
-    def current_value(self):
+    def current_value(self) -> Any:
         """Retrieve the currently stored data.
 
         Returns
         -------
-        any
+        Any
             The data stored in the container.
-        
         """
         return self.data
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
         """Check if the stored data is valid.
 
         Returns
         -------
         bool
             `True` if the data is valid, `False` otherwise.
-        
         """
         return self.valid
 
-    def invalidate(self):
-        """Mark the stored data as invalid.
-
-        This method sets the `valid` attribute to `False`, indicating that the 
-        data is no longer reliable.
-        
-        """
+    def invalidate(self) -> None:
+        """Mark the stored data as invalid."""
         self.valid = False
 
-    def validate(self):
-        """Mark the stored data as valid.
-
-        This method sets the `valid` attribute to `True`, indicating that the 
-        data is considered up-to-date and reliable.
-        
-        """
+    def validate(self) -> None:
+        """Mark the stored data as valid."""
         self.valid = True
 
 
