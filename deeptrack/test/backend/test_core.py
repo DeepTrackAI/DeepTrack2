@@ -149,7 +149,20 @@ class TestCore(unittest.TestCase):
 
 
     def test_DeepTrackNode_overloading(self):
-        pass
+        node1 = core.DeepTrackNode(action=lambda: 5)
+        node2 = core.DeepTrackNode(action=lambda: 10)
+
+        sum_node = node1 + node2
+        self.assertEqual(sum_node(), 15)
+
+        diff_node = node2 - node1
+        self.assertEqual(diff_node(), 5)
+
+        prod_node = node1 * node2
+        self.assertEqual(prod_node(), 50)
+
+        div_node = node2 / node1
+        self.assertEqual(div_node(), 2)
 
 if __name__ == "__main__":
     unittest.main()
