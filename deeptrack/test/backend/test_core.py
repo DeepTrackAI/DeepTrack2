@@ -164,5 +164,11 @@ class TestCore(unittest.TestCase):
         div_node = node2 / node1
         self.assertEqual(div_node(), 2)
 
+    def test_DeepTrackNode_citations(self):
+        node = core.DeepTrackNode(action=lambda: 42)
+        citations = node.get_citations()
+        self.assertIn(core.citation_midtvet2021quantitative, citations)
+
+
 if __name__ == "__main__":
     unittest.main()
