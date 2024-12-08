@@ -99,6 +99,35 @@ class DeepTrackDataObject:
     validate()
         Marks the data as valid.
 
+    Example
+    -------
+    Create a `DeepTrackDataObject`:
+
+    >>> data_obj = core.DeepTrackDataObject()
+
+    Store a value in this container:
+
+    >>> data_obj.store(42)
+    >>> print(data_obj.current_value())
+    42
+
+    Check if the stored data is valid:
+
+    >>> print(data_obj.is_valid())
+    True
+
+    Invalidate the stored data:
+
+    >>> data_obj.invalidate()
+    >>> print(data_obj.is_valid())
+    False
+
+    Validate the data again to restore its status:
+
+    >>> data_obj.validate()
+    >>> print(data_obj.is_valid())
+    True
+
     """
 
     # Attributes.
@@ -459,28 +488,29 @@ class DeepTrackDataDict:
 class DeepTrackNode:
     """Object corresponding to a node in a computation graph.
 
-    This class represents a node within a computation graph, where each node 
-    can store data and compute new values based on its dependencies. The value 
-    of a node is computed by calling its `action` method.
+    `DeepTrackNode` represents a node within a DeepTrack2 computation graph. 
+    In the DeepTrack2 computation graph, each node can store data and compute 
+    new values based on its dependencies. The value of a node is computed by 
+    calling its `action` method.
 
     Attributes
     ----------
     data : DeepTrackDataDict
-        A dictionary-like object for storing data, indexed by tuples of ints.
+        Dictionary-like object for storing data, indexed by tuples of integers.
     children : WeakSet[DeepTrackNode]
-        Set of nodes that depend on this node.
+        Nodes that depend on this node (its parents, grandparents, etc.).
     dependencies : WeakSet[DeepTrackNode]
-        Set of nodes on which this node depends.
+        Nodes on which this node depends (its children, grandchildren, etc.).
     _action : Callable
-        The function or lambda to compute new values.
+        The function or lambda-function to compute the node value.
     _accepts_ID : bool
-        Whether `action` accepts `_ID`.
+        Whether `action` accepts an input ID.
     _all_subchildren : Set[DeepTrackNode]
         All nodes in the subtree rooted at this node, including itself.
     citations : List[str]
         Citations associated with this node.
     
- Methods
+    Methods
     -------
     action : property
         Get/set the computation function.
@@ -524,6 +554,44 @@ class DeepTrackNode:
     __getitem__(idx: Any) -> DeepTrackNode
         Index into the node’s computed data.
 
+    Example
+    -------
+    Create two `DeepTrackNode` objects:
+
+    >>> parent = DeepTrackNode(action=lambda: 10)
+    >>> child = DeepTrackNode(action=lambda _ID=None: parent(_ID) * 2)
+
+    First, establish the dependency between `parent` and `child`:
+
+    >>> parent.add_child(child)
+
+    Store values in the parent node for specific IDs:
+
+    >>> parent.store(15, _ID=(0,))
+    >>> parent.store(20, _ID=(1,))
+
+    Compute the values for the child node based on these parent values:
+
+    >>> child_value_0 = child(_ID=(0,))
+    >>> child_value_1 = child(_ID=(1,))
+    >>> print(child_value_0, child_value_1)
+    30 40
+
+    Invalidate the parent data for a specific ID:
+
+    >>> parent.invalidate((0,))
+    >>> print(parent.is_valid((0,)))
+    False
+    >>> print(child.is_valid((0,)))
+    False
+
+    Update the parent value and recompute the child value:
+
+    >>> parent.store(25, _ID=(0,))
+    >>> child_value_recomputed = child(_ID=(0,))
+    >>> print(child_value_recomputed)
+    50    
+
     """
 
     # Attributes.
@@ -566,8 +634,8 @@ class DeepTrackNode:
         self._accepts_ID = utils.get_kwarg_names(value).__contains__("_ID")
 
     def __init__(
-        self, 
-        action: Optional[Callable[..., Any]] = None, 
+        self,
+        action: Optional[Callable[..., Any]] = None,
         **kwargs: Any,
     ):
         """Initialize a new DeepTrackNode.
@@ -587,7 +655,7 @@ class DeepTrackNode:
         self.dependencies = WeakSet()
         self._action = lambda: None  # Default no-op action.
 
-        # If action is provided, set it. If it's callable, use it directly; 
+        # If action is provided, set it. If it's callable, use it directly;
         # otherwise, wrap it in a lambda.
         if action is not None:
             if callable(action):
