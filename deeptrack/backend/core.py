@@ -479,7 +479,7 @@ class DeepTrackNode:
     invalidate(_ID: Tuple[int, ...] = ()) -> DeepTrackNode
         Invalidates this node’s and its children's data.
     validate(_ID: Tuple[int, ...] = ()) -> DeepTrackNode
-        Validates this node’s and its children's data.
+        Validates this node’s data.
     _update() -> DeepTrackNode
         Internal method to reset data.
     set_value(value: Any, _ID: Tuple[int, ...] = ()) -> DeepTrackNode

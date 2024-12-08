@@ -140,7 +140,7 @@ class TestCore(unittest.TestCase):
         # Validate parent and ensure child is invalid until recomputation.
         parent.validate()
         self.assertTrue(parent.is_valid())
-        self.assertFalse(child.is_valid())  ###TODO this test doesn't pass!
+        self.assertFalse(child.is_valid())
 
         # Recompute child and check its validity
         child()
