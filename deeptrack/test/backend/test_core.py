@@ -244,6 +244,66 @@ class TestCore(unittest.TestCase):
         cluster_value = cluster()
         self.assertEqual(cluster_value, 3)
 
+    def test_DeepTrackNode_parent_id_inheritance(self):
+
+        # Children with IDs matching than parents.
+        parent_matching = core.DeepTrackNode(action=lambda: 10)
+        child_matching = core.DeepTrackNode(
+            action=lambda _ID=None: parent_matching(_ID[:1]) * 2
+        )
+        parent_matching.add_child(child_matching)
+
+        parent_matching.store(7, _ID=(0,))
+        parent_matching.store(5, _ID=(1,))
+
+        self.assertEqual(child_matching(_ID=(0,)), 14)
+        self.assertEqual(child_matching(_ID=(1,)), 10)
+
+        # Children with IDs deeper than parents.
+        parent_deeper = core.DeepTrackNode(action=lambda: 10)
+        child_deeper = core.DeepTrackNode(
+            action=lambda _ID=None: parent_deeper(_ID[:1]) * 2
+        )
+        parent_deeper.add_child(child_deeper)
+
+        parent_deeper.store(7, _ID=(0,))
+        parent_deeper.store(5, _ID=(1,))
+
+        self.assertEqual(child_deeper(_ID=(0, 0)), 14)
+        self.assertEqual(child_deeper(_ID=(0, 1)), 14)
+        self.assertEqual(child_deeper(_ID=(0, 2)), 14)
+
+        self.assertEqual(child_deeper(_ID=(1, 0)), 10)
+        self.assertEqual(child_deeper(_ID=(1, 1)), 10)
+        self.assertEqual(child_deeper(_ID=(1, 2)), 10)
+
+    def test_DeepTrackNode_invalidation_and_ids(self):
+        """Test that invalidating a parent affects specific IDs of children."""
+
+        parent = core.DeepTrackNode(action=lambda: 10)
+        child = core.DeepTrackNode(action=lambda _ID=None: parent(_ID[:1]) * 2)
+        parent.add_child(child)
+
+        # Store and compute values.
+        parent.store(0, _ID=(0,))
+        parent.store(1, _ID=(1,))
+        child(_ID=(0, 0))
+        child(_ID=(0, 1))
+        child(_ID=(1, 0))
+        child(_ID=(1, 1))
+
+        # Invalidate the parent at _ID=(0,).
+        parent.invalidate((0,))
+        
+        self.assertFalse(parent.is_valid((0,)))
+        self.assertFalse(parent.is_valid((1,)))
+        self.assertFalse(child.is_valid((0, 0)))
+        self.assertFalse(child.is_valid((0, 1)))
+        self.assertFalse(child.is_valid((1, 0)))
+        self.assertFalse(child.is_valid((1, 1)))
+
+
+
 
 
 if __name__ == "__main__":
