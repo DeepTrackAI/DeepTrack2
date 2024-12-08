@@ -728,7 +728,7 @@ class DeepTrackNode:
         return self
 
     def validate(self, _ID: Tuple[int, ...] = ()) -> 'DeepTrackNode':
-        """Mark this node’s data and all its children’s data as valid.
+        """Mark this node’s data as valid.
 
         Parameters
         ----------
@@ -739,17 +739,9 @@ class DeepTrackNode:
         -------
         self : DeepTrackNode
 
-        Notes
-        -----
-        If a child does not have the specified `_ID`, it is ignored.
-        
         """
         
-        for child in self.recurse_children():
-            try:
-                child.data[_ID].validate()
-            except KeyError:
-                pass
+        self.data[_ID].validate()
 
         return self
 
