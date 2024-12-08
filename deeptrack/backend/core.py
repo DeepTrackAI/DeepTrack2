@@ -1026,7 +1026,7 @@ class DeepTrackNode:
         Uses the node’s `id` to ensure uniqueness.
         
         """
-        
+
         return id(self)
 
     def __getitem__(self, idx: Any) -> 'DeepTrackNode':
@@ -1191,7 +1191,7 @@ class DeepTrackNode:
         return _create_node_with_operator(operator.__mul__, other, self)
 
     def __truediv__(
-        self, 
+        self,
         other: Union['DeepTrackNode', Any],
     ) -> 'DeepTrackNode':
         """Divide node by another node or value.
@@ -1214,7 +1214,7 @@ class DeepTrackNode:
         return _create_node_with_operator(operator.__truediv__, self, other)
 
     def __rtruediv__(
-        self, 
+        self,
         other: Union['DeepTrackNode', Any],
     ) -> 'DeepTrackNode':
         """Divide other value by node (right-hand).
@@ -1237,7 +1237,7 @@ class DeepTrackNode:
         return _create_node_with_operator(operator.__truediv__, other, self)
 
     def __floordiv__(
-        self, 
+        self,
         other: Union['DeepTrackNode', Any],
     ) -> 'DeepTrackNode':
         """Perform floor division of node by another node or value.
@@ -1262,7 +1262,7 @@ class DeepTrackNode:
         return _create_node_with_operator(operator.__floordiv__, self, other)
 
     def __rfloordiv__(
-        self, 
+        self,
         other: Union['DeepTrackNode', Any],
     ) -> 'DeepTrackNode':
         """Perform floor division of other value by node (right-hand).
