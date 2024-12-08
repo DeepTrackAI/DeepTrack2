@@ -94,8 +94,28 @@ class TestCore(unittest.TestCase):
             self.assertIsInstance(value, core.DeepTrackDataObject)
 
 
-    def test_DeepTrackNode(self):
-        pass
+    def test_DeepTrackNode_basics(self):
+        node = core.DeepTrackNode(action=lambda: 42)
+
+        # Evaluate the node.
+        result = node()  # Value is calculated and stored.
+        self.assertEqual(result, 42)
+
+        # Store a value.
+        node.store(100)  # Value is stored.
+        self.assertEqual(node.current_value(), 100)
+        self.assertTrue(node.is_valid())
+
+        # Invalidate the node and check the value.
+        node.invalidate()
+        self.assertFalse(node.is_valid())
+
+        self.assertEqual(node.current_value(), 100)  # Value is retrieved.
+        self.assertFalse(node.is_valid())
+
+        self.assertEqual(node(), 42)  # Value is calculated and stored.
+        self.assertTrue(node.is_valid())
+
 
 
 if __name__ == "__main__":
