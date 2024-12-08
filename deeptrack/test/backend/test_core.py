@@ -199,11 +199,50 @@ class TestCore(unittest.TestCase):
         for id, value in enumerate(range(10)):
             parent.store(id, _ID=(id,))
 
+        # Retrieves the values stored in children and parents.
         for id, value in enumerate(range(10)):
             self.assertEqual(child(_ID=(id,)), value * 2)
             self.assertEqual(parent.previous((id,)), value)
 
+    def test_DeepTrackNode_nested_ids(self):
+        """Test nested IDs for parent-child relationships."""
 
+        parent = core.DeepTrackNode(action=lambda: 10)
+        child = core.DeepTrackNode(
+            action=lambda _ID=None: parent(_ID[:1]) * _ID[1]
+        )
+        parent.add_child(child)
+
+        # Store values for parent at different IDs.
+        parent.store(5, _ID=(0,))
+        parent.store(10, _ID=(1,))
+
+        # Compute child values for nested IDs
+        child_value_0_0 = child(_ID=(0, 0))  # Uses parent(_ID=(0,)).
+        self.assertEqual(child_value_0_0, 0)
+
+        child_value_0_1 = child(_ID=(0, 1))  # Uses parent(_ID=(0,)).
+        self.assertEqual(child_value_0_1, 5)
+
+        child_value_1_0 = child(_ID=(1, 0))  # Uses parent(_ID=(1,)).
+        self.assertEqual(child_value_1_0, 0)
+
+        child_value_1_1 = child(_ID=(1, 1))  # Uses parent(_ID=(1,)).
+        self.assertEqual(child_value_1_1, 10)
+
+
+    def test_DeepTrackNode_replicated_behavior(self):
+        """Test replicated behavior where IDs expand."""
+
+        particle = core.DeepTrackNode(action=lambda _ID=None: _ID[0] + 1)
+
+        # Replicate node logic.
+        cluster = core.DeepTrackNode(
+            action=lambda _ID=None: particle(_ID=(0,)) + particle(_ID=(1,))
+        )
+
+        cluster_value = cluster()
+        self.assertEqual(cluster_value, 3)
 
 
 
