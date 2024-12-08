@@ -5,10 +5,12 @@ annotations used throughout the codebase. It enhances code readability,
 maintainability, and reduces redundancy in type annotations. These types are 
 particularly useful for properties and array-like structures used within the 
 library.
+
 """
 
-import numpy as np
 import typing
+
+import numpy as np
 
 # T is a generic type variable defining generic types for reusability.
 T = typing.TypeVar("T")
