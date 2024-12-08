@@ -1,58 +1,42 @@
-"""DeepTrack2 core package.
+"""Core data strDeepTrack2 package.
 
-This package provides the core classes and functionality required for managing, 
-processing, and evaluating data within the DeepTrack framework. It is designed 
-to support building flexible pipelines for scientific data analysis and machine 
-learning applications.
-
-This package is the core component of the DeepTrack2 framework. It enables 
-users to:
+This package provides the core DeepTrack2 classes to manage and process data. 
+In particular, it enables users to:
 - Construct flexible and efficient computational pipelines.
 - Manage data and dependencies in a hierarchical structure.
 - Perform lazy evaluations for performance optimization.
 
 Main Features
 -------------
-Data Management:
-- `DeepTrackDataObject` and `DeepTrackDataDict` provide tools to store, 
-  validate, and manage data with dependency tracking.
-- Enables nested structures and flexible indexing for complex data 
-  hierarchies.
+Data Management: `DeepTrackDataObject` and `DeepTrackDataDict` provide tools 
+to store, validate, and manage data with dependency tracking. They enable 
+nested data structures and flexible indexing for complex data hierarchies.
 
-Computational Graphs:
-- `DeepTrackNode` forms the backbone of computation pipelines, representing 
-  nodes in a computation graph.
-- Nodes support lazy evaluation, dependency tracking, and caching to 
-  optimize performance.
-- Implements mathematical operators for easy composition of computational 
-  graphs.
+Computational Graphs: `DeepTrackNode` forms the backbone of DeepTrack2 
+computation pipelines, representing computation nodes in a computation graph.
+Nodes support lazy evaluation, dependency tracking, and caching for improved 
+computational performance. They implement mathematical operators for easy 
+composition of computational graphs.
 
-Citations:
-- Supports citing the relevant publication (`Midtvedt et al., 2021`) to 
-  ensure proper attribution.
-
-Utilities:
-- Includes helper functions like `_equivalent` and 
-  `_create_node_with_operator` to streamline graph operations.
+Citations: Supports citing the relevant publication to ensure proper 
+attribution (e.g., `Midtvedt et al., 2021`).
 
 Package Structure
 -----------------
 Data Containers:
 - `DeepTrackDataObject`: A basic container for data with validation status.
-- `DeepTrackDataDict`: Stores multiple data objects indexed by unique access 
-                       IDs, enabling nested data storage.
+- `DeepTrackDataDict`: A data contained to store multiple data objects 
+                       (DeepTrackDataObject) indexed by unique access IDs 
+                       (consisting of tuples of integers), enabling nested data 
+                       storage.
 
 Computation Nodes:
 - `DeepTrackNode`: Represents a node in a computation graph, capable of lazy 
                    evaluation, caching, and dependency management.
 
-Citation Management:
-- Provides support for including citations in pipelines for academic and 
-  scientific use.
-
 Example
 -------
-Create a DeepTrackNode with an action:
+Create a DeepTrackNode:
 
 >>> node = DeepTrackNode(lambda x: x**2)
 >>> node.store(5)
@@ -64,10 +48,9 @@ Retrieve the stored value:
 """
 
 import operator  # Operator overloading for computation nodes.
-from weakref import WeakSet  # Manages relationships between nodes without 
+from weakref import WeakSet  # Manages relationships between nodes without
                              # creating circular dependencies.
 
-import numpy as np
 from typing import (
     Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 )
@@ -93,15 +76,13 @@ citation_midtvet2021quantitative = """
 class DeepTrackDataObject:
     """Basic data container for DeepTrack2.
 
-    This class serves as a simple container for storing data and managing its 
-    validity. It is designed to track whether the data remains valid, based on 
-    changes in dependencies or other external factors that might invalidate the 
-    data since it was last updated.
+    `DeepTrackDataObject` is a simple data container to store data and track
+    its validity.
 
     Attributes
     ----------
     data : Any
-        The stored data. Default is `None`. Can hold any data type.
+        The stored data. Default is `None`.
     valid : bool
         A flag indicating whether the stored data is valid. Default is `False`.
 
@@ -112,11 +93,12 @@ class DeepTrackDataObject:
     current_value() -> Any
         Returns the currently stored data.
     is_valid() -> bool
-        Checks if the stored data is valid.
+        Returns whether the stored data is valid.
     invalidate()
         Marks the data as invalid.
     validate()
         Marks the data as valid.
+
     """
 
     # Attributes.
@@ -126,86 +108,75 @@ class DeepTrackDataObject:
     def __init__(self):
         """Initialize the container without data.
 
-        The `data` attribute is set to `None`, and the `valid` attribute is set 
-        to `False` by default.
+        The `data` and `valid` attributes are set to their default values 
+        `None` and `False`.
+        
         """
+        
         self.data = None
         self.valid = False
 
     def store(self, data: Any) -> None:
-        """Store data in the container and mark it as valid.
+        """Store data and mark it as valid.
 
         Parameters
         ----------
         data : Any
             The data to be stored in the container.
+        
         """
+        
         self.data = data
         self.valid = True
 
     def current_value(self) -> Any:
-        """Retrieve the currently stored data.
+        """Retrieve the stored data.
 
         Returns
         -------
         Any
             The data stored in the container.
+        
         """
+        
         return self.data
 
     def is_valid(self) -> bool:
-        """Check if the stored data is valid.
+        """Return whether the stored data is valid.
 
         Returns
         -------
         bool
             `True` if the data is valid, `False` otherwise.
+        
         """
+        
         return self.valid
 
     def invalidate(self) -> None:
         """Mark the stored data as invalid."""
+        
         self.valid = False
 
     def validate(self) -> None:
         """Mark the stored data as valid."""
+        
         self.valid = True
 
 
 class DeepTrackDataDict:
-    """Stores multiple data objects indexed by a tuple of integers (access ID).
+    """Stores multiple data objects indexed by a tuple of integers (ID).
 
-    This class allows a single object to store multiple `DeepTrackDataObject` 
-    instances concurrently, each associated with a unique tuple of integers 
-    (the access ID). This is particularly useful for handling sequences of data 
-    or nested structures, as required by features like `Repeat`.
+    `DeepTrackDataDict` can store multiple `DeepTrackDataObject` instances, 
+    each associated with a unique tuple of integers (its ID). This is 
+    particularly useful to handle sequences of data or nested structures.
 
-    The default access ID is an empty tuple `()`. Once an entry is created, all 
-    IDs must match the established key length. If an ID longer than the 
-    stored length is requested, the request is trimmed. If an ID shorter than 
-    what is stored is requested, a dictionary slice containing all matching 
-    entries is returned. This mechanism supports flexible indexing of nested 
-    data and ensures that dependencies at various nesting depths can be 
-    correctly handled.
+    The default ID is an empty tuple, `()`. Once the first entry is created, 
+    all IDs must match the established key length:
+    -  If an ID longer than the set length is requested, it is trimmed. 
+    -  If an ID shorter than the set length is requested, a dictionary slice 
+       containing all matching entries is returned.
 
-    Example
-    -------
-    Consider the following structure, where `Repeat` is a feature that creates
-    multiple instances of another feature:
-
-    >>> F = Repeat(Repeat(DummyFeature(prop=np.random.rand), 2), 2)
-
-    Here, `F` contains 2 * 2 = 4 instances of the feature `prop`. 
-    These can be accessed using the IDs:
-    (0, 0), (0, 1), (1, 0), and (1, 1).
-
-    In this nested structure:
-    - (0, 0) refers to the first repeat of the outer feature and the first 
-        repeat of the inner feature.
-    - (0, 1) refers to the first repeat of the outer feature and the second 
-        repeat of the inner feature.
-    And so forth, resolving nested structures via tuples of indices.
-    
     Attributes
     ----------
     keylength : int or None
@@ -235,6 +206,42 @@ class DeepTrackDataDict:
         than `keylength`.
     __contains__(_ID : Tuple[int, ...]) -> bool
         Checks if the given ID exists in the dictionary.
+
+    Example
+    -------
+    Imagine to have a structure that generates multiple instances of data:
+
+    >>> data_dict = DeepTrackDataDict()
+
+    # Create two top-level entries
+    >>> data_dict.create_index((0,))
+    >>> data_dict.create_index((1,))
+
+    # Add nested entries
+    >>> data_dict.create_index((0, 0))
+    >>> data_dict.create_index((0, 1))
+    >>> data_dict.create_index((1, 0))
+    >>> data_dict.create_index((1, 1))
+
+    Now, store and access values associated with each ID:
+
+    >>> data_dict[(0, 0)].store("Data at (0, 0)")
+    >>> data_dict[(0, 1)].store("Data at (0, 1)")
+    >>> data_dict[(1, 0)].store("Data at (1, 0)")
+    >>> data_dict[(1, 1)].store("Data at (1, 1)")
+
+    Retrieve values based on their IDs:
+
+    >>> print(data_dict[(0, 0)].current_value())
+    Data at (0, 0)
+
+    >>> print(data_dict[(1, 1)].current_value())
+    Data at (1, 1)
+
+    If requesting a shorter ID, it returns all matching nested entries:
+    
+    >>> print(data_dict[(0,)])
+    {(0, 0): <DeepTrackDataObject>, (0, 1): <DeepTrackDataObject>}
     
     """
 
@@ -249,7 +256,7 @@ class DeepTrackDataDict:
         indicating no data objects are currently stored.
         
         """
-        
+
         self.keylength = None
         self.dict = {}
 
@@ -259,7 +266,7 @@ class DeepTrackDataDict:
         Calls `invalidate()` on every `DeepTrackDataObject` in the dictionary.
         
         """
-        
+
         for dataobject in self.dict.values():
             dataobject.invalidate()
 
@@ -269,13 +276,18 @@ class DeepTrackDataDict:
         Calls `validate()` on every `DeepTrackDataObject` in the dictionary.
         
         """
-        
+
         for dataobject in self.dict.values():
             dataobject.validate()
 
     def valid_index(self, _ID: Tuple[int, ...]) -> bool:
         """Check if a given ID is valid for this data dictionary.
 
+        If `keylength` is `None`, any tuple ID is considered valid since no 
+        entries have been created yet. If `_ID` already exists in `dict`, it is 
+        automatically valid. Otherwise, `_ID` must have the same length as 
+        `keylength` to be considered valid.
+        
         Parameters
         ----------
         _ID : Tuple[int, ...]
@@ -290,23 +302,15 @@ class DeepTrackDataDict:
         Raises
         ------
         AssertionError
-            If `_ID` is not a tuple of integers. The error message includes the 
-            actual `_ID` value and the types of its elements for easier 
-            debugging.
-
-        Notes
-        -----
-        - If `keylength` is `None`, any tuple ID is considered valid since no 
-            entries have been created yet.
-        - If `_ID` already exists in `dict`, it is automatically valid.
-        - Otherwise, `_ID` must have the same length as `keylength` to be 
-            considered valid.
+            If `_ID` is not a tuple of integers.
         
         """
-        
-        assert (
-            isinstance(_ID, tuple) and all(isinstance(i, int) for i in _ID)
-        ), (
+
+        # Ensure `_ID` is a tuple of integers.
+        assert isinstance(_ID, tuple), (
+            f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
+        )
+        assert all(isinstance(i, int) for i in _ID), (
             f"Data index {_ID} is not a tuple of integers. "
             f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
         )
@@ -325,6 +329,13 @@ class DeepTrackDataDict:
     def create_index(self, _ID: Tuple[int, ...] = ()) -> None:
         """Create a new data entry for the given ID if not already existing.
 
+        Each newly created index is associated with a new 
+        `DeepTrackDataObject`. If `_ID` is already in `dict`, no new entry is 
+        created.
+        
+        If `keylength` is `None`, it is set to the length of `_ID`. Once 
+        established, all subsequently created IDs must have this same length.
+
         Parameters
         ----------
         _ID : Tuple[int, ...], optional
@@ -335,50 +346,35 @@ class DeepTrackDataDict:
         Raises
         ------
         AssertionError
-            - If `_ID` is not a tuple of integers. The error message includes 
-                the value of `_ID` and the types of its elements.
-            - If `_ID` is not a valid index according to the current 
-                configuration.
-
-        Notes
-        -----
-        - If `keylength` is `None`, it is set to the length of `_ID`. Once 
-            established, all subsequently created IDs must have this same length.
-        - If `_ID` is already in `dict`, no new entry is created.
-        - Each newly created index is associated with a fresh 
-            `DeepTrackDataObject`.
+            - If `_ID` is not a tuple of integers.
+            - If `_ID` is not valid for the current configuration.
             
         """
-        
-        # Ensure `_ID` is a tuple of integers.
-        assert (
-            isinstance(_ID, tuple) and all(isinstance(i, int) for i in _ID)
-        ), (
-            f"Data index {_ID} is not a tuple of integers. "
-            f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
+
+        # Check if the given `_ID` is valid.
+        # (Also: Ensure `_ID` is a tuple of integers.)
+        assert self.valid_index(_ID), (
+            f"{_ID} is not a valid index for current dictionary configuration."
         )
 
         # If `_ID` already exists, do nothing.
         if _ID in self.dict:
             return
 
-        # Check if the given `_ID` is valid.
-        assert self.valid_index(_ID), (
-            f"{_ID} is not a valid index for current dictionary configuration."
-        )
+        # Create a new DeepTrackDataObject for this ID.
+        self.dict[_ID] = DeepTrackDataObject()
 
         # If `keylength` is not set, initialize it with current ID's length.
         if self.keylength is None:
             self.keylength = len(_ID)
 
-        # Create a new DeepTrackDataObject for this ID.
-        self.dict[_ID] = DeepTrackDataObject()
-
     def __getitem__(
-        self, 
+        self,
         _ID: Tuple[int, ...],
-    ) -> Union[DeepTrackDataObject, 
-               Dict[Tuple[int, ...], DeepTrackDataObject]]:
+    ) -> Union[
+        DeepTrackDataObject,
+        Dict[Tuple[int, ...], DeepTrackDataObject]
+    ]:
         """Retrieve data associated with a given ID.
 
         Parameters
@@ -388,7 +384,7 @@ class DeepTrackDataDict:
 
         Returns
         -------
-        DeepTrackDataObject or dict
+        DeepTrackDataObject or Dict[Tuple[int, ...], DeepTrackDataObject]
             If `_ID` matches `keylength`, returns the corresponding 
             `DeepTrackDataObject`.
             If `_ID` is longer than `keylength`, the request is trimmed to 
@@ -402,25 +398,31 @@ class DeepTrackDataDict:
             If `_ID` is not a tuple of integers.
         KeyError
             If the dictionary is empty (`keylength` is `None`).
+        
         """
-        assert (
-            isinstance(_ID, tuple) and all(isinstance(i, int) for i in _ID)
-        ), (
+
+        # Ensure `_ID` is a tuple of integers.
+        assert isinstance(_ID, tuple), (
+            f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
+        )
+        assert all(isinstance(i, int) for i in _ID), (
             f"Data index {_ID} is not a tuple of integers. "
             f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
         )
 
         if self.keylength is None:
-            raise KeyError("Indexing an empty dict.")
+            raise KeyError("Attempting to index an empty dict.")
 
+        # If ID matches keylength, returns corresponding DeepTrackDataObject.
         if len(_ID) == self.keylength:
             return self.dict[_ID]
-        elif len(_ID) > self.keylength:
-            # Trim the requested ID to match keylength.
+
+        # If ID longer than keylength, trim the requested ID.
+        if len(_ID) > self.keylength:
             return self[_ID[: self.keylength]]
-        else:
-            # Return a slice of all items matching the shorter ID prefix.
-            return {k: v for k, v in self.dict.items() if k[: len(_ID)] == _ID}
+
+        # If ID longer than keylength, return a slice of all matching items.
+        return {k: v for k, v in self.dict.items() if k[: len(_ID)] == _ID}
 
     def __contains__(self, _ID: Tuple[int, ...]) -> bool:
         """Check if a given ID exists in the dictionary.
@@ -434,7 +436,23 @@ class DeepTrackDataDict:
         -------
         bool
             `True` if the ID exists, `False` otherwise.
+
+        Raises
+        ------
+        AssertionError
+            If `_ID` is not a tuple of integers.
+
         """
+
+        # Ensure `_ID` is a tuple of integers.
+        assert isinstance(_ID, tuple), (
+            f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
+        )
+        assert all(isinstance(i, int) for i in _ID), (
+            f"Data index {_ID} is not a tuple of integers. "
+            f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
+        )
+
         return _ID in self.dict
 
 
@@ -1439,11 +1457,14 @@ class DeepTrackNode:
 
 
 def _equivalent(a, b):
-    """Check if two objects are equivalent (internal function).
+    """Check if two objects are equivalent.
 
-    This is a basic implementation to determine equivalence between two 
-    objects. Additional cases can be implemented as needed to refine this 
-    behavior.
+    This internal helper function provides a basic implementation to determine 
+    equivalence between two objects:
+    - If `a` and `b` are the same object (identity check), they are considered 
+      equivalent.
+    - If both `a` and `b` are empty lists, they are considered equivalent.
+    Additional cases can be implemented as needed to refine this behavior.
 
     Parameters
     ----------
@@ -1457,33 +1478,38 @@ def _equivalent(a, b):
     bool
         `True` if the objects are equivalent, `False` otherwise.
 
-    Notes
-    -----
-    - If `a` and `b` are the same object (identity check), they are considered 
-      equivalent.
-    - If both `a` and `b` are empty lists, they are considered equivalent.
     """
-    
+
+    # If a and b are the same object, return True.
     if a is b:
         return True
 
+    # If a and b are empty lists, consider them identical.
     if isinstance(a, list) and isinstance(b, list):
         return len(a) == 0 and len(b) == 0
 
+    # Otherwise, return False.
     return False
 
 
 def _create_node_with_operator(op, a, b):
     """Create a new computation node using a given operator and operands.
 
-    This internal helper function constructs a `DeepTrackNode` that represents 
-    the application of the specified operator to two operands. If the operands 
+    This internal helper function constructs a `DeepTrackNode` obtained from 
+    the  application of the specified operator to two operands. If the operands 
     are not already `DeepTrackNode` instances, they are converted to nodes.
+
+    This function also establishes bidirectional relationships between the new 
+    node and its operands:
+    - The new node is added as a child of the operands `a` and `b`.
+    - The operands `a` and `b` are added as dependencies of the new node.
+    - The operator `op` is applied lazily, meaning it will be evaluated when 
+      the new node is called, for computational efficiency.
 
     Parameters
     ----------
     op : Callable
-        The operator function to apply.
+        The operator function.
     a : Any
         First operand. If not a `DeepTrackNode`, it will be wrapped in one.
     b : Any
@@ -1492,27 +1518,23 @@ def _create_node_with_operator(op, a, b):
     Returns
     -------
     DeepTrackNode
-        A new `DeepTrackNode` that applies the operator `op` to the values of 
-        nodes `a` and `b`.
+        A new `DeepTrackNode` containing the result of applying the operator 
+        `op` to the values of nodes `a` and `b`.
 
-    Notes
-    -----
-    - This function establishes bidirectional relationships between the new 
-        node and its operands:
-        - The new node is added as a child of both `a` and `b`.
-        - The operands are added as dependencies of the new node.
-    - The operator `op` is applied lazily, meaning it will be evaluated when 
-        the new node is called.
+    Raises
+    ------
+    TypeError
+        If any of the operand is not a `DeepTrackNode` or a callable.
 
     """
-    
+
     # Ensure `a` is a `DeepTrackNode`. Wrap it if necessary.
     if not isinstance(a, DeepTrackNode):
         if callable(a):
             a = DeepTrackNode(a)
         else:
             raise TypeError("Operand 'a' must be callable or a DeepTrackNode, "
-                            + f"got {type(a).__name__}.")
+                            f"got {type(a).__name__}.")
 
     # Ensure `b` is a `DeepTrackNode`. Wrap it if necessary.
     if not isinstance(b, DeepTrackNode): 
@@ -1520,17 +1542,19 @@ def _create_node_with_operator(op, a, b):
             b = DeepTrackNode(b)
         else:
             raise TypeError("Operand 'b' must be callable or a DeepTrackNode, "
-                            + f"got {type(b).__name__}.")
+                            f"got {type(b).__name__}.")
 
-    # New node that applies the operator `op` to the outputs of `a` and `b`.
+    # New node that applies the operator `op` to the values of `a` and `b`.
     new_node = DeepTrackNode(lambda _ID=(): op(a(_ID=_ID), b(_ID=_ID)))
-    
-    # Establish dependency relationships between the nodes.
-    new_node.add_dependency(a)
-    new_node.add_dependency(b)
-    
+
     # Set the new node as a child of both `a` and `b`.
+    # (Also: Establish dependency relationships between the nodes.)
     a.add_child(new_node)
     b.add_child(new_node)
+
+    # Establish dependency relationships between the nodes.
+    # (Not needed because already done implicitly above.)
+    # new_node.add_dependency(a)
+    # new_node.add_dependency(b)
 
     return new_node
