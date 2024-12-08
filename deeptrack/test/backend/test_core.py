@@ -303,7 +303,27 @@ class TestCore(unittest.TestCase):
         self.assertFalse(child.is_valid((1, 1)))
 
 
+    def test_DeepTrackNode_dependency_graph_with_ids(self):
+        """Test a multi-level dependency graph with nested IDs."""
 
+        A = core.DeepTrackNode(action=lambda: 10)
+        B = core.DeepTrackNode(action=lambda _ID=None: A(_ID[:-1]) + 5)
+        C = core.DeepTrackNode(
+            action=lambda _ID=None: B(_ID[:-1]) * (_ID[-1] + 1)
+        )
+        A.add_child(B)
+        B.add_child(C)
+
+        # Store values for A at different IDs.
+        A.store(3, _ID=(0,))
+        A.store(4, _ID=(1,))
+
+        # Compute values for C at nested IDs.
+        C_0_1_2 = C(_ID=(0, 1, 2))  # B((0, 1)) * (2 + 1)
+                                    # (A((0,)) + 5) * (2 + 1)
+                                    # (3 + 5) * (2 + 1)
+                                    # 24
+        self.assertEqual(C_0_1_2, 24)
 
 
 if __name__ == "__main__":
