@@ -117,6 +117,39 @@ class TestCore(unittest.TestCase):
         self.assertTrue(node.is_valid())
 
 
+    def test_DeepTrackNode_dependencies(self):
+        parent = core.DeepTrackNode(action=lambda: 10)
+        child = core.DeepTrackNode(action=lambda _ID=None: parent() * 2)
+        parent.add_child(child)  # Establish dependency.
+
+        # Check that the just create nodes are invalid as not calculated.
+        self.assertFalse(parent.is_valid())
+        self.assertFalse(child.is_valid())
+
+        # Calculate child, and therefore parent.
+        result = child()
+        self.assertEqual(result, 20)
+        self.assertTrue(parent.is_valid())
+        self.assertTrue(child.is_valid())
+
+        # Invalidate parent and check child validity.
+        parent.invalidate()
+        self.assertFalse(parent.is_valid())
+        self.assertFalse(child.is_valid())
+
+        # Validate parent and ensure child is invalid until recomputation.
+        parent.validate()
+        self.assertTrue(parent.is_valid())
+        self.assertFalse(child.is_valid())
+
+        # Recompute child and check its validity
+        child()
+        self.assertTrue(parent.is_valid())
+        self.assertTrue(child.is_valid())
+
+
+    def test_DeepTrackNode_dependencies(self):
+        pass
 
 if __name__ == "__main__":
     unittest.main()
