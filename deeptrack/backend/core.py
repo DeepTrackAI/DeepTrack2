@@ -717,6 +717,11 @@ class DeepTrackNode:
         Returns
         -------
         self : DeepTrackNode
+        
+        Note
+        ----
+        At the moment, the code to invalidate specific IDs is not implemented, 
+        so the _ID parameter is not used.
 
         """
         
