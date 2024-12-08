@@ -140,7 +140,7 @@ class TestCore(unittest.TestCase):
         # Validate parent and ensure child is invalid until recomputation.
         parent.validate()
         self.assertTrue(parent.is_valid())
-        self.assertFalse(child.is_valid())
+        self.assertFalse(child.is_valid())  ###TODO this test doesn't pass!
 
         # Recompute child and check its validity
         child()
@@ -148,7 +148,7 @@ class TestCore(unittest.TestCase):
         self.assertTrue(child.is_valid())
 
 
-    def test_DeepTrackNode_dependencies(self):
+    def test_DeepTrackNode_overloading(self):
         pass
 
 if __name__ == "__main__":
