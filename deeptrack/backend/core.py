@@ -75,7 +75,7 @@ from typing import (
 from .. import utils
 
 
-citation_Midtvet2021Quantitative = """
+citation_midtvet2021quantitative = """
 @article{Midtvet2021Quantitative,
     author  = {Midtvedt, Benjamin and Helgadottir, Saga and Argun, Aykut and 
                Pineda, Jesús and Midtvedt, Daniel and Volpe, Giovanni},
@@ -519,7 +519,7 @@ class DeepTrackNode:
     _all_subchildren: Set['DeepTrackNode']
 
     # Citations associated with this DeepTrack2.
-    citations: List[str] = [citation_Midtvet2021Quantitative]
+    citations: List[str] = [citation_midtvet2021quantitative]
 
     @property
     def action(self) -> Callable[..., Any]:
