@@ -1,81 +1,66 @@
-""" Utility functions
+"""Utility functions.
 
-Defines a set of utility functions used throughout the code
-to make it more readable.
+This module defines utility functions that enhance code readability, 
+streamline common operations, and ensure type and argument consistency.
 
 Functions
 ---------
-hasfunction(obj: any, function_name: str) -> bool
-    Return True if the object has a field named function_name
-    that is callable. Otherwise, return False.
-isiterable(obj: any)
-    Return True if the object is iterable. Else, return False.
-as_list(obj: any)
-    If the input is iterable, convert it to list.
+hasmethod(obj: any, method_name: str) -> bool
+    Return True if the object has a field named `function_name` that is 
+    callable. Otherwise, return False.
+as_list(obj: any) -> list
+    If the input is iterable, convert it to list. 
     Otherwise, wrap the input in a list.
-get_kwarg_names(function: Callable)
-    Return the names of the keyword arguments the function accepts.
+get_kwarg_names(function: Callable) -> List[str]
+    Retrieves the names of the keyword arguments accepted by a function.
+kwarg_has_default(function: Callable, argument: str) -> bool
+    Checks if a specific argument of a function has a default value.
+safe_call(function, positional_args=[], **kwargs)
+    Calls a function, passing only valid arguments from the provided kwargs.
+
 """
 
 import inspect
-from typing import Callable, List
+from typing import Any, Callable, List
 
 
 def hasmethod(obj: any, method_name: str) -> bool:
-    """Check if an object has a callable method named method_name.
+    """Check if an object has a callable method named `method_name`.
 
     Parameters
     ----------
-    obj
-        The object to be checked.
-    method_name
+    obj : any
+        The object to inspect.
+    method_name : str
         The name of the method to look for.
 
     Returns
     -------
     bool
-        True if the object has an attribute method_name, and that
-        attribute is callable.
+        True if the object has an attribute named `method_name` that is 
+        callable.
 
     """
 
-    return hasattr(obj, method_name) and callable(getattr(obj, method_name, None))
-
-
-def isiterable(obj: any) -> bool:
-    """Check if the input is iterable.
-    Note that this function does not capture all possible cases
-    and is subject to change in the future if issues arise.
-
-    Parameters
-    ----------
-    obj
-        The object to check.
-
-    Returns
-    -------
-    bool
-        True if the object has __next__ defined.
-
-    """
-
-    return hasattr(obj, "__next__")
+    return (hasattr(obj, method_name) 
+            and callable(getattr(obj, method_name, None)))
 
 
 def as_list(obj: any) -> list:
-    """Ensure the input is a list.
-    If the input is iterable, convert it to a list,
-    otherwise wrap the input in a list.
+    """Ensure that the input is a list.
+
+    Converts the input to a list if it is iterable; otherwise, it wraps it in a 
+    list.
 
     Parameters
     ----------
-    obj
-        The object that will be made a list.
+    obj : any
+        The object to be converted or wrapped in a list.
 
     Returns
     -------
     list
-        The input as a list.
+        The input object as a list.
 
     """
 
@@ -86,19 +71,20 @@ def as_list(obj: any) -> list:
 
 
 def get_kwarg_names(function: Callable) -> List[str]:
-    """Retrieve the names of the keyword arguments.
-    Retrieve the names of the keyword arguments accepted by `function`
-    as a list of strings.
+    """Retrieve the names of the keyword arguments accepted by a function.
+    
+    Retrieves the names of the keyword arguments accepted by `function` as a 
+    list of strings.
 
     Parameters
     ----------
-    function
-        The function to retrieve keyword argument names from.
+    function : Callable
+        The function whose keyword argument names are to be retrieved.
 
     Returns
     -------
     List[str]
-        The accepted keyword arguments as a list of strings.
+        A list of names of keyword arguments the function accepts.
 
     """
 
@@ -114,20 +100,22 @@ def get_kwarg_names(function: Callable) -> List[str]:
 
 
 def kwarg_has_default(function: Callable, argument: str) -> bool:
-    """Returns true if an argument has a default value.
+    """Check if a specific argument of a function has a default value.
 
     Parameters
     ----------
     function : Callable
-        The function to check.
+        The function to inspect.
     argument : str
-        Name of the argument
+        Name of the argument to check.
 
     Returns
     -------
     bool
+        True if the specified argument has a default value.
 
     """
+    
     args = get_kwarg_names(function)
 
     if argument not in args:
@@ -138,22 +126,32 @@ def kwarg_has_default(function: Callable, argument: str) -> bool:
     return len(args) - args.index(argument) <= len(defaults)
 
 
-def safe_call(function, positional_args=[], **kwargs):
-    """Calls a function, using keyword arguments from a dictionary of arguments.
-
-    If the function does not accept one of the argument provided, it will not
-    be passed. Does not support non-keyword arguments.
+def safe_call(function, positional_args=[], **kwargs) -> Any:
+    """Calls a function with valid arguments from a dictionary of arguments.
+    
+    Filters `kwargs` to include only arguments accepted by the function, 
+    ensuring that no invalid arguments are passed. This function also supports 
+    positional arguments.
 
     Parameters
     ----------
     function : Callable
-        The function to call
-    kwargs
-        Key-value pairs to draw input arguments from.
+        The function to call.
+    positional_args : list, optional
+        List of positional arguments to pass to the function.
+    kwargs : dict
+        Dictionary of keyword arguments to filter and pass.
+    
+    Returns
+    -------
+    Any
+        The result of calling the function with the filtered arguments.   
+     
     """
 
     keys = get_kwarg_names(function)
 
+    # Filter kwargs to include only keys present in the function's signature.
     input_arguments = {}
     for key in keys:
         if key in kwargs:

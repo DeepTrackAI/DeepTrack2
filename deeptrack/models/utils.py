@@ -21,9 +21,9 @@ except Exception:
         ImportWarning,
     )
 
-import pkg_resources
+'''import pkg_resources
 
-installed_pkg = [pkg.key for pkg in pkg_resources.working_set]
+installed_pkg = [pkg.key for pkg in pkg_resources.working_set]'''#TBE
 
 __all__ = [
     "compile",
@@ -96,8 +96,8 @@ def _get_norm_by_name(x):
     """Returns a normalization layer by name."""
     if hasattr(layers, x):
         return getattr(layers, x)
-    elif "tensorflow-addons" in installed_pkg and hasattr(tfa.layers, x):
-        return getattr(tfa.layers, x)
+        '''elif "tensorflow-addons" in installed_pkg and hasattr(tfa.layers, x):
+            return getattr(tfa.layers, x)'''#TBE
     else:
         raise ValueError(f"Unknown normalization {x}.")
 

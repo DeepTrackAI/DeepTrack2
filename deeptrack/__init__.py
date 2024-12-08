@@ -1,13 +1,13 @@
 # flake8: noqa
-from pint import UnitRegistry, Context
-from .backend.pint_definition import pint_definitions
 import lazy_import
-import importlib
 
+from pint import UnitRegistry
+from .backend.pint_definition import pint_definitions
 
+# Create a unit registry with custom pixel-related units.
 units = UnitRegistry(pint_definitions.split("\n"))
 
-# Check if tensorflow is installed without importing it
+'''# Check if tensorflow is installed without importing it #TBE
 import pkg_resources
 
 installed = [pkg.key for pkg in pkg_resources.working_set]
@@ -23,7 +23,7 @@ else:
     HAS_TORCH = False
 
 if HAS_TENSORFLOW and HAS_TORCH:
-    import torch # torch must be imported before tensorflow
+    import torch # torch must be imported before tensorflow'''#TBE
 
 from deeptrack.features import *
 from deeptrack.aberrations import *

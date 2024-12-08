@@ -10,7 +10,7 @@ import warnings
 import random
 
 import numpy as np
-from pint.quantity import Quantity
+from pint import Quantity
 # import tensorflow as tf
 import skimage
 import skimage.measure

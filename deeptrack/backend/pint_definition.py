@@ -1,3 +1,55 @@
+"""Pint constants and units definition for DeepTrack2.
+
+This file consolidates and extends the default definitions provided by Pint's 
+`default_en.txt` and `constants_en.txt` files. These files define physical 
+constants and unit systems based on internationally recognized standards, such 
+as the  International System of Units (SI), and additional systems like CGS, 
+Planck units, and atomic units.
+
+Sources
+-------
+- Pint's default unit definitions: 
+  https://github.com/hgrecco/pint/blob/main/pint/default_en.txt
+- Pint's default constants definitions: 
+  https://github.com/hgrecco/pint/blob/main/pint/constants_en.txt
+
+Content
+-------
+- Mathematical Constants: Includes key values like π, Euler's number, 
+    and the natural logarithm of 10.
+- Physical Constants: Covers fundamental constants like the speed of light, 
+    Planck constant, and Boltzmann constant.
+- Derived Constants: Defines values such as the fine-structure constant and 
+    classical electron radius.
+- Units: Provides base and derived units for length, mass, time, energy, etc., 
+    with precise conversion factors.
+- Prefixes and Aliases: Defines standard prefixes (e.g., milli-, kilo-, mega-) 
+    and unit aliases to ensure flexibility.
+- Unit Systems: Details unit systems, including SI, MKS, CGS, Planck, and 
+    imperial units.
+- Contexts and Conversion: Includes context-specific definitions to facilitate 
+    domain-specific conversions.
+
+Key Modifications
+-----------------
+This file is derived from the default Pint files with the adjustments:
+1. Groups Removed: Unit group definitions (e.g., `@group`) have been excluded 
+    to avoid conflicts with the definition of pixel.
+2. Final Variables Added: Defines constants and variables required for the 
+    project-specific context (e.g., pixel-related units).
+
+Usage
+-----
+To create a unit registry with custom pixel-related units:
+
+>>> from pint import UnitRegistry
+>>> from .backend.pint_definition import pint_definitions
+>>>
+>>> units = UnitRegistry(pint_definitions.split("\n"))
+
+"""
+
+
 pint_constants = """
 # Default Pint constants definition file
 # Based on the International System of Units
@@ -939,5 +991,4 @@ zpixel = 1 micrometer = zpx
 simulation_xpixel = 1 micrometer = sxpx
 simulation_ypixel = 1 micrometer = sypx
 simulation_zpixel = 1 micrometer = szpx
-
 """

@@ -2,10 +2,7 @@
 """
 
 import numpy as np
-from .utils import (
-    isiterable,
-    get_kwarg_names,
-)
+from .utils import get_kwarg_names
 
 
 from .backend.core import DeepTrackNode
@@ -58,7 +55,7 @@ class Property(DeepTrackNode):
         if isinstance(sampling_rule, (tuple, np.ndarray)):
             return lambda _ID=(): sampling_rule
 
-        if isiterable(sampling_rule):
+        if hasattr(sampling_rule, "__next__"):
             # If it's iterable, return the next value
             def wrapped_iterator():
                 while True:
