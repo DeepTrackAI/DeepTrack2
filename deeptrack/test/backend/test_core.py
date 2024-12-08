@@ -147,6 +147,23 @@ class TestCore(unittest.TestCase):
         self.assertTrue(parent.is_valid())
         self.assertTrue(child.is_valid())
 
+    def test_DeepTrackNode_nested_dependencies(self):
+        parent = core.DeepTrackNode(action=lambda: 5)
+        middle = core.DeepTrackNode(action=lambda: parent() + 5)
+        child = core.DeepTrackNode(action=lambda: middle() * 2)
+
+        parent.add_child(middle)
+        middle.add_child(child)
+
+        result = child()
+        self.assertEqual(result, 20, "Nested computation failed.")
+
+        # Invalidate the middle and check propagation.
+        middle.invalidate()
+        self.assertTrue(parent.is_valid())
+        self.assertFalse(middle.is_valid())
+        self.assertFalse(child.is_valid())
+
 
     def test_DeepTrackNode_overloading(self):
         node1 = core.DeepTrackNode(action=lambda: 5)
@@ -164,11 +181,12 @@ class TestCore(unittest.TestCase):
         div_node = node2 / node1
         self.assertEqual(div_node(), 2)
 
+
     def test_DeepTrackNode_citations(self):
         node = core.DeepTrackNode(action=lambda: 42)
         citations = node.get_citations()
         self.assertIn(core.citation_midtvet2021quantitative, citations)
-
+            
 
 if __name__ == "__main__":
     unittest.main()
