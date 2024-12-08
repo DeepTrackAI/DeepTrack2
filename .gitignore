@@ -26,3 +26,5 @@ examples/**/*/models/
 *.jpeg
 *.npy
 *.db
+
+.DS_Store
