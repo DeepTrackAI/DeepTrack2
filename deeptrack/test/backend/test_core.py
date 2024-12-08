@@ -187,6 +187,7 @@ class TestCore(unittest.TestCase):
         citations = node.get_citations()
         self.assertIn(core.citation_midtvet2021quantitative, citations)
 
+
     def test_DeepTrackNode_single_id(self):
         """Test a single _ID on a simple parent-child relationship."""
 
@@ -194,13 +195,17 @@ class TestCore(unittest.TestCase):
         child = core.DeepTrackNode(action=lambda _ID=None: parent(_ID) * 2)
         parent.add_child(child)
 
-        # Store value for a specific _ID
-        parent.store(15, _ID=(0,))
-        child_value = child(_ID=(0,))
+        # Store value for a specific _ID's.
+        for id, value in enumerate(range(10)):
+            parent.store(id, _ID=(id,))
 
-        self.assertEqual(child_value, 30)
-        self.assertEqual(parent.previous((0,)), 15)
-            
+        for id, value in enumerate(range(10)):
+            self.assertEqual(child(_ID=(id,)), value * 2)
+            self.assertEqual(parent.previous((id,)), value)
+
+
+
+
 
 if __name__ == "__main__":
     unittest.main()
