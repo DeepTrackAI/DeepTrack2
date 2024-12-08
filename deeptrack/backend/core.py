@@ -513,46 +513,50 @@ class DeepTrackNode:
     Methods
     -------
     action : property
-        Get/set the computation function.
+        Gets or sets the computation function for the node.
     add_child(other: DeepTrackNode) -> DeepTrackNode
-        Adds a child node.
+        Adds a child node that depends on this node.
+        Also adds the dependency between the two nodes.
     add_dependency(other: DeepTrackNode) -> DeepTrackNode
-        Adds a dependency node.
+        Adds a dependency, making this node depend on the given node.
     store(data: Any, _ID: Tuple[int, ...] = ()) -> DeepTrackNode
-        Stores computed data.
+        Stores computed data for the given `_ID`.
     is_valid(_ID: Tuple[int, ...] = ()) -> bool
-        Checks if data is valid.
+        Checks if the data for the given `_ID` is valid.
     valid_index(_ID: Tuple[int, ...]) -> bool
-        Checks if `_ID` is valid.
+        Checks if the given `_ID` is valid for this node.
     invalidate(_ID: Tuple[int, ...] = ()) -> DeepTrackNode
-        Invalidates this node’s and its children's data.
+        Invalidates the data for the given `_ID` and all child nodes.
     validate(_ID: Tuple[int, ...] = ()) -> DeepTrackNode
-        Validates this node’s data.
-    _update() -> DeepTrackNode
-        Internal method to reset data.
+        Validates the data for the given `_ID`, marking it as up-to-date, but 
+        not its children.
     set_value(value: Any, _ID: Tuple[int, ...] = ()) -> DeepTrackNode
-        Sets a value, invalidating if necessary.
+        Sets a value for the given `_ID`. If the new value differs from the 
+        current value, the node is invalidated to ensure dependencies are 
+        recomputed.
     previous(_ID: Tuple[int, ...] = ()) -> Any
-        Returns previously stored value.
-    recurse_children(memory: Optional[Set[DeepTrackNode]] = None) 
-        -> Set[DeepTrackNode]
-        Returns all subchildren.
-    old_recurse_children(memory: Optional[List[DeepTrackNode]] = None) 
-        -> Iterator[DeepTrackNode]
-        Legacy depth-first traversal.
-    recurse_dependencies(memory: Optional[List[DeepTrackNode]] = None) 
-        -> Iterator[DeepTrackNode]
-        Yields dependencies.
+        Returns the previously stored value for the given `_ID` without 
+        recomputing it.
+    recurse_children(
+        memory: Optional[Set[DeepTrackNode]] = None
+    ) -> Set[DeepTrackNode]
+        Returns all child nodes in the dependency tree rooted at this node.
+    recurse_dependencies(
+        memory: Optional[List[DeepTrackNode]] = None
+    ) -> Iterator[DeepTrackNode]
+        Yields all nodes that this node depends on, traversing dependencies.
     get_citations() -> Set[str]
-        Gathers citations.
+        Returns a set of citations for this node and its dependencies.
     __call__(_ID: Tuple[int, ...] = ()) -> Any
-        Evaluates the node.
+        Evaluates the node's computation for the given `_ID`, recomputing if 
+        necessary.
     current_value(_ID: Tuple[int, ...] = ()) -> Any
-        Returns currently stored value.
+        Returns the currently stored value for the given `_ID` without 
+        recomputation.
     __hash__() -> int
-        Returns unique hash.
+        Returns a unique hash for this node.
     __getitem__(idx: Any) -> DeepTrackNode
-        Index into the node’s computed data.
+        Creates a new node that indexes into this node’s computed data.
 
     Example
     -------
