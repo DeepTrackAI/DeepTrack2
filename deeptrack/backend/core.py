@@ -548,9 +548,9 @@ class DeepTrackNode:
         True.
         
         """
-        
+
         return self._action
-    
+
     @action.setter
     def action(self, value: Callable[..., Any]) -> None:
         """Set the action used to compute this node’s value.
@@ -581,7 +581,7 @@ class DeepTrackNode:
             Additional arguments for subclasses or extended functionality.
             
         """
-        
+
         self.data = DeepTrackDataDict()
         self.children = WeakSet()
         self.dependencies = WeakSet()
@@ -597,7 +597,7 @@ class DeepTrackNode:
 
         # Check if action accepts `_ID`.
         self._accepts_ID = "_ID" in utils.get_kwarg_names(self.action)
-        
+
         # Call super init in case of multiple inheritance.
         super().__init__(**kwargs)
 
@@ -625,11 +625,11 @@ class DeepTrackNode:
         remain consistent.
         
         """
-        
+
         self.children.add(other)
         if self not in other.dependencies:
             other.add_dependency(self)  # Ensure bidirectional relationship.
-        
+
         # Get all subchildren of `other` and add `other` itself.
         subchildren = other._all_subchildren.copy()
         subchildren.add(other)
@@ -657,7 +657,7 @@ class DeepTrackNode:
             Returns the current node for chaining.
         
         """
-        
+
         self.dependencies.add(other)
         other.add_child(self)  # Ensure the child relationship is also set.
 
@@ -679,7 +679,7 @@ class DeepTrackNode:
         self : DeepTrackNode
         
         """
-        
+
         # Create the index if necessary, then store data in it.
         self.data.create_index(_ID)
         self.data[_ID].store(data)
@@ -700,7 +700,7 @@ class DeepTrackNode:
             `True` if data at `_ID` is valid, otherwise `False`.
         
         """
-        
+
         try:
             return self.data[_ID].is_valid()
         except (KeyError, AttributeError):
@@ -742,7 +742,7 @@ class DeepTrackNode:
         so the _ID parameter is not used.
 
         """
-        
+
         # Invalidate data for all children of this node.
 
         for child in self.recurse_children():
@@ -763,7 +763,7 @@ class DeepTrackNode:
         self : DeepTrackNode
 
         """
-        
+
         self.data[_ID].validate()
 
         return self
@@ -810,7 +810,7 @@ class DeepTrackNode:
         self : DeepTrackNode
         
         """
-        
+
         # Check if current value is equivalent. If not, invalidate and store 
         # the new value. If set to same value, no need to invalidate
         if not (
@@ -837,14 +837,14 @@ class DeepTrackNode:
             Returns `[]` if `_ID` is not a valid index.
         
         """
-        
+
         if self.data.valid_index(_ID):
             return self.data[_ID].current_value()
         else:
             return []
 
     def recurse_children(
-        self, 
+        self,
         memory: Optional[Set['DeepTrackNode']] = None,
     ) -> Set['DeepTrackNode']:
         """Return all subchildren of this node.
@@ -859,12 +859,12 @@ class DeepTrackNode:
         set
             All nodes in the subtree rooted at this node, including itself.
         """
-        
+
         # Simply return `_all_subchildren` since it's maintained incrementally.
         return self._all_subchildren
 
     def old_recurse_children(
-        self, 
+        self,
         memory: Optional[List['DeepTrackNode']] = None,
     ) -> Iterator['DeepTrackNode']:
         """Legacy recursive method for traversing children.
@@ -885,7 +885,7 @@ class DeepTrackNode:
         This method is kept for backward compatibility or debugging purposes.
         
         """
-        
+
         # On first call, instantiate memory.
         if memory is None:
             memory = []
@@ -1017,7 +1017,7 @@ class DeepTrackNode:
             The currently stored value for `_ID`.
         
         """
-        
+
         return self.data[_ID].current_value()
 
     def __hash__(self) -> int:
@@ -1048,14 +1048,14 @@ class DeepTrackNode:
         This effectively creates a node that corresponds to `self(...)[idx]`, 
         allowing you to select parts of the computed data dynamically.
         """
-        
+
         # Create a new node whose action indexes into this node’s result.
         node = DeepTrackNode(lambda _ID=None: self(_ID=_ID)[idx])
-        
+
         node.add_dependency(self)
-        
+
         self.add_child(node)
-        
+
         return node
 
     # Node-node operators.
@@ -1082,7 +1082,7 @@ class DeepTrackNode:
             A new node that represents the addition operation (`self + other`).
         
         """
-        
+
         return _create_node_with_operator(operator.__add__, self, other)
 
     def __radd__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1102,7 +1102,7 @@ class DeepTrackNode:
             A new node that represents the addition operation (`other + self`).
         
         """
-        
+
         return _create_node_with_operator(operator.__add__, other, self)
 
     def __sub__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1124,7 +1124,7 @@ class DeepTrackNode:
             (`self - other`).
         
         """
-        
+
         return _create_node_with_operator(operator.__sub__, self, other)
 
     def __rsub__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1145,7 +1145,7 @@ class DeepTrackNode:
                 `other - self`).
         
         """
-        
+
         return _create_node_with_operator(operator.__sub__, other, self)
 
     def __mul__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1167,7 +1167,7 @@ class DeepTrackNode:
             (`self * other`).
         
         """
-        
+
         return _create_node_with_operator(operator.__mul__, self, other)
 
     def __rmul__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1210,7 +1210,7 @@ class DeepTrackNode:
             A new node that represents the division operation (`self / other`).
         
         """
-        
+
         return _create_node_with_operator(operator.__truediv__, self, other)
 
     def __rtruediv__(
@@ -1233,7 +1233,7 @@ class DeepTrackNode:
             A new node that represents the division operation (`other / self`).
         
         """
-        
+
         return _create_node_with_operator(operator.__truediv__, other, self)
 
     def __floordiv__(
@@ -1258,7 +1258,7 @@ class DeepTrackNode:
             (`self // other`).
         
         """
-        
+
         return _create_node_with_operator(operator.__floordiv__, self, other)
 
     def __rfloordiv__(
@@ -1283,7 +1283,7 @@ class DeepTrackNode:
             (`other // self`).
         
         """
-        
+
         return _create_node_with_operator(operator.__floordiv__, other, self)
 
     def __lt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1303,7 +1303,7 @@ class DeepTrackNode:
             A new node that represents the comparison operation (`self < other`).
         
         """
-        
+
         return _create_node_with_operator(operator.__lt__, self, other)
 
     def __rlt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1324,7 +1324,7 @@ class DeepTrackNode:
             (`other < self`).
         
         """
-        
+
         return _create_node_with_operator(operator.__lt__, other, self)
 
     def __gt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1345,7 +1345,7 @@ class DeepTrackNode:
             (`self > other`).
         
         """
-        
+
         return _create_node_with_operator(operator.__gt__, self, other)
 
     def __rgt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1366,7 +1366,7 @@ class DeepTrackNode:
             (`other > self`).
         
         """
-        
+
         return _create_node_with_operator(operator.__gt__, other, self)
 
     def __le__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1387,7 +1387,7 @@ class DeepTrackNode:
             (`self <= other`).
         
         """
-        
+
         return _create_node_with_operator(operator.__le__, self, other)
 
     def __rle__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1408,7 +1408,7 @@ class DeepTrackNode:
             (`other <= self`).
         
         """
-        
+
         return _create_node_with_operator(operator.__le__, other, self)
 
     def __ge__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1428,9 +1428,9 @@ class DeepTrackNode:
         DeepTrackNode
             A new node that represents the comparison operation 
             (`self >= other`).
-        
+
         """
-        
+
         return _create_node_with_operator(operator.__ge__, self, other)
 
     def __rge__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
@@ -1452,7 +1452,7 @@ class DeepTrackNode:
             (`other >= self`).
         
         """
-        
+
         return _create_node_with_operator(operator.__ge__, other, self)
 
 
