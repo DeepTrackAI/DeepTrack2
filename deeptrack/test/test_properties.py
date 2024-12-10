@@ -38,10 +38,62 @@ class TestProperties(unittest.TestCase):
         np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
 
 
+    def test_Property_function(self):
+
+        # Lambda function.
+        P = properties.Property(lambda x: x * 2, x=properties.Property(10))
+        self.assertEqual(P(), 20)
+        P._update()
+        self.assertEqual(P(), 20)
+
+        # Function.
+        def func(x):
+            return 2 * x
+
+        P = properties.Property(func, x=properties.Property(10))
+        self.assertEqual(P(), 20)
+        P._update()
+        self.assertEqual(P(), 20)
+
+        # Lambda function with randomness.
+        P = properties.Property(lambda: np.random.rand())
+        for _ in range(10):
+            P._update()
+            self.assertEqual(P(), P())
+            self.assertTrue(P() >= 0 and P() <= 1)
+
+        # Function with randomness.
+        def func(x):
+            return 2 * x
+        
+        P = properties.Property(
+            func,
+            x=properties.Property(lambda: np.random.rand()),
+        )
+        for _ in range(10):
+            P._update()
+            self.assertEqual(P(), P())
+            self.assertTrue(P() >= 0 and P() <= 2)
 
 
+    def test_Property_slice(self):
+        pass
 
 
+    def test_Property_iterable(self):
+        pass
+
+
+    def test_Property_list(self):
+        pass
+
+
+    def test_Property_dict(self):
+        pass
+
+
+    def test_Property_DeepTrackNode(self):
+        pass
 
 
 
@@ -52,12 +104,6 @@ class TestProperties(unittest.TestCase):
         for i in range(1, 5):
             self.assertEqual(P(), i)
             P._update()
-
-    def test_Property_random(self):
-        P = properties.Property(lambda: np.random.rand())
-        for _ in range(100):
-            P._update()
-            self.assertTrue(P() >= 0 and P() <= 1)
 
     def test_PropertyDict(self):
         property_dict = properties.PropertyDict(
