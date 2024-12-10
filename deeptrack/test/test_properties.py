@@ -1,20 +1,50 @@
-import sys
+# pylint: disable=C0115:missing-class-docstring
+# pylint: disable=C0116:missing-function-docstring
+# pylint: disable=C0103:invalid-name
 
-# sys.path.append(".")  # Adds the module to path
+# Use this only when running the test locally.
+# import sys
+# sys.path.append(".")  # Adds the module to path.
 
 import unittest
 
-from .. import properties, features, optics
-
+from deeptrack.backend.core import DeepTrackNode
+from deeptrack.utils import get_kwarg_names
 import numpy as np
+
+from deeptrack import properties
 
 
 class TestProperties(unittest.TestCase):
+
     def test_Property_constant(self):
-        P = properties.Property(1)
-        self.assertEqual(P(), 1)
+        P = properties.Property(42)
+        self.assertEqual(P(), 42)
         P._update()
-        self.assertEqual(P(), 1)
+        self.assertEqual(P(), 42)
+
+
+    def test_Property_list(self):
+        P = properties.Property((1, 2, 3))
+        self.assertEqual(P(), (1, 2, 3))
+        P._update()
+        self.assertEqual(P(), (1, 2, 3))
+
+
+    def test_Property_nparray(self):
+        P = properties.Property(np.array([1, 2, 3]))
+        np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
+        P._update()
+        np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
+
+
+
+
+
+
+
+
+
 
     def test_Property_iter(self):
         P = properties.Property(iter([1, 2, 3, 4, 5]))
