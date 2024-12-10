@@ -74,7 +74,7 @@ def as_list(obj: any) -> list:
 def get_kwarg_names(function: Callable) -> List[str]:
     """Retrieve the names of the keyword arguments accepted by a function.
     
-    It retrieves the names of the keyword arguments accepted by `function` as a 
+    It retrieves the names of the keyword arguments accepted by `function` as a
     list of strings.
 
     Parameters
