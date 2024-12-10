@@ -67,18 +67,19 @@ class Property(DeepTrackNode):
         # List.
         if isinstance(sampling_rule, list):
             list_of_actions = [
-                self.create_action(val, **dependencies) for val in sampling_rule
+                self.create_action(val, **dependencies) 
+                for val in sampling_rule
             ]
             return lambda _ID=(): [val(_ID=_ID) for val in list_of_actions]
 
-        # Tuple or numpy array.
+        # Tuple or numpy array (constant).
         if isinstance(sampling_rule, (tuple, np.ndarray)):
             return lambda _ID=(): sampling_rule
 
         # Iterable.
         # Return the next value
         if hasattr(sampling_rule, "__next__"):
-            
+
             def wrapped_iterator():
                 while True:
                     try:
