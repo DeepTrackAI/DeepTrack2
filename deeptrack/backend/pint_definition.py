@@ -6,15 +6,15 @@ constants and unit systems based on internationally recognized standards, such
 as the  International System of Units (SI), and additional systems like CGS, 
 Planck units, and atomic units.
 
-Sources:
---------
+Sources
+-------
 - Pint's default unit definitions: 
   https://github.com/hgrecco/pint/blob/main/pint/default_en.txt
 - Pint's default constants definitions: 
   https://github.com/hgrecco/pint/blob/main/pint/constants_en.txt
 
-Content:
---------
+Content
+-------
 - Mathematical Constants: Includes key values like π, Euler's number, 
     and the natural logarithm of 10.
 - Physical Constants: Covers fundamental constants like the speed of light, 
@@ -30,16 +30,16 @@ Content:
 - Contexts and Conversion: Includes context-specific definitions to facilitate 
     domain-specific conversions.
 
-Key Modifications:
-------------------
+Key Modifications
+-----------------
 This file is derived from the default Pint files with the adjustments:
 1. Groups Removed: Unit group definitions (e.g., `@group`) have been excluded 
     to avoid conflicts with the definition of pixel.
 2. Final Variables Added: Defines constants and variables required for the 
     project-specific context (e.g., pixel-related units).
 
-Usage:
-------
+Usage
+-----
 To create a unit registry with custom pixel-related units:
 
 >>> from pint import UnitRegistry
