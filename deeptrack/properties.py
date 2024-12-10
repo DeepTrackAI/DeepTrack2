@@ -106,6 +106,8 @@ class Property(DeepTrackNode):
             )
 
         # Function.
+        # Return the result of the function. It accepts the names of other 
+        # properties of the same feature as arguments.
         if callable(sampling_rule):
 
             knames = get_kwarg_names(sampling_rule)
