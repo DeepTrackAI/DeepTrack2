@@ -77,7 +77,15 @@ class TestProperties(unittest.TestCase):
 
 
     def test_Property_slice(self):
-        pass
+        P = properties.Property(slice(1, lambda: 10, properties.Property(2)))
+        result = P()
+        self.assertEqual(result.start, 1)
+        self.assertEqual(result.stop, 10)
+        self.assertEqual(result.step, 2)
+        P._update()
+        self.assertEqual(result.start, 1)
+        self.assertEqual(result.stop, 10)
+        self.assertEqual(result.step, 2)
 
 
     def test_Property_iterable(self):
@@ -94,6 +102,15 @@ class TestProperties(unittest.TestCase):
 
     def test_Property_DeepTrackNode(self):
         pass
+
+
+    def test_Property_ID(self):
+        P = properties.Property(lambda _ID: _ID)
+        self.assertEqual(P(), ())
+        self.assertEqual(P((1,)), (1,))
+        self.assertEqual(P((1, 2, 3)), (1, 2, 3))
+
+
 
 
 
@@ -124,10 +141,6 @@ class TestProperties(unittest.TestCase):
             )
             property_dict._update()
 
-    def test_AcceptsReplicateIndex(self):
-
-        prop = properties.Property(lambda _ID: _ID)
-        self.assertEqual(prop(), ())
 
 
 if __name__ == "__main__":
