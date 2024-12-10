@@ -127,6 +127,7 @@ class Property(DeepTrackNode):
             )
 
         # Constant, tuple or numpy array.
+        # Return always the same constant value.
         return lambda _ID=(): sampling_rule
 
 
