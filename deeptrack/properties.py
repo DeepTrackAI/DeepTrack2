@@ -93,6 +93,7 @@ class Property(DeepTrackNode):
             return action
 
         # Slice.
+        # Sample individually the start, stop and step.
         if isinstance(sampling_rule, slice):
 
             start = self.create_action(sampling_rule.start, **dependencies)
