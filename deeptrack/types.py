@@ -8,8 +8,10 @@ library.
 
 """
 
-import numpy as np
 import typing
+
+import numpy as np
+
 
 # T is a generic type variable defining generic types for reusability.
 T = typing.TypeVar("T")
