@@ -6,17 +6,18 @@ streamline common operations, and ensure type and argument consistency.
 Functions
 ---------
 hasmethod(obj: any, method_name: str) -> bool
-    Return True if the object has a field named `function_name` that is 
-    callable. Otherwise, return False.
+    Returns True if the object has a field named `function_name` that is 
+    callable. Otherwise, returns False.
 as_list(obj: any) -> list
-    If the input is iterable, convert it to list. 
-    Otherwise, wrap the input in a list.
+    If the input is iterable, converts it to list. 
+    Otherwise, wraps the input in a list.
 get_kwarg_names(function: Callable) -> List[str]
     Retrieves the names of the keyword arguments accepted by a function.
 kwarg_has_default(function: Callable, argument: str) -> bool
     Checks if a specific argument of a function has a default value.
 safe_call(function, positional_args=[], **kwargs)
-    Calls a function, passing only valid arguments from the provided kwargs.
+    Calls a function, passing only valid arguments from the provided keyword 
+    arguments (kwargs).
 
 """
 
@@ -42,7 +43,7 @@ def hasmethod(obj: any, method_name: str) -> bool:
 
     """
 
-    return (hasattr(obj, method_name) 
+    return (hasattr(obj, method_name)
             and callable(getattr(obj, method_name, None)))
 
 
@@ -73,7 +74,7 @@ def as_list(obj: any) -> list:
 def get_kwarg_names(function: Callable) -> List[str]:
     """Retrieve the names of the keyword arguments accepted by a function.
     
-    Retrieves the names of the keyword arguments accepted by `function` as a 
+    It retrieves the names of the keyword arguments accepted by `function` as a
     list of strings.
 
     Parameters
@@ -129,8 +130,8 @@ def kwarg_has_default(function: Callable, argument: str) -> bool:
 def safe_call(function, positional_args=[], **kwargs) -> Any:
     """Calls a function with valid arguments from a dictionary of arguments.
     
-    Filters `kwargs` to include only arguments accepted by the function, 
-    ensuring that no invalid arguments are passed. This function also supports 
+    It filters `kwargs` to include only arguments accepted by the function,
+    ensuring that no invalid arguments are passed. This function also supports
     positional arguments.
 
     Parameters

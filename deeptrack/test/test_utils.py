@@ -1,16 +1,25 @@
+# pylint: disable=C0115:missing-class-docstring
+# pylint: disable=C0116:missing-function-docstring
+# pylint: disable=C0103:invalid-name
+
+# Use this only when running the test locally.
+# import sys
+# sys.path.append(".")  # Adds the module to path.
+
 import unittest
 
 from .. import utils
 
 
 class TestUtils(unittest.TestCase):
-    
+
+
     def test_hasmethod(self):
         self.assertTrue(utils.hasmethod(utils, "hasmethod"))
         self.assertFalse(
             utils.hasmethod(utils, "this_is_definetely_not_a_method_of_utils")
         )
-    
+
 
     def test_as_list(self):
         obj = 1
