@@ -107,7 +107,11 @@ class TestProperties(unittest.TestCase):
     def test_Property_ID(self):
         P = properties.Property(lambda _ID: _ID)
         self.assertEqual(P(), ())
+
+        P = properties.Property(lambda _ID: _ID)
         self.assertEqual(P((1,)), (1,))
+
+        P = properties.Property(lambda _ID: _ID)
         self.assertEqual(P((1, 2, 3)), (1, 2, 3))
 
 
