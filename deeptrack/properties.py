@@ -6,19 +6,33 @@ from .utils import get_kwarg_names
 
 
 from .backend.core import DeepTrackNode
-from . import features
+# from . import features #TBE
 
 
 class Property(DeepTrackNode):
     """Class that defines a property of a feature.
 
-    A property contains one argument for evaluating feature. It can be a constant, a function, a list,
-    a tuple, a numpy array, a slice, a dictionary, a DeepTrackNode (such as another property or feature),
-    or a generator. If it is a function, it can have the names of other properties of the same feature as arguments.
-    The output of the function is the value of the property. If it is a list, each element of the list will be sampled individually.
-    If it is a dictionary, each value of the dictionary will be sampled individually. If it is a tuple or an array, it will be treated as a constant.
-    If it is a slice, the start, stop and step will be sampled individually. If it is a generator, the next value will be sampled.
-    When the generator is exhausted, it will yield the final value infinitely.
+    A property contains one argument for evaluating feature.
+    
+    It can be a constant, a function, a list, a tuple, a numpy array, a slice, 
+    a dictionary, a DeepTrackNode (such as another property or feature), or a
+    generator.
+    
+    If it is a function, it can have the names of other properties of the same 
+    feature as arguments. The output of the function is the value of the 
+    property.
+    
+    If it is a list, each element of the list will be sampled individually.
+    
+    If it is a dictionary, each value of the dictionary will be sampled 
+    individually. 
+    
+    If it is a tuple or an array, it will be treated as a constant.
+    
+    If it is a slice, the start, stop and step will be sampled individually. 
+    
+    If it is a generator, the next value will be sampled. When the generator is 
+    exhausted, it will yield the final value infinitely.
 
     Parameters
     ----------
@@ -27,16 +41,20 @@ class Property(DeepTrackNode):
     """
 
     def __init__(self, sampling_rule, **kwargs):
+        
         super().__init__()
+        
         self.action = self.create_action(sampling_rule, **kwargs)
 
     def create_action(self, sampling_rule, **dependencies):
 
+        # DeepTrackNode (e.g., another property or feature).
         if isinstance(sampling_rule, DeepTrackNode):
             sampling_rule.add_child(self)
             self.add_dependency(sampling_rule)
             return sampling_rule
 
+        # Dictionary.
         if isinstance(sampling_rule, dict):
             dict_of_actions = dict(
                 (key, self.create_action(val, **dependencies))
@@ -46,17 +64,21 @@ class Property(DeepTrackNode):
                 (key, val(_ID=_ID)) for key, val in dict_of_actions.items()
             )
 
+        # List.
         if isinstance(sampling_rule, list):
             list_of_actions = [
                 self.create_action(val, **dependencies) for val in sampling_rule
             ]
             return lambda _ID=(): [val(_ID=_ID) for val in list_of_actions]
 
+        # Tuple or numpy array.
         if isinstance(sampling_rule, (tuple, np.ndarray)):
             return lambda _ID=(): sampling_rule
 
+        # Iterable.
+        # Return the next value
         if hasattr(sampling_rule, "__next__"):
-            # If it's iterable, return the next value
+            
             def wrapped_iterator():
                 while True:
                     try:
@@ -73,6 +95,7 @@ class Property(DeepTrackNode):
 
             return action
 
+        # Slice.
         if isinstance(sampling_rule, slice):
 
             start = self.create_action(sampling_rule.start, **dependencies)
@@ -85,6 +108,7 @@ class Property(DeepTrackNode):
                 step(_ID=_ID),
             )
 
+        # Function.
         if callable(sampling_rule):
 
             knames = get_kwarg_names(sampling_rule)
