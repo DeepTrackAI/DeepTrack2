@@ -66,6 +66,7 @@ class Property(DeepTrackNode):
             )
 
         # List.
+        # Return a list with each each member sampled individually.
         if isinstance(sampling_rule, list):
             list_of_actions = [
                 self.create_action(value, **dependencies)
