@@ -57,20 +57,20 @@ class Property(DeepTrackNode):
         # Dictionary.
         if isinstance(sampling_rule, dict):
             dict_of_actions = dict(
-                (key, self.create_action(val, **dependencies))
-                for key, val in sampling_rule.items()
+                (key, self.create_action(value, **dependencies))
+                for key, value in sampling_rule.items()
             )
             return lambda _ID=(): dict(
-                (key, val(_ID=_ID)) for key, val in dict_of_actions.items()
+                (key, value(_ID=_ID)) for key, value in dict_of_actions.items()
             )
 
         # List.
         if isinstance(sampling_rule, list):
             list_of_actions = [
-                self.create_action(val, **dependencies)
-                for val in sampling_rule
+                self.create_action(value, **dependencies)
+                for value in sampling_rule
             ]
-            return lambda _ID=(): [val(_ID=_ID) for val in list_of_actions]
+            return lambda _ID=(): [value(_ID=_ID) for value in list_of_actions]
 
         # Iterable.
         # Return the next value
@@ -115,17 +115,19 @@ class Property(DeepTrackNode):
 
             # Extract the arguments that are also properties
             used_dependencies = dict(
-                (key, dep) for key, dep in dependencies.items() if key in knames
+                (key, dependency) for key, dependency
+                in dependencies.items() if key in knames
             )
 
-            # Add the dependencies of the function as dependencies.
-            for dep in used_dependencies.values():
-                dep.add_child(self)
-                self.add_dependency(dep)
+            # Add the dependencies of the function as children.
+            for dependency in used_dependencies.values():
+                dependency.add_child(self)
+                self.add_dependency(dependency)
 
             # Create the action.
             return lambda _ID=(): sampling_rule(
-                **{key: dep(_ID=_ID) for key, dep in used_dependencies.items()},
+                **{key: dependency(_ID=_ID) for key, dependency 
+                   in used_dependencies.items()},
                 **({"_ID": _ID} if "_ID" in knames else {}),
             )
 
