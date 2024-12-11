@@ -101,7 +101,18 @@ class TestProperties(unittest.TestCase):
 
 
     def test_Property_DeepTrackNode(self):
-        pass
+        node = DeepTrackNode(100)
+        P = properties.Property(node)
+        self.assertEqual(P(), 100)
+        P._update()
+        self.assertEqual(P(), 100)
+
+        node = DeepTrackNode(lambda _ID=(): np.random.rand())
+        P = properties.Property(node)
+        for _ in range(10):
+            P._update()
+            self.assertEqual(P(), P())
+            self.assertTrue(P() >= 0 and P() <= 1)
 
 
     def test_Property_ID(self):
