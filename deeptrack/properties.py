@@ -417,7 +417,7 @@ class PropertyDict(DeepTrackNode, dict):
         return dict.__getitem__(self, key)
 
 
-class SequentialProperty(Property):
+class SequentialProperty(Property):  #TODO comment.
     """Property that has multiple sequential values
 
     Extends standard `Property` to resolve one value for each step
@@ -498,8 +498,7 @@ class SequentialProperty(Property):
         return super().__call__(_ID=_ID)
 
 
-#TODO move to features?
-def propagate_data_to_dependencies(X, **kwargs):
+def propagate_data_to_dependencies(X, **kwargs):  #TODO move to features?
     """Iterates the dependencies of a feature and sets the value of their properties to the values in kwargs.
 
     Parameters
