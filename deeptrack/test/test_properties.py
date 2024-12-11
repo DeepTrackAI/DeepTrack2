@@ -17,21 +17,17 @@ from deeptrack import properties
 
 class TestProperties(unittest.TestCase):
 
-    def test_Property_constant(self):
+    def test_Property_constant_list_nparray(self):
         P = properties.Property(42)
         self.assertEqual(P(), 42)
         P._update()
         self.assertEqual(P(), 42)
 
-
-    def test_Property_list(self):
         P = properties.Property((1, 2, 3))
         self.assertEqual(P(), (1, 2, 3))
         P._update()
         self.assertEqual(P(), (1, 2, 3))
 
-
-    def test_Property_nparray(self):
         P = properties.Property(np.array([1, 2, 3]))
         np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
         P._update()
@@ -47,10 +43,10 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(P(), 20)
 
         # Function.
-        def func(x):
+        def func1(x):
             return 2 * x
 
-        P = properties.Property(func, x=properties.Property(10))
+        P = properties.Property(func1, x=properties.Property(10))
         self.assertEqual(P(), 20)
         P._update()
         self.assertEqual(P(), 20)
@@ -63,11 +59,11 @@ class TestProperties(unittest.TestCase):
             self.assertTrue(P() >= 0 and P() <= 1)
 
         # Function with randomness.
-        def func(x):
+        def func2(x):
             return 2 * x
         
         P = properties.Property(
-            func,
+            func2,
             x=properties.Property(lambda: np.random.rand()),
         )
         for _ in range(10):
@@ -89,7 +85,15 @@ class TestProperties(unittest.TestCase):
 
 
     def test_Property_iterable(self):
-        pass
+        P = properties.Property(iter([1, 2, 3]))
+
+        self.assertEqual(P(), 1)
+        P._update()
+        self.assertEqual(P(), 2)
+        P._update()
+        self.assertEqual(P(), 3)
+        P._update()
+        self.assertEqual(P(), 3)  # Last value repeats indefinitely
 
 
     def test_Property_list(self):
@@ -99,9 +103,10 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(P(), [1, 2, 3])
 
         P = properties.Property(
-            [lambda _ID=(): 1 * np.random.rand(), 
-            lambda: 2 * np.random.rand(), 
-            properties.Property(lambda _ID=(): 3 * np.random.rand()),
+            [
+                lambda _ID=(): 1 * np.random.rand(),
+                lambda: 2 * np.random.rand(),
+                properties.Property(lambda _ID=(): 3 * np.random.rand()),
             ]
         )
         for _ in range(10):
@@ -112,9 +117,31 @@ class TestProperties(unittest.TestCase):
             self.assertTrue(P()[2] >= 0 and P()[2] <= 3)
 
 
-
     def test_Property_dict(self):
-        pass
+        P = properties.Property(
+            {
+                "a": 1, 
+                "b": lambda: 2, 
+                "c": properties.Property(3),
+            }
+        )
+        self.assertEqual(P(), {"a": 1, "b": 2, "c": 3})
+        P._update()
+        self.assertEqual(P(), {"a": 1, "b": 2, "c": 3})
+
+        P = properties.Property(
+            {
+                "a": lambda _ID=(): 1 * np.random.rand(),
+                "b": lambda: 2 * np.random.rand(),
+                "c": properties.Property(lambda _ID=(): 3 * np.random.rand()),
+            }
+        )
+        for _ in range(10):
+            P._update()
+            self.assertEqual(P(), P())
+            self.assertTrue(P()["a"] >= 0 and P()["a"] <= 1)
+            self.assertTrue(P()["b"] >= 0 and P()["b"] <= 2)
+            self.assertTrue(P()["c"] >= 0 and P()["c"] <= 3)
 
 
     def test_Property_DeepTrackNode(self):
@@ -143,36 +170,27 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(P((1, 2, 3)), (1, 2, 3))
 
 
-
-
-
-
-    def test_Property_iter(self):
-        P = properties.Property(iter([1, 2, 3, 4, 5]))
-        self.assertEqual(P(), 1)
-        for i in range(1, 5):
-            self.assertEqual(P(), i)
-            P._update()
-
-    def test_PropertyDict(self):
-        property_dict = properties.PropertyDict(
-            P1=properties.Property(1),
-            P2=properties.Property(iter([1, 2, 3, 4, 5])),
-            P3=properties.Property(lambda: np.random.rand()),
+    def test_Propery_combined(self):
+        P = properties.Property(
+            {
+                "constant": 42,
+                "list": [1, lambda: 2, properties.Property(3)],
+                "dict": {"a": properties.Property(1), "b": lambda: 2},
+                "function": lambda x, y: x * y,
+                "slice": slice(1, lambda: 10, properties.Property(2)),
+            },
+            x=properties.Property(5),
+            y=properties.Property(3),
         )
-        current_value_dict = property_dict()
-        self.assertEqual(current_value_dict["P1"], 1)
-        self.assertEqual(current_value_dict["P2"], 1)
-        self.assertTrue(current_value_dict["P3"] >= 0 and current_value_dict["P3"] <= 1)
-        for i in range(1, 100):
-            current_value_dict = property_dict()
-            self.assertEqual(current_value_dict["P1"], 1)
-            self.assertEqual(current_value_dict["P2"], np.min((i, 5)))
-            self.assertTrue(
-                current_value_dict["P3"] >= 0 and current_value_dict["P3"] <= 1
-            )
-            property_dict._update()
 
+        result = P()
+        self.assertEqual(result["constant"], 42)
+        self.assertEqual(result["list"], [1, 2, 3])
+        self.assertEqual(result["dict"], {"a": 1, "b": 2})
+        self.assertEqual(result["function"], 15)
+        self.assertEqual(result["slice"].start, 1)
+        self.assertEqual(result["slice"].stop, 10)
+        self.assertEqual(result["slice"].step, 2)
 
 
 if __name__ == "__main__":
