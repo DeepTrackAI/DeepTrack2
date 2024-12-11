@@ -56,6 +56,7 @@ class Property(DeepTrackNode):
             return sampling_rule
 
         # Dictionary.
+        # Return a dictionary with each each member sampled individually.
         if isinstance(sampling_rule, dict):
             dict_of_actions = dict(
                 (key, self.create_action(value, **dependencies))
@@ -75,7 +76,7 @@ class Property(DeepTrackNode):
             return lambda _ID=(): [value(_ID=_ID) for value in list_of_actions]
 
         # Iterable.
-        # Return the next value
+        # Return the next value. The last value is returned indefinetely.
         if hasattr(sampling_rule, "__next__"):
 
             def wrapped_iterator():
