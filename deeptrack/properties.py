@@ -379,7 +379,7 @@ class PropertyDict(DeepTrackNode, dict):
             
             """
 
-            return dict((key, value(_ID=_ID)) for key, value in self.items())  # SLOW - why??
+            return dict((key, value(_ID=_ID)) for key, value in self.items())  #TODO SLOW - why??
 
         super().__init__(action, **dependencies)
 
@@ -498,6 +498,7 @@ class SequentialProperty(Property):
         return super().__call__(_ID=_ID)
 
 
+#TODO move to features?
 def propagate_data_to_dependencies(X, **kwargs):
     """Iterates the dependencies of a feature and sets the value of their properties to the values in kwargs.
 
