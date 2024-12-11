@@ -49,6 +49,7 @@ class Property(DeepTrackNode):
     def create_action(self, sampling_rule, **dependencies):
 
         # DeepTrackNode (e.g., another property or feature).
+        # Return the value sampled by the DeepTrackNode.
         if isinstance(sampling_rule, DeepTrackNode):
             sampling_rule.add_child(self)
             self.add_dependency(sampling_rule)
