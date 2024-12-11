@@ -504,7 +504,7 @@ class Feature(DeepTrackNode):
     def __next__(self):
         yield self.update().resolve()
 
-    def __rshift__(self, other) -> "Feature":
+    def __rshift__(self, other) -> 'Feature':
 
         # Allows chaining of features. For example,
         # feature1 >> feature2 >> feature3
@@ -525,7 +525,7 @@ class Feature(DeepTrackNode):
 
         return NotImplemented
 
-    def __rrshift__(self, other: "Feature") -> "Feature":
+    def __rrshift__(self, other: "Feature") -> 'Feature':
         # Allows chaining of features. For example,
         # some_function << feature1 << feature2
         # or
@@ -538,80 +538,80 @@ class Feature(DeepTrackNode):
 
         return NotImplemented
 
-    def __add__(self, other) -> "Feature":
+    def __add__(self, other) -> 'Feature':
         # Overrides add operator
         return self >> Add(other)
 
-    def __radd__(self, other) -> "Feature":
+    def __radd__(self, other) -> 'Feature':
         # Overrides add operator
         return Value(other) >> Add(self)
 
-    def __sub__(self, other) -> "Feature":
+    def __sub__(self, other) -> 'Feature':
         # Overrides add operator
         return self >> Subtract(other)
 
-    def __rsub__(self, other) -> "Feature":
+    def __rsub__(self, other) -> 'Feature':
         # Overrides add operator
         return Value(other) >> Subtract(self)
 
-    def __mul__(self, other) -> "Feature":
+    def __mul__(self, other) -> 'Feature':
         return self >> Multiply(other)
 
-    def __rmul__(self, other) -> "Feature":
+    def __rmul__(self, other) -> 'Feature':
         return Value(other) >> Multiply(self)
 
-    def __truediv__(self, other) -> "Feature":
+    def __truediv__(self, other) -> 'Feature':
         return self >> Divide(other)
 
-    def __rtruediv__(self, other) -> "Feature":
+    def __rtruediv__(self, other) -> 'Feature':
         return Value(other) >> Divide(self)
 
-    def __floordiv__(self, other) -> "Feature":
+    def __floordiv__(self, other) -> 'Feature':
         return self >> FloorDivide(other)
 
-    def __rfloordiv__(self, other) -> "Feature":
+    def __rfloordiv__(self, other) -> 'Feature':
         return Value(other) >> FloorDivide(self)
 
-    def __pow__(self, other) -> "Feature":
+    def __pow__(self, other) -> 'Feature':
         return self >> Power(other)
 
-    def __rpow__(self, other) -> "Feature":
+    def __rpow__(self, other) -> 'Feature':
         return Value(other) >> Power(self)
 
-    def __gt__(self, other) -> "Feature":
+    def __gt__(self, other) -> 'Feature':
         return self >> GreaterThan(other)
 
-    def __rgt__(self, other) -> "Feature":
+    def __rgt__(self, other) -> 'Feature':
         return Value(other) >> GreaterThan(self)
 
-    def __lt__(self, other) -> "Feature":
+    def __lt__(self, other) -> 'Feature':
         return self >> LessThan(other)
 
-    def __rlt__(self, other) -> "Feature":
+    def __rlt__(self, other) -> 'Feature':
         return Value(other) >> LessThan(self)
 
-    def __le__(self, other) -> "Feature":
+    def __le__(self, other) -> 'Feature':
         return self >> LessThanOrEquals(other)
 
-    def __rle__(self, other) -> "Feature":
+    def __rle__(self, other) -> 'Feature':
         return Value(other) >> LessThanOrEquals(self)
 
-    def __ge__(self, other) -> "Feature":
+    def __ge__(self, other) -> 'Feature':
         return self >> GreaterThanOrEquals(other)
 
-    def __rge__(self, other) -> "Feature":
+    def __rge__(self, other) -> 'Feature':
         return Value(other) >> GreaterThanOrEquals(self)
 
-    def __xor__(self, other) -> "Feature":
+    def __xor__(self, other) -> 'Feature':
         return Repeat(self, other)
 
-    def __and__(self, other) -> "Feature":
+    def __and__(self, other) -> 'Feature':
         return self >> Stack(other)
 
-    def __rand__(self, other) -> "Feature":
+    def __rand__(self, other) -> 'Feature':
         return Value(other) >> Stack(self)
 
-    def __getitem__(self, slices) -> "Feature":
+    def __getitem__(self, slices) -> 'Feature':
         # Allows direct slicing of the data.
         if not isinstance(slices, tuple):
             slices = (slices,)
