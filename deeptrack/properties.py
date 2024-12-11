@@ -2,7 +2,7 @@
 
 """
 
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 import numpy as np
 
@@ -309,41 +309,106 @@ class SequentialProperty(Property):
 class PropertyDict(DeepTrackNode, dict):
     """Dictionary with Property elements
 
-    A dictionary of properties. It provides utility functions to update,
-    sample, reset and retrieve properties.
+    A `PropertyDict` is a specialized dictionary where values are instances of 
+    `Property`. It provides additional utility functions to update, sample, 
+    reset, and retrieve properties. This is particularly useful for managing 
+    feature-specific properties in a structured manner.
 
     Parameters
     ----------
-    *args, **kwargs
-        Arguments used to initialize a dict
+    **kwargs : dict
+        Key-value pairs used to initialize the dictionary, where values are 
+        either directly used to create `Property` instances or are dependent 
+        on other `Property` values.
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
+        """Initialize a PropertyDict with properties and dependencies.
 
-        dependencies = {}
+        Iteratively converts the input dictionary's values into `Property` 
+        instances while resolving dependencies between the properties.
 
+        It resolves dependencies between the properties iteratively.
+        
+        An `action` is created to evaluate and return the dictionary with 
+        sampled values.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Key-value pairs used to initialize the dictionary. Values can be 
+            constants, functions, or other `Property`-compatible types.
+
+        """
+
+        dependencies = {}  # To store the resolved Property instances.
         while kwargs:
-
-            for key, val in list(kwargs.items()):
+            for key, value in list(kwargs.items()):
                 try:
-                    dependencies[key] = Property(val, **{**dependencies, **kwargs})
+                    # Create a Property instance for the key, 
+                    # resolving dependencies.
+                    dependencies[key] = Property(value,
+                                                 **{**dependencies, **kwargs})
+                    # Remove the key from the input dictionary once resolved.
                     kwargs.pop(key)
                 except AttributeError:
+                    # Catch unresolved dependencies and continue iterating.
                     pass
 
-        def action(_ID=()):
-            # SLOW
-            return dict((key, val(_ID=_ID)) for key, val in self.items())
+        def action(_ID: Tuple[int, ...] = ()) -> Dict[str, Any]:
+            """Evaluate and return the dictionary with sampled Property values.
+
+            Parameters
+            ----------
+            _ID : Tuple[int, ...], optional
+                A unique identifier for sampling properties.
+
+            Returns
+            -------
+            dict
+                A dictionary where each value is sampled from its respective 
+                `Property`.
+            
+            """
+
+            return dict((key, value(_ID=_ID)) for key, value in self.items())  # SLOW - why??
 
         super().__init__(action, **dependencies)
 
-        for val in dependencies.values():
-            val.add_child(self)
-            self.add_dependency(val)
+        for value in dependencies.values():
+            value.add_child(self)
+            # self.add_dependency(value)  # Already executed by add_child.
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
+        """Retrieve a value from the dictionary.
+
+        Overrides the default `__getitem__` to ensure dictionary functionality.
+
+        Parameters
+        ----------
+        key : str
+            The key to retrieve the value for.
+
+        Returns
+        -------
+        Any
+            The value associated with the specified key.
+
+        Notes
+        -----
+        This method explicitly calls the `__getitem__` method of the built-in 
+        `dict` class. This ensures that the standard dictionary behavior is 
+        used to retrieve values, bypassing any custom logic in `PropertyDict` 
+        that might otherwise cause infinite recursion or unexpected results.
+        
+        """
+
+        # Directly invoke the built-in dictionary method to retrieve the value.
+        # This avoids potential recursion by bypassing any overridden behavior
+        # in the current class or its parents.
         return dict.__getitem__(self, key)
+
 
 def propagate_data_to_dependencies(X, **kwargs):
     """Iterates the dependencies of a feature and sets the value of their properties to the values in kwargs.
