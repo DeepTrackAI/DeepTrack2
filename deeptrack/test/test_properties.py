@@ -93,7 +93,24 @@ class TestProperties(unittest.TestCase):
 
 
     def test_Property_list(self):
-        pass
+        P = properties.Property([1, lambda: 2, properties.Property(3)])
+        self.assertEqual(P(), [1, 2, 3])
+        P._update()
+        self.assertEqual(P(), [1, 2, 3])
+
+        P = properties.Property(
+            [lambda _ID=(): 1 * np.random.rand(), 
+            lambda: 2 * np.random.rand(), 
+            properties.Property(lambda _ID=(): 3 * np.random.rand()),
+            ]
+        )
+        for _ in range(10):
+            P._update()
+            self.assertEqual(P(), P())
+            self.assertTrue(P()[0] >= 0 and P()[0] <= 1)
+            self.assertTrue(P()[1] >= 0 and P()[1] <= 2)
+            self.assertTrue(P()[2] >= 0 and P()[2] <= 3)
+
 
 
     def test_Property_dict(self):
