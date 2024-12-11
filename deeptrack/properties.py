@@ -1,52 +1,138 @@
 """Tools to manage the properties of a feature
+
 """
 
+from typing import Any, Callable, Dict, List, Union
+
 import numpy as np
+
 from .utils import get_kwarg_names
-
-
 from .backend.core import DeepTrackNode
-# from . import features #TBE
 
 
 class Property(DeepTrackNode):
-    """Property of a feature in the DeepTrack framework.
+    """Property of a feature in the DeepTrack2 framework.
 
-    A property contains one argument for evaluating feature.
-    
-    It can be a constant, a function, a list, a tuple, a numpy array, a slice, 
-    a dictionary, a DeepTrackNode (such as another property or feature), or a
-    generator.
-    
-    If it is a function, it can have the names of other properties of the same 
-    feature as arguments. The output of the function is the value of the 
-    property.
-    
-    If it is a list, each element of the list will be sampled individually.
-    
-    If it is a dictionary, each value of the dictionary will be sampled 
-    individually. 
-    
-    If it is a tuple or an array, it will be treated as a constant.
-    
-    If it is a slice, the start, stop and step will be sampled individually. 
-    
-    If it is a generator, the next value will be sampled. When the generator is 
-    exhausted, it will yield the final value infinitely.
+    A `Property` defines a rule for sampling values used to evaluate features. 
+    It supports various data types and structures, such as constants, 
+    functions, lists, iterators, dictionaries, tuples, NumPy arrays, slices, 
+    and DeepTrackNodes.
+
+    The behavior of a `Property` depends on the type of the sampling rule:
+    - Constant values (including tuples and NumPy arrays): Always returns the 
+      same value.
+    - Functions: Evaluates dynamically, potentially using other properties as 
+      arguments.
+    - Lists or dictionaries: Evaluates and samples each member individually.
+    - Iterators: Returns the next value in the sequence, repeating the final 
+      value indefinitely.
+    - Slices: Samples the `start`, `stop`, and `step` values individually.
+    - DeepTrackNodes (e.g., other properties or features): Uses the value 
+      computed by the node.
+
+    Dependencies between properties are tracked automatically, enabling 
+    efficient recomputation when dependencies change.
 
     Parameters
     ----------
-    sampling_rule : function, list, tuple, numpy array, slice, dictionary, DeepTrackNode, or generator
-        The rule to sample the property.
+    sampling_rule : Any
+        The rule for sampling values. Can be a constant, function, list, 
+        dictionary, iterator, tuple, NumPy array, slice, or DeepTrackNode.
+    **kwargs : dict
+        Additional dependencies passed as named arguments. These dependencies 
+        can be used as inputs to functions or other dynamic components of the 
+        sampling rule.
+
+    Methods
+    -------
+    create_action(sampling_rule, **dependencies)
+        Creates an action that defines how the property is evaluated. The 
+        behavior of the action depends on the type of `sampling_rule`.
+
+    Examples
+    --------
+    Constant property:
+    >>> const_prop = Property(42)
+    >>> const_prop()  # Returns 42
+
+    Dynamic property using a function:
+    >>> dynamic_prop = Property(lambda x: x * 2, x=Property(5))
+    >>> dynamic_prop()  # Returns 10
+
+    Property with a dictionary rule:
+    >>> dict_prop = Property({"a": Property(1), "b": lambda: 2})
+    >>> dict_prop()  # Returns {"a": 1, "b": 2}
+
+    Property with a generator:
+    >>> gen = (i for i in range(3))
+    >>> gen_prop = Property(gen)
+    >>> gen_prop()  # Returns the next value from the generator
+    >>> gen_prop()  # Returns the next value
+    
     """
 
-    def __init__(self, sampling_rule, **kwargs):
+    def __init__(
+        self,
+        sampling_rule: Union[
+            Callable[..., Any],
+            List[Any],
+            Dict[str, Any],
+            tuple,
+            np.ndarray,
+            slice,
+            DeepTrackNode,
+            Any
+        ],
+        **kwargs: 'Property',
+    ):
+        """Initializes a Property object with a given sampling rule.
+
+        Parameters
+        ----------
+        sampling_rule : Union[Callable[..., Any], List[Any], Dict[str, Any], 
+                              tuple, np.ndarray, slice, Generator, 
+                              DeepTrackNode, Any]
+            The rule to sample values for the property.
+        **kwargs : Property
+            Additional named dependencies used in the sampling rule.
         
+        """
+
         super().__init__()
-        
+
         self.action = self.create_action(sampling_rule, **kwargs)
 
-    def create_action(self, sampling_rule, **dependencies):
+    def create_action(
+        self,
+        sampling_rule: Union[
+            Callable[..., Any],
+            List[Any],
+            Dict[str, Any],
+            tuple,
+            np.ndarray,
+            slice,
+            DeepTrackNode,
+            Any
+        ],
+        **dependencies: 'Property',
+    ) -> Callable[..., Any]:
+        """Creates an action defining how the property is evaluated.
+
+        Parameters
+        ----------
+        sampling_rule : Union[Callable[..., Any], List[Any], Dict[str, Any], 
+                              tuple, np.ndarray, slice, Generator, 
+                              DeepTrackNode, Any]
+            The rule to sample values for the property.
+        **dependencies : Property
+            Dependencies to be used in the sampling rule.
+
+        Returns
+        -------
+        Callable[..., Any]
+            A callable that defines the evaluation behavior of the property.
+
+        """
 
         # DeepTrackNode (e.g., another property or feature).
         # Return the value sampled by the DeepTrackNode.
