@@ -89,10 +89,6 @@ class Feature(DeepTrackNode):
     __property_memorability__ = 1
     __conversion_table__ = ConversionTable()
     __gpu_compatible__ = False
-    
-
-    # A None-safe default value to compare against
-    __nonelike_default = object()
 
     _wrap_array_with_image = False
 
