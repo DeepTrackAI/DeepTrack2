@@ -1,4 +1,67 @@
-"""Tools to manage the properties of a feature
+"""Tools to manage feature properties in DeepTrack2.
+
+This package provides classes and functions for managing, sampling, and 
+evaluating properties of features within the DeepTrack2 framework. It offers 
+flexibility in defining and handling properties with various data types, 
+dependencies, and sampling rules.
+
+Main Features
+-------------
+Property Management: Classes like `Property` and `PropertyDict` provide tools 
+for defining, sampling, and evaluating properties. These properties can be 
+constants, functions, lists, dictionaries, iterators, or slices, allowing for 
+dynamic and context-dependent evaluations.
+
+Sequential Sampling: The `SequentialProperty` class enables the creation of 
+properties that evolve over a sequence, useful for applications like creating 
+dynamic features in videos or time-series data.
+
+Utility Functions: Includes tools like `propagate_data_to_dependencies` to 
+efficiently manage and propagate property updates across dependencies.
+
+Package Structure
+-----------------
+Property Classes:
+- `Property`: Defines a single property of a feature, supporting various data 
+              types and dynamic evaluations.
+- `SequentialProperty`: Extends `Property` to support sequential sampling 
+                        across steps.
+- `PropertyDict`: A dictionary of properties with utilities for dependency 
+                  management and sampling.
+
+Utility Functions:
+- `propagate_data_to_dependencies`: Propagates updated data to dependent 
+                                    features and their properties.
+
+Example
+-------
+Create and use a constant property:
+
+>>> const_prop = Property(42)
+>>> const_prop()  # Returns 42
+
+Define a dynamic property dependent on another:
+
+>>> dynamic_prop = Property(lambda x: x * 2, x=Property(5))
+>>> dynamic_prop()  # Returns 10
+
+Create a dictionary of properties:
+
+>>> prop_dict = PropertyDict(
+...     constant=42,
+...     dependent=lambda constant: constant + 10,
+...     random=lambda: np.random.rand(),
+... )
+>>> print(prop_dict["constant"]())  # Returns 42
+>>> print(prop_dict["dependent"]())  # Returns 52
+
+Handle sequential properties:
+
+>>> seq_prop = SequentialProperty(initialization=lambda: np.random.rand())
+>>> seq_prop.sequence_length.store(5)
+>>> for i in range(5):
+...     seq_prop.sequence_step.store(i)
+...     print(seq_prop())  # Returns different values for each step
 
 """
 
@@ -321,6 +384,31 @@ class PropertyDict(DeepTrackNode, dict):
         either directly used to create `Property` instances or are dependent 
         on other `Property` values.
 
+    Methods
+    -------
+    __init__(**kwargs: Any)
+        Initializes the `PropertyDict`, resolving `Property` dependencies.
+    __getitem__(key: str) -> Any
+        Retrieves a value from the dictionary using a key.
+
+    Examples
+    --------
+    Initialize a `PropertyDict` with different types of properties:
+
+    >>> prop_dict = PropertyDict(
+    ...     constant=42,
+    ...     dependent=lambda constant: constant + 10,
+    ...     random=lambda: np.random.rand(),
+    ... )
+
+    Access constant and dependent properties:
+
+    >>> print(prop_dict["constant"]())
+    42
+    
+    >>> print(prop_dict["dependent"]())
+    52
+    
     """
 
     def __init__(self, **kwargs: Any):
