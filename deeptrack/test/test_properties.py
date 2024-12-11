@@ -170,7 +170,7 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(P((1, 2, 3)), (1, 2, 3))
 
 
-    def test_Propery_combined(self):
+    def test_Property_combined(self):
         P = properties.Property(
             {
                 "constant": 42,
@@ -191,6 +191,36 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(result["slice"].start, 1)
         self.assertEqual(result["slice"].stop, 10)
         self.assertEqual(result["slice"].step, 2)
+
+
+    def test_PropertyDict(self):
+
+        PD = properties.PropertyDict(
+            constant=42,
+            random=lambda: np.random.rand(),
+            dependent=lambda constant: constant + 1,
+        )
+
+        self.assertIn("constant", PD)
+        self.assertIn("constant", PD())
+        self.assertIn("random", PD)
+        self.assertIn("random", PD())
+        self.assertIn("dependent", PD)
+        self.assertIn("dependent", PD())
+
+        print(PD["constant"])
+
+        self.assertIsInstance(PD["constant"], properties.Property)
+        self.assertEqual(PD["constant"](), 42)
+        self.assertEqual(PD()["constant"], 42)
+
+        self.assertIsInstance(PD["random"], properties.Property)
+        self.assertTrue(0 <= PD["random"]() <= 1)
+        self.assertTrue(0 <= PD()["random"] <= 1)
+
+        self.assertIsInstance(PD["dependent"], properties.Property)
+        self.assertEqual(PD["dependent"](), 43)
+        self.assertEqual(PD()["dependent"], 43)
 
 
 if __name__ == "__main__":
