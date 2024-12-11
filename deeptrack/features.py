@@ -21,7 +21,7 @@ from .backend.core import DeepTrackNode
 from .backend.units import ConversionTable, create_context
 from .backend import config
 from .image import Image
-from .properties import PropertyDict, propagate_data_to_dependencies
+from .properties import PropertyDict
 from .types import ArrayLike, PropertyLike
 from . import units
 
@@ -231,16 +231,6 @@ class Feature(DeepTrackNode):
         tensor_feature.store_properties(False, recursive=False)
         return self >> tensor_feature
 
-    # def numpy(self):
-    #     """Convert the feature to a numpy feature.
-
-    #     Returns
-    #     -------
-    #     Feature
-    #         A numpy feature.
-    #     """
-    #     return self >> ToNumpy()
-
     def batch(self, batch_size=32):
         """Batch the feature.
 
@@ -346,9 +336,6 @@ class Feature(DeepTrackNode):
             )
         super()._update()
         return self
-    
-    # def to(self, device):
-        
 
     def add_feature(self, feature):
         """Adds a feature to the dependecy graph."""
@@ -733,6 +720,23 @@ class Feature(DeepTrackNode):
 
         else:
             return [i.to_numpy() for i in inputs]
+
+
+def propagate_data_to_dependencies(X, **kwargs):
+    """Iterates the dependencies of a feature and sets the value of their properties to the values in kwargs.
+
+    Parameters
+    ----------
+    X : features.Feature
+        The feature whose dependencies are to be updated
+    kwargs : dict
+        The values to be set for the properties of the dependencies.
+    """
+    for dep in X.recurse_dependencies():
+        if isinstance(dep, PropertyDict):
+            for key, value in kwargs.items():
+                if key in dep:
+                    dep[key].set_value(value)
 
 
 class StructuralFeature(Feature):

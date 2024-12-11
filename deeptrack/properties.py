@@ -16,9 +16,6 @@ Sequential Sampling: The `SequentialProperty` class enables the creation of
 properties that evolve over a sequence, useful for applications like creating 
 dynamic features in videos or time-series data.
 
-Utility Functions: Includes tools like `propagate_data_to_dependencies` to 
-efficiently manage and propagate property updates across dependencies.
-
 Package Structure
 -----------------
 Property Classes:
@@ -28,10 +25,6 @@ Property Classes:
                         across steps.
 - `PropertyDict`: A dictionary of properties with utilities for dependency 
                   management and sampling.
-
-Utility Functions:
-- `propagate_data_to_dependencies`: Propagates updated data to dependent 
-                                    features and their properties.
 
 Example
 -------
@@ -496,20 +489,3 @@ class SequentialProperty(Property):  #TODO comment.
 
     def __call__(self, _ID=()):
         return super().__call__(_ID=_ID)
-
-
-def propagate_data_to_dependencies(X, **kwargs):  #TODO move to features?
-    """Iterates the dependencies of a feature and sets the value of their properties to the values in kwargs.
-
-    Parameters
-    ----------
-    X : features.Feature
-        The feature whose dependencies are to be updated
-    kwargs : dict
-        The values to be set for the properties of the dependencies.
-    """
-    for dep in X.recurse_dependencies():
-        if isinstance(dep, PropertyDict):
-            for key, value in kwargs.items():
-                if key in dep:
-                    dep[key].set_value(value)
