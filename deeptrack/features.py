@@ -94,7 +94,7 @@ class Feature(DeepTrackNode):
 
     def __init__(self, _input=[], **kwargs):
 
-        super(Feature, self).__init__()
+        super().__init__()
 
         # Add all keyword arguments as properties.
         # In most cases, properties does not yet exist as an attribute.
@@ -240,7 +240,7 @@ class Feature(DeepTrackNode):
     #         A numpy feature.
     #     """
     #     return self >> ToNumpy()
-    
+
     def batch(self, batch_size=32):
         """Batch the feature.
 
@@ -258,18 +258,15 @@ class Feature(DeepTrackNode):
         res = list(zip(*res))
 
         for idx, r in enumerate(res):
-            
+
             if isinstance(r[0], np.ndarray):
                 res[idx] = np.stack(r)
             else:
                 import torch
                 if isinstance(r[0], torch.Tensor):
                     res[idx] = torch.stack(r)
-        
-        return tuple(res)
-            
-        
 
+        return tuple(res)
 
     def action(self, _ID=()):
         """Creates the image.
@@ -379,8 +376,6 @@ class Feature(DeepTrackNode):
                 properties[key] = val.magnitude
         return properties
 
-
-
     def plot(
         self,
         input_image: Image or List[Image] = None,
@@ -467,14 +462,13 @@ class Feature(DeepTrackNode):
                     ),
                 )
 
-
     def _process_properties(self, propertydict) -> dict:
         # Optional hook for subclasses to preprocess input before calling
         # the method .get()
 
         propertydict = self._normalize(**propertydict)
         return propertydict
-    
+
     def _activate_sources(self, x):
         if isinstance(x, SourceItem):
             x()
@@ -628,7 +622,7 @@ class Feature(DeepTrackNode):
             return self._image_wrapped_format_input
         else:
             return self._no_wrap_format_input
-        
+
     @property
     def _process_and_get(self):
         if self._wrap_array_with_image:
@@ -654,7 +648,7 @@ class Feature(DeepTrackNode):
 
         inputs = [(Image(image)) for image in image_list]
         return self._coerce_inputs(inputs, **kwargs)
-    
+
     def _no_wrap_format_input(self, image_list, **kwargs) -> list:
         # Ensures the input is a list of Image.
 
@@ -681,7 +675,7 @@ class Feature(DeepTrackNode):
                 new_list = [new_list]
 
             return new_list
-        
+
     def _image_wrapped_process_and_get(self, image_list, **feature_input) -> List[Image]:
         # Controls how the get function is called
 
@@ -711,7 +705,7 @@ class Feature(DeepTrackNode):
                 if not isinstance(image, Image):
                     new_list[idx] = Image(image)
             return new_list
-    
+
     def _image_wrapped_process_output(self, image_list, feature_input):
         for index, image in enumerate(image_list):
 
@@ -725,7 +719,7 @@ class Feature(DeepTrackNode):
 
             if isinstance(image, Image):
                 image_list[index] = image._value
-    
+
     def _coerce_inputs(self, inputs, **kwargs):
         # Coerces inputs to the correct type (numpy array or tensor or cupyy array).
         if config.gpu_enabled:
@@ -739,6 +733,7 @@ class Feature(DeepTrackNode):
 
         else:
             return [i.to_numpy() for i in inputs]
+
 
 class StructuralFeature(Feature):
     """Provides the structure of a feature-set
