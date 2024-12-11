@@ -288,87 +288,6 @@ class Property(DeepTrackNode):
         return lambda _ID=(): sampling_rule
 
 
-class SequentialProperty(Property):
-    """Property that has multiple sequential values
-
-    Extends standard `Property` to resolve one value for each step
-    in a sequence of images. This is often used when creating movies.
-
-    Parameters
-    ----------
-    initialization : any
-        Sampling rule for the first step of the sequence.
-
-
-    """
-
-    def __init__(self, initialization=None, **kwargs):
-
-        super().__init__(None)
-
-        # Create extra dependencies
-        self.sequence_length = Property(0)
-        self.add_dependency(self.sequence_length)
-        self.sequence_length.add_child(self)
-
-        # The current index of the sequence
-        self.sequence_step = Property(0)
-        self.add_dependency(self.sequence_step)
-        self.sequence_step.add_child(self)
-
-        # Stores all previous values
-        self.previous_values = Property(
-            lambda _ID=(): self.previous(_ID=_ID)[: self.sequence_step() - 1]
-            if self.sequence_step(_ID=_ID)
-            else []
-        )
-        self.add_dependency(self.previous_values)
-        self.previous_values.add_child(self)
-        self.previous_values.add_dependency(self.sequence_step)
-        self.sequence_step.add_child(self.previous_values)
-
-        # Stores the previous value
-        self.previous_value = Property(
-            lambda _ID=(): self.previous(_ID=_ID)[self.sequence_step() - 1]
-            if self.previous(_ID=_ID)
-            else None
-        )
-        self.add_dependency(self.previous_value)
-        self.previous_value.add_child(self)
-        self.previous_value.add_dependency(self.sequence_step)
-        self.sequence_step.add_child(self.previous_value)
-
-        # Creates an action for initializing the sequence
-        if initialization:
-            self.initialization = self.create_action(initialization, **kwargs)
-        else:
-            self.initialization = None
-
-        self.current = lambda: None
-        self.action = self._action_override
-
-    def _action_override(self, _ID=()):
-        return (
-            self.initialization(_ID=_ID)
-            if self.sequence_step(_ID=_ID) == 0
-            else self.current(_ID=_ID)
-        )
-
-    def store(self, value, _ID=()):
-        try:
-            current_data = self.data[_ID].current_value()
-        except KeyError:
-            current_data = []
-
-        super().store(current_data + [value], _ID=_ID)
-
-    def current_value(self, _ID):
-        return super().current_value(_ID=_ID)[self.sequence_step(_ID=_ID)]
-
-    def __call__(self, _ID=()):
-        return super().__call__(_ID=_ID)
-
-
 class PropertyDict(DeepTrackNode, dict):
     """Dictionary with Property elements
 
@@ -496,6 +415,87 @@ class PropertyDict(DeepTrackNode, dict):
         # This avoids potential recursion by bypassing any overridden behavior
         # in the current class or its parents.
         return dict.__getitem__(self, key)
+
+
+class SequentialProperty(Property):
+    """Property that has multiple sequential values
+
+    Extends standard `Property` to resolve one value for each step
+    in a sequence of images. This is often used when creating movies.
+
+    Parameters
+    ----------
+    initialization : any
+        Sampling rule for the first step of the sequence.
+
+
+    """
+
+    def __init__(self, initialization=None, **kwargs):
+
+        super().__init__(None)
+
+        # Create extra dependencies
+        self.sequence_length = Property(0)
+        self.add_dependency(self.sequence_length)
+        self.sequence_length.add_child(self)
+
+        # The current index of the sequence
+        self.sequence_step = Property(0)
+        self.add_dependency(self.sequence_step)
+        self.sequence_step.add_child(self)
+
+        # Stores all previous values
+        self.previous_values = Property(
+            lambda _ID=(): self.previous(_ID=_ID)[: self.sequence_step() - 1]
+            if self.sequence_step(_ID=_ID)
+            else []
+        )
+        self.add_dependency(self.previous_values)
+        self.previous_values.add_child(self)
+        self.previous_values.add_dependency(self.sequence_step)
+        self.sequence_step.add_child(self.previous_values)
+
+        # Stores the previous value
+        self.previous_value = Property(
+            lambda _ID=(): self.previous(_ID=_ID)[self.sequence_step() - 1]
+            if self.previous(_ID=_ID)
+            else None
+        )
+        self.add_dependency(self.previous_value)
+        self.previous_value.add_child(self)
+        self.previous_value.add_dependency(self.sequence_step)
+        self.sequence_step.add_child(self.previous_value)
+
+        # Creates an action for initializing the sequence
+        if initialization:
+            self.initialization = self.create_action(initialization, **kwargs)
+        else:
+            self.initialization = None
+
+        self.current = lambda: None
+        self.action = self._action_override
+
+    def _action_override(self, _ID=()):
+        return (
+            self.initialization(_ID=_ID)
+            if self.sequence_step(_ID=_ID) == 0
+            else self.current(_ID=_ID)
+        )
+
+    def store(self, value, _ID=()):
+        try:
+            current_data = self.data[_ID].current_value()
+        except KeyError:
+            current_data = []
+
+        super().store(current_data + [value], _ID=_ID)
+
+    def current_value(self, _ID):
+        return super().current_value(_ID=_ID)[self.sequence_step(_ID=_ID)]
+
+    def __call__(self, _ID=()):
+        return super().__call__(_ID=_ID)
 
 
 def propagate_data_to_dependencies(X, **kwargs):
