@@ -1,6 +1,6 @@
 """
 This utility package extends the random number generator objects for both
-Python and Numpy and adds functions to generate several instances as well as
+Python and Numpy by adding functions to generate several instances as well as
 dependency tracking with DeepTrackNode objects.
 """
 

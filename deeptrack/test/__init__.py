@@ -1,5 +1,4 @@
 from .backend import *
-
 from .test_aberrations import *
 from .test_augmentations import *
 from .test_elementwise import *
@@ -13,6 +12,7 @@ from .test_models import *
 from .test_noises import *
 from .test_optics import *
 from .test_properties import *
+from .test_radialcenter import *
 from .test_scatterers import *
 from .test_sequences import *
 from .test_statistics import *

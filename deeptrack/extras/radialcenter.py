@@ -1,5 +1,3 @@
-
-
 # import * to keep syntax similar to matlab
 from numpy import *
 import scipy.signal
@@ -23,7 +21,7 @@ def radialcenter(I, invert_xy=False):
   Returns
   -------
     int 
-      Coordinate pair x,y of the center of radial symmetry, 
+      Coordinate pair x, y of the center of radial symmetry, 
       px, from px #1 = left/topmost pixel.
       So a shape centered in the middle of a 2*N+1 x 2*N+1
       square (e.g. from make2Dgaussian.m with x0=y0=0) will return
