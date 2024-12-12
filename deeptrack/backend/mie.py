@@ -30,8 +30,8 @@ Compute the coefficients:
 
 from typing import Tuple
 import numpy as np
-from deeptrack.backend._config import cupy
-from deeptrack.backend import (
+from ._config import cupy
+from . import (
     ricbesh,
     ricbesy,
     ricbesj,
