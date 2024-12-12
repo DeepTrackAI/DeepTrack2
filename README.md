@@ -1,7 +1,9 @@
-### ⚠️ TensorFlow Compatibility Notice
+<p align="center">
+### TensorFlow Compatibility Notice
 
 **DeepTrack2 version 2.0++ does not support TensorFlow.**  
 If you need TensorFlow support, please install the legacy version 1.7.
+</p>
 
 <p align="center">
   <img width="350" src=https://github.com/softmatterlab/DeepTrack2/blob/develop/assets/logo.png?raw=true>
