@@ -9,8 +9,9 @@ import functools
 class SourceDeepTrackNode(DeepTrackNode):
     """A node that creates child nodes when attributes are accessed.
     
-    This class is used to create a node that creates child nodes when attributes are accessed.
-    Assumes the value of the node is dict-like (i.e. has a __getitem__ method that takes a string).
+    This class is used to create a node that creates child nodes when 
+    attributes are accessed. Assumes the value of the node is dict-like
+    (i.e. has a __getitem__ method that takes a string).
 
     Example:
     >>> node = SourceDeepTrackNode(lambda: {"a": 1, "b": 2})
@@ -32,9 +33,9 @@ class SourceDeepTrackNode(DeepTrackNode):
 class SourceItem(dict):
     """ A dict-like object that calls a list of callbacks when called.
 
-    Used in conjunction with the Source class to call a list of callbacks when called.
-    These callbacks are used to activate a certain item in the source, ensuring all 
-    DeepTrackNodes are updated.
+    Used in conjunction with the Source class to call a list of callbacks
+    when called. These callbacks are used to activate a certain item
+    in the source, ensuring all DeepTrackNodes are updated.
 
     Example:
     >>> source = Source(a=[1, 2], b=[3, 4])
@@ -64,11 +65,12 @@ class SourceItem(dict):
 class Source:
     """ A class that represents one or more sources of data.
 
-    This class is used to represent one or more sources of data. When accessed,
-    it returns a deeptrack object that can be passed as properties to features.
+    This class is used to represent one or more sources of data.
+    When accessed, it returns a deeptrack object that can be passed
+    as properties to features.
 
-    The feature can then be called with an item from the source to get the value of the feature
-    for that item. 
+    The feature can then be called with an item from the source to get the 
+    value of the feature for that item. 
 
     Example:
     >>> source = Source(a=[1, 2], b=[3, 4])
@@ -81,7 +83,8 @@ class Source:
     Parameters
     ----------
     kwargs : dict
-        A dictionary of lists or arrays. The keys of the dictionary are the names of the sources, and the values are the sources themselves.
+        A dictionary of lists or arrays. The keys of the dictionary are
+        the names of the sources, and the values are the sources themselves.
     """
     
     def __init__(self, **kwargs):
@@ -106,17 +109,23 @@ class Source:
     def product(self, **kwargs):
         """Return the product of the source with the given sources.
 
-        Returns a new source that is the product of the source with the given sources.
+        Returns a source that is the product of th
+        source with the given sources.
 
         Example:
         >>> source = Source(a=[1, 2], b=[3, 4])
         >>> new_source = source.product(c=[5, 6])
-        >>> new_source # returns Source(c=[5, 6, 5, 6], a=[1, 1, 2, 2], b=[3, 3, 4, 4])
+        >>> new_source # returns Source(c=[5, 6, 5, 6],
+                                        a=[1, 1, 2, 2],
+                                        b=[3, 3, 4, 4]
+                                    )
 
         Parameters
         ----------
         kwargs : dict
-            A dictionary of lists or arrays. The keys of the dictionary are the names of the sources, and the values are the sources themselves.
+            A dictionary of lists or arrays.
+            The keys of the dictionary are the names of the sources,
+            and the values are the sources themselves.
         """
         return Product(self, **kwargs)
     
@@ -131,7 +140,8 @@ class Source:
         Parameters
         ----------
         kwargs : dict
-            A dictionary of values. The keys of the dictionary are the names of the sources, and the values are the values themselves.
+            A dictionary of values. The keys of the dictionary are the
+            names of the sources, and the values are the values themselves.
         """
         return Product(self, **{k: [v] for k, v in kwargs.items()}) 
     
@@ -161,13 +171,17 @@ class Source:
         return self._wrap_iterable(key)
 
     def _wrap_indexable(self, key):
-        value_getter = SourceDeepTrackNode(lambda: self._dict[key][self._current_index()])
+        value_getter = SourceDeepTrackNode(
+            lambda: self._dict[key][self._current_index()]
+            )
         value_getter.add_dependency(self._current_index)
         self._current_index.add_child(value_getter)
         return value_getter
     
     def _wrap_iterable(self, key):
-        value_getter = SourceDeepTrackNode(lambda: list(self._dict[key])[self._current_index()])
+        value_getter = SourceDeepTrackNode(
+            lambda: list(self._dict[key])[self._current_index()]
+            )
         value_getter.add_dependency(self._current_index)
         self._current_index.add_child(value_getter)
         return value_getter
@@ -188,23 +202,24 @@ class Source:
 
     def _get_slice(self, slice):
 
-        # convert slice to list of indices
+        # Convert slice to list of indices.
         indices = list(range(*slice.indices(len(self))))
 
-        # get values for each index
+        # Get values for each index.
         return [self[i] for i in indices]
     
     def on_activate(self, callback: callable):
         self._callbacks.add(callback)
 
 class Product(Source):
-    """ A class that represents the product of a source with one or more sources.
+    """Class that represents the product of a source with one or more sources.
 
-    This class is used to represent the product of a source with one or more sources. When accessed,
-    it returns a deeptrack object that can be passed as properties to features.
+    This class is used to represent the product of a source with
+    one or more sources. When accessed, it returns a deeptrack object that
+    can be passed as properties to features.
 
-    The feature can then be called with an item from the source to get the value of the feature
-    for that item.
+    The feature can then be called with an item from the source
+    to get the value of the feature for that item.
     """
 
     def __init__(self, __source=[{}], **kwargs):
@@ -216,7 +231,9 @@ class Product(Source):
         
         # if overlapping keys, error
         if set(kwargs.keys()).intersection(set(source_dict.keys())):
-            raise ValueError(f"Overlapping keys in product. Duplicate keys: {set(kwargs.keys()).intersection(set(source_dict.keys()))}")
+            raise ValueError(
+                f"Overlapping keys in product. Duplicate keys: 
+                {set(kwargs.keys()).intersection(set(source_dict.keys()))}")
 
         dict_of_lists.update(source_dict)
 
@@ -234,7 +251,8 @@ class Subset(Source):
     def __init__(self, source, indices):
         self.source = source
         self.indices = indices
-        self._dict = {k: [v[i] for i in indices] for k, v in source._dict.items()}
+        self._dict = {k: [v[i] for i in indices]
+                      for k, v in source._dict.items()}
 
     def __iter__(self):
         for i in self.indices:
@@ -252,10 +270,11 @@ class Subset(Source):
 
 
 class Sources:
-    """ Joins multiple sources into a single access point.
+    """Joins multiple sources into a single access point.
 
-    Used when one of multiple sources can be passed to a feature. For example the sources
-    are split into training and validation sets, and the user can choose which one to use.
+    Used when one of multiple sources can be passed to a feature.
+    For example the sources are split into training and validation sets,
+    and the user can choose which one to use.
 
     Example:
     >>> source1 = Source(a=[1, 2], b=[3, 4])
@@ -300,14 +319,15 @@ class Sources:
 Join = Sources
 
 def random_split(source, lengths, generator=np.random.default_rng()):
-    """Randomly split a source into non-overlapping new sources of given lengths.
+    """Randomly split source into non-overlapping new sources of given lengths.
 
     Parameters
     ----------
     source : Source
         The source to split.
     lengths : list of int or float
-        The lengths of the new sources. If the lengths are floats, they are interpreted as fractions of the source.
+        The lengths of the new sources. If the lengths are floats,
+        they are interpreted as fractions of the source.
     generator : numpy.random.Generator, optional
         The random number generator to use.
     """
@@ -318,13 +338,17 @@ def random_split(source, lengths, generator=np.random.default_rng()):
         subset_lengths = []
         for i, frac in enumerate(lengths):
             if frac < 0 or frac > 1:
-                raise ValueError(f"Fraction at index {i} is not between 0 and 1")
+                raise ValueError(
+                    f"Fraction at index {i} is not between 0 and 1"
+                    )
             n_items_in_split = int(
                 math.floor(len(source) * frac)  # type: ignore[arg-type]
             )
             subset_lengths.append(n_items_in_split)
         remainder = len(source) - sum(subset_lengths)  # type: ignore[arg-type]
-        # add 1 to all the lengths in round-robin fashion until the remainder is 0
+        
+        # Add 1 to all the lengths in round-robin fashion
+        #  until the remainder is 0.
         for i in range(remainder):
             idx_to_add_at = i % len(subset_lengths)
             subset_lengths[idx_to_add_at] += 1
@@ -333,12 +357,16 @@ def random_split(source, lengths, generator=np.random.default_rng()):
             if length == 0:
                 warnings.warn(f"Length of split at index {i} is 0. "
                                 f"This might result in an empty source.")
+                
         # Cannot verify that dataset is Sized
     if sum(lengths) != len(source):    # type: ignore[arg-type]
-        raise ValueError("Sum of input lengths does not equal the length of the input dataset!")
+        raise ValueError("Sum of input lengths does not\
+                          equal the length of the input dataset!")
 
-    indices = generator.permutation(sum(lengths)).tolist()  # type: ignore[call-overload]
-    return [Subset(source, indices[offset - length : offset]) for offset, length in zip(_accumulate(lengths), lengths)]
+    indices = generator.permutation(
+        sum(lengths)).tolist()  # type: ignore[call-overload]
+    return [Subset(source, indices[offset - length : offset]) 
+            for offset, length in zip(_accumulate(lengths), lengths)]
 
         
 
