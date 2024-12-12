@@ -62,7 +62,8 @@ _ID = {
 def load(key):
     """Downloads a dataset from google drive.
     One of: "CellCounting", "MNIST", "QuantumDots", "ParticleTracking",
-    "ParticleSizing", "3DTracking", "MitoGAN", "CellData", "CellMigData", "BFC2Cells"
+    "ParticleSizing", "3DTracking", "MitoGAN", "CellData", 
+    "CellMigData", "BFC2Cells".
 
     Data will be stored in the "datasets" folder.
 
@@ -114,11 +115,13 @@ def load(key):
 def load_model(key):
     """Downloads a model from google drive.
     One of: "CellCounting", "MNIST", "QuantumDots", "ParticleTracking",
-    "ParticleSizing", "3DTracking", "MitoGAN", "CellData", "CellMigData", "BFC2Cells"
+    "ParticleSizing", "3DTracking", "MitoGAN", "CellData",
+    "CellMigData", "BFC2Cells".
 
     Data will be stored in the "models" folder.
 
-    Returns:
+    Returns
+    -------
         path to the model : str
 
     """
@@ -207,17 +210,21 @@ def download_file_from_google_drive(
 ):
     """Download a Google Drive file from  and place it in root.
 
-    Args:
+    Parameters
+    ----------
         file_id (str): id of file to be downloaded
         root (str): Directory to place downloaded file in
-        filename (str, optional): Name to save the file under. If None, use the id of the file.
-        md5 (str, optional): MD5 checksum of the download. If None, do not check
+        filename (str, optional): Name to save the file under. 
+        If None, use the id of the file.
+        md5 (str, optional): MD5 checksum of the download.
+        If None, do not check.
     """
     try:
         import gdown
     except ModuleNotFoundError:
         raise RuntimeError(
-            "To download files from GDrive, 'gdown' is required. You can install it with 'pip install gdown'."
+            "To download files from GDrive, 'gdown' is required.\
+                You can install it with 'pip install gdown'."
         )
 
     root = os.path.expanduser(root)
