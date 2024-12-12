@@ -1,3 +1,8 @@
+"""
+This utility package extends the random number generator objects for both
+Python and Numpy and adds functions to generate several instances as well as
+dependency tracking with DeepTrackNode objects.
+"""
 
 import numpy as np
 import random 
@@ -9,6 +14,43 @@ from deeptrack.backend.core import DeepTrackNode
 
 
 class NumpyRNG(Source, np.random.RandomState):
+    """Class that generates multiple numpy random number generators.
+
+    It is used for creating multiple rng's with different seeds.
+
+    Parameters
+    ----------
+    n_states : int
+        The number of random number generators to create.
+
+    seed : int, optional
+        The seed used to initialize the first random generator. If not provided, a 
+        random seed will be generated automatically using `np.random.randint()`.
+
+    Attributes
+    ----------
+    rng : list of numpy.Random
+        A list of `numpy.Random` objects, each seeded with a unique value.
+        
+    Methods
+    -------
+    _generate_states() : list
+        Generates and returns a list of independent `numpy.Random` objects.
+        
+    reset() : None
+        Resets the list of random number generators with new seeds.
+
+    __getattribute__(__name) : Any
+        Custom attribute access to allow lazy evaluation
+        of random number generator methods.
+        
+    _create_lazy_callback(__name) : callable
+        Creates a lazy callback for accessing methods 
+        from the `numpy.Random` objects.
+
+    set_index(index) : self
+        Sets the current index and resets the random number generators.
+    """
 
     rng: list
 
@@ -55,6 +97,44 @@ class NumpyRNG(Source, np.random.RandomState):
     
 
 class PythonRNG(Source, random.Random):
+    """Class that generates multiple random.Random number generators.
+
+    It is used for creating multiple rng's with different seeds.
+
+    Parameters
+    ----------
+    n_states : int
+        The number of random number generators to create.
+
+    seed : int, optional
+        The seed used to initialize the first random generator. If not provided, a 
+        random seed will be generated automatically
+        using `random.Random.randint()`.
+
+    Attributes
+    ----------
+    rng : list of random.Random
+        A list of `random.Random` objects, each seeded with a unique value.
+        
+    Methods
+    -------
+    _generate_states() : list
+        Generates and returns a list of independent `random.Random` objects.
+        
+    reset() : None
+        Resets the list of random number generators with new seeds.
+
+    __getattribute__(__name) : Any
+        Custom attribute access to allow lazy evaluation
+        of random number generator methods.
+        
+    _create_lazy_callback(__name) : callable
+        Creates a lazy callback for accessing methods 
+        from the `random.Random` objects.
+
+    set_index(index) : self
+        Sets the current index and resets the random number generators.
+    """
 
     
     rng: list
