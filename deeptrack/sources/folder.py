@@ -7,7 +7,8 @@ known_extensions = ["png", "jpg", "jpeg", "tif", "tiff", "bmp", "gif"]
 class ImageFolder(Source):
     """Data source for images organized in a directory structure.
 
-    This class assumes that the images are organized in a directory structure where:
+    This class assumes that the images are organized in a
+    directory structure where:
 
     ```bash
         root/dog/xxx.png
