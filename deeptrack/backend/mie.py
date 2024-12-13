@@ -176,9 +176,21 @@ def mie_harmonics(
     Parameters
     ----------
     x : np.ndarray
-        The cosine of the angle defined by the line passing through the origin
-        parallel to the propagation direction and the evaluation point, with 
-        the corner at the origin.
+        An array representing the cosine of the polar angle (theta) for each 
+        evaluation point relative to the scattering particle's center 
+        (the origin). 
+        The polar angle is the angle between:
+        - The z-axis (aligned with the direction of wave propagation), and 
+        - The vector from the particle's center to the evaluation point.
+        
+        Values in `x` should lie in the range [-1, 1], where:
+        - `x = 1` corresponds to theta = 0° (point directly forward along the 
+          z-axis),
+        - `x = -1` corresponds to theta = 180° (point directly backward along 
+          the z-axis),
+        - `x = 0` corresponds to theta = 90° (point perpendicular to the 
+          z-axis).
+
     L : int
         The order up to which to evaluate the harmonics.
 
