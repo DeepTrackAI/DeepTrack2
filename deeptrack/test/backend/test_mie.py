@@ -9,7 +9,7 @@
 import unittest
 
 import numpy as np
-from deeptrack.backend import mie
+from deeptrack.backend.mie import *
 
 class TestMie(unittest.TestCase):
 
@@ -17,7 +17,7 @@ class TestMie(unittest.TestCase):
         m = 1.5 + 0.01j
         a = 0.5
         L = 5
-        A, B = mie.mie_coefficients(m, a, L)
+        A, B = mie_coefficients(m, a, L)
 
         # Check the shape of the coefficients
         self.assertEqual(A.shape, (L,))
@@ -31,7 +31,7 @@ class TestMie(unittest.TestCase):
         m = [1.5 + 0.01j, 1.2 + 0.02j]
         a = [0.5, 0.3]
         L = 5
-        an, bn = mie.stratified_mie_coefficients(m, a, L)
+        an, bn = stratified_mie_coefficients(m, a, L)
 
         # Check the shape of the coefficients
         self.assertEqual(an.shape, (L,))
@@ -44,7 +44,7 @@ class TestMie(unittest.TestCase):
     def test_mie_harmonics(self):
         x = np.linspace(-1, 1, 100)
         L = 5
-        PI, TAU = mie.mie_harmonics(x, L)
+        PI, TAU = mie_harmonics(x, L)
 
         # Check the shape of the harmonics
         self.assertEqual(PI.shape, (L, 100))
