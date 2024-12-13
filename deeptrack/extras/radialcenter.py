@@ -1,33 +1,21 @@
-# import * to keep syntax similar to matlab
-from numpy import *
-import scipy.signal
+"""Radial center calculation function
 
+This module provides a function to calculate the center location
+of an intensity distribution.
 
-def radialcenter(I, invert_xy=False):
-  """Calculates the center of a 2D intensity distribution.
+Module Structure
+----------------
+Functions:
+- `radialcenter`: Calculates the center of a 2D intensity distribution.
 
-  Considers lines passing through each half-pixel point with slope
-  parallel to the gradient of the intensity at that point. Considers the
-  distance of closest approach between these lines and the coordinate
-  origin, and determines (analytically) the origin that minimizes the
-  weighted sum of these distances-squared.
+Example
+-------
+Calculate center of an image containing randomly generated Gaussian blur.
 
-  Parameters
-  ----------
-  I : np.ndarray
-    2D intensity distribution (i.e. a grayscale image)
-    Size need not be an odd number of pixels along each dimension
-
-  Returns
-  -------
-    int 
-      Coordinate pair x, y of the center of radial symmetry, 
-      px, from px #1 = left/topmost pixel.
-      So a shape centered in the middle of a 2*N+1 x 2*N+1
-      square (e.g. from make2Dgaussian.m with x0=y0=0) will return
-      a center value at x0=y0=N+1.
-
-      Note that y increases with increasing row number (i.e. "downward")
+>>> from deeptrack.extras import radialcenter as rc
+>>> gaussian_blur = np.random.normal(0, 0.005, (100, 100))
+>>> x, y = rc.radialcenter(gaussian_blur)
+>>> print(f"Center of distribution = {x}, {y}")
 
 
   Python implementation by Benjamin Midtvedt, University of Gothenburg, 2020
@@ -51,8 +39,39 @@ def radialcenter(I, invert_xy=False):
   August 21, 2011 (begun)
   last modified Apr. 6, 2012 (minor change)
   Copyright 2011-2012, Raghuveer Parthasarathy
-
 """
+
+# import * to keep syntax similar to matlab
+from numpy import *
+import scipy.signal
+
+def radialcenter(I, invert_xy=False):
+  """Calculates the center of a 2D intensity distribution.
+
+  Considers lines passing through each half-pixel point with slope
+  parallel to the gradient of the intensity at that point. Considers the
+  distance of closest approach between these lines and the coordinate
+  origin, and determines (analytically) the origin that minimizes the
+  weighted sum of these distances-squared.
+
+  Parameters
+  ----------
+  I : np.ndarray
+    2D intensity distribution (i.e. a grayscale image)
+    Size need not be an odd number of pixels along each dimension
+
+  Returns
+  -------
+  float, float
+      Coordinate pair x, y of the center of radial symmetry, 
+      px, from px #1 = left/topmost pixel.
+      So a shape centered in the middle of a 2*N+1 x 2*N+1
+      square (e.g. from make2Dgaussian.m with x0=y0=0) will return
+      a center value at x0=y0=N+1.
+
+      Note that y increases with increasing row number (i.e. "downward")
+
+  """
   I = squeeze(I)
   Ny, Nx = I.shape[:2]
 
