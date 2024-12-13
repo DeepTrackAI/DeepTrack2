@@ -36,14 +36,19 @@ Computation Nodes:
 
 Example
 -------
-Create a DeepTrackNode:
+Create two `DeepTrackNode` objects:
 
->>> node = DeepTrackNode(lambda: 42)
->>> node.store(5)
+>>> parent = DeepTrackNode()
+>>> child = DeepTrackNode(lambda: 2 * parent())
+>>> parent.add_child(child)
 
-Retrieve the stored value:
+Set the value of the parent:
 
->>> print(node.current_value())  # Output: 5
+>>> parent.store(5)
+
+And obtain the value of the child:
+
+>>> print(child())  # Output: 10
 
 """
 
