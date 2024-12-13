@@ -39,7 +39,7 @@ Example
 Create a DeepTrackNode:
 
 >>> node = DeepTrackNode(lambda x: x**2)
->>> node.store(5)
+>>> node.store(node._action(5))
 
 Retrieve the stored value:
 
@@ -247,6 +247,7 @@ class DeepTrackDataDict:
     >>> data_dict.create_index((1,))
 
     # Add nested entries
+    >>> data_dict.keylength = 2
     >>> data_dict.create_index((0, 0))
     >>> data_dict.create_index((0, 1))
     >>> data_dict.create_index((1, 0))
@@ -270,7 +271,11 @@ class DeepTrackDataDict:
     If requesting a shorter ID, it returns all matching nested entries:
     
     >>> print(data_dict[(0,)])
-    {(0, 0): <DeepTrackDataObject>, (0, 1): <DeepTrackDataObject>}
+    {
+        (0,): <DeepTrackDataObject>,
+        (0, 0): <DeepTrackDataObject>,
+        (0, 1): <DeepTrackDataObject>
+    }
     
     """
 
@@ -1378,7 +1383,8 @@ class DeepTrackNode:
         Returns
         -------
         DeepTrackNode
-            A new node that represents the comparison operation (`self < other`).
+            A new node that represents the comparison operation
+            (`self < other`).
         
         """
 
