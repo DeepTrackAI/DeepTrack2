@@ -38,12 +38,12 @@ Example
 -------
 Create a DeepTrackNode:
 
->>> node = DeepTrackNode(lambda x: x**2)
+>>> node = DeepTrackNode(lambda: 42)
 >>> node.store(5)
 
 Retrieve the stored value:
 
->>> print(node.current_value())  # Output: 25
+>>> print(node.current_value())  # Output: 5
 
 """
 
@@ -242,11 +242,8 @@ class DeepTrackDataDict:
 
     >>> data_dict = DeepTrackDataDict()
 
-    # Create two top-level entries
-    >>> data_dict.create_index((0,))
-    >>> data_dict.create_index((1,))
-
-    # Add nested entries
+    Create entries:
+    
     >>> data_dict.create_index((0, 0))
     >>> data_dict.create_index((0, 1))
     >>> data_dict.create_index((1, 0))
@@ -270,7 +267,10 @@ class DeepTrackDataDict:
     If requesting a shorter ID, it returns all matching nested entries:
     
     >>> print(data_dict[(0,)])
-    {(0, 0): <DeepTrackDataObject>, (0, 1): <DeepTrackDataObject>}
+    {
+        (0, 0): <DeepTrackDataObject>, 
+        (0, 1): <DeepTrackDataObject>,
+    }
     
     """
 
@@ -602,10 +602,8 @@ class DeepTrackNode:
 
     # Attributes.
     data: DeepTrackDataDict
-    children: WeakSet  #TODO 
-                       # From Python 3.9, change to WeakSet['DeepTrackNode']
-    dependencies: WeakSet #TODO
-                          # From Python 3.9, change to WeakSet['DeepTrackNode']
+    children: WeakSet['DeepTrackNode']
+    dependencies: WeakSet['DeepTrackNode']
     _action: Callable[..., Any]
     _accepts_ID: bool
     _all_subchildren: Set['DeepTrackNode']
@@ -1378,7 +1376,8 @@ class DeepTrackNode:
         Returns
         -------
         DeepTrackNode
-            A new node that represents the comparison operation (`self < other`).
+            A new node that represents the comparison operation
+            (`self < other`).
         
         """
 
