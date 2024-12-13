@@ -242,12 +242,8 @@ class DeepTrackDataDict:
 
     >>> data_dict = DeepTrackDataDict()
 
-    # Create two top-level entries
-    >>> data_dict.create_index((0,))
-    >>> data_dict.create_index((1,))
-
-    # Add nested entries
-    >>> data_dict.keylength = 2
+    Create entries:
+    
     >>> data_dict.create_index((0, 0))
     >>> data_dict.create_index((0, 1))
     >>> data_dict.create_index((1, 0))
@@ -272,9 +268,8 @@ class DeepTrackDataDict:
     
     >>> print(data_dict[(0,)])
     {
-        (0,): <DeepTrackDataObject>,
-        (0, 0): <DeepTrackDataObject>,
-        (0, 1): <DeepTrackDataObject>
+        (0, 0): <DeepTrackDataObject>, 
+        (0, 1): <DeepTrackDataObject>,
     }
     
     """
