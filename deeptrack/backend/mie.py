@@ -136,22 +136,32 @@ def stratified_mie_coefficients(
                     continue
 
                 if np.mod(i, 2) == 0:
-                    A[i, j] = (
-                        dricbesj(n + 1, m[p] * a[q])
-                        if np.mod(j, 2) == 0
-                        else dricbesy(n + 1, m[p] * a[q])
-                    )
+                    if (j < 2 * n_layers - 1) and ((j == 0) or
+                                                   (np.mod(j, 2) == 1)):
+                        A[i, j] = dricbesj(n + 1, m[p] * a[q])
+                    elif np.mod(j, 2) == 0:
+                        A[i, j] = dricbesy(n + 1, m[p] * a[q])
+                    else:
+                        A[i, j] = dricbesj(n + 1, a[q])
+
                     C[i, j] = (
-                        m[p] * A[i, j] if j != 2 * n_layers - 1 else A[i, j]
+                        m[p] * A[i, j]
+                        if j != 2 * n_layers - 1
+                        else A[i, j]
                     )
                 else:
-                    C[i, j] = (
-                        ricbesj(n + 1, m[p] * a[q])
-                        if np.mod(j, 2) == 0
-                        else ricbesy(n + 1, m[p] * a[q])
-                    )
+                    if (j < 2 * n_layers - 1) and ((j == 0) or
+                                                   (np.mod(j, 2) == 1)):
+                        C[i, j] = ricbesj(n + 1, m[p] * a[q])
+                    elif np.mod(j, 2) == 0:
+                        C[i, j] = ricbesy(n + 1, m[p] * a[q])
+                    else:
+                        C[i, j] = ricbesj(n + 1, a[q])
+
                     A[i, j] = (
-                        m[p] * C[i, j] if j != 2 * n_layers - 1 else C[i, j]
+                        m[p] * C[i, j]
+                        if j != 2 * n_layers - 1 
+                        else C[i, j]
                     )
 
         B = A.copy()
