@@ -5,7 +5,7 @@ Provides classes and tools for creating and interacting with features.
 
 import itertools
 import operator
-from typing import Any, Callable, Iterable, List
+from typing import Any, Callable, Iterable, List, Tuple
 import warnings
 import random
 
@@ -146,53 +146,79 @@ class Feature(DeepTrackNode):
             The transformed image or list of images.
         
         """
-        
+
         raise NotImplementedError
 
-    def __call__(self, image_list: Image or List[Image] = None, _ID=(), **kwargs):
+    def __call__(
+        self,
+        image_list: Image | List[Image] = None,
+        _ID: Tuple[int, ...] = (),
+        **kwargs: Any,
+    ) -> Any:
         """Execute the feature or pipeline.
+
+        This method executes the feature or pipeline on the provided input and 
+        updates the computation graph if necessary. It handles overriding 
+        properties using additional keyword arguments.
+
+        The actual computation is performed by calling the parent `__call__` 
+        method in the `DeepTrackNode` class, which manages lazy evaluation and 
+        caching.
 
         Arguments
         ---------
-        image_list : Image or List[Image] or array-like or None
-           The input to the feature or pipeline.
-        **kwargs : any
-           Additional paramaters sent to the pipeline. These will override properties of the same name.
-           For example `feature(x, value=4)` will execute `feature` on the input `x`, setting the property `value`
-           to 4. In a pipeline, all features will be affected by this.
+        image_list : Image | List[Image], optional
+            The input to the feature or pipeline. If `None`, the feature uses 
+            previously set input values or propagates properties.
+        **kwargs : Any
+            Additional parameters passed to the pipeline. These override 
+            properties with matching names. For example, calling 
+            `feature(x, value=4)` executes `feature` on the input `x` while 
+            setting the property `value` to `4`. All features in a pipeline are 
+            affected by these overrides.
+
+        Returns
+        -------
+        Any
+            The output of the feature or pipeline after execution.
 
         """
 
-        # if image_list is as Source, activate it.
+        # If image_list is as Source, activate it.
         self._activate_sources(image_list)
 
         # Potentially fragile. Maybe a special variable dt._last_input instead?
-        # If the input is not empty, we set the value of the input.
+        # If the input is not empty, set the value of the input.
         if (
-            image_list is not None 
+            image_list is not None
             and not (isinstance(image_list, list) and len(image_list) == 0)
-            and not (isinstance(image_list, tuple) and any(isinstance(x, SourceItem) for x in image_list))
+            and not (isinstance(image_list, tuple)
+                     and any(isinstance(x, SourceItem) for x in image_list))
         ):
             self._input.set_value(image_list, _ID=_ID)
 
-        # A dict to store the values of self.arguments before we update them.
+        # A dict to store the values of self.arguments before updating them.
         original_values = {}
 
-        # If we don't have self.arguments, we instead propagate the values of the kwargs to all properties in the computation graph.
+        # If there are no self.arguments, instead propagate the values of the 
+        # kwargs to all properties in the computation graph.
         if kwargs and self.arguments is None:
             propagate_data_to_dependencies(self, **kwargs)
 
-        # If we have self.arguments, we update the values of self.arguments to match kwargs.
+        # If there are self.arguments, update the values of self.arguments to 
+        # match kwargs.
         if isinstance(self.arguments, Feature):
             for key, value in kwargs.items():
                 if key in self.arguments.properties:
                     original_values[key] = self.arguments.properties[key](_ID=_ID)
                     self.arguments.properties[key].set_value(value, _ID=_ID)
 
-        # This executes the feature. DeepTrackNode will determine if it needs to be recalculated. If it does, it will call the `action` method.
-        output = super(Feature, self).__call__(_ID=_ID)
+        # This executes the feature. DeepTrackNode will determine if it needs
+        # to be recalculated. If it does, it will call the `action` method.
+        output = super().__call__(_ID=_ID)
 
-        # If we have self.arguments, we reset the values of self.arguments to their original values.
+        # If there are self.arguments, reset the values of self.arguments to 
+        # their original values.
         for key, value in original_values.items():
             self.arguments.properties[key].set_value(value, _ID=_ID)
 
