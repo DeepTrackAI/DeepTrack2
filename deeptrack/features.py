@@ -47,16 +47,16 @@ class Feature(DeepTrackNode):
 
     Parameters
     ----------
-    _input : List[Image] (optional)
+    _input : Image | List[Image], optional
         Defines a list of DeepTrackNode objects that calculate the input of the 
         feature. In most cases, this can be left empty.
-    **kwargs
+    **kwargs : Any
         All Keyword arguments will be wrapped as instances of `Property` and
         included in the `properties` attribute.
 
     Attributes
     ----------
-    properties : dict
+    properties : PropertyDict
         A dict that contains all keyword arguments passed to the constructor 
         wrapped as Distributions. A sampled copy of this dict is sent as input 
         to the get function, and is appended to the properties field of the 
@@ -70,7 +70,7 @@ class Feature(DeepTrackNode):
         Controls whether `.get(image, **kwargs)` is called on each element in 
         the list separately (`__distributed__ = True`), or if it is called on 
         the list as a whole (`__distributed__ = False`).
-    __property_memorability__
+    __property_memorability__ : int
         Controls whether to store the features properties to the `Image`.
         Values 1 or lower will be included by default.
     __conversion_table__ : ConversionTable
@@ -78,6 +78,24 @@ class Feature(DeepTrackNode):
         the desired units.
     __gpu_compatible__ : bool
         Controls whether to use GPU acceleration for the feature.
+
+    Methods
+    -------
+    get(image: Image | List[Image], **kwargs: Any) -> Image | List[Image]
+        Abstract method that defines how the feature transforms the input.
+    __call__(image_list: Optional[Union[Image, List[Image]]] = None, 
+             _ID: Tuple[int, ...] = (), **kwargs: Any) -> Any
+        Executes the feature or pipeline on the input and applies property 
+        overrides from `kwargs`.
+    store_properties(x: bool = True, recursive: bool = True) -> None
+        Controls whether the properties are stored in the output `Image` object.
+    torch(dtype: Optional[torch.dtype] = None, device: Optional[torch.device] = None, 
+          permute_mode: str = "never") -> 'Feature'
+        Converts the feature into a PyTorch-compatible feature.
+    batch(batch_size: int = 32) -> Union[tuple, List[Image]]
+        Batches the feature for repeated execution.
+    seed(_ID: Tuple[int, ...] = ()) -> None
+        Sets the random seed for the feature, ensuring deterministic behavior.
 
     """
 
@@ -226,7 +244,11 @@ class Feature(DeepTrackNode):
 
     resolve = __call__
 
-    def store_properties(self, x=True, recursive=True):
+    def store_properties(
+        self, 
+        x: bool = True, 
+        recursive: bool = True,
+    ) -> None:
         """Store properties to the Image.
 
         Parameters
