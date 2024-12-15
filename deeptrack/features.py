@@ -104,21 +104,23 @@ class Feature(DeepTrackNode):
 
         # Create propertydict and add it to the computation graph.
         self.properties = PropertyDict(**properties)
-        self.add_dependency(self.properties)
         self.properties.add_child(self)
+        # self.add_dependency(self.properties)  # Executed by add_child.
 
         # The input of the feature is added as a dependency.
-        # This lets the feature know that it needs to be recalculated if the input changes.
+        # This lets the feature know that it needs to be recalculated if the 
+        # input changes.
         # _input is set when the feature is called.
         self._input = DeepTrackNode(_input)
-        self.add_dependency(self._input)
         self._input.add_child(self)
+        # self.add_dependency(self._input)  # Executed by add_child.
 
         # A random seed can be set to make the feature deterministic.
-        # A non-deterministic feature does not need to be recalculated if the seed is the same.
+        # A non-deterministic feature does not need to be recalculated if the 
+        # seed is the same.
         self._random_seed = DeepTrackNode(lambda: random.randint(0, 2147483648))
-        self.add_dependency(self._random_seed)
         self._random_seed.add_child(self)
+        # self.add_dependency(self._random_seed)  # Executed by add_child.
 
         # Initilaize arguments
         self.arguments = None
@@ -326,6 +328,7 @@ class Feature(DeepTrackNode):
         return self
 
     def _update(self, **global_arguments):
+        
         if global_arguments:
             # Deptracated, but not necessary to raise hard error.
             warnings.warn(
@@ -334,6 +337,7 @@ class Feature(DeepTrackNode):
                 "The prefered solution is to use dt.Arguments",
                 DeprecationWarning,
             )
+            
         super()._update()
         return self
 
