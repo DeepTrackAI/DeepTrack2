@@ -32,47 +32,44 @@ MERGE_STRATEGY_APPEND = 1
 class Feature(DeepTrackNode):
     """Base feature class.
 
-    Features define the image generation process. All features operate
-    on lists of images. Most features, such as noise, apply some
-    tranformation to all images in the list. This transformation can
-    be additive, such as adding some Gaussian noise or a background
-    illumination, or non-additive, such as introducing Poisson noise
-    or performing a low-pass filter. This transformation is defined
-    by the method `get(image, **kwargs)`, which all implementations of
-    the class `Feature` need to define.
+    Features define the image generation process. All features operate on lists 
+    of images. Most features, such as noise, apply some tranformation to all 
+    images in the list. This transformation can be additive, such as adding 
+    some Gaussian noise or a background illumination, or non-additive, such as 
+    introducing Poisson noise or performing a low-pass filter. This 
+    transformation is defined by the method `get(image, **kwargs)`, which all 
+    implementations of the class `Feature` need to define.
 
     Whenever a Feature is initiated, all keyword arguments passed to the
-    constructor will be wrapped as a Property, and stored in the
-    `properties` field as a `PropertyDict`. When a Feature is resolved,
-    the current value of each property is sent as input to the get method.
+    constructor will be wrapped as a `Property`, and stored in the `properties` 
+    attribute as a `PropertyDict`. When a Feature is resolved, the current 
+    value of each property is sent as input to the get method.
 
     Parameters
     ----------
     _input : List[Image] (optional)
-        Defines a list of DeepTrackNode objects that calculate the input of the feature.
-        In most cases, this can be left empty.
+        Defines a list of DeepTrackNode objects that calculate the input of the 
+        feature. In most cases, this can be left empty.
     **kwargs
-        All Keyword arguments will be wrapped as instances of ``Property`` and
-        included in the field `properties`.
-
+        All Keyword arguments will be wrapped as instances of `Property` and
+        included in the `properties` attribute.
 
     Attributes
     ----------
     properties : dict
-        A dict that contains all keyword arguments passed to the
-        constructor wrapped as Distributions. A sampled copy of this
-        dict is sent as input to the get function, and is appended
-        to the properties field of the output image.
+        A dict that contains all keyword arguments passed to the constructor 
+        wrapped as Distributions. A sampled copy of this dict is sent as input 
+        to the get function, and is appended to the properties field of the 
+        output image.
     __list_merge_strategy__ : int
-        Controls how the output of `.get(image, **kwargs)` is merged with
-        the input list. It can be `MERGE_STRATEGY_OVERRIDE` (0, default),
-        where the input is replaced by the new list, or
-        `MERGE_STRATEGY_APPEND` (1), where the new list is appended to the
-        end of the input list.
+        Controls how the output of `.get(image, **kwargs)` is merged with the 
+        input list. It can be `MERGE_STRATEGY_OVERRIDE` (0, default), where the 
+        input is replaced by the new list, or `MERGE_STRATEGY_APPEND` (1), 
+        where the new list is appended to the end of the input list.
     __distributed__ : bool
-        Controls whether `.get(image, **kwargs)` is called on each element
-        in the list separately (`__distributed__ = True`), or if it is
-        called on the list as a whole (`__distributed__ = False`).
+        Controls whether `.get(image, **kwargs)` is called on each element in 
+        the list separately (`__distributed__ = True`), or if it is called on 
+        the list as a whole (`__distributed__ = False`).
     __property_memorability__
         Controls whether to store the features properties to the `Image`.
         Values 1 or lower will be included by default.
@@ -125,28 +122,34 @@ class Feature(DeepTrackNode):
         # Initilaize arguments
         self.arguments = None
 
-    def get(self, image: Image or List[Image], **kwargs) -> Image or List[Image]:
-        """Method for altering an image
-        Abstract method that define how the feature transforms the input. The current
-        value of all properties will be passed as keyword arguments.
+    def get(
+        self,
+        image: Image | List[Image],
+        **kwargs: Any,
+    ) -> Image | List[Image]:
+        """Transform an image [abstract method].
+        
+        Abstract method that define how the feature transforms the input. The 
+        current value of all properties will be passed as keyword arguments.
 
         Parameters
         ---------
-        image : Image or List[Image]
-            The Image or list of images to transform
+        image : Image | List[Image]
+            The Image or list of images to transform.
         **kwargs
-            The current value of all properties in `properties` as well as any global
-            arguments.
+            The current value of all properties in `properties` as well as any 
+            global arguments.
 
         Returns
         -------
-        Image or List[Image]
-            The transformed image or list of images
+        Image | List[Image]
+            The transformed image or list of images.
+        
         """
+        
         raise NotImplementedError
 
     def __call__(self, image_list: Image or List[Image] = None, _ID=(), **kwargs):
-
         """Execute the feature or pipeline.
 
         Arguments
