@@ -27,6 +27,35 @@ class TestMie(unittest.TestCase):
         self.assertIsInstance(A, np.ndarray)
         self.assertIsInstance(B, np.ndarray)
 
+        # Check against test values from Sergio Aragon's Mie Scattering 
+        # in Mathematica
+        m = 4.0 / 3.0
+        a = 50
+        L = 1
+        A, B = mie_coefficients(m, a, L)
+        self.assertAlmostEqual(A.real, 0.5311058892948411929, delta=1e-8)
+        self.assertAlmostEqual(A.imag, -0.4990314856310943073, delta=1e-8)
+        self.assertAlmostEqual(B.real, 0.7919244759352004773, delta=1e-8)
+        self.assertAlmostEqual(B.imag, -0.4059311522289938238, delta=1e-8)
+
+        m = 1.5 + 1j
+        a = 2
+        L = 1
+        A, B = mie_coefficients(m, a, L)
+        self.assertAlmostEqual(A.real, 0.5465202033970914511, delta=1e-8)
+        self.assertAlmostEqual(A.imag, -0.1523738572575972279, delta=1e-8)
+        self.assertAlmostEqual(B.real, 0.3897147278879423235, delta=1e-8)
+        self.assertAlmostEqual(B.imag, 0.2278960752564908264, delta=1e-8)
+
+        m = 1.1 + 25j
+        a = 2
+        L = 2
+        A, B = mie_coefficients(m, a, L)
+        self.assertAlmostEqual(A[1].real, 0.324433578437, delta=1e-8)
+        self.assertAlmostEqual(A[1].imag, -0.465627763266, delta=1e-8)
+        self.assertAlmostEqual(B[1].real, 0.060464399088, delta=1e-8)
+        self.assertAlmostEqual(B[1].imag, 0.236805417045, delta=1e-8)
+
     def test_stratified_mie_coefficients(self):
         m = [1.5 + 0.01j, 1.2 + 0.02j]
         a = [0.5, 0.3]
@@ -53,6 +82,32 @@ class TestMie(unittest.TestCase):
         # Check the type of the harmonics
         self.assertIsInstance(PI, np.ndarray)
         self.assertIsInstance(TAU, np.ndarray)
+
+        # Check against test values
+        x = np.array([0.5])
+        L = 3
+        PI_expected = np.array([[1], [1.5], [0.875]])
+        TAU_expected = np.array([[0.5], [-1.5], [-4.3125]])
+        PI, TAU = mie_harmonics(x, L)
+        self.assertTrue(np.allclose(PI, PI_expected))
+        self.assertTrue(np.allclose(TAU, TAU_expected))
+        
+        x = np.array([0])
+        L = 2
+        PI_expected = np.array([[1], [0]])
+        TAU_expected = np.array([[0], [-3]])
+        PI, TAU = mie_harmonics(x, L)
+        self.assertTrue(np.allclose(PI, PI_expected))
+        self.assertTrue(np.allclose(TAU, TAU_expected))
+        
+        x = np.array([-0.5])
+        L = 3
+        PI_expected = np.array([[1], [-1.5], [0.875]])
+        TAU_expected = np.array([[-0.5], [-1.5], [4.3125]])
+        PI, TAU = mie_harmonics(x, L)
+        self.assertTrue(np.allclose(PI, PI_expected))
+        self.assertTrue(np.allclose(TAU, TAU_expected))
+
 
 if __name__ == "__main__":
     unittest.main()
