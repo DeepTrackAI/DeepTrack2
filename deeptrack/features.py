@@ -5,7 +5,7 @@ Provides classes and tools for creating and interacting with features.
 
 import itertools
 import operator
-from typing import Any, Callable, Iterable, List, Tuple
+from typing import Any, Callable, Iterable, List, Tuple, Union
 import warnings
 import random
 
@@ -47,7 +47,7 @@ class Feature(DeepTrackNode):
 
     Parameters
     ----------
-    _input : Image | List[Image], optional
+    _input : Union['Image', List['Image']], optional
         Defines a list of DeepTrackNode objects that calculate the input of the 
         feature. In most cases, this can be left empty.
     **kwargs : Any
@@ -81,7 +81,9 @@ class Feature(DeepTrackNode):
 
     Methods
     -------
-    get(image: Image | List[Image], **kwargs: Any) -> Image | List[Image]
+    get(
+        image: Union['Image', List['Image']], **kwargs: Any
+    ) -> Union['Image', List['Image']]
         Abstract method that defines how the feature transforms the input.
     __call__(image_list: Optional[Union[Image, List[Image]]] = None, 
              _ID: Tuple[int, ...] = (), **kwargs: Any) -> Any
@@ -142,9 +144,9 @@ class Feature(DeepTrackNode):
 
     def get(
         self,
-        image: Image | List[Image],
+        image: Union['Image', List['Image']],
         **kwargs: Any,
-    ) -> Image | List[Image]:
+    ) -> Union['Image', List['Image']]:
         """Transform an image [abstract method].
         
         Abstract method that define how the feature transforms the input. The 
@@ -152,7 +154,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ---------
-        image : Image | List[Image]
+        image : Union['Image', List['Image']]
             The Image or list of images to transform.
         **kwargs
             The current value of all properties in `properties` as well as any 
@@ -160,7 +162,7 @@ class Feature(DeepTrackNode):
 
         Returns
         -------
-        Image | List[Image]
+        Union['Image', List['Image']]
             The transformed image or list of images.
         
         """
@@ -169,7 +171,7 @@ class Feature(DeepTrackNode):
 
     def __call__(
         self,
-        image_list: Image | List[Image] = None,
+        image_list: Union['Image', List['Image']] = None,
         _ID: Tuple[int, ...] = (),
         **kwargs: Any,
     ) -> Any:
@@ -185,7 +187,7 @@ class Feature(DeepTrackNode):
 
         Arguments
         ---------
-        image_list : Image | List[Image], optional
+        image_list : Union['Image', List['Image']], optional
             The input to the feature or pipeline. If `None`, the feature uses 
             previously set input values or propagates properties.
         **kwargs : Any
