@@ -84,26 +84,26 @@ class TestMie(unittest.TestCase):
         self.assertIsInstance(TAU, np.ndarray)
 
         # Check against test values
-        x = np.array([0.5])
-        L = 3
-        PI_expected = np.array([[1], [1.5], [0.875]])
-        TAU_expected = np.array([[0.5], [-1.5], [-4.3125]])
+        x = np.array([0.4])
+        L = 4
+        PI_expected = np.array([[1], [1.2], [-0.3],[-1.88]])
+        TAU_expected = np.array([[0.4], [-2.04], [-5.16],[-1.508]])
         PI, TAU = mie_harmonics(x, L)
         self.assertTrue(np.allclose(PI, PI_expected))
         self.assertTrue(np.allclose(TAU, TAU_expected))
         
         x = np.array([0])
-        L = 2
-        PI_expected = np.array([[1], [0]])
-        TAU_expected = np.array([[0], [-3]])
+        L = 5
+        PI_expected = np.array([[1], [0], [-1.5], [0], [1.875]])
+        TAU_expected = np.array([[0], [-3],[0],[7.5],[0]])
         PI, TAU = mie_harmonics(x, L)
         self.assertTrue(np.allclose(PI, PI_expected))
         self.assertTrue(np.allclose(TAU, TAU_expected))
         
         x = np.array([-0.5])
         L = 3
-        PI_expected = np.array([[1], [-1.5], [0.875]])
-        TAU_expected = np.array([[-0.5], [-1.5], [4.3125]])
+        PI_expected = np.array([[1], [-1.5], [0.375]])
+        TAU_expected = np.array([[-0.5], [-1.5], [5.4375]])
         PI, TAU = mie_harmonics(x, L)
         self.assertTrue(np.allclose(PI, PI_expected))
         self.assertTrue(np.allclose(TAU, TAU_expected))
