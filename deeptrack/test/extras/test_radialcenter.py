@@ -1,9 +1,12 @@
 import unittest
-import numpy as np
+
 from deeptrack.extras import radialcenter as rc
+
+import numpy as np
+
 class TestRadialCenter(unittest.TestCase):
     def test_noise(self):
-        intensity_map = np.random.normal(0,0.005,(100,100))
+        intensity_map = np.random.normal(0, 0.005, (100, 100))
         x, y = rc.radialcenter(intensity_map)
         self.assertIsInstance(x, float)
         self.assertIsInstance(y, float)
