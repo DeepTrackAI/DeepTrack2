@@ -171,9 +171,7 @@ class Source:
         return self._wrap_iterable(key)
 
     def _wrap_indexable(self, key):
-        value_getter = SourceDeepTrackNode(
-            lambda: self._dict[key][self._current_index()]
-            )
+        value_getter = SourceDeepTrackNode(lambda: self._dict[key][self._current_index()])
         value_getter.add_dependency(self._current_index)
         self._current_index.add_child(value_getter)
         return value_getter
@@ -231,9 +229,7 @@ class Product(Source):
         
         # if overlapping keys, error
         if set(kwargs.keys()).intersection(set(source_dict.keys())):
-            raise ValueError(
-                f"Overlapping keys in product. Duplicate keys: 
-                {set(kwargs.keys()).intersection(set(source_dict.keys()))}")
+            raise ValueError(f"Overlapping keys in product. Duplicate keys: {set(kwargs.keys()).intersection(set(source_dict.keys()))}")
 
         dict_of_lists.update(source_dict)
 
@@ -302,9 +298,7 @@ class Sources:
         self._dict = dict.fromkeys(keys)
 
         for key in keys:
-            node = SourceDeepTrackNode(
-                functools.partial(lambda key: self._dict[key], key)
-            )
+            node = SourceDeepTrackNode(functools.partial(lambda key: self._dict[key], key))
 
             setattr(self, key, node)
 
