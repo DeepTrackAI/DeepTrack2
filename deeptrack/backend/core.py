@@ -1,6 +1,6 @@
-"""Core data strDeepTrack2 package.
+"""Core data for DeepTrack2 package.
 
-This package provides the core DeepTrack2 classes to manage and process data. 
+This module provides the core DeepTrack2 classes to manage and process data. 
 In particular, it enables users to:
 - Construct flexible and efficient computational pipelines.
 - Manage data and dependencies in a hierarchical structure.
@@ -21,7 +21,7 @@ composition of computational graphs.
 Citations: Supports citing the relevant publication to ensure proper 
 attribution (e.g., `Midtvedt et al., 2021`).
 
-Package Structure
+Module Structure
 -----------------
 Data Containers:
 - `DeepTrackDataObject`: A basic container for data with validation status.

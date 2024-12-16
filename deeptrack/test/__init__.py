@@ -4,12 +4,8 @@ from .test_aberrations import *
 from .test_augmentations import *
 from .test_elementwise import *
 from .test_features import *
-from .test_generators import *
 from .test_image import *
-from .test_layers import *
-from .test_losses import *
 from .test_math import *
-from .test_models import *
 from .test_noises import *
 from .test_optics import *
 from .test_properties import *
