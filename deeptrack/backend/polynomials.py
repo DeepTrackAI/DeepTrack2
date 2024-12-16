@@ -69,11 +69,13 @@ dricbesh(
 ) -> Union[float, np.ndarray]
     Computes the first derivative of the Riccati-Bessel polynomial of the
     third kind.
+    
 """
+
+from typing import Union
 
 import numpy as np
 from scipy.special import jv, h1vp, yv
-from typing import Union
 
 
 def besselj(
@@ -93,6 +95,7 @@ def besselj(
     -------
     float, ndarray
         The polynomial evaluated at x
+
     """
 
     return jv(l, x)
@@ -115,6 +118,7 @@ def dbesselj(
     -------
     float, ndarray
         The polynomial evaluated at x
+
     """
 
     return 0.5 * (besselj(l - 1, x) - besselj(l + 1, x))
@@ -137,6 +141,7 @@ def bessely(
     -------
     float, ndarray
         The polynomial evaluated at x
+
     """
 
     return yv(l, x)
@@ -146,7 +151,6 @@ def dbessely(
         l: Union[int, float],
         x: Union[int, float, np.ndarray],
     ) -> Union[float, np.ndarray]:
-    
     """The first derivative of the Bessel polynomial of the second kind.
 
     Parameters
@@ -160,8 +164,9 @@ def dbessely(
     -------
     float, ndarray
         The polynomial evaluated at x
+
     """
-    
+
     return 0.5 * (bessely(l - 1, x) - bessely(l + 1, x))
 
 
@@ -182,6 +187,7 @@ def ricbesj(
     -------
     float, ndarray
         The polynomial evaluated at x
+
     """
 
     return np.sqrt(np.pi * x / 2) * besselj(l + 0.5, x)
@@ -205,6 +211,7 @@ def dricbesj(
     -------
     float, ndarray
         The polynomial evaluated at x
+
     """
 
     return 0.5 * np.sqrt(np.pi / x / 2) * besselj(l + 0.5, x) + np.sqrt(
@@ -229,6 +236,7 @@ def ricbesy(
     -------
     float, ndarray
         The polynomial evaluated at x
+
     """
 
     return -np.sqrt(np.pi * x / 2) * bessely(l + 0.5, x)
@@ -252,6 +260,7 @@ def dricbesy(
     -------
     float, ndarray
         The polynomial evaluated at x
+
     """
 
     return -0.5 * np.sqrt(np.pi / 2 / x) * yv(l + 0.5, x) - np.sqrt(
@@ -276,6 +285,7 @@ def ricbesh(
     -------
     float, ndarray
         The polynomial evaluated at x
+
     """
 
     return np.sqrt(np.pi * x / 2) * h1vp(l + 0.5, x, False)
@@ -298,6 +308,7 @@ def dricbesh(
     -------
     float, ndarray
         The polynomial evaluated at x
+
     """
 
     xi = 0.5 * np.sqrt(np.pi / 2 / x) * h1vp(l + 0.5, x, False) + np.sqrt(
