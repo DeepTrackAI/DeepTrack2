@@ -365,7 +365,7 @@ def random_split(source, lengths, generator=np.random.default_rng()):
 
     indices = generator.permutation(
         sum(lengths)).tolist()  # type: ignore[call-overload]
-    return [Subset(source, indices[offset - length : offset]) 
+    return [Subset(source, indices[offset - length : offset])\
             for offset, length in zip(_accumulate(lengths), lengths)]
 
         
