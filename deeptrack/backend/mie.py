@@ -14,37 +14,31 @@ Functions:
 
 Example
 -------
-Calculate Mie coefficients for a single-layer particle:
+Calculate Mie coefficients for a solid particle:
 
->>> from mie import mie_coefficients
 >>> relative_refract_index = 1.5 + 0.01j
 >>> particle_radius = 0.5
 >>> max_order = 5
 
-Compute the coefficients:
-
 >>> A, B = mie_coefficients(relative_refract_index, particle_radius, max_order)
+
 >>> print("A coefficients:", A)
 >>> print("B coefficients:", B)
+
 """
 
-from typing import Tuple
+from typing import List, Tuple, Union
+
 import numpy as np
+
 from ._config import cupy
-from . import (
-    ricbesh,
-    ricbesy,
-    ricbesj,
-    besselj,
-    dricbesh,
-    dricbesj,
-    dricbesy,
-    dbesselj,
-)
+from . import ricbesh, ricbesy, ricbesj, dricbesh, dricbesj, dricbesy
 
 
 def mie_coefficients(
-    m: float or complex, a: float, L: int
+    m: Union[float, complex], 
+    a: float, 
+    L: int,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Calculate the Mie scattering coefficients for a spherical particle.
 
@@ -68,6 +62,7 @@ def mie_coefficients(
         are the Mie scattering coefficients up to (and including) order L.
 
     """
+    
     A = np.zeros((L,), dtype=np.complex128)
     B = np.zeros((L,), dtype=np.complex128)
 
@@ -90,7 +85,9 @@ def mie_coefficients(
 
 
 def stratified_mie_coefficients(
-    m: list[complex], a: list[float], L: int
+    m: List[complex],
+    a: List[float],
+    L: int,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Calculate the Mie scattering coefficients for stratified spherical 
     particles.
@@ -177,7 +174,8 @@ def stratified_mie_coefficients(
     return an, bn
 
 def mie_harmonics(
-    x: np.ndarray, L: int
+    x: np.ndarray,
+    L: int,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Calculate the spherical harmonics of the Mie field.
 
