@@ -24,7 +24,7 @@ from deeptrack.backend.units import (
     get_active_voxel_size,
 )
 from deeptrack.math import AveragePooling
-from deeptrack.properties import propagate_data_to_dependencies
+from deeptrack.features import propagate_data_to_dependencies
 import numpy as np
 from .features import DummyFeature, Feature, StructuralFeature
 from .image import Image, pad_image_to_fft, maybe_cupy

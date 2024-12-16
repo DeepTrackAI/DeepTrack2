@@ -13,7 +13,6 @@ from .. import utils
 
 class TestUtils(unittest.TestCase):
 
-
     def test_hasmethod(self):
         self.assertTrue(utils.hasmethod(utils, "hasmethod"))
         self.assertFalse(

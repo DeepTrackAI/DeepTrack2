@@ -5,13 +5,13 @@ Provides classes and tools for creating and interacting with features.
 
 import itertools
 import operator
-from typing import Any, Callable, Iterable, List
+from typing import Any, Callable, Iterable, List, Tuple, Union
 import warnings
 import random
 
 import numpy as np
 from pint import Quantity
-# import tensorflow as tf
+# import tensorflow as tf #TBE
 import skimage
 import skimage.measure
 
@@ -21,7 +21,7 @@ from .backend.core import DeepTrackNode
 from .backend.units import ConversionTable, create_context
 from .backend import config
 from .image import Image
-from .properties import PropertyDict, propagate_data_to_dependencies
+from .properties import PropertyDict
 from .types import ArrayLike, PropertyLike
 from . import units
 
@@ -32,48 +32,45 @@ MERGE_STRATEGY_APPEND = 1
 class Feature(DeepTrackNode):
     """Base feature class.
 
-    Features define the image generation process. All features operate
-    on lists of images. Most features, such as noise, apply some
-    tranformation to all images in the list. This transformation can
-    be additive, such as adding some Gaussian noise or a background
-    illumination, or non-additive, such as introducing Poisson noise
-    or performing a low-pass filter. This transformation is defined
-    by the method `get(image, **kwargs)`, which all implementations of
-    the class `Feature` need to define.
+    Features define the image generation process. All features operate on lists 
+    of images. Most features, such as noise, apply some tranformation to all 
+    images in the list. This transformation can be additive, such as adding 
+    some Gaussian noise or a background illumination, or non-additive, such as 
+    introducing Poisson noise or performing a low-pass filter. This 
+    transformation is defined by the method `get(image, **kwargs)`, which all 
+    implementations of the class `Feature` need to define.
 
     Whenever a Feature is initiated, all keyword arguments passed to the
-    constructor will be wrapped as a Property, and stored in the
-    `properties` field as a `PropertyDict`. When a Feature is resolved,
-    the current value of each property is sent as input to the get method.
+    constructor will be wrapped as a `Property`, and stored in the `properties` 
+    attribute as a `PropertyDict`. When a Feature is resolved, the current 
+    value of each property is sent as input to the get method.
 
     Parameters
     ----------
-    _input : List[Image] (optional)
-        Defines a list of DeepTrackNode objects that calculate the input of the feature.
-        In most cases, this can be left empty.
-    **kwargs
-        All Keyword arguments will be wrapped as instances of ``Property`` and
-        included in the field `properties`.
-
+    _input : Union['Image', List['Image']], optional
+        Defines a list of DeepTrackNode objects that calculate the input of the 
+        feature. In most cases, this can be left empty.
+    **kwargs : Any
+        All Keyword arguments will be wrapped as instances of `Property` and
+        included in the `properties` attribute.
 
     Attributes
     ----------
-    properties : dict
-        A dict that contains all keyword arguments passed to the
-        constructor wrapped as Distributions. A sampled copy of this
-        dict is sent as input to the get function, and is appended
-        to the properties field of the output image.
+    properties : PropertyDict
+        A dict that contains all keyword arguments passed to the constructor 
+        wrapped as Distributions. A sampled copy of this dict is sent as input 
+        to the get function, and is appended to the properties field of the 
+        output image.
     __list_merge_strategy__ : int
-        Controls how the output of `.get(image, **kwargs)` is merged with
-        the input list. It can be `MERGE_STRATEGY_OVERRIDE` (0, default),
-        where the input is replaced by the new list, or
-        `MERGE_STRATEGY_APPEND` (1), where the new list is appended to the
-        end of the input list.
+        Controls how the output of `.get(image, **kwargs)` is merged with the 
+        input list. It can be `MERGE_STRATEGY_OVERRIDE` (0, default), where the 
+        input is replaced by the new list, or `MERGE_STRATEGY_APPEND` (1), 
+        where the new list is appended to the end of the input list.
     __distributed__ : bool
-        Controls whether `.get(image, **kwargs)` is called on each element
-        in the list separately (`__distributed__ = True`), or if it is
-        called on the list as a whole (`__distributed__ = False`).
-    __property_memorability__
+        Controls whether `.get(image, **kwargs)` is called on each element in 
+        the list separately (`__distributed__ = True`), or if it is called on 
+        the list as a whole (`__distributed__ = False`).
+    __property_memorability__ : int
         Controls whether to store the features properties to the `Image`.
         Values 1 or lower will be included by default.
     __conversion_table__ : ConversionTable
@@ -82,6 +79,26 @@ class Feature(DeepTrackNode):
     __gpu_compatible__ : bool
         Controls whether to use GPU acceleration for the feature.
 
+    Methods
+    -------
+    get(
+        image: Union['Image', List['Image']], **kwargs: Any
+    ) -> Union['Image', List['Image']]
+        Abstract method that defines how the feature transforms the input.
+    __call__(image_list: Optional[Union[Image, List[Image]]] = None, 
+             _ID: Tuple[int, ...] = (), **kwargs: Any) -> Any
+        Executes the feature or pipeline on the input and applies property 
+        overrides from `kwargs`.
+    store_properties(x: bool = True, recursive: bool = True) -> None
+        Controls whether the properties are stored in the output `Image` object.
+    torch(dtype: Optional[torch.dtype] = None, device: Optional[torch.device] = None, 
+          permute_mode: str = "never") -> 'Feature'
+        Converts the feature into a PyTorch-compatible feature.
+    batch(batch_size: int = 32) -> Union[tuple, List[Image]]
+        Batches the feature for repeated execution.
+    seed(_ID: Tuple[int, ...] = ()) -> None
+        Sets the random seed for the feature, ensuring deterministic behavior.
+
     """
 
     __list_merge_strategy__ = MERGE_STRATEGY_OVERRIDE
@@ -89,16 +106,12 @@ class Feature(DeepTrackNode):
     __property_memorability__ = 1
     __conversion_table__ = ConversionTable()
     __gpu_compatible__ = False
-    
-
-    # A None-safe default value to compare against
-    __nonelike_default = object()
 
     _wrap_array_with_image = False
 
     def __init__(self, _input=[], **kwargs):
 
-        super(Feature, self).__init__()
+        super().__init__()
 
         # Add all keyword arguments as properties.
         # In most cases, properties does not yet exist as an attribute.
@@ -108,90 +121,124 @@ class Feature(DeepTrackNode):
 
         # Create propertydict and add it to the computation graph.
         self.properties = PropertyDict(**properties)
-        self.add_dependency(self.properties)
         self.properties.add_child(self)
+        # self.add_dependency(self.properties)  # Executed by add_child.
 
         # The input of the feature is added as a dependency.
-        # This lets the feature know that it needs to be recalculated if the input changes.
+        # This lets the feature know that it needs to be recalculated if the 
+        # input changes.
         # _input is set when the feature is called.
         self._input = DeepTrackNode(_input)
-        self.add_dependency(self._input)
         self._input.add_child(self)
+        # self.add_dependency(self._input)  # Executed by add_child.
 
         # A random seed can be set to make the feature deterministic.
-        # A non-deterministic feature does not need to be recalculated if the seed is the same.
+        # A non-deterministic feature does not need to be recalculated if the 
+        # seed is the same.
         self._random_seed = DeepTrackNode(lambda: random.randint(0, 2147483648))
-        self.add_dependency(self._random_seed)
         self._random_seed.add_child(self)
+        # self.add_dependency(self._random_seed)  # Executed by add_child.
 
         # Initilaize arguments
         self.arguments = None
 
-    def get(self, image: Image or List[Image], **kwargs) -> Image or List[Image]:
-        """Method for altering an image
-        Abstract method that define how the feature transforms the input. The current
-        value of all properties will be passed as keyword arguments.
+    def get(
+        self,
+        image: Union['Image', List['Image']],
+        **kwargs: Any,
+    ) -> Union['Image', List['Image']]:
+        """Transform an image [abstract method].
+        
+        Abstract method that define how the feature transforms the input. The 
+        current value of all properties will be passed as keyword arguments.
 
         Parameters
         ---------
-        image : Image or List[Image]
-            The Image or list of images to transform
+        image : Union['Image', List['Image']]
+            The Image or list of images to transform.
         **kwargs
-            The current value of all properties in `properties` as well as any global
-            arguments.
+            The current value of all properties in `properties` as well as any 
+            global arguments.
 
         Returns
         -------
-        Image or List[Image]
-            The transformed image or list of images
+        Union['Image', List['Image']]
+            The transformed image or list of images.
+        
         """
+
         raise NotImplementedError
 
-    def __call__(self, image_list: Image or List[Image] = None, _ID=(), **kwargs):
-
+    def __call__(
+        self,
+        image_list: Union['Image', List['Image']] = None,
+        _ID: Tuple[int, ...] = (),
+        **kwargs: Any,
+    ) -> Any:
         """Execute the feature or pipeline.
+
+        This method executes the feature or pipeline on the provided input and 
+        updates the computation graph if necessary. It handles overriding 
+        properties using additional keyword arguments.
+
+        The actual computation is performed by calling the parent `__call__` 
+        method in the `DeepTrackNode` class, which manages lazy evaluation and 
+        caching.
 
         Arguments
         ---------
-        image_list : Image or List[Image] or array-like or None
-           The input to the feature or pipeline.
-        **kwargs : any
-           Additional paramaters sent to the pipeline. These will override properties of the same name.
-           For example `feature(x, value=4)` will execute `feature` on the input `x`, setting the property `value`
-           to 4. In a pipeline, all features will be affected by this.
+        image_list : Union['Image', List['Image']], optional
+            The input to the feature or pipeline. If `None`, the feature uses 
+            previously set input values or propagates properties.
+        **kwargs : Any
+            Additional parameters passed to the pipeline. These override 
+            properties with matching names. For example, calling 
+            `feature(x, value=4)` executes `feature` on the input `x` while 
+            setting the property `value` to `4`. All features in a pipeline are 
+            affected by these overrides.
+
+        Returns
+        -------
+        Any
+            The output of the feature or pipeline after execution.
 
         """
 
-        # if image_list is as Source, activate it.
+        # If image_list is as Source, activate it.
         self._activate_sources(image_list)
 
         # Potentially fragile. Maybe a special variable dt._last_input instead?
-        # If the input is not empty, we set the value of the input.
+        # If the input is not empty, set the value of the input.
         if (
-            image_list is not None 
+            image_list is not None
             and not (isinstance(image_list, list) and len(image_list) == 0)
-            and not (isinstance(image_list, tuple) and any(isinstance(x, SourceItem) for x in image_list))
+            and not (isinstance(image_list, tuple)
+                     and any(isinstance(x, SourceItem) for x in image_list))
         ):
             self._input.set_value(image_list, _ID=_ID)
 
-        # A dict to store the values of self.arguments before we update them.
+        # A dict to store the values of self.arguments before updating them.
         original_values = {}
 
-        # If we don't have self.arguments, we instead propagate the values of the kwargs to all properties in the computation graph.
+        # If there are no self.arguments, instead propagate the values of the 
+        # kwargs to all properties in the computation graph.
         if kwargs and self.arguments is None:
             propagate_data_to_dependencies(self, **kwargs)
 
-        # If we have self.arguments, we update the values of self.arguments to match kwargs.
+        # If there are self.arguments, update the values of self.arguments to 
+        # match kwargs.
         if isinstance(self.arguments, Feature):
             for key, value in kwargs.items():
                 if key in self.arguments.properties:
                     original_values[key] = self.arguments.properties[key](_ID=_ID)
                     self.arguments.properties[key].set_value(value, _ID=_ID)
 
-        # This executes the feature. DeepTrackNode will determine if it needs to be recalculated. If it does, it will call the `action` method.
-        output = super(Feature, self).__call__(_ID=_ID)
+        # This executes the feature. DeepTrackNode will determine if it needs
+        # to be recalculated. If it does, it will call the `action` method.
+        output = super().__call__(_ID=_ID)
 
-        # If we have self.arguments, we reset the values of self.arguments to their original values.
+        # If there are self.arguments, reset the values of self.arguments to 
+        # their original values.
         for key, value in original_values.items():
             self.arguments.properties[key].set_value(value, _ID=_ID)
 
@@ -199,7 +246,11 @@ class Feature(DeepTrackNode):
 
     resolve = __call__
 
-    def store_properties(self, x=True, recursive=True):
+    def store_properties(
+        self, 
+        x: bool = True, 
+        recursive: bool = True,
+    ) -> None:
         """Store properties to the Image.
 
         Parameters
@@ -235,16 +286,6 @@ class Feature(DeepTrackNode):
         tensor_feature.store_properties(False, recursive=False)
         return self >> tensor_feature
 
-    # def numpy(self):
-    #     """Convert the feature to a numpy feature.
-
-    #     Returns
-    #     -------
-    #     Feature
-    #         A numpy feature.
-    #     """
-    #     return self >> ToNumpy()
-    
     def batch(self, batch_size=32):
         """Batch the feature.
 
@@ -262,18 +303,15 @@ class Feature(DeepTrackNode):
         res = list(zip(*res))
 
         for idx, r in enumerate(res):
-            
+
             if isinstance(r[0], np.ndarray):
                 res[idx] = np.stack(r)
             else:
                 import torch
                 if isinstance(r[0], torch.Tensor):
                     res[idx] = torch.stack(r)
-        
-        return tuple(res)
-            
-        
 
+        return tuple(res)
 
     def action(self, _ID=()):
         """Creates the image.
@@ -343,6 +381,7 @@ class Feature(DeepTrackNode):
         return self
 
     def _update(self, **global_arguments):
+        
         if global_arguments:
             # Deptracated, but not necessary to raise hard error.
             warnings.warn(
@@ -351,11 +390,9 @@ class Feature(DeepTrackNode):
                 "The prefered solution is to use dt.Arguments",
                 DeprecationWarning,
             )
+            
         super()._update()
         return self
-    
-    # def to(self, device):
-        
 
     def add_feature(self, feature):
         """Adds a feature to the dependecy graph."""
@@ -382,8 +419,6 @@ class Feature(DeepTrackNode):
             if isinstance(val, Quantity):
                 properties[key] = val.magnitude
         return properties
-
-
 
     def plot(
         self,
@@ -471,14 +506,13 @@ class Feature(DeepTrackNode):
                     ),
                 )
 
-
     def _process_properties(self, propertydict) -> dict:
         # Optional hook for subclasses to preprocess input before calling
         # the method .get()
 
         propertydict = self._normalize(**propertydict)
         return propertydict
-    
+
     def _activate_sources(self, x):
         if isinstance(x, SourceItem):
             x()
@@ -508,7 +542,7 @@ class Feature(DeepTrackNode):
     def __next__(self):
         yield self.update().resolve()
 
-    def __rshift__(self, other) -> "Feature":
+    def __rshift__(self, other) -> 'Feature':
 
         # Allows chaining of features. For example,
         # feature1 >> feature2 >> feature3
@@ -529,7 +563,7 @@ class Feature(DeepTrackNode):
 
         return NotImplemented
 
-    def __rrshift__(self, other: "Feature") -> "Feature":
+    def __rrshift__(self, other: "Feature") -> 'Feature':
         # Allows chaining of features. For example,
         # some_function << feature1 << feature2
         # or
@@ -542,80 +576,80 @@ class Feature(DeepTrackNode):
 
         return NotImplemented
 
-    def __add__(self, other) -> "Feature":
+    def __add__(self, other) -> 'Feature':
         # Overrides add operator
         return self >> Add(other)
 
-    def __radd__(self, other) -> "Feature":
+    def __radd__(self, other) -> 'Feature':
         # Overrides add operator
         return Value(other) >> Add(self)
 
-    def __sub__(self, other) -> "Feature":
+    def __sub__(self, other) -> 'Feature':
         # Overrides add operator
         return self >> Subtract(other)
 
-    def __rsub__(self, other) -> "Feature":
+    def __rsub__(self, other) -> 'Feature':
         # Overrides add operator
         return Value(other) >> Subtract(self)
 
-    def __mul__(self, other) -> "Feature":
+    def __mul__(self, other) -> 'Feature':
         return self >> Multiply(other)
 
-    def __rmul__(self, other) -> "Feature":
+    def __rmul__(self, other) -> 'Feature':
         return Value(other) >> Multiply(self)
 
-    def __truediv__(self, other) -> "Feature":
+    def __truediv__(self, other) -> 'Feature':
         return self >> Divide(other)
 
-    def __rtruediv__(self, other) -> "Feature":
+    def __rtruediv__(self, other) -> 'Feature':
         return Value(other) >> Divide(self)
 
-    def __floordiv__(self, other) -> "Feature":
+    def __floordiv__(self, other) -> 'Feature':
         return self >> FloorDivide(other)
 
-    def __rfloordiv__(self, other) -> "Feature":
+    def __rfloordiv__(self, other) -> 'Feature':
         return Value(other) >> FloorDivide(self)
 
-    def __pow__(self, other) -> "Feature":
+    def __pow__(self, other) -> 'Feature':
         return self >> Power(other)
 
-    def __rpow__(self, other) -> "Feature":
+    def __rpow__(self, other) -> 'Feature':
         return Value(other) >> Power(self)
 
-    def __gt__(self, other) -> "Feature":
+    def __gt__(self, other) -> 'Feature':
         return self >> GreaterThan(other)
 
-    def __rgt__(self, other) -> "Feature":
+    def __rgt__(self, other) -> 'Feature':
         return Value(other) >> GreaterThan(self)
 
-    def __lt__(self, other) -> "Feature":
+    def __lt__(self, other) -> 'Feature':
         return self >> LessThan(other)
 
-    def __rlt__(self, other) -> "Feature":
+    def __rlt__(self, other) -> 'Feature':
         return Value(other) >> LessThan(self)
 
-    def __le__(self, other) -> "Feature":
+    def __le__(self, other) -> 'Feature':
         return self >> LessThanOrEquals(other)
 
-    def __rle__(self, other) -> "Feature":
+    def __rle__(self, other) -> 'Feature':
         return Value(other) >> LessThanOrEquals(self)
 
-    def __ge__(self, other) -> "Feature":
+    def __ge__(self, other) -> 'Feature':
         return self >> GreaterThanOrEquals(other)
 
-    def __rge__(self, other) -> "Feature":
+    def __rge__(self, other) -> 'Feature':
         return Value(other) >> GreaterThanOrEquals(self)
 
-    def __xor__(self, other) -> "Feature":
+    def __xor__(self, other) -> 'Feature':
         return Repeat(self, other)
 
-    def __and__(self, other) -> "Feature":
+    def __and__(self, other) -> 'Feature':
         return self >> Stack(other)
 
-    def __rand__(self, other) -> "Feature":
+    def __rand__(self, other) -> 'Feature':
         return Value(other) >> Stack(self)
 
-    def __getitem__(self, slices) -> "Feature":
+    def __getitem__(self, slices) -> 'Feature':
         # Allows direct slicing of the data.
         if not isinstance(slices, tuple):
             slices = (slices,)
@@ -632,7 +666,7 @@ class Feature(DeepTrackNode):
             return self._image_wrapped_format_input
         else:
             return self._no_wrap_format_input
-        
+
     @property
     def _process_and_get(self):
         if self._wrap_array_with_image:
@@ -658,7 +692,7 @@ class Feature(DeepTrackNode):
 
         inputs = [(Image(image)) for image in image_list]
         return self._coerce_inputs(inputs, **kwargs)
-    
+
     def _no_wrap_format_input(self, image_list, **kwargs) -> list:
         # Ensures the input is a list of Image.
 
@@ -685,7 +719,7 @@ class Feature(DeepTrackNode):
                 new_list = [new_list]
 
             return new_list
-        
+
     def _image_wrapped_process_and_get(self, image_list, **feature_input) -> List[Image]:
         # Controls how the get function is called
 
@@ -715,7 +749,7 @@ class Feature(DeepTrackNode):
                 if not isinstance(image, Image):
                     new_list[idx] = Image(image)
             return new_list
-    
+
     def _image_wrapped_process_output(self, image_list, feature_input):
         for index, image in enumerate(image_list):
 
@@ -729,7 +763,7 @@ class Feature(DeepTrackNode):
 
             if isinstance(image, Image):
                 image_list[index] = image._value
-    
+
     def _coerce_inputs(self, inputs, **kwargs):
         # Coerces inputs to the correct type (numpy array or tensor or cupyy array).
         if config.gpu_enabled:
@@ -743,6 +777,24 @@ class Feature(DeepTrackNode):
 
         else:
             return [i.to_numpy() for i in inputs]
+
+
+def propagate_data_to_dependencies(X, **kwargs):
+    """Iterates the dependencies of a feature and sets the value of their properties to the values in kwargs.
+
+    Parameters
+    ----------
+    X : features.Feature
+        The feature whose dependencies are to be updated
+    kwargs : dict
+        The values to be set for the properties of the dependencies.
+    """
+    for dep in X.recurse_dependencies():
+        if isinstance(dep, PropertyDict):
+            for key, value in kwargs.items():
+                if key in dep:
+                    dep[key].set_value(value)
+
 
 class StructuralFeature(Feature):
     """Provides the structure of a feature-set
