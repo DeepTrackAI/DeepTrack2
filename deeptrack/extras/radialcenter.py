@@ -42,10 +42,16 @@ Calculate center of an image containing randomly generated Gaussian blur.
 """
 
 # import * to keep syntax similar to matlab
+from typing import Tuple
+
 from numpy import *
 import scipy.signal
 
-def radialcenter(I, invert_xy=False):
+
+def radialcenter(
+        I: np.ndarray, 
+        invert_xy: bool = False,
+) -> Tuple[float, float]:
   """Calculates the center of a 2D intensity distribution.
 
   Considers lines passing through each half-pixel point with slope
