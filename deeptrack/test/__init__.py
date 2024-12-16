@@ -9,7 +9,6 @@ from .test_math import *
 from .test_noises import *
 from .test_optics import *
 from .test_properties import *
-from .test_radialcenter import *
 from .test_scatterers import *
 from .test_sequences import *
 from .test_statistics import *
