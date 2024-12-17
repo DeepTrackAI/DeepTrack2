@@ -1,4 +1,4 @@
-"""Classes to simulate aberrations.
+"""Classes to add aberrations to optics.
 
 This module provides the aberration DeepTrack2 classes
 that simulate aberratations and modify pupil functions for optics.
