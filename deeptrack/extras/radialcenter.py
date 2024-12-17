@@ -49,7 +49,7 @@ import scipy.signal
 
 
 def radialcenter(
-        I: np.ndarray, 
+        I: ndarray, 
         invert_xy: bool = False,
 ) -> Tuple[float, float]:
   """Calculates the center of a 2D intensity distribution.
