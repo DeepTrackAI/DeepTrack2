@@ -56,7 +56,7 @@ import numpy as np
 
 
 class ElementwiseFeature(Feature):
-
+    
     __gpu_compatible__ = True
 
     def __init__(self, function, feature=None, **kwargs):
