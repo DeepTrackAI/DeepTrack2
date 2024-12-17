@@ -1,4 +1,48 @@
-""" Features that aberrate and modify pupil functions."""
+"""Classes to simulate aberrations.
+
+This module provides the aberration DeepTrack2 classes
+that simulate aberratations and modify pupil functions for optics.
+
+Module Structure
+----------------
+Aberration Base Class:
+- `Aberration` 
+
+Amplitude Aberration:
+- `GaussianApodization`
+
+Phase Aberration Base Class:
+- `Zernike`
+
+Zernike polynomial aberrations:
+    Computes the Zernike polynomial for a given
+    aberration and adds that value to each pixel in the pupil.
+
+- `Piston`
+- `Vertical-Tilt`
+- `Horizontal-Tilt`
+- `Oblique-Astigmatism`
+- `Defocus`
+- `Astigmatism`
+- `Oblique-Trefoil`
+- `Vertical-Coma`
+- `Horizontal-Coma`
+- `Trefoil`
+- `Spherical-Aberration`
+
+Example
+-------
+Simulate defocus in optics:
+
+    >>> import deeptrack as dt
+    >>> from matplotlib import pyplot as plt
+
+    >>> particle = dt.PointParticle(z = 1 * dt.units.micrometer)
+    >>> aberrated_optics = dt.Fluorescence(aberration=dt.Defocus())
+    >>> defocused_particle = aberrated_optics(particle)
+    >>> plt.imshow(defocused_particle())
+
+"""
 
 from typing import List, Tuple
 
@@ -13,14 +57,30 @@ class Aberration(Feature):
     """Base abstract class.
 
     Ensures that the method `.get()` receives rho and theta as optional
-    arguments, describing the polar coordinates of each pixel in the image
+    arguments, describing the polar coordinates of each pixel in the image 
     scaled so that rho is 1 at the edge of the pupil.
     """
 
     __distributed__ = True
 
     # Adds rho and theta of the pupil to the input.
-    def _process_and_get(self, image_list, **kwargs):
+    def _process_and_get(
+            self,
+            image_list: List[np.ndarray],
+            **kwargs,
+        ) -> List[np.ndarray]:
+        """Processes a list of images by adding rho and theta information.
+
+        Parameters
+        ----------
+        image_list : List[np.ndarray]
+            List of np.ndarray representing the images.
+
+        Returns
+        -------
+            A list of np.ndarray with the processed images.
+
+        """
         new_list = []
         for image in image_list:
             x = np.arange(image.shape[0]) - image.shape[0] / 2
@@ -31,7 +91,10 @@ class Aberration(Feature):
             theta = np.arctan2(Y, X)
 
             new_list += super()._process_and_get(
-                [image], rho=rho, theta=theta, **kwargs
+                [image],
+                rho=rho,
+                theta=theta,
+                **kwargs,
             )
         return new_list
 
@@ -45,7 +108,7 @@ class GaussianApodization(Aberration):
     Decreases the amplitude of the pupil at high frequencies according
     to a Gaussian distribution.
 
-    Parameters
+    Attributes
     ----------
     sigma : float
         The standard deviation of the apodization. The edge of the pupil
@@ -53,8 +116,8 @@ class GaussianApodization(Aberration):
     offset : (float, float)
         Offsets the center of the gaussian.
 
-    Examples
-    --------
+    Example
+    -------
     >>> particle = dt.PointParticle(z = 1 * dt.units.micrometer)
     >>> aberrated_optics = dt.Fluorescence(aberration=dt.GaussianApodization(sigma=0.1))
     >>> pipeline = aberrated_optics(particle)
@@ -66,9 +129,13 @@ class GaussianApodization(Aberration):
         self,
         sigma: PropertyLike[float] = 1,
         offset: PropertyLike[Tuple[int, int]] = (0, 0),
-        **kwargs
+        **kwargs,
     ):
-        super().__init__(sigma=sigma, offset=offset, **kwargs)
+        super().__init__(
+            sigma=sigma,
+            offset=offset,
+            **kwargs,
+        )
 
     def get(self, pupil, offset, sigma, rho, **kwargs):
         if offset != (0, 0):
@@ -97,7 +164,7 @@ class Zernike(Aberration):
     Zernike polynomials corresponding to each set of values in these lists
     before adding them to the phase.
 
-    Parameters
+    Attributes
     ----------
     n, m : int or list of ints
         The zernike polynomial numbers.
@@ -112,14 +179,21 @@ class Zernike(Aberration):
         coefficient: PropertyLike[float or List[float]] = 1,
         **kwargs
     ):
-        super().__init__(n=n, m=m, coefficient=coefficient, **kwargs)
+        super().__init__(
+            n=n,
+            m=m,
+            coefficient=coefficient,
+            **kwargs,
+        )
 
     def get(self, pupil, rho, theta, n, m, coefficient, **kwargs):
         m_list = as_list(m)
         n_list = as_list(n)
         coefficients = as_list(coefficient)
 
-        assert len(m_list) == len(n_list), "The number of indices need to match"
+        assert len(m_list) == len(
+            n_list
+            ), "The number of indices need to match"
         assert len(m_list) == len(
             coefficients
         ), "The number of indices need to match the number of coefficients"
@@ -170,7 +244,7 @@ class Zernike(Aberration):
 class Piston(Zernike):
     """Zernike polynomial with n=0, m=0.
 
-    Parameters
+    Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
@@ -186,7 +260,7 @@ class Piston(Zernike):
 class VerticalTilt(Zernike):
     """Zernike polynomial with n=1, m=-1.
 
-    Parameters
+    Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
@@ -202,7 +276,7 @@ class VerticalTilt(Zernike):
 class HorizontalTilt(Zernike):
     """Zernike polynomial with n=1, m=1.
 
-    Parameters
+    Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
@@ -218,7 +292,7 @@ class HorizontalTilt(Zernike):
 class ObliqueAstigmatism(Zernike):
     """Zernike polynomial with n=2, m=-2.
 
-    Parameters
+    Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
@@ -234,7 +308,7 @@ class ObliqueAstigmatism(Zernike):
 class Defocus(Zernike):
     """Zernike polynomial with n=2, m=0.
 
-    Parameters
+    Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
@@ -250,7 +324,7 @@ class Defocus(Zernike):
 class Astigmatism(Zernike):
     """Zernike polynomial with n=2, m=2.
 
-    Parameters
+    Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
@@ -266,7 +340,7 @@ class Astigmatism(Zernike):
 class ObliqueTrefoil(Zernike):
     """Zernike polynomial with n=3, m=-3.
 
-    Parameters
+    Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
@@ -282,7 +356,7 @@ class ObliqueTrefoil(Zernike):
 class VerticalComa(Zernike):
     """Zernike polynomial with n=3, m=-1.
 
-    Parameters
+    Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
@@ -298,7 +372,7 @@ class VerticalComa(Zernike):
 class HorizontalComa(Zernike):
     """Zernike polynomial with n=3, m=1.
 
-    Parameters
+    Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
@@ -314,7 +388,7 @@ class HorizontalComa(Zernike):
 class Trefoil(Zernike):
     """Zernike polynomial with n=3, m=3.
 
-    Parameters
+    Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
@@ -330,7 +404,7 @@ class Trefoil(Zernike):
 class SphericalAberration(Zernike):
     """Zernike polynomial with n=4, m=0.
 
-    Parameters
+    Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
