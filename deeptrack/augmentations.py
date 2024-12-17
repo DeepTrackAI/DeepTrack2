@@ -1,7 +1,7 @@
 """Classes to augment images.
 
-This module provides the aberration DeepTrack2 classes
-that simulate aberratations and modify pupil functions for optics.
+This module provides the augmentation DeepTrack2 classes
+that augment the image with various transformations.
 
 Module Structure
 ----------------

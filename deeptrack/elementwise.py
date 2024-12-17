@@ -1,9 +1,54 @@
-"""Features that apply functions to arrays elementwise.
 
-All features defined here can be inserted into a pipeline as::
-   A >> ElementwiseFeature()
-or::
-   ElementwiseFeature(A)
+"""Classes that apply functions to features elementwise.
+
+This module provides the elementwise DeepTrack2 classes
+that work as a handle to perform various functions to features elementwise.
+
+Module Structure
+----------------
+
+Elementwise Base Class:
+- `ElementwiseFeature` 
+
+Trigonometric Classes:
+- `Sin`
+- `Cos`
+- `Tan`
+- `ArcSin`
+- `Arccos`
+- `ArcTan`
+
+Hyperbolic Classes:
+- `Sinh`
+- `Cosh`
+- `Tanh`
+- `ArcSinh`
+- `Arccosh`
+- `ArcTanh`
+
+Rounding Classes:
+- `Round`
+- `Floor`
+- `Ceil`
+
+Exponents & Logarithm Classes:
+- `Exp`
+- `Log`
+- `Log10`
+- `Log2`
+
+Complex Number Classes:
+- `Angle`
+- `Real`
+- `Imag`
+- `Abs`
+- `Conjugate`
+
+Miscellaneous Classes:
+- `Sqrt`
+- `Square`
+- `Sign`
+
 """
 
 from .features import Feature
@@ -30,18 +75,16 @@ class ElementwiseFeature(Feature):
 
 """
 Trigonometric functions
-=======================
 """
+
+class Sin(ElementwiseFeature):
+    def __init__(self, feature=None, **kwargs):
+        super().__init__(np.sin, feature=feature, **kwargs)
 
 
 class Cos(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
         super().__init__(np.cos, feature=feature, **kwargs)
-
-
-class Sin(ElementwiseFeature):
-    def __init__(self, feature=None, **kwargs):
-        super().__init__(np.sin, feature=feature, **kwargs)
 
 
 class Tan(ElementwiseFeature):
@@ -66,7 +109,6 @@ class Arctan(ElementwiseFeature):
 
 """
 Hyperbolic functions
-=======================
 """
 
 
@@ -102,7 +144,6 @@ class Arctanh(ElementwiseFeature):
 
 """
 Rounding
-========
 """
 
 
@@ -122,8 +163,7 @@ class Ceil(ElementwiseFeature):
 
 
 """
-Exponents and logaritms
-=======================
+Exponents and logarithms
 """
 
 
@@ -149,7 +189,6 @@ class Log2(ElementwiseFeature):
 
 """
 Complex numbers
-===============
 """
 
 
@@ -179,8 +218,8 @@ class Conjugate(ElementwiseFeature):
 
 
 """
-Misc.
-=====
+Miscellaneous
+
 """
 
 
