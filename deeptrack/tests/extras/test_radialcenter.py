@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from deeptrack.extras import radialcenter
+from deeptrack.extras.radialcenter import radialcenter
 
 
 class TestRadialCenter(unittest.TestCase):
@@ -12,7 +12,7 @@ class TestRadialCenter(unittest.TestCase):
         gaussian = np.exp(-0.5 * (
             linspace[:, None] ** 2 + linspace[None, :] ** 2)
         )
-        x, y = radialcenter.radialcenter(gaussian)
+        x, y = radialcenter(gaussian)
 
         self.assertIsInstance(x, float)
         self.assertIsInstance(y, float)
