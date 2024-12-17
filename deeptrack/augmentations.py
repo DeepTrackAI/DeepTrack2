@@ -49,7 +49,7 @@ Augment image of a particle with flips:
 
 import warnings
 import random
-from typing import Callable
+from typing import Callable, List
 
 import numpy as np
 import scipy.ndimage as ndimage
