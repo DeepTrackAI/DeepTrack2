@@ -177,7 +177,7 @@ class Zernike(Aberration):
         n: PropertyLike[int or List[int]],
         m: PropertyLike[int or List[int]],
         coefficient: PropertyLike[float or List[float]] = 1,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             n=n,
