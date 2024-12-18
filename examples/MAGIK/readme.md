@@ -9,11 +9,11 @@ Here we provide the code as well as instructions to train models and to analyze 
 
 MAGIK requires at least python 3.6.
 
-To use MAGIK you must install the [Deeplay](https://github.com/DeepTrackAI/deeplay) framework. Open a terminal or command prompt and run:
+To use MAGIK you must install the [Deeplay](https://github.com/DeepTrackAI/deeplay) package. Open a terminal or command prompt and run:
 
     pip install deeplay
 
-This will also install all the dependencies.
+This will also install the required dependencies.
 
 ## Software requirements
 
@@ -24,12 +24,9 @@ MAGIK has been tested on the following systems:
 - macOS: Monterey (12.2.1)
 - Windows: 10 (64-bit)
 
-
-If you have a very recent version of python, you may need to install numpy _before_ DeepTrack. This is a known issue with scikit-image.
-
 ## It's a kind of MAGIK...
 
-To see MAGIK in action, we provide an [example](//github.com/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/) based on live-cell migration experiments. Data courtesy of Sergi Masó Orriols, [the QuBI lab](https://mon.uvic.cat/qubilab/).
+To see MAGIK in action, we provide an [example](//github.com/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/tracking_hela_cells.ipynb) of tracking and segmenting migrating cells on a glass slide. Data courtesy of [Gert van Cappellen](https://pure.eur.nl/en/persons/gert-van-cappellen).
 
 
 ## Cite us!
