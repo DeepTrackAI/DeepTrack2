@@ -49,7 +49,7 @@ Augment image of a particle with flips:
 
 import warnings
 import random
-from typing import Callable, List
+from typing import Callable, List, Bool
 
 import numpy as np
 import scipy.ndimage as ndimage
@@ -75,11 +75,11 @@ class Augmentation(Feature):
         super().__init__(time_consistent=time_consistent, **kwargs)
 
     def _image_wrapped_process_and_get (
-            self,
-            image_list,
-            time_consistent,
-            **kwargs
-        ) -> List:
+        self,
+        image_list: List[Image],
+        time_consistent: PropertyLike[bool],
+        **kwargs
+    ) -> List[List]:
         if not isinstance(image_list, list):
             wrap_depth = 2
             image_list_of_lists = [[image_list]]
@@ -113,11 +113,12 @@ class Augmentation(Feature):
         return new_list_of_lists
     
     def _no_wrap_process_and_get(
-            self,
-            image_list,
-            time_consistent,
-            **kwargs
-        ) -> list:
+        self,
+        image_list: List[Image],
+        time_consistent: PropertyLike[bool],
+        **kwargs
+    ) -> List[List]:
+
         if not isinstance(image_list, list):
             wrap_depth = 2
             image_list_of_lists = [[image_list]]
@@ -188,7 +189,13 @@ class Reuse(Feature):
         self.counter = 0
         self.cache = []
 
-    def get(self, image, uses, storage, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        uses: PropertyLike[int],
+        storage: PropertyLike[int],
+        **kwargs
+    ) -> List[Image]:
 
         self.cache = self.cache[-storage:]
 
@@ -325,7 +332,11 @@ class FlipDiagonal(Augmentation):
             **kwargs,
         )
 
-    def get(self, image, augment, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        augment: PropertyLike[float],
+        **kwargs):
         if augment:
             image = np.transpose(image, axes=(1, 0, *range(2, image.ndim)))
         return image
@@ -437,7 +448,15 @@ class Affine(Augmentation):
 
         return properties
 
-    def get(self, image, scale, translate, rotate, shear, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        scale: PropertyLike[float],
+        translate: PropertyLike[float],
+        rotate: PropertyLike[float],
+        shear: PropertyLike[float],
+        **kwargs
+    ) -> Image:
 
         assert (
             image.ndim == 2 or image.ndim == 3
@@ -597,7 +616,14 @@ class ElasticTransformation(Augmentation):
             **kwargs,
         )
 
-    def get(self, image, sigma, alpha, ignore_last_dim, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        sigma: PropertyLike[float],
+        alpha: PropertyLike[float],
+        ignore_last_dim: PropertyLike[bool],
+        **kwargs
+    ) -> Image:
 
         shape = image.shape
 
@@ -688,7 +714,14 @@ class Crop(Augmentation):
             **kwargs,
         )
 
-    def get(self, image, corner, crop, crop_mode, **kwargs):
+    def get(
+        self,
+        image: PropertyLike[Image],
+        corner: PropertyLike[str],
+        crop: PropertyLike[int or ArrayLike[int]],
+        crop_mode: PropertyLike[str],
+        **kwargs
+    ) -> Image:
 
         # Get crop argument
         if callable(crop):
@@ -815,7 +848,11 @@ class CropTight(Feature):
     def __init__(self, eps=1e-10, **kwargs):
         super().__init__(eps=eps, **kwargs)
 
-    def get(self, image, eps, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        eps: PropertyLike[float],
+        **kwargs):
         image = np.asarray(image)
 
         image = image[..., np.any(image > eps, axis=(0, 1))]
@@ -847,7 +884,11 @@ class Pad(Augmentation):
     ):
         super().__init__(px=px, mode=mode, cval=cval, **kwargs)
 
-    def get(self, image, px, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        px: PropertyLike[int],
+        **kwargs)::
 
         padding = []
         if callable(px):
