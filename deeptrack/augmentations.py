@@ -888,7 +888,7 @@ class Pad(Augmentation):
         self,
         image: ArrayLike[Image],
         px: PropertyLike[int],
-        **kwargs)::
+        **kwargs):
 
         padding = []
         if callable(px):
