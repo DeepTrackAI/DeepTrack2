@@ -49,7 +49,7 @@ Augment image of a particle with flips:
 
 import warnings
 import random
-from typing import Callable, List
+from typing import Callable, List, Union
 
 import numpy as np
 import scipy.ndimage as ndimage
@@ -59,7 +59,7 @@ from scipy.ndimage.interpolation import map_coordinates
 from . import utils
 from .features import Feature
 from .image import Image
-from .types import ArrayLike, PropertyLike, Union
+from .types import ArrayLike, PropertyLike
 
 
 class Augmentation(Feature):

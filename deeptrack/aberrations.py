@@ -66,9 +66,9 @@ class Aberration(Feature):
     # Adds rho and theta of the pupil to the input.
     def _process_and_get(
             self,
-            image_list: List[Image],
+            image_list: List[np.ndarray],
             **kwargs,
-    ) -> List[Image]:
+    ) -> List[np.ndarray]:
         """Processes a list of images by adding rho and theta information.
 
         Parameters
