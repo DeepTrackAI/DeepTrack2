@@ -49,7 +49,7 @@ from typing import List, Tuple, Union
 import numpy as np
 
 from .features import Feature
-from .types import PropertyLike
+from .types import PropertyLike, ArrayLike
 from .utils import as_list
 
 
