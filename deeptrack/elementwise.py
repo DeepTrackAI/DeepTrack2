@@ -2,7 +2,8 @@
 """Classes that apply functions to features elementwise.
 
 This module provides the elementwise DeepTrack2 classes
-that work as a handle to perform various functions to features elementwise.
+that work as a handle to perform various numpy functions 
+to features elementwise.
 
 Module Structure
 ----------------
@@ -74,7 +75,7 @@ class ElementwiseFeature(Feature):
 
 
 """
-Trigonometric functions
+Trigonometric Functions
 """
 
 class Sin(ElementwiseFeature):
@@ -108,7 +109,7 @@ class Arctan(ElementwiseFeature):
 
 
 """
-Hyperbolic functions
+Hyperbolic Functions
 """
 
 
@@ -163,7 +164,7 @@ class Ceil(ElementwiseFeature):
 
 
 """
-Exponents and logarithms
+Exponents and Logarithms
 """
 
 
@@ -188,7 +189,7 @@ class Log2(ElementwiseFeature):
 
 
 """
-Complex numbers
+Complex Numbers
 """
 
 
