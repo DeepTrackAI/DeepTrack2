@@ -39,7 +39,7 @@ Augment image of a particle with flips:
     >>> import numpy as np 
     >>> particle = dt.PointParticle()
     >>> optics = dt.Fluorescence()
-    >>> augment = dt.Value(optics(particle)) 
+    >>> augment = dt.Value(optics(particle))\ 
     >>>     >> dt.FlipUD(p=1.0) >> dt.FlipLR(p=1.0)
     >>> image = np.array(augment.update()())
     >>> plt.imshow(image)
@@ -59,7 +59,7 @@ from scipy.ndimage.interpolation import map_coordinates
 from . import utils
 from .features import Feature
 from .image import Image
-from .types import ArrayLike, PropertyLike
+from .types import ArrayLike, PropertyLike, Union
 
 
 class Augmentation(Feature):
@@ -402,11 +402,11 @@ class Affine(Augmentation):
 
     def __init__(
         self,
-        scale: PropertyLike[float or ArrayLike[float]] = 1,
-        translate: PropertyLike[float or ArrayLike[float] or None] = None,
-        translate_px: PropertyLike[float or ArrayLike[float]] = 0,
-        rotate: PropertyLike[float or ArrayLike[float]] = 0,
-        shear: PropertyLike[float or ArrayLike[float]] = 0,
+        scale: PropertyLike[Union[float, ArrayLike[float]]] = 1,
+        translate: PropertyLike[Union[float, ArrayLike[float], None]] = None,
+        translate_px: PropertyLike[Union[float, ArrayLike[float]]] = 0,
+        rotate: PropertyLike[Union[float, ArrayLike[float]]] = 0,
+        shear: PropertyLike[Union[float, ArrayLike[float]]] = 0,
         order: PropertyLike[int] = 1,
         cval: PropertyLike[float] = 0,
         mode: PropertyLike[str] = "reflect",

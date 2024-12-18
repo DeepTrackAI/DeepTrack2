@@ -44,12 +44,12 @@ Simulate defocus in optics:
 
 """
 
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 
 from .features import Feature
-from .types import PropertyLike
+from .types import PropertyLike,
 from .utils import as_list
 
 
@@ -66,9 +66,9 @@ class Aberration(Feature):
     # Adds rho and theta of the pupil to the input.
     def _process_and_get(
             self,
-            image_list: List[np.ndarray],
+            image_list: List[Image],
             **kwargs,
-        ) -> List[np.ndarray]:
+    ) -> List[Image]:
         """Processes a list of images by adding rho and theta information.
 
         Parameters
@@ -173,11 +173,11 @@ class Zernike(Aberration):
     """
 
     def __init__(
-        self,
-        n: PropertyLike[int or List[int]],
-        m: PropertyLike[int or List[int]],
-        coefficient: PropertyLike[float or List[float]] = 1,
-        **kwargs,
+	    self,
+	    n: PropertyLike[Union[int, List[int]]],
+	    m: PropertyLike[Union[int, List[int]]],
+	    coefficient: PropertyLike[Union[float, List[float]]] = 1,
+	    **kwargs,
     ):
         super().__init__(
             n=n,
@@ -186,7 +186,16 @@ class Zernike(Aberration):
             **kwargs,
         )
 
-    def get(self, pupil, rho, theta, n, m, coefficient, **kwargs):
+    def get(
+        self,
+        pupil: ArrayLike[np.ndarray],
+        rho: PropertyLike[float],
+        theta: PropertyLike[float],
+        n: PropertyLike[Union[int, List[int]]],
+        m: PropertyLike[int],
+        coefficient: PropertyLike[float],
+        **kwargs
+    ) -> ArrayLike[np.ndarray]:
         m_list = as_list(m)
         n_list = as_list(n)
         coefficients = as_list(coefficient)
@@ -251,7 +260,7 @@ class Piston(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        self, *args, coefficient: PropertyLike[Union[float,List[float]]] = 1,
         **kwargs
     ):
         super().__init__(*args, n=0, m=0, coefficient=coefficient, **kwargs)
@@ -267,7 +276,7 @@ class VerticalTilt(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        self, *args, coefficient: PropertyLike[Union[float, List[float]]] = 1,
         **kwargs
     ):
         super().__init__(*args, n=1, m=-1, coefficient=coefficient, **kwargs)
@@ -283,7 +292,7 @@ class HorizontalTilt(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        self, *args, coefficient: PropertyLike[Union[float, List[float]]] = 1,
         **kwargs
     ):
         super().__init__(*args, n=1, m=1, coefficient=coefficient, **kwargs)
@@ -299,7 +308,7 @@ class ObliqueAstigmatism(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        self, *args, coefficient: PropertyLike[Union[float, List[float]]] = 1,
         **kwargs
     ):
         super().__init__(*args, n=2, m=-2, coefficient=coefficient, **kwargs)
@@ -315,7 +324,7 @@ class Defocus(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        self, *args, coefficient: PropertyLike[Union[float, List[float]]] = 1,
         **kwargs
     ):
         super().__init__(*args, n=2, m=0, coefficient=coefficient, **kwargs)
@@ -331,7 +340,7 @@ class Astigmatism(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        self, *args, coefficient: PropertyLike[Union[float, List[float]]] = 1,
         **kwargs
     ):
         super().__init__(*args, n=2, m=2, coefficient=coefficient, **kwargs)
@@ -347,7 +356,7 @@ class ObliqueTrefoil(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        self, *args, coefficient: PropertyLike[Union[float, List[float]]] = 1,
         **kwargs
     ):
         super().__init__(*args, n=3, m=-3, coefficient=coefficient, **kwargs)
@@ -363,7 +372,7 @@ class VerticalComa(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        self, *args, coefficient: PropertyLike[Union[float, List[float]]] = 1,
         **kwargs
     ):
         super().__init__(*args, n=3, m=-1, coefficient=coefficient, **kwargs)
@@ -379,7 +388,7 @@ class HorizontalComa(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        self, *args, coefficient: PropertyLike[Union[float, List[float]]] = 1,
         **kwargs
     ):
         super().__init__(*args, n=3, m=1, coefficient=coefficient, **kwargs)
@@ -395,7 +404,7 @@ class Trefoil(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        self, *args, coefficient: PropertyLike[Union[float, List[float]]] = 1,
         **kwargs
     ):
         super().__init__(*args, n=3, m=3, coefficient=coefficient, **kwargs)
@@ -411,7 +420,7 @@ class SphericalAberration(Zernike):
     """
 
     def __init__(
-        self, *args, coefficient: PropertyLike[float or List[float]] = 1,
+        self, *args, coefficient: PropertyLike[Union[float, List[float]]] = 1,
         **kwargs
     ):
         super().__init__(*args, n=4, m=0, coefficient=coefficient, **kwargs)
