@@ -14,9 +14,9 @@ context of DeepTrack2.
 Sources
 -------
 - **Pint's default unit definitions**: 
-  `default_en.txt <https://github.com/hgrecco/pint/blob/main/pint/default_en.txt>`
+  `default_en.txt <https://github.com/hgrecco/pint/blob/main/pint/default_en.txt>`_
 - **Pint's default constants definitions**: 
-  `constants_en.txt <https://github.com/hgrecco/pint/blob/main/pint/constants_en.txt>`
+  `constants_en.txt <https://github.com/hgrecco/pint/blob/main/pint/constants_en.txt>`_
 
 Content Overview
 ----------------
@@ -38,6 +38,7 @@ Content Overview
 Key Modifications
 -----------------
 This module is derived from the default Pint files with the following changes:
+
 1. **Groups Removed**: Unit group definitions (e.g., `@group`) have been 
     excluded to avoid conflicts with pixel definitions.
 2. **Final Variables Added**: Constants and variables required for 
