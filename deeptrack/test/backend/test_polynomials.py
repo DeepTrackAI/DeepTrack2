@@ -1,3 +1,11 @@
+# pylint: disable=C0115:missing-class-docstring
+# pylint: disable=C0116:missing-function-docstring
+# pylint: disable=C0103:invalid-name
+
+# Use this only when running the test locally.
+# import sys
+# sys.path.append(".")  # Adds the module to path.
+
 import unittest
 
 from deeptrack.backend import polynomials
@@ -59,7 +67,7 @@ class TestPolynomials(unittest.TestCase):
 
         self.assertTrue(abs(dRicBesy(1, 1) + 0.8414) < 1e-3)
 
-        
+
     def test_RicBesh(self):
         RicBesh = polynomials.ricbesh
 
