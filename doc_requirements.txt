@@ -1,0 +1,3 @@
+Sphinx
+sphinx-automodapi
+pydata-sphinx-theme
