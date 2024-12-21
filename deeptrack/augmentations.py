@@ -13,13 +13,13 @@ Cache Class:
 
 General Augmentations:
 - `FlipLR` : Flips image left to right.
-- `FlipUD` : Flips image upside down.
+- `FlipUD` : Flips image up to down.
 - `FlipDiagonal` : Flips image along the diagonal.
 
 Advanced Augmentations:
 - `Affine` : Class to enable translation, scaling, rotation, shearing
              of an image, with user specified parameters.
-- 'ElasticTransformation' : Transform using displacement field.
+- 'ElasticTransformation' : Transform using a displacement field.
 
 Cropping:
 - `Crop` : Crop regions of an image.
@@ -701,7 +701,7 @@ class Crop(Augmentation):
     def __init__(
         self,
         *args,
-        crop: PropertyLike[int or ArrayLike[int]] = (64, 64),
+        crop: PropertyLike[Union[int, ArrayLike[int]]] = (64, 64),
         crop_mode: PropertyLike[str] = "retain",
         corner: PropertyLike[str] = "random",
         **kwargs
@@ -718,7 +718,7 @@ class Crop(Augmentation):
         self,
         image: PropertyLike[Image],
         corner: PropertyLike[str],
-        crop: PropertyLike[int or ArrayLike[int]],
+        crop: PropertyLike[Union[int, ArrayLike[int]]],
         crop_mode: PropertyLike[str],
         **kwargs
     ) -> Image:
@@ -800,7 +800,7 @@ class CropToMultiplesOf(Crop):
 
     def __init__(
         self,
-        multiple: PropertyLike[int or ArrayLike[int] or None] = 1,
+        multiple: PropertyLike[Union[int, ArrayLike[int], None]] = 1,
         corner: PropertyLike[str] = "random",
         **kwargs
     ):
@@ -912,11 +912,10 @@ class Pad(Augmentation):
     def _image_wrap_process_and_get(self, images, **kwargs):
         results = [self.get(image, **kwargs) for image in images]
         # for idx, result in enumerate(results):
-        #     if isinstance(result, tuple):
-
-        #         results[idx] = Image(result[0]).merge_properties_from(images[idx])
-        #     else:
-        #         Image(results[idx]).merge_properties_from(images[idx])
+        #    if isinstance(result, tuple):
+        #    results[idx] = Image(result[0]).merge_properties_from(images[idx])
+        #    else:
+        #    Image(results[idx]).merge_properties_from(images[idx])
         return results
 
 
@@ -932,7 +931,7 @@ class PadToMultiplesOf(Pad):
 
     """
 
-    def __init__(self, multiple: PropertyLike[int or None] = 1, **kwargs):
+    def __init__(self, multiple: PropertyLike[Union[int, None]] = 1, **kwargs):
         def amount_to_pad(image):
             shape = image.shape
             multiple = self.multiple()

@@ -2,7 +2,7 @@
 """Classes that apply functions to features elementwise.
 
 This module provides the elementwise DeepTrack2 classes
-that work as a handle to perform various numpy functions 
+which work as a handle to perform various numpy functions 
 to features elementwise.
 
 Module Structure
