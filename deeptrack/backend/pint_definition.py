@@ -8,15 +8,15 @@ Introduction
 ------------
 Pint is a Python library used for handling units and quantities. This module 
 augments Pint's default definitions by introducing project-specific constants 
-and unit modifications, ensuring precise and flexible calculations in the context 
-of DeepTrack2.
+and unit modifications, ensuring precise and flexible calculations in the 
+context of DeepTrack2.
 
 Sources
 -------
 - **Pint's default unit definitions**: 
-  [default_en.txt](https://github.com/hgrecco/pint/blob/main/pint/default_en.txt)
+  `default_en.txt <https://github.com/hgrecco/pint/blob/main/pint/default_en.txt>`
 - **Pint's default constants definitions**: 
-  [constants_en.txt](https://github.com/hgrecco/pint/blob/main/pint/constants_en.txt)
+  `constants_en.txt <https://github.com/hgrecco/pint/blob/main/pint/constants_en.txt>`
 
 Content Overview
 ----------------
