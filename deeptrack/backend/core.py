@@ -239,7 +239,7 @@ class DeepTrackDataDict:
     create_index(_ID : Tuple[int, ...] = ()) -> None
         Creates an entry for the given ID if it does not exist.
     __getitem__(
-        _ID : tuple
+      _ID : tuple
     ) -> DeepTrackDataObject or Dict[Tuple[int, ...], DeepTrackDataObject]
         Retrieves data associated with the ID. Can return a 
         `DeepTrackDataObject` or a dict of matching entries if `_ID` is shorter 
