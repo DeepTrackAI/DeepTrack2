@@ -238,10 +238,9 @@ class DeepTrackDataDict:
         Checks if the given ID is valid for the current configuration.
     create_index(_ID : Tuple[int, ...] = ())
         Creates an entry for the given ID if it does not exist.
-    __getitem__(_ID : tuple) -> Union[
-            DeepTrackDataObject, 
-            Dict[Tuple[int, ...], DeepTrackDataObject]
-        ]
+    __getitem__(
+        _ID : tuple
+    ) -> DeepTrackDataObject or Dict[Tuple[int, ...], DeepTrackDataObject]
         Retrieves data associated with the ID. Can return a 
         `DeepTrackDataObject` or a dict of matching entries if `_ID` is shorter 
         than `keylength`.
@@ -250,18 +249,18 @@ class DeepTrackDataDict:
 
     Example
     -------
-    Imagine to have a structure that generates multiple instances of data:
+    Create a structure to store multiple, indexed instances of data:
 
     >>> data_dict = DeepTrackDataDict()
 
-    Create entries:
+    Create the entries:
     
     >>> data_dict.create_index((0, 0))
     >>> data_dict.create_index((0, 1))
     >>> data_dict.create_index((1, 0))
     >>> data_dict.create_index((1, 1))
 
-    Now, store and access values associated with each ID:
+    Store the values associated with each ID:
 
     >>> data_dict[(0, 0)].store("Data at (0, 0)")
     >>> data_dict[(0, 1)].store("Data at (0, 1)")
