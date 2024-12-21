@@ -1,29 +1,34 @@
-"""Core data for DeepTrack2 package.
+"""Core data structures for DeepTrack2.
 
 This module provides the core DeepTrack2 classes to manage and process data. 
 In particular, it enables users to:
+
 - Construct flexible and efficient computational pipelines.
 - Manage data and dependencies in a hierarchical structure.
 - Perform lazy evaluations for performance optimization.
 
 Main Features
 -------------
-Data Management: `DeepTrackDataObject` and `DeepTrackDataDict` provide tools 
-to store, validate, and manage data with dependency tracking. They enable 
-nested data structures and flexible indexing for complex data hierarchies.
+- **Data Management**: 
+    `DeepTrackDataObject` and `DeepTrackDataDict` provide tools to store, 
+    validate, and manage data with dependency tracking. They enable nested 
+    data structures and flexible indexing for complex data hierarchies.
 
-Computational Graphs: `DeepTrackNode` forms the backbone of DeepTrack2 
-computation pipelines, representing computation nodes in a computation graph.
-Nodes support lazy evaluation, dependency tracking, and caching for improved 
-computational performance. They implement mathematical operators for easy 
-composition of computational graphs.
+- **Computational Graphs**: 
+    `DeepTrackNode` forms the backbone of DeepTrack2 computation pipelines, 
+    representing computation nodes in a computation graph. Nodes support lazy 
+    evaluation, dependency tracking, and caching for improved computational 
+    performance. They implement mathematical operators for easy composition 
+    of computational graphs.
 
-Citations: Supports citing the relevant publication to ensure proper 
-attribution (e.g., `Midtvedt et al., 2021`).
+- **Citations**: 
+    Supports citing the relevant publication to ensure proper attribution 
+    (e.g., `Midtvedt et al., 2021`).
 
 Module Structure
 -----------------
 Data Containers:
+
 - `DeepTrackDataObject`: A basic container for data with validation status.
 - `DeepTrackDataDict`: A data contained to store multiple data objects 
                        (DeepTrackDataObject) indexed by unique access IDs 
@@ -31,6 +36,7 @@ Data Containers:
                        storage.
 
 Computation Nodes:
+
 - `DeepTrackNode`: Represents a node in a computation graph, capable of lazy 
                    evaluation, caching, and dependency management.
 
