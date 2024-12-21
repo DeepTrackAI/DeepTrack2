@@ -230,13 +230,13 @@ class DeepTrackDataDict:
 
     Methods
     -------
-    invalidate()
+    invalidate() -> None
         Marks all stored data objects as invalid.
-    validate()
+    validate() -> None
         Marks all stored data objects as valid.
     valid_index(_ID : Tuple[int, ...]) -> bool
         Checks if the given ID is valid for the current configuration.
-    create_index(_ID : Tuple[int, ...] = ())
+    create_index(_ID : Tuple[int, ...] = ()) -> None
         Creates an entry for the given ID if it does not exist.
     __getitem__(
         _ID : tuple
