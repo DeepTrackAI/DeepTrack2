@@ -518,7 +518,7 @@ class DeepTrackNode:
     _accepts_ID : bool
         Whether `action` accepts an input ID.
     _all_subchildren : Set[DeepTrackNode]
-        All nodes in the subtree rooted at this node, including itself.
+        All nodes in the subtree rooted at the node, including the node itself.
     citations : List[str]
         Citations associated with this node.
     
@@ -645,7 +645,9 @@ class DeepTrackNode:
             A function or lambda to be used for computing the node’s value. If 
             the function’s signature includes `_ID`, this node will pass `_ID` 
             when calling `action`.
+        
         """
+        
         self._action = value
         self._accepts_ID = "_ID" in utils.get_kwarg_names(value)
 

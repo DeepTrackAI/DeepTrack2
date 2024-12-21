@@ -3,21 +3,20 @@
 This module defines utility functions that enhance code readability, 
 streamline common operations, and ensure type and argument consistency.
 
-Functions
----------
-hasmethod(obj: Any, method_name: str) -> bool
-    Returns `True` if the object has a field named `method_name` that is 
-    callable. Otherwise, returns `False`.
-as_list(obj: Any) -> list
-    If the input is iterable, converts it to list. 
-    Otherwise, wraps the input in a list.
-get_kwarg_names(function: Callable) -> List[str]
-    Retrieves the names of the keyword arguments accepted by a function.
-kwarg_has_default(function: Callable, argument: str) -> bool
-    Checks if a specific argument of a function has a default value.
-safe_call(function, positional_args=[], **kwargs)
-    Calls a function, passing only valid arguments from the provided keyword 
-    arguments (kwargs).
+Module Structure
+----------------
+Functions:
+
+- `hasmethod`: Returns `True` if the object has a field named `method_name` 
+               that is callable. Otherwise, returns `False`.
+- `as_list`: If the input is iterable, converts it to list. Otherwise, wraps 
+             the input in a list.
+- `get_kwarg_names`: Retrieves the names of the keyword arguments accepted by a 
+                     function.
+- `kwarg_has_default`: Checks if a specific argument of a function has a 
+                       default value.
+- `safe_call`: Calls a function, passing only valid arguments from the provided 
+               keyword arguments (kwargs).
 
 """
 
