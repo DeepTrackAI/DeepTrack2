@@ -5,10 +5,10 @@ streamline common operations, and ensure type and argument consistency.
 
 Functions
 ---------
-hasmethod(obj: any, method_name: str) -> bool
-    Returns True if the object has a field named `function_name` that is 
-    callable. Otherwise, returns False.
-as_list(obj: any) -> list
+hasmethod(obj: Any, method_name: str) -> bool
+    Returns `True` if the object has a field named `method_name` that is 
+    callable. Otherwise, returns `False`.
+as_list(obj: Any) -> list
     If the input is iterable, converts it to list. 
     Otherwise, wraps the input in a list.
 get_kwarg_names(function: Callable) -> List[str]
@@ -25,12 +25,12 @@ import inspect
 from typing import Any, Callable, List
 
 
-def hasmethod(obj: any, method_name: str) -> bool:
+def hasmethod(obj: Any, method_name: str) -> bool:
     """Check if an object has a callable method named `method_name`.
 
     Parameters
     ----------
-    obj : any
+    obj : Any
         The object to inspect.
     method_name : str
         The name of the method to look for.
@@ -55,7 +55,7 @@ def as_list(obj: any) -> list:
 
     Parameters
     ----------
-    obj : any
+    obj : Any
         The object to be converted or wrapped in a list.
 
     Returns
