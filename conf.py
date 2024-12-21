@@ -43,7 +43,7 @@ html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_theme_options = {
     "switcher": {
-        "json_url": "https://ORGANIZATION.github.io/REPO/latest/_static/switcher.json",
+        "json_url": "https://DeepTrackAI.github.io/DeepTrack2/latest/_static/switcher.json",
         "version_match": version,
     },
     "navbar_end": [
