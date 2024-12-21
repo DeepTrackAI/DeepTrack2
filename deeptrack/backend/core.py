@@ -313,7 +313,8 @@ class DeepTrackDataDict:
     def validate(self) -> None:
         """Mark all stored data objects as valid.
 
-        Calls `validate()` on every `DeepTrackDataObject` in the dictionary.
+        This method calls `validate()` on every `DeepTrackDataObject` in the 
+        dictionary.
         
         """
 
@@ -323,7 +324,7 @@ class DeepTrackDataDict:
     def valid_index(self, _ID: Tuple[int, ...]) -> bool:
         """Check if a given ID is valid for this data dictionary.
 
-        If `keylength` is `None`, any tuple ID is considered valid since no 
+        If `keylength` is `None`, any tuple `_ID` is considered valid since no 
         entries have been created yet. If `_ID` already exists in `dict`, it is 
         automatically valid. Otherwise, `_ID` must have the same length as 
         `keylength` to be considered valid.
