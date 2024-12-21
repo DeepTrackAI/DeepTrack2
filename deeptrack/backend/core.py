@@ -1545,7 +1545,7 @@ class DeepTrackNode:
         return _create_node_with_operator(operator.__ge__, other, self)
 
 
-def _equivalent(a, b):
+def _equivalent(a: Any, b: Any) -> bool:
     """Check if two objects are equivalent.
 
     This internal helper function provides a basic implementation to determine 
@@ -1581,7 +1581,11 @@ def _equivalent(a, b):
     return False
 
 
-def _create_node_with_operator(op, a, b):
+def _create_node_with_operator(
+    op: Callable, 
+    a: Any, 
+    b: Any,
+) -> 'DeepTrackNode':
     """Create a new computation node using a given operator and operands.
 
     This internal helper function constructs a `DeepTrackNode` obtained from 
