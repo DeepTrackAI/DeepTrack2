@@ -1,0 +1,93 @@
+name: Update Documentation
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      test_tag:
+        description: "Release tag to simulate"
+        required: true
+
+jobs:
+  update-docs:
+    name: Update Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the docs branch
+      - name: Checkout docs branch
+        uses: actions/checkout@v3
+        with:
+          ref: docs
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r doc_requirements.txt
+
+      # Step 4: Pull the release code into a separate directory
+      - name: Checkout release code
+        uses: actions/checkout@v3
+        with:
+          path: release-code
+          # Use the test tag from workflow_dispatch or the actual release tag
+          ref: ${{ github.event.inputs.test_tag || github.event.release.tag_name }}
+
+      - name: Install the package
+        run: |
+          cd release-code
+          pip install -e .
+
+      - name: Create the markdown files
+        run: |
+          python generate_doc_markdown.py deeptrack --exclude=tests,test,pytorch,deeplay
+
+      # Step 5: Set version variable
+      - name: Set version variable
+        run: |
+          VERSION=${{ github.event.inputs.test_tag || github.event.release.tag_name }}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      # Step 6: Update switcher.json
+      - name: Update switcher.json
+        run: |
+          SWITCHER_FILE=_static/switcher.json
+          jq --arg version "$VERSION" \
+             '. |= [{"name": $version, "version": $version, "url": "https://DeepTrackAI.github.io/DeepTrack2/\($version)/"}] + .' \
+             $SWITCHER_FILE > temp.json && mv temp.json $SWITCHER_FILE
+
+      # Step 7: Build documentation using Sphinx into html
+      - name: Build documentation
+        env:
+          SPHINX_APIDOC_DIR: release-code
+        run: make html
+
+      # Step 8: Copy built HTML to `docs/latest` and `docs/{version}`
+      - name: Copy built HTML
+        run: |
+          mkdir -p docs/latest
+          mkdir -p docs/$VERSION
+          cp -r _build/html/* docs/latest/
+          cp -r _build/html/* docs/$VERSION/
+
+      # Step 9: Clean up `release-code` directory
+      - name: Remove release-code directory
+        run: rm -rf release-code
+
+      # Step 10: Commit and push changes
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/latest docs/$VERSION _static/switcher.json
+          git commit -m "Update docs for release $VERSION"
+          git push
