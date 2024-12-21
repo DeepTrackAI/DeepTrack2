@@ -213,9 +213,10 @@ class DeepTrackDataDict:
 
     The default ID is an empty tuple, `()`. Once the first entry is created, 
     all IDs must match the established key length:
-    -  If an ID longer than the set length is requested, it is trimmed. 
-    -  If an ID shorter than the set length is requested, a dictionary slice 
-       containing all matching entries is returned.
+    
+    - If an ID longer than the set length is requested, it is trimmed. 
+    - If an ID shorter than the set length is requested, a dictionary slice 
+      containing all matching entries is returned.
 
     Attributes
     ----------
