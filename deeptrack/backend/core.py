@@ -30,8 +30,8 @@ Module Structure
 Data Containers:
 
 - `DeepTrackDataObject`: A basic container for data with validation status.
-- `DeepTrackDataDict`: A data contained to store multiple data objects 
-                       (DeepTrackDataObject) indexed by unique access IDs 
+- `DeepTrackDataDict`: A data container to store multiple data objects 
+                       (`DeepTrackDataObject`) indexed by unique access IDs 
                        (consisting of tuples of integers), enabling nested data 
                        storage.
 
@@ -52,7 +52,7 @@ Set the value of the parent:
 
 >>> parent.store(5)
 
-And obtain the value of the child:
+And print the value of the child:
 
 >>> print(child())  # Output: 10
 
@@ -87,8 +87,8 @@ citation_midtvet2021quantitative = """
 class DeepTrackDataObject:
     """Basic data container for DeepTrack2.
 
-    `DeepTrackDataObject` is a simple data container to store data and track
-    its validity.
+    `DeepTrackDataObject` is a simple data container to store some data and 
+    track its validity.
 
     Attributes
     ----------
@@ -99,15 +99,15 @@ class DeepTrackDataObject:
 
     Methods
     -------
-    store(data : Any)
+    store(data : Any) -> None
         Stores data in the container and marks it as valid.
     current_value() -> Any
         Returns the currently stored data.
     is_valid() -> bool
         Returns whether the stored data is valid.
-    invalidate()
+    invalidate() -> None
         Marks the data as invalid.
-    validate()
+    validate() -> None
         Marks the data as valid.
 
     Example
@@ -152,7 +152,7 @@ class DeepTrackDataObject:
         `None` and `False`.
         
         """
-        
+
         self.data = None
         self.valid = False
 
@@ -165,7 +165,7 @@ class DeepTrackDataObject:
             The data to be stored in the container.
         
         """
-        
+
         self.data = data
         self.valid = True
 
@@ -178,7 +178,7 @@ class DeepTrackDataObject:
             The data stored in the container.
         
         """
-        
+
         return self.data
 
     def is_valid(self) -> bool:
@@ -190,17 +190,17 @@ class DeepTrackDataObject:
             `True` if the data is valid, `False` otherwise.
         
         """
-        
+
         return self.valid
 
     def invalidate(self) -> None:
         """Mark the stored data as invalid."""
-        
+
         self.valid = False
 
     def validate(self) -> None:
         """Mark the stored data as valid."""
-        
+
         self.valid = True
 
 
