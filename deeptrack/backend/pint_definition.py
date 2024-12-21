@@ -1,51 +1,58 @@
 """Pint constants and units definition for DeepTrack2.
 
-This file consolidates and extends the default definitions provided by Pint's 
-`default_en.txt` and `constants_en.txt` files. These files define physical 
-constants and unit systems based on internationally recognized standards, such 
-as the  International System of Units (SI), and additional systems like CGS, 
-Planck units, and atomic units.
+This module consolidates and extends the default definitions provided by Pint's 
+`default_en.txt` and `constants_en.txt` files. It defines physical constants, 
+unit systems, and project-specific adjustments necessary for DeepTrack2.
+
+Introduction
+------------
+Pint is a Python library used for handling units and quantities. This module 
+augments Pint's default definitions by introducing project-specific constants 
+and unit modifications, ensuring precise and flexible calculations in the context 
+of DeepTrack2.
 
 Sources
 -------
-- Pint's default unit definitions: 
-  https://github.com/hgrecco/pint/blob/main/pint/default_en.txt
-- Pint's default constants definitions: 
-  https://github.com/hgrecco/pint/blob/main/pint/constants_en.txt
+- **Pint's default unit definitions**: 
+  [default_en.txt](https://github.com/hgrecco/pint/blob/main/pint/default_en.txt)
+- **Pint's default constants definitions**: 
+  [constants_en.txt](https://github.com/hgrecco/pint/blob/main/pint/constants_en.txt)
 
-Content
--------
-- Mathematical Constants: Includes key values like π, Euler's number, 
-    and the natural logarithm of 10.
-- Physical Constants: Covers fundamental constants like the speed of light, 
-    Planck constant, and Boltzmann constant.
-- Derived Constants: Defines values such as the fine-structure constant and 
-    classical electron radius.
-- Units: Provides base and derived units for length, mass, time, energy, etc., 
-    with precise conversion factors.
-- Prefixes and Aliases: Defines standard prefixes (e.g., milli-, kilo-, mega-) 
-    and unit aliases to ensure flexibility.
-- Unit Systems: Details unit systems, including SI, MKS, CGS, Planck, and 
+Content Overview
+----------------
+1. **Mathematical Constants**: Includes key values like pi, Euler's number, and 
+    the natural logarithm of 10.
+2. **Physical Constants**: Covers fundamental constants like the speed of 
+    light, Planck constant, and Boltzmann constant.
+3. **Derived Constants**: Defines values such as the fine-structure constant 
+    and classical electron radius.
+4. **Units**: Provides base and derived units for length, mass, time, energy, 
+    etc., with precise conversion factors.
+5. **Prefixes and Aliases**: Defines standard prefixes (e.g., milli-, kilo-, 
+    mega-) and unit aliases.
+6. **Unit Systems**: Details systems including SI, MKS, CGS, Planck, and 
     imperial units.
-- Contexts and Conversion: Includes context-specific definitions to facilitate 
+7. **Contexts and Conversion**: Context-specific definitions for 
     domain-specific conversions.
 
 Key Modifications
 -----------------
-This file is derived from the default Pint files with the adjustments:
-1. Groups Removed: Unit group definitions (e.g., `@group`) have been excluded 
-    to avoid conflicts with the definition of pixel.
-2. Final Variables Added: Defines constants and variables required for the 
-    project-specific context (e.g., pixel-related units).
+This module is derived from the default Pint files with the following changes:
+1. **Groups Removed**: Unit group definitions (e.g., `@group`) have been 
+    excluded to avoid conflicts with pixel definitions.
+2. **Final Variables Added**: Constants and variables required for 
+    project-specific contexts, such as pixel-related units.
 
-Usage
------
+Usage Example
+-------------
 To create a unit registry with custom pixel-related units:
 
->>> from pint import UnitRegistry
->>> from .backend.pint_definition import pint_definitions
->>>
->>> units = UnitRegistry(pint_definitions.split("\n"))
+.. code-block:: python
+
+    from pint import UnitRegistry
+    from .backend.pint_definition import pint_definitions
+
+    units = UnitRegistry(pint_definitions.split("\n"))
 
 """
 
