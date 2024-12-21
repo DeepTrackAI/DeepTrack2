@@ -44,8 +44,8 @@ This module is derived from the default Pint files with the following changes:
 2. **Final Variables Added**: Constants and variables required for 
     project-specific contexts, such as pixel-related units.
 
-Usage Example
--------------
+Example
+-------
 To create a unit registry with custom pixel-related units:
 
 >>> from pint import UnitRegistry
