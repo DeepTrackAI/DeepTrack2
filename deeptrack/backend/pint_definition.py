@@ -14,9 +14,9 @@ context of DeepTrack2.
 Sources
 -------
 - **Pint's default unit definitions**: 
-  `default_en.txt <https://github.com/hgrecco/pint/blob/main/pint/default_en.txt>`_
+  `default_en.txt <https://github.com/hgrecco/pint/blob/master/pint/default_en.txt>`_
 - **Pint's default constants definitions**: 
-  `constants_en.txt <https://github.com/hgrecco/pint/blob/main/pint/constants_en.txt>`_
+  `constants_en.txt <https://github.com/hgrecco/pint/blob/master/pint/constants_en.txt>`_
 
 Content Overview
 ----------------
@@ -48,12 +48,10 @@ Usage Example
 -------------
 To create a unit registry with custom pixel-related units:
 
-.. code-block:: python
+>>> from pint import UnitRegistry
+>>> from .backend.pint_definition import pint_definitions
 
-    from pint import UnitRegistry
-    from .backend.pint_definition import pint_definitions
-
-    units = UnitRegistry(pint_definitions.split("\n"))
+>>> units = UnitRegistry(pint_definitions.split("\n"))
 
 """
 
