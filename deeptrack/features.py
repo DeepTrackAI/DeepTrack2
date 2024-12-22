@@ -1001,6 +1001,7 @@ class Chain(StructuralFeature):
 
 Branch = Chain  # Alias for backwards compatability.
 
+
 class DummyFeature(Feature):
     """A no-op feature that simply returns the input unchanged.
 
@@ -1054,25 +1055,95 @@ class DummyFeature(Feature):
 
 
 class Value(Feature):
-    """Represents a constant (per evaluation) value.
+    """Represents a constant (per evaluation) value in a DeepTrack pipeline.
+
+    This feature can hold a single value (e.g., a scalar) and supply it 
+    on-demand to other parts of the pipeline. It does not transform the input 
+    image. Instead, it returns the stored scalar (or array) value.
 
     Parameters
     ----------
-    value : number
-        The value of the feature.
+    value : PropertyLike[float], optional
+        The numerical value to store. Defaults to 0. If an `Image` is provided, 
+        a warning is issued suggesting convertion to a NumPy array for 
+        performance reasons.
+    **kwargs : Dict[str, Any]
+        Additional named properties passed to the `Feature` constructor.
+
+    Attributes
+    ----------
+    __distributed__ : bool
+        Set to False, indicating that this feature’s `get(...)` method
+        processes the entire list of images (or data) at once, rather than
+        distributing calls for each item.
+
+    Examples
+    --------
+    >>> value = Value(42)
+    >>> print(value())
+    42
+
+    Overriding the value at call time:
+    
+    >>> print(value(value=100))
+    100
+
+    >>> print(value())
+    100
+        
     """
 
-    __distributed__ = False
+    # Attributes.
+    __distributed__: bool = False  # Process as a single batch.
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+
+    def __init__(
+        self, 
+        value: PropertyLike[float] = 0, 
+        **kwargs: Dict[str, Any],
+    ):
+        """
+        Create a `Value` feature that stores a constant value.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The initial value for this feature. If it's an Image, a warning 
+            will be raised. Defaults to 0.
+        **kwargs : dict
+            Additional properties passed to `Feature` constructor (e.g., name).
+        
+        """
 
         if isinstance(value, Image):
             warnings.warn(
-                "Setting dt.Value value as a Image object is likely to lead to performance deterioation. Consider converting it to a numpy array using np.array"
+                "Setting dt.Value value as an Image object is likely to lead "
+                "to performance deterioation. Consider converting it to a "
+                "numpy array using np.array."
             )
+
         super().__init__(value=value, **kwargs)
 
-    def get(self, image, value, **kwargs):
+    def get(self, image: Any, value: float, **kwargs: Dict[str, Any]) -> float:
+        """Return the stored value, ignoring the input image.
+
+        Parameters
+        ----------
+        image : Any
+            Input data that would normally be transformed by a feature, 
+            but `Value` does not modify or use it.
+        value : float
+            The current (possibly overridden) value stored in this feature.
+        **kwargs : Dict[str, Any]
+            Additional properties or overrides that are not used here.
+
+        Returns
+        -------
+        float
+            The `value` property, unchanged.
+
+        """
+
         return value
 
 
