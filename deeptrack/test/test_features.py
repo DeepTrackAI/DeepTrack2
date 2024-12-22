@@ -216,6 +216,21 @@ class TestFeatures(unittest.TestCase):
         )
 
 
+    def test_Value(self):
+
+        value = features.Value(value=1)
+        self.assertEqual(value(), 1)
+        self.assertEqual(value.value(), 1)
+        self.assertEqual(value(value=2), 2)
+        self.assertEqual(value.value(), 2)
+
+        value = features.Value(value=lambda: 1)
+        self.assertEqual(value(), 1)
+        self.assertEqual(value.value(), 1)
+        self.assertEqual(value(value=lambda: 2), 2)
+        self.assertEqual(value.value(), 2)
+
+
     def test_Property_set_value_invalidates_feature(self):
         class ConcreteFeature(features.Feature):
             __distributed__ = False
@@ -271,16 +286,6 @@ class TestFeatures(unittest.TestCase):
 
         feature([1])
         self.assertEqual(len(list_of_inputs), 4)
-
-    def test_Value(self):
-
-        value = features.Value(value=1)
-        self.assertEqual(value(), 1)
-        self.assertEqual(value.value(), 1)
-
-        value = features.Value(value=lambda: 1)
-        self.assertEqual(value(), 1)
-        self.assertEqual(value.value(), 1)
 
     def test_Feature_dependence(self):
         A = features.Value(lambda: np.random.rand())
