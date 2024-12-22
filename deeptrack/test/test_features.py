@@ -142,8 +142,44 @@ class TestFeatures(unittest.TestCase):
         F = features.DummyFeature(a=1, b=2)
         self.assertIsInstance(F, features.Feature)
         self.assertIsInstance(F.properties, properties.PropertyDict)
-        self.assertEqual(F.properties, 
+        self.assertEqual(F.properties,
                          {'a': 1, 'b': 2, 'name': 'DummyFeature'})
+
+        F = features.DummyFeature(prop_int=1, prop_bool=True, prop_str="a")
+        self.assertIsInstance(F, features.Feature)
+        self.assertIsInstance(F.properties, properties.PropertyDict)
+        self.assertEqual(
+            F.properties,
+            {'prop_int': 1, 'prop_bool': True, 'prop_str': 'a'},
+        )
+        self.assertIsInstance(F.properties['prop_int'](), int)
+        self.assertEqual(F.properties['prop_int'](), 1)
+        self.assertIsInstance(F.properties['prop_bool'](), bool)
+        self.assertEqual(F.properties['prop_bool'](), True)
+        self.assertIsInstance(F.properties['prop_str'](), str)
+        self.assertEqual(F.properties['prop_str'](), 'a')
+
+
+    def test_Feature_properties_update(self):
+
+        feature = features.DummyFeature(
+            prop_a=lambda: np.random.rand(),
+            prop_b="b",
+            prop_c=iter(range(10)),
+        )
+
+        prop_dict = feature.properties()
+
+        self.assertIsInstance(prop_dict["prop_a"], float)
+        self.assertIsInstance(prop_dict["prop_b"], str)
+        self.assertIsInstance(prop_dict["prop_c"], int)
+
+        prop_dict_without_update = feature.properties()
+        self.assertDictEqual(prop_dict, prop_dict_without_update)
+
+        feature.update()
+        prop_dict_with_update = feature.properties()
+        self.assertNotEqual(prop_dict, prop_dict_with_update)
 
 
     def test_Chain(self):
@@ -160,48 +196,25 @@ class TestFeatures(unittest.TestCase):
                 # 'multiplier' is a property set via self.properties (default: 1).
                 return image * self.properties.get("multiplier", 1)()
 
-        addition = Addition(addend=10)
-        multiplication = Multiplication(multiplier=0.5)
-
-        chain_am = features.Chain(addition, multiplication)
-        chain_ma = features.Chain(multiplication, addition)
+        A = Addition(addend=10)
+        M = Multiplication(multiplier=0.5)
 
         input_image = np.ones((2, 3))
 
-        chain_am(input_image)
-        chain_ma(input_image)
-
-
-    def test_create_Feature_with_properties(self):
-        feature = features.DummyFeature(prop_a="a", prop_2=2)
-
-        self.assertIsInstance(feature, features.Feature)
-        self.assertIsInstance(feature.properties, properties.PropertyDict)
-
-        self.assertIsInstance(feature.properties["prop_a"](), str)
-        self.assertEqual(feature.properties["prop_a"](), "a")
-
-        self.assertIsInstance(feature.properties["prop_2"](), int)
-        self.assertEqual(feature.properties["prop_2"](), 2)
-
-    def test_Feature_properties_update(self):
-
-        feature = features.DummyFeature(
-            prop_a=lambda: np.random.rand(), prop_b="b", prop_c=iter(range(10))
+        chain_AM = features.Chain(A, M)
+        self.assertEqual(
+            chain_AM(input_image),
+            (np.ones((2, 3)) + A.properties["addend"]())
+            * M.properties["multiplier"](),
         )
 
-        start = feature.properties()
+        chain_MA = features.Chain(M, A)
+        self.assertEqual(
+            chain_MA(input_image),
+            (np.ones((2, 3)) * M.properties["multiplier"]()
+            + A.properties["addend"]()),
+        )
 
-        self.assertIsInstance(start["prop_a"], float)
-        self.assertIsInstance(start["prop_b"], str)
-        self.assertIsInstance(start["prop_c"], int)
-
-        without_update = feature.properties()
-        self.assertDictEqual(start, without_update)
-
-        feature.update()
-        with_update = feature.properties()
-        self.assertNotEqual(start, with_update)
 
     def test_Property_set_value_invalidates_feature(self):
         class ConcreteFeature(features.Feature):
