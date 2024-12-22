@@ -896,33 +896,104 @@ def propagate_data_to_dependencies(X, **kwargs):
 
 
 class StructuralFeature(Feature):
-    """Provides the structure of a feature-set
-    Feature with __property_verbosity__ = 2 to avoid adding it to the list
-    of properties, and __distributed__ = False to pass the input as-is.
+    """Provides the structure of a feature set without input transformations.
+    
+    Because it does not add new properties or affect data distribution, 
+    `StructuralFeature` is often used as a logical or organizational tool 
+    rather than a direct image transformer.
+    
+    Since StructuralFeature doesn’t override __init__ or get, it just inherits 
+    the behavior of Feature.
+
+    Attributes
+    ----------
+    __property_verbosity__ : int
+        Controls whether this feature’s properties are included in the 
+        output image’s property list. A value of 2 means do not include.
+    __distributed__ : bool
+        If set to False, the feature’s `get` method is called on the 
+        entire list rather than each element individually.
+
     """
 
-    __property_verbosity__ = 2
-    __distributed__ = False
+    __property_verbosity__: int = 2  # Hide properties from logs or output.
+    __distributed__: bool = False  # Process the entire image list in one call.
 
 
 class Chain(StructuralFeature):
-    """Resolves two features sequentially.
-    Passes the output of the first to the input of the second.
+    """Resolve two features sequentially.
+    
+    This feature resolves two features sequentially, passing the output of the 
+    first feature as the input to the second.
+
     Parameters
     ----------
     feature_1 : Feature
+        The first feature in the chain. Its output is passed to `feature_2`.
     feature_2 : Feature
+        The second feature in the chain, which processes the output from 
+        `feature_1`.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `StructuralFeature` 
+        (and thus `Feature`).
+    
     """
 
-    def __init__(self, feature_1: Feature, feature_2: Feature, **kwargs):
+    def __init__(
+        self, 
+        feature_1: Feature, 
+        feature_2: Feature, 
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the chain with two sub-features.
+
+        Both `feature_1` and `feature_2` are added as dependencies of the 
+        chain, ensuring that updates to them propagate correctly through the 
+        DeepTrack computation graph.
+
+        Parameters
+        ----------
+        feature_1 : Feature
+            The first feature to be applied.
+        feature_2 : Feature
+            The second feature, applied after `feature_1`.
+        **kwargs : Dict[str, Any]
+            Passed to the parent constructor (e.g., name, properties).
+
+        """
 
         super().__init__(**kwargs)
 
         self.feature_1 = self.add_feature(feature_1)
         self.feature_2 = self.add_feature(feature_2)
 
-    def get(self, image, _ID=(), **kwargs):
-        """Resolves `feature_1` and `feature_2` sequentially"""
+    def get(
+        self, 
+        image: Union['Image', List['Image']],
+        _ID: Tuple[int, ...] = (), 
+        **kwargs: Dict[str, Any],
+    ) -> Union['Image', List['Image']]:
+        """Apply the two features in sequence on the given input image(s).
+
+        Parameters
+        ----------
+        image : Image or List[Image]
+            The input data (image or list of images) to transform.
+        _ID : Tuple[int, ...], optional
+            A unique identifier for caching/parallel calls.
+        **kwargs : Dict[str, Any]
+            Additional parameters passed to or sampled by the features. 
+            Generally unused here, since each sub-feature will fetch 
+            what it needs from their own properties.
+
+        Returns
+        -------
+        Image or List[Image]
+            The final output after `feature_1` and then `feature_2` have 
+            processed the input.
+
+        """
+
         image = self.feature_1(image, _ID=_ID)
         image = self.feature_2(image, _ID=_ID)
         return image
