@@ -347,7 +347,7 @@ class TestFeatures(unittest.TestCase):
     def test_TrueDivide(self):
         test_operator(self, operator.truediv)
 
-    def test_TrueDivide(self):
+    def test_FloorDivide(self):
         test_operator(self, operator.floordiv)
 
     def test_Power(self):
