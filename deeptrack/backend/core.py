@@ -547,7 +547,7 @@ class DeepTrackNode:
     validate(_ID: Tuple[int, ...] = ()) -> DeepTrackNode
         Validates the data for the given `_ID`, marking it as up-to-date, but 
         not its children.
-    _update() -> DeepTrackNode
+    update() -> DeepTrackNode
         Resets the data.
     set_value(value: Any, _ID: Tuple[int, ...] = ()) -> DeepTrackNode
         Sets a value for the given `_ID`. If the new value differs from the 
@@ -862,8 +862,8 @@ class DeepTrackNode:
 
         return self
 
-    def _update(self) -> 'DeepTrackNode':
-        """Internal method to reset data in all dependent children.
+    def update(self) -> 'DeepTrackNode':
+        """Reset data in all dependent children.
 
         This method resets `data` for all children of each dependency, 
         effectively clearing cached values to force a recomputation on the next 

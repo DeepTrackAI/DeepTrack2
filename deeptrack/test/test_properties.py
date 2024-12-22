@@ -20,17 +20,17 @@ class TestProperties(unittest.TestCase):
     def test_Property_constant_list_nparray(self):
         P = properties.Property(42)
         self.assertEqual(P(), 42)
-        P._update()
+        P.update()
         self.assertEqual(P(), 42)
 
         P = properties.Property((1, 2, 3))
         self.assertEqual(P(), (1, 2, 3))
-        P._update()
+        P.update()
         self.assertEqual(P(), (1, 2, 3))
 
         P = properties.Property(np.array([1, 2, 3]))
         np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
-        P._update()
+        P.update()
         np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
 
 
@@ -39,7 +39,7 @@ class TestProperties(unittest.TestCase):
         # Lambda function.
         P = properties.Property(lambda x: x * 2, x=properties.Property(10))
         self.assertEqual(P(), 20)
-        P._update()
+        P.update()
         self.assertEqual(P(), 20)
 
         # Function.
@@ -48,13 +48,13 @@ class TestProperties(unittest.TestCase):
 
         P = properties.Property(func1, x=properties.Property(10))
         self.assertEqual(P(), 20)
-        P._update()
+        P.update()
         self.assertEqual(P(), 20)
 
         # Lambda function with randomness.
         P = properties.Property(lambda: np.random.rand())
         for _ in range(10):
-            P._update()
+            P.update()
             self.assertEqual(P(), P())
             self.assertTrue(P() >= 0 and P() <= 1)
 
@@ -67,7 +67,7 @@ class TestProperties(unittest.TestCase):
             x=properties.Property(lambda: np.random.rand()),
         )
         for _ in range(10):
-            P._update()
+            P.update()
             self.assertEqual(P(), P())
             self.assertTrue(P() >= 0 and P() <= 2)
 
@@ -78,7 +78,7 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(result.start, 1)
         self.assertEqual(result.stop, 10)
         self.assertEqual(result.step, 2)
-        P._update()
+        P.update()
         self.assertEqual(result.start, 1)
         self.assertEqual(result.stop, 10)
         self.assertEqual(result.step, 2)
@@ -88,18 +88,18 @@ class TestProperties(unittest.TestCase):
         P = properties.Property(iter([1, 2, 3]))
 
         self.assertEqual(P(), 1)
-        P._update()
+        P.update()
         self.assertEqual(P(), 2)
-        P._update()
+        P.update()
         self.assertEqual(P(), 3)
-        P._update()
+        P.update()
         self.assertEqual(P(), 3)  # Last value repeats indefinitely
 
 
     def test_Property_list(self):
         P = properties.Property([1, lambda: 2, properties.Property(3)])
         self.assertEqual(P(), [1, 2, 3])
-        P._update()
+        P.update()
         self.assertEqual(P(), [1, 2, 3])
 
         P = properties.Property(
@@ -110,7 +110,7 @@ class TestProperties(unittest.TestCase):
             ]
         )
         for _ in range(10):
-            P._update()
+            P.update()
             self.assertEqual(P(), P())
             self.assertTrue(P()[0] >= 0 and P()[0] <= 1)
             self.assertTrue(P()[1] >= 0 and P()[1] <= 2)
@@ -126,7 +126,7 @@ class TestProperties(unittest.TestCase):
             }
         )
         self.assertEqual(P(), {"a": 1, "b": 2, "c": 3})
-        P._update()
+        P.update()
         self.assertEqual(P(), {"a": 1, "b": 2, "c": 3})
 
         P = properties.Property(
@@ -137,7 +137,7 @@ class TestProperties(unittest.TestCase):
             }
         )
         for _ in range(10):
-            P._update()
+            P.update()
             self.assertEqual(P(), P())
             self.assertTrue(P()["a"] >= 0 and P()["a"] <= 1)
             self.assertTrue(P()["b"] >= 0 and P()["b"] <= 2)
@@ -148,13 +148,13 @@ class TestProperties(unittest.TestCase):
         node = DeepTrackNode(100)
         P = properties.Property(node)
         self.assertEqual(P(), 100)
-        P._update()
+        P.update()
         self.assertEqual(P(), 100)
 
         node = DeepTrackNode(lambda _ID=(): np.random.rand())
         P = properties.Property(node)
         for _ in range(10):
-            P._update()
+            P.update()
             self.assertEqual(P(), P())
             self.assertTrue(P() >= 0 and P() <= 1)
 

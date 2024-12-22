@@ -371,17 +371,13 @@ class Feature(DeepTrackNode):
         """Determine if the feature should use the GPU."""
         return self.__gpu_compatible__ and np.prod(np.shape(inp)) > (90000)
 
-    def update(self, **_):
+    def update(self, **global_arguments):
         """Refresh the feature to create a new image.
 
         Per default, when a feature is called multiple times, it will return the same value.
         To tell the feature to return a new value, we first call `update`.
         """
-        self._update()
-        return self
 
-    def _update(self, **global_arguments):
-        
         if global_arguments:
             # Deptracated, but not necessary to raise hard error.
             warnings.warn(
@@ -390,8 +386,9 @@ class Feature(DeepTrackNode):
                 "The prefered solution is to use dt.Arguments",
                 DeprecationWarning,
             )
-            
-        super()._update()
+    
+        super().update()
+        
         return self
 
     def add_feature(self, feature):
