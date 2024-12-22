@@ -66,21 +66,21 @@ def grid_test_features(
                 np.array(output), np.array(expected_result), equal_nan=True
             )
 
-            tester.failIf(
+            tester.assertFalse(
                 not is_equal,
                 "Feature output {} is not equal to expect result {}.\n Using arguments \n\tFeature_1: {}, \n\t Feature_2: {}".format(
                     output, expected_result, f_a_input, f_b_input
                 ),
             )
         if not isinstance(output, list):
-            tester.failIf(
+            tester.assertFalse(
                 not any(p == f_a.properties() for p in output.properties),
                 "Feature_a properties {} not in output Image, with properties {}".format(
                     f_a.properties(), output.properties
                 ),
             )
         if not isinstance(output, list):
-            tester.failIf(
+            tester.assertFalse(
                 not any(p == f_a.properties() for p in output.properties),
                 "Feature_a properties {} not in output Image, with properties {}".format(
                     f_a.properties(), output.properties
