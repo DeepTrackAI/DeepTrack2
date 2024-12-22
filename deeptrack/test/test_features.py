@@ -132,7 +132,7 @@ def test_operator(self, operator, emulated_operator=None):
 
 class TestFeatures(unittest.TestCase):
 
-    def test_create_Feature(self):
+    def test_Feature_basics(self):
 
         F = features.DummyFeature()
         self.assertIsInstance(F, features.Feature)
@@ -144,6 +144,32 @@ class TestFeatures(unittest.TestCase):
         self.assertIsInstance(F.properties, properties.PropertyDict)
         self.assertEqual(F.properties, 
                          {'a': 1, 'b': 2, 'name': 'DummyFeature'})
+
+
+    def test_Chain(self):
+
+        class Addition(features.Feature):
+            """Simple feature that adds a constant."""
+            def get(self, image, **kwargs):
+                # 'addend' is a property set via self.properties (default: 0).
+                return image + self.properties.get("addend", 0)()
+
+        class Multiplication(features.Feature):
+            """Simple feature that multiplies by a constant."""
+            def get(self, image, **kwargs):
+                # 'multiplier' is a property set via self.properties (default: 1).
+                return image * self.properties.get("multiplier", 1)()
+
+        addition = Addition(addend=10)
+        multiplication = Multiplication(multiplier=0.5)
+
+        chain_am = features.Chain(addition, multiplication)
+        chain_ma = features.Chain(multiplication, addition)
+
+        input_image = np.ones((2, 3))
+
+        chain_am(input_image)
+        chain_ma(input_image)
 
 
     def test_create_Feature_with_properties(self):
