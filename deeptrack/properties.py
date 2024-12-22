@@ -506,6 +506,15 @@ class SequentialProperty(Property):
     """
 
 
+    # Attributes.
+    sequence_length: Property
+    sequence_step: Property
+    previous_values: Property
+    previous_value: Property
+    initialization: Optional[Callable[..., Any]]
+    current: Callable[..., Any]
+    action: Callable[..., Any]
+
     def __init__(
         self,
         initialization: Optional[Any] = None,
