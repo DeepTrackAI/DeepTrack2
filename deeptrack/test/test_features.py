@@ -898,11 +898,11 @@ class TestFeatures(unittest.TestCase):
         self.assertTrue(has_been_two)
         self.assertTrue(has_been_three)
 
-        self.assertEquals(values.update().resolve(key=0), 1)
+        self.assertEqual(values.update().resolve(key=0), 1)
 
-        self.assertEquals(values.update().resolve(key=1), 2)
+        self.assertEqual(values.update().resolve(key=1), 2)
 
-        self.assertEquals(values.update().resolve(key=2), 3)
+        self.assertEqual(values.update().resolve(key=2), 3)
 
         self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
 
@@ -929,11 +929,11 @@ class TestFeatures(unittest.TestCase):
         self.assertTrue(has_been_two)
         self.assertTrue(has_been_three)
 
-        self.assertEquals(values.update().resolve(key=0), 1)
+        self.assertEqual(values.update().resolve(key=0), 1)
 
-        self.assertEquals(values.update().resolve(key=1), 2)
+        self.assertEqual(values.update().resolve(key=1), 2)
 
-        self.assertEquals(values.update().resolve(key=2), 3)
+        self.assertEqual(values.update().resolve(key=2), 3)
 
         self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
 
@@ -985,11 +985,11 @@ class TestFeatures(unittest.TestCase):
         self.assertTrue(has_been_two)
         self.assertTrue(has_been_three)
 
-        self.assertEquals(values.update().resolve(key="1"), 1)
+        self.assertEqual(values.update().resolve(key="1"), 1)
 
-        self.assertEquals(values.update().resolve(key="2"), 2)
+        self.assertEqual(values.update().resolve(key="2"), 2)
 
-        self.assertEquals(values.update().resolve(key="3"), 3)
+        self.assertEqual(values.update().resolve(key="3"), 3)
 
         self.assertRaises(KeyError, lambda: values.update().resolve(key="4"))
 
