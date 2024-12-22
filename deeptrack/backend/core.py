@@ -244,9 +244,7 @@ class DeepTrackDataDict:
         Checks if the given ID is valid for the current configuration.
     create_index(_ID : Tuple[int, ...] = ()) -> None
         Creates an entry for the given ID if it does not exist.
-    __getitem__(
-      _ID : tuple
-    ) -> DeepTrackDataObject or Dict[Tuple[int, ...], DeepTrackDataObject]
+    __getitem__(_ID : tuple) -> DeepTrackDataObject or Dict[Tuple[int, ...], DeepTrackDataObject]
         Retrieves data associated with the ID. Can return a 
         `DeepTrackDataObject` or a dict of matching entries if `_ID` is shorter 
         than `keylength`.
@@ -516,9 +514,9 @@ class DeepTrackNode:
     data : DeepTrackDataDict
         Dictionary-like object for storing data, indexed by tuples of integers.
     children : WeakSet[DeepTrackNode]
-        Nodes that depend on this node (its parents, grandparents, etc.).
-    dependencies : WeakSet[DeepTrackNode]
         Nodes on which this node depends (its children, grandchildren, etc.).
+    dependencies : WeakSet[DeepTrackNode]
+        Nodes that depend on this node (its parents, grandparents, etc.).
     _action : Callable
         The function or lambda-function to compute the node value.
     _accepts_ID : bool
