@@ -1,22 +1,18 @@
-import sys
+# pylint: disable=C0115:missing-class-docstring
+# pylint: disable=C0116:missing-function-docstring
+# pylint: disable=C0103:invalid-name
 
-# sys.path.append(".")  # Adds the module to path
+# Use this only when running the test locally.
+# import sys
+# sys.path.append(".")  # Adds the module to path.
 
 import unittest
 import operator
 import itertools
-from numpy.core.numeric import array_equal
-
-from numpy.testing._private.utils import assert_almost_equal
-
-from deeptrack import scatterers
-
-from .. import features, Image, properties, utils
-from .. import units
-
 
 import numpy as np
-import numpy.testing
+
+from deeptrack import features, properties, scatterers, units
 
 
 def grid_test_features(
@@ -135,12 +131,20 @@ def test_operator(self, operator, emulated_operator=None):
 
 
 class TestFeatures(unittest.TestCase):
+
     def test_create_Feature(self):
 
-        feature = features.DummyFeature()
+        F = features.DummyFeature()
+        self.assertIsInstance(F, features.Feature)
+        self.assertIsInstance(F.properties, properties.PropertyDict)
+        self.assertEqual(F.properties, {'name': 'DummyFeature'})
 
-        self.assertIsInstance(feature, features.Feature)
-        self.assertIsInstance(feature.properties, properties.PropertyDict)
+        F = features.DummyFeature(a=1, b=2)
+        self.assertIsInstance(F, features.Feature)
+        self.assertIsInstance(F.properties, properties.PropertyDict)
+        self.assertEqual(F.properties, 
+                         {'a': 1, 'b': 2, 'name': 'DummyFeature'})
+
 
     def test_create_Feature_with_properties(self):
         feature = features.DummyFeature(prop_a="a", prop_2=2)
