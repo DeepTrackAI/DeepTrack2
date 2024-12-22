@@ -1,30 +1,42 @@
 """Tools to manage feature properties in DeepTrack2.
 
-This package provides classes and functions for managing, sampling, and 
-evaluating properties of features within the DeepTrack2 framework. It offers 
-flexibility in defining and handling properties with various data types, 
-dependencies, and sampling rules.
+This module provides classes for managing, sampling, and evaluating properties 
+of features within the DeepTrack2 framework. It offers flexibility in defining 
+and handling properties with various data types, dependencies, and sampling 
+rules.
 
 Main Features
 -------------
-Property Management: Classes like `Property` and `PropertyDict` provide tools 
-for defining, sampling, and evaluating properties. These properties can be 
-constants, functions, lists, dictionaries, iterators, or slices, allowing for 
-dynamic and context-dependent evaluations.
+- **Property Management**
 
-Sequential Sampling: The `SequentialProperty` class enables the creation of 
-properties that evolve over a sequence, useful for applications like creating 
-dynamic features in videos or time-series data.
+    Classes like `Property` and `PropertyDict` provide tools 
+    for defining, sampling, and evaluating properties. These properties can be 
+    constants, functions, lists, dictionaries, iterators, or slices, allowing 
+    for dynamic and context-dependent evaluations.
 
-Package Structure
+**Sequential Sampling** 
+    
+    The `SequentialProperty` class enables the creation of properties that 
+    evolve over a sequence, useful for applications like creating dynamic 
+    features in videos or time-series data.
+
+Model Structure
 -----------------
 Property Classes:
-- `Property`: Defines a single property of a feature, supporting various data 
-              types and dynamic evaluations.
-- `SequentialProperty`: Extends `Property` to support sequential sampling 
-                        across steps.
-- `PropertyDict`: A dictionary of properties with utilities for dependency 
-                  management and sampling.
+
+- `Property`: Property of a feature.
+
+    Defines a single property of a feature, supporting various data types and 
+    dynamic evaluations.
+    
+- `SequentialProperty`: Property for sequential sampling.
+
+    Extends `Property` to support sequential sampling across steps.
+
+- `PropertyDict`: Property dictionary.
+
+    A dictionary of properties with utilities for dependency management and 
+    sampling.
 
 Example
 -------
@@ -35,7 +47,8 @@ Create and use a constant property:
 
 Define a dynamic property dependent on another:
 
->>> dynamic_prop = Property(lambda x: x * 2, x=Property(5))
+>>> const_prop = Property(5)
+>>> dynamic_prop = Property(lambda x: x * 2, x=const_prop)
 >>> dynamic_prop()  # Returns 10
 
 Create a dictionary of properties:
@@ -43,10 +56,11 @@ Create a dictionary of properties:
 >>> prop_dict = PropertyDict(
 ...     constant=42,
 ...     dependent=lambda constant: constant + 10,
-...     random=lambda: np.random.rand(),
+...     random=lambda dependent: np.random.rand() + dependent,
 ... )
 >>> print(prop_dict["constant"]())  # Returns 42
 >>> print(prop_dict["dependent"]())  # Returns 52
+>>> print(prop_dict["random"]())
 
 Handle sequential properties:
 
@@ -75,15 +89,16 @@ class Property(DeepTrackNode):
     and DeepTrackNodes.
 
     The behavior of a `Property` depends on the type of the sampling rule:
-    - Constant values (including tuples and NumPy arrays): Always returns the 
+    
+    - **Constant values** (including tuples and NumPy arrays): Always returns the 
       same value.
-    - Functions: Evaluates dynamically, potentially using other properties as 
+    - **Functions**: Evaluates dynamically, potentially using other properties as 
       arguments.
-    - Lists or dictionaries: Evaluates and samples each member individually.
-    - Iterators: Returns the next value in the sequence, repeating the final 
+    - **Lists or dictionaries**: Evaluates and samples each member individually.
+    - **Iterators**: Returns the next value in the sequence, repeating the final 
       value indefinitely.
-    - Slices: Samples the `start`, `stop`, and `step` values individually.
-    - DeepTrackNodes (e.g., other properties or features): Uses the value 
+    - **Slices**: Samples the `start`, `stop`, and `step` values individually.
+    - **DeepTrackNodes** (e.g., other properties or features): Uses the value 
       computed by the node.
 
     Dependencies between properties are tracked automatically, enabling 
@@ -94,35 +109,41 @@ class Property(DeepTrackNode):
     sampling_rule : Any
         The rule for sampling values. Can be a constant, function, list, 
         dictionary, iterator, tuple, NumPy array, slice, or DeepTrackNode.
-    **kwargs : dict
+    **kwargs : Dict['Property']
         Additional dependencies passed as named arguments. These dependencies 
         can be used as inputs to functions or other dynamic components of the 
         sampling rule.
 
     Methods
     -------
-    create_action(sampling_rule, **dependencies)
+    create_action(sampling_rule: Any, **dependencies: Dict[str, Property]) -> Callable[..., Any]
         Creates an action that defines how the property is evaluated. The 
         behavior of the action depends on the type of `sampling_rule`.
 
     Examples
     --------
     Constant property:
+    
     >>> const_prop = Property(42)
     >>> const_prop()  # Returns 42
 
     Dynamic property using a function:
-    >>> dynamic_prop = Property(lambda x: x * 2, x=Property(5))
+    
+    >>> const_prop = Property(5)
+    >>> dynamic_prop = Property(lambda x: x * 2, x=const_prop)
     >>> dynamic_prop()  # Returns 10
 
     Property with a dictionary rule:
+    
     >>> dict_prop = Property({"a": Property(1), "b": lambda: 2})
     >>> dict_prop()  # Returns {"a": 1, "b": 2}
 
-    Property with a generator:
+    Property with an iterable:
+    
     >>> gen = (i for i in range(3))
     >>> gen_prop = Property(gen)
     >>> gen_prop()  # Returns the next value from the generator
+    >>> gen_prop.update()
     >>> gen_prop()  # Returns the next value
     
     """
@@ -145,9 +166,8 @@ class Property(DeepTrackNode):
 
         Parameters
         ----------
-        sampling_rule : Union[Callable[..., Any], List[Any], Dict[str, Any], 
-                              tuple, np.ndarray, slice, Generator, 
-                              DeepTrackNode, Any]
+        sampling_rule : Callable[..., Any] or List[Any] or Dict[str, Any] or 
+                        tuple or np.ndarray or slice or DeepTrackNode or Any
             The rule to sample values for the property.
         **kwargs : Property
             Additional named dependencies used in the sampling rule.
@@ -170,7 +190,7 @@ class Property(DeepTrackNode):
             DeepTrackNode,
             Any
         ],
-        **dependencies: 'Property',
+        **dependencies: Dict[str, 'Property'],
     ) -> Callable[..., Any]:
         """Creates an action defining how the property is evaluated.
 
@@ -180,7 +200,7 @@ class Property(DeepTrackNode):
                               tuple, np.ndarray, slice, Generator, 
                               DeepTrackNode, Any]
             The rule to sample values for the property.
-        **dependencies : Property
+        **dependencies : Dict[str, Property]
             Dependencies to be used in the sampling rule.
 
         Returns
@@ -194,7 +214,7 @@ class Property(DeepTrackNode):
         # Return the value sampled by the DeepTrackNode.
         if isinstance(sampling_rule, DeepTrackNode):
             sampling_rule.add_child(self)
-            self.add_dependency(sampling_rule)
+            # self.add_dependency(sampling_rule)  # Already done by add_child.
             return sampling_rule
 
         # Dictionary.
@@ -252,13 +272,13 @@ class Property(DeepTrackNode):
             )
 
         # Function.
-        # Return the result of the function. It accepts the names of other 
+        # Return the result of the function. It accepts the names of other
         # properties of the same feature as arguments.
         if callable(sampling_rule):
 
             knames = get_kwarg_names(sampling_rule)
 
-            # Extract the arguments that are also properties
+            # Extract the arguments that are also properties.
             used_dependencies = dict(
                 (key, dependency) for key, dependency
                 in dependencies.items() if key in knames
@@ -267,11 +287,11 @@ class Property(DeepTrackNode):
             # Add the dependencies of the function as children.
             for dependency in used_dependencies.values():
                 dependency.add_child(self)
-                self.add_dependency(dependency)
+                # self.add_dependency(dependency)  # Already done by add_child.
 
             # Create the action.
             return lambda _ID=(): sampling_rule(
-                **{key: dependency(_ID=_ID) for key, dependency 
+                **{key: dependency(_ID=_ID) for key, dependency
                    in used_dependencies.items()},
                 **({"_ID": _ID} if "_ID" in knames else {}),
             )
@@ -410,7 +430,7 @@ class PropertyDict(DeepTrackNode, dict):
         return dict.__getitem__(self, key)
 
 
-class SequentialProperty(Property):  #TODO comment.
+class SequentialProperty(Property):
     """Property that has multiple sequential values
 
     Extends standard `Property` to resolve one value for each step

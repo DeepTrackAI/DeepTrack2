@@ -61,7 +61,7 @@ class TestProperties(unittest.TestCase):
         # Function with randomness.
         def func2(x):
             return 2 * x
-        
+
         P = properties.Property(
             func2,
             x=properties.Property(lambda: np.random.rand()),

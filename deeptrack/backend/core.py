@@ -9,19 +9,22 @@ In particular, it enables users to:
 
 Main Features
 -------------
-- **Data Management**: 
+- **Data Management**
+    
     `DeepTrackDataObject` and `DeepTrackDataDict` provide tools to store, 
     validate, and manage data with dependency tracking. They enable nested 
     data structures and flexible indexing for complex data hierarchies.
 
-- **Computational Graphs**: 
+- **Computational Graphs**
+    
     `DeepTrackNode` forms the backbone of DeepTrack2 computation pipelines, 
     representing computation nodes in a computation graph. Nodes support lazy 
     evaluation, dependency tracking, and caching for improved computational 
     performance. They implement mathematical operators for easy composition 
     of computational graphs.
 
-- **Citations**: 
+- **Citations**
+
     Supports citing the relevant publication to ensure proper attribution 
     (e.g., `Midtvedt et al., 2021`).
 
