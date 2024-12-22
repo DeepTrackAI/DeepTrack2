@@ -244,7 +244,7 @@ class DeepTrackDataDict:
         Checks if the given ID is valid for the current configuration.
     create_index(_ID : Tuple[int, ...] = ()) -> None
         Creates an entry for the given ID if it does not exist.
-    __getitem__(_ID : tuple) -> DeepTrackDataObject or Dict[Tuple[int, ...], DeepTrackDataObject]
+    __getitem__(_ID : Tuple[int, ...]) -> DeepTrackDataObject or Dict[Tuple[int, ...], DeepTrackDataObject]
         Retrieves data associated with the ID. Can return a 
         `DeepTrackDataObject` or a dict of matching entries if `_ID` is shorter 
         than `keylength`.
@@ -514,9 +514,9 @@ class DeepTrackNode:
     data : DeepTrackDataDict
         Dictionary-like object for storing data, indexed by tuples of integers.
     children : WeakSet[DeepTrackNode]
-        Nodes on which this node depends (its children, grandchildren, etc.).
+        Nodes that depend on this node (its children, grandchildren, etc.).
     dependencies : WeakSet[DeepTrackNode]
-        Nodes that depend on this node (its parents, grandparents, etc.).
+        Nodes on which this node depends (its parents, grandparents, etc.).
     _action : Callable
         The function or lambda-function to compute the node value.
     _accepts_ID : bool
@@ -532,9 +532,10 @@ class DeepTrackNode:
         Gets or sets the computation function for the node.
     add_child(child: DeepTrackNode) -> DeepTrackNode
         Adds a child node that depends on this node.
-        Also adds the dependency between the two nodes.
-    add_dependency(other: DeepTrackNode) -> DeepTrackNode
-        Adds a dependency, making this node depend on the given node.
+        Also adds the dependency in the child node on this node.
+    add_dependency(parent: DeepTrackNode) -> DeepTrackNode
+        Adds a dependency, making this node depend on the parent node.
+        It also sets this node as a child of the parent node.
     store(data: Any, _ID: Tuple[int, ...] = ()) -> DeepTrackNode
         Stores computed data for the given `_ID`.
     is_valid(_ID: Tuple[int, ...] = ()) -> bool
@@ -547,7 +548,7 @@ class DeepTrackNode:
         Validates the data for the given `_ID`, marking it as up-to-date, but 
         not its children.
     _update() -> DeepTrackNode
-        Internal method to reset data.
+        Resets the data.
     set_value(value: Any, _ID: Tuple[int, ...] = ()) -> DeepTrackNode
         Sets a value for the given `_ID`. If the new value differs from the 
         current value, the node is invalidated to ensure dependencies are 
