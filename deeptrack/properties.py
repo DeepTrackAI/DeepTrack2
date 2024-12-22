@@ -246,8 +246,7 @@ class Property(DeepTrackNode):
                     try:
                         next_value = next(sampling_rule)
                     except StopIteration:
-                        pass
-                    # Yield the final value infinitely
+                        pass  # Yield the final value infinitely.
                     yield next_value
 
             iterator = wrapped_iterator()
