@@ -60,7 +60,7 @@ def grid_test_features(
                     np.array(output), np.array(expected_result), equal_nan=True
                 )
 
-                tester.failIf(
+                tester.assertFalse(
                     not is_equal,
                     "Feature output {} is not equal to expect result {}.\n Using arguments {}".format(
                         output, expected_result, f_a_input
