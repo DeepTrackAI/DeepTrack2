@@ -287,14 +287,14 @@ class TestFeatures(unittest.TestCase):
         input_image = np.ones((2, 3))
 
         chain_AM = features.Chain(A, M)
-        self.assertEqual(
+        np.testing.assert_array_equal(
             chain_AM(input_image),
             (np.ones((2, 3)) + A.properties["addend"]())
             * M.properties["multiplier"](),
         )
 
         chain_MA = features.Chain(M, A)
-        self.assertEqual(
+        np.testing.assert_array_equal(
             chain_MA(input_image),
             (np.ones((2, 3)) * M.properties["multiplier"]()
             + A.properties["addend"]()),
