@@ -137,20 +137,21 @@ class TestFeatures(unittest.TestCase):
         F = features.DummyFeature()
         self.assertIsInstance(F, features.Feature)
         self.assertIsInstance(F.properties, properties.PropertyDict)
-        self.assertEqual(F.properties, {'name': 'DummyFeature'})
+        self.assertEqual(F.properties(), {'name': 'DummyFeature'})
 
         F = features.DummyFeature(a=1, b=2)
         self.assertIsInstance(F, features.Feature)
         self.assertIsInstance(F.properties, properties.PropertyDict)
-        self.assertEqual(F.properties,
+        self.assertEqual(F.properties(),
                          {'a': 1, 'b': 2, 'name': 'DummyFeature'})
 
-        F = features.DummyFeature(prop_int=1, prop_bool=True, prop_str="a")
+        F = features.DummyFeature(prop_int=1, prop_bool=True, prop_str='a')
         self.assertIsInstance(F, features.Feature)
         self.assertIsInstance(F.properties, properties.PropertyDict)
         self.assertEqual(
-            F.properties,
-            {'prop_int': 1, 'prop_bool': True, 'prop_str': 'a'},
+            F.properties(),
+            {'prop_int': 1, 'prop_bool': True, 'prop_str': 'a', 
+             'name': 'DummyFeature'},
         )
         self.assertIsInstance(F.properties['prop_int'](), int)
         self.assertEqual(F.properties['prop_int'](), 1)
