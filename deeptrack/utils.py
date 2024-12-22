@@ -7,16 +7,11 @@ Module Structure
 ----------------
 Functions:
 
-- `hasmethod`: Returns `True` if the object has a field named `method_name` 
-               that is callable. Otherwise, returns `False`.
-- `as_list`: If the input is iterable, converts it to list. Otherwise, wraps 
-             the input in a list.
-- `get_kwarg_names`: Retrieves the names of the keyword arguments accepted by a 
-                     function.
-- `kwarg_has_default`: Checks if a specific argument of a function has a 
-                       default value.
-- `safe_call`: Calls a function, passing only valid arguments from the provided 
-               keyword arguments (kwargs).
+- `hasmethod`: Checks if an object has a callable method named `method_name`.    
+- `as_list`: Ensures that the input is a list.
+- `get_kwarg_names`: Retrieves keyword argument names accepted by a function.
+- `kwarg_has_default`: Checks if a function argument has a default value.
+- `safe_call`: Calls a function, passing only valid arguments.
 
 """
 
@@ -26,6 +21,9 @@ from typing import Any, Callable, List
 
 def hasmethod(obj: Any, method_name: str) -> bool:
     """Check if an object has a callable method named `method_name`.
+
+    Returns `True` if the object has a field named `method_name` that is 
+    callable. Otherwise, returns `False`.
 
     Parameters
     ----------

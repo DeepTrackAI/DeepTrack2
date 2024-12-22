@@ -29,16 +29,22 @@ Module Structure
 -----------------
 Data Containers:
 
-- `DeepTrackDataObject`: A basic container for data with validation status.
-- `DeepTrackDataDict`: A data container to store multiple data objects 
-                       (`DeepTrackDataObject`) indexed by unique access IDs 
-                       (consisting of tuples of integers), enabling nested data 
-                       storage.
+- `DeepTrackDataObject`: Basic data container with validation status.
+
+    A basic container for data with validation status.
+    
+- `DeepTrackDataDict`: Dictionary to store multiple data with validation.
+
+    A data container to store multiple data objects (`DeepTrackDataObject`) 
+    indexed by unique access IDs (consisting of tuples of integers), enabling 
+    nested data storage.
 
 Computation Nodes:
 
-- `DeepTrackNode`: Represents a node in a computation graph, capable of lazy 
-                   evaluation, caching, and dependency management.
+- `DeepTrackNode`: Node in a computation graph.
+    
+    Represents a node in a computation graph, capable of lazy evaluation, 
+    caching, and dependency management.
 
 Example
 -------

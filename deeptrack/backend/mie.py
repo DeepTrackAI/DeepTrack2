@@ -8,9 +8,8 @@ Module Structure
 -----------------
 Functions:
 
-- `coefficients`: Computes coefficients for spherical harmonics.
-- `stratified_coefficients`: Computes coefficients for stratified spherical 
-                             harmonics.
+- `coefficients`: Coefficients for spherical harmonics.
+- `stratified_coefficients`: Coefficients for stratified spherical harmonics.
 - `harmonics`: Evaluates spherical harmonics of the Mie field.
 
 Example

@@ -8,21 +8,16 @@ Module Structure
 -----------------
 Functions:
 
-- `besselj`: Computes the Bessel polynomial of the 1st kind.
-- `dbesselj`: Computes the first derivative of the Bessel polynomial of the 
-              1st kind.
-- `bessely`: Computes the Bessel polynomial of the 2nd kind.
-- `dbessely`: Computes the first derivative of the Bessel polynomial of the 
-              2nd kind.
-- `ricbesj`: Computes the Riccati-Bessel polynomial of the 1st kind.
-- `dricbesj`: Computes the first derivative of the Riccati-Bessel polynomial of 
-              the 1st kind.
-- `ricbesy`: Computes the Riccati-Bessel polynomial of the 2nd kind.
-- `dricbesy`: Computes the first derivative of the Riccati-Bessel polynomial of 
-              the 2nd kind.
-- `ricbesh`: Computes the Riccati-Bessel polynomial of the 3rd kind.
-- `dricbesh`: Computes the first derivative of the Riccati-Bessel polynomial of 
-              the 3rd kind.
+- `besselj`: Bessel polynomial of the 1st kind.
+- `dbesselj`: First derivative of the Bessel polynomial of the 1st kind.
+- `bessely`: Bessel polynomial of the 2nd kind.
+- `dbessely`: First derivative of the Bessel polynomial of the 2nd kind.
+- `ricbesj`: Riccati-Bessel polynomial of the 1st kind.
+- `dricbesj`: First derivative of the Riccati-Bessel polynomial of the 1st kind.
+- `ricbesy`: Riccati-Bessel polynomial of the 2nd kind.
+- `dricbesy`: First derivative of the Riccati-Bessel polynomial of the 2nd kind.
+- `ricbesh`: Riccati-Bessel polynomial of the 3rd kind.
+- `dricbesh`: First derivative of the Riccati-Bessel polynomial of the 3rd kind.
     
 """
 
