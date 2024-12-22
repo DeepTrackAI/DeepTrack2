@@ -521,9 +521,9 @@ class DeepTrackNode:
         The function or lambda-function to compute the node value.
     _accepts_ID : bool
         Whether `action` accepts an input ID.
-    _all_subchildren : Set[DeepTrackNode]
+    _all_children : Set[DeepTrackNode]
         All nodes in the subtree rooted at the node, including the node itself.
-    citations : List[str]
+    _citations : List[str]
         Citations associated with this node.
     
     Methods
@@ -556,13 +556,9 @@ class DeepTrackNode:
     previous(_ID: Tuple[int, ...] = ()) -> Any
         Returns the previously stored value for the given `_ID` without 
         recomputing it.
-    recurse_children(
-        memory: Optional[Set[DeepTrackNode]] = None
-    ) -> Set[DeepTrackNode]
+    recurse_children(memory: Optional[Set[DeepTrackNode]] = None) -> Set[DeepTrackNode]
         Returns all child nodes in the dependency tree rooted at this node.
-    recurse_dependencies(
-        memory: Optional[List[DeepTrackNode]] = None
-    ) -> Iterator[DeepTrackNode]
+    recurse_dependencies(memory: Optional[List[DeepTrackNode]] = None) -> Iterator[DeepTrackNode]
         Yields all nodes that this node depends on, traversing dependencies.
     get_citations() -> Set[str]
         Returns a set of citations for this node and its dependencies.
@@ -623,10 +619,10 @@ class DeepTrackNode:
     dependencies: WeakSet['DeepTrackNode']
     _action: Callable[..., Any]
     _accepts_ID: bool
-    _all_subchildren: Set['DeepTrackNode']
+    _all_children: Set['DeepTrackNode']
 
-    # Citations associated with this DeepTrack2.
-    citations: List[str] = [citation_midtvet2021quantitative]
+    # Citations associated with DeepTrack2.
+    _citations: List[str] = [citation_midtvet2021quantitative]
 
     @property
     def action(self) -> Callable[..., Any]:
@@ -634,7 +630,7 @@ class DeepTrackNode:
 
         When accessed, returns the current action. This is often a function or 
         lambda-function  that takes `_ID` as an optional parameter if 
-        `_accepts_ID` is True.
+        `_accepts_ID` is `True`.
         
         """
 
@@ -652,7 +648,7 @@ class DeepTrackNode:
             when calling `action`.
         
         """
-        
+
         self._action = value
         self._accepts_ID = "_ID" in utils.get_kwarg_names(value)
 
@@ -679,7 +675,7 @@ class DeepTrackNode:
         self.dependencies = WeakSet()
         self._action = lambda: None  # Default no-op action.
 
-        # If action is provided, set it. 
+        # If action is provided, set it.
         # If it's callable, use it directly;
         # otherwise, wrap it in a lambda.
         if action is not None:
@@ -694,14 +690,14 @@ class DeepTrackNode:
         # Call super init in case of multiple inheritance.
         super().__init__(**kwargs)
 
-        # Keep track of all subchildren, including this node.
-        self._all_subchildren = set()
-        self._all_subchildren.add(self)
+        # Keep track of all children, including this node.
+        self._all_children = set()
+        self._all_children.add(self)
 
     def add_child(self, child: 'DeepTrackNode') -> 'DeepTrackNode':
         """Add a child node to the current node.
 
-        Adding a child also updates `_all_subchildren` for this node and all 
+        Adding a child also updates `_all_children` for this node and all 
         its dependencies. It also ensures that dependency and child 
         relationships remain consistent.
 
@@ -721,15 +717,14 @@ class DeepTrackNode:
         if self not in child.dependencies:
             child.add_dependency(self)  # Ensure bidirectional relationship.
 
-        # Get all subchildren of `child` and add `child` itself.
-        subchildren = child._all_subchildren.copy()
-        subchildren.add(child)
+        # Get all children of `child` and add `child` itself.
+        children = child._all_children.copy()
+        children.add(child)
 
-        # Merge all these subchildren into this node’s subtree.
-        self._all_subchildren = self._all_subchildren.union(subchildren)
+        # Merge all these children into this node’s subtree.
+        self._all_children = self._all_children.union(children)
         for parent in self.recurse_dependencies():
-            parent._all_subchildren = \
-                parent._all_subchildren.union(subchildren)
+            parent._all_children = parent._all_children.union(children)
 
         return self
 
@@ -761,7 +756,7 @@ class DeepTrackNode:
         Parameters
         ----------
         data : Any
-            The data to be store.
+            The data to be stored.
         _ID : Tuple[int, ...], optional
             The index for this data. Default is the empty tuple (), indicating 
             a root-level entry.
@@ -775,6 +770,7 @@ class DeepTrackNode:
 
         # Create the index if necessary, then store data in it.
         self.data.create_index(_ID)
+        
         self.data[_ID].store(data)
 
         return self
@@ -863,7 +859,7 @@ class DeepTrackNode:
         return self
 
     def update(self) -> 'DeepTrackNode':
-        """Reset data in all dependent children.
+        """Reset data in all children.
 
         This method resets `data` for all children of each dependency, 
         effectively clearing cached values to force a recomputation on the next 
@@ -943,7 +939,7 @@ class DeepTrackNode:
         self,
         memory: Optional[Set['DeepTrackNode']] = None,
     ) -> Set['DeepTrackNode']:
-        """Return all subchildren of this node.
+        """Return all children of this node.
 
         Parameters
         ----------
@@ -956,8 +952,8 @@ class DeepTrackNode:
             All nodes in the subtree rooted at this node, including itself.
         """
 
-        # Simply return `_all_subchildren` since it's maintained incrementally.
-        return self._all_subchildren
+        # Simply return `_all_children` since it's maintained incrementally.
+        return self._all_children
 
     def old_recurse_children(
         self,
@@ -1040,7 +1036,7 @@ class DeepTrackNode:
         """Get citations from this node and all its dependencies.
 
         It gathers citations from this node and all nodes that it depends on. 
-        Citations are stored as a class attribute `citations`.
+        Citations are stored as the class attribute `_citations`.
 
         Returns
         -------
@@ -1050,11 +1046,11 @@ class DeepTrackNode:
         """
 
         # Initialize citations as a set of elements from self.citations.
-        citations = set(self.citations) if self.citations else set()
+        citations = set(self._citations) if self._citations else set()
 
         # Recurse through dependencies to collect all citations.
-        for dep in self.recurse_dependencies():
-            for obj in type(dep).mro():
+        for dependency in self.recurse_dependencies():
+            for obj in type(dependency).mro():
                 if hasattr(obj, "citations"):
                     # Add the citations of the current object.
                     citations.update(
@@ -1096,7 +1092,7 @@ class DeepTrackNode:
 
         # Store the newly computed value.
         self.store(new_value, _ID=_ID)
-        
+
         return self.current_value(_ID)
 
     def current_value(self, _ID: Tuple[int, ...] = ()) -> Any:

@@ -147,6 +147,7 @@ class TestCore(unittest.TestCase):
         self.assertTrue(parent.is_valid())
         self.assertTrue(child.is_valid())
 
+
     def test_DeepTrackNode_nested_dependencies(self):
         parent = core.DeepTrackNode(action=lambda: 5)
         middle = core.DeepTrackNode(action=lambda: parent() + 5)
@@ -156,7 +157,7 @@ class TestCore(unittest.TestCase):
         middle.add_child(child)
 
         result = child()
-        self.assertEqual(result, 20, "Nested computation failed.")
+        self.assertEqual(result, 20)
 
         # Invalidate the middle and check propagation.
         middle.invalidate()
@@ -165,7 +166,7 @@ class TestCore(unittest.TestCase):
         self.assertFalse(child.is_valid())
 
 
-    def test_DeepTrackNode_overloading(self):
+    def test_DeepTrackNode_op_overloading(self):
         node1 = core.DeepTrackNode(action=lambda: 5)
         node2 = core.DeepTrackNode(action=lambda: 10)
 
@@ -203,6 +204,7 @@ class TestCore(unittest.TestCase):
         for id, value in enumerate(range(10)):
             self.assertEqual(child(_ID=(id,)), value * 2)
             self.assertEqual(parent.previous((id,)), value)
+
 
     def test_DeepTrackNode_nested_ids(self):
         """Test nested IDs for parent-child relationships."""
@@ -244,6 +246,7 @@ class TestCore(unittest.TestCase):
         cluster_value = cluster()
         self.assertEqual(cluster_value, 3)
 
+
     def test_DeepTrackNode_parent_id_inheritance(self):
 
         # Children with IDs matching than parents.
@@ -277,6 +280,7 @@ class TestCore(unittest.TestCase):
         self.assertEqual(child_deeper(_ID=(1, 1)), 10)
         self.assertEqual(child_deeper(_ID=(1, 2)), 10)
 
+
     def test_DeepTrackNode_invalidation_and_ids(self):
         """Test that invalidating a parent affects specific IDs of children."""
 
@@ -294,7 +298,7 @@ class TestCore(unittest.TestCase):
 
         # Invalidate the parent at _ID=(0,).
         parent.invalidate((0,))
-        
+
         self.assertFalse(parent.is_valid((0,)))
         self.assertFalse(parent.is_valid((1,)))
         self.assertFalse(child.is_valid((0, 0)))
