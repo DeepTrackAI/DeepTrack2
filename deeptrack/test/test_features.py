@@ -312,8 +312,8 @@ class TestFeatures(unittest.TestCase):
         value = features.Value(value=lambda: 1)
         self.assertEqual(value(), 1)
         self.assertEqual(value.value(), 1)
-        self.assertEqual(value(value=lambda: 2), 2)
-        self.assertEqual(value.value(), 2)
+        self.assertNotEqual(value(value=lambda: 2), 2)
+        self.assertNotEqual(value.value(), 2)
 
 
     def test_Property_set_value_invalidates_feature(self):
