@@ -301,7 +301,7 @@ class Property(DeepTrackNode):
 
 
 class PropertyDict(DeepTrackNode, dict):
-    """Dictionary with Property elements
+    """Dictionary with Property elements.
 
     A `PropertyDict` is a specialized dictionary where values are instances of 
     `Property`. It provides additional utility functions to update, sample, 
@@ -310,14 +310,14 @@ class PropertyDict(DeepTrackNode, dict):
 
     Parameters
     ----------
-    **kwargs : dict
+    **kwargs : Dict[str, Any]
         Key-value pairs used to initialize the dictionary, where values are 
         either directly used to create `Property` instances or are dependent 
         on other `Property` values.
 
     Methods
     -------
-    __init__(**kwargs: Any)
+    __init__(**kwargs: Dict[str, Any])
         Initializes the `PropertyDict`, resolving `Property` dependencies.
     __getitem__(key: str) -> Any
         Retrieves a value from the dictionary using a key.
@@ -332,17 +332,15 @@ class PropertyDict(DeepTrackNode, dict):
     ...     random=lambda: np.random.rand(),
     ... )
 
-    Access constant and dependent properties:
+    Access the properties:
 
-    >>> print(prop_dict["constant"]())
-    42
-    
-    >>> print(prop_dict["dependent"]())
-    52
+    >>> print(prop_dict["constant"]())  # Returns 42
+    >>> print(prop_dict["dependent"]())  # Returns 52
+    >>> print(prop_dict["random"]())
     
     """
 
-    def __init__(self, **kwargs: Any):
+    def __init__(self, **kwargs: Dict[str, Any]):
         """Initialize a PropertyDict with properties and dependencies.
 
         Iteratively converts the input dictionary's values into `Property` 
@@ -355,17 +353,20 @@ class PropertyDict(DeepTrackNode, dict):
 
         Parameters
         ----------
-        **kwargs : dict
+        **kwargs : Dict[str, Any]
             Key-value pairs used to initialize the dictionary. Values can be 
             constants, functions, or other `Property`-compatible types.
 
         """
 
         dependencies = {}  # To store the resolved Property instances.
+
         while kwargs:
+            # Multiple passes over the data until everything that can be 
+            # resolved is resolved.
             for key, value in list(kwargs.items()):
                 try:
-                    # Create a Property instance for the key, 
+                    # Create a Property instance for the key,
                     # resolving dependencies.
                     dependencies[key] = Property(value,
                                                  **{**dependencies, **kwargs})
@@ -385,13 +386,13 @@ class PropertyDict(DeepTrackNode, dict):
 
             Returns
             -------
-            dict
+            Dict[str, Any]
                 A dictionary where each value is sampled from its respective 
                 `Property`.
             
             """
 
-            return dict((key, value(_ID=_ID)) for key, value in self.items())  #TODO SLOW - why??
+            return dict((key, value(_ID=_ID)) for key, value in self.items())
 
         super().__init__(action, **dependencies)
 
@@ -429,7 +430,7 @@ class PropertyDict(DeepTrackNode, dict):
         return dict.__getitem__(self, key)
 
 
-class SequentialProperty(Property):
+class SequentialProperty(Property):  #TODO Revise and comment
     """Property that has multiple sequential values
 
     Extends standard `Property` to resolve one value for each step
@@ -445,55 +446,54 @@ class SequentialProperty(Property):
 
     def __init__(self, initialization=None, **kwargs):
 
-        super().__init__(None)
+        super().__init__(sampling_rule=None)
 
-        # Create extra dependencies
+        # Initialize sequence length to 0.
         self.sequence_length = Property(0)
-        self.add_dependency(self.sequence_length)
         self.sequence_length.add_child(self)
+        # self.add_dependency(self.sequence_length)  # Done by add_child.
 
-        # The current index of the sequence
+        # Current index of the sequence (0).
         self.sequence_step = Property(0)
-        self.add_dependency(self.sequence_step)
         self.sequence_step.add_child(self)
+        # self.add_dependency(self.sequence_step)  # Done by add_child.
 
-        # Stores all previous values
+        # Store all previous values.
         self.previous_values = Property(
             lambda _ID=(): self.previous(_ID=_ID)[: self.sequence_step() - 1]
-            if self.sequence_step(_ID=_ID)
-            else []
+                           if self.sequence_step(_ID=_ID)
+                           else []
         )
-        self.add_dependency(self.previous_values)
         self.previous_values.add_child(self)
-        self.previous_values.add_dependency(self.sequence_step)
+        # self.add_dependency(self.previous_values)  # Done by add_child.
         self.sequence_step.add_child(self.previous_values)
+        # self.previous_values.add_dependency(self.sequence_step)  # Done.
 
-        # Stores the previous value
+        # Store the previous value.
         self.previous_value = Property(
             lambda _ID=(): self.previous(_ID=_ID)[self.sequence_step() - 1]
-            if self.previous(_ID=_ID)
-            else None
+                           if self.previous(_ID=_ID)
+                           else None
         )
-        self.add_dependency(self.previous_value)
         self.previous_value.add_child(self)
-        self.previous_value.add_dependency(self.sequence_step)
+        # self.add_dependency(self.previous_value)  # Done by add_child.
         self.sequence_step.add_child(self.previous_value)
+        # self.previous_value.add_dependency(self.sequence_step)  # Done.
 
-        # Creates an action for initializing the sequence
+        # Create an action for initializing the sequence.
         if initialization:
             self.initialization = self.create_action(initialization, **kwargs)
         else:
             self.initialization = None
 
-        self.current = lambda: None
+        self.current = lambda _ID=(): None
         self.action = self._action_override
 
     def _action_override(self, _ID=()):
-        return (
-            self.initialization(_ID=_ID)
-            if self.sequence_step(_ID=_ID) == 0
-            else self.current(_ID=_ID)
-        )
+        if self.sequence_step(_ID=_ID) == 0:
+            return self.initialization(_ID=_ID)
+        else:
+            return self.current(_ID=_ID)
 
     def store(self, value, _ID=()):
         try:
@@ -503,7 +503,7 @@ class SequentialProperty(Property):
 
         super().store(current_data + [value], _ID=_ID)
 
-    def current_value(self, _ID):
+    def current_value(self, _ID=()):
         return super().current_value(_ID=_ID)[self.sequence_step(_ID=_ID)]
 
     def __call__(self, _ID=()):

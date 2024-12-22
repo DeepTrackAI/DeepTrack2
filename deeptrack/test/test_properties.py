@@ -208,8 +208,6 @@ class TestProperties(unittest.TestCase):
         self.assertIn("dependent", PD)
         self.assertIn("dependent", PD())
 
-        print(PD["constant"])
-
         self.assertIsInstance(PD["constant"], properties.Property)
         self.assertEqual(PD["constant"](), 42)
         self.assertEqual(PD()["constant"], 42)
