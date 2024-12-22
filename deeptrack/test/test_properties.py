@@ -221,5 +221,29 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(PD()["dependent"], 43)
 
 
+    def test_SequentialProperty(self):
+        SP = properties.SequentialProperty()
+        SP.sequence_length.store(5)
+        SP.current = lambda _ID=(): SP.sequence_step() + 1
+
+        for step in range(SP.sequence_length()):
+            SP.sequence_step.store(step)
+            current_value = SP.current()
+            SP.store(current_value)
+
+            self.assertEqual(SP.data[()].current_value(),
+                             list(range(1, step + 2)))
+
+            SP.previous_value.invalidate()
+            # print(SP.previous_value())
+
+            SP.previous_values.invalidate()
+            # print(SP.previous_values())
+
+        self.assertEqual(SP.previous_value(), 4)
+        self.assertEqual(SP.previous_values(),
+                         list(range(1, SP.sequence_length() - 1)))
+
+
 if __name__ == "__main__":
     unittest.main()

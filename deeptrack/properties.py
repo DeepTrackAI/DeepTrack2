@@ -64,15 +64,17 @@ Create a dictionary of properties:
 
 Handle sequential properties:
 
->>> seq_prop = SequentialProperty(initialization=lambda: np.random.rand())
+>>> seq_prop = SequentialProperty()
 >>> seq_prop.sequence_length.store(5)
->>> for i in range(5):
-...     seq_prop.sequence_step.store(i)
-...     print(seq_prop())  # Returns different values for each step
+>>> SP.current = lambda _ID=(): SP.sequence_step() + 1
+>>> for step in range(SP.sequence_length()):
+...     SP.sequence_step.store(step)
+...     SP.store(SP.current())
+...     print(SP.data[()].current_value())
 
 """
 
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -430,35 +432,111 @@ class PropertyDict(DeepTrackNode, dict):
         return dict.__getitem__(self, key)
 
 
-class SequentialProperty(Property):  #TODO Revise and comment
-    """Property that has multiple sequential values
+class SequentialProperty(Property):
+    """Property that yields different values for sequential steps.
 
-    Extends standard `Property` to resolve one value for each step
-    in a sequence of images. This is often used when creating movies.
+    The `SequentialProperty` extends the standard `Property` to handle 
+    scenarios where the property’s value evolves over discrete steps, such as 
+    frames in a video, time-series data, or any sequential process. At each 
+    step, it selects whether to use the `initialization` function (step = 0) or 
+    the `current` function (steps >= 1). It also keeps track of all previously 
+    generated values, allowing to refer back to them if needed.
 
     Parameters
     ----------
-    initialization : any
-        Sampling rule for the first step of the sequence.
+    initialization : Any, optional
+        A sampling rule for the first step of the sequence (step=0). 
+        Can be any value or callable that is acceptable to `Property`. 
+        If not provided, the initial value is `None`.
+    **kwargs : Dict[str, Property]
+        Additional dependencies that might be required if `initialization` 
+        is a callable. These dependencies are injected when evaluating
+        `initialization`.
 
+    Attributes
+    ----------
+    sequence_length : Property
+        A `Property` holding the total number of steps in the sequence. 
+        Initialized to 0 by default.
+    sequence_step : Property
+        A `Property` holding the index of the current step (starting at 0).
+    previous_values : Property
+        A `Property` returning all previously stored values up to, but not
+        including, the current value and the previous value.
+    previous_value : Property
+        A `Property` returning the most recently stored value, or `None` 
+        if there is no history yet.
+    initialization : Callable[..., Any], optional
+        A function to compute the value at step=0. If `None`, the property 
+        returns `None` at the first step.
+    current : Callable[..., Any]
+        A function to compute the value at steps >= 1. By default,  it returns 
+        `None`.
+    action : Callable[..., Any]
+        Overrides the default `Property.action` to select between 
+        `initialization` (if `sequence_step` is 0) or `current` (otherwise).
 
+    Methods
+    -------
+    _action_override(_ID: Tuple[int, ...]) -> Any
+        Internal logic to pick which function (`initialization` or `current`) 
+        to call based on the `sequence_step`.
+    store(value: Any, _ID: Tuple[int, ...] = ()) -> None
+        Store a newly computed `value` in the property’s internal list of 
+        previously generated values.
+    current_value(_ID: Tuple[int, ...] = ()) -> Any
+        Retrieve the value associated with the current step index.
+    __call__(_ID: Tuple[int, ...] = ()) -> Any
+        Evaluate the property at the current step, returning either the 
+        initialization (if step=0) or current value (if step>0).
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>>
+    >>> seq_prop = SequentialProperty()
+    >>> seq_prop.sequence_length.store(5)
+    >>> seq_prop.current = lambda _ID=(): SP.sequence_step() + 1
+    >>> for step in range(seq_prop.sequence_length()):
+    ...     seq_prop.sequence_step.store(step)
+    ...     current_value = seq_prop.current()
+    ...     seq_prop.store(current_value)
+    ...     print(SP.data[()].current_value())
+    
     """
 
-    def __init__(self, initialization=None, **kwargs):
 
+    def __init__(
+        self,
+        initialization: Optional[Any] = None,
+        **kwargs: Dict[str, 'Property'],
+    ):
+        """Create a SequentialProperty with optional initialization.
+        
+        Parameters
+        ----------
+        initialization : Any, optional
+            The sampling rule (value or callable) for step=0. Defaults to None.
+        **kwargs : Dict[str, Property]
+            Additional named dependencies for `initialization`.
+        
+        """
+
+        # Set sampling_rule=None to the base constructor, as it overrides 
+        # action below with _action_override.
         super().__init__(sampling_rule=None)
 
-        # Initialize sequence length to 0.
+        # 1) Initialize sequence length to 0.
         self.sequence_length = Property(0)
         self.sequence_length.add_child(self)
         # self.add_dependency(self.sequence_length)  # Done by add_child.
 
-        # Current index of the sequence (0).
+        # 2) Current index of the sequence (0).
         self.sequence_step = Property(0)
         self.sequence_step.add_child(self)
         # self.add_dependency(self.sequence_step)  # Done by add_child.
 
-        # Store all previous values.
+        # 3) Store all previous values.
         self.previous_values = Property(
             lambda _ID=(): self.previous(_ID=_ID)[: self.sequence_step() - 1]
                            if self.sequence_step(_ID=_ID)
@@ -469,7 +547,7 @@ class SequentialProperty(Property):  #TODO Revise and comment
         self.sequence_step.add_child(self.previous_values)
         # self.previous_values.add_dependency(self.sequence_step)  # Done.
 
-        # Store the previous value.
+        # 4) Store the previous value.
         self.previous_value = Property(
             lambda _ID=(): self.previous(_ID=_ID)[self.sequence_step() - 1]
                            if self.previous(_ID=_ID)
@@ -480,22 +558,63 @@ class SequentialProperty(Property):  #TODO Revise and comment
         self.sequence_step.add_child(self.previous_value)
         # self.previous_value.add_dependency(self.sequence_step)  # Done.
 
-        # Create an action for initializing the sequence.
-        if initialization:
+        # 5) Create an action for initializing the sequence.
+        if initialization is not None:
             self.initialization = self.create_action(initialization, **kwargs)
         else:
             self.initialization = None
 
+        # 6) Define a default current function for steps >= 1.
         self.current = lambda _ID=(): None
+
+        # 7) Override the default action with our custom logic.
         self.action = self._action_override
 
-    def _action_override(self, _ID=()):
+    def _action_override(self, _ID: Tuple[int, ...] = ()) -> Any:
+        """Decide which function to call based on the current step.
+
+        For step=0, call `initialization`. Otherwise, call `self.current`.
+
+        Parameters
+        ----------
+        _ID : Tuple[int, ...], optional
+            A unique identifier that differentiates parallel evaluations.
+
+        Returns
+        -------
+        Any
+            The result of the `initialization` (step=0) or the `current` 
+            function (step>0).
+        
+        """
+
         if self.sequence_step(_ID=_ID) == 0:
-            return self.initialization(_ID=_ID)
+            return (self.initialization(_ID=_ID) 
+                    if self.initialization else None)
         else:
             return self.current(_ID=_ID)
 
-    def store(self, value, _ID=()):
+    def store(self, value: Any, _ID: Tuple[int, ...] = ()) -> None:
+        """Append value to the internal list of previously generated values.
+
+        It retrieves the existing list of values for this _ID. If this _ID has 
+        never been used, it starts an empty list
+
+        Parameters
+        ----------
+        value : Any
+            The value to store, e.g., the output from calling `self()`.
+        _ID : Tuple[int, ...], optional
+            A unique identifier that allows the property to keep separate 
+            histories for different parallel evaluations.
+
+        Raises
+        ------
+        KeyError
+            If no existing data for this _ID, it initializes an empty list.
+
+        """
+
         try:
             current_data = self.data[_ID].current_value()
         except KeyError:
@@ -503,8 +622,42 @@ class SequentialProperty(Property):  #TODO Revise and comment
 
         super().store(current_data + [value], _ID=_ID)
 
-    def current_value(self, _ID=()):
+    def current_value(self, _ID: Tuple[int, ...] = ()) -> Any:
+        """Retrieve the value corresponding to the current step.
+
+        It expects that each step's value has been stored. If no value has been 
+        stored for this step, it thorws an IndexError.
+
+        Parameters
+        ----------
+        _ID : Tuple[int, ...], optional
+            A unique identifier for separate parallel evaluations.
+
+        Returns
+        -------
+        Any
+            The value stored at the index = `self.sequence_step(_ID=_ID)`.
+        
+        """
+
         return super().current_value(_ID=_ID)[self.sequence_step(_ID=_ID)]
 
-    def __call__(self, _ID=()):
+    def __call__(self, _ID: Tuple[int, ...] = ()) -> Any:
+        """Evaluate the property at the current step.
+        
+        It returns either the initialization (if step=0) or the result of 
+        `self.current`.
+
+        Parameters
+        ----------
+        _ID : Tuple[int, ...], optional
+            A unique identifier for parallel evaluations.
+
+        Returns
+        -------
+        Any
+            The computed value for this step.
+        
+        """
+
         return super().__call__(_ID=_ID)
