@@ -1636,7 +1636,7 @@ def _create_node_with_operator(
                             f"got {type(a).__name__}.")
 
     # Ensure `b` is a `DeepTrackNode`. Wrap it if necessary.
-    if not isinstance(b, DeepTrackNode): 
+    if not isinstance(b, DeepTrackNode):
         if callable(b):
             b = DeepTrackNode(b)
         else:
