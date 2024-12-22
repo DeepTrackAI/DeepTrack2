@@ -182,6 +182,90 @@ class TestFeatures(unittest.TestCase):
         self.assertNotEqual(prop_dict, prop_dict_with_update)
 
 
+    def test_Feature_memorized(self):
+
+        list_of_inputs = []
+
+        class ConcreteFeature(features.Feature):
+            __distributed__ = False
+
+            def get(self, input, **kwargs):
+                list_of_inputs.append(input)
+                return input
+
+        feature = ConcreteFeature(prop_a=1)
+        self.assertEqual(len(list_of_inputs), 0)
+
+        feature()
+        self.assertEqual(len(list_of_inputs), 1)
+
+        feature()
+        self.assertEqual(len(list_of_inputs), 1)
+
+        feature.update()
+        self.assertEqual(len(list_of_inputs), 1)
+        feature()
+        self.assertEqual(len(list_of_inputs), 2)
+
+        feature.prop_a.set_value(1)
+        feature()
+        self.assertEqual(len(list_of_inputs), 2)
+
+        feature.prop_a.set_value(2)
+        feature()
+        self.assertEqual(len(list_of_inputs), 3)
+
+        feature([])
+        self.assertEqual(len(list_of_inputs), 3)
+
+        feature([1])
+        self.assertEqual(len(list_of_inputs), 4)
+
+
+    def test_Feature_dependence(self):
+
+        A = features.Value(lambda: np.random.rand())
+        B = features.Value(value=A.value)
+        C = features.Value(value=B.value + 1)
+        D = features.Value(value=C.value + B.value)
+        E = features.Value(value=D + C.value)
+
+        self.assertEqual(B(), A())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
+
+        A.update()
+        self.assertEqual(B(), A())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
+
+        B.update()
+        self.assertEqual(B(), A())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
+
+        C.update()
+        self.assertEqual(B(), A())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
+
+        D.update()
+        self.assertEqual(B(), A())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
+
+        E.update()
+        self.assertEqual(B(), A())
+        self.assertEqual(C(), B() + 1)
+        self.assertEqual(D(), C() + B())
+        self.assertEqual(E(), D() + C())
+
+
     def test_Chain(self):
 
         class Addition(features.Feature):
@@ -250,84 +334,6 @@ class TestFeatures(unittest.TestCase):
 
         feature.prop.set_value(2)
         self.assertFalse(feature.is_valid())
-
-    def test_Feature_memoized(self):
-
-        list_of_inputs = []
-
-        class ConcreteFeature(features.Feature):
-            __distributed__ = False
-
-            def get(self, input, **kwargs):
-                list_of_inputs.append(input)
-                return input
-
-        feature = ConcreteFeature(prop_a=1)
-
-        feature()
-        self.assertEqual(len(list_of_inputs), 1)
-        feature()
-        self.assertEqual(len(list_of_inputs), 1)
-        feature.update()
-        feature()
-        self.assertEqual(len(list_of_inputs), 2)
-        # Called with identical input
-
-        feature.prop_a.set_value(1)
-        feature()
-        self.assertEqual(len(list_of_inputs), 2)
-
-        feature.prop_a.set_value(2)
-        feature()
-        self.assertEqual(len(list_of_inputs), 3)
-
-        feature([])
-        self.assertEqual(len(list_of_inputs), 3)
-
-        feature([1])
-        self.assertEqual(len(list_of_inputs), 4)
-
-    def test_Feature_dependence(self):
-        A = features.Value(lambda: np.random.rand())
-        B = features.Value(value=A.value)
-        C = features.Value(value=B.value + 1)
-        D = features.Value(value=C.value + B.value)
-        E = features.Value(value=D + C.value)
-
-        self.assertEqual(A(), B())
-        self.assertEqual(C(), B() + 1)
-        self.assertEqual(D(), C() + B())
-        self.assertEqual(E(), D() + C())
-
-        A.update()
-        self.assertEqual(A(), B())
-        self.assertEqual(C(), B() + 1)
-        self.assertEqual(D(), C() + B())
-        self.assertEqual(E(), D() + C())
-
-        B.update()
-        self.assertEqual(A(), B())
-        self.assertEqual(C(), B() + 1)
-        self.assertEqual(D(), C() + B())
-        self.assertEqual(E(), D() + C())
-
-        C.update()
-        self.assertEqual(A(), B())
-        self.assertEqual(C(), B() + 1)
-        self.assertEqual(D(), C() + B())
-        self.assertEqual(E(), D() + C())
-
-        D.update()
-        self.assertEqual(A(), B())
-        self.assertEqual(C(), B() + 1)
-        self.assertEqual(D(), C() + B())
-        self.assertEqual(E(), D() + C())
-
-        E.update()
-        self.assertEqual(A(), B())
-        self.assertEqual(C(), B() + 1)
-        self.assertEqual(D(), C() + B())
-        self.assertEqual(E(), D() + C())
 
     def test_Add(self):
         test_operator(self, operator.add)
