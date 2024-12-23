@@ -1214,189 +1214,751 @@ class Value(Feature):
 
 
 class ArithmeticOperationFeature(Feature):
-    """Parent feature of arithmetic operation features like +*-/> etc.
+    """Applies an arithmetic operation element-wise to inputs.
 
-    Inputs can be either single values or a lists of values. If a list is passed, the operation is applied to each element in the list.
-    If both inputs are lists of different lengths, the shorter list is cycled.
+    This feature performs an arithmetic operation (e.g., addition, subtraction, 
+    multiplication, etc.) on the input data. The inputs can be single values or 
+    lists of values. If a list is passed, the operation is applied to each 
+    element in the list. When both inputs are lists of different lengths, the 
+    shorter list is cycled.
 
     Parameters
     ----------
-    operation : callable
-        The operation to apply.
-    value : number
-        The other value to apply the operation to."""
+    op : Callable
+        The arithmetic operation to apply. This can be a built-in operator or a 
+        custom callable.
+    value : float or int or List[float or int], optional
+        The other value(s) to apply the operation with. Defaults to 0.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature`.
 
-    __distributed__ = False
-    __gpu_compatible__ = True
+    Attributes
+    ----------
+    __distributed__ : bool
+        Set to `False`, indicating that this feature’s `get(...)` method 
+        processes the entire list of images or values at once, rather than 
+        distributing calls for each item.
+    __gpu_compatible__ : bool
+        Set to `True`, indicating compatibility with GPU processing.
 
-    def __init__(self, op, value=0, **kwargs):
+    Example
+    -------
+    >>> import operator
+    >>> import numpy as np
+    >>> from deeptrack.features import ArithmeticOperationFeature
+
+    Define a simple addition operation:
+    
+    >>> addition = ArithmeticOperationFeature(operator.add, value=10)
+
+    Create a list of input values:
+    
+    >>> input_values = [1, 2, 3, 4]
+
+    Apply the operation:
+    
+    >>> output_values = addition(input_values)
+    >>> print(output_values)
+    [11, 12, 13, 14]
+
+    In this example, each value in the input list is incremented by 10.
+    
+    """
+
+    __distributed__: bool = False
+    __gpu_compatible__: bool = True
+
+
+    def __init__(
+        self,
+        op: Callable[[Any, Any], Any],
+        value: Union[float, int, List[Union[float, int]]] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the ArithmeticOperationFeature.
+
+        Parameters
+        ----------
+        op : Callable[[Any, Any], Any]
+            The operation to apply, such as `operator.add` or `operator.mul`.
+        value : float or int or List[float or int], optional
+            The value(s) to apply the operation with. Defaults to 0.
+        **kwargs : Any
+            Additional arguments passed to the parent `Feature` constructor.
+
+        """
         self.op = op
         super().__init__(value=value, **kwargs)
 
-    def get(self, image, value, **kwargs):
+    def get(
+        self,
+        image: Union[Any, List[Any]],
+        value: Union[float, int, List[Union[float, int]]],
+        **kwargs: Any,
+    ) -> List[Any]:
+        """Apply the operation element-wise to the input data.
 
+        Parameters
+        ----------
+        image : Any or List[Any]
+            The input data (list or single value) to transform.
+        value : float or int or List[float or int]
+            The value(s) to apply the operation with. If a single value is 
+            provided, it is broadcast to match the input size. If a list is 
+            provided, it will be cycled to match the length of the input list.
+        **kwargs : Dict[str, Any]
+            Additional parameters or overrides (unused here).
+
+        Returns
+        -------
+        List[Any]
+            A list with the result of applying the operation to the input.
+            
+        """
+
+        # If value is a scalar, wrap it in a list for uniform processing.
         if not isinstance(value, (list, tuple)):
             value = [value]
 
+        # Cycle the shorter list to match the length of the longer list.
         if len(image) < len(value):
             image = itertools.cycle(image)
         elif len(value) < len(image):
             value = itertools.cycle(value)
 
+        # Apply the operation element-wise.
         return [self.op(a, b) for a, b in zip(image, value)]
 
 
 class Add(ArithmeticOperationFeature):
-    """Adds a value to the input.
+    """Add a value to the input.
+    
+    This feature performs element-wise addition (+) to the input.
 
     Parameters
     ----------
-    value : number
-        The value to add
+    value : PropertyLike[int or float], optional
+        The value to add to the input. Defaults to 0.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent constructor.
+
+    Example
+    -------
+    In this example, each element in the input array is incremented by 5.
+
+    Start by creating a pipeline using Add:
+
+    >>> from deeptrack.features import Add, Value
+    
+    >>> pipeline = Value([1, 2, 3]) >> Add(value=5)
+    >>> pipeline.resolve()
+    [6, 7, 8]
+    
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Value([1, 2, 3]) + 5
+    
+    >>> pipeline = 5 + Value([1, 2, 3])
+    
+    Or, most explicitly:
+    
+    >>> input_value = Value([1, 2, 3])
+    >>> add_feature = Add(value=5)
+    >>> pipeline = add_feature(input_value)
+
     """
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    def __init__(
+        self,
+        value: PropertyLike[float] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the Add feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The value to add to the input. Defaults to 0.
+        **kwargs : Any
+            Additional keyword arguments.
+
+        """
+
         super().__init__(operator.add, value=value, **kwargs)
 
 
 class Subtract(ArithmeticOperationFeature):
-    """Subtracts a value from the input.
+    """Subtract a value from the input.
 
+    This feature performs element-wise subtraction (-) from the input.
+    
     Parameters
     ----------
-    value : number
-        The value to subtract
+    value : PropertyLike[int or float], optional
+        The value to subtract from the input. Defaults to 0.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent constructor.
+
+    Example
+    -------
+    In this example, each element in the input array is decreased by 2.
+
+    Start by creating a pipeline using Subtract:
+
+    >>> from deeptrack.features import Subtract, Value
+    
+    >>> pipeline = Value([1, 2, 3]) >> Subtract(value=2)
+    >>> pipeline.resolve()
+    [-1, 0, 1]
+    
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Value([1, 2, 3]) - 2
+    
+    >>> pipeline = - 2 + Value([1, 2, 3])
+    
+    Or, most explicitly:
+    
+    >>> input_value = Value([1, 2, 3])
+    >>> sub_feature = Subtract(value=2)
+    >>> pipeline = sub_feature(input_value)
+
     """
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    def __init__(
+        self,
+        value: PropertyLike[float] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the Subtract feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The value to subtract from the input. Defaults to 0.
+        **kwargs : Any
+            Additional keyword arguments.
+
+        """
+
         super().__init__(operator.sub, value=value, **kwargs)
 
 
 class Multiply(ArithmeticOperationFeature):
-    """Multiplies the input with a value.
+    """Multiply the input by a value.
 
+    This feature performs element-wise multiplication (*) of the input.
+    
     Parameters
     ----------
-    value : number
-        The value to multiply with.
+    value : PropertyLike[int or float], optional
+        The value to multiply the input. Defaults to 0.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent constructor.
+
+    Example
+    -------
+    In this example, each element in the input array is multiplied by 5.
+
+    Start by creating a pipeline using Multiply:
+
+    >>> from deeptrack.features import Multiply, Value
+    
+    >>> pipeline = Value([1, 2, 3]) >> Multiply(value=5)
+    >>> pipeline.resolve()
+    [5, 10, 15]
+    
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Value([1, 2, 3]) * 5
+    
+    >>> pipeline = 5 * Value([1, 2, 3])
+    
+    Or, most explicitly:
+    
+    >>> input_value = Value([1, 2, 3])
+    >>> sub_feature = Multiply(value=5)
+    >>> pipeline = sub_feature(input_value)
+
     """
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    def __init__(
+        self,
+        value: PropertyLike[float] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the Multiply feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The value to multiply the input. Defaults to 0.
+        **kwargs : Any
+            Additional keyword arguments.
+
+        """
+
         super().__init__(operator.mul, value=value, **kwargs)
 
 
 class Divide(ArithmeticOperationFeature):
-    """Divides the input with a value.
+    """Divide the input with a value.
 
+    This feature performs element-wise division (/) of the input.
+    
     Parameters
     ----------
-    value : number
-        The value to divide with.
+    value : PropertyLike[int or float], optional
+        The value to divide the input. Defaults to 0.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent constructor.
+
+    Example
+    -------
+    In this example, each element in the input array is divided by 5.
+
+    Start by creating a pipeline using Divide:
+
+    >>> from deeptrack.features import Divide, Value
+    
+    >>> pipeline = Value([1, 2, 3]) >> Divide(value=5)
+    >>> pipeline.resolve()
+    [0.2 0.4 0.6]
+    
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Value([1, 2, 3]) / 5
+    
+    >>> pipeline = 5 / Value([1, 2, 3])  # Different result.
+    
+    Or, most explicitly:
+    
+    >>> input_value = Value([1, 2, 3])
+    >>> truediv_feature = Divide(value=5)
+    >>> pipeline = truediv_feature(input_value)
+
     """
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    def __init__(
+        self,
+        value: PropertyLike[float] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the Divide feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The value to divide the input. Defaults to 0.
+        **kwargs : Any
+            Additional keyword arguments.
+
+        """
+
         super().__init__(operator.truediv, value=value, **kwargs)
 
 
 class FloorDivide(ArithmeticOperationFeature):
-    """Divides the input with a value.
+    """Divide the input with a value.
 
+    This feature performs element-wise floor division (//) of the input.
+    
+    Floor division produces an integer result when both operands are integers, 
+    but truncates towards negative infinity when operands are floating-point 
+    numbers.
+    
     Parameters
     ----------
-    value : number
-        The value to divide with.
+    value : PropertyLike[int or float], optional
+        The value to floor-divide the input. Defaults to 0.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent constructor.
+
+    Example
+    -------
+    In this example, each element in the input array is floor-divided by 5.
+
+    Start by creating a pipeline using FloorDivide:
+
+    >>> from deeptrack.features import FloorDivide, Value
+    
+    >>> pipeline = Value([-3, 3, 6]) >> FloorDivide(value=5)
+    >>> pipeline.resolve()
+    [0.2 0.4 0.6]
+    
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Value([-3, 3, 6]) // 5
+    
+    >>> pipeline = 5 // Value([-3, 3, 6])  # Different result.
+    
+    Or, most explicitly:
+    
+    >>> input_value = Value([-3, 3, 6])
+    >>> floordiv_feature = FloorDivide(value=5)
+    >>> pipeline = floordiv_feature(input_value)
+
     """
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    def __init__(
+        self,
+        value: PropertyLike[float] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the FloorDivide feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The value to fllor-divide the input. Defaults to 0.
+        **kwargs : Any
+            Additional keyword arguments.
+
+        """
+
         super().__init__(operator.floordiv, value=value, **kwargs)
 
 
 class Power(ArithmeticOperationFeature):
-    """Raises the input to a power.
+    """Raise the input to a power.
+
+    This feature performs element-wise power (**) of the input.
 
     Parameters
     ----------
-    value : number
-        The power to raise with.
+    value : PropertyLike[int or float], optional
+        The value to take the power of the input. Defaults to 0.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent constructor.
+
+    Example
+    -------
+    In this example, each element in the input array is elevated to the 3.
+
+    Start by creating a pipeline using Power:
+
+    >>> from deeptrack.features import Power, Value
+    
+    >>> pipeline = Value([1, 2, 3]) >> Power(value=3)
+    >>> pipeline.resolve()
+    [1, 8, 27]
+    
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Value([1, 2, 3]) ** 3
+    
+    >>> pipeline = 3 ** Value([1, 2, 3])  # Different result.
+    
+    Or, most explicitly:
+    
+    >>> input_value = Value([1, 2, 3])
+    >>> pow_feature = Power(value=3)
+    >>> pipeline = pow_feature(input_value)
+
     """
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    def __init__(
+        self,
+        value: PropertyLike[float] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the Power feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The value to take the power of the input. Defaults to 0.
+        **kwargs : Any
+            Additional keyword arguments.
+
+        """
+
         super().__init__(operator.pow, value=value, **kwargs)
 
 
 class LessThan(ArithmeticOperationFeature):
-    """Divides the input with a value.
+    """Determine whether input is less than value.
+
+    This feature performs element-wise comparison (<) of the input.
 
     Parameters
     ----------
-    value : number
-        The value to divide with.
+    value : PropertyLike[int or float], optional
+        The value to compare (<) with the input. Defaults to 0.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent constructor.
+
+    Example
+    -------
+    In this example, each element in the input array is compared (<) with 2.
+
+    Start by creating a pipeline using LessThan:
+
+    >>> from deeptrack.features import LessThan, Value
+    
+    >>> pipeline = Value([1, 2, 3]) >> LessThan(value=2)
+    >>> pipeline.resolve()
+    [ True False False]
+    
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Value([1, 2, 3]) < 2
+    
+    >>> pipeline = 2 < Value([1, 2, 3])  # Different result.
+    
+    Or, most explicitly:
+    
+    >>> input_value = Value([1, 2, 3])
+    >>> lt_feature = LessThan(value=2)
+    >>> pipeline = lt_feature(input_value)
+
     """
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    def __init__(
+        self,
+        value: PropertyLike[float] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the LessThan feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The value to compare (<) with the input. Defaults to 0.
+        **kwargs : Any
+            Additional keyword arguments.
+
+        """
+
         super().__init__(operator.lt, value=value, **kwargs)
 
 
 class LessThanOrEquals(ArithmeticOperationFeature):
-    """Divides the input with a value.
+    """Determine whether input is less than or equal to value.
+
+    This feature performs element-wise comparison (<=) of the input.
 
     Parameters
     ----------
-    value : number
-        The value to divide with.
+    value : PropertyLike[int or float], optional
+        The value to compare (<=) with the input. Defaults to 0.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent constructor.
+
+    Example
+    -------
+    In this example, each element in the input array is compared (<=) with 2.
+
+    Start by creating a pipeline using LessThanOrEquals:
+
+    >>> from deeptrack.features import LessThanOrEquals, Value
+    
+    >>> pipeline = Value([1, 2, 3]) >> LessThanOrEquals(value=2)
+    >>> pipeline.resolve()
+    [ True  True False]
+    
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Value([1, 2, 3]) <= 2
+    
+    >>> pipeline = 2 <= Value([1, 2, 3])  # Different result.
+    
+    Or, most explicitly:
+    
+    >>> input_value = Value([1, 2, 3])
+    >>> le_feature = LessThanOrEquals(value=2)
+    >>> pipeline = le_feature(input_value)
+
     """
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    def __init__(
+        self,
+        value: PropertyLike[float] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the LessThanOrEquals feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The value to compare (<=) with the input. Defaults to 0.
+        **kwargs : Any
+            Additional keyword arguments.
+
+        """
+
         super().__init__(operator.le, value=value, **kwargs)
 
 
+LessThanOrEqual = LessThanOrEquals
+
+
 class GreaterThan(ArithmeticOperationFeature):
-    """Divides the input with a value.
+    """Determine whether input is greater than value.
+
+    This feature performs element-wise comparison (>) of the input.
 
     Parameters
     ----------
-    value : number
-        The value to divide with.
+    value : PropertyLike[int or float], optional
+        The value to compare (>) with the input. Defaults to 0.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent constructor.
+
+    Example
+    -------
+    In this example, each element in the input array is compared (>) with 2.
+
+    Start by creating a pipeline using GreaterThan:
+
+    >>> from deeptrack.features import GreaterThan, Value
+    
+    >>> pipeline = Value([1, 2, 3]) >> GreaterThan(value=2)
+    >>> pipeline.resolve()
+    [False False  True]
+    
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Value([1, 2, 3]) > 2
+    
+    >>> pipeline = 2 > Value([1, 2, 3])  # Different result.
+    
+    Or, most explicitly:
+    
+    >>> input_value = Value([1, 2, 3])
+    >>> gt_feature = GreaterThan(value=2)
+    >>> pipeline = gt_feature(input_value)
+
     """
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    def __init__(
+        self,
+        value: PropertyLike[float] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the GreaterThan feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The value to compare (>) with the input. Defaults to 0.
+        **kwargs : Any
+            Additional keyword arguments.
+
+        """
+
         super().__init__(operator.gt, value=value, **kwargs)
 
 
 class GreaterThanOrEquals(ArithmeticOperationFeature):
-    """Divides the input with a value.
+    """Determine whether input is greater than or equal to value.
+
+    This feature performs element-wise comparison (>=) of the input.
 
     Parameters
     ----------
-    value : number
-        The value to divide with.
+    value : PropertyLike[int or float], optional
+        The value to compare (<=) with the input. Defaults to 0.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent constructor.
+
+    Example
+    -------
+    In this example, each element in the input array is compared (>=) with 2.
+
+    Start by creating a pipeline using GreaterThanOrEquals:
+
+    >>> from deeptrack.features import GreaterThanOrEquals, Value
+    
+    >>> pipeline = Value([1, 2, 3]) >> GreaterThanOrEquals(value=2)
+    >>> pipeline.resolve()
+    [False  True  True]
+    
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Value([1, 2, 3]) >= 2
+    
+    >>> pipeline = 2 >= Value([1, 2, 3])  # Different result.
+    
+    Or, most explicitly:
+    
+    >>> input_value = Value([1, 2, 3])
+    >>> ge_feature = GreaterThanOrEquals(value=2)
+    >>> pipeline = ge_feature(input_value)
+
     """
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    def __init__(
+        self,
+        value: PropertyLike[float] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the GreaterThanOrEquals feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The value to compare (>=) with the input. Defaults to 0.
+        **kwargs : Any
+            Additional keyword arguments.
+
+        """
+
         super().__init__(operator.ge, value=value, **kwargs)
 
 
+GreaterThanOrEqual = GreaterThanOrEquals
+
+
 class Equals(ArithmeticOperationFeature):
-    """Divides the input with a value.
+    """Determine whether input is equal to value.
+
+    This feature performs element-wise comparison (==) of the input.
 
     Parameters
     ----------
-    value : number
-        The value to divide with.
-    """
+    value : PropertyLike[int or float], optional
+        The value to compare (==) with the input. Defaults to 0.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent constructor.
 
-    def __init__(self, value: PropertyLike[float] = 0, **kwargs):
+    """
+    
+    #TODO: Example for Equals.
+    #TODO: Why Equals behaves differently from the other operators?
+    #TODO: Why __eq__ and __req__ are not defined in DeepTrackNode and Feature?
+
+    def __init__(
+        self,
+        value: PropertyLike[float] = 0,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the Equals feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[float], optional
+            The value to compare (==) with the input. Defaults to 0.
+        **kwargs : Any
+            Additional keyword arguments.
+
+        """
+
         super().__init__(operator.eq, value=value, **kwargs)
+
+
+Equal = Equals
 
 
 class Stack(Feature):
     """Stacks the input and the value.
 
-    If B is a feature then Stack can be visualized as::
+    If B is a feature, then Stack can be visualized as::
 
        A >> Stack(B) = [*A(), *B()]
 
-    If either A or B create a single Image, an additional dimension is automatically added.
+    If either A or B create a single Image, an additional dimension is 
+    automatically added.
 
     This can be
 
@@ -1408,7 +1970,11 @@ class Stack(Feature):
 
     __distributed__ = False
 
-    def __init__(self, value=PropertyLike[Any], **kwargs):
+    def __init__(
+        self, 
+        value: PropertyLike[Any], 
+        **kwargs: Dict[str, Any],
+    ):
         super().__init__(value=value, **kwargs)
 
     def get(self, image, value, **kwargs):

@@ -56,10 +56,8 @@ def grid_test_features(
         )
 
         if isinstance(output, list) and isinstance(expected_result, list):
-            [
-                np.testing.assert_almost_equal(np.array(a), np.array(b))
-                for a, b in zip(output, expected_result)
-            ]
+            [np.testing.assert_almost_equal(np.array(a), np.array(b))
+             for a, b in zip(output, expected_result)]
 
         else:
             is_equal = np.array_equal(
@@ -267,6 +265,27 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(E(), D() + C())
 
 
+    def test_Feature_validation(self):
+
+        class ConcreteFeature(features.Feature):
+            __distributed__ = False
+            def get(self, input, **kwargs):
+                return input
+
+        feature = ConcreteFeature(prop=1)
+
+        self.assertFalse(feature.is_valid())
+
+        feature()
+        self.assertTrue(feature.is_valid())
+
+        feature.prop.set_value(1)  # Does not change value.
+        self.assertTrue(feature.is_valid())
+
+        feature.prop.set_value(2)  # Changes value.
+        self.assertFalse(feature.is_valid())
+
+
     def test_Chain(self):
 
         class Addition(features.Feature):
@@ -316,55 +335,65 @@ class TestFeatures(unittest.TestCase):
         self.assertNotEqual(value.value(), 2)
 
 
-    def test_Property_set_value_invalidates_feature(self):
-        class ConcreteFeature(features.Feature):
-            __distributed__ = False
+    def test_ArithmeticOperationFeature(self):
 
-            def get(self, input, **kwargs):
-                return input
+        addition_feature = \
+            features.ArithmeticOperationFeature(operator.add, value=10)
+        input_values = [1, 2, 3, 4]
+        expected_output = [11, 12, 13, 14]
+        output = addition_feature(input_values)
+        self.assertEqual(output, expected_output)    
 
-        feature = ConcreteFeature(prop=1)
-
-        self.assertFalse(feature.is_valid())
-
-        feature()
-        self.assertTrue(feature.is_valid())
-
-        feature.prop.set_value(1)
-        self.assertTrue(feature.is_valid())
-
-        feature.prop.set_value(2)
-        self.assertFalse(feature.is_valid())
 
     def test_Add(self):
         test_operator(self, operator.add)
 
+
     def test_Subtract(self):
         test_operator(self, operator.sub)
+
 
     def test_Multiply(self):
         test_operator(self, operator.add)
 
-    def test_TrueDivide(self):
+
+    def test_Divide(self):
         test_operator(self, operator.truediv)
+
 
     def test_FloorDivide(self):
         test_operator(self, operator.floordiv)
 
+
     def test_Power(self):
         test_operator(self, operator.pow)
+
 
     def test_GreaterThan(self):
         test_operator(self, operator.gt)
 
-    def test_GreaterThanOrEqual(self):
+
+    def test_GreaterThanOrEquals(self):
         test_operator(self, operator.ge)
+
 
     def test_LessThan(self):
         test_operator(self, operator.lt)
 
-    def test_LessThanOrEqual(self):
+
+    def test_LessThanOrEquals(self):
         test_operator(self, operator.le)
+
+
+    def test_Equals(self):
+        # test_operator(self, operator.eq)
+        #TODO: Why the tests work diffeent for Equals?
+
+        equals_feature = features.Equals(value=2)
+        input_values = np.array([1, 2, 3])
+        output_values = equals_feature(input_values)
+        self.assertTrue(np.array_equal(output_values, [False, True, False]))
+
 
     def test_Stack(self):
 
@@ -402,6 +431,7 @@ class TestFeatures(unittest.TestCase):
             ],
             operator.__and__,
         )
+
 
     def test_Feature_2(self):
         class FeatureAddValue(features.Feature):
