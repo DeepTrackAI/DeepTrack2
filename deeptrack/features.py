@@ -937,6 +937,46 @@ class Chain(StructuralFeature):
         Additional keyword arguments passed to the parent `StructuralFeature` 
         (and thus `Feature`).
     
+    Example
+    -------
+    Let us create a feature chain where the first feature adds an offset to an 
+    image, and the second feature multiplies it by a constant.
+
+    >>> import numpy as np
+    >>> from deeptrack.features import Chain, Feature
+    
+    Define the features:
+    
+    >>> class Addition(Feature):
+    ...     '''Simple feature that adds a constant.'''
+    ...     def get(self, image, **kwargs):
+    ...         # 'addend' property set via self.properties (default: 0).
+    ...         return image + self.properties.get("addend", 0)()
+
+    >>> class Multiplication(Feature):
+    ...     '''Simple feature that multiplies by a constant.'''
+    ...     def get(self, image, **kwargs):
+    ...         # 'multiplier' property set via self.properties (default: 1).
+    ...         return image * self.properties.get("multiplier", 1)()
+
+    Chain the features:
+
+    >>> A = Addition(addend=10)
+    >>> M = Multiplication(multiplier=0.5)
+    >>> chain = Chain(A, M)
+
+    Create a dummy image:
+    
+    >>> dummy_image = np.ones((60, 80))
+
+    Apply the chained features:
+    
+    >>> transformed_image = chain(dummy_image)
+
+    In this example, the image is first passed through the `Addition` feature 
+    to add an offset, and then through the `Multiplication` feature to multiply
+    by a constant factor.
+
     """
 
     def __init__(
