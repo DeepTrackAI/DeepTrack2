@@ -268,7 +268,10 @@ class Feature(DeepTrackNode):
         toggle: bool = True,
         recursive: bool = True,
     ) -> None:
-        """Control whether to store properties to the Image.
+        """Control whether to return an Image object.
+        
+        If selected `True`, the output of the evaluation of the feature is an 
+        Image object that also contains the properties.
 
         Parameters
         ----------
@@ -621,18 +624,45 @@ class Feature(DeepTrackNode):
                     if isinstance(source, SourceItem):
                         source()
 
-    def __getattr__(self, key):
-        # Allows easier access to properties. For example,
-        # feature.my_property is equivalent to feature.properties["my_property"]
+    def __getattr__(self, key: str) -> Any:
+        """Custom attribute access for the Feature class.
+
+        This method allows properties of the `Feature` instance to be accessed 
+        as if they were attributes. For example, `feature.my_property` is 
+        equivalent to `feature.properties["my_property"]`.
+        
+        Specifically, it checks if the requested 
+        attribute (`key`) exists in the `properties` dictionary of the instance 
+        and returns the corresponding value if found. If the `key` does not 
+        exist in `properties`, or if the `properties` attribute is not set, an 
+        `AttributeError` is raised.
+
+        Parameters
+        ----------
+        key : str
+            The name of the attribute being accessed.
+
+        Returns
+        -------
+        Any
+            The value of the property corresponding to the given `key` in the 
+            `properties` dictionary.
+
+        Raises
+        ------
+        AttributeError
+            If `properties` is not defined for the instance, or if the `key` 
+            does not exist in `properties`.
+
+        """
 
         if "properties" in self.__dict__:
             properties = self.__dict__["properties"]
             if key in properties:
                 return properties[key]
-            else:
-                raise AttributeError
-        else:
-            raise AttributeError
+
+        raise AttributeError(f"'{self.__class__.__name__}' object has "
+                             "no attribute '{key}'")
 
     def __iter__(self):
         while True:
@@ -642,7 +672,6 @@ class Feature(DeepTrackNode):
         yield self.update().resolve()
 
     def __rshift__(self, other) -> 'Feature':
-
         # Allows chaining of features. For example,
         # feature1 >> feature2 >> feature3
         # or
@@ -651,18 +680,15 @@ class Feature(DeepTrackNode):
         if isinstance(other, DeepTrackNode):
             return Chain(self, other)
 
-        # Import here to avoid circular import.
-        
-
         # If other is a function, call it on the output of the feature.
         # For example, feature >> some_function
-
         if callable(other):
             return self >> Lambda(lambda: other)
 
+        # The operator is not implemented for other inputs.
         return NotImplemented
 
-    def __rrshift__(self, other: "Feature") -> 'Feature':
+    def __rrshift__(self, other: 'Feature') -> 'Feature':
         # Allows chaining of features. For example,
         # some_function << feature1 << feature2
         # or
@@ -670,6 +696,7 @@ class Feature(DeepTrackNode):
 
         if isinstance(other, Feature):
             return Chain(other, self)
+
         if isinstance(other, DeepTrackNode):
             return Chain(Value(other), self)
 
@@ -963,6 +990,10 @@ class Chain(StructuralFeature):
 
     >>> A = Addition(addend=10)
     >>> M = Multiplication(multiplier=0.5)
+    >>> chain = A >> M  
+    
+    Equivalent to: 
+    
     >>> chain = Chain(A, M)
 
     Create a dummy image:
@@ -980,9 +1011,9 @@ class Chain(StructuralFeature):
     """
 
     def __init__(
-        self, 
-        feature_1: Feature, 
-        feature_2: Feature, 
+        self,
+        feature_1: Feature,
+        feature_2: Feature,
         **kwargs: Dict[str, Any],
     ):
         """Initialize the chain with two sub-features.
@@ -1008,9 +1039,9 @@ class Chain(StructuralFeature):
         self.feature_2 = self.add_feature(feature_2)
 
     def get(
-        self, 
+        self,
         image: Union['Image', List['Image']],
-        _ID: Tuple[int, ...] = (), 
+        _ID: Tuple[int, ...] = (),
         **kwargs: Dict[str, Any],
     ) -> Union['Image', List['Image']]:
         """Apply the two features in sequence on the given input image(s).
@@ -1952,39 +1983,106 @@ Equal = Equals
 
 class Stack(Feature):
     """Stacks the input and the value.
+    
+    This feature combines the output of the input data (`image`) and the 
+    value produced by the specified feature (`value`). The resulting output 
+    is a list where the elements of the `image` and `value` are concatenated.
 
-    If B is a feature, then Stack can be visualized as::
+    If either the input (`image`) or the `value` is a single `Image` object, 
+    it is automatically converted into a list to maintain consistency in the 
+    output format.
 
-       A >> Stack(B) = [*A(), *B()]
+    If B is a feature, `Stack` can be visualized as::
 
-    If either A or B create a single Image, an additional dimension is 
-    automatically added.
-
-    This can be
+    >>>   A >> Stack(B) = [*A(), *B()]
 
     Parameters
     ----------
-    value
-       Feature that produces image to stack on input.
+    value : PropertyLike[Any]
+        The feature or data to stack with the input.
+    **kwargs : Dict[str, Any]
+        Additional arguments passed to the parent `Feature` class.
+
+    Attributes
+    ----------
+    __distributed__ : bool
+        Indicates whether this feature distributes computation across inputs. 
+        Always `False` for `Stack`, as it processes all inputs at once.
+
+    Example
+    -------
+    Start by creating a pipeline using Stack:
+
+    >>> from deeptrack.features import Stack, Value
+    
+    >>> pipeline = Value([1, 2, 3]) >> Stack(value=[4, 5])
+    >>> print(pipeline.resolve())
+    [1, 2, 3, 4, 5]
+
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Value([1, 2, 3]) & [4, 5]
+
+    >>> pipeline = [4, 5] & Value([1, 2, 3])  # Different result.
+
     """
 
     __distributed__ = False
 
     def __init__(
-        self, 
-        value: PropertyLike[Any], 
+        self,
+        value: PropertyLike[Any],
         **kwargs: Dict[str, Any],
     ):
+        """Initialize the Stack feature.
+
+        Parameters
+        ----------
+        value : PropertyLike[Any]
+            The feature or data to stack with the input.
+        **kwargs : Dict[str, Any]
+            Additional arguments passed to the parent `Feature` class.
+        """
+
         super().__init__(value=value, **kwargs)
 
-    def get(self, image, value, **kwargs):
+    def get(
+        self,
+        image: Union[Any, List[Any]],
+        value: Union[Any, List[Any]],
+        **kwargs: Dict[str, Any],
+    ) -> List[Any]:
+        """Concatenate the input with the value.
 
+        It ensures that both the input (`image`) and the value (`value`) are 
+        treated as lists before concatenation.
+
+        Parameters
+        ----------
+        image : Any or List[Any]
+            The input data to stack. Can be a single element or a list.
+        value : Any or List[Any]
+            The feature or data to stack with the input. Can be a single 
+            element or a list.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments (not used here).
+
+        Returns
+        -------
+        List[Any]
+            A list containing all elements from `image` and `value`.
+
+        """
+
+        # Ensure the input is treated as a list.
         if not isinstance(image, list):
             image = [image]
 
+        # Ensure the value is treated as a list.
         if not isinstance(value, list):
             value = [value]
 
+        # Concatenate and return the lists.
         return [*image, *value]
 
 
@@ -2097,32 +2195,107 @@ class Probability(StructuralFeature):
 class Repeat(Feature):
     """Repeats the evaluation of the input feature a certain number of times.
 
-    Each time the feature is evaluated, it receives the output of the previous iteration. Each iteration
-    also has its own set of properties. The index of the iteration is available as `_ID` or replicate_index.
+    The `Repeat` feature allows iterative application of another feature, 
+    passing the output of each iteration as the input to the next. Each 
+    iteration operates with its own set of properties, and the index of the 
+    current iteration is available as `_ID` or `replicate_index`. This enables 
+    dynamic behavior across iterations.
 
     Parameters
     ----------
     feature : Feature
-        Feature to repeat
-    count : int
-        Number of times to repeat
+        The feature to be repeated.
+    N : int
+        The number of times to repeat the feature evaluation.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Attributes
+    ----------
+    __distributed__ : bool
+        Indicates whether this feature distributes computation across inputs. 
+        Always `False` for `Repeat`, as it processes sequentially.
+
+    Example
+    -------
+    Start by creating a pipeline using Repeat:
+
+    >>> from deeptrack.features import Add, Repeat
+    
+    >>> pipeline = Repeat(Add(value=10), N=3)
+    >>> print(pipeline.resolve([1, 2, 3]))
+    [31, 32, 33]
+
+    Equivalently, this pipeline can be created using:
+    
+    >>> pipeline = Add(value=10) ^ 3
+
     """
 
-    __distributed__ = False
+    __distributed__: bool = False
 
-    def __init__(self, feature, N, **kwargs):
+    def __init__(
+        self, 
+        feature: 'Feature', 
+        N: int, 
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the Repeat feature.
+
+        Parameters
+        ----------
+        feature : Feature
+            The feature to be repeated.
+        N : int
+            The number of times to repeat the feature evaluation.
+        **kwargs : Dict[str, Any]
+            Additional arguments passed to the parent `Feature` class.
+
+        """
+
         super().__init__(N=N, **kwargs)
+
         self.feature = self.add_feature(feature)
 
-    def get(self, image, N, _ID=(), **kwargs):
+    def get(
+        self,
+        image: Any,
+        N: int,
+        _ID: Tuple[int, ...] = (),
+        **kwargs: Dict[str, Any],
+    ):
+        """Apply sequentially the feature a set number of times.
+
+        Sequentially applies the feature `N` times, passing the output of each 
+        iteration as the input to the next.
+
+        Parameters
+        ----------
+        image : Any
+            The input data to be transformed by the repeated feature.
+        N : int
+            The number of repetitions.
+        _ID : Tuple[int, ...], optional
+            A unique identifier for the current computation, which tracks the 
+            iteration index for caching and reproducibility.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the feature.
+
+        Returns
+        -------
+        Any
+            The final output after `N` repetitions of the feature.
+        
+        """
+        
         for n in range(N):
 
-            index = _ID + (n,)
+            index = _ID + (n,)  # Track iteration index.
 
             image = self.feature(
                 image,
                 _ID=index,
-                replicate_index=index,  # Pass replicate_index for legacy reasons
+                replicate_index=index,  # Pass replicate_index for legacy.
             )
 
         return image
@@ -3153,34 +3326,179 @@ class Store(Feature):
 
 
 class Squeeze(Feature):
-    """Squeezes the input image to the smallest possible dimension.
+    """Squeeze the input image to the smallest possible dimension.
+
+    This feature removes axes of size 1 from the input image. By default, it 
+    removes all singleton dimensions. If a specific axis or axes are specified, 
+    only those axes are squeezed.
 
     Parameters
     ----------
-    axis : int or tuple of ints
-        The axis to squeeze. Defaults to None, which squeezes all axes.
+    axis : int or Tuple[int, ...], optional
+        The axis or axes to squeeze. Defaults to `None`, squeezing all axes.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from deeptrack.features import Squeeze
+
+    Create an input array with extra dimensions:
+    
+    >>> input_image = np.array([[[[1], [2], [3]]]])
+    >>> print(input_image.shape)
+    (1, 1, 3, 1)
+
+    Create a Squeeze feature:
+    
+    >>> squeeze_feature = Squeeze(axis=0)
+    >>> output_image = squeeze_feature(input_image)
+    >>> print(output_image.shape)
+    (1, 3, 1)
+
+    Without specifying an axis:
+    
+    >>> squeeze_feature = Squeeze()
+    >>> output_image = squeeze_feature(input_image)
+    >>> print(output_image.shape)
+    (3,)
+
     """
 
-    def __init__(self, axis=None, **kwargs):
+    def __init__(
+        self,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the Squeeze feature.
+
+        Parameters
+        ----------
+        axis : int or Tuple[int, ...], optional
+            The axis or axes to squeeze. Defaults to `None`, which squeezes 
+            all axes.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the parent `Feature` class.
+
+        """
+
         super().__init__(axis=axis, **kwargs)
 
-    def get(self, image, axis, **kwargs):
+    def get(
+        self,
+        image: np.ndarray,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
+        **kwargs: Dict[str, Any],
+    ):
+        """Squeeze the input image by removing singleton dimensions.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            The input image to process.
+        axis : int or Tuple[int, ...], optional
+            The axis or axes to squeeze. Defaults to `None`, which squeezes 
+            all axes.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments (unused here).
+
+        Returns
+        -------
+        np.ndarray
+            The squeezed image with reduced dimensions.
+
+        """
+
         return np.squeeze(image, axis=axis)
 
 
 class Unsqueeze(Feature):
     """Unsqueezes the input image to the smallest possible dimension.
 
+    This feature adds new singleton dimensions to the input image at the 
+    specified axis or axes. If no axis is specified, it defaults to adding 
+    a singleton dimension at the last axis.
+
     Parameters
     ----------
-    axis : int or tuple of ints
-        The axis to unsqueeze. Defaults to None, which unsqueezes all axes.
+    axis : int or Tuple[int, ...], optional
+        The axis or axes where new singleton dimensions should be added. 
+        Defaults to `None`, which adds a singleton dimension at the last axis.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from deeptrack.features import Unsqueeze
+
+    Create an input array:
+    
+    >>> input_image = np.array([1, 2, 3])
+    >>> print(input_image.shape)
+    (3,)
+
+    Apply an Unsqueeze feature:
+    
+    >>> unsqueeze_feature = Unsqueeze(axis=0)
+    >>> output_image = unsqueeze_feature(input_image)
+    >>> print(output_image.shape)
+    (1, 3)
+
+    Without specifying an axis:
+
+    >>> unsqueeze_feature = Unsqueeze()
+    >>> output_image = unsqueeze_feature(input_image)
+    >>> print(output_image.shape)
+    (3, 1)
+
     """
 
-    def __init__(self, axis=None, **kwargs):
+    def __init__(
+        self,
+        axis: Optional[Union[int, Tuple[int, ...]]] = -1,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the Unsqueeze feature.
+
+        Parameters
+        ----------
+        axis : int or Tuple[int, ...], optional
+            The axis or axes where new singleton dimensions should be added. 
+            Defaults to -1, which adds a singleton dimension at the last axis.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the parent `Feature` class.
+
+        """
+
         super().__init__(axis=axis, **kwargs)
 
-    def get(self, image, axis, **kwargs):
+    def get(
+        self,
+        image: np.ndarray,
+        axis: Optional[Union[int, Tuple[int, ...]]] = -1,
+        **kwargs: Dict[str, Any],
+    ):
+        """Add singleton dimensions to the input image.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            The input image to process.
+        axis : int or Tuple[int, ...], optional
+            The axis or axes where new singleton dimensions should be added. 
+            Defaults to -1, which adds a singleton dimension at the last axis.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments (unused here).
+
+        Returns
+        -------
+        np.ndarray
+            The input image with the specified singleton dimensions added.
+
+        """
+
         return np.expand_dims(image, axis=axis)
 
 
@@ -3240,7 +3558,7 @@ class OneHot(Feature):
             image = image[..., 0]
         return np.eye(num_classes)[image]
 
-    
+
 class TakeProperties(Feature):
     """Extracts all instances of a set of properties from a pipeline
 
