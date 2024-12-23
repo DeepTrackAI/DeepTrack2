@@ -1407,8 +1407,23 @@ class TestFeatures(unittest.TestCase):
             )
         )
 
+
     def test_Store(self):
-        pass
+
+        value_feature = features.Value(lambda: np.random.rand())
+
+        store_feature = features.Store(feature=value_feature, key="example")
+
+        output = store_feature(None, key="example", replace=False)
+
+        value_feature.update()
+        cached_output = store_feature(None, key="example", replace=False)
+        self.assertEqual(cached_output, output)
+
+        value_feature.update()
+        cached_output = store_feature(None, key="example", replace=True)
+        self.assertNotEqual(cached_output, output)
+
 
     def test_Squeeze(self):
 
@@ -1437,16 +1452,53 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_MoveAxis(self):
-        pass
+
+        input_image = np.random.rand(2, 3, 4)
+
+        move_axis_feature = features.MoveAxis(source=0, destination=2)
+        output_image = move_axis_feature(input_image)
+        self.assertEqual(output_image.shape, (3, 4, 2))
+
 
     def test_Transpose(self):
-        pass
+
+        input_image = np.random.rand(2, 3, 4)
+
+        transpose_feature = features.Transpose(axes=(1, 2, 0))
+        output_image = transpose_feature(input_image)
+        self.assertEqual(output_image.shape, (3, 4, 2))
+
+        transpose_feature = features.Transpose()
+        output_image = transpose_feature(input_image)
+        self.assertEqual(output_image.shape, (4, 3, 2))
+
 
     def test_OneHot(self):
-        pass
+
+        input_image = np.array([0, 1, 2])
+
+        one_hot_feature = features.OneHot(num_classes=3)
+        output_image = one_hot_feature.get(input_image, num_classes=3)
+        expected_output = np.array([
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0]
+        ])
+        np.testing.assert_array_equal(output_image, expected_output)
+
 
     def test_TakeProperties(self):
-        pass
+
+        class ExampleFeature(features.Feature):
+            def __init__(self, my_property, **kwargs):
+                super().__init__(my_property=my_property, **kwargs)
+
+
+        feature = ExampleFeature(my_property=properties.Property(42))
+
+        take_properties = features.TakeProperties(feature, "my_property")
+        output = take_properties.get(image=None, names=["my_property"])
+        self.assertEqual(output, [42])
 
 
 if __name__ == "__main__":

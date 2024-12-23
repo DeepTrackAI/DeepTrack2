@@ -3305,24 +3305,132 @@ class NonOverlapping(Feature):
 
 
 class Store(Feature):
+    """Stores the output of a feature for reuse.
 
-    __distributed__ = False
+    The `Store` feature evaluates a given feature and stores its output in an 
+    internal dictionary. Subsequent calls with the same key will return the 
+    stored value unless the `replace` parameter is set to `True`. This enables 
+    caching and reuse of computed feature outputs.
 
-    def __init__(self, feature, key, replace=False, **kwargs):
+    Parameters
+    ----------
+    feature : Feature
+        The feature to evaluate and store.
+    key : Any
+        The key used to identify the stored output.
+    replace : bool, optional
+        If `True`, replaces the stored value with a new computation. Defaults 
+        to `False`.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Attributes
+    ----------
+    __distributed__ : bool
+        Indicates whether this feature distributes computation across inputs.
+        Always `False` for `Store`, as it handles caching locally.
+    _store : Dict[Any, Image]
+        A dictionary used to store the outputs of the evaluated feature.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from deeptrack.features import Store, Value
+
+    >>> value_feature = Value(lambda: np.random.rand())
+
+    Create a `Store` feature with a key:
+
+    >>> store_feature = Store(feature=value_feature, key="example")
+
+    Retrieve and store the value:
+
+    >>> output = store_feature(None, key="example", replace=False)
+
+    Retrieve the stored value without recomputing:
+
+    >>> value_feature.update()
+    >>> cached_output = store_feature(None, key="example", replace=False)
+    >>> print(cached_output == output)
+    True
+
+    Retrieve the stored value recomputing:
+
+    >>> value_feature.update()
+    >>> cached_output = store_feature(None, key="example", replace=True)
+    >>> print(cached_output == output)
+    False
+
+    """
+
+    __distributed__: bool = False
+
+    def __init__(
+        self,
+        feature: Feature,
+        key: Any,
+        replace: bool = False,
+        **kwargs: Dict[str, Any],
+    ):
+        """
+        Initialize the Store feature.
+
+        Parameters
+        ----------
+        feature : Feature
+            The feature to evaluate and store.
+        key : Any
+            The key used to identify the stored output.
+        replace : bool, optional
+            If `True`, replaces the stored value with a new computation. 
+            Defaults to `False`.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the parent `Feature` class.
+
+        """
+
         super().__init__(feature=feature, key=key, replace=replace, **kwargs)
 
         self.feature = self.add_feature(feature, **kwargs)
 
         self._store: dict[Any, Image] = {}
 
-    def get(self, _, key, replace, **kwargs):
+    def get(
+        self,
+        _: Any,
+        key: Any,
+        replace: bool,
+        **kwargs: Dict[str, Any],
+    ) -> Any:
+        """Evaluate and store the feature output, or return the cached result.
+
+        Parameters
+        ----------
+        _ : Any
+            Placeholder for unused image input.
+        key : Any
+            The key used to identify the stored output.
+        replace : bool
+            If `True`, replaces the stored value with a new computation.
+        **kwargs : Any
+            Additional keyword arguments passed to the feature.
+
+        Returns
+        -------
+        Any
+            The stored output or a newly computed result.
+
+        """
+
+        # Check if the value should be recomputed or retrieved from the store
         if replace or not (key in self._store):
             self._store[key] = self.feature()
+
+        # Return the stored or newly computed result
         if self._wrap_array_with_image:
             return Image(self._store[key], copy=False)
         else:
             return self._store[key]
-        # return self._store[key] 
 
 
 class Squeeze(Feature):
@@ -3390,7 +3498,7 @@ class Squeeze(Feature):
         image: np.ndarray,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         **kwargs: Dict[str, Any],
-    ):
+    ) -> np.ndarray:
         """Squeeze the input image by removing singleton dimensions.
 
         Parameters
@@ -3479,7 +3587,7 @@ class Unsqueeze(Feature):
         image: np.ndarray,
         axis: Optional[Union[int, Tuple[int, ...]]] = -1,
         **kwargs: Dict[str, Any],
-    ):
+    ) -> np.ndarray:
         """Add singleton dimensions to the input image.
 
         Parameters
@@ -3508,34 +3616,175 @@ ExpandDims = Unsqueeze
 class MoveAxis(Feature):
     """Moves the axis of the input image.
 
+    This feature rearranges the axes of an input image, moving a specified 
+    source axis to a new destination position. All other axes remain in their 
+    original order.
+
     Parameters
     ----------
     source : int
         The axis to move.
     destination : int
-        The destination of the axis.
+        The destination position of the axis.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from deeptrack.features import MoveAxis
+
+    Create an input array:
+    
+    >>> input_image = np.random.rand(2, 3, 4)
+    >>> print(input_image.shape)
+    (2, 3, 4)
+
+    Apply a MoveAxis feature:
+    
+    >>> move_axis_feature = MoveAxis(source=0, destination=2)
+    >>> output_image = move_axis_feature(input_image)
+    >>> print(output_image.shape)
+    (3, 4, 2)
+
     """
 
-    def __init__(self, source, destination, **kwargs):
+    def __init__(
+        self,
+        source: int,
+        destination: int,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the MoveAxis feature.
+
+        Parameters
+        ----------
+        source : int
+            The axis to move.
+        destination : int
+            The destination position of the axis.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the parent `Feature` class.
+
+        """
+
         super().__init__(source=source, destination=destination, **kwargs)
 
-    def get(self, image, source, destination, **kwargs):
+    def get(
+        self,
+        image: np.ndarray,
+        source: int,
+        destination: int, 
+        **kwargs: Dict[str, Any],
+    ) -> np.ndarray:
+        """Move the specified axis of the input image to a new position.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            The input image to process.
+        source : int
+            The axis to move.
+        destination : int
+            The destination position of the axis.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments (unused here).
+
+        Returns
+        -------
+        np.ndarray
+            The input image with the specified axis moved to the destination.
+        """
+
         return np.moveaxis(image, source, destination)
 
 
 class Transpose(Feature):
-    """Transposes the input image.
+    """Transpose the input image.
+
+    This feature rearranges the axes of an input image according to the 
+    specified order. The `axes` parameter determines the new order of the 
+    dimensions.
 
     Parameters
     ----------
-    axes : tuple of ints
-        The axes to transpose.
+    axes : Tuple[int, ...], optional
+        A tuple specifying the permutation of the axes. If `None`, the axes are 
+        reversed by default.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from deeptrack.features import Transpose
+
+    Create an input array:
+
+    >>> input_image = np.random.rand(2, 3, 4)
+    >>> print(input_image.shape)
+    (2, 3, 4)
+
+    Apply a Transpose feature:
+    
+    >>> transpose_feature = Transpose(axes=(1, 2, 0))
+    >>> output_image = transpose_feature(input_image)
+    >>> print(output_image.shape)
+    (3, 4, 2)
+
+    Without specifying axes:
+    
+    >>> transpose_feature = Transpose()
+    >>> output_image = transpose_feature(input_image)
+    >>> print(output_image.shape)
+    (4, 3, 2)
+
     """
 
-    def __init__(self, axes, **kwargs):
+    def __init__(
+        self,
+        axes: Optional[Tuple[int, ...]] = None,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the Transpose feature.
+
+        Parameters
+        ----------
+        axes : Tuple[int, ...], optional
+            A tuple specifying the permutation of the axes. If `None`, the 
+            axes are reversed by default.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the parent `Feature` class.
+        
+        """
+
         super().__init__(axes=axes, **kwargs)
 
-    def get(self, image, axes, **kwargs):
+    def get(
+        self,
+        image: np.ndarray,
+        axes: Optional[Tuple[int, ...]] = None,
+        **kwargs: Dict[str, Any],
+    ) -> np.ndarray:
+        """Transpose the axes of the input image.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            The input image to process.
+        axes : Tuple[int, ...], optional
+            A tuple specifying the permutation of the axes. If `None`, the 
+            axes are reversed by default.
+        **kwargs : Any
+            Additional keyword arguments (unused here).
+
+        Returns
+        -------
+        np.ndarray
+            The transposed image with rearranged axes.
+
+        """
+
         return np.transpose(image, axes)
 
 
@@ -3545,64 +3794,228 @@ Permute = Transpose
 class OneHot(Feature):
     """Converts the input to a one-hot encoded array.
 
+    This feature takes an input array of integer class labels and converts it 
+    into a one-hot encoded array. The last dimension of the input is replaced 
+    by the one-hot encoding.
+
     Parameters
     ----------
     num_classes : int
-        The number of classes to encode.
+        The total number of classes for the one-hot encoding.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from deeptrack.features import OneHot
+
+    Create an input array of class labels:
+
+    >>> input_data = np.array([0, 1, 2])
+
+    Apply a OneHot feature:
+
+    >>> one_hot_feature = OneHot(num_classes=3)
+    >>> one_hot_encoded = one_hot_feature.get(input_data, num_classes=3)
+    >>> print(one_hot_encoded)
+    [[1. 0. 0.]
+     [0. 1. 0.]
+     [0. 0. 1.]]
+
     """
-    def __init__(self, num_classes, **kwargs):
+
+    def __init__(
+        self,
+        num_classes: int,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the OneHot feature.
+
+        Parameters
+        ----------
+        num_classes : int
+            The total number of classes for the one-hot encoding.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the parent `Feature` class.
+
+        """
+
         super().__init__(num_classes=num_classes, **kwargs)
 
-    def get(self, image, num_classes, **kwargs):
+    def get(
+        self,
+        image: np.ndarray,
+        num_classes: int,
+        **kwargs: Dict[str, Any],
+    ) -> np.ndarray:
+        """
+        Convert the input array of class labels into a one-hot encoded array.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            The input array of class labels. The last dimension should contain 
+            integers representing class indices.
+        num_classes : int
+            The total number of classes for the one-hot encoding.
+        **kwargs : Any
+            Additional keyword arguments (unused here).
+
+        Returns
+        -------
+        np.ndarray
+            The one-hot encoded array. The last dimension is replaced with 
+            one-hot vectors of length `num_classes`.
+
+        """
+
+        # Flatten the last dimension if it's singleton.
         if image.shape[-1] == 1:
             image = image[..., 0]
+
+        # Create the one-hot encoded array.
         return np.eye(num_classes)[image]
 
 
 class TakeProperties(Feature):
-    """Extracts all instances of a set of properties from a pipeline
+    """Extracts all instances of a set of properties from a pipeline.
 
-    Only extracts the properties if the feature contains all given property-names.
-    Order of the properties is not guaranteed to be the same as the evaluation order.
+    Only extracts the properties if the feature contains all given 
+    property-names. The order of the properties is not guaranteed to be the 
+    same as the evaluation order.
 
-    If there is only a single property name, this will return a list of the property values.
-    If there are multiple property names, this will return a tuple of lists of the property values.
+    If there is only a single property name, this will return a list of the 
+    property values.
+    
+    If there are multiple property names, this will return a tuple of lists of 
+    the property values.
 
     Parameters
     ----------
     feature : Feature
-        The feature to extract the properties from
-    names : list of str
+        The feature from which to extract properties.
+    names : List[str]
         The names of the properties to extract
-    """
-    __distributed__ = False
-    __list_merge_strategy__ = MERGE_STRATEGY_APPEND
 
-    def __init__(self, feature, *names, **kwargs):
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Attributes
+    ----------
+    __distributed__ : bool
+        Indicates whether this feature distributes computation across inputs.
+        Always `False` for `TakeProperties`, as it processes sequentially.
+    __list_merge_strategy__ : int
+        Specifies how lists of properties are merged. Set to 
+        `MERGE_STRATEGY_APPEND` to append values to the result list.
+
+    Example
+    -------
+    >>> from deeptrack.features import Feature, TakeProperties
+    >>> from deeptrack.properties import Property
+    
+    >>> class ExampleFeature(Feature):
+    ...     def __init__(self, my_property, **kwargs):
+    ...         super().__init__(my_property=my_property, **kwargs)
+
+    Create an example feature with a property:
+    
+    >>> feature = ExampleFeature(my_property=Property(42))
+
+    Use `TakeProperties` to extract the property:
+    
+    >>> take_properties = TakeProperties(feature, "my_property")
+    >>> output = take_properties.get(image=None, names=["my_property"])
+    >>> print(output)
+    [42]
+    
+    """
+
+    __distributed__: bool = False
+    __list_merge_strategy__: int = MERGE_STRATEGY_APPEND
+
+    def __init__(
+        self,
+        feature,
+        *names,
+        **kwargs,
+    ):
+        """
+        Initialize the TakeProperties feature.
+
+        Parameters
+        ----------
+        feature : Feature
+            The feature from which to extract properties.
+        *names : List[str]
+            One or more names of the properties to extract.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the parent `Feature` class.
+
+        """
+
         super().__init__(names=names, **kwargs)
         self.feature = self.add_feature(feature)
 
-    def get(self, image, names, _ID=(), **kwargs):
+    def get(
+        self,
+        image: Any,
+        names: Tuple[str, ...],
+        _ID: Tuple[int, ...] = (),
+        **kwargs: Dict[str, Any],
+    ) -> Union[np.ndarray, Tuple[np.ndarray, ...]]:
+        """
+        Extract the specified properties from the feature pipeline.
 
+        Parameters
+        ----------
+        image : Any
+            The input image (unused in this method).
+        names : Tuple[str, ...]
+            The names of the properties to extract.
+        _ID : Tuple[int, ...], optional
+            A unique identifier for the current computation, used to match 
+            dependencies. Defaults to an empty tuple.
+        **kwargs : Any
+            Additional keyword arguments (unused here).
+
+        Returns
+        -------
+        np.ndarray or Tuple[np.ndarray, ...]
+            If a single property name is provided, a NumPy array containing the 
+            property values is returned. If multiple property names are 
+            provided, a tuple of NumPy arrays is returned, where each array 
+            corresponds to a property.
+
+        """
+
+        # Ensure the feature is valid for the given _ID.
         if not self.feature.is_valid(_ID=_ID):
             self.feature(_ID=_ID)
 
+        # Initialize a dictionary to store property values.
         res = {}
         for name in names:
             res[name] = []
 
+        # Traverse the dependencies of the feature.
         for dep in self.feature.recurse_dependencies():
-            if isinstance(dep, PropertyDict) and all(name in dep for name in names):
-                # if all names are in dep, 
-                
+            # Check if the dependency contains all required property names.
+            if (isinstance(dep, PropertyDict) 
+                and all(name in dep for name in names)):
                 for name in names:
+                    # Extract property values that match the current _ID.
                     data = dep[name].data.dict
                     for key, value in data.items():
-                        
                         if key[:len(_ID)] == _ID:
                             res[name].append(value.current_value())
 
+        # Convert the results to NumPy arrays.
         res = tuple([np.array(res[name]) for name in names])
+
+        # Return a single array if only one property name is specified.
         if len(res) == 1:
             res = res[0]
+
         return res
