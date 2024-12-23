@@ -1061,10 +1061,34 @@ class DummyFeature(Feature):
         Additional keyword arguments are wrapped as `Property` instances and 
         stored in `self.properties`.
 
-    See Also
-    --------
-    Feature : The base feature class that defines the interface and 
-        fundamental mechanisms for building image-processing pipelines.
+    Example
+    -------
+    >>> import numpy as np
+    >>> from deeptrack.features import DummyFeature
+
+    Create an image:
+    >>> dummy_image = np.ones((60, 80))
+
+    Initialize the DummyFeature:
+    
+    >>> dummy_feature = DummyFeature(value=42)
+
+    Pass the image through the DummyFeature:
+    
+    >>> output_image = dummy_feature(dummy_image)
+
+    The output should be identical to the input:
+    
+    >>> np.array_equal(dummy_image, output_image)
+    True
+
+    Access the properties stored in DummyFeature:
+    
+    >>> dummy_feature.properties["value"]()
+    42
+
+    This example illustrates that the `DummyFeature` can act as a container
+    for properties, while the data itself remains unaltered.
 
     """
 
@@ -1119,6 +1143,8 @@ class Value(Feature):
 
     Examples
     --------
+    >>> from deeptrack.features import Value
+    
     >>> value = Value(42)
     >>> print(value())
     42
