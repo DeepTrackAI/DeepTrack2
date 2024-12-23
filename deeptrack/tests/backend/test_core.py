@@ -190,7 +190,7 @@ class TestCore(unittest.TestCase):
 
 
     def test_DeepTrackNode_single_id(self):
-        """Test a single _ID on a simple parent-child relationship."""
+        # Test a single _ID on a simple parent-child relationship.
 
         parent = core.DeepTrackNode(action=lambda: 10)
         child = core.DeepTrackNode(action=lambda _ID=None: parent(_ID) * 2)
@@ -207,7 +207,7 @@ class TestCore(unittest.TestCase):
 
 
     def test_DeepTrackNode_nested_ids(self):
-        """Test nested IDs for parent-child relationships."""
+        # Test nested IDs for parent-child relationships.
 
         parent = core.DeepTrackNode(action=lambda: 10)
         child = core.DeepTrackNode(
@@ -234,7 +234,7 @@ class TestCore(unittest.TestCase):
 
 
     def test_DeepTrackNode_replicated_behavior(self):
-        """Test replicated behavior where IDs expand."""
+        # Test replicated behavior where IDs expand.
 
         particle = core.DeepTrackNode(action=lambda _ID=None: _ID[0] + 1)
 
@@ -282,7 +282,7 @@ class TestCore(unittest.TestCase):
 
 
     def test_DeepTrackNode_invalidation_and_ids(self):
-        """Test that invalidating a parent affects specific IDs of children."""
+        # Test that invalidating a parent affects specific IDs of children.
 
         parent = core.DeepTrackNode(action=lambda: 10)
         child = core.DeepTrackNode(action=lambda _ID=None: parent(_ID[:1]) * 2)
@@ -308,7 +308,7 @@ class TestCore(unittest.TestCase):
 
 
     def test_DeepTrackNode_dependency_graph_with_ids(self):
-        """Test a multi-level dependency graph with nested IDs."""
+        # Test a multi-level dependency graph with nested IDs.
 
         A = core.DeepTrackNode(action=lambda: 10)
         B = core.DeepTrackNode(action=lambda _ID=None: A(_ID[:-1]) + 5)

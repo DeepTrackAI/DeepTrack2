@@ -12,6 +12,7 @@ import numpy as np
 
 from deeptrack.backend import mie
 
+
 class TestMie(unittest.TestCase):
 
     def test_coefficients(self):
