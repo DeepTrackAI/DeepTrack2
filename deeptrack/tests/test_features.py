@@ -6,9 +6,9 @@
 # import sys
 # sys.path.append(".")  # Adds the module to path.
 
-import unittest
-import operator
 import itertools
+import operator
+import unittest
 
 import numpy as np
 
@@ -863,6 +863,9 @@ class TestFeatures(unittest.TestCase):
             p2=arguments.d,
         )
 
+        #TODO: complete unit test with asserts.
+
+
     def test_BindUpdate(self):
 
         value = features.Value(value=lambda input_value: input_value, input_value=10)
@@ -878,6 +881,7 @@ class TestFeatures(unittest.TestCase):
 
         res = pipeline_with_small_input.update(input_value=10).resolve()
         self.assertEqual(res, 11)
+
 
     def test_Bind(self):
 
@@ -895,6 +899,7 @@ class TestFeatures(unittest.TestCase):
         res = pipeline_with_small_input.update(input_value=10).resolve()
         self.assertEqual(res, 11)
 
+
     def test_BindResolve(self):
 
         value = features.Value(value=lambda input_value: input_value, input_value=10)
@@ -910,6 +915,7 @@ class TestFeatures(unittest.TestCase):
 
         res = pipeline_with_small_input.update(input_value=10).resolve()
         self.assertEqual(res, 11)
+
 
     def test_ConditionalSetProperty(self):
 
@@ -929,6 +935,7 @@ class TestFeatures(unittest.TestCase):
 
         res = pipeline_with_small_input.update().resolve(is_condition=False)
         self.assertEqual(res, 2)
+
 
     def test_ConditionalSetFeature(self):
 
@@ -950,8 +957,10 @@ class TestFeatures(unittest.TestCase):
         res = pipeline.update().resolve(is_condition=True)
         self.assertEqual(res, 2)
 
+
     def test_Merge(self):
         pass
+
 
     def test_OneOf_list(self):
 
@@ -984,6 +993,7 @@ class TestFeatures(unittest.TestCase):
 
         self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
 
+
     def test_OneOf_tuple(self):
 
         values = features.OneOf(
@@ -1015,6 +1025,7 @@ class TestFeatures(unittest.TestCase):
 
         self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
 
+
     def test_OneOf_set(self):
 
         values = features.OneOf(
@@ -1039,6 +1050,7 @@ class TestFeatures(unittest.TestCase):
         self.assertTrue(has_been_three)
 
         self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
+
 
     def test_OneOf_dict(self):
 
@@ -1071,14 +1083,23 @@ class TestFeatures(unittest.TestCase):
 
         self.assertRaises(KeyError, lambda: values.update().resolve(key="4"))
 
+
     def test_Label(self):
-        pass
+        pass 
+
+        #TODO: add unit test.
+
 
     def test_LoadImage(self):
         pass
 
+        #TODO: add unit test.
+
+
     def test_SampleToMasks(self):
         pass
+
+        #TODO: add unit test.
 
 
     def test_AsType(self):
@@ -1118,7 +1139,7 @@ class TestFeatures(unittest.TestCase):
 
     def test_NonOverlapping_resample_volume_position(self):
 
-        # setup
+        # Setup.
         nonOverlapping = features.NonOverlapping(
             features.Value(value=1),
         )
@@ -1136,7 +1157,7 @@ class TestFeatures(unittest.TestCase):
             position=lambda: next(positions_with_unit_iter)
         )()
 
-        # test
+        # Test.
 
         self.assertEqual(volume_1.get_property("position"), positions_no_unit[0])
         self.assertEqual(
@@ -1153,9 +1174,9 @@ class TestFeatures(unittest.TestCase):
             positions_with_unit[1].to("px").magnitude,
         )
 
+
     def test_NonOverlapping_check_volumes_non_overlapping(self):
 
-        # setup
         nonOverlapping = features.NonOverlapping(
             features.Value(value=1),
         )
@@ -1338,15 +1359,16 @@ class TestFeatures(unittest.TestCase):
             )
         )
 
+
     def test_NonOverlapping_check_non_overlapping(self):
 
-        # setup
+        # Setup.
         nonOverlapping = features.NonOverlapping(
             features.Value(value=1),
             min_distance=1,
         )
 
-        # Two spheres at the same position
+        # Two spheres at the same position.
         volume_test0_a = scatterers.Sphere(
             radius=5 * units.px, position=(0, 0, 0) * units.px
         )()
@@ -1354,7 +1376,7 @@ class TestFeatures(unittest.TestCase):
             radius=5 * units.px, position=(0, 0, 0) * units.px
         )()
 
-        # Two spheres of the same size, one under the other
+        # Two spheres of the same size, one under the other.
         volume_test1_a = scatterers.Sphere(
             radius=5 * units.px, position=(0, 0, 0) * units.px
         )()
@@ -1363,7 +1385,7 @@ class TestFeatures(unittest.TestCase):
         )()
 
         # Two spheres of the same size, one under the other, but with a
-        # spacing of 1
+        # spacing of 1.
         volume_test2_a = scatterers.Sphere(
             radius=5 * units.px, position=(0, 0, 0) * units.px
         )()
@@ -1372,7 +1394,7 @@ class TestFeatures(unittest.TestCase):
         )()
 
         # Two spheres of the same size, one under the other, but with a
-        # spacing of -1
+        # spacing of -1.
         volume_test3_a = scatterers.Sphere(
             radius=5 * units.px, position=(0, 0, 0) * units.px
         )()
@@ -1380,7 +1402,7 @@ class TestFeatures(unittest.TestCase):
             radius=5 * units.px, position=(0, 0, 9) * units.px
         )()
 
-        # Two spheres of the same size, diagonally next to each other
+        # Two spheres of the same size, diagonally next to each other.
         volume_test4_a = scatterers.Sphere(
             radius=5 * units.px, position=(0, 0, 0) * units.px
         )()
@@ -1389,7 +1411,7 @@ class TestFeatures(unittest.TestCase):
         )()
 
         # Two spheres of the same size, diagonally next to each other, but
-        # with a spacing of 1
+        # with a spacing of 1.
         volume_test5_a = scatterers.Sphere(
             radius=5 * units.px, position=(0, 0, 0) * units.px
         )()
@@ -1397,7 +1419,7 @@ class TestFeatures(unittest.TestCase):
             radius=5 * units.px, position=(7, 7, 7) * units.px
         )()
 
-        # Run tests
+        # Run tests.
         self.assertFalse(
             nonOverlapping._check_non_overlapping(
                 [volume_test0_a, volume_test0_b],
