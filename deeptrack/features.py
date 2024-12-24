@@ -3060,7 +3060,7 @@ class AsType(Feature):
         image: np.ndarray,
         dtype: str,
         **kwargs: Dict[str, Any],
-    ):
+    ) -> np.ndarray:
         """Convert the data type of the input image.
 
         Parameters
@@ -3153,7 +3153,7 @@ class ChannelFirst2d(Feature):
         image: np.ndarray,
         axis: int,
         **kwargs: Dict[str, Any],
-    ):
+    ) -> np.ndarray:
         """Rearrange the axes of an image to channel-first format.
 
         Rearrange the axes of a 3D image to channel-first format or add a 
@@ -3195,39 +3195,121 @@ class ChannelFirst2d(Feature):
 
 
 class Upscale(Feature):
-    """Performs the simulation at a higher resolution.
+    """Perform the simulation at a higher resolution.
 
-    Redefines the sizes of internal units to scale up the simulation. The resulting image
-    is then downscaled back to the original size. Example::
-
-       optics = dt.Fluorescence()
-       particle = dt.Sphere()
-       pipeline = optics(particle)
-       upscaled_pipeline = dt.Upscale(pipeline, factor=4)
+    This feature scales up the resolution of the input pipeline by a specified 
+    factor, performs computations at the higher resolution, and then 
+    downsamples the result back to the original size. This is useful for 
+    simulating effects at a finer resolution while preserving compatibility 
+    with lower-resolution pipelines.
+    
+    It redefines the sizes of internal units to scale up the simulation. 
+    The resulting image is then downscaled back to the original size.
 
     Parameters
     ----------
     feature : Feature
-        The pipeline to resolve at a higher resolution
-    factor : int or tuple of ints
-        The factor to scale up the simulation by. If a tuple of three integers,
-        each axis is scaled up individually.
+        The pipeline or feature to resolve at a higher resolution.
+    factor : int or Tuple[int, int, int], optional
+        The factor by which to upscale the simulation. If a single integer is 
+        provided, it is applied uniformly across all axes. If a tuple of three 
+        integers is provided, each axis is scaled individually. Defaults to 1.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Attributes
+    ----------
+    __distributed__ : bool
+        Indicates whether this feature distributes computation across inputs.
+        Always `False` for `Upscale`.
+
+    Methods
+    -------
+    get(image, factor, **kwargs)
+        Scales up the pipeline, performs computations, and scales down result.
+
+    Example
+    -------
+    >>> import deeptrack as dt
+    >>> optics = dt.Fluorescence()
+    >>> particle = dt.Sphere()
+    >>> pipeline = optics(particle)
+    >>> upscaled_pipeline = dt.Upscale(pipeline, factor=4)
 
     """
 
-    __distributed__ = False
+    __distributed__: bool = False
 
-    def __init__(self, feature, factor=1, **kwargs):
+    def __init__(
+        self,
+        feature: Feature,
+        factor: Union[int, Tuple[int, int, int]] = 1,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the Upscale feature.
+
+        Parameters
+        ----------
+        feature : Feature
+            The pipeline or feature to resolve at a higher resolution.
+        factor : Union[int, Tuple[int, int, int]], optional
+            The factor by which to upscale the simulation. If a single integer 
+            is provided, it is applied uniformly across all axes. If a tuple of 
+            three integers is provided, each axis is scaled individually. 
+            Defaults to `1`.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the parent `Feature` class.
+
+        """
+
         super().__init__(factor=factor, **kwargs)
         self.feature = self.add_feature(feature)
 
-    def get(self, image, factor, **kwargs):
+    def get(
+        self,
+        image: np.ndarray,
+        factor: Union[int, Tuple[int, int, int]],
+        **kwargs: Dict[str, Any],
+    ) -> np.ndarray:
+        """Scale up resolution of feature pipeline and scale down result.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            The input image to process.
+        factor : int or Tuple[int, int, int]
+            The factor by which to upscale the simulation. If a single integer 
+            is provided, it is applied uniformly across all axes. If a tuple of 
+            three integers is provided, each axis is scaled individually.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the feature.
+
+        Returns
+        -------
+        np.ndarray
+            The processed image at the original resolution.
+
+        Raises
+        ------
+        ValueError
+            If the input `factor` is not a valid integer or tuple of integers.
+
+        """
+
+        # Ensure factor is a tuple of three integers.
         if np.size(factor) == 1:
             factor = (factor,) * 3
+        elif len(factor) != 3:
+            raise ValueError(
+                "Factor must be an integer or a tuple of three integers."
+            )
+
+        # Create a context for upscaling and perform computation.
         ctx = create_context(None, None, None, *factor)
         with units.context(ctx):
             image = self.feature(image)
 
+        # Downscale the result to the original resolution.
         image = skimage.measure.block_reduce(
             image, (factor[0], factor[1]) + (1,) * (image.ndim - 2), np.mean
         )
