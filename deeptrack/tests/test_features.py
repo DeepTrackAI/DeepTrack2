@@ -1080,11 +1080,37 @@ class TestFeatures(unittest.TestCase):
     def test_SampleToMasks(self):
         pass
 
+
     def test_AsType(self):
-        pass
+
+        input_image = np.array([1.5, 2.5, 3.5])
+
+        data_types = ["float64", "int32", "uint16", "int16", "uint8", "int8"]
+        for dtype in data_types:
+            astype_feature = features.AsType(dtype=dtype)
+            output_image = astype_feature.get(input_image, dtype=dtype)
+            self.assertTrue(output_image.dtype == np.dtype(dtype))
+
+            # Additional check for specific behavior of integers.
+            if np.issubdtype(np.dtype(dtype), np.integer):
+                # Verify that fractional parts are truncated
+                self.assertTrue(
+                    np.all(output_image == np.array([1, 2, 3], dtype=dtype))
+                )
+
 
     def test_ChannelFirst2d(self):
-        pass
+
+        channel_first_feature = features.ChannelFirst2d()
+
+        input_image_2d = np.random.rand(10, 20)
+        output_image = channel_first_feature.get(input_image_2d, axis=-1)
+        self.assertEqual(output_image.shape, (1, 10, 20))
+
+        input_image_3d = np.random.rand(10, 20, 3)
+        output_image = channel_first_feature.get(input_image_3d, axis=-1)
+        self.assertEqual(output_image.shape, (3, 10, 20))
+
 
     def test_Upscale(self):
         pass

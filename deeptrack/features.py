@@ -3000,44 +3000,198 @@ def _get_position(image, mode="corner", return_z=False):
 
 
 class AsType(Feature):
-    """Converts the data type of images
+    """Convert the data type of images.
 
-    Accepts same types as numpy arrays. Common types include
-
-    `float64, int32, uint16, int16, uint8, int8`
+    This feature changes the data type (`dtype`) of input images to a specified 
+    type. The accepted types are the same as those used by NumPy arrays, such 
+    as `float64`, `int32`, `uint16`, `int16`, `uint8`, and `int8`.
 
     Parameters
     ----------
-    dtype : str
-        dtype string. Same as numpy dtype.
+    dtype : PropertyLike[Any], optional
+        The desired data type for the image. Defaults to `"float64"`.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from deeptrack.features import AsType
+
+    Create an input array:
+
+    >>> input_image = np.array([1.5, 2.5, 3.5])
+
+    Apply an AsType feature to convert to `int32`:
+
+    >>> astype_feature = AsType(dtype="int32")
+    >>> output_image = astype_feature.get(input_image, dtype="int32")
+    >>> print(output_image)
+    [1 2 3]
+
+    Verify the data type:
+    
+    >>> print(output_image.dtype)
+    int32
 
     """
 
-    def __init__(self, dtype: PropertyLike[Any] = "float64", **kwargs):
+    def __init__(
+        self,
+        dtype: PropertyLike[Any] = "float64",
+        **kwargs: Dict[str, Any],
+    ):
+        """
+        Initialize the AsType feature.
+
+        Parameters
+        ----------
+        dtype : PropertyLike[Any], optional
+            The desired data type for the image. Defaults to `"float64"`.
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the parent `Feature` class.
+
+        """
+
         super().__init__(dtype=dtype, **kwargs)
 
-    def get(self, image, dtype, **kwargs):
+    def get(
+        self,
+        image: np.ndarray,
+        dtype: str,
+        **kwargs: Dict[str, Any],
+    ):
+        """Convert the data type of the input image.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            The input image to process.
+        dtype : str
+            The desired data type for the image.
+        **kwargs : Any
+            Additional keyword arguments (unused here).
+
+        Returns
+        -------
+        np.ndarray
+            The input image converted to the specified data type.
+
+        """
+
         return image.astype(dtype)
 
 
 class ChannelFirst2d(Feature):
-    """Converts a 3d image to channel first format.
+    """Convert an image to a channel-first format.
+
+    This feature rearranges the axes of a 3D image so that the specified axis 
+    (e.g., channel axis) is moved to the first position. If the input image is 
+    2D, it adds a new dimension at the front, effectively treating the 2D 
+    image as a single-channel image.
 
     Parameters
     ----------
-    axis : int
-        The axis to move to the first position. Defaults to -1.
+    axis : int, optional
+        The axis to move to the first position. Defaults to `-1` (last axis).
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from deeptrack.features import ChannelFirst2d
+
+    Create a 2D input array:
+
+    >>> input_image_2d = np.random.rand(10, 10)
+    >>> print(input_image_2d.shape)
+    (10, 10)
+
+    Convert it to channel-first format:
+
+    >>> channel_first_feature = ChannelFirst2d()
+    >>> output_image = channel_first_feature.get(input_image_2d, axis=-1)
+    >>> print(output_image.shape)
+    (1, 10, 10)
+
+    Create a 3D input array:
+
+    >>> input_image_3d = np.random.rand(10, 10, 3)
+    >>> print(input_image_3d.shape)
+    (10, 10, 3)
+
+    Convert it to channel-first format:
+
+    >>> output_image = channel_first_feature.get(input_image_3d, axis=-1)
+    >>> print(output_image.shape)
+    (3, 10, 10)
+
     """
 
-    def __init__(self, axis=-1, **kwargs):
+    def __init__(
+        self,
+        axis: int = -1,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the ChannelFirst2d feature.
+
+        Parameters
+        ----------
+        axis : int, optional
+            The axis to move to the first position. 
+            Defaults to `-1` (last axis).
+        **kwargs : Dict[str, Any]
+            Additional keyword arguments passed to the parent `Feature` class.
+
+        """
+
         super().__init__(axis=axis, **kwargs)
-    def get(self, image, axis, **kwargs):
+
+    def get(
+        self,
+        image: np.ndarray,
+        axis: int,
+        **kwargs: Dict[str, Any],
+    ):
+        """Rearrange the axes of an image to channel-first format.
+
+        Rearrange the axes of a 3D image to channel-first format or add a 
+        channel dimension to a 2D image.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            The input image to process. Can be 2D or 3D.
+        axis : int
+            The axis to move to the first position (for 3D images).
+        **kwargs : Any
+            Additional keyword arguments (unused here).
+
+        Returns
+        -------
+        np.ndarray
+            The processed image in channel-first format.
+
+        Raises
+        ------
+        ValueError
+            If the input image is neither 2D nor 3D.
+
+        """
+
         ndim = image.ndim
 
+        # Add a new dimension for 2D images.
         if ndim == 2:
             return image[None]
-        elif ndim == 3:
+
+        # Move the specified axis to the first position for 3D images.
+        if ndim == 3:
             return np.moveaxis(image, axis, 0)
+
+        raise ValueError("ChannelFirst2d only supports 2D or 3D images. "
+                         f"Received {ndim}D image.")
 
 
 class Upscale(Feature):
