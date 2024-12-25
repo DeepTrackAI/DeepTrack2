@@ -26,7 +26,7 @@ MAGIK has been tested on the following systems:
 
 ## It's a kind of MAGIK...
 
-To see MAGIK in action, we provide an [example](//github.com/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/tracking_hela_cells.ipynb) of tracking and segmenting migrating cells on a glass slide. Data courtesy of [Gert van Cappellen](https://pure.eur.nl/en/persons/gert-van-cappellen).
+To see MAGIK in action, we provide an [example](//github.com/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/Tracking_hela_cells.ipynb) of tracking and segmenting migrating cells on a glass slide. Data courtesy of [Gert van Cappellen](https://pure.eur.nl/en/persons/gert-van-cappellen).
 
 
 ## Cite us!
