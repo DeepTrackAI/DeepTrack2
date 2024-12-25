@@ -1002,7 +1002,7 @@ class Feature(DeepTrackNode):
             return [i.to_numpy() for i in inputs]
 
 
-def propagate_data_to_dependencies(X: Feature, **kwargs: Dict[str, Any]):
+def propagate_data_to_dependencies(feature: Feature, **kwargs: Dict[str, Any]):
     """Updates the properties of dependencies in a feature's dependency tree.
 
     This function iterates over all the dependencies of the given feature and 
@@ -1017,7 +1017,7 @@ def propagate_data_to_dependencies(X: Feature, **kwargs: Dict[str, Any]):
 
     Parameters
     ----------
-    X : Feature
+    feature : Feature
         The feature whose dependencies are to be updated. The dependencies are 
         recursively traversed to ensure all relevant nodes in the dependency 
         tree are considered.
@@ -1029,7 +1029,7 @@ def propagate_data_to_dependencies(X: Feature, **kwargs: Dict[str, Any]):
 
     """
 
-    for dep in X.recurse_dependencies():
+    for dep in feature.recurse_dependencies():
         if isinstance(dep, PropertyDict):
             for key, value in kwargs.items():
                 if key in dep:
