@@ -1,4 +1,4 @@
-"""Mie scattering calculations.
+"""Mie scattering calculations
 
 This module provides functions to perform Mie scattering calculations, 
 including computation of spherical harmonics coefficients and related 
@@ -7,25 +7,20 @@ operations.
 Module Structure
 -----------------
 Functions:
-
-- `coefficients`: Coefficients for spherical harmonics.
-- `stratified_coefficients`: Coefficients for stratified spherical harmonics.
-- `harmonics`: Evaluates spherical harmonics of the Mie field.
+- `mie_coefficients`: Computes coefficients for spherical harmonics.
+- `stratified_mie_coefficients`: Computes coefficients for stratified spherical 
+                                 harmonics.
+- `mie_harmonics`: Evaluates spherical harmonics of the Mie field.
 
 Example
 -------
-Define the parameters of the particle and the Mie scattering:
+Calculate Mie coefficients for a solid particle:
 
 >>> relative_refract_index = 1.5 + 0.01j
 >>> particle_radius = 0.5
 >>> max_order = 5
 
-Calculate Mie coefficients for a solid particle:
-
->>> from deeptrack.backend import mie
->>> A, B = mie.coefficients(relative_refract_index, particle_radius, max_order)
-
-Print them:
+>>> A, B = mie_coefficients(relative_refract_index, particle_radius, max_order)
 
 >>> print("A coefficients:", A)
 >>> print("B coefficients:", B)
@@ -37,14 +32,12 @@ from typing import List, Tuple, Union
 import numpy as np
 
 from ._config import cupy
-from .polynomials import (
-    ricbesh, ricbesy, ricbesj, dricbesh, dricbesj, dricbesy
-)
+from . import ricbesh, ricbesy, ricbesj, dricbesh, dricbesj, dricbesy
 
 
-def coefficients(
-    m: Union[float, complex],
-    a: float,
+def mie_coefficients(
+    m: Union[float, complex], 
+    a: float, 
     L: int,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Calculate the Mie scattering coefficients for a spherical particle.
@@ -69,7 +62,7 @@ def coefficients(
         are the Mie scattering coefficients up to (and including) order L.
 
     """
-
+    
     A = np.zeros((L,), dtype=np.complex128)
     B = np.zeros((L,), dtype=np.complex128)
 
@@ -82,20 +75,16 @@ def coefficients(
         dxix = dricbesh(l, a)
 
         A[l - 1] = (
-            (m * Smx * dSx - Sx * dSmx) 
-            / 
-            (m * Smx * dxix - xix * dSmx)
+            (m * Smx * dSx - Sx * dSmx) / (m * Smx * dxix - xix * dSmx)
         )
         B[l - 1] = (
-            (Smx * dSx - m * Sx * dSmx) 
-            / 
-            (Smx * dxix - m * xix * dSmx)
+            (Smx * dSx - m * Sx * dSmx) / (Smx * dxix - m * xix * dSmx)
         )
 
     return A, B
 
 
-def stratified_coefficients(
+def stratified_mie_coefficients(
     m: List[complex],
     a: List[float],
     L: int,
@@ -103,15 +92,15 @@ def stratified_coefficients(
     """Calculate the Mie scattering coefficients for stratified spherical 
     particles.
 
-    This function calculates the terms up to (and including) order L using 
-    Riccati-Bessel polynomials.
+    Calculates the terms up to (and including) order L using Riccati-Bessel
+    polynomials.
 
     Parameters
     ----------
-    m : List[float or complex]
+    m : list of float or complex
         The relative refractive indices of the particle layers
         (n_particle / n_medium).
-    a : List[float]
+    a : list of float
         The radii of the particle layers (> 0).
     L : int
         The maximum order of the spherical harmonics to be calculated.
@@ -126,7 +115,7 @@ def stratified_coefficients(
     n_layers = len(a)
 
     if n_layers == 1:
-        return coefficients(m[0], a[0], L)
+        return mie_coefficients(m[0], a[0], L)
 
     an = np.zeros((L,), dtype=np.complex128)
     bn = np.zeros((L,), dtype=np.complex128)
@@ -184,8 +173,7 @@ def stratified_coefficients(
 
     return an, bn
 
-
-def harmonics(
+def mie_harmonics(
     x: np.ndarray,
     L: int,
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -199,15 +187,17 @@ def harmonics(
         An array representing the cosine of the polar angle (theta) for each 
         evaluation point relative to the scattering particle's center 
         (the origin). 
-        The polar angle is the angle between the z-axis (aligned with the 
-        direction of wave propagation) and the vector from the particle's 
-        center to the evaluation point.
+        The polar angle is the angle between:
+        - The z-axis (aligned with the direction of wave propagation), and 
+        - The vector from the particle's center to the evaluation point.
         
-        Values in `x` should lie in the range [-1, 1], where `x = 1` 
-        corresponds to theta = 0° (point directly forward along the z-axis),
-        `x = -1` corresponds to theta = 180° (point directly backward along the 
-        z-axis), and `x = 0` corresponds to theta = 90° (point perpendicular to 
-        the z-axis).
+        Values in `x` should lie in the range [-1, 1], where:
+        - `x = 1` corresponds to theta = 0° (point directly forward along the 
+          z-axis),
+        - `x = -1` corresponds to theta = 180° (point directly backward along 
+          the z-axis),
+        - `x = 0` corresponds to theta = 90° (point perpendicular to the 
+          z-axis).
 
     L : int
         The order up to which to evaluate the harmonics.
@@ -219,7 +209,6 @@ def harmonics(
         shape (L, *x.shape).
 
     """
-
     if isinstance(x, cupy.ndarray):
         PI = cupy.zeros((L, *x.shape))
         TAU = cupy.zeros((L, *x.shape))

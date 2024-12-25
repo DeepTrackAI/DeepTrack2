@@ -1,23 +1,74 @@
 """Bessel and Riccati-Bessel polynomials.
 
-This module defines a set of functions for computing Bessel and Riccati-Bessel 
-polynomials and their derivatives. It expands the corresponding capabilities of 
-`scipy`.
+This file defines a set of functions for computing Bessel and Riccati-Bessel 
+polynomials and their derivatives. It expands the capabilities of `scipy`.
 
-Module Structure
------------------
-Functions:
+Functions
+---------
+besselj(
+    l: Union[int, float],
+    x: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]
+    Computes the Bessel polynomial of the first kind for a given order `l`
+    and input `x`.
 
-- `besselj`: Bessel polynomial of the 1st kind.
-- `dbesselj`: First derivative of the Bessel polynomial of the 1st kind.
-- `bessely`: Bessel polynomial of the 2nd kind.
-- `dbessely`: First derivative of the Bessel polynomial of the 2nd kind.
-- `ricbesj`: Riccati-Bessel polynomial of the 1st kind.
-- `dricbesj`: First derivative of the Riccati-Bessel polynomial of the 1st kind.
-- `ricbesy`: Riccati-Bessel polynomial of the 2nd kind.
-- `dricbesy`: First derivative of the Riccati-Bessel polynomial of the 2nd kind.
-- `ricbesh`: Riccati-Bessel polynomial of the 3rd kind.
-- `dricbesh`: First derivative of the Riccati-Bessel polynomial of the 3rd kind.
+dbesselj(
+    l: Union[int, float],
+    x: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]
+    Computes the first derivative of the Bessel polynomial of the first kind.
+
+bessely(
+    l: Union[int, float], 
+    x: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]
+    Computes the Bessel polynomial of the second kind for a given order `l`
+    and input `x`.
+
+dbessely(
+    l: Union[int, float], 
+    x: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]
+    Computes the first derivative of the Bessel polynomial of the second kind.
+
+ricbesj(
+    l: Union[int, float], 
+    x: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]
+    Computes the Riccati-Bessel polynomial of the first kind.
+
+dricbesj(
+    l: Union[int, float], 
+    x: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]
+    Computes the first derivative of the Riccati-Bessel polynomial of the
+    first kind.
+
+ricbesy(
+    l: Union[int, float], 
+    x: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]
+    Computes the Riccati-Bessel polynomial of the second kind.
+
+dricbesy(
+    l: Union[int, float], 
+    x: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]
+    Computes the first derivative of the Riccati-Bessel polynomial of the
+    second kind.
+
+ricbesh(
+    l: Union[int, float], 
+    x: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]
+    Computes the Riccati-Bessel polynomial of the third kind.
+
+dricbesh(
+    l: Union[int, float], 
+    x: Union[int, float, np.ndarray]
+) -> Union[float, np.ndarray]
+    Computes the first derivative of the Riccati-Bessel polynomial of the
+    third kind.
     
 """
 
@@ -31,19 +82,19 @@ def besselj(
         l: Union[int, float],
         x: Union[int, float, np.ndarray],
     ) -> Union[float, np.ndarray]:
-    """The Bessel polynomial of the 1st kind.
+    """The Bessel polynomial of the first kind.
 
     Parameters
     ----------
-    l : int or float
-        Polynomial order.
-    x : int or float or np.ndarray
-        The point(s) where the polynomial is evaluated.
+    l : int, float
+        Polynomial order
+    x : number, ndarray
+        The point(s) the polynomial is evaluated at
 
     Returns
     -------
-    float or np.ndarray
-        The polynomial evaluated at x.
+    float, ndarray
+        The polynomial evaluated at x
 
     """
 
@@ -54,19 +105,19 @@ def dbesselj(
         l: Union[int, float],
         x: Union[int, float, np.ndarray],
     ) -> Union[float, np.ndarray]:
-    """The first derivative of the Bessel polynomial of the 1st kind.
+    """The first derivative of the Bessel polynomial of the first kind.
 
     Parameters
     ----------
-    l : int or float
-        Polynomial order.
-    x : int or float or np.ndarray
-        The point(s) where the polynomial is evaluated.
+    l : int, float
+        Polynomial order
+    x : number, ndarray
+        The point(s) the polynomial is evaluated at
 
     Returns
     -------
-    float or np.ndarray
-        The polynomial evaluated at x.
+    float, ndarray
+        The polynomial evaluated at x
 
     """
 
@@ -77,19 +128,19 @@ def bessely(
         l: Union[int, float],
         x: Union[int, float, np.ndarray],
     ) -> Union[float, np.ndarray]:
-    """The Bessel polynomial of the 2nd kind.
+    """The Bessel polynomial of the second kind.
 
     Parameters
     ----------
-    l : int or float
-        Polynomial order.
-    x : int or float or np.ndarray
-        The point(s) where the polynomial is evaluated.
+    l : int, float
+        Polynomial order
+    x : number, ndarray
+        The point(s) the polynomial is evaluated at
 
     Returns
     -------
-    float or np.ndarray
-        The polynomial evaluated at x.
+    float, ndarray
+        The polynomial evaluated at x
 
     """
 
@@ -100,19 +151,19 @@ def dbessely(
         l: Union[int, float],
         x: Union[int, float, np.ndarray],
     ) -> Union[float, np.ndarray]:
-    """The first derivative of the Bessel polynomial of the 2nd kind.
+    """The first derivative of the Bessel polynomial of the second kind.
 
     Parameters
     ----------
-    l : int or float
-        Polynomial order.
-    x : int or float or np.ndarray
-        The point(s) where the polynomial is evaluated.
+    l : int, float
+        Polynomial order
+    x : number, ndarray
+        The point(s) the polynomial is evaluated at
 
     Returns
     -------
-    float or np.ndarray
-        The polynomial evaluated at x.
+    float, ndarray
+        The polynomial evaluated at x
 
     """
 
@@ -123,19 +174,19 @@ def ricbesj(
         l: Union[int, float],
         x: Union[int, float, np.ndarray],
     ) -> Union[float, np.ndarray]:
-    """The Riccati-Bessel polynomial of the 1st kind.
+    """The Riccati-Bessel polynomial of the first kind.
 
     Parameters
     ----------
-    l : int or float
-        Polynomial order.
-    x : int or float or np.ndarray
-        The point(s) where the polynomial is evaluated.
+    l : int, float
+        Polynomial order
+    x : number, ndarray
+        The point(s) the polynomial is evaluated at
 
     Returns
     -------
-    float or np.ndarray
-        The polynomial evaluated at x.
+    float, ndarray
+        The polynomial evaluated at x
 
     """
 
@@ -146,19 +197,20 @@ def dricbesj(
         l: Union[int, float],
         x: Union[int, float, np.ndarray],
     ) -> Union[float, np.ndarray]:
-    """The first derivative of the Riccati-Bessel polynomial of the 1st kind.
+    """The first derivative of the Riccati-Bessel polynomial of the first
+    kind.
 
     Parameters
     ----------
-    l : int or float
-        Polynomial order.
-    x : int or float or np.ndarray
-        The point(s) where the polynomial is evaluated.
+    l : int, float
+        Polynomial order
+    x : number, ndarray
+        The point(s) the polynomial is evaluated at
 
     Returns
     -------
-    float or np.ndarray
-        The polynomial evaluated at x.
+    float, ndarray
+        The polynomial evaluated at x
 
     """
 
@@ -171,19 +223,19 @@ def ricbesy(
         l: Union[int, float],
         x: Union[int, float, np.ndarray],
     ) -> Union[float, np.ndarray]:
-    """The Riccati-Bessel polynomial of the 2nd kind.
+    """The Riccati-Bessel polynomial of the second kind.
 
     Parameters
     ----------
-    l : int or float
-        Polynomial order.
-    x : int or float or np.ndarray
-        The point(s) where the polynomial is evaluated.
+    l : int, float
+        Polynomial order
+    x : number, ndarray
+        The point(s) the polynomial is evaluated at
 
     Returns
     -------
-    float or np.ndarray
-        The polynomial evaluated at x.
+    float, ndarray
+        The polynomial evaluated at x
 
     """
 
@@ -194,19 +246,20 @@ def dricbesy(
         l: Union[int, float],
         x: Union[int, float, np.ndarray],
     ) -> Union[float, np.ndarray]:
-    """The first derivative of the Riccati-Bessel polynomial of the 2nd kind.
+    """The first derivative of the Riccati-Bessel polynomial of the second
+    kind.
 
     Parameters
     ----------
-    l : int or float
-        Polynomial order.
-    x : int or float or np.ndarray
-        The point(s) where the polynomial is evaluated.
+    l : int, float
+        Polynomial order
+    x : number, ndarray
+        The point(s) the polynomial is evaluated at
 
     Returns
     -------
-    float or np.ndarray
-        The polynomial evaluated at x.
+    float, ndarray
+        The polynomial evaluated at x
 
     """
 
@@ -219,19 +272,19 @@ def ricbesh(
         l: Union[int, float],
         x: Union[int, float, np.ndarray],
     ) -> Union[float, np.ndarray]:
-    """The Riccati-Bessel polynomial of the 3rd kind.
+    """The Riccati-Bessel polynomial of the third kind.
 
     Parameters
     ----------
-    l : int or float
-        Polynomial order.
-    x : int or float or np.ndarray
-        The point(s) where the polynomial is evaluated.
+    l : int, float
+        Polynomial order
+    x : number, ndarray
+        The point(s) the polynomial is evaluated at
 
     Returns
     -------
-    float or np.ndarray
-        The polynomial evaluated at x.
+    float, ndarray
+        The polynomial evaluated at x
 
     """
 
@@ -242,19 +295,19 @@ def dricbesh(
         l: Union[int, float],
         x: Union[int, float, np.ndarray],
     ) -> Union[float, np.ndarray]:
-    """The first derivative of the Riccati-Bessel polynomial of the 3rd kind.
+    """The first derivative of the Riccati-Bessel polynomial of the third kind.
 
     Parameters
     ----------
-    l : int or float
-        Polynomial order.
-    x : int or float or np.ndarray
-        The point(s) where the polynomial is evaluated.
+    l : int, float
+        Polynomial order
+    x : number, ndarray
+        The point(s) the polynomial is evaluated at
 
     Returns
     -------
-    float or np.ndarray
-        The polynomial evaluated at x.
+    float, ndarray
+        The polynomial evaluated at x
 
     """
 

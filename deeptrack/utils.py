@@ -3,15 +3,21 @@
 This module defines utility functions that enhance code readability, 
 streamline common operations, and ensure type and argument consistency.
 
-Module Structure
-----------------
-Functions:
-
-- `hasmethod`: Checks if an object has a callable method named `method_name`.    
-- `as_list`: Ensures that the input is a list.
-- `get_kwarg_names`: Retrieves keyword argument names accepted by a function.
-- `kwarg_has_default`: Checks if a function argument has a default value.
-- `safe_call`: Calls a function, passing only valid arguments.
+Functions
+---------
+hasmethod(obj: any, method_name: str) -> bool
+    Returns True if the object has a field named `function_name` that is 
+    callable. Otherwise, returns False.
+as_list(obj: any) -> list
+    If the input is iterable, converts it to list. 
+    Otherwise, wraps the input in a list.
+get_kwarg_names(function: Callable) -> List[str]
+    Retrieves the names of the keyword arguments accepted by a function.
+kwarg_has_default(function: Callable, argument: str) -> bool
+    Checks if a specific argument of a function has a default value.
+safe_call(function, positional_args=[], **kwargs)
+    Calls a function, passing only valid arguments from the provided keyword 
+    arguments (kwargs).
 
 """
 
@@ -19,15 +25,12 @@ import inspect
 from typing import Any, Callable, List
 
 
-def hasmethod(obj: Any, method_name: str) -> bool:
+def hasmethod(obj: any, method_name: str) -> bool:
     """Check if an object has a callable method named `method_name`.
-
-    Returns `True` if the object has a field named `method_name` that is 
-    callable. Otherwise, returns `False`.
 
     Parameters
     ----------
-    obj : Any
+    obj : any
         The object to inspect.
     method_name : str
         The name of the method to look for.
@@ -52,7 +55,7 @@ def as_list(obj: any) -> list:
 
     Parameters
     ----------
-    obj : Any
+    obj : any
         The object to be converted or wrapped in a list.
 
     Returns

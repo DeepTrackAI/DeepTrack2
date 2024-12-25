@@ -147,7 +147,6 @@ class TestCore(unittest.TestCase):
         self.assertTrue(parent.is_valid())
         self.assertTrue(child.is_valid())
 
-
     def test_DeepTrackNode_nested_dependencies(self):
         parent = core.DeepTrackNode(action=lambda: 5)
         middle = core.DeepTrackNode(action=lambda: parent() + 5)
@@ -157,7 +156,7 @@ class TestCore(unittest.TestCase):
         middle.add_child(child)
 
         result = child()
-        self.assertEqual(result, 20)
+        self.assertEqual(result, 20, "Nested computation failed.")
 
         # Invalidate the middle and check propagation.
         middle.invalidate()
@@ -166,7 +165,7 @@ class TestCore(unittest.TestCase):
         self.assertFalse(child.is_valid())
 
 
-    def test_DeepTrackNode_op_overloading(self):
+    def test_DeepTrackNode_overloading(self):
         node1 = core.DeepTrackNode(action=lambda: 5)
         node2 = core.DeepTrackNode(action=lambda: 10)
 
@@ -190,7 +189,7 @@ class TestCore(unittest.TestCase):
 
 
     def test_DeepTrackNode_single_id(self):
-        # Test a single _ID on a simple parent-child relationship.
+        """Test a single _ID on a simple parent-child relationship."""
 
         parent = core.DeepTrackNode(action=lambda: 10)
         child = core.DeepTrackNode(action=lambda _ID=None: parent(_ID) * 2)
@@ -205,9 +204,8 @@ class TestCore(unittest.TestCase):
             self.assertEqual(child(_ID=(id,)), value * 2)
             self.assertEqual(parent.previous((id,)), value)
 
-
     def test_DeepTrackNode_nested_ids(self):
-        # Test nested IDs for parent-child relationships.
+        """Test nested IDs for parent-child relationships."""
 
         parent = core.DeepTrackNode(action=lambda: 10)
         child = core.DeepTrackNode(
@@ -234,7 +232,7 @@ class TestCore(unittest.TestCase):
 
 
     def test_DeepTrackNode_replicated_behavior(self):
-        # Test replicated behavior where IDs expand.
+        """Test replicated behavior where IDs expand."""
 
         particle = core.DeepTrackNode(action=lambda _ID=None: _ID[0] + 1)
 
@@ -245,7 +243,6 @@ class TestCore(unittest.TestCase):
 
         cluster_value = cluster()
         self.assertEqual(cluster_value, 3)
-
 
     def test_DeepTrackNode_parent_id_inheritance(self):
 
@@ -280,9 +277,8 @@ class TestCore(unittest.TestCase):
         self.assertEqual(child_deeper(_ID=(1, 1)), 10)
         self.assertEqual(child_deeper(_ID=(1, 2)), 10)
 
-
     def test_DeepTrackNode_invalidation_and_ids(self):
-        # Test that invalidating a parent affects specific IDs of children.
+        """Test that invalidating a parent affects specific IDs of children."""
 
         parent = core.DeepTrackNode(action=lambda: 10)
         child = core.DeepTrackNode(action=lambda _ID=None: parent(_ID[:1]) * 2)
@@ -298,7 +294,7 @@ class TestCore(unittest.TestCase):
 
         # Invalidate the parent at _ID=(0,).
         parent.invalidate((0,))
-
+        
         self.assertFalse(parent.is_valid((0,)))
         self.assertFalse(parent.is_valid((1,)))
         self.assertFalse(child.is_valid((0, 0)))
@@ -308,7 +304,7 @@ class TestCore(unittest.TestCase):
 
 
     def test_DeepTrackNode_dependency_graph_with_ids(self):
-        # Test a multi-level dependency graph with nested IDs.
+        """Test a multi-level dependency graph with nested IDs."""
 
         A = core.DeepTrackNode(action=lambda: 10)
         B = core.DeepTrackNode(action=lambda _ID=None: A(_ID[:-1]) + 5)
