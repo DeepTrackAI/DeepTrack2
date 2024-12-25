@@ -15,7 +15,7 @@ Calculate center of an image containing randomly generated Gaussian blur.
 >>> from deeptrack.extras import radialcenter as rc
 >>> gaussian_blur = np.random.normal(0, 0.005, (100, 100))
 >>> x, y = rc.radialcenter(gaussian_blur)
->>> print(f"Center of distribution = {x}, {y}")
+>>> print(f"Center of intensity distribution = {x}, {y}")
 
 
   Python implementation by Benjamin Midtvedt, University of Gothenburg, 2020
@@ -42,10 +42,16 @@ Calculate center of an image containing randomly generated Gaussian blur.
 """
 
 # import * to keep syntax similar to matlab
+from typing import Tuple
+
 from numpy import *
 import scipy.signal
 
-def radialcenter(I, invert_xy=False):
+
+def radialcenter(
+        I: ndarray, 
+        invert_xy: bool = False,
+) -> Tuple[float, float]:
   """Calculates the center of a 2D intensity distribution.
 
   Considers lines passing through each half-pixel point with slope

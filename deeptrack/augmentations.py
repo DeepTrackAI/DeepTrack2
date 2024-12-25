@@ -1,9 +1,55 @@
-""" Features that augment images.
+"""Classes to augment images.
+
+This module provides the augmentation DeepTrack2 classes
+that augment the image with various transformations.
+
+Module Structure
+----------------
+Augmentation Base Class:
+- `Augmentation` 
+
+Cache Class:
+- `Reuse` : Stores and reuses feature outputs.
+
+General Augmentations:
+- `FlipLR` : Flips image left to right.
+- `FlipUD` : Flips image up to down.
+- `FlipDiagonal` : Flips image along the diagonal.
+
+Advanced Augmentations:
+- `Affine` : Class to enable translation, scaling, rotation, shearing
+             of an image, with user specified parameters.
+- 'ElasticTransformation' : Transform using a displacement field.
+
+Cropping:
+- `Crop` : Crop regions of an image.
+- `CropToMultiplesOf` : Crops image until height/width is multiple of a value
+- `CropTight` : Crops to remove empty space at start and end of a 3D array.
+
+Padding:
+- `Pad` : Pads image
+- `PadMultiplesOf` : Pad images until height/width is a multiple of a value.
+
+Example
+-------
+Augment image of a particle with flips:
+
+    >>> import deeptrack as dt
+    >>> from matplotlib import pyplot as plt
+    >>> import numpy as np 
+    >>> particle = dt.PointParticle()
+    >>> optics = dt.Fluorescence()
+    >>> augment = dt.Value(optics(particle))\ 
+    >>>     >> dt.FlipUD(p=1.0) >> dt.FlipLR(p=1.0)
+    >>> image = np.array(augment.update()())
+    >>> plt.imshow(image)
+
+
 """
 
 import warnings
 import random
-from typing import Callable
+from typing import Callable, List, Union
 
 import numpy as np
 import scipy.ndimage as ndimage
@@ -19,7 +65,7 @@ from .types import ArrayLike, PropertyLike
 class Augmentation(Feature):
     """Base abstract augmentation class.
 
-    Parameters
+    Attributes
     ----------
     time_consistend: boolean
        Whether to augment all images in a sequence equally.
@@ -28,7 +74,12 @@ class Augmentation(Feature):
     def __init__(self, time_consistent=False, **kwargs):
         super().__init__(time_consistent=time_consistent, **kwargs)
 
-    def _image_wrapped_process_and_get (self, image_list, time_consistent, **kwargs):
+    def _image_wrapped_process_and_get (
+        self,
+        image_list: List[Image],
+        time_consistent: PropertyLike[bool],
+        **kwargs
+    ) -> List[List]:
         if not isinstance(image_list, list):
             wrap_depth = 2
             image_list_of_lists = [[image_list]]
@@ -61,7 +112,13 @@ class Augmentation(Feature):
 
         return new_list_of_lists
     
-    def _no_wrap_process_and_get(self, image_list, time_consistent, **kwargs) -> list:
+    def _no_wrap_process_and_get(
+        self,
+        image_list: List[Image],
+        time_consistent: PropertyLike[bool],
+        **kwargs
+    ) -> List[List]:
+
         if not isinstance(image_list, list):
             wrap_depth = 2
             image_list_of_lists = [[image_list]]
@@ -100,22 +157,25 @@ class Augmentation(Feature):
 class Reuse(Feature):
     """Acts like cache.
 
-    `Reuse` stores the output of a feature and reuses it for subsequent calls, even if it is updated.
-    This is can be used after a time-consuming feature to augment the output of the feature without
-    recalculating it. For example::
-
+    `Reuse` stores the output of a feature and reuses it for subsequent calls,
+    even if it is updated. This is can be used after a time-consuming feature
+    to augment the output of the feature without recalculating it.
+    For example:
        pipeline = dt.Reuse(pipeline, uses=2) >> dt.FlipLR()
 
     Here, the output of pipeline is used twice, augmented randomly by FlipLR.
 
-    Parameters
+    Attributes
     ----------
     feature : Feature
        The feature to reuse.
     uses : int
-       Number of each stored image uses before evaluating `feature`. Note that the actual total number of uses is `uses * storage`. Should be constant.
+       Number of each stored image uses before evaluating `feature`.
+       Note that the actual total number of uses is `uses * storage`.
+       Should be constant.
     storage : int
-       Number of instances of the output of `feature` to cache. Should be constant.
+       Number of instances of the output of `feature` to cache.
+       Should be constant.
 
     """
 
@@ -129,7 +189,13 @@ class Reuse(Feature):
         self.counter = 0
         self.cache = []
 
-    def get(self, image, uses, storage, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        uses: PropertyLike[int],
+        storage: PropertyLike[int],
+        **kwargs
+    ) -> List[Image]:
 
         self.cache = self.cache[-storage:]
 
@@ -172,13 +238,16 @@ class FlipLR(Augmentation):
     Extra arguments
     ---------------
     augment : bool
-       Whether to perform the augmentation. Leaving as default is sufficient most of the time.
+       Whether to perform the augmentation.
+       Leaving as default is sufficient most of the time.
     """
 
     def __init__(self, p=0.5, augment=None, **kwargs):
         super().__init__(
             p=p,
-            augment=(lambda p: np.random.rand() < p) if augment is None else augment,
+            augment=(
+                lambda p: np.random.rand() < p
+            ) if augment is None else augment,
             **kwargs,
         )
 
@@ -209,13 +278,16 @@ class FlipUD(Augmentation):
     Extra arguments
     ---------------
     augment : bool
-       Whether to perform the augmentation. Leaving as default is sufficient most of the time.
+       Whether to perform the augmentation.
+       Leaving as default is sufficient most of the time.
     """
 
     def __init__(self, p=0.5, augment=None, **kwargs):
         super().__init__(
             p=p,
-            augment=(lambda p: np.random.rand() < p) if augment is None else augment,
+            augment=(
+                lambda p: np.random.rand() < p
+                ) if augment is None else augment,
             **kwargs,
         )
 
@@ -236,7 +308,8 @@ class FlipUD(Augmentation):
 class FlipDiagonal(Augmentation):
     """Flips images along the main diagonal.
 
-    Updates all properties called "position" by swapping the first and second index.
+    Updates all properties called "position" by swapping
+    the first and second index.
 
     Arguments
     ---------
@@ -246,17 +319,24 @@ class FlipDiagonal(Augmentation):
     Extra arguments
     ---------------
     augment : bool
-       Whether to perform the augmentation. Leaving as default is sufficient most of the time.
+       Whether to perform the augmentation.
+       Leaving as default is sufficient most of the time.
     """
 
     def __init__(self, p=0.5, augment=None, **kwargs):
         super().__init__(
             p=p,
-            augment=(lambda p: np.random.rand() < p) if augment is None else augment,
+            augment=(
+                lambda p: np.random.rand() < p
+                ) if augment is None else augment,
             **kwargs,
         )
 
-    def get(self, image, augment, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        augment: PropertyLike[float],
+        **kwargs):
         if augment:
             image = np.transpose(image, axes=(1, 0, *range(2, image.ndim)))
         return image
@@ -287,25 +367,25 @@ class Affine(Augmentation):
     of the input image to generate output pixel values. The parameter `order`
     deals with the method of interpolation used for this.
 
-
-    Parameters
+    Attributes
     ----------
-    scale : number or tuple of number or list of number or dict {"x": number, "y": number}
+    scale : float or tuple of float or list of float or dict
         Scaling factor to use, where ``1.0`` denotes "no change" and
         ``0.5`` is zoomed out to ``50`` percent of the original size.
-        If two values are provided (using tuple, list, or dict), the two first dimensions of the input are scaled individually.
+        If two values are provided (using tuple, list, or dict),
+        the two first dimensions of the input are scaled individually.
 
-    translate : number or tuple of number or list of number or dict {"x": number, "y": number}
+    translate : float or tuple of float or list of float or dict
         Translation in pixels.
 
-    translate_px : number or tuple of number or list of number or dict {"x": number, "y": number}
+    translate_px : float or tuple of float or list of float or dict
         DEPRECATED, use translate.
 
-    rotate : number
+    rotate : float
         Rotation in radians, i.e. Rotation happens around the *center* of the
         image.
 
-    shear : number
+    shear : float
         Shear in radians. Values in the range (-pi/4, pi/4) are common
 
 
@@ -322,11 +402,11 @@ class Affine(Augmentation):
 
     def __init__(
         self,
-        scale: PropertyLike[float or ArrayLike[float]] = 1,
-        translate: PropertyLike[float or ArrayLike[float] or None] = None,
-        translate_px: PropertyLike[float or ArrayLike[float]] = 0,
-        rotate: PropertyLike[float or ArrayLike[float]] = 0,
-        shear: PropertyLike[float or ArrayLike[float]] = 0,
+        scale: PropertyLike[Union[float, ArrayLike[float]]] = 1,
+        translate: PropertyLike[Union[float, ArrayLike[float], None]] = None,
+        translate_px: PropertyLike[Union[float, ArrayLike[float]]] = 0,
+        rotate: PropertyLike[Union[float, ArrayLike[float]]] = 0,
+        shear: PropertyLike[Union[float, ArrayLike[float]]] = 0,
         order: PropertyLike[int] = 1,
         cval: PropertyLike[float] = 0,
         mode: PropertyLike[str] = "reflect",
@@ -368,13 +448,20 @@ class Affine(Augmentation):
 
         return properties
 
-    def get(self, image, scale, translate, rotate, shear, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        scale: PropertyLike[float],
+        translate: PropertyLike[float],
+        rotate: PropertyLike[float],
+        shear: PropertyLike[float],
+        **kwargs
+    ) -> Image:
 
         assert (
             image.ndim == 2 or image.ndim == 3
-        ), "Affine only supports 2-dimensional or 3-dimension inputs, got {0}".format(
-            image.ndim
-        )
+        ), "Affine only supports 2-dimensional or 3-dimension inputs, got {0}"\
+        .format(image.ndim)
 
         dx, dy = translate
         fx, fy = scale
@@ -450,18 +537,19 @@ class Affine(Augmentation):
 
 
 class ElasticTransformation(Augmentation):
-    """Transform images by moving pixels locally around using displacement fields.
+    """Transform images using displacement fields.
 
-    The augmenter creates a random distortion field using `alpha` and `sigma`, which define
-    the strength and smoothness of the field respectively. These are used to transform the
-    input locally.
+    The augmenter creates a random distortion field using `alpha` and `sigma`,
+    which define the strength and smoothness of the field respectively.
+    These are used to transform the input locally.
 
-    .. Note:
-        This augmentation does not currently update the position property of the image,
-        meaning that it is not recommended to use it if the network label is
-        derived from the position properties of the resulting image.
+    Note:
+        This augmentation does not currently update the position property
+        of the image, meaning that it is not recommended to use it if
+        the data label is derived from the position properties of the
+        resulting image.
 
-    For a detailed explanation, see ::
+    For a detailed explanation, see:
 
         Simard, Steinkraus and Platt
         Best Practices for Convolutional Neural Networks applied to Visual
@@ -470,34 +558,34 @@ class ElasticTransformation(Augmentation):
         Recognition, 2003
 
 
-    Parameters
+    Attributes
     ----------
-    alpha : number
-        Strength of the distortion field. Common values are in the range (10, 100)
+    alpha : float
+        Strength of the distortion field.
+        Common values are in the range (10, 100)
 
-    sigma : number
+    sigma : float
         Standard deviation of the gaussian kernel used to smooth the distortion
         fields. Common values are in the range (1, 10)
 
     ignore_last_dim : bool
         Whether to skip creating a distortion field for the last dimension.
-        This is often desired if the last dimension is a channel dimension (such as
-        a color image.) In that case, the three channels are transformed identically
-        and do not `bleed` into eachother.
-
+        This is often desired if the last dimension is a channel dimension
+        (such as a color image.) In that case, the three channels are
+        transformed identically and do not "bleed" into eachother.
 
     order : int
         Interpolation order to use. Takes integers from 0 to 5
 
-            * ``0``: ``Nearest-neighbor``
-            * ``1``: ``Bi-linear`` (default)
-            * ``2``: ``Bi-quadratic`` (not recommended by skimage)
-            * ``3``: ``Bi-cubic``
-            * ``4``: ``Bi-quartic``
-            * ``5``: ``Bi-quintic``
+            * 0: ``Nearest-neighbor``
+            * 1: ``Bi-linear`` (default)
+            * 2: ``Bi-quadratic`` (not recommended by skimage)
+            * 3: ``Bi-cubic``
+            * 4: ``Bi-quartic``
+            * 5: ``Bi-quintic``
 
 
-    cval : number
+    cval : float
         The constant intensity value used to fill in new pixels.
         This value is only used if `mode` is set to ``constant``.
 
@@ -528,7 +616,14 @@ class ElasticTransformation(Augmentation):
             **kwargs,
         )
 
-    def get(self, image, sigma, alpha, ignore_last_dim, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        sigma: PropertyLike[float],
+        alpha: PropertyLike[float],
+        ignore_last_dim: PropertyLike[bool],
+        **kwargs
+    ) -> Image:
 
         shape = image.shape
 
@@ -555,7 +650,9 @@ class ElasticTransformation(Augmentation):
         grids = list(np.meshgrid(*ranges))
 
         for grid, delta in zip(grids, deltas):
-            dDim = np.transpose(grid, axes=(1, 0) + tuple(range(2, grid.ndim))) + delta
+            dDim = np.transpose(
+                grid, axes=(1, 0
+                ) + tuple(range(2, grid.ndim))) + delta
             coordinates.append(np.reshape(dDim, (-1, 1)))
 
         if ignore_last_dim:
@@ -581,7 +678,7 @@ class ElasticTransformation(Augmentation):
 class Crop(Augmentation):
     """Crops a regions of an image.
 
-    Parameters
+    Attributes
     ----------
     feature : feature or list of features
         Feature(s) to augment.
@@ -604,14 +701,27 @@ class Crop(Augmentation):
     def __init__(
         self,
         *args,
-        crop: PropertyLike[int or ArrayLike[int]] = (64, 64),
+        crop: PropertyLike[Union[int, ArrayLike[int]]] = (64, 64),
         crop_mode: PropertyLike[str] = "retain",
         corner: PropertyLike[str] = "random",
         **kwargs
     ):
-        super().__init__(*args, crop=crop, crop_mode=crop_mode, corner=corner, **kwargs)
+        super().__init__(
+            *args,
+            crop=crop,
+            crop_mode=crop_mode,
+            corner=corner,
+            **kwargs,
+        )
 
-    def get(self, image, corner, crop, crop_mode, **kwargs):
+    def get(
+        self,
+        image: PropertyLike[Image],
+        corner: PropertyLike[str],
+        crop: PropertyLike[Union[int, ArrayLike[int]]],
+        crop_mode: PropertyLike[str],
+        **kwargs
+    ) -> Image:
 
         # Get crop argument
         if callable(crop):
@@ -619,7 +729,8 @@ class Crop(Augmentation):
         if isinstance(crop, int):
             crop = (crop,) * image.ndim
 
-        crop = [c if c is not None else image.shape[i] for i, c in enumerate(crop)]
+        crop = [c if c is not None else image.shape[i]\
+        for i, c in enumerate(crop)]
 
         # Get amount to crop from image
         if crop_mode == "retain":
@@ -630,7 +741,10 @@ class Crop(Augmentation):
             raise ValueError("Unrecognized crop_mode {0}".format(crop_mode))
 
         # Contain within image
-        crop_amount = np.amax((np.array(crop_amount), [0] * image.ndim), axis=0)
+        crop_amount = np.amax(
+            (np.array(crop_amount), [0] * image.ndim),
+            axis=0
+        )
         crop_amount = np.amin((np.array(image.shape) - 1, crop_amount), axis=0)
         # Get corner of crop
         if isinstance(corner, str) and corner == "random":
@@ -658,7 +772,8 @@ class Crop(Augmentation):
 
         # Update positions
         if hasattr(image, "properties"):
-            cropped_image.properties = [dict(prop) for prop in image.properties]
+            cropped_image.properties =\
+            [dict(prop) for prop in image.properties]
             for prop in cropped_image.properties:
                 if "position" in prop:
                     position = np.array(prop["position"])
@@ -674,7 +789,7 @@ class Crop(Augmentation):
 class CropToMultiplesOf(Crop):
     """Crop images down until their height/width is a multiple of a value.
 
-    Parameters
+    Attributes
     ----------
     multiple : int or tuple of (int or None)
         Images will be cropped down until their width is a multiple of
@@ -685,7 +800,7 @@ class CropToMultiplesOf(Crop):
 
     def __init__(
         self,
-        multiple: PropertyLike[int or ArrayLike[int] or None] = 1,
+        multiple: PropertyLike[Union[int, ArrayLike[int], None]] = 1,
         corner: PropertyLike[str] = "random",
         **kwargs
     ):
@@ -717,20 +832,27 @@ class CropToMultiplesOf(Crop):
 
 
 class CropTight(Feature):
+    """Crops input array to remove empty space.
+
+    Removes indices from the start and end of the array,
+    where all values are below eps.
+    Currently only works for 3D arrays.
+
+    Attributes
+    ----------
+    eps : float, optional
+        The threshold for considering a pixel to be empty,
+        by default 1e-10.
+
+    """
     def __init__(self, eps=1e-10, **kwargs):
-        """Crops input array to remove empty space.
-
-        Removes indices from the start and end of the array, where all values are below eps.
-
-        Currently only works for 3D arrays.
-
-        Parameters
-        ----------
-        eps : float, optional
-            The threshold for considering a pixel to be empty, by default 1e-10"""
         super().__init__(eps=eps, **kwargs)
 
-    def get(self, image, eps, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        eps: PropertyLike[float],
+        **kwargs):
         image = np.asarray(image)
 
         image = image[..., np.any(image > eps, axis=(0, 1))]
@@ -746,7 +868,7 @@ class Pad(Augmentation):
     Arguments match this of numpy.pad, save for pad_width, which is called px,
     and is defined as (left, right, up, down, before_axis_3, after_axis_3, ...)
 
-    Parameters
+    Attributes
     ----------
     px : int or list of int
         amount to pad in each direction
@@ -762,7 +884,11 @@ class Pad(Augmentation):
     ):
         super().__init__(px=px, mode=mode, cval=cval, **kwargs)
 
-    def get(self, image, px, **kwargs):
+    def get(
+        self,
+        image: ArrayLike[Image],
+        px: PropertyLike[int],
+        **kwargs):
 
         padding = []
         if callable(px):
@@ -776,24 +902,27 @@ class Pad(Augmentation):
         while len(padding) < image.ndim:
             padding.append((0, 0))
 
-        return utils.safe_call(np.pad, positional_args=(image, padding), **kwargs)
+        return utils.safe_call(
+            np.pad,
+            positional_args=(image, padding),
+            **kwargs,
+            )
  
 
     def _image_wrap_process_and_get(self, images, **kwargs):
         results = [self.get(image, **kwargs) for image in images]
         # for idx, result in enumerate(results):
-        #     if isinstance(result, tuple):
-
-        #         results[idx] = Image(result[0]).merge_properties_from(images[idx])
-        #     else:
-        #         Image(results[idx]).merge_properties_from(images[idx])
+        #    if isinstance(result, tuple):
+        #    results[idx] = Image(result[0]).merge_properties_from(images[idx])
+        #    else:
+        #    Image(results[idx]).merge_properties_from(images[idx])
         return results
 
 
 class PadToMultiplesOf(Pad):
     """Pad images until their height/width is a multiple of a value.
 
-    Parameters
+    Attributes
     ----------
     multiple : int or tuple of (int or None)
         Images will be padded until their width is a multiple of
@@ -802,7 +931,7 @@ class PadToMultiplesOf(Pad):
 
     """
 
-    def __init__(self, multiple: PropertyLike[int or None] = 1, **kwargs):
+    def __init__(self, multiple: PropertyLike[Union[int, None]] = 1, **kwargs):
         def amount_to_pad(image):
             shape = image.shape
             multiple = self.multiple()
@@ -824,6 +953,5 @@ class PadToMultiplesOf(Pad):
             return new_shape
 
         super().__init__(multiple=multiple, px=lambda: amount_to_pad, **kwargs)
-
 
 # TODO: add resizing by rescaling
