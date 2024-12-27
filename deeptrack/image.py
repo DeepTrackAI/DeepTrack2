@@ -555,14 +555,19 @@ class Image:
         
         The following NumPy universal functions (ufuncs) are supported:
 
-        - Arithmetic: `np.add`, `np.subtract`, `np.multiply`, `np.divide`,
-            `np.power`, `np.mod`, etc.
-        - Trigonometric: `np.sin`, `np.cos`, `np.tan`, `np.arcsin`,
-            `np.arccos`, `np.arctan`, etc.
-        - Exponential and logarithmic: `np.exp`, `np.log`, `np.log10`, etc.
-        - Comparison: `np.equal`, `np.not_equal`, `np.less`, `np.less_equal`,
+        - Arithmetic: 
+            `np.add`, `np.subtract`, `np.multiply`, `np.divide`, `np.power`,
+            `np.mod`, etc.
+        - Trigonometric:
+            `np.sin`, `np.cos`, `np.tan`, `np.arcsin`, `np.arccos`,
+            `np.arctan`, etc.
+        - Exponential and logarithmic:
+            `np.exp`, `np.log`, `np.log10`, etc.
+        - Comparison:
+            `np.equal`, `np.not_equal`, `np.less`, `np.less_equal`,
             `np.greater`, `np.greater_equal`, etc.
-        - Bitwise: `np.bitwise_and`, `np.bitwise_or`, `np.bitwise_xor`, etc.
+        - Bitwise:
+            `np.bitwise_and`, `np.bitwise_or`, `np.bitwise_xor`, etc.
 
     `__array_function__(func: Callable[..., Any], types: Tuple[type, ...], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> Union['Image', Tuple['Image', ...], Any]`
         Enable compatibility with numpy's general functions, such as `np.mean`,
@@ -570,10 +575,12 @@ class Image:
         
         The following numpy general functions are supported:
 
-        - Array manipulation: `np.reshape`, `np.transpose`, `np.concatenate`,
-            etc.
-        - Statistical: `np.mean`, `np.sum`, `np.std`, etc.
-        - Linear algebra: `np.dot`, `np.cross`, etc.
+        - Array manipulation:
+            `np.reshape`, `np.transpose`, `np.concatenate`, etc.
+        - Statistical:
+            `np.mean`, `np.sum`, `np.std`, etc.
+        - Linear algebra:
+            `np.dot`, `np.cross`, etc.
 
     **Indexing and Assignment**
     
