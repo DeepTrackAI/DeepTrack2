@@ -523,6 +523,72 @@ class Image:
         If `True`, the `value` is copied to ensure independence (default).
         If `False`, a reference to the original value is maintained.
 
+    Methods
+    -------
+    **Property Management**
+    
+    `append(property_dict: dict) -> 'Image'`
+        Add a dictionary of properties to the `Image`.
+    `get_property(key: str, get_one: bool = True, default: Any = None) -> Union[Any, List[Any]]`
+        Retrieve a property by key. If `get_one` is `True`, returns the first
+        match; otherwise, returns a list of matches.
+    `merge_properties_from(other: Union['Image', List['Image'], np.ndarray]) -> 'Image'`  
+        Merge properties from another `Image`, list of `Image`s, or a NumPy
+        array.
+
+    **Conversion Utilities**
+
+    `to_cupy() -> 'Image'`
+      Convert the `Image` to a CuPy array if the underlying value is a NumPy
+      array.
+    `to_numpy() -> 'Image'`
+      Convert the `Image` to a numpy array if the underlying value is a CuPy
+      array.
+    `__array__(*args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> np.ndarray`  
+      Convert the `Image` to a numpy array. Used implicitly by numpy functions.
+
+    **NumPy Compatibility
+    
+    `__array_ufunc__(ufunc: Callable, method: str, *inputs: Tuple[Any], **kwargs: Dict[str, Any]) -> Union['Image', Tuple['Image', ...], None]`
+        Enable compatibility with numpy's universal functions (ufuncs).
+        Examples include `np.add`, `np.multiply`, and `np.sin`.
+        
+        The following NumPy universal functions (ufuncs) are supported:
+
+        - Arithmetic: `np.add`, `np.subtract`, `np.multiply`, `np.divide`,
+            `np.power`, `np.mod`, etc.
+        - Trigonometric: `np.sin`, `np.cos`, `np.tan`, `np.arcsin`,
+            `np.arccos`, `np.arctan`, etc.
+        - Exponential and logarithmic: `np.exp`, `np.log`, `np.log10`, etc.
+        - Comparison: `np.equal`, `np.not_equal`, `np.less`, `np.less_equal`,
+            `np.greater`, `np.greater_equal`, etc.
+        - Bitwise: `np.bitwise_and`, `np.bitwise_or`, `np.bitwise_xor`, etc.
+
+    `__array_function__(func: Callable[..., Any], types: Tuple[type, ...], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> Union['Image', Tuple['Image', ...], Any]`
+        Enable compatibility with numpy's general functions, such as `np.mean`,
+        `np.dot`, and `np.concatenate`.
+        
+        The following numpy general functions are supported:
+
+        - Array manipulation: `np.reshape`, `np.transpose`, `np.concatenate`,
+            etc.
+        - Statistical: `np.mean`, `np.sum`, `np.std`, etc.
+        - Linear algebra: `np.dot`, `np.cross`, etc.
+
+    **Indexing and Assignment**
+    
+    `__getitem__(idx: Any) -> Union['Image', Any]`
+        Access array elements using standard indexing or slicing. If the result
+        is scalar, returns it; otherwise, returns an `Image`.
+    `__setitem__(key: Any, value: Any) -> None` 
+        Assign values to specific array elements. Updates the properties of the
+        `Image` accordingly.
+
+    **Special Methods**
+
+    `__repr__() -> str`  
+        Return a string representation of the `Image` object.
+
     Examples
     --------
     Create an `Image` instance from a NumPy array:
