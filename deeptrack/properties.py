@@ -42,18 +42,20 @@ Example
 -------
 Create and use a constant property:
 
->>> const_prop = Property(42)
+>>> import deeptrack as dt
+
+>>> const_prop = dt.Property(42)
 >>> const_prop()  # Returns 42
 
 Define a dynamic property dependent on another:
 
->>> const_prop = Property(5)
->>> dynamic_prop = Property(lambda x: x * 2, x=const_prop)
+>>> const_prop = dt.Property(5)
+>>> dynamic_prop = dt.Property(lambda x: x * 2, x=const_prop)
 >>> dynamic_prop()  # Returns 10
 
 Create a dictionary of properties:
 
->>> prop_dict = PropertyDict(
+>>> prop_dict = dt.PropertyDict(
 ...     constant=42,
 ...     dependent=lambda constant: constant + 10,
 ...     random=lambda dependent: np.random.rand() + dependent,
@@ -64,13 +66,13 @@ Create a dictionary of properties:
 
 Handle sequential properties:
 
->>> seq_prop = SequentialProperty()
+>>> seq_prop = dt.SequentialProperty()
 >>> seq_prop.sequence_length.store(5)
->>> SP.current = lambda _ID=(): SP.sequence_step() + 1
->>> for step in range(SP.sequence_length()):
-...     SP.sequence_step.store(step)
-...     SP.store(SP.current())
-...     print(SP.data[()].current_value())
+>>> seq_prop.current = lambda _ID=(): seq_prop.sequence_step() + 1
+>>> for step in range(seq_prop.sequence_length()):
+...     seq_prop.sequence_step.store(step)
+...     seq_prop.store(seq_prop.current())
+...     print(seq_prop.data[()].current_value())
 
 """
 
@@ -126,24 +128,26 @@ class Property(DeepTrackNode):
     --------
     Constant property:
     
-    >>> const_prop = Property(42)
+    >>> import deeptrack as dt
+    
+    >>> const_prop = dt.Property(42)
     >>> const_prop()  # Returns 42
 
     Dynamic property using a function:
     
-    >>> const_prop = Property(5)
-    >>> dynamic_prop = Property(lambda x: x * 2, x=const_prop)
+    >>> const_prop = dt.Property(5)
+    >>> dynamic_prop = dt.Property(lambda x: x * 2, x=const_prop)
     >>> dynamic_prop()  # Returns 10
 
     Property with a dictionary rule:
     
-    >>> dict_prop = Property({"a": Property(1), "b": lambda: 2})
+    >>> dict_prop = dt.Property({"a": Property(1), "b": lambda: 2})
     >>> dict_prop()  # Returns {"a": 1, "b": 2}
 
     Property with an iterable:
     
     >>> gen = (i for i in range(3))
-    >>> gen_prop = Property(gen)
+    >>> gen_prop = dt.Property(gen)
     >>> gen_prop()  # Returns the next value from the generator
     >>> gen_prop.update()
     >>> gen_prop()  # Returns the next value
@@ -328,7 +332,9 @@ class PropertyDict(DeepTrackNode, dict):
     --------
     Initialize a `PropertyDict` with different types of properties:
 
-    >>> prop_dict = PropertyDict(
+    >>> import deeptrack as dt
+
+    >>> prop_dict = dt.PropertyDict(
     ...     constant=42,
     ...     dependent=lambda constant: constant + 10,
     ...     random=lambda: np.random.rand(),
@@ -492,16 +498,22 @@ class SequentialProperty(Property):
 
     Examples
     --------
+    >>> import deeptrack as dt
     >>> import numpy as np
-    >>>
-    >>> seq_prop = SequentialProperty()
+
+    >>> seq_prop = dt.SequentialProperty()
     >>> seq_prop.sequence_length.store(5)
-    >>> seq_prop.current = lambda _ID=(): SP.sequence_step() + 1
+    >>> seq_prop.current = lambda _ID=(): seq_prop.sequence_step() + 1
     >>> for step in range(seq_prop.sequence_length()):
     ...     seq_prop.sequence_step.store(step)
     ...     current_value = seq_prop.current()
     ...     seq_prop.store(current_value)
-    ...     print(SP.data[()].current_value())
+    ...     print(seq_prop.data[()].current_value())
+    [1]
+    [1, 2]
+    [1, 2, 3]
+    [1, 2, 3, 4]
+    [1, 2, 3, 4, 5]
     
     """
 
