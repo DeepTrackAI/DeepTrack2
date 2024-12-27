@@ -635,7 +635,7 @@ class Image:
     """
 
     # Attributes.
-    _value : Union[np.ndarray, list, int, float, bool, 'Image']
+    _value : np.ndarray
     properties : List[Dict[str, Property]]
 
     def __init__(
@@ -1499,26 +1499,6 @@ class Image:
         """
 
         return float(self._value)
-
-    def __nonzero__(
-        self: 'Image',
-    ) -> bool:
-        """Check if the Image's value is non-zero.
-
-        This method is used in Python 2 for truth value testing.
-
-        Returns
-        -------
-        bool
-            `True` if the `_value` is non-zero, otherwise `False`.
-
-        Note
-        ----
-        In Python 3, use `__bool__` instead.
-
-        """
-
-        return bool(self._value)
 
     def __bool__(
         self: 'Image',
