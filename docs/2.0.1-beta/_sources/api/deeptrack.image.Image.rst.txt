@@ -1,0 +1,25 @@
+Image
+=====
+
+.. currentmodule:: deeptrack.image
+
+.. autoclass:: Image
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Image.append
+      ~Image.get_property
+      ~Image.merge_properties_from
+      ~Image.to_cupy
+      ~Image.to_numpy
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: append
+   .. automethod:: get_property
+   .. automethod:: merge_properties_from
+   .. automethod:: to_cupy
+   .. automethod:: to_numpy

@@ -1,0 +1,17 @@
+Offset
+======
+
+.. currentmodule:: deeptrack.noises
+
+.. autoclass:: Offset
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Offset.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

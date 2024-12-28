@@ -1,0 +1,7 @@
+CropToMultiplesOf
+=================
+
+.. currentmodule:: deeptrack.augmentations
+
+.. autoclass:: CropToMultiplesOf
+   :show-inheritance:

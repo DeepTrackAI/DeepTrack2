@@ -1,0 +1,17 @@
+Lambda
+======
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Lambda
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Lambda.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,915 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>aberrations &#8212; DeepTrack 2.0 documentation</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
+
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="augmentations" href="augmentations.html" />
+    <link rel="prev" title="backend" href="backend.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+
+    
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
+        
+      </ul>
+
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2">
+  <a class="reference internal" href="backend.html">
+   backend
+  </a>
+ </li>
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   aberrations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="augmentations.html">
+   augmentations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="features.html">
+   features
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="generators.html">
+   generators
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="image.html">
+   image
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="layers.html">
+   layers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="losses.html">
+   losses
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="math.html">
+   math
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="models.html">
+   models
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="noises.html">
+   noises
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="optics.html">
+   optics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="properties.html">
+   properties
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="scatterers.html">
+   scatterers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="sequences.html">
+   sequences
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="test.html">
+   test
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="types.html">
+   types
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="utils.html">
+   utils
+  </a>
+ </li>
+</ul>
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#classes">
+   Classes
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-classes">
+   Module classes
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#aberration">
+     Aberration
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#astigmatism">
+     Astigmatism
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#defocus">
+     Defocus
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#gaussianapodization">
+     GaussianApodization
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#horizontalcoma">
+     HorizontalComa
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#horizontaltilt">
+     HorizontalTilt
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#obliqueastigmatism">
+     ObliqueAstigmatism
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#obliquetrefoil">
+     ObliqueTrefoil
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#piston">
+     Piston
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#sphericalaberration">
+     SphericalAberration
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#trefoil">
+     Trefoil
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#verticalcoma">
+     VerticalComa
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#verticaltilt">
+     VerticalTilt
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#zernike">
+     Zernike
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.aberrations">
+<span id="aberrations"></span><h1>aberrations<a class="headerlink" href="#module-deeptrack.aberrations" title="Permalink to this headline">¶</a></h1>
+<p>Features that aberrate and modify pupil functions.</p>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Aberration</dt><dd><p>Base abstract class</p>
+</dd>
+<dt>GaussianApodization</dt><dd><p>Introduces pupil apodization.</p>
+</dd>
+<dt>Zernike</dt><dd><p>Introduces a Zernike phase aberration.</p>
+</dd>
+<dt>Piston</dt><dd><p>Zernike polynomial with n=0, m=0.</p>
+</dd>
+<dt>VerticalTilt</dt><dd><p>Zernike polynomial with n=1, m=-1.</p>
+</dd>
+<dt>HorizontalTilt</dt><dd><p>Zernike polynomial with n=1, m=1.</p>
+</dd>
+<dt>ObliqueAstigmatism</dt><dd><p>Zernike polynomial with n=2, m=-2.</p>
+</dd>
+<dt>Defocus</dt><dd><p>Zernike polynomial with n=2, m=0.</p>
+</dd>
+<dt>Astigmatism</dt><dd><p>Zernike polynomial with n=2, m=2.</p>
+</dd>
+<dt>ObliqueTrefoil</dt><dd><p>Zernike polynomial with n=3, m=-3.</p>
+</dd>
+<dt>VerticalComa</dt><dd><p>Zernike polynomial with n=3, m=-1.</p>
+</dd>
+<dt>HorizontalComa</dt><dd><p>Zernike polynomial with n=3, m=1.</p>
+</dd>
+<dt>Trefoil</dt><dd><p>Zernike polynomial with n=3, m=3.</p>
+</dd>
+<dt>SphericalAberration</dt><dd><p>Zernike polynomial with n=4, m=0.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-classes">
+<h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="aberration">
+<h3>Aberration<a class="headerlink" href="#aberration" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.Aberration">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">Aberration</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.Aberration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base abstract class.</p>
+<p>Ensures that the method <cite>.get()</cite> receives rho and theta as optional
+arguments, describing the polar coordinates of each pixel in the image
+scaled so that rho is 1 at the edge of the pupil.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="astigmatism">
+<h3>Astigmatism<a class="headerlink" href="#astigmatism" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.Astigmatism">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">Astigmatism</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.Astigmatism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=2, m=2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficient</strong><span class="classifier">float</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="defocus">
+<h3>Defocus<a class="headerlink" href="#defocus" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.Defocus">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">Defocus</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.Defocus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=2, m=0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficient</strong><span class="classifier">float</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="gaussianapodization">
+<h3>GaussianApodization<a class="headerlink" href="#gaussianapodization" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.GaussianApodization">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">GaussianApodization</code><span class="sig-paren">(</span><em class="sig-param">sigma=1</em>, <em class="sig-param">offset=(0</em>, <em class="sig-param">0)</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.GaussianApodization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Introduces pupil apodization.</p>
+<p>Decreases the amplitude of the pupil at high frequencies according
+to a Gaussian distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sigma</strong><span class="classifier">float</span></dt><dd><p>The standard deviation of the apodization. The edge of the pupil
+is at one deviation from the center.</p>
+</dd>
+<dt><strong>offset</strong><span class="classifier">(float, float)</span></dt><dd><p>Offsets the center of the gaussian.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="horizontalcoma">
+<h3>HorizontalComa<a class="headerlink" href="#horizontalcoma" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.HorizontalComa">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">HorizontalComa</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.HorizontalComa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=3, m=1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficient</strong><span class="classifier">float</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="horizontaltilt">
+<h3>HorizontalTilt<a class="headerlink" href="#horizontaltilt" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.HorizontalTilt">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">HorizontalTilt</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.HorizontalTilt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=1, m=1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficient</strong><span class="classifier">float</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="obliqueastigmatism">
+<h3>ObliqueAstigmatism<a class="headerlink" href="#obliqueastigmatism" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.ObliqueAstigmatism">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">ObliqueAstigmatism</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.ObliqueAstigmatism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=2, m=-2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficient</strong><span class="classifier">float</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="obliquetrefoil">
+<h3>ObliqueTrefoil<a class="headerlink" href="#obliquetrefoil" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.ObliqueTrefoil">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">ObliqueTrefoil</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.ObliqueTrefoil" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=3, m=-3.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficient</strong><span class="classifier">float</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="piston">
+<h3>Piston<a class="headerlink" href="#piston" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.Piston">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">Piston</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.Piston" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=0, m=0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficient</strong><span class="classifier">float</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="sphericalaberration">
+<h3>SphericalAberration<a class="headerlink" href="#sphericalaberration" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.SphericalAberration">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">SphericalAberration</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.SphericalAberration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=4, m=0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficient</strong><span class="classifier">float</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="trefoil">
+<h3>Trefoil<a class="headerlink" href="#trefoil" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.Trefoil">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">Trefoil</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.Trefoil" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=3, m=3.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficient</strong><span class="classifier">float</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="verticalcoma">
+<h3>VerticalComa<a class="headerlink" href="#verticalcoma" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.VerticalComa">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">VerticalComa</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.VerticalComa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=3, m=-1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficient</strong><span class="classifier">float</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="verticaltilt">
+<h3>VerticalTilt<a class="headerlink" href="#verticaltilt" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.VerticalTilt">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">VerticalTilt</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.VerticalTilt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zernike polynomial with n=1, m=-1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficient</strong><span class="classifier">float</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="zernike">
+<h3>Zernike<a class="headerlink" href="#zernike" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.aberrations.Zernike">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.aberrations.</code><code class="sig-name descname">Zernike</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">m</em>, <em class="sig-param">coefficient=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.aberrations.Zernike" title="Permalink to this definition">¶</a></dt>
+<dd><p>Introduces a Zernike phase aberration.</p>
+<p>Calculates the Zernike polynomial defined by the numbers <cite>n</cite> and <cite>m</cite> at
+each pixel in the pupil, multiplies it by <cite>coefficient</cite>, and adds the
+result to the phase of the pupil.</p>
+<p>If <cite>n</cite>, <cite>m</cite> and <cite>coefficient</cite> are lists of equal lengths, sum the
+Zernike polynomials corresponding to each set of values in these lists
+before adding them to the phase.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n, m</strong><span class="classifier">int or list of ints</span></dt><dd><p>The zernike polynomial numbers.</p>
+</dd>
+<dt><strong>coefficient</strong><span class="classifier">float or list of floats</span></dt><dd><p>The coefficient of the polynomial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="backend.html" title="previous page">backend</a>
+    <a class='right-next' id="next-link" href="augmentations.html" title="next page">augmentations</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

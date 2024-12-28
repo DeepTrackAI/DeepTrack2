@@ -1,0 +1,39 @@
+Feature
+=======
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Feature
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Feature.__call__
+      ~Feature.action
+      ~Feature.add_feature
+      ~Feature.batch
+      ~Feature.bind_arguments
+      ~Feature.get
+      ~Feature.plot
+      ~Feature.resolve
+      ~Feature.seed
+      ~Feature.store_properties
+      ~Feature.torch
+      ~Feature.update
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: __call__
+   .. automethod:: action
+   .. automethod:: add_feature
+   .. automethod:: batch
+   .. automethod:: bind_arguments
+   .. automethod:: get
+   .. automethod:: plot
+   .. automethod:: resolve
+   .. automethod:: seed
+   .. automethod:: store_properties
+   .. automethod:: torch
+   .. automethod:: update

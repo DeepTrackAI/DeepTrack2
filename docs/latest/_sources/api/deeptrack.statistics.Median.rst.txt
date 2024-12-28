@@ -1,0 +1,7 @@
+Median
+======
+
+.. currentmodule:: deeptrack.statistics
+
+.. autoclass:: Median
+   :show-inheritance:

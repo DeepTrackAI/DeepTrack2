@@ -1,0 +1,17 @@
+Transpose
+=========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Transpose
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Transpose.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

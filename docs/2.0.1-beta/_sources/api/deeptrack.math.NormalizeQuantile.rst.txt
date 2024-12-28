@@ -1,0 +1,17 @@
+NormalizeQuantile
+=================
+
+.. currentmodule:: deeptrack.math
+
+.. autoclass:: NormalizeQuantile
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~NormalizeQuantile.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

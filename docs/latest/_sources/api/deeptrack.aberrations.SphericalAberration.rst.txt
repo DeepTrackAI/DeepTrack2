@@ -1,0 +1,7 @@
+SphericalAberration
+===================
+
+.. currentmodule:: deeptrack.aberrations
+
+.. autoclass:: SphericalAberration
+   :show-inheritance:

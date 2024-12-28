@@ -1,0 +1,989 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>augmentations &#8212; DeepTrack 2.0 documentation</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
+
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="features" href="features.html" />
+    <link rel="prev" title="aberrations" href="aberrations.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+
+    
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
+        
+      </ul>
+
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2">
+  <a class="reference internal" href="backend.html">
+   backend
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="aberrations.html">
+   aberrations
+  </a>
+ </li>
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   augmentations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="features.html">
+   features
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="generators.html">
+   generators
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="image.html">
+   image
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="layers.html">
+   layers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="losses.html">
+   losses
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="math.html">
+   math
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="models.html">
+   models
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="noises.html">
+   noises
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="optics.html">
+   optics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="properties.html">
+   properties
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="scatterers.html">
+   scatterers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="sequences.html">
+   sequences
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="test.html">
+   test
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="types.html">
+   types
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="utils.html">
+   utils
+  </a>
+ </li>
+</ul>
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#classes">
+   Classes
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-classes">
+   Module classes
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#affine">
+     Affine
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#augmentation">
+     Augmentation
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#crop">
+     Crop
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#croptomultiplesof">
+     CropToMultiplesOf
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#elastictransformation">
+     ElasticTransformation
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#flipdiagonal">
+     FlipDiagonal
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#fliplr">
+     FlipLR
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#flipud">
+     FlipUD
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#pad">
+     Pad
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#padtomultiplesof">
+     PadToMultiplesOf
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#preload">
+     PreLoad
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.augmentations">
+<span id="augmentations"></span><h1>augmentations<a class="headerlink" href="#module-deeptrack.augmentations" title="Permalink to this headline">¶</a></h1>
+<p>Features that augment images</p>
+<p>Augmentations are features that can resolve more than one image without
+calling <cite>.resolve()</cite> on the parent feature. Specifically, they create
+<cite>updates_per_reload</cite> images, while calling their parent feature
+<cite>load_size</cite> times.</p>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Augmentation</dt><dd><p>Base abstract augmentation class.</p>
+</dd>
+<dt>PreLoad</dt><dd><p>Simple storage with no augmentation.</p>
+</dd>
+<dt>FlipLR</dt><dd><p>Flips images left-right.</p>
+</dd>
+<dt>FlipUD</dt><dd><p>Flips images up-down.</p>
+</dd>
+<dt>FlipDiagonal</dt><dd><p>Flips images diagonally.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-classes">
+<h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="affine">
+<h3>Affine<a class="headerlink" href="#affine" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.augmentations.Affine">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">Affine</code><span class="sig-paren">(</span><em class="sig-param">scale=1</em>, <em class="sig-param">translate=None</em>, <em class="sig-param">translate_px=0</em>, <em class="sig-param">rotate=0</em>, <em class="sig-param">shear=0</em>, <em class="sig-param">order=1</em>, <em class="sig-param">cval=0</em>, <em class="sig-param">mode='reflect'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.Affine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Augmenter to apply affine transformations to images.</p>
+<p>Affine transformations involve:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Translation</p></li>
+<li><p>Scaling</p></li>
+<li><p>Rotation</p></li>
+<li><p>Shearing</p></li>
+</ul>
+</div></blockquote>
+<p>Some transformations involve interpolations between several pixels
+of the input image to generate output pixel values. The parameter <cite>order</cite>
+deals with the method of interpolation used for this.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>scale</strong><span class="classifier">number or tuple of number or list of number or dict {“x”: number, “y”: number}</span></dt><dd><p>Scaling factor to use, where <code class="docutils literal notranslate"><span class="pre">1.0</span></code> denotes “no change” and
+<code class="docutils literal notranslate"><span class="pre">0.5</span></code> is zoomed out to <code class="docutils literal notranslate"><span class="pre">50</span></code> percent of the original size.
+If two values are provided (using tuple, list, or dict), the two first dimensions of the input are scaled individually.</p>
+</dd>
+<dt><strong>translate</strong><span class="classifier">number or tuple of number or list of number or dict {“x”: number, “y”: number}</span></dt><dd><p>Translation in pixels.</p>
+</dd>
+<dt><strong>translate_px</strong><span class="classifier">number or tuple of number or list of number or dict {“x”: number, “y”: number}</span></dt><dd><p>DEPRECATED, use translate.</p>
+</dd>
+<dt><strong>rotate</strong><span class="classifier">number</span></dt><dd><p>Rotation in radians, i.e. Rotation happens around the <em>center</em> of the
+image.</p>
+</dd>
+<dt><strong>shear</strong><span class="classifier">number</span></dt><dd><p>Shear in radians. Values in the range (-pi/4, pi/4) are common</p>
+</dd>
+<dt><strong>order</strong><span class="classifier">int</span></dt><dd><p>Interpolation order to use. Same meaning as in <code class="docutils literal notranslate"><span class="pre">skimage</span></code>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0</span></code>: <code class="docutils literal notranslate"><span class="pre">Nearest-neighbor</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code>: <code class="docutils literal notranslate"><span class="pre">Bi-linear</span></code> (default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code>: <code class="docutils literal notranslate"><span class="pre">Bi-quadratic</span></code> (not recommended by skimage)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">3</span></code>: <code class="docutils literal notranslate"><span class="pre">Bi-cubic</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">4</span></code>: <code class="docutils literal notranslate"><span class="pre">Bi-quartic</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">5</span></code>: <code class="docutils literal notranslate"><span class="pre">Bi-quintic</span></code></p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="augmentation">
+<h3>Augmentation<a class="headerlink" href="#augmentation" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.augmentations.Augmentation">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">Augmentation</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">load_size=1</em>, <em class="sig-param">updates_per_reload=1</em>, <em class="sig-param">update_properties=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.Augmentation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base abstract augmentation class.</p>
+<p>Augmentations are features that can resolve more than one image without
+calling <cite>.resolve()</cite> on the parent feature. Specifically, they create
+<cite>updates_per_reload</cite> images, while calling their parent feature
+<cite>load_size</cite> times. They achieve this by resolving <cite>load_size</cite> results
+from the parent feature at once, and randomly drawing one of these
+results as input to the method <cite>.get()</cite>. A new input is chosen
+every time <cite>.update()</cite> is called. Once <cite>.update()</cite> has been called
+<cite>updated_per_reload</cite> times, a new batch of <cite>load_size</cite> results are
+resolved from the parent feature.</p>
+<p>The method <cite>.get()</cite> of implementations of this class may accept the
+property <cite>number_of_updates</cite> as an argument. This number represents
+the number of times the <cite>.update()</cite> method has been called since the
+last time the parent feature was resolved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature, optional, deprecated</span></dt><dd><p>DEPRECATED. The parent feature. If not passed, it acts like any other feature.</p>
+</dd>
+<dt><strong>load_size</strong><span class="classifier">int</span></dt><dd><p>Number of results to resolve from the parent feature.</p>
+</dd>
+<dt><strong>updates_per_reload</strong><span class="classifier">int</span></dt><dd><p>Number of times <cite>.update()</cite> is called before resolving new results
+from the parent feature.</p>
+</dd>
+<dt><strong>update_properties</strong><span class="classifier">Callable or None</span></dt><dd><p>Function called on the output of the method <cite>.get()</cite>. Overrides
+the default behaviour, allowing full control over how to update
+the properties of the output to account for the augmentation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="crop">
+<h3>Crop<a class="headerlink" href="#crop" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.augmentations.Crop">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">Crop</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">crop=(64</em>, <em class="sig-param">64)</em>, <em class="sig-param">crop_mode='retain'</em>, <em class="sig-param">corner='random'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.Crop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Crops a regions of an image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">feature or list of features</span></dt><dd><p>Feature(s) to augment.</p>
+</dd>
+<dt><strong>crop</strong><span class="classifier">int or tuple of int or list of int or Callable[Image]-&gt;tuple of ints</span></dt><dd><p>Number of pixels to remove or retain (depending in <cite>crop_mode</cite>)
+If a tuple or list, it is assumed to be per axis.
+Can also be a function that returns any of the other types.</p>
+</dd>
+<dt><strong>crop_mode</strong><span class="classifier">str {“retain”, “remove”}</span></dt><dd><p>How the <cite>crop</cite> argument is interpreted. If “remove”, then
+<cite>crop</cite> denotes the amount to crop from the edges. If “retain”, 
+<cite>crop</cite> denotes the size of the output.</p>
+</dd>
+<dt><strong>corner</strong><span class="classifier">tuple of ints or Callable[Image]-&gt;tuple of ints or “random”</span></dt><dd><p>Top left corner of the cropped region. Can be a tuple of ints,
+a function that returns a tuple of ints or the string random.
+If corner is placed so that the cropping cannot be performed,
+the modulo of the corner with the allowed region is used.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="croptomultiplesof">
+<h3>CropToMultiplesOf<a class="headerlink" href="#croptomultiplesof" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.augmentations.CropToMultiplesOf">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">CropToMultiplesOf</code><span class="sig-paren">(</span><em class="sig-param">multiple=1</em>, <em class="sig-param">corner='random'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.CropToMultiplesOf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Crop images down until their height/width is a multiple of a value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>multiple</strong><span class="classifier">int or tuple of (int or None)</span></dt><dd><p>Images will be cropped down until their width is a multiple of
+this value. If a tuple, it is assumed to be a multiple per axis.
+A value of None or -1 indicates to skip that axis.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="elastictransformation">
+<h3>ElasticTransformation<a class="headerlink" href="#elastictransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.augmentations.ElasticTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">ElasticTransformation</code><span class="sig-paren">(</span><em class="sig-param">alpha=20</em>, <em class="sig-param">sigma=2</em>, <em class="sig-param">ignore_last_dim=True</em>, <em class="sig-param">order=3</em>, <em class="sig-param">cval=0</em>, <em class="sig-param">mode='constant'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.ElasticTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform images by moving pixels locally around using displacement fields.</p>
+<p>The augmenter creates a random distortion field using <cite>alpha</cite> and <cite>sigma</cite>, which define
+the strength and smoothness of the field respectively. These are used to transform the
+input locally.</p>
+<p>For a detailed explanation, see</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Simard</span><span class="p">,</span> <span class="n">Steinkraus</span> <span class="ow">and</span> <span class="n">Platt</span>
+<span class="n">Best</span> <span class="n">Practices</span> <span class="k">for</span> <span class="n">Convolutional</span> <span class="n">Neural</span> <span class="n">Networks</span> <span class="n">applied</span> <span class="n">to</span> <span class="n">Visual</span>
+<span class="n">Document</span> <span class="n">Analysis</span>
+<span class="ow">in</span> <span class="n">Proc</span><span class="o">.</span> <span class="n">of</span> <span class="n">the</span> <span class="n">International</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Document</span> <span class="n">Analysis</span> <span class="ow">and</span>
+<span class="n">Recognition</span><span class="p">,</span> <span class="mi">2003</span>
+</pre></div>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>alpha</strong><span class="classifier">number</span></dt><dd><p>Strength of the distortion field. Common values are in the range (10, 100)</p>
+</dd>
+<dt><strong>sigma</strong><span class="classifier">number</span></dt><dd><p>Standard deviation of the gaussian kernel used to smooth the distortion
+fields. Common values are in the range (1, 10)</p>
+</dd>
+<dt><strong>ignore_last_dim</strong><span class="classifier">bool</span></dt><dd><p>Whether to skip creating a distortion field for the last dimension.
+This is often desired if the last dimension is a channel dimension (such as
+a color image.) In that case, the three channels are transformed identically
+and do not <cite>bleed</cite> into eachother.</p>
+</dd>
+<dt><strong>order</strong><span class="classifier">int</span></dt><dd><p>Interpolation order to use. Takes integers from 0 to 5</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0</span></code>: <code class="docutils literal notranslate"><span class="pre">Nearest-neighbor</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code>: <code class="docutils literal notranslate"><span class="pre">Bi-linear</span></code> (default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code>: <code class="docutils literal notranslate"><span class="pre">Bi-quadratic</span></code> (not recommended by skimage)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">3</span></code>: <code class="docutils literal notranslate"><span class="pre">Bi-cubic</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">4</span></code>: <code class="docutils literal notranslate"><span class="pre">Bi-quartic</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">5</span></code>: <code class="docutils literal notranslate"><span class="pre">Bi-quintic</span></code></p></li>
+</ul>
+</div></blockquote>
+</dd>
+<dt><strong>cval</strong><span class="classifier">number</span></dt><dd><p>The constant intensity value used to fill in new pixels.
+This value is only used if <cite>mode</cite> is set to <code class="docutils literal notranslate"><span class="pre">constant</span></code>.</p>
+</dd>
+<dt><strong>mode</strong><span class="classifier">str</span></dt><dd><p>Parameter that defines newly created pixels.
+May take the same values as in <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.ndimage.map_coordinates()</span></code>,
+i.e. <code class="docutils literal notranslate"><span class="pre">constant</span></code>, <code class="docutils literal notranslate"><span class="pre">nearest</span></code>, <code class="docutils literal notranslate"><span class="pre">reflect</span></code> or <code class="docutils literal notranslate"><span class="pre">wrap</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="flipdiagonal">
+<h3>FlipDiagonal<a class="headerlink" href="#flipdiagonal" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.augmentations.FlipDiagonal">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">FlipDiagonal</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.FlipDiagonal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flips images along the main diagonal.</p>
+<p>Updates all properties called “position” by swapping the first and second index.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="fliplr">
+<h3>FlipLR<a class="headerlink" href="#fliplr" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.augmentations.FlipLR">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">FlipLR</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.FlipLR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flips images left-right.</p>
+<p>Updates all properties called “position” to flip the second index.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="flipud">
+<h3>FlipUD<a class="headerlink" href="#flipud" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.augmentations.FlipUD">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">FlipUD</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.FlipUD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flips images up-down.</p>
+<p>Updates all properties called “position” by flipping the first index.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="pad">
+<h3>Pad<a class="headerlink" href="#pad" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.augmentations.Pad">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">Pad</code><span class="sig-paren">(</span><em class="sig-param">px=(0</em>, <em class="sig-param">0</em>, <em class="sig-param">0</em>, <em class="sig-param">0)</em>, <em class="sig-param">mode='constant'</em>, <em class="sig-param">cval=0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.Pad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pads the image.</p>
+<p>Arguments match this of numpy.pad, save for pad_width, which is called px,
+and is defined as (left, right, up, down, before_axis_3, after_axis_3, …)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>px</strong><span class="classifier">int or list of int</span></dt><dd><p>amount to pad in each direction</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="padtomultiplesof">
+<h3>PadToMultiplesOf<a class="headerlink" href="#padtomultiplesof" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.augmentations.PadToMultiplesOf">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">PadToMultiplesOf</code><span class="sig-paren">(</span><em class="sig-param">multiple=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.PadToMultiplesOf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pad images until their height/width is a multiple of a value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>multiple</strong><span class="classifier">int or tuple of (int or None)</span></dt><dd><p>Images will be padded until their width is a multiple of
+this value. If a tuple, it is assumed to be a multiple per axis.
+A value of None or -1 indicates to skip that axis.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="preload">
+<h3>PreLoad<a class="headerlink" href="#preload" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.augmentations.PreLoad">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.augmentations.</code><code class="sig-name descname">PreLoad</code><span class="sig-paren">(</span><em class="sig-param">feature=None</em>, <em class="sig-param">load_size=1</em>, <em class="sig-param">updates_per_reload=1</em>, <em class="sig-param">update_properties=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.augmentations.PreLoad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple storage with no augmentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>The parent feature.</p>
+</dd>
+<dt><strong>load_size</strong><span class="classifier">int</span></dt><dd><p>Number of results to resolve from the parent feature.</p>
+</dd>
+<dt><strong>updates_per_reload</strong><span class="classifier">int</span></dt><dd><p>Number of times <cite>.update()</cite> is called before resolving new results
+from the parent feature.</p>
+</dd>
+<dt><strong>index</strong><span class="classifier">int</span></dt><dd><p>The index of the image to grab from storage. By default a random image.</p>
+</dd>
+<dt><strong>update_properties</strong><span class="classifier">Callable or None</span></dt><dd><p>Function called on the output of the method <cite>.get()</cite>. Overrides
+the default behaviour, allowing full control over how to update
+the properties of the output to account for the augmentation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_properties</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="aberrations.html" title="previous page">aberrations</a>
+    <a class='right-next' id="next-link" href="features.html" title="next page">features</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

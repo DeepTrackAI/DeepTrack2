@@ -1,0 +1,17 @@
+Ellipse
+=======
+
+.. currentmodule:: deeptrack.scatterers
+
+.. autoclass:: Ellipse
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Ellipse.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

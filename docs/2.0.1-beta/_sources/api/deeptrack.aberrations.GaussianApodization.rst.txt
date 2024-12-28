@@ -1,0 +1,17 @@
+GaussianApodization
+===================
+
+.. currentmodule:: deeptrack.aberrations
+
+.. autoclass:: GaussianApodization
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~GaussianApodization.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

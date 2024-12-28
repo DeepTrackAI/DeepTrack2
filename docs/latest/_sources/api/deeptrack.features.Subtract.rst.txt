@@ -1,0 +1,7 @@
+Subtract
+========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Subtract
+   :show-inheritance:

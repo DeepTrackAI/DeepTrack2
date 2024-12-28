@@ -1,0 +1,17 @@
+CropTight
+=========
+
+.. currentmodule:: deeptrack.augmentations
+
+.. autoclass:: CropTight
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~CropTight.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

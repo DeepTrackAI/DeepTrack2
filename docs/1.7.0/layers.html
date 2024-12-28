@@ -1,0 +1,497 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>layers &#8212; DeepTrack 2.0 documentation</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
+
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="losses" href="losses.html" />
+    <link rel="prev" title="image" href="image.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+
+    
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
+        
+      </ul>
+
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2">
+  <a class="reference internal" href="backend.html">
+   backend
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="aberrations.html">
+   aberrations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="augmentations.html">
+   augmentations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="features.html">
+   features
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="generators.html">
+   generators
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="image.html">
+   image
+  </a>
+ </li>
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   layers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="losses.html">
+   losses
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="math.html">
+   math
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="models.html">
+   models
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="noises.html">
+   noises
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="optics.html">
+   optics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="properties.html">
+   properties
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="scatterers.html">
+   scatterers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="sequences.html">
+   sequences
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="test.html">
+   test
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="types.html">
+   types
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="utils.html">
+   utils
+  </a>
+ </li>
+</ul>
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-functions">
+   Module functions
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#convolutionalblock">
+     ConvolutionalBlock
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#deconvolutionalblock">
+     DeconvolutionalBlock
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#denseblock">
+     DenseBlock
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#identity">
+     Identity
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#poolingblock">
+     PoolingBlock
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#residualblock">
+     ResidualBlock
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#staticupsampleblock">
+     StaticUpsampleBlock
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#as-block">
+     as_block
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.layers">
+<span id="layers"></span><h1>layers<a class="headerlink" href="#module-deeptrack.layers" title="Permalink to this headline">¶</a></h1>
+<p>Standardized layers implemented in keras.</p>
+<div class="section" id="module-functions">
+<h2>Module functions<a class="headerlink" href="#module-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="convolutionalblock">
+<h3>ConvolutionalBlock<a class="headerlink" href="#convolutionalblock" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.layers.ConvolutionalBlock">
+<code class="sig-prename descclassname">deeptrack.layers.</code><code class="sig-name descname">ConvolutionalBlock</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=3</em>, <em class="sig-param">activation='relu'</em>, <em class="sig-param">padding='same'</em>, <em class="sig-param">strides=1</em>, <em class="sig-param">instance_norm=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.layers.ConvolutionalBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single 2d convolutional layer.</p>
+<p>Accepts arguments of keras.layers.Conv2D.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>kernel_size</strong><span class="classifier">int</span></dt><dd><p>Size of the convolution kernel</p>
+</dd>
+<dt><strong>activation</strong><span class="classifier">str or activation function or layer</span></dt><dd><p>Activation function of the layer. See keras docs for accepted strings.</p>
+</dd>
+<dt><strong>padding</strong><span class="classifier">str</span></dt><dd><p>How to pad the input tensor. See keras docs for accepted strings.</p>
+</dd>
+<dt><strong>strides</strong><span class="classifier">int</span></dt><dd><p>Step length of kernel</p>
+</dd>
+<dt><strong>instance_norm</strong><span class="classifier">bool</span></dt><dd><p>Whether to add instance normalization (before activation).</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Other keras.layers.Conv2D arguments</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="deconvolutionalblock">
+<h3>DeconvolutionalBlock<a class="headerlink" href="#deconvolutionalblock" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.layers.DeconvolutionalBlock">
+<code class="sig-prename descclassname">deeptrack.layers.</code><code class="sig-name descname">DeconvolutionalBlock</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=(2</em>, <em class="sig-param">2)</em>, <em class="sig-param">activation=None</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">strides=2</em>, <em class="sig-param">instance_norm=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.layers.DeconvolutionalBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single 2d deconvolutional layer.</p>
+<p>Accepts arguments of keras.layers.Conv2DTranspose.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>kernel_size</strong><span class="classifier">int</span></dt><dd><p>Size of the kernel</p>
+</dd>
+<dt><strong>activation</strong><span class="classifier">str or activation function or layer</span></dt><dd><p>Activation function of the layer. See keras docs for accepted strings.</p>
+</dd>
+<dt><strong>padding</strong><span class="classifier">str</span></dt><dd><p>How to pad the input tensor. See keras docs for accepted strings.</p>
+</dd>
+<dt><strong>strides</strong><span class="classifier">int</span></dt><dd><p>Step length of kernel</p>
+</dd>
+<dt><strong>instance_norm</strong><span class="classifier">bool</span></dt><dd><p>Whether to add instance normalization (before activation).</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Other keras.layers.Conv2DTranspose arguments</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="denseblock">
+<h3>DenseBlock<a class="headerlink" href="#denseblock" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.layers.DenseBlock">
+<code class="sig-prename descclassname">deeptrack.layers.</code><code class="sig-name descname">DenseBlock</code><span class="sig-paren">(</span><em class="sig-param">activation='tanh'</em>, <em class="sig-param">instance_norm=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.layers.DenseBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single dense layer.</p>
+<p>Accepts arguments of keras.layers.Dense.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>activation</strong><span class="classifier">str or activation function or layer</span></dt><dd><p>Activation function of the layer. See keras docs for accepted strings.</p>
+</dd>
+<dt><strong>instance_norm</strong><span class="classifier">bool</span></dt><dd><p>Whether to add instance normalization (before activation).</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Other keras.layers.Dense arguments</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="identity">
+<h3>Identity<a class="headerlink" href="#identity" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.layers.Identity">
+<code class="sig-prename descclassname">deeptrack.layers.</code><code class="sig-name descname">Identity</code><span class="sig-paren">(</span><em class="sig-param">activation=None</em>, <em class="sig-param">instance_norm=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.layers.Identity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identity layer that returns the input tensor.</p>
+<p>Can optionally perform instance normalization or some activation function.</p>
+<p>Accepts arguments of keras.layers.Layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>activation</strong><span class="classifier">str or activation function or layer</span></dt><dd><p>Activation function of the layer. See keras docs for accepted strings.</p>
+</dd>
+<dt><strong>instance_norm</strong><span class="classifier">bool</span></dt><dd><p>Whether to add instance normalization (before activation).</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Other keras.layers.Layer arguments</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="poolingblock">
+<h3>PoolingBlock<a class="headerlink" href="#poolingblock" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.layers.PoolingBlock">
+<code class="sig-prename descclassname">deeptrack.layers.</code><code class="sig-name descname">PoolingBlock</code><span class="sig-paren">(</span><em class="sig-param">pool_size=(2</em>, <em class="sig-param">2)</em>, <em class="sig-param">activation=None</em>, <em class="sig-param">padding='same'</em>, <em class="sig-param">strides=2</em>, <em class="sig-param">instance_norm=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.layers.PoolingBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single max pooling layer.</p>
+<p>Accepts arguments of keras.layers.MaxPool2D.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pool_size</strong><span class="classifier">int</span></dt><dd><p>Size of the pooling kernel</p>
+</dd>
+<dt><strong>activation</strong><span class="classifier">str or activation function or layer</span></dt><dd><p>Activation function of the layer. See keras docs for accepted strings.</p>
+</dd>
+<dt><strong>padding</strong><span class="classifier">str</span></dt><dd><p>How to pad the input tensor. See keras docs for accepted strings.</p>
+</dd>
+<dt><strong>strides</strong><span class="classifier">int</span></dt><dd><p>Step length of kernel</p>
+</dd>
+<dt><strong>instance_norm</strong><span class="classifier">bool</span></dt><dd><p>Whether to add instance normalization (before activation).</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Other keras.layers.MaxPool2D arguments</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="residualblock">
+<h3>ResidualBlock<a class="headerlink" href="#residualblock" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.layers.ResidualBlock">
+<code class="sig-prename descclassname">deeptrack.layers.</code><code class="sig-name descname">ResidualBlock</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=(3</em>, <em class="sig-param">3)</em>, <em class="sig-param">activation='relu'</em>, <em class="sig-param">strides=1</em>, <em class="sig-param">instance_norm=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.layers.ResidualBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 2d residual layer with two convolutional steps.</p>
+<p>Accepts arguments of keras.layers.Conv2D.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>kernel_size</strong><span class="classifier">int</span></dt><dd><p>Size of the kernel</p>
+</dd>
+<dt><strong>activation</strong><span class="classifier">str or activation function or layer</span></dt><dd><p>Activation function of the layer. See keras docs for accepted strings.</p>
+</dd>
+<dt><strong>strides</strong><span class="classifier">int</span></dt><dd><p>Step length of kernel</p>
+</dd>
+<dt><strong>instance_norm</strong><span class="classifier">bool</span></dt><dd><p>Whether to add instance normalization (before activation).</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Other keras.layers.Conv2D arguments</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="staticupsampleblock">
+<h3>StaticUpsampleBlock<a class="headerlink" href="#staticupsampleblock" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.layers.StaticUpsampleBlock">
+<code class="sig-prename descclassname">deeptrack.layers.</code><code class="sig-name descname">StaticUpsampleBlock</code><span class="sig-paren">(</span><em class="sig-param">size=(2</em>, <em class="sig-param">2)</em>, <em class="sig-param">activation=None</em>, <em class="sig-param">interpolation='bilinear'</em>, <em class="sig-param">instance_norm=False</em>, <em class="sig-param">kernel_size=(1</em>, <em class="sig-param">1)</em>, <em class="sig-param">strides=1</em>, <em class="sig-param">padding='same'</em>, <em class="sig-param">with_conv=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.layers.StaticUpsampleBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single no-trainable 2d deconvolutional layer.</p>
+<p>Accepts arguments of keras.layers.UpSampling2D.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>size</strong><span class="classifier">int</span></dt><dd><p>Size of the kernel</p>
+</dd>
+<dt><strong>activation</strong><span class="classifier">str or activation function or layer</span></dt><dd><p>Activation function of the layer. See keras docs for accepted strings.</p>
+</dd>
+<dt><strong>interpolation</strong></dt><dd><p>Interpolation type. Either “bilinear” or “nearest”.</p>
+</dd>
+<dt><strong>instance_norm</strong><span class="classifier">bool</span></dt><dd><p>Whether to add instance normalization (before activation).</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Other keras.layers.Conv2DTranspose arguments</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="as-block">
+<h3>as_block<a class="headerlink" href="#as-block" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.layers.as_block">
+<code class="sig-prename descclassname">deeptrack.layers.</code><code class="sig-name descname">as_block</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.layers.as_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts input to layer block</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="image.html" title="previous page">image</a>
+    <a class='right-next' id="next-link" href="losses.html" title="next page">losses</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

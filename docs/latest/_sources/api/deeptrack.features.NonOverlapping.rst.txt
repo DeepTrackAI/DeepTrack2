@@ -1,0 +1,17 @@
+NonOverlapping
+==============
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: NonOverlapping
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~NonOverlapping.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

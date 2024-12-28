@@ -1,0 +1,7 @@
+Min
+===
+
+.. currentmodule:: deeptrack.statistics
+
+.. autoclass:: Min
+   :show-inheritance:

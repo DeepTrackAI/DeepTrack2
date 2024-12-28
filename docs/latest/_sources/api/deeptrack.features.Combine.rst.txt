@@ -1,0 +1,17 @@
+Combine
+=======
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Combine
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Combine.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

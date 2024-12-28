@@ -1,0 +1,17 @@
+Darkfield
+=========
+
+.. currentmodule:: deeptrack.optics
+
+.. autoclass:: Darkfield
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Darkfield.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

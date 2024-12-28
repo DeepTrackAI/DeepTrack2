@@ -1,0 +1,17 @@
+Label
+=====
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Label
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Label.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

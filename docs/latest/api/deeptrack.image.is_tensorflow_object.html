@@ -1,0 +1,744 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>is_tensorflow_object &#8212; DeepTrack2 2024-12-23 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=423892ae"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/deeptrack.image.is_tensorflow_object';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://giovannivolpe.github.io/trial_DeepTrack2/latest/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '2024-12-23';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="maybe_cupy" href="deeptrack.image.maybe_cupy.html" />
+    <link rel="prev" title="coerce" href="deeptrack.image.coerce.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2024-12-23" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">DeepTrack2 2024-12-23 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../src/Documentation.html">
+    Documentation
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../src/Documentation.html">
+    Documentation
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/aberrations.html">deeptrack.aberrations Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.Aberration.html">Aberration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.Astigmatism.html">Astigmatism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.Defocus.html">Defocus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.GaussianApodization.html">GaussianApodization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.HorizontalComa.html">HorizontalComa</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.HorizontalTilt.html">HorizontalTilt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.ObliqueAstigmatism.html">ObliqueAstigmatism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.ObliqueTrefoil.html">ObliqueTrefoil</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.Piston.html">Piston</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.SphericalAberration.html">SphericalAberration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.Trefoil.html">Trefoil</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.VerticalComa.html">VerticalComa</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.VerticalTilt.html">VerticalTilt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.aberrations.Zernike.html">Zernike</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/augmentations.html">deeptrack.augmentations Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.Affine.html">Affine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.Augmentation.html">Augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.Crop.html">Crop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.CropTight.html">CropTight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.CropToMultiplesOf.html">CropToMultiplesOf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.ElasticTransformation.html">ElasticTransformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.FlipDiagonal.html">FlipDiagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.FlipLR.html">FlipLR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.FlipUD.html">FlipUD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.Pad.html">Pad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.PadToMultiplesOf.html">PadToMultiplesOf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.augmentations.Reuse.html">Reuse</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/elementwise.html">deeptrack.elementwise Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Abs.html">Abs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Angle.html">Angle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Arccos.html">Arccos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Arccosh.html">Arccosh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Arcsin.html">Arcsin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Arcsinh.html">Arcsinh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Arctan.html">Arctan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Arctanh.html">Arctanh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Ceil.html">Ceil</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Conjugate.html">Conjugate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Cos.html">Cos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Cosh.html">Cosh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.ElementwiseFeature.html">ElementwiseFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Exp.html">Exp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Floor.html">Floor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Imag.html">Imag</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Log.html">Log</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Log10.html">Log10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Log2.html">Log2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Real.html">Real</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Round.html">Round</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Sign.html">Sign</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Sin.html">Sin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Sinh.html">Sinh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Sqrt.html">Sqrt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Square.html">Square</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Tan.html">Tan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.elementwise.Tanh.html">Tanh</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/features.html">deeptrack.features Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.propagate_data_to_dependencies.html">propagate_data_to_dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Add.html">Add</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Arguments.html">Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.ArithmeticOperationFeature.html">ArithmeticOperationFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.AsType.html">AsType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Bind.html">Bind</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.BindResolve.html">BindResolve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.BindUpdate.html">BindUpdate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Branch.html">Branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Chain.html">Chain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.ChannelFirst2d.html">ChannelFirst2d</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Combine.html">Combine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.ConditionalSetFeature.html">ConditionalSetFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.ConditionalSetProperty.html">ConditionalSetProperty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Divide.html">Divide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.DummyFeature.html">DummyFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Equal.html">Equal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Equals.html">Equals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.ExpandDims.html">ExpandDims</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.FloorDivide.html">FloorDivide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.GreaterThan.html">GreaterThan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.GreaterThanOrEqual.html">GreaterThanOrEqual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.GreaterThanOrEquals.html">GreaterThanOrEquals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Label.html">Label</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Lambda.html">Lambda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.LessThan.html">LessThan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.LessThanOrEqual.html">LessThanOrEqual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.LessThanOrEquals.html">LessThanOrEquals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.LoadImage.html">LoadImage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Merge.html">Merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.MoveAxis.html">MoveAxis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Multiply.html">Multiply</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.NonOverlapping.html">NonOverlapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.OneHot.html">OneHot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.OneOf.html">OneOf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.OneOfDict.html">OneOfDict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Permute.html">Permute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Power.html">Power</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Probability.html">Probability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Repeat.html">Repeat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.SampleToMasks.html">SampleToMasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Slice.html">Slice</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Squeeze.html">Squeeze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Stack.html">Stack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Store.html">Store</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.StructuralFeature.html">StructuralFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Subtract.html">Subtract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.TakeProperties.html">TakeProperties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Transpose.html">Transpose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Unsqueeze.html">Unsqueeze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Upscale.html">Upscale</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.features.Value.html">Value</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/holography.html">deeptrack.holography Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.holography.get_propagation_matrix.html">get_propagation_matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.holography.FourierTransform.html">FourierTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.holography.FourierTransformTransformation.html">FourierTransformTransformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.holography.InverseFourierTransform.html">InverseFourierTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.holography.Rescale.html">Rescale</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../src/image.html">deeptrack.image Module</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.image.coerce.html">coerce</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">is_tensorflow_object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.image.maybe_cupy.html">maybe_cupy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.image.pad_image_to_fft.html">pad_image_to_fft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.image.strip.html">strip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.image.Image.html">Image</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/math.html">deeptrack.math Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.Average.html">Average</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.AverageBlur.html">AverageBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.AveragePooling.html">AveragePooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.BilateralBlur.html">BilateralBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.Blur.html">Blur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.BlurCV2.html">BlurCV2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.Clip.html">Clip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.GaussianBlur.html">GaussianBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.MaxPooling.html">MaxPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.MedianBlur.html">MedianBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.MedianPooling.html">MedianPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.MinPooling.html">MinPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.NormalizeMinMax.html">NormalizeMinMax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.NormalizeQuantile.html">NormalizeQuantile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.NormalizeStandard.html">NormalizeStandard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.Pool.html">Pool</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.math.Resize.html">Resize</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/noises.html">deeptrack.noises Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.noises.Background.html">Background</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.noises.ComplexGaussian.html">ComplexGaussian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.noises.Gaussian.html">Gaussian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.noises.Noise.html">Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.noises.Offset.html">Offset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.noises.Poisson.html">Poisson</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/optics.html">deeptrack.optics Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.optics.Brightfield.html">Brightfield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.optics.Darkfield.html">Darkfield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.optics.Fluorescence.html">Fluorescence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.optics.Holography.html">Holography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.optics.ISCAT.html">ISCAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.optics.IlluminationGradient.html">IlluminationGradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.optics.Microscope.html">Microscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.optics.Optics.html">Optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/properties.html">deeptrack.properties Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.properties.Property.html">Property</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.properties.PropertyDict.html">PropertyDict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.properties.SequentialProperty.html">SequentialProperty</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/scatterers.html">deeptrack.scatterers Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.scatterers.Ellipse.html">Ellipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.scatterers.Ellipsoid.html">Ellipsoid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.scatterers.MieScatterer.html">MieScatterer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.scatterers.MieSphere.html">MieSphere</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.scatterers.MieStratifiedSphere.html">MieStratifiedSphere</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.scatterers.PointParticle.html">PointParticle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.scatterers.Scatterer.html">Scatterer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.scatterers.Sphere.html">Sphere</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/sequences.html">deeptrack.sequences Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sequences.Sequential.html">Sequential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sequences.propagate_sequential_data.html">propagate_sequential_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sequences.Sequence.html">Sequence</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/statistics.html">deeptrack.statistics Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Cumsum.html">Cumsum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Max.html">Max</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Mean.html">Mean</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Median.html">Median</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Min.html">Min</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.PeakToPeak.html">PeakToPeak</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Percentile.html">Percentile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Prod.html">Prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Quantile.html">Quantile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Reducer.html">Reducer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Std.html">Std</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Sum.html">Sum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.statistics.Variance.html">Variance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/types.html">deeptrack.types Module</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/utils.html">deeptrack.utils Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.utils.as_list.html">as_list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.utils.get_kwarg_names.html">get_kwarg_names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.utils.hasmethod.html">hasmethod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.utils.kwarg_has_default.html">kwarg_has_default</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.utils.safe_call.html">safe_call</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/backend.core.html">deeptrack.backend.core Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.core.DeepTrackDataDict.html">DeepTrackDataDict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.core.DeepTrackDataObject.html">DeepTrackDataObject</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.core.DeepTrackNode.html">DeepTrackNode</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/backend.mie.html">deeptrack.backend.mie Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.mie.coefficients.html">coefficients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.mie.harmonics.html">harmonics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.mie.stratified_coefficients.html">stratified_coefficients</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../src/backend.pint_definition.html">deeptrack.backend.pint_definition Module</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/backend.polynomials.html">deeptrack.backend.polynomials Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.polynomials.besselj.html">besselj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.polynomials.bessely.html">bessely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.polynomials.dbesselj.html">dbesselj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.polynomials.dbessely.html">dbessely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.polynomials.dricbesh.html">dricbesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.polynomials.dricbesj.html">dricbesj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.polynomials.dricbesy.html">dricbesy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.polynomials.ricbesh.html">ricbesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.polynomials.ricbesj.html">ricbesj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.polynomials.ricbesy.html">ricbesy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/backend.units.html">deeptrack.backend.units Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.units.create_context.html">create_context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.units.get_active_scale.html">get_active_scale</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.units.get_active_voxel_size.html">get_active_voxel_size</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.backend.units.ConversionTable.html">ConversionTable</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/extras.radialcenter.html">deeptrack.extras.radialcenter Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.extras.radialcenter.radialcenter.html">radialcenter</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/sources.base.html">deeptrack.sources.base Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sources.base.random_split.html">random_split</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sources.base.Join.html">Join</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sources.base.Product.html">Product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sources.base.Source.html">Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sources.base.SourceDeepTrackNode.html">SourceDeepTrackNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sources.base.SourceItem.html">SourceItem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sources.base.Sources.html">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sources.base.Subset.html">Subset</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/sources.folder.html">deeptrack.sources.folder Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sources.folder.ImageFolder.html">ImageFolder</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../src/sources.rng.html">deeptrack.sources.rng Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sources.rng.NumpyRNG.html">NumpyRNG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deeptrack.sources.rng.PythonRNG.html">PythonRNG</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../src/Documentation.html" class="nav-link">Documentation</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../src/image.html" class="nav-link">deeptrack.image Module</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">is_tensorflow_object</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="is-tensorflow-object">
+<h1>is_tensorflow_object<a class="headerlink" href="#is-tensorflow-object" title="Link to this heading">#</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="deeptrack.image.is_tensorflow_object">
+<span class="sig-prename descclassname"><span class="pre">deeptrack.image.</span></span><span class="sig-name descname"><span class="pre">is_tensorflow_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.image.is_tensorflow_object" title="Link to this definition">#</a></dt>
+<dd><p>Checks if value is a tensorflow tensor without importing tensorflow.</p>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="deeptrack.image.coerce.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">coerce</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="deeptrack.image.maybe_cupy.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">maybe_cupy</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deeptrack.image.is_tensorflow_object"><code class="docutils literal notranslate"><span class="pre">is_tensorflow_object()</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/deeptrack.image.is_tensorflow_object.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, The DeepTrack2 Team.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

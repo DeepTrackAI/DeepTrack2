@@ -1,0 +1,17 @@
+OneOf
+=====
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: OneOf
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~OneOf.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

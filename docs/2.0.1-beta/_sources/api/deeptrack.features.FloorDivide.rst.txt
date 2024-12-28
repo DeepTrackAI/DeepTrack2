@@ -1,0 +1,7 @@
+FloorDivide
+===========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: FloorDivide
+   :show-inheritance:

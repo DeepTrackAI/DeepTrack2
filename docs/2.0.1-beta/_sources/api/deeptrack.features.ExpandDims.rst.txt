@@ -1,0 +1,17 @@
+ExpandDims
+==========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: ExpandDims
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~ExpandDims.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

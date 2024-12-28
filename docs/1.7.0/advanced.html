@@ -1,0 +1,338 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Advanced Topics &#8212; DeepTrack 2.0 documentation</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
+
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Documentation" href="deeptrack.html" />
+    <link rel="prev" title="Basics" href="basics.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+
+    
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
+        
+      </ul>
+
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2">
+  <a class="reference internal" href="basics.html">
+   Basics
+  </a>
+ </li>
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   Advanced Topics
+  </a>
+ </li>
+</ul>
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#dummy-arguments">
+   Dummy arguments
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#dependent-arguments">
+   Dependent arguments
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#dependencies-between-features">
+   Dependencies between features
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#overriding-properties">
+   Overriding properties
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#overriding-with-update">
+     Overriding with update
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#overriding-with-resolve">
+     Overriding with resolve
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="advanced-topics">
+<h1>Advanced Topics<a class="headerlink" href="#advanced-topics" title="Permalink to this headline">¶</a></h1>
+<p>DeepTrack 2.0 allows much more rich interactions than what is exposed on the surface. This section will explain how to define dependent variables, both within and between features. We’ll also explain how these can be more explicitly controlled after the entire pipeline has been created.</p>
+<div class="section" id="dummy-arguments">
+<h2>Dummy arguments<a class="headerlink" href="#dummy-arguments" title="Permalink to this headline">¶</a></h2>
+<p>First, we will introduce a concept that might seem useless at the time, but will make more sense in the next subsection: dummy arguments, or dummy properties. A dummy property is a argument passed to a feature that is not directly used by the feature. These can have any value and any name (that is not any of the feature’s input arguments).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span>
+    <span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">useless_argument</span><span class="o">=</span><span class="s2">&quot;I do nothing&quot;</span>
+<span class="p">)</span>
+<span class="n">add_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">11</span>
+</pre></div>
+</div>
+<p>Here <cite>useless_argument</cite> is a dummy property, as it is not directly used by the Add feature</p>
+</div>
+<div class="section" id="dependent-arguments">
+<h2>Dependent arguments<a class="headerlink" href="#dependent-arguments" title="Permalink to this headline">¶</a></h2>
+<p>Now, we will show the use of dummy properties: ordinary arguments can depend on them! This means that arguments that are functions can take them as input:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_random_integer</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span>
+<span class="n">min_value</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span>
+<span class="n">max_value</span><span class="o">=</span><span class="k">lambda</span> <span class="n">min_value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">min_value</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">101</span><span class="p">),</span>
+<span class="n">value</span><span class="o">=</span><span class="k">lambda</span> <span class="n">min_value</span><span class="p">,</span> <span class="n">max_value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">min_value</span><span class="p">,</span> <span class="n">max_value</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">add_random_integer</span><span class="o">.</span><span class="n">update</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">76</span>
+</pre></div>
+</div>
+<p>Let’s break this example down. We define <code class="code python docutils literal notranslate"><span class="name"><span class="pre">min_value</span></span></code>, which is a random integer between 0 and 99, which defines the minimum value to add. We also define <code class="code python docutils literal notranslate"><span class="name"><span class="pre">max_value</span></span></code> which takes <code class="code python docutils literal notranslate"><span class="name"><span class="pre">min_value</span></span></code> as an input, and returns a random integer between <cite>min_value + 1</cite> and 100. Finally, we define <cite>value</cite>, which is the argument used by the Add feature to determine the value to add. It takes <cite>min_value</cite> and <cite>max_value</cite> as inputs, and returns a random integer between <cite>min_value</cite> and <cite>max_value</cite>.</p>
+</div>
+<div class="section" id="dependencies-between-features">
+<h2>Dependencies between features<a class="headerlink" href="#dependencies-between-features" title="Permalink to this headline">¶</a></h2>
+<p>A feature can dependent on the arguments of another feature. The syntax for this is simple:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one_or_two</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">undo_add</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Subtract</span><span class="p">(</span>
+    <span class="n">value</span><span class="o">=</span><span class="n">add_one_or_two</span><span class="o">.</span><span class="n">value</span>
+<span class="p">)</span>
+
+<span class="n">do_nothing</span> <span class="o">=</span> <span class="n">add_one_or_two</span> <span class="o">+</span> <span class="n">undo_add</span>
+<span class="n">do_nothing</span><span class="o">.</span><span class="n">update</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">10</span>
+</pre></div>
+</div>
+<p>These two arguments will now always be the same. You can of course accept it as a dummy property:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one_or_two</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">undo_add</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Subtract</span><span class="p">(</span>
+    <span class="n">value_added</span><span class="o">=</span><span class="n">add_one_or_two</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+    <span class="n">value</span><span class="o">=</span><span class="k">lambda</span> <span class="n">value_added</span><span class="p">:</span> <span class="n">value_added</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>It is also possible to inherit all the arguments of another feature by calling</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one_or_two</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">undo_add</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Subtract</span><span class="p">(</span>
+    <span class="o">**</span><span class="n">add_one_or_two</span><span class="o">.</span><span class="n">properties</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>These dependency trees can be any size you want, as long as there are no cyclic dependencies.</p>
+</div>
+<div class="section" id="overriding-properties">
+<h2>Overriding properties<a class="headerlink" href="#overriding-properties" title="Permalink to this headline">¶</a></h2>
+<p>You might find yourself wanting more direct control over the properties in a pipeline. For example,
+you might want to resolve the same image twice but with different levels of noise,
+or maybe you want to use the same pipeline for both training set and the validation set, but with
+slightly different properties. We provide two methods of achieving this, both with their own benefits
+and use-cases.</p>
+<div class="section" id="overriding-with-update">
+<h3>Overriding with update<a class="headerlink" href="#overriding-with-update" title="Permalink to this headline">¶</a></h3>
+<p>When calling <code class="code python docutils literal notranslate"><span class="name"><span class="pre">Feature</span></span><span class="operator"><span class="pre">.</span></span><span class="name"><span class="pre">update</span></span><span class="punctuation"><span class="pre">()</span></span></code>, you are free to pass keyword arguments. These can be thought of as global
+properties that are true for all features, overriding local values. As an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">add_one</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">add_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">12</span>
+</pre></div>
+</div>
+<p>By passing <cite>value=2</cite> when updating, that value overwrote the internal value of add_one!</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If two features share the same name for a property, they will both be overwritten. For example, if
+we had both <code class="code python docutils literal notranslate"><span class="name"><span class="pre">dt</span></span><span class="operator"><span class="pre">.</span></span><span class="name"><span class="pre">Add</span></span><span class="punctuation"><span class="pre">(</span></span><span class="name"><span class="pre">value</span></span><span class="operator"><span class="pre">=</span></span><span class="literal number integer"><span class="pre">1</span></span><span class="punctuation"><span class="pre">)</span></span></code> and <code class="code python docutils literal notranslate"><span class="name"><span class="pre">dt</span></span><span class="operator"><span class="pre">.</span></span><span class="name"><span class="pre">Subtract</span></span><span class="punctuation"><span class="pre">(</span></span><span class="name"><span class="pre">value</span></span><span class="operator"><span class="pre">=</span></span><span class="literal number integer"><span class="pre">1</span></span><span class="punctuation"><span class="pre">)</span></span></code>, both of them would get
+<code class="code python docutils literal notranslate"><span class="name"><span class="pre">value</span></span></code> from the update call. This can be both an advantage or a disadvantage. For example
+it makes it easy to set the out of plane position of each scatterer to zero, or to remove all
+averrations. On the other hand, it can lead to confusing behaviour if the name conflict isn’t known!</p>
+</div>
+<p>A common use for this is to differentiate between different sets of data:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">validation_paths</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">([</span><span class="s1">&#39;./validation/file_1&#39;</span><span class="p">,</span> <span class="s1">&#39;./validation/file_2&#39;</span><span class="p">,</span> <span class="s1">&#39;./validation/file_3&#39;</span><span class="p">])</span>
+<span class="n">training_paths</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">([</span><span class="s1">&#39;./training/file_1&#39;</span><span class="p">,</span> <span class="s1">&#39;./training/file_2&#39;</span><span class="p">,</span> <span class="s1">&#39;./training/file_3&#39;</span><span class="p">])</span>
+
+<span class="n">loader</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">LoadImage</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="k">lambda</span> <span class="n">is_validation</span><span class="p">:</span> <span class="nb">next</span><span class="p">(</span><span class="n">validation_paths</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_validation</span> \
+                          <span class="k">else</span> <span class="nb">next</span><span class="p">(</span><span class="n">training_paths</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">loader</span><span class="o">.</span><span class="n">update</span><span class="p">()</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">current_value</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;./training/file_1&#39;</span>
+
+<span class="n">loader</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">is_validation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">current_value</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;./validation/file_1&#39;</span>
+</pre></div>
+</div>
+<p>Eagle-eyed readers may have noticed that the loader ran, even though <code class="code python docutils literal notranslate"><span class="name"><span class="pre">is_validation</span></span></code> should have been undefined. How come it didn’t crash?
+DeepTrack handles this internally by looking at the specifications of the function. If the function takes an argument for which there is no local nor global
+value to pass, DeepTrack first tries not passing the value (which would work for a definition like <code class="code python docutils literal notranslate"><span class="keyword"><span class="pre">def</span></span> <span class="name function"><span class="pre">path</span></span><span class="punctuation"><span class="pre">(</span></span><span class="name"><span class="pre">is_validation</span></span><span class="operator"><span class="pre">=</span></span><span class="keyword constant"><span class="pre">False</span></span><span class="punctuation"><span class="pre">)</span></span></code>). If this fails, then
+<code class="code python docutils literal notranslate"><span class="keyword constant"><span class="pre">None</span></span></code> is passed instead.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since <code class="code python docutils literal notranslate"><span class="keyword constant"><span class="pre">None</span></span></code> is passed to arguments that do not exist, you may encounter excpetions of the type <code class="code python docutils literal notranslate"><span class="operator"><span class="pre">+</span></span> <span class="operator word"><span class="pre">not</span></span> <span class="name"><span class="pre">defined</span></span> <span class="keyword"><span class="pre">for</span></span> <span class="name"><span class="pre">NoneType</span></span><span class="operator"><span class="pre">…</span></span></code>. If that’s the case
+check if you have misspelled any property!</p>
+</div>
+</div>
+<div class="section" id="overriding-with-resolve">
+<h3>Overriding with resolve<a class="headerlink" href="#overriding-with-resolve" title="Permalink to this headline">¶</a></h3>
+<p>A very similar approach is possible directly to the method <code class="code python docutils literal notranslate"><span class="name"><span class="pre">resolve</span></span></code>, but it behaves slightly differently. Primarly, all other properties,
+even dependent ones, remain unchanged. So if property <code class="code python docutils literal notranslate"><span class="name"><span class="pre">Y</span></span></code> is set to be <code class="code python docutils literal notranslate"><span class="name"><span class="pre">X</span></span><span class="operator"><span class="pre">+</span></span><span class="literal number integer"><span class="pre">1</span></span></code>, then <code class="code python docutils literal notranslate"><span class="operator"><span class="pre">.</span></span><span class="name"><span class="pre">resolve</span></span><span class="punctuation"><span class="pre">(</span></span><span class="name"><span class="pre">X</span></span><span class="operator"><span class="pre">=</span></span><span class="literal number integer"><span class="pre">0</span></span><span class="punctuation"><span class="pre">)</span></span></code> would leave <code class="code python docutils literal notranslate"><span class="name"><span class="pre">Y</span></span></code> unchanged.</p>
+<p>This allows you to resolve the exact same image twice, while changing some parameter of the process. For example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">add_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">12</span>
+</pre></div>
+</div>
+<p>A good use-case for this is to create a network label. One could imagine resolving the same image again, but with every particle exactly in focus, or without
+aberrations, or without noise.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A more targetted solution is provided by the features <a class="reference external" href="features.html#conditionalsetfeature">ConditionalSetFeature</a> and <a class="reference external" href="features.html#conditionalsetproperty">ConditionalSetProperty</a></p>
+</div>
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="basics.html" title="previous page">Basics</a>
+    <a class='right-next' id="next-link" href="deeptrack.html" title="next page">Documentation</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+Permute
+=======
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Permute
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Permute.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

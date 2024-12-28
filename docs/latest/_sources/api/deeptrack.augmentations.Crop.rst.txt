@@ -1,0 +1,17 @@
+Crop
+====
+
+.. currentmodule:: deeptrack.augmentations
+
+.. autoclass:: Crop
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Crop.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

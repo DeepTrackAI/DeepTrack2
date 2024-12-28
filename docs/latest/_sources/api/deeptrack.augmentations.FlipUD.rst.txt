@@ -1,0 +1,19 @@
+FlipUD
+======
+
+.. currentmodule:: deeptrack.augmentations
+
+.. autoclass:: FlipUD
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~FlipUD.get
+      ~FlipUD.update_properties
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get
+   .. automethod:: update_properties

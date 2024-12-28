@@ -1,0 +1,17 @@
+Pad
+===
+
+.. currentmodule:: deeptrack.augmentations
+
+.. autoclass:: Pad
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Pad.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,17 @@
+OneHot
+======
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: OneHot
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~OneHot.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

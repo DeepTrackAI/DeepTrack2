@@ -1,0 +1,7 @@
+Product
+=======
+
+.. currentmodule:: deeptrack.sources.base
+
+.. autoclass:: Product
+   :show-inheritance:

@@ -1,0 +1,6 @@
+dbessely
+========
+
+.. currentmodule:: deeptrack.backend.polynomials
+
+.. autofunction:: dbessely

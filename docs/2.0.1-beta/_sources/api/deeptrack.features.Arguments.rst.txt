@@ -1,0 +1,17 @@
+Arguments
+=========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Arguments
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Arguments.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,17 @@
+Slice
+=====
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Slice
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Slice.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

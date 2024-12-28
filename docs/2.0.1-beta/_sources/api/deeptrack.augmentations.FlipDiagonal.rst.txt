@@ -1,0 +1,19 @@
+FlipDiagonal
+============
+
+.. currentmodule:: deeptrack.augmentations
+
+.. autoclass:: FlipDiagonal
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~FlipDiagonal.get
+      ~FlipDiagonal.update_properties
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get
+   .. automethod:: update_properties

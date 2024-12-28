@@ -1,0 +1,7 @@
+GreaterThan
+===========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: GreaterThan
+   :show-inheritance:

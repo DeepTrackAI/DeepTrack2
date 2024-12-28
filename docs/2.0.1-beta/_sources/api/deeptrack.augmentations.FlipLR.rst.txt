@@ -1,0 +1,19 @@
+FlipLR
+======
+
+.. currentmodule:: deeptrack.augmentations
+
+.. autoclass:: FlipLR
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~FlipLR.get
+      ~FlipLR.update_properties
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get
+   .. automethod:: update_properties

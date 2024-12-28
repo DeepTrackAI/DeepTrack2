@@ -1,0 +1,17 @@
+AsType
+======
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: AsType
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~AsType.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,17 @@
+Bind
+====
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Bind
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Bind.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

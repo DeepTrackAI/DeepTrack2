@@ -1,0 +1,500 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>losses &#8212; DeepTrack 2.0 documentation</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
+
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="math" href="math.html" />
+    <link rel="prev" title="layers" href="layers.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+
+    
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
+        
+      </ul>
+
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2">
+  <a class="reference internal" href="backend.html">
+   backend
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="aberrations.html">
+   aberrations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="augmentations.html">
+   augmentations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="features.html">
+   features
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="generators.html">
+   generators
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="image.html">
+   image
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="layers.html">
+   layers
+  </a>
+ </li>
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   losses
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="math.html">
+   math
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="models.html">
+   models
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="noises.html">
+   noises
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="optics.html">
+   optics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="properties.html">
+   properties
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="scatterers.html">
+   scatterers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="sequences.html">
+   sequences
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="test.html">
+   test
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="types.html">
+   types
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="utils.html">
+   utils
+  </a>
+ </li>
+</ul>
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#functions">
+   Functions
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-functions">
+   Module functions
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#deeptrack-loss-function">
+     deeptrack_loss_function
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#flatten">
+     flatten
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#nd-binary-crossentropy">
+     nd_binary_crossentropy
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#nd-kl-divergence">
+     nd_kl_divergence
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#nd-mean-absolute-error">
+     nd_mean_absolute_error
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#nd-mean-absolute-percentage-error">
+     nd_mean_absolute_percentage_error
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#nd-mean-squared-error">
+     nd_mean_squared_error
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#nd-mean-squared-logarithmic-error">
+     nd_mean_squared_logarithmic_error
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#nd-poisson">
+     nd_poisson
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#nd-squared-hinge">
+     nd_squared_hinge
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#sigmoid">
+     sigmoid
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#weighted-crossentropy">
+     weighted_crossentropy
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.losses">
+<span id="losses"></span><h1>losses<a class="headerlink" href="#module-deeptrack.losses" title="Permalink to this headline">¶</a></h1>
+<p>Loss functions specialized for images and tracking tasks.</p>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>flatten</dt><dd><p>Flattends the inputs before calling the loss function.</p>
+</dd>
+<dt>sigmoid</dt><dd><p>Adds a signmoid transformation to the prediction before calling the loss function.</p>
+</dd>
+<dt>weighted_crossentropy</dt><dd><p>Binary crossentropy with weighted classes.</p>
+</dd>
+<dt>nd_mean_squared_error</dt><dd><p>Mean square error with flattened inputs.</p>
+</dd>
+<dt>nd_mean_squared_logarithmic_error</dt><dd><p>Mean square log error with flattened inputs.</p>
+</dd>
+<dt>nd_poisson</dt><dd><p>Poisson error loss flattened inputs.</p>
+</dd>
+<dt>nd_squared_hinge</dt><dd><p>Squared hinge error with flattened inputs.</p>
+</dd>
+<dt>nd_binary_crossentropy</dt><dd><p>Binary crossentropy error with flattened inputs.</p>
+</dd>
+<dt>nd_kullback_leibler_divergence</dt><dd><p>Kullback-Leibler divergence error with flattened inputs.</p>
+</dd>
+<dt>nd_mean_absolute_error</dt><dd><p>Mean absolute error with flattened inputs.</p>
+</dd>
+<dt>nd_mean_absolute_percentage_error</dt><dd><p>Mean absolute percentage error with flattened inputs.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-functions">
+<h2>Module functions<a class="headerlink" href="#module-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="deeptrack-loss-function">
+<h3>deeptrack_loss_function<a class="headerlink" href="#deeptrack-loss-function" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.deeptrack_loss_function">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">deeptrack_loss_function</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.deeptrack_loss_function" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="flatten">
+<h3>flatten<a class="headerlink" href="#flatten" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.flatten">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">flatten</code><span class="sig-paren">(</span><em class="sig-param">func</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flattens the inputs before calling the loss function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>func</strong><span class="classifier">loss function</span></dt><dd><p>The loss function to wrap.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>function</dt><dd><p>The new loss function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="nd-binary-crossentropy">
+<h3>nd_binary_crossentropy<a class="headerlink" href="#nd-binary-crossentropy" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.nd_binary_crossentropy">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">nd_binary_crossentropy</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.nd_binary_crossentropy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="nd-kl-divergence">
+<h3>nd_kl_divergence<a class="headerlink" href="#nd-kl-divergence" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.nd_kl_divergence">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">nd_kl_divergence</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.nd_kl_divergence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="nd-mean-absolute-error">
+<h3>nd_mean_absolute_error<a class="headerlink" href="#nd-mean-absolute-error" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.nd_mean_absolute_error">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">nd_mean_absolute_error</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.nd_mean_absolute_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="nd-mean-absolute-percentage-error">
+<h3>nd_mean_absolute_percentage_error<a class="headerlink" href="#nd-mean-absolute-percentage-error" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.nd_mean_absolute_percentage_error">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">nd_mean_absolute_percentage_error</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.nd_mean_absolute_percentage_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="nd-mean-squared-error">
+<h3>nd_mean_squared_error<a class="headerlink" href="#nd-mean-squared-error" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.nd_mean_squared_error">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">nd_mean_squared_error</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.nd_mean_squared_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="nd-mean-squared-logarithmic-error">
+<h3>nd_mean_squared_logarithmic_error<a class="headerlink" href="#nd-mean-squared-logarithmic-error" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.nd_mean_squared_logarithmic_error">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">nd_mean_squared_logarithmic_error</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.nd_mean_squared_logarithmic_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="nd-poisson">
+<h3>nd_poisson<a class="headerlink" href="#nd-poisson" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.nd_poisson">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">nd_poisson</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.nd_poisson" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="nd-squared-hinge">
+<h3>nd_squared_hinge<a class="headerlink" href="#nd-squared-hinge" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.nd_squared_hinge">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">nd_squared_hinge</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">P</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.nd_squared_hinge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="sigmoid">
+<h3>sigmoid<a class="headerlink" href="#sigmoid" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.sigmoid">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">sigmoid</code><span class="sig-paren">(</span><em class="sig-param">func</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.sigmoid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a signmoid transformation to the prediction before calling the loss function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>func</strong><span class="classifier">loss function</span></dt><dd><p>The loss function to wrap.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>function</dt><dd><p>The new loss function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="weighted-crossentropy">
+<h3>weighted_crossentropy<a class="headerlink" href="#weighted-crossentropy" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="deeptrack.losses.weighted_crossentropy">
+<code class="sig-prename descclassname">deeptrack.losses.</code><code class="sig-name descname">weighted_crossentropy</code><span class="sig-paren">(</span><em class="sig-param">weight=(1</em>, <em class="sig-param">1)</em>, <em class="sig-param">eps=0.0001</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.losses.weighted_crossentropy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binary crossentropy with weighted classes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>weight</strong><span class="classifier">Tuple[float, float]</span></dt><dd><p>Tuple of two numbers, indicating the weighting of the two classes – 1 and 0.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>function</dt><dd><p>Weighted binary crossentropy loss function</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="layers.html" title="previous page">layers</a>
+    <a class='right-next' id="next-link" href="math.html" title="next page">math</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

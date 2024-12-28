@@ -1,0 +1,17 @@
+BlurCV2
+=======
+
+.. currentmodule:: deeptrack.math
+
+.. autoclass:: BlurCV2
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~BlurCV2.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,503 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>generators &#8212; DeepTrack 2.0 documentation</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
+
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="image" href="image.html" />
+    <link rel="prev" title="features" href="features.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+
+    
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
+        
+      </ul>
+
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2">
+  <a class="reference internal" href="backend.html">
+   backend
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="aberrations.html">
+   aberrations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="augmentations.html">
+   augmentations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="features.html">
+   features
+  </a>
+ </li>
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   generators
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="image.html">
+   image
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="layers.html">
+   layers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="losses.html">
+   losses
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="math.html">
+   math
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="models.html">
+   models
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="noises.html">
+   noises
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="optics.html">
+   optics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="properties.html">
+   properties
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="scatterers.html">
+   scatterers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="sequences.html">
+   sequences
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="test.html">
+   test
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="types.html">
+   types
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="utils.html">
+   utils
+  </a>
+ </li>
+</ul>
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#classes">
+   Classes
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-classes">
+   Module classes
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#cappedcontinuousgenerator">
+     CappedContinuousGenerator
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#continuousgenerator">
+     ContinuousGenerator
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#generator">
+     Generator
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.generators">
+<span id="generators"></span><h1>generators<a class="headerlink" href="#module-deeptrack.generators" title="Permalink to this headline">¶</a></h1>
+<p>Generators to continuously resolve features.</p>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Generator</dt><dd><p>Base class for a generator.</p>
+</dd>
+<dt>ContinuousGenerator</dt><dd><p>Generator that asynchronously expands the dataset</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-classes">
+<h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cappedcontinuousgenerator">
+<h3>CappedContinuousGenerator<a class="headerlink" href="#cappedcontinuousgenerator" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.generators.CappedContinuousGenerator">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.generators.</code><code class="sig-name descname">CappedContinuousGenerator</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">max_sample_exposure=inf</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.generators.CappedContinuousGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator that asynchronously expands the dataset.</p>
+<p>Generator that aims to speed up the training of networks by striking a
+balance between the generalization gained by generating new images
+and the speed gained from reusing images. The generator will continuously
+create new training data during training, until <cite>max_data_size</cite> is reached,
+at which point the oldest data point is replaced.</p>
+<p>Unlike the <cite>ContinuousGenerator</cite>, this generator will purge any data that
+has been seen more than <cite>max_sample_exposure</cite> times.</p>
+<p>The generator is expected to be used with the python “with” statement, which
+ensures that the generator worker is consumed correctly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>The feature to resolve images from.</p>
+</dd>
+<dt><strong>label_function</strong><span class="classifier">Callable[Image or list of Image] -&gt; array_like</span></dt><dd><p>Function that returns the label corresponding to a feature output.</p>
+</dd>
+<dt><strong>batch_function</strong><span class="classifier">Callable[Image or list of Image] -&gt; array_like, optional</span></dt><dd><p>Function that returns the training data corresponding a feature output.</p>
+</dd>
+<dt><strong>min_data_size</strong><span class="classifier">int</span></dt><dd><p>Minimum size of the training data before training starts</p>
+</dd>
+<dt><strong>max_data_set</strong><span class="classifier">int</span></dt><dd><p>Maximum size of the training data before old data is replaced.</p>
+</dd>
+<dt><strong>max_sample_exposure</strong><span class="classifier">int</span></dt><dd><p>Any sample that has been seen for more than <cite>max_sample_exposure</cite> will be removed from the dataset</p>
+</dd>
+<dt><strong>batch_size</strong><span class="classifier">int or Callable[int, int] -&gt; int</span></dt><dd><p>Number of images per batch. A function is expected to accept the current epoch
+and the size of the training data as input.</p>
+</dd>
+<dt><strong>shuffle_batch</strong><span class="classifier">bool</span></dt><dd><p>If True, the batches are shuffled before outputting.</p>
+</dd>
+<dt><strong>feature_kwargs</strong><span class="classifier">dict or list of dicts</span></dt><dd><p>Set of options to pass to the feature when resolving</p>
+</dd>
+<dt><strong>ndim</strong><span class="classifier">int</span></dt><dd><p>Number of dimensions of each batch (including the batch dimension).</p>
+</dd>
+<dt><strong>max_sample_exposure</strong><span class="classifier">int</span></dt><dd><p>Any sample that has been seen for more than <cite>max_sample_exposure</cite> will be removed from the dataset</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#deeptrack.generators.CappedContinuousGenerator.on_epoch_end" title="deeptrack.generators.CappedContinuousGenerator.on_epoch_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_epoch_end</span></code></a>()</p></td>
+<td><p>Method called at the end of every epoch.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 70%" />
+<col style="width: 30%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>cleanup</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>construct_datapoint</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="deeptrack.generators.CappedContinuousGenerator.on_epoch_end">
+<code class="sig-name descname">on_epoch_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.generators.CappedContinuousGenerator.on_epoch_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method called at the end of every epoch.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="continuousgenerator">
+<h3>ContinuousGenerator<a class="headerlink" href="#continuousgenerator" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.generators.ContinuousGenerator">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.generators.</code><code class="sig-name descname">ContinuousGenerator</code><span class="sig-paren">(</span><em class="sig-param">feature</em>, <em class="sig-param">label_function=None</em>, <em class="sig-param">batch_function=&lt;function ContinuousGenerator.&lt;lambda&gt;&gt;</em>, <em class="sig-param">min_data_size=None</em>, <em class="sig-param">max_data_size=inf</em>, <em class="sig-param">batch_size=32</em>, <em class="sig-param">shuffle_batch=True</em>, <em class="sig-param">feature_kwargs={}</em>, <em class="sig-param">update_kwargs={}</em>, <em class="sig-param">verbose=1</em>, <em class="sig-param">ndim=4</em>, <em class="sig-param">max_sample_exposure=inf</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.generators.ContinuousGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator that asynchronously expands the dataset.</p>
+<p>Generator that aims to speed up the training of networks by striking a
+balance between the generalization gained by generating new images
+and the speed gained from reusing images. The generator will continuously
+create new training data during training, until <cite>max_data_size</cite> is reached,
+at which point the oldest data point is replaced.</p>
+<p>The generator is expected to be used with the python “with” statement, which
+ensures that the generator worker is consumed correctly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>The feature to resolve images from.</p>
+</dd>
+<dt><strong>label_function</strong><span class="classifier">Callable[Image or list of Image] -&gt; array_like</span></dt><dd><p>Function that returns the label corresponding to a feature output.</p>
+</dd>
+<dt><strong>batch_function</strong><span class="classifier">Callable[Image or list of Image] -&gt; array_like, optional</span></dt><dd><p>Function that returns the training data corresponding a feature output.</p>
+</dd>
+<dt><strong>min_data_size</strong><span class="classifier">int</span></dt><dd><p>Minimum size of the training data before training starts</p>
+</dd>
+<dt><strong>max_data_set</strong><span class="classifier">int</span></dt><dd><p>Maximum size of the training data before old data is replaced.</p>
+</dd>
+<dt><strong>batch_size</strong><span class="classifier">int or Callable[int, int] -&gt; int</span></dt><dd><p>Number of images per batch. A function is expected to accept the current epoch
+and the size of the training data as input.</p>
+</dd>
+<dt><strong>shuffle_batch</strong><span class="classifier">bool</span></dt><dd><p>If True, the batches are shuffled before outputting.</p>
+</dd>
+<dt><strong>feature_kwargs</strong><span class="classifier">dict or list of dicts</span></dt><dd><p>Set of options to pass to the feature when resolving</p>
+</dd>
+<dt><strong>ndim</strong><span class="classifier">int</span></dt><dd><p>Number of dimensions of each batch (including the batch dimension).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#deeptrack.generators.ContinuousGenerator.on_epoch_end" title="deeptrack.generators.ContinuousGenerator.on_epoch_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_epoch_end</span></code></a>()</p></td>
+<td><p>Method called at the end of every epoch.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 70%" />
+<col style="width: 30%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>cleanup</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>construct_datapoint</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="deeptrack.generators.ContinuousGenerator.on_epoch_end">
+<code class="sig-name descname">on_epoch_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.generators.ContinuousGenerator.on_epoch_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method called at the end of every epoch.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="generator">
+<h3>Generator<a class="headerlink" href="#generator" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.generators.Generator">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.generators.</code><code class="sig-name descname">Generator</code><a class="headerlink" href="#deeptrack.generators.Generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for a generator.</p>
+<p>Generators continously update and resolve features, and allow other
+frameworks to continuously access new features.</p>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#deeptrack.generators.Generator.generate" title="deeptrack.generators.Generator.generate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate</span></code></a>(feature[, label_function, …])</p></td>
+<td><p>Create generator instance.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_epoch_end</span></code>()</p></td>
+<td><p>Method called at the end of every epoch.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="deeptrack.generators.Generator.generate">
+<code class="sig-name descname">generate</code><span class="sig-paren">(</span><em class="sig-param">feature</em>, <em class="sig-param">label_function=None</em>, <em class="sig-param">batch_function=&lt;function Generator.&lt;lambda&gt;&gt;</em>, <em class="sig-param">batch_size=1</em>, <em class="sig-param">repeat_batch=1</em>, <em class="sig-param">ndim=4</em>, <em class="sig-param">shuffle_batch=True</em>, <em class="sig-param">ensure_contains_classes=[]</em>, <em class="sig-param">feature_kwargs={}</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.generators.Generator.generate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create generator instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>feature</strong><span class="classifier">Feature</span></dt><dd><p>The feature to resolve images from.</p>
+</dd>
+<dt><strong>label_function</strong><span class="classifier">Callable[Image] -&gt; array_like</span></dt><dd><p>Function that returns the label corresponding to an image.</p>
+</dd>
+<dt><strong>batch_size</strong><span class="classifier">int</span></dt><dd><p>Number of images per batch.</p>
+</dd>
+<dt><strong>repeat_batch</strong><span class="classifier">int</span></dt><dd><p>How many times to reuse the same batch before creating a new batch.</p>
+</dd>
+<dt><strong>shuffle_batch</strong><span class="classifier">bool</span></dt><dd><p>If True, the batches are shuffled before outputting.</p>
+</dd>
+<dt><strong>ndim</strong><span class="classifier">int</span></dt><dd><p>Expected number of dimensions of the output.</p>
+</dd>
+<dt><strong>feature_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Set of options to pass to the feature when resolving</p>
+</dd>
+<dt><strong>ensure_contains_classes</strong><span class="classifier">list</span></dt><dd><p>Ensures each batch contains all classes. Label is assumed to be sparse.
+´batch_size´ needs to be larger than the number of classes</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="features.html" title="previous page">features</a>
+    <a class='right-next' id="next-link" href="image.html" title="next page">image</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

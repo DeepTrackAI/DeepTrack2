@@ -1,0 +1,1058 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>deeptrack.features Module &#8212; DeepTrack2 2024-12-28 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=56532bcb"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'src/features';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://giovannivolpe.github.io/trial_DeepTrack2/latest/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '2024-12-28';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="propagate_data_to_dependencies" href="../api/deeptrack.features.propagate_data_to_dependencies.html" />
+    <link rel="prev" title="Tanh" href="../api/deeptrack.elementwise.Tanh.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2024-12-28" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">DeepTrack2 2024-12-28 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="Documentation.html">
+    Documentation
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="Documentation.html">
+    Documentation
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="aberrations.html">deeptrack.aberrations Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Aberration.html">Aberration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Astigmatism.html">Astigmatism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Defocus.html">Defocus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.GaussianApodization.html">GaussianApodization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.HorizontalComa.html">HorizontalComa</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.HorizontalTilt.html">HorizontalTilt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.ObliqueAstigmatism.html">ObliqueAstigmatism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.ObliqueTrefoil.html">ObliqueTrefoil</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Piston.html">Piston</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.SphericalAberration.html">SphericalAberration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Trefoil.html">Trefoil</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.VerticalComa.html">VerticalComa</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.VerticalTilt.html">VerticalTilt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Zernike.html">Zernike</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="augmentations.html">deeptrack.augmentations Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.Affine.html">Affine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.Augmentation.html">Augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.Crop.html">Crop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.CropTight.html">CropTight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.CropToMultiplesOf.html">CropToMultiplesOf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.ElasticTransformation.html">ElasticTransformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.FlipDiagonal.html">FlipDiagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.FlipLR.html">FlipLR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.FlipUD.html">FlipUD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.Pad.html">Pad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.PadToMultiplesOf.html">PadToMultiplesOf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.Reuse.html">Reuse</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="elementwise.html">deeptrack.elementwise Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Abs.html">Abs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Angle.html">Angle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arccos.html">Arccos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arccosh.html">Arccosh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arcsin.html">Arcsin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arcsinh.html">Arcsinh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arctan.html">Arctan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arctanh.html">Arctanh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Ceil.html">Ceil</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Conjugate.html">Conjugate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Cos.html">Cos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Cosh.html">Cosh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.ElementwiseFeature.html">ElementwiseFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Exp.html">Exp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Floor.html">Floor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Imag.html">Imag</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Log.html">Log</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Log10.html">Log10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Log2.html">Log2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Real.html">Real</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Round.html">Round</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Sign.html">Sign</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Sin.html">Sin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Sinh.html">Sinh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Sqrt.html">Sqrt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Square.html">Square</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Tan.html">Tan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Tanh.html">Tanh</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">deeptrack.features Module</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.propagate_data_to_dependencies.html">propagate_data_to_dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Add.html">Add</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Arguments.html">Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.ArithmeticOperationFeature.html">ArithmeticOperationFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.AsType.html">AsType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Bind.html">Bind</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.BindResolve.html">BindResolve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.BindUpdate.html">BindUpdate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Branch.html">Branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Chain.html">Chain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.ChannelFirst2d.html">ChannelFirst2d</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Combine.html">Combine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.ConditionalSetFeature.html">ConditionalSetFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.ConditionalSetProperty.html">ConditionalSetProperty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Divide.html">Divide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.DummyFeature.html">DummyFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Equal.html">Equal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Equals.html">Equals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.ExpandDims.html">ExpandDims</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.FloorDivide.html">FloorDivide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.GreaterThan.html">GreaterThan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.GreaterThanOrEqual.html">GreaterThanOrEqual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.GreaterThanOrEquals.html">GreaterThanOrEquals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Label.html">Label</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Lambda.html">Lambda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.LessThan.html">LessThan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.LessThanOrEqual.html">LessThanOrEqual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.LessThanOrEquals.html">LessThanOrEquals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.LoadImage.html">LoadImage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Merge.html">Merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.MoveAxis.html">MoveAxis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Multiply.html">Multiply</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.NonOverlapping.html">NonOverlapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.OneHot.html">OneHot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.OneOf.html">OneOf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.OneOfDict.html">OneOfDict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Permute.html">Permute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Power.html">Power</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Probability.html">Probability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Repeat.html">Repeat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.SampleToMasks.html">SampleToMasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Slice.html">Slice</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Squeeze.html">Squeeze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Stack.html">Stack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Store.html">Store</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.StructuralFeature.html">StructuralFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Subtract.html">Subtract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.TakeProperties.html">TakeProperties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Transpose.html">Transpose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Unsqueeze.html">Unsqueeze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Upscale.html">Upscale</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Value.html">Value</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="holography.html">deeptrack.holography Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.holography.get_propagation_matrix.html">get_propagation_matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.holography.FourierTransform.html">FourierTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.holography.FourierTransformTransformation.html">FourierTransformTransformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.holography.InverseFourierTransform.html">InverseFourierTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.holography.Rescale.html">Rescale</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="image.html">deeptrack.image Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.image.coerce.html">coerce</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.image.maybe_cupy.html">maybe_cupy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.image.pad_image_to_fft.html">pad_image_to_fft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.image.strip.html">strip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.image.Image.html">Image</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="math.html">deeptrack.math Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.Average.html">Average</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.AverageBlur.html">AverageBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.AveragePooling.html">AveragePooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.BilateralBlur.html">BilateralBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.Blur.html">Blur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.BlurCV2.html">BlurCV2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.Clip.html">Clip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.GaussianBlur.html">GaussianBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.MaxPooling.html">MaxPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.MedianBlur.html">MedianBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.MedianPooling.html">MedianPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.MinPooling.html">MinPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.NormalizeMinMax.html">NormalizeMinMax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.NormalizeQuantile.html">NormalizeQuantile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.NormalizeStandard.html">NormalizeStandard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.Pool.html">Pool</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.Resize.html">Resize</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="noises.html">deeptrack.noises Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.Background.html">Background</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.ComplexGaussian.html">ComplexGaussian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.Gaussian.html">Gaussian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.Noise.html">Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.Offset.html">Offset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.Poisson.html">Poisson</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="optics.html">deeptrack.optics Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Brightfield.html">Brightfield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Darkfield.html">Darkfield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Fluorescence.html">Fluorescence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Holography.html">Holography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.ISCAT.html">ISCAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.IlluminationGradient.html">IlluminationGradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Microscope.html">Microscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Optics.html">Optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="properties.html">deeptrack.properties Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.properties.Property.html">Property</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.properties.PropertyDict.html">PropertyDict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.properties.SequentialProperty.html">SequentialProperty</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="scatterers.html">deeptrack.scatterers Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.Ellipse.html">Ellipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.Ellipsoid.html">Ellipsoid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.MieScatterer.html">MieScatterer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.MieSphere.html">MieSphere</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.MieStratifiedSphere.html">MieStratifiedSphere</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.PointParticle.html">PointParticle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.Scatterer.html">Scatterer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.Sphere.html">Sphere</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sequences.html">deeptrack.sequences Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sequences.Sequential.html">Sequential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sequences.propagate_sequential_data.html">propagate_sequential_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sequences.Sequence.html">Sequence</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="statistics.html">deeptrack.statistics Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Cumsum.html">Cumsum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Max.html">Max</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Mean.html">Mean</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Median.html">Median</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Min.html">Min</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.PeakToPeak.html">PeakToPeak</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Percentile.html">Percentile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Prod.html">Prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Quantile.html">Quantile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Reducer.html">Reducer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Std.html">Std</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Sum.html">Sum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Variance.html">Variance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="types.html">deeptrack.types Module</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="utils.html">deeptrack.utils Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.utils.as_list.html">as_list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.utils.get_kwarg_names.html">get_kwarg_names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.utils.hasmethod.html">hasmethod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.utils.kwarg_has_default.html">kwarg_has_default</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.utils.safe_call.html">safe_call</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="backend.core.html">deeptrack.backend.core Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.core.DeepTrackDataDict.html">DeepTrackDataDict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.core.DeepTrackDataObject.html">DeepTrackDataObject</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.core.DeepTrackNode.html">DeepTrackNode</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="backend.mie.html">deeptrack.backend.mie Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.mie.coefficients.html">coefficients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.mie.harmonics.html">harmonics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.mie.stratified_coefficients.html">stratified_coefficients</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="backend.pint_definition.html">deeptrack.backend.pint_definition Module</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="backend.polynomials.html">deeptrack.backend.polynomials Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.besselj.html">besselj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.bessely.html">bessely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.dbesselj.html">dbesselj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.dbessely.html">dbessely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.dricbesh.html">dricbesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.dricbesj.html">dricbesj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.dricbesy.html">dricbesy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.ricbesh.html">ricbesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.ricbesj.html">ricbesj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.ricbesy.html">ricbesy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="backend.units.html">deeptrack.backend.units Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.units.create_context.html">create_context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.units.get_active_scale.html">get_active_scale</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.units.get_active_voxel_size.html">get_active_voxel_size</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.units.ConversionTable.html">ConversionTable</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="extras.radialcenter.html">deeptrack.extras.radialcenter Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.extras.radialcenter.radialcenter.html">radialcenter</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sources.base.html">deeptrack.sources.base Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.random_split.html">random_split</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.Join.html">Join</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.Product.html">Product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.Source.html">Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.SourceDeepTrackNode.html">SourceDeepTrackNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.SourceItem.html">SourceItem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.Sources.html">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.Subset.html">Subset</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sources.folder.html">deeptrack.sources.folder Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.folder.ImageFolder.html">ImageFolder</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sources.rng.html">deeptrack.sources.rng Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.rng.NumpyRNG.html">NumpyRNG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.rng.PythonRNG.html">PythonRNG</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="Documentation.html" class="nav-link">Documentation</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">deeptrack.features Module</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-deeptrack.features">
+<span id="deeptrack-features-module"></span><h1>deeptrack.features Module<a class="headerlink" href="#module-deeptrack.features" title="Link to this heading">#</a></h1>
+<p>Core features for building and processing pipelines in DeepTrack2.</p>
+<p>This module defines the core classes and utilities used to create and 
+manipulate features in DeepTrack2, enabling users to build sophisticated data 
+processing pipelines with modular, reusable, and composable components.</p>
+<section id="main-concepts">
+<h2>Main Concepts<a class="headerlink" href="#main-concepts" title="Link to this heading">#</a></h2>
+<ul>
+<li><p><strong>Features</strong></p>
+<blockquote>
+<div><p>A <cite>Feature</cite> is a building block of a data processing pipeline. 
+It represents a transformation applied to data, such as image manipulation, 
+data augmentation, or computational operations. Features are highly 
+customizable and can be combined into pipelines for complex workflows.</p>
+</div></blockquote>
+</li>
+<li><p><strong>Structural Features</strong></p>
+<blockquote>
+<div><p>Structural features extend the basic <cite>Feature</cite> class by adding hierarchical 
+or logical structures, such as chains, branches, or probabilistic choices. 
+They enable the construction of pipelines with advanced data flow 
+requirements.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="key-classes">
+<h2>Key Classes<a class="headerlink" href="#key-classes" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><dl class="simple">
+<dt><cite>Feature</cite>: </dt><dd><p>Base class for all features in DeepTrack2. Represents a modular data 
+transformation with properties and methods for customization.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>StructuralFeature</cite>: </dt><dd><p>A specialized feature for organizing and managing hierarchical or logical 
+structures in the pipeline.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>Value</cite>: </dt><dd><p>Stores a constant value as a feature. Useful for passing parameters through 
+the pipeline.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>Chain</cite>: </dt><dd><p>Sequentially applies multiple features to the input data (&gt;&gt;).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>DummyFeature</cite>: </dt><dd><p>A no-op feature that passes the input data unchanged.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>ArithmeticOperationFeature</cite>:</dt><dd><p>A parent class for features performing arithmetic operations like addition, 
+subtraction, multiplication, and division.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="module-highlights">
+<h2>Module Highlights<a class="headerlink" href="#module-highlights" title="Link to this heading">#</a></h2>
+<ul>
+<li><p><strong>Feature Properties</strong></p>
+<blockquote>
+<div><p>Features in DeepTrack2 can have dynamically sampled properties, enabling 
+parameterization of transformations. These properties are defined at 
+initialization and can be updated during pipeline execution.</p>
+</div></blockquote>
+</li>
+<li><p><strong>Pipeline Composition</strong></p>
+<blockquote>
+<div><p>Features can be composed into flexible pipelines using intuitive operators 
+(<cite>&gt;&gt;</cite>, <cite>&amp;</cite>, etc.), making it easy to define complex data processing 
+workflows.</p>
+</div></blockquote>
+</li>
+<li><p><strong>Lazy Evaluation</strong></p>
+<blockquote>
+<div><p>DeepTrack2 supports lazy evaluation of features, ensuring that data is 
+processed only when needed, which improves performance and scalability.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
+<p>Define a simple pipeline with features:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">deeptrack.features</span> <span class="kn">import</span> <span class="n">Feature</span><span class="p">,</span> <span class="n">Chain</span><span class="p">,</span> <span class="n">Value</span>
+</pre></div>
+</div>
+<p>Create a basic addition feature:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Add</span><span class="p">(</span><span class="n">Feature</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="n">image</span> <span class="o">+</span> <span class="n">value</span>
+</pre></div>
+</div>
+<p>Create two features:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">add_five</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">add_ten</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Chain features together:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">Chain</span><span class="p">(</span><span class="n">add_five</span><span class="p">,</span> <span class="n">add_ten</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or equivalently:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">add_five</span> <span class="o">&gt;&gt;</span> <span class="n">add_ten</span>
+</pre></div>
+</div>
+<p>Process an input image:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_image</span> <span class="o">=</span> <span class="n">pipeline</span><span class="p">(</span><span class="n">input_image</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">output_image</span><span class="p">)</span>
+<span class="go">[16, 17, 18]</span>
+</pre></div>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_context</span></code>([xpixel, ypixel, zpixel, ...])</p></td>
+<td><p>Creates a new context for unit conversions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.propagate_data_to_dependencies.html#deeptrack.features.propagate_data_to_dependencies" title="deeptrack.features.propagate_data_to_dependencies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">propagate_data_to_dependencies</span></code></a>(feature, **kwargs)</p></td>
+<td><p>Updates the properties of dependencies in a feature's dependency tree.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Add.html#deeptrack.features.Add" title="deeptrack.features.Add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Add</span></code></a>([value])</p></td>
+<td><p>Add a value to the input.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.Arguments.html#deeptrack.features.Arguments" title="deeptrack.features.Arguments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Arguments</span></code></a>([_input])</p></td>
+<td><p>A convenience container for pipeline arguments.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.ArithmeticOperationFeature.html#deeptrack.features.ArithmeticOperationFeature" title="deeptrack.features.ArithmeticOperationFeature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ArithmeticOperationFeature</span></code></a>(op[, value])</p></td>
+<td><p>Applies an arithmetic operation element-wise to inputs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.AsType.html#deeptrack.features.AsType" title="deeptrack.features.AsType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AsType</span></code></a>([dtype])</p></td>
+<td><p>Convert the data type of images.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Bind.html#deeptrack.features.Bind" title="deeptrack.features.Bind"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bind</span></code></a>(feature, **kwargs)</p></td>
+<td><p>Bind a feature with property arguments.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.BindResolve.html#deeptrack.features.BindResolve" title="deeptrack.features.BindResolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BindResolve</span></code></a></p></td>
+<td><p>alias of <a class="reference internal" href="../api/deeptrack.features.Bind.html#deeptrack.features.Bind" title="deeptrack.features.Bind"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bind</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.BindUpdate.html#deeptrack.features.BindUpdate" title="deeptrack.features.BindUpdate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BindUpdate</span></code></a>(feature, **kwargs)</p></td>
+<td><p>Bind a feature with certain arguments.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.Branch.html#deeptrack.features.Branch" title="deeptrack.features.Branch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Branch</span></code></a></p></td>
+<td><p>alias of <a class="reference internal" href="../api/deeptrack.features.Chain.html#deeptrack.features.Chain" title="deeptrack.features.Chain"><code class="xref py py-class docutils literal notranslate"><span class="pre">Chain</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Chain.html#deeptrack.features.Chain" title="deeptrack.features.Chain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Chain</span></code></a>(feature_1, feature_2, **kwargs)</p></td>
+<td><p>Resolve two features sequentially.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.ChannelFirst2d.html#deeptrack.features.ChannelFirst2d" title="deeptrack.features.ChannelFirst2d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ChannelFirst2d</span></code></a>([axis])</p></td>
+<td><p>Convert an image to a channel-first format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Combine.html#deeptrack.features.Combine" title="deeptrack.features.Combine"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Combine</span></code></a>(features, **kwargs)</p></td>
+<td><p>Combine multiple features into a single feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.ConditionalSetFeature.html#deeptrack.features.ConditionalSetFeature" title="deeptrack.features.ConditionalSetFeature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConditionalSetFeature</span></code></a>([on_false, on_true, ...])</p></td>
+<td><p>Conditionally resolves one of two features based on a condition.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.ConditionalSetProperty.html#deeptrack.features.ConditionalSetProperty" title="deeptrack.features.ConditionalSetProperty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConditionalSetProperty</span></code></a>(feature[, condition])</p></td>
+<td><p>Conditionally override the properties of child features.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConversionTable</span></code>(**conversions)</p></td>
+<td><p>Convert a dictionary of values to the desired units.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeepTrackNode</span></code>([action])</p></td>
+<td><p>Object corresponding to a node in a computation graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.Divide.html#deeptrack.features.Divide" title="deeptrack.features.Divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Divide</span></code></a>([value])</p></td>
+<td><p>Divide the input with a value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.DummyFeature.html#deeptrack.features.DummyFeature" title="deeptrack.features.DummyFeature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DummyFeature</span></code></a>([_input])</p></td>
+<td><p>A no-op feature that simply returns the input unchanged.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.Equal.html#deeptrack.features.Equal" title="deeptrack.features.Equal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Equal</span></code></a></p></td>
+<td><p>alias of <a class="reference internal" href="../api/deeptrack.features.Equals.html#deeptrack.features.Equals" title="deeptrack.features.Equals"><code class="xref py py-class docutils literal notranslate"><span class="pre">Equals</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Equals.html#deeptrack.features.Equals" title="deeptrack.features.Equals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Equals</span></code></a>([value])</p></td>
+<td><p>Determine whether input is equal to value.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.ExpandDims.html#deeptrack.features.ExpandDims" title="deeptrack.features.ExpandDims"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExpandDims</span></code></a></p></td>
+<td><p>alias of <a class="reference internal" href="../api/deeptrack.features.Unsqueeze.html#deeptrack.features.Unsqueeze" title="deeptrack.features.Unsqueeze"><code class="xref py py-class docutils literal notranslate"><span class="pre">Unsqueeze</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Feature.html#deeptrack.features.Feature" title="deeptrack.features.Feature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Feature</span></code></a>([_input])</p></td>
+<td><p>Base feature class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.FloorDivide.html#deeptrack.features.FloorDivide" title="deeptrack.features.FloorDivide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FloorDivide</span></code></a>([value])</p></td>
+<td><p>Divide the input with a value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.GreaterThan.html#deeptrack.features.GreaterThan" title="deeptrack.features.GreaterThan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GreaterThan</span></code></a>([value])</p></td>
+<td><p>Determine whether input is greater than value.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.GreaterThanOrEqual.html#deeptrack.features.GreaterThanOrEqual" title="deeptrack.features.GreaterThanOrEqual"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GreaterThanOrEqual</span></code></a></p></td>
+<td><p>alias of <a class="reference internal" href="../api/deeptrack.features.GreaterThanOrEquals.html#deeptrack.features.GreaterThanOrEquals" title="deeptrack.features.GreaterThanOrEquals"><code class="xref py py-class docutils literal notranslate"><span class="pre">GreaterThanOrEquals</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.GreaterThanOrEquals.html#deeptrack.features.GreaterThanOrEquals" title="deeptrack.features.GreaterThanOrEquals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GreaterThanOrEquals</span></code></a>([value])</p></td>
+<td><p>Determine whether input is greater than or equal to value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Image</span></code>(value[, copy])</p></td>
+<td><p>Wrapper for array-like values with property tracking.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Label.html#deeptrack.features.Label" title="deeptrack.features.Label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Label</span></code></a>([output_shape])</p></td>
+<td><p>Output the properties of this feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.Lambda.html#deeptrack.features.Lambda" title="deeptrack.features.Lambda"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Lambda</span></code></a>(function, **kwargs)</p></td>
+<td><p>Apply a custom function on each image in the input.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.LessThan.html#deeptrack.features.LessThan" title="deeptrack.features.LessThan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LessThan</span></code></a>([value])</p></td>
+<td><p>Determine whether input is less than value.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.LessThanOrEqual.html#deeptrack.features.LessThanOrEqual" title="deeptrack.features.LessThanOrEqual"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LessThanOrEqual</span></code></a></p></td>
+<td><p>alias of <a class="reference internal" href="../api/deeptrack.features.LessThanOrEquals.html#deeptrack.features.LessThanOrEquals" title="deeptrack.features.LessThanOrEquals"><code class="xref py py-class docutils literal notranslate"><span class="pre">LessThanOrEquals</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.LessThanOrEquals.html#deeptrack.features.LessThanOrEquals" title="deeptrack.features.LessThanOrEquals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LessThanOrEquals</span></code></a>([value])</p></td>
+<td><p>Determine whether input is less than or equal to value.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.LoadImage.html#deeptrack.features.LoadImage" title="deeptrack.features.LoadImage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LoadImage</span></code></a>(path[, load_options, as_list, ...])</p></td>
+<td><p>Load an image from disk.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Merge.html#deeptrack.features.Merge" title="deeptrack.features.Merge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Merge</span></code></a>(function, **kwargs)</p></td>
+<td><p>Apply a custom function to a list of images.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.MoveAxis.html#deeptrack.features.MoveAxis" title="deeptrack.features.MoveAxis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MoveAxis</span></code></a>(source, destination, **kwargs)</p></td>
+<td><p>Moves the axis of the input image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Multiply.html#deeptrack.features.Multiply" title="deeptrack.features.Multiply"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Multiply</span></code></a>([value])</p></td>
+<td><p>Multiply the input by a value.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.NonOverlapping.html#deeptrack.features.NonOverlapping" title="deeptrack.features.NonOverlapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NonOverlapping</span></code></a>(feature[, min_distance, ...])</p></td>
+<td><p>Ensure volumes are placed non-overlapping in a 3D space.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.OneHot.html#deeptrack.features.OneHot" title="deeptrack.features.OneHot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OneHot</span></code></a>(num_classes, **kwargs)</p></td>
+<td><p>Converts the input to a one-hot encoded array.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.OneOf.html#deeptrack.features.OneOf" title="deeptrack.features.OneOf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OneOf</span></code></a>(collection[, key])</p></td>
+<td><p>Resolves one feature from a collection on the input.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.OneOfDict.html#deeptrack.features.OneOfDict" title="deeptrack.features.OneOfDict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OneOfDict</span></code></a>(collection[, key])</p></td>
+<td><p>Resolve one feature from a dictionary.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.Permute.html#deeptrack.features.Permute" title="deeptrack.features.Permute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Permute</span></code></a></p></td>
+<td><p>alias of <a class="reference internal" href="../api/deeptrack.features.Transpose.html#deeptrack.features.Transpose" title="deeptrack.features.Transpose"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transpose</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Power.html#deeptrack.features.Power" title="deeptrack.features.Power"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Power</span></code></a>([value])</p></td>
+<td><p>Raise the input to a power.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.Probability.html#deeptrack.features.Probability" title="deeptrack.features.Probability"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Probability</span></code></a>(feature, probability, *args, ...)</p></td>
+<td><p>Resolve a feature with a certain probability</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PropertyDict</span></code>(**kwargs)</p></td>
+<td><p>Dictionary with Property elements.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Repeat.html#deeptrack.features.Repeat" title="deeptrack.features.Repeat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Repeat</span></code></a>(feature, N, **kwargs)</p></td>
+<td><p>Repeats the evaluation of the input feature a certain number of times.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.SampleToMasks.html#deeptrack.features.SampleToMasks" title="deeptrack.features.SampleToMasks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SampleToMasks</span></code></a>(transformation_function[, ...])</p></td>
+<td><p>Creates a mask from a list of images.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Slice.html#deeptrack.features.Slice" title="deeptrack.features.Slice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Slice</span></code></a>(slices, **kwargs)</p></td>
+<td><p>Array indexing for each Image in list.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SourceItem</span></code>(callbacks, **kwargs)</p></td>
+<td><p>A dict-like object that calls a list of callbacks when called.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Squeeze.html#deeptrack.features.Squeeze" title="deeptrack.features.Squeeze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Squeeze</span></code></a>([axis])</p></td>
+<td><p>Squeeze the input image to the smallest possible dimension.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.Stack.html#deeptrack.features.Stack" title="deeptrack.features.Stack"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Stack</span></code></a>(value, **kwargs)</p></td>
+<td><p>Stacks the input and the value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Store.html#deeptrack.features.Store" title="deeptrack.features.Store"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Store</span></code></a>(feature, key[, replace])</p></td>
+<td><p>Stores the output of a feature for reuse.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.StructuralFeature.html#deeptrack.features.StructuralFeature" title="deeptrack.features.StructuralFeature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StructuralFeature</span></code></a>([_input])</p></td>
+<td><p>Provides the structure of a feature set without input transformations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Subtract.html#deeptrack.features.Subtract" title="deeptrack.features.Subtract"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Subtract</span></code></a>([value])</p></td>
+<td><p>Subtract a value from the input.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.TakeProperties.html#deeptrack.features.TakeProperties" title="deeptrack.features.TakeProperties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TakeProperties</span></code></a>(feature, *names, **kwargs)</p></td>
+<td><p>Extracts all instances of a set of properties from a pipeline.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Transpose.html#deeptrack.features.Transpose" title="deeptrack.features.Transpose"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Transpose</span></code></a>([axes])</p></td>
+<td><p>Transpose the input image.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.Unsqueeze.html#deeptrack.features.Unsqueeze" title="deeptrack.features.Unsqueeze"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Unsqueeze</span></code></a>([axis])</p></td>
+<td><p>Unsqueezes the input image to the smallest possible dimension.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/deeptrack.features.Upscale.html#deeptrack.features.Upscale" title="deeptrack.features.Upscale"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Upscale</span></code></a>(feature[, factor])</p></td>
+<td><p>Perform the simulation at a higher resolution.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.features.Value.html#deeptrack.features.Value" title="deeptrack.features.Value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Value</span></code></a>([value])</p></td>
+<td><p>Represents a constant (per evaluation) value in a DeepTrack pipeline.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../api/deeptrack.elementwise.Tanh.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tanh</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../api/deeptrack.features.propagate_data_to_dependencies.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">propagate_data_to_dependencies</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#main-concepts">Main Concepts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-classes">Key Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-highlights">Module Highlights</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/src/features.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, The DeepTrack2 Team.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

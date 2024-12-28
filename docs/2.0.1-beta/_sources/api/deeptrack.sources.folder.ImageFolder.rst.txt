@@ -1,0 +1,33 @@
+ImageFolder
+===========
+
+.. currentmodule:: deeptrack.sources.folder
+
+.. autoclass:: ImageFolder
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~ImageFolder.classes
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~ImageFolder.get_category_name
+      ~ImageFolder.label_to_name
+      ~ImageFolder.name_to_label
+      ~ImageFolder.split
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: classes
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get_category_name
+   .. automethod:: label_to_name
+   .. automethod:: name_to_label
+   .. automethod:: split

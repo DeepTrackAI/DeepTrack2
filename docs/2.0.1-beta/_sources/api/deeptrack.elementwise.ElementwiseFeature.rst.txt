@@ -1,0 +1,17 @@
+ElementwiseFeature
+==================
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: ElementwiseFeature
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~ElementwiseFeature.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,6 @@
+propagate_sequential_data
+=========================
+
+.. currentmodule:: deeptrack.sequences
+
+.. autofunction:: propagate_sequential_data

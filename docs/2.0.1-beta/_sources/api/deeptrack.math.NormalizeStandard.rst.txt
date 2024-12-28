@@ -1,0 +1,17 @@
+NormalizeStandard
+=================
+
+.. currentmodule:: deeptrack.math
+
+.. autoclass:: NormalizeStandard
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~NormalizeStandard.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

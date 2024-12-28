@@ -1,0 +1,6 @@
+get_active_voxel_size
+=====================
+
+.. currentmodule:: deeptrack.backend.units
+
+.. autofunction:: get_active_voxel_size

@@ -1,0 +1,17 @@
+BindResolve
+===========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: BindResolve
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~BindResolve.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

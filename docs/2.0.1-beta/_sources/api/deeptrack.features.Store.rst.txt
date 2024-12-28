@@ -1,0 +1,17 @@
+Store
+=====
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Store
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Store.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

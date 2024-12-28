@@ -1,0 +1,17 @@
+Pool
+====
+
+.. currentmodule:: deeptrack.math
+
+.. autoclass:: Pool
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Pool.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

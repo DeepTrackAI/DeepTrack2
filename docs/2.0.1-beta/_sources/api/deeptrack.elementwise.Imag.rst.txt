@@ -1,0 +1,7 @@
+Imag
+====
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: Imag
+   :show-inheritance:

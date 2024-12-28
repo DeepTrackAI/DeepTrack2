@@ -1,0 +1,6 @@
+strip
+=====
+
+.. currentmodule:: deeptrack.image
+
+.. autofunction:: strip

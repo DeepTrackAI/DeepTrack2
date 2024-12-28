@@ -1,0 +1,7 @@
+MieStratifiedSphere
+===================
+
+.. currentmodule:: deeptrack.scatterers
+
+.. autoclass:: MieStratifiedSphere
+   :show-inheritance:

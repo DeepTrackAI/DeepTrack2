@@ -1,0 +1,7 @@
+AveragePooling
+==============
+
+.. currentmodule:: deeptrack.math
+
+.. autoclass:: AveragePooling
+   :show-inheritance:

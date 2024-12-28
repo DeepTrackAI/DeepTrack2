@@ -1,0 +1,7 @@
+StructuralFeature
+=================
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: StructuralFeature
+   :show-inheritance:

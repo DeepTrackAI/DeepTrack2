@@ -1,0 +1,17 @@
+Sequence
+========
+
+.. currentmodule:: deeptrack.sequences
+
+.. autoclass:: Sequence
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Sequence.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

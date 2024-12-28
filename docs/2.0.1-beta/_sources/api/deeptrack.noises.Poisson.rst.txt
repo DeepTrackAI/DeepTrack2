@@ -1,0 +1,17 @@
+Poisson
+=======
+
+.. currentmodule:: deeptrack.noises
+
+.. autoclass:: Poisson
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Poisson.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

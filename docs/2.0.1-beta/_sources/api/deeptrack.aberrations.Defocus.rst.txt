@@ -1,0 +1,7 @@
+Defocus
+=======
+
+.. currentmodule:: deeptrack.aberrations
+
+.. autoclass:: Defocus
+   :show-inheritance:

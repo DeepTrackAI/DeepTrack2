@@ -1,0 +1,7 @@
+Cosh
+====
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: Cosh
+   :show-inheritance:

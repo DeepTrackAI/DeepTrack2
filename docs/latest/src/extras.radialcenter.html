@@ -1,0 +1,1638 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>deeptrack.extras.radialcenter Module &#8212; DeepTrack2 2024-12-28 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=56532bcb"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'src/extras.radialcenter';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://giovannivolpe.github.io/trial_DeepTrack2/latest/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '2024-12-28';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="radialcenter" href="../api/deeptrack.extras.radialcenter.radialcenter.html" />
+    <link rel="prev" title="ConversionTable" href="../api/deeptrack.backend.units.ConversionTable.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="2024-12-28" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">DeepTrack2 2024-12-28 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="Documentation.html">
+    Documentation
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="Documentation.html">
+    Documentation
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="aberrations.html">deeptrack.aberrations Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Aberration.html">Aberration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Astigmatism.html">Astigmatism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Defocus.html">Defocus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.GaussianApodization.html">GaussianApodization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.HorizontalComa.html">HorizontalComa</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.HorizontalTilt.html">HorizontalTilt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.ObliqueAstigmatism.html">ObliqueAstigmatism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.ObliqueTrefoil.html">ObliqueTrefoil</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Piston.html">Piston</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.SphericalAberration.html">SphericalAberration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Trefoil.html">Trefoil</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.VerticalComa.html">VerticalComa</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.VerticalTilt.html">VerticalTilt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.aberrations.Zernike.html">Zernike</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="augmentations.html">deeptrack.augmentations Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.Affine.html">Affine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.Augmentation.html">Augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.Crop.html">Crop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.CropTight.html">CropTight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.CropToMultiplesOf.html">CropToMultiplesOf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.ElasticTransformation.html">ElasticTransformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.FlipDiagonal.html">FlipDiagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.FlipLR.html">FlipLR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.FlipUD.html">FlipUD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.Pad.html">Pad</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.PadToMultiplesOf.html">PadToMultiplesOf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.augmentations.Reuse.html">Reuse</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="elementwise.html">deeptrack.elementwise Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Abs.html">Abs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Angle.html">Angle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arccos.html">Arccos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arccosh.html">Arccosh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arcsin.html">Arcsin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arcsinh.html">Arcsinh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arctan.html">Arctan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Arctanh.html">Arctanh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Ceil.html">Ceil</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Conjugate.html">Conjugate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Cos.html">Cos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Cosh.html">Cosh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.ElementwiseFeature.html">ElementwiseFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Exp.html">Exp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Floor.html">Floor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Imag.html">Imag</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Log.html">Log</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Log10.html">Log10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Log2.html">Log2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Real.html">Real</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Round.html">Round</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Sign.html">Sign</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Sin.html">Sin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Sinh.html">Sinh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Sqrt.html">Sqrt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Square.html">Square</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Tan.html">Tan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.elementwise.Tanh.html">Tanh</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="features.html">deeptrack.features Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.propagate_data_to_dependencies.html">propagate_data_to_dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Add.html">Add</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Arguments.html">Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.ArithmeticOperationFeature.html">ArithmeticOperationFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.AsType.html">AsType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Bind.html">Bind</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.BindResolve.html">BindResolve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.BindUpdate.html">BindUpdate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Branch.html">Branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Chain.html">Chain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.ChannelFirst2d.html">ChannelFirst2d</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Combine.html">Combine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.ConditionalSetFeature.html">ConditionalSetFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.ConditionalSetProperty.html">ConditionalSetProperty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Divide.html">Divide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.DummyFeature.html">DummyFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Equal.html">Equal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Equals.html">Equals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.ExpandDims.html">ExpandDims</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.FloorDivide.html">FloorDivide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.GreaterThan.html">GreaterThan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.GreaterThanOrEqual.html">GreaterThanOrEqual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.GreaterThanOrEquals.html">GreaterThanOrEquals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Label.html">Label</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Lambda.html">Lambda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.LessThan.html">LessThan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.LessThanOrEqual.html">LessThanOrEqual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.LessThanOrEquals.html">LessThanOrEquals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.LoadImage.html">LoadImage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Merge.html">Merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.MoveAxis.html">MoveAxis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Multiply.html">Multiply</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.NonOverlapping.html">NonOverlapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.OneHot.html">OneHot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.OneOf.html">OneOf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.OneOfDict.html">OneOfDict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Permute.html">Permute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Power.html">Power</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Probability.html">Probability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Repeat.html">Repeat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.SampleToMasks.html">SampleToMasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Slice.html">Slice</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Squeeze.html">Squeeze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Stack.html">Stack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Store.html">Store</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.StructuralFeature.html">StructuralFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Subtract.html">Subtract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.TakeProperties.html">TakeProperties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Transpose.html">Transpose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Unsqueeze.html">Unsqueeze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Upscale.html">Upscale</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.features.Value.html">Value</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="holography.html">deeptrack.holography Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.holography.get_propagation_matrix.html">get_propagation_matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.holography.FourierTransform.html">FourierTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.holography.FourierTransformTransformation.html">FourierTransformTransformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.holography.InverseFourierTransform.html">InverseFourierTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.holography.Rescale.html">Rescale</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="image.html">deeptrack.image Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.image.coerce.html">coerce</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.image.maybe_cupy.html">maybe_cupy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.image.pad_image_to_fft.html">pad_image_to_fft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.image.strip.html">strip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.image.Image.html">Image</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="math.html">deeptrack.math Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.Average.html">Average</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.AverageBlur.html">AverageBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.AveragePooling.html">AveragePooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.BilateralBlur.html">BilateralBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.Blur.html">Blur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.BlurCV2.html">BlurCV2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.Clip.html">Clip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.GaussianBlur.html">GaussianBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.MaxPooling.html">MaxPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.MedianBlur.html">MedianBlur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.MedianPooling.html">MedianPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.MinPooling.html">MinPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.NormalizeMinMax.html">NormalizeMinMax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.NormalizeQuantile.html">NormalizeQuantile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.NormalizeStandard.html">NormalizeStandard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.Pool.html">Pool</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.math.Resize.html">Resize</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="noises.html">deeptrack.noises Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.Background.html">Background</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.ComplexGaussian.html">ComplexGaussian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.Gaussian.html">Gaussian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.Noise.html">Noise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.Offset.html">Offset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.noises.Poisson.html">Poisson</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="optics.html">deeptrack.optics Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Brightfield.html">Brightfield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Darkfield.html">Darkfield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Fluorescence.html">Fluorescence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Holography.html">Holography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.ISCAT.html">ISCAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.IlluminationGradient.html">IlluminationGradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Microscope.html">Microscope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.optics.Optics.html">Optics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="properties.html">deeptrack.properties Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.properties.Property.html">Property</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.properties.PropertyDict.html">PropertyDict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.properties.SequentialProperty.html">SequentialProperty</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="scatterers.html">deeptrack.scatterers Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.Ellipse.html">Ellipse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.Ellipsoid.html">Ellipsoid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.MieScatterer.html">MieScatterer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.MieSphere.html">MieSphere</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.MieStratifiedSphere.html">MieStratifiedSphere</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.PointParticle.html">PointParticle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.Scatterer.html">Scatterer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.scatterers.Sphere.html">Sphere</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sequences.html">deeptrack.sequences Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sequences.Sequential.html">Sequential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sequences.propagate_sequential_data.html">propagate_sequential_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sequences.Sequence.html">Sequence</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="statistics.html">deeptrack.statistics Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Cumsum.html">Cumsum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Max.html">Max</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Mean.html">Mean</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Median.html">Median</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Min.html">Min</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.PeakToPeak.html">PeakToPeak</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Percentile.html">Percentile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Prod.html">Prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Quantile.html">Quantile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Reducer.html">Reducer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Std.html">Std</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Sum.html">Sum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.statistics.Variance.html">Variance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="types.html">deeptrack.types Module</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="utils.html">deeptrack.utils Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.utils.as_list.html">as_list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.utils.get_kwarg_names.html">get_kwarg_names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.utils.hasmethod.html">hasmethod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.utils.kwarg_has_default.html">kwarg_has_default</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.utils.safe_call.html">safe_call</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="backend.core.html">deeptrack.backend.core Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.core.DeepTrackDataDict.html">DeepTrackDataDict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.core.DeepTrackDataObject.html">DeepTrackDataObject</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.core.DeepTrackNode.html">DeepTrackNode</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="backend.mie.html">deeptrack.backend.mie Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.mie.coefficients.html">coefficients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.mie.harmonics.html">harmonics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.mie.stratified_coefficients.html">stratified_coefficients</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="backend.pint_definition.html">deeptrack.backend.pint_definition Module</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="backend.polynomials.html">deeptrack.backend.polynomials Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.besselj.html">besselj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.bessely.html">bessely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.dbesselj.html">dbesselj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.dbessely.html">dbessely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.dricbesh.html">dricbesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.dricbesj.html">dricbesj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.dricbesy.html">dricbesy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.ricbesh.html">ricbesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.ricbesj.html">ricbesj</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.polynomials.ricbesy.html">ricbesy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="backend.units.html">deeptrack.backend.units Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.units.create_context.html">create_context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.units.get_active_scale.html">get_active_scale</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.units.get_active_voxel_size.html">get_active_voxel_size</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.backend.units.ConversionTable.html">ConversionTable</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">deeptrack.extras.radialcenter Module</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.extras.radialcenter.radialcenter.html">radialcenter</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sources.base.html">deeptrack.sources.base Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.random_split.html">random_split</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.Join.html">Join</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.Product.html">Product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.Source.html">Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.SourceDeepTrackNode.html">SourceDeepTrackNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.SourceItem.html">SourceItem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.Sources.html">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.base.Subset.html">Subset</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sources.folder.html">deeptrack.sources.folder Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.folder.ImageFolder.html">ImageFolder</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sources.rng.html">deeptrack.sources.rng Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.rng.NumpyRNG.html">NumpyRNG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/deeptrack.sources.rng.PythonRNG.html">PythonRNG</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="Documentation.html" class="nav-link">Documentation</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">deeptrack.extras.radialcenter Module</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-deeptrack.extras.radialcenter">
+<span id="deeptrack-extras-radialcenter-module"></span><h1>deeptrack.extras.radialcenter Module<a class="headerlink" href="#module-deeptrack.extras.radialcenter" title="Link to this heading">#</a></h1>
+<p>Radial center calculation function</p>
+<p>This module provides a function to calculate the center location
+of an intensity distribution.</p>
+<section id="module-structure">
+<h2>Module Structure<a class="headerlink" href="#module-structure" title="Link to this heading">#</a></h2>
+<p>Functions:
+- <cite>radialcenter</cite>: Calculates the center of a 2D intensity distribution.</p>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
+<p>Calculate center of an image containing randomly generated Gaussian blur.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">deeptrack.extras</span> <span class="kn">import</span> <span class="n">radialcenter</span> <span class="k">as</span> <span class="n">rc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gaussian_blur</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">,</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">radialcenter</span><span class="p">(</span><span class="n">gaussian_blur</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Center of distribution = </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>Python implementation by Benjamin Midtvedt, University of Gothenburg, 2020
+Copyright 2011-2012, Raghuveer Parthasarathy, The University of Oregon</p>
+<dl>
+<dt>Disclaimer / License  </dt><dd><dl class="simple">
+<dt>This program is free software: you can redistribute it and/or </dt><dd><p>modify it under the terms of the GNU General Public License as 
+published by the Free Software Foundation, either version 3 of the 
+License, or (at your option) any later version.</p>
+</dd>
+</dl>
+<p>This set of programs is distributed in the hope that it will be useful, 
+but WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
+General Public License for more details.
+You should have received a copy of the GNU General Public License 
+(gpl.txt) along with this program.</p>
+<blockquote>
+<div><p>If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>Raghuveer Parthasarathy
+The University of Oregon
+August 21, 2011 (begun)
+last modified Apr. 6, 2012 (minor change)
+Copyright 2011-2012, Raghuveer Parthasarathy</p>
+</div></blockquote>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">all</span></code>(a[, axis, out, keepdims, where])</p></td>
+<td><p>Test whether all array elements along a given axis evaluate to True.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">allclose</span></code>(a, b[, rtol, atol, equal_nan])</p></td>
+<td><p>Returns True if two arrays are element-wise equal within a tolerance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">amax</span></code>(a[, axis, out, keepdims, initial, where])</p></td>
+<td><p>Return the maximum of an array or maximum along an axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">amin</span></code>(a[, axis, out, keepdims, initial, where])</p></td>
+<td><p>Return the minimum of an array or minimum along an axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">angle</span></code>(z[, deg])</p></td>
+<td><p>Return the angle of the complex argument.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">any</span></code>(a[, axis, out, keepdims, where])</p></td>
+<td><p>Test whether any array element along a given axis evaluates to True.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append</span></code>(arr, values[, axis])</p></td>
+<td><p>Append values to the end of an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_along_axis</span></code>(func1d, axis, arr, *args, ...)</p></td>
+<td><p>Apply a function to 1-D slices along the given axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_over_axes</span></code>(func, a, axes)</p></td>
+<td><p>Apply a function repeatedly over multiple axes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">arange</span></code>([start,] stop[, step,][, dtype, ...])</p></td>
+<td><p>Return evenly spaced values within a given interval.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">argmax</span></code>(a[, axis, out, keepdims])</p></td>
+<td><p>Returns the indices of the maximum values along an axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">argmin</span></code>(a[, axis, out, keepdims])</p></td>
+<td><p>Returns the indices of the minimum values along an axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">argpartition</span></code>(a, kth[, axis, kind, order])</p></td>
+<td><p>Perform an indirect partition along the given axis using the algorithm specified by the <cite>kind</cite> keyword.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">argsort</span></code>(a[, axis, kind, order, stable])</p></td>
+<td><p>Returns the indices that would sort an array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">argwhere</span></code>(a)</p></td>
+<td><p>Find the indices of array elements that are non-zero, grouped by element.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">around</span></code>(a[, decimals, out])</p></td>
+<td><p>Round an array to the given number of decimals.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></p></td>
+<td><p>array(object, dtype=None, <a href="#id1"><span class="problematic" id="id2">*</span></a>, copy=True, order='K', subok=False, ndmin=0,</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array2string</span></code>(a[, max_line_width, precision, ...])</p></td>
+<td><p>Return a string representation of an array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array_equal</span></code>(a1, a2[, equal_nan])</p></td>
+<td><p>True if two arrays have the same shape and elements, False otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array_equiv</span></code>(a1, a2)</p></td>
+<td><p>Returns True if input arrays are shape consistent and all elements equal.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array_repr</span></code>(arr[, max_line_width, precision, ...])</p></td>
+<td><p>Return the string representation of an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array_split</span></code>(ary, indices_or_sections[, axis])</p></td>
+<td><p>Split an array into multiple sub-arrays.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array_str</span></code>(a[, max_line_width, precision, ...])</p></td>
+<td><p>Return a string representation of the data in an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">asanyarray</span></code>(a[, dtype, order, like])</p></td>
+<td><p>Convert the input to an ndarray, but pass ndarray subclasses through.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">asarray</span></code>(a[, dtype, order, device, copy, like])</p></td>
+<td><p>Convert the input to an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">asarray_chkfinite</span></code>(a[, dtype, order])</p></td>
+<td><p>Convert the input to an array, checking for NaNs or Infs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ascontiguousarray</span></code>(a[, dtype, like])</p></td>
+<td><p>Return a contiguous array (ndim &gt;= 1) in memory (C order).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">asfortranarray</span></code>(a[, dtype, like])</p></td>
+<td><p>Return an array (ndim &gt;= 1) laid out in Fortran order in memory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">asmatrix</span></code>(data[, dtype])</p></td>
+<td><p>Interpret the input as a matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">astype</span></code>(x, dtype, /, *[, copy])</p></td>
+<td><p>Copies an array to a specified data type.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">atleast_1d</span></code>(*arys)</p></td>
+<td><p>Convert inputs to arrays with at least one dimension.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">atleast_2d</span></code>(*arys)</p></td>
+<td><p>View inputs as arrays with at least two dimensions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">atleast_3d</span></code>(*arys)</p></td>
+<td><p>View inputs as arrays with at least three dimensions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">average</span></code>(a[, axis, weights, returned, keepdims])</p></td>
+<td><p>Compute the weighted average along the specified axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bartlett</span></code>(M)</p></td>
+<td><p>Return the Bartlett window.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">base_repr</span></code>(number[, base, padding])</p></td>
+<td><p>Return a string representation of a number in the given base system.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">binary_repr</span></code>(num[, width])</p></td>
+<td><p>Return the binary representation of the input number as a string.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bincount</span></code>(x, /[, weights, minlength])</p></td>
+<td><p>Count number of occurrences of each value in array of non-negative ints.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">blackman</span></code>(M)</p></td>
+<td><p>Return the Blackman window.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">block</span></code>(arrays)</p></td>
+<td><p>Assemble an nd-array from nested lists of blocks.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bmat</span></code>(obj[, ldict, gdict])</p></td>
+<td><p>Build a matrix object from a string, nested sequence, or array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">broadcast_arrays</span></code>(*args[, subok])</p></td>
+<td><p>Broadcast any number of arrays against each other.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">broadcast_shapes</span></code>(*args)</p></td>
+<td><p>Broadcast the input shapes into a single shape.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">broadcast_to</span></code>(array, shape[, subok])</p></td>
+<td><p>Broadcast an array to a new shape.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">busday_count</span></code></p></td>
+<td><p>busday_count(</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">busday_offset</span></code></p></td>
+<td><p>busday_offset(</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">can_cast</span></code>(from_, to[, casting])</p></td>
+<td><p>Returns True if cast between data types can occur according to the casting rule.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">choose</span></code>(a, choices[, out, mode])</p></td>
+<td><p>Construct an array from an index array and a list of arrays to choose from.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clip</span></code>(a, a_min, a_max[, out])</p></td>
+<td><p>Clip (limit) the values in an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">column_stack</span></code>(tup)</p></td>
+<td><p>Stack 1-D arrays as columns into a 2-D array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">common_type</span></code>(*arrays)</p></td>
+<td><p>Return a scalar type which is common to the input arrays.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">compress</span></code>(condition, a[, axis, out])</p></td>
+<td><p>Return selected slices of an array along given axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">concat</span></code></p></td>
+<td><p>concatenate(</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">concatenate</span></code></p></td>
+<td><p>concatenate(</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">convolve</span></code>(a, v[, mode])</p></td>
+<td><p>Returns the discrete, linear convolution of two one-dimensional sequences.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code>(a[, order, subok])</p></td>
+<td><p>Return an array copy of the given object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">copyto</span></code>(dst, src[, casting, where])</p></td>
+<td><p>Copies values from one array to another, broadcasting as necessary.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">corrcoef</span></code>(x[, y, rowvar, bias, ddof, dtype])</p></td>
+<td><p>Return Pearson product-moment correlation coefficients.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">correlate</span></code>(a, v[, mode])</p></td>
+<td><p>Cross-correlation of two 1-dimensional sequences.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">count_nonzero</span></code>(a[, axis, keepdims])</p></td>
+<td><p>Counts the number of non-zero values in the array <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cov</span></code>(m[, y, rowvar, bias, ddof, fweights, ...])</p></td>
+<td><p>Estimate a covariance matrix, given data and weights.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cross</span></code>(a, b[, axisa, axisb, axisc, axis])</p></td>
+<td><p>Return the cross product of two (arrays of) vectors.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cumprod</span></code>(a[, axis, dtype, out])</p></td>
+<td><p>Return the cumulative product of elements along a given axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cumsum</span></code>(a[, axis, dtype, out])</p></td>
+<td><p>Return the cumulative sum of the elements along a given axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime_as_string</span></code>(arr[, unit, timezone, ...])</p></td>
+<td><p>Convert an array of datetimes into an array of strings.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime_data</span></code>(dtype, /)</p></td>
+<td><p>Get information about the step size of a date or time type.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete</span></code>(arr, obj[, axis])</p></td>
+<td><p>Return a new array with sub-arrays along an axis deleted.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">diag</span></code>(v[, k])</p></td>
+<td><p>Extract a diagonal or construct a diagonal array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">diag_indices</span></code>(n[, ndim])</p></td>
+<td><p>Return the indices to access the main diagonal of an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">diag_indices_from</span></code>(arr)</p></td>
+<td><p>Return the indices to access the main diagonal of an n-dimensional array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">diagflat</span></code>(v[, k])</p></td>
+<td><p>Create a two-dimensional array with the flattened input as a diagonal.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">diagonal</span></code>(a[, offset, axis1, axis2])</p></td>
+<td><p>Return specified diagonals.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">diff</span></code>(a[, n, axis, prepend, append])</p></td>
+<td><p>Calculate the n-th discrete difference along the given axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">digitize</span></code>(x, bins[, right])</p></td>
+<td><p>Return the indices of the bins to which each value in input array belongs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dot</span></code>(a, b[, out])</p></td>
+<td><p>Dot product of two arrays.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dsplit</span></code>(ary, indices_or_sections)</p></td>
+<td><p>Split array into multiple sub-arrays along the 3rd axis (depth).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dstack</span></code>(tup)</p></td>
+<td><p>Stack arrays in sequence depth wise (along third axis).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ediff1d</span></code>(ary[, to_end, to_begin])</p></td>
+<td><p>The differences between consecutive elements of an array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">einsum</span></code>(*operands[, out, optimize])</p></td>
+<td><p>einsum(subscripts, <a href="#id3"><span class="problematic" id="id4">*</span></a>operands, out=None, dtype=None, order='K',</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">einsum_path</span></code>(subscripts, *operands[, optimize])</p></td>
+<td><p>Evaluates the lowest cost contraction order for an einsum expression by considering the creation of intermediate arrays.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">empty</span></code>(shape[, dtype, order, device, like])</p></td>
+<td><p>Return a new array of given shape and type, without initializing entries.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">empty_like</span></code></p></td>
+<td><p>empty_like(prototype, dtype=None, order='K', subok=True, shape=None, <a href="#id5"><span class="problematic" id="id6">*</span></a>,</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">expand_dims</span></code>(a, axis)</p></td>
+<td><p>Expand the shape of an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract</span></code>(condition, arr)</p></td>
+<td><p>Return the elements of an array that satisfy some condition.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">eye</span></code>(N[, M, k, dtype, order, device, like])</p></td>
+<td><p>Return a 2-D array with ones on the diagonal and zeros elsewhere.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fill_diagonal</span></code>(a, val[, wrap])</p></td>
+<td><p>Fill the main diagonal of the given array of any dimensionality.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fix</span></code>(x[, out])</p></td>
+<td><p>Round to nearest integer towards zero.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">flatnonzero</span></code>(a)</p></td>
+<td><p>Return indices that are non-zero in the flattened version of a.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">flip</span></code>(m[, axis])</p></td>
+<td><p>Reverse the order of elements in an array along the given axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fliplr</span></code>(m)</p></td>
+<td><p>Reverse the order of elements along axis 1 (left/right).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">flipud</span></code>(m)</p></td>
+<td><p>Reverse the order of elements along axis 0 (up/down).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_float_positional</span></code>(x[, precision, ...])</p></td>
+<td><p>Format a floating-point scalar as a decimal string in positional notation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_float_scientific</span></code>(x[, precision, ...])</p></td>
+<td><p>Format a floating-point scalar as a decimal string in scientific notation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_dlpack</span></code>(x, /)</p></td>
+<td><p>Create a NumPy array from an object implementing the <code class="docutils literal notranslate"><span class="pre">__dlpack__</span></code> protocol.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">frombuffer</span></code>(buffer[, dtype, count, offset, like])</p></td>
+<td><p>Interpret a buffer as a 1-dimensional array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fromfile</span></code>(file[, dtype, count, sep, offset, like])</p></td>
+<td><p>Construct an array from data in a text or binary file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fromfunction</span></code>(function, shape, *[, dtype, like])</p></td>
+<td><p>Construct an array by executing a function over each coordinate.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fromiter</span></code>(iter, dtype[, count, like])</p></td>
+<td><p>Create a new 1-dimensional array from an iterable object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">frompyfunc</span></code>(func, /, nin, nout, *[, identity])</p></td>
+<td><p>Takes an arbitrary Python function and returns a NumPy ufunc.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fromregex</span></code>(file, regexp, dtype[, encoding])</p></td>
+<td><p>Construct an array from a text file, using regular expression parsing.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fromstring</span></code>(string[, dtype, count, like])</p></td>
+<td><p>A new 1-D array initialized from text data in a string.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">full</span></code>(shape, fill_value[, dtype, order, ...])</p></td>
+<td><p>Return a new array of given shape and type, filled with <cite>fill_value</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">full_like</span></code>(a, fill_value[, dtype, order, ...])</p></td>
+<td><p>Return a full array with the same shape and type as a given array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">genfromtxt</span></code>(fname[, dtype, comments, ...])</p></td>
+<td><p>Load data from a text file, with missing values handled as specified.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">geomspace</span></code>(start, stop[, num, endpoint, ...])</p></td>
+<td><p>Return numbers spaced evenly on a log scale (a geometric progression).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_include</span></code>()</p></td>
+<td><p>Return the directory that contains the NumPy *.h header files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_printoptions</span></code>()</p></td>
+<td><p>Return the current print options.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">getbufsize</span></code>()</p></td>
+<td><p>Return the size of the buffer used in ufuncs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">geterr</span></code>()</p></td>
+<td><p>Get the current way of handling floating-point errors.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">geterrcall</span></code>()</p></td>
+<td><p>Return the current callback function used on floating-point errors.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gradient</span></code>(f, *varargs[, axis, edge_order])</p></td>
+<td><p>Return the gradient of an N-dimensional array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hamming</span></code>(M)</p></td>
+<td><p>Return the Hamming window.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hanning</span></code>(M)</p></td>
+<td><p>Return the Hanning window.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">histogram</span></code>(a[, bins, range, density, weights])</p></td>
+<td><p>Compute the histogram of a dataset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">histogram2d</span></code>(x, y[, bins, range, density, ...])</p></td>
+<td><p>Compute the bi-dimensional histogram of two data samples.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">histogram_bin_edges</span></code>(a[, bins, range, weights])</p></td>
+<td><p>Function to calculate only the edges of the bins used by the <cite>histogram</cite> function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">histogramdd</span></code>(sample[, bins, range, density, ...])</p></td>
+<td><p>Compute the multidimensional histogram of some data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hsplit</span></code>(ary, indices_or_sections)</p></td>
+<td><p>Split an array into multiple sub-arrays horizontally (column-wise).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hstack</span></code>(tup, *[, dtype, casting])</p></td>
+<td><p>Stack arrays in sequence horizontally (column wise).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">i0</span></code>(x)</p></td>
+<td><p>Modified Bessel function of the first kind, order 0.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">identity</span></code>(n[, dtype, like])</p></td>
+<td><p>Return the identity array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">imag</span></code>(val)</p></td>
+<td><p>Return the imaginary part of the complex argument.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">in1d</span></code>(ar1, ar2[, assume_unique, invert, kind])</p></td>
+<td><p>Test whether each element of a 1-D array is also present in a second array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">indices</span></code>(dimensions[, dtype, sparse])</p></td>
+<td><p>Return an array representing the indices of a grid.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">info</span></code>([object, maxwidth, output, toplevel])</p></td>
+<td><p>Get help information for an array, function, class, or module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">inner</span></code>(a, b, /)</p></td>
+<td><p>Inner product of two arrays.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">insert</span></code>(arr, obj, values[, axis])</p></td>
+<td><p>Insert values along the given axis before the given indices.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">interp</span></code>(x, xp, fp[, left, right, period])</p></td>
+<td><p>One-dimensional linear interpolation for monotonically increasing sample points.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersect1d</span></code>(ar1, ar2[, assume_unique, ...])</p></td>
+<td><p>Find the intersection of two arrays.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_busday</span></code></p></td>
+<td><p>is_busday(</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">isclose</span></code>(a, b[, rtol, atol, equal_nan])</p></td>
+<td><p>Returns a boolean array where two arrays are element-wise equal within a tolerance.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">iscomplex</span></code>(x)</p></td>
+<td><p>Returns a bool array, where True if input element is complex.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">iscomplexobj</span></code>(x)</p></td>
+<td><p>Check for a complex type or an array of complex numbers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">isdtype</span></code>(dtype, kind)</p></td>
+<td><p>Determine if a provided dtype is of a specified data type <code class="docutils literal notranslate"><span class="pre">kind</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">isfortran</span></code>(a)</p></td>
+<td><p>Check if the array is Fortran contiguous but <em>not</em> C contiguous.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">isin</span></code>(element, test_elements[, ...])</p></td>
+<td><p>Calculates <code class="docutils literal notranslate"><span class="pre">element</span> <span class="pre">in</span> <span class="pre">test_elements</span></code>, broadcasting over <cite>element</cite> only.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">isneginf</span></code>(x[, out])</p></td>
+<td><p>Test element-wise for negative infinity, return result as bool array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">isposinf</span></code>(x[, out])</p></td>
+<td><p>Test element-wise for positive infinity, return result as bool array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">isreal</span></code>(x)</p></td>
+<td><p>Returns a bool array, where True if input element is real.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">isrealobj</span></code>(x)</p></td>
+<td><p>Return True if x is a not complex type or an array of complex numbers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">isscalar</span></code>(element)</p></td>
+<td><p>Returns True if the type of <cite>element</cite> is a scalar type.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">issubdtype</span></code>(arg1, arg2)</p></td>
+<td><p>Returns True if first argument is a typecode lower/equal in type hierarchy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">iterable</span></code>(y)</p></td>
+<td><p>Check whether or not an object can be iterated over.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ix_</span></code>(*args)</p></td>
+<td><p>Construct an open mesh from multiple sequences.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">kaiser</span></code>(M, beta)</p></td>
+<td><p>Return the Kaiser window.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">kron</span></code>(a, b)</p></td>
+<td><p>Kronecker product of two arrays.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">lexsort</span></code>(keys[, axis])</p></td>
+<td><p>Perform an indirect stable sort using a sequence of keys.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">linspace</span></code>(start, stop[, num, endpoint, ...])</p></td>
+<td><p>Return evenly spaced numbers over a specified interval.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code>(file[, mmap_mode, allow_pickle, ...])</p></td>
+<td><p>Load arrays or pickled objects from <code class="docutils literal notranslate"><span class="pre">.npy</span></code>, <code class="docutils literal notranslate"><span class="pre">.npz</span></code> or pickled files.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">loadtxt</span></code>(fname[, dtype, comments, delimiter, ...])</p></td>
+<td><p>Load data from a text file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">logspace</span></code>(start, stop[, num, endpoint, base, ...])</p></td>
+<td><p>Return numbers spaced evenly on a log scale.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mask_indices</span></code>(n, mask_func[, k])</p></td>
+<td><p>Return the indices to access (n, n) arrays, given a masking function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">matrix_transpose</span></code>(x, /)</p></td>
+<td><p>Transposes a matrix (or a stack of matrices) <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">max</span></code>(a[, axis, out, keepdims, initial, where])</p></td>
+<td><p>Return the maximum of an array or maximum along an axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">may_share_memory</span></code>(a, b, /[, max_work])</p></td>
+<td><p>Determine if two arrays might share memory</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code>(a[, axis, dtype, out, keepdims, where])</p></td>
+<td><p>Compute the arithmetic mean along the specified axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code>(a[, axis, out, overwrite_input, keepdims])</p></td>
+<td><p>Compute the median along the specified axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">meshgrid</span></code>(*xi[, copy, sparse, indexing])</p></td>
+<td><p>Return a tuple of coordinate matrices from coordinate vectors.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min</span></code>(a[, axis, out, keepdims, initial, where])</p></td>
+<td><p>Return the minimum of an array or minimum along an axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_scalar_type</span></code>(a, /)</p></td>
+<td><p>For scalar <code class="docutils literal notranslate"><span class="pre">a</span></code>, returns the data type with the smallest size and smallest scalar kind which can hold its value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mintypecode</span></code>(typechars[, typeset, default])</p></td>
+<td><p>Return the character for the minimum-size type to which given types can be safely cast.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">moveaxis</span></code>(a, source, destination)</p></td>
+<td><p>Move axes of an array to new positions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nan_to_num</span></code>(x[, copy, nan, posinf, neginf])</p></td>
+<td><p>Replace NaN with zero and infinity with large finite numbers (default behaviour) or with the numbers defined by the user using the <cite>nan</cite>, <cite>posinf</cite> and/or <cite>neginf</cite> keywords.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nanargmax</span></code>(a[, axis, out, keepdims])</p></td>
+<td><p>Return the indices of the maximum values in the specified axis ignoring NaNs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nanargmin</span></code>(a[, axis, out, keepdims])</p></td>
+<td><p>Return the indices of the minimum values in the specified axis ignoring NaNs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nancumprod</span></code>(a[, axis, dtype, out])</p></td>
+<td><p>Return the cumulative product of array elements over a given axis treating Not a Numbers (NaNs) as one.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nancumsum</span></code>(a[, axis, dtype, out])</p></td>
+<td><p>Return the cumulative sum of array elements over a given axis treating Not a Numbers (NaNs) as zero.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nanmax</span></code>(a[, axis, out, keepdims, initial, where])</p></td>
+<td><p>Return the maximum of an array or maximum along an axis, ignoring any NaNs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nanmean</span></code>(a[, axis, dtype, out, keepdims, where])</p></td>
+<td><p>Compute the arithmetic mean along the specified axis, ignoring NaNs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nanmedian</span></code>(a[, axis, out, overwrite_input, ...])</p></td>
+<td><p>Compute the median along the specified axis, while ignoring NaNs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nanmin</span></code>(a[, axis, out, keepdims, initial, where])</p></td>
+<td><p>Return minimum of an array or minimum along an axis, ignoring any NaNs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nanpercentile</span></code>(a, q[, axis, out, ...])</p></td>
+<td><p>Compute the qth percentile of the data along the specified axis, while ignoring nan values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nanprod</span></code>(a[, axis, dtype, out, keepdims, ...])</p></td>
+<td><p>Return the product of array elements over a given axis treating Not a Numbers (NaNs) as ones.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nanquantile</span></code>(a, q[, axis, out, ...])</p></td>
+<td><p>Compute the qth quantile of the data along the specified axis, while ignoring nan values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nanstd</span></code>(a[, axis, dtype, out, ddof, ...])</p></td>
+<td><p>Compute the standard deviation along the specified axis, while ignoring NaNs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nansum</span></code>(a[, axis, dtype, out, keepdims, ...])</p></td>
+<td><p>Return the sum of array elements over a given axis treating Not a Numbers (NaNs) as zero.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nanvar</span></code>(a[, axis, dtype, out, ddof, ...])</p></td>
+<td><p>Compute the variance along the specified axis, while ignoring NaNs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndim</span></code>(a)</p></td>
+<td><p>Return the number of dimensions of an array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nested_iters</span></code>(op, axes[, flags, op_flags, ...])</p></td>
+<td><p>Create nditers for use in nested loops</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nonzero</span></code>(a)</p></td>
+<td><p>Return the indices of the elements that are non-zero.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ones</span></code>(shape[, dtype, order, device, like])</p></td>
+<td><p>Return a new array of given shape and type, filled with ones.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ones_like</span></code>(a[, dtype, order, subok, shape, ...])</p></td>
+<td><p>Return an array of ones with the same shape and type as a given array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">outer</span></code>(a, b[, out])</p></td>
+<td><p>Compute the outer product of two vectors.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">packbits</span></code>(a, /[, axis, bitorder])</p></td>
+<td><p>Packs the elements of a binary-valued array into bits in a uint8 array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pad</span></code>(array, pad_width[, mode])</p></td>
+<td><p>Pad an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">partition</span></code>(a, kth[, axis, kind, order])</p></td>
+<td><p>Return a partitioned copy of an array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">percentile</span></code>(a, q[, axis, out, ...])</p></td>
+<td><p>Compute the q-th percentile of the data along the specified axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">permute_dims</span></code>(a[, axes])</p></td>
+<td><p>Returns an array with axes transposed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">piecewise</span></code>(x, condlist, funclist, *args, **kw)</p></td>
+<td><p>Evaluate a piecewise-defined function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">place</span></code>(arr, mask, vals)</p></td>
+<td><p>Change elements of an array based on conditional and input values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">poly</span></code>(seq_of_zeros)</p></td>
+<td><p>Find the coefficients of a polynomial with the given sequence of roots.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">polyadd</span></code>(a1, a2)</p></td>
+<td><p>Find the sum of two polynomials.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">polyder</span></code>(p[, m])</p></td>
+<td><p>Return the derivative of the specified order of a polynomial.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">polydiv</span></code>(u, v)</p></td>
+<td><p>Returns the quotient and remainder of polynomial division.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">polyfit</span></code>(x, y, deg[, rcond, full, w, cov])</p></td>
+<td><p>Least squares polynomial fit.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">polyint</span></code>(p[, m, k])</p></td>
+<td><p>Return an antiderivative (indefinite integral) of a polynomial.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">polymul</span></code>(a1, a2)</p></td>
+<td><p>Find the product of two polynomials.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">polysub</span></code>(a1, a2)</p></td>
+<td><p>Difference (subtraction) of two polynomials.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">polyval</span></code>(p, x)</p></td>
+<td><p>Evaluate a polynomial at specific values.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">printoptions</span></code>(*args, **kwargs)</p></td>
+<td><p>Context manager for setting print options.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">prod</span></code>(a[, axis, dtype, out, keepdims, ...])</p></td>
+<td><p>Return the product of array elements over a given axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">promote_types</span></code>(type1, type2)</p></td>
+<td><p>Returns the data type with the smallest size and smallest scalar kind to which both <code class="docutils literal notranslate"><span class="pre">type1</span></code> and <code class="docutils literal notranslate"><span class="pre">type2</span></code> may be safely cast.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ptp</span></code>(a[, axis, out, keepdims])</p></td>
+<td><p>Range of values (maximum - minimum) along an axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">put</span></code>(a, ind, v[, mode])</p></td>
+<td><p>Replaces specified elements of an array with given values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">put_along_axis</span></code>(arr, indices, values, axis)</p></td>
+<td><p>Put values into the destination array by matching 1d index and data slices.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">putmask</span></code>(a, mask, values)</p></td>
+<td><p>Changes elements of an array based on conditional and input values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantile</span></code>(a, q[, axis, out, overwrite_input, ...])</p></td>
+<td><p>Compute the q-th quantile of the data along the specified axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/deeptrack.extras.radialcenter.radialcenter.html#deeptrack.extras.radialcenter.radialcenter" title="deeptrack.extras.radialcenter.radialcenter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">radialcenter</span></code></a>(I[, invert_xy])</p></td>
+<td><p>Calculates the center of a 2D intensity distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ravel</span></code>(a[, order])</p></td>
+<td><p>Return a contiguous flattened array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ravel_multi_index</span></code>(multi_index, dims[, mode, ...])</p></td>
+<td><p>Converts a tuple of index arrays into an array of flat indices, applying boundary modes to the multi-index.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">real</span></code>(val)</p></td>
+<td><p>Return the real part of the complex argument.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">real_if_close</span></code>(a[, tol])</p></td>
+<td><p>If input is complex with all imaginary parts close to zero, return real parts.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">repeat</span></code>(a, repeats[, axis])</p></td>
+<td><p>Repeat each element of an array after themselves</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">require</span></code>(a[, dtype, requirements, like])</p></td>
+<td><p>Return an ndarray of the provided type that satisfies requirements.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reshape</span></code>(a, newshape[, order])</p></td>
+<td><p>Gives a new shape to an array without changing its data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resize</span></code>(a, new_shape)</p></td>
+<td><p>Return a new array with the specified shape.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">result_type</span></code>(*arrays_and_dtypes)</p></td>
+<td><p>Returns the type that results from applying the NumPy type promotion rules to the arguments.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">roll</span></code>(a, shift[, axis])</p></td>
+<td><p>Roll array elements along a given axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rollaxis</span></code>(a, axis[, start])</p></td>
+<td><p>Roll the specified axis backwards, until it lies in a given position.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">roots</span></code>(p)</p></td>
+<td><p>Return the roots of a polynomial with coefficients given in p.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rot90</span></code>(m[, k, axes])</p></td>
+<td><p>Rotate an array by 90 degrees in the plane specified by axes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">round</span></code>(a[, decimals, out])</p></td>
+<td><p>Evenly round to the given number of decimals.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">row_stack</span></code>(tup, *[, dtype, casting])</p></td>
+<td><p>Stack arrays in sequence vertically (row wise).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code>(file, arr[, allow_pickle, fix_imports])</p></td>
+<td><p>Save an array to a binary file in NumPy <code class="docutils literal notranslate"><span class="pre">.npy</span></code> format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">savetxt</span></code>(fname, X[, fmt, delimiter, newline, ...])</p></td>
+<td><p>Save an array to a text file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">savez</span></code>(file, *args, **kwds)</p></td>
+<td><p>Save several arrays into a single file in uncompressed <code class="docutils literal notranslate"><span class="pre">.npz</span></code> format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">savez_compressed</span></code>(file, *args, **kwds)</p></td>
+<td><p>Save several arrays into a single file in compressed <code class="docutils literal notranslate"><span class="pre">.npz</span></code> format.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">searchsorted</span></code>(a, v[, side, sorter])</p></td>
+<td><p>Find indices where elements should be inserted to maintain order.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">select</span></code>(condlist, choicelist[, default])</p></td>
+<td><p>Return an array drawn from elements in choicelist, depending on conditions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_printoptions</span></code>([precision, threshold, ...])</p></td>
+<td><p>Set printing options.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">setbufsize</span></code>(size)</p></td>
+<td><p>Set the size of the buffer used in ufuncs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">setdiff1d</span></code>(ar1, ar2[, assume_unique])</p></td>
+<td><p>Find the set difference of two arrays.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">seterr</span></code>([all, divide, over, under, invalid])</p></td>
+<td><p>Set how floating-point errors are handled.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">seterrcall</span></code>(func)</p></td>
+<td><p>Set the floating-point error callback function or log object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">setxor1d</span></code>(ar1, ar2[, assume_unique])</p></td>
+<td><p>Find the set exclusive-or of two arrays.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code>(a)</p></td>
+<td><p>Return the shape of an array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shares_memory</span></code>(a, b, /[, max_work])</p></td>
+<td><p>Determine if two arrays share memory.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_config</span></code>([mode])</p></td>
+<td><p>Show libraries and system information on which NumPy was built and is being used</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_runtime</span></code>()</p></td>
+<td><p>Print information about various resources in the system including available intrinsic support and BLAS/LAPACK library in use</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sinc</span></code>(x)</p></td>
+<td><p>Return the normalized sinc function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">size</span></code>(a[, axis])</p></td>
+<td><p>Return the number of elements along a given axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort</span></code>(a[, axis, kind, order, stable])</p></td>
+<td><p>Return a sorted copy of an array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort_complex</span></code>(a)</p></td>
+<td><p>Sort a complex array using the real part first, then the imaginary part.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">split</span></code>(ary, indices_or_sections[, axis])</p></td>
+<td><p>Split an array into multiple sub-arrays as views into <cite>ary</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">squeeze</span></code>(a[, axis])</p></td>
+<td><p>Remove axes of length one from <cite>a</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stack</span></code>(arrays[, axis, out, dtype, casting])</p></td>
+<td><p>Join a sequence of arrays along a new axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">std</span></code>(a[, axis, dtype, out, ddof, keepdims, ...])</p></td>
+<td><p>Compute the standard deviation along the specified axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sum</span></code>(a[, axis, dtype, out, keepdims, ...])</p></td>
+<td><p>Sum of array elements over a given axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">swapaxes</span></code>(a, axis1, axis2)</p></td>
+<td><p>Interchange two axes of an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">take</span></code>(a, indices[, axis, out, mode])</p></td>
+<td><p>Take elements from an array along an axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">take_along_axis</span></code>(arr, indices, axis)</p></td>
+<td><p>Take values from the input array by matching 1d index and data slices.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensordot</span></code>(a, b[, axes])</p></td>
+<td><p>Compute tensor dot product along specified axes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tile</span></code>(A, reps)</p></td>
+<td><p>Construct an array by repeating A the number of times given by reps.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">trace</span></code>(a[, offset, axis1, axis2, dtype, out])</p></td>
+<td><p>Return the sum along diagonals of the array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">transpose</span></code>(a[, axes])</p></td>
+<td><p>Returns an array with axes transposed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">trapezoid</span></code>(y[, x, dx, axis])</p></td>
+<td><p>Integrate along the given axis using the composite trapezoidal rule.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">trapz</span></code>(y[, x, dx, axis])</p></td>
+<td><p><cite>trapz</cite> is deprecated in NumPy 2.0.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tri</span></code>(N[, M, k, dtype, like])</p></td>
+<td><p>An array with ones at and below the given diagonal and zeros elsewhere.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tril</span></code>(m[, k])</p></td>
+<td><p>Lower triangle of an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tril_indices</span></code>(n[, k, m])</p></td>
+<td><p>Return the indices for the lower-triangle of an (n, m) array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tril_indices_from</span></code>(arr[, k])</p></td>
+<td><p>Return the indices for the lower-triangle of arr.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">trim_zeros</span></code>(filt[, trim])</p></td>
+<td><p>Trim the leading and/or trailing zeros from a 1-D array or sequence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">triu</span></code>(m[, k])</p></td>
+<td><p>Upper triangle of an array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">triu_indices</span></code>(n[, k, m])</p></td>
+<td><p>Return the indices for the upper-triangle of an (n, m) array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">triu_indices_from</span></code>(arr[, k])</p></td>
+<td><p>Return the indices for the upper-triangle of arr.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">typename</span></code>(char)</p></td>
+<td><p>Return a description for the given data type code.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">union1d</span></code>(ar1, ar2)</p></td>
+<td><p>Find the union of two arrays.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unique</span></code>(ar[, return_index, return_inverse, ...])</p></td>
+<td><p>Find the unique elements of an array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unique_all</span></code>(x)</p></td>
+<td><p>Find the unique elements of an array, and counts, inverse and indices.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unique_counts</span></code>(x)</p></td>
+<td><p>Find the unique elements and counts of an input array <cite>x</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unique_inverse</span></code>(x)</p></td>
+<td><p>Find the unique elements of <cite>x</cite> and indices to reconstruct <cite>x</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unique_values</span></code>(x)</p></td>
+<td><p>Returns the unique elements of an input array <cite>x</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unpackbits</span></code>(a, /[, axis, count, bitorder])</p></td>
+<td><p>Unpacks elements of a uint8 array into a binary-valued output array.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unravel_index</span></code>(indices, shape[, order])</p></td>
+<td><p>Converts a flat index or array of flat indices into a tuple of coordinate arrays.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unwrap</span></code>(p[, discont, axis, period])</p></td>
+<td><p>Unwrap by taking the complement of large deltas with respect to the period.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">vander</span></code>(x[, N, increasing])</p></td>
+<td><p>Generate a Vandermonde matrix.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code>(a[, axis, dtype, out, ddof, keepdims, ...])</p></td>
+<td><p>Compute the variance along the specified axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">vdot</span></code>(a, b, /)</p></td>
+<td><p>Return the dot product of two vectors.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">vsplit</span></code>(ary, indices_or_sections)</p></td>
+<td><p>Split an array into multiple sub-arrays vertically (row-wise).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">vstack</span></code>(tup, *[, dtype, casting])</p></td>
+<td><p>Stack arrays in sequence vertically (row wise).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">where</span></code>(condition, [x, y], /)</p></td>
+<td><p>Return elements chosen from <cite>x</cite> or <cite>y</cite> depending on <cite>condition</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros</span></code>(shape[, dtype, order, like])</p></td>
+<td><p>Return a new array of given shape and type, filled with zeros.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros_like</span></code>(a[, dtype, order, subok, shape, ...])</p></td>
+<td><p>Return an array of zeros with the same shape and type as a given array.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../api/deeptrack.backend.units.ConversionTable.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">ConversionTable</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../api/deeptrack.extras.radialcenter.radialcenter.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">radialcenter</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-structure">Module Structure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/src/extras.radialcenter.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, The DeepTrack2 Team.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

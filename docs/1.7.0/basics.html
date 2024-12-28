@@ -1,0 +1,274 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Basics &#8212; DeepTrack 2.0 documentation</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
+
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Advanced Topics" href="advanced.html" />
+    <link rel="prev" title="Tutorials and notebooks" href="tutorials.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+
+    
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
+        
+      </ul>
+
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   Basics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="advanced.html">
+   Advanced Topics
+  </a>
+ </li>
+</ul>
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#features">
+   Features
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#chaining-features">
+   Chaining features
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#executing-a-feature-multiple-times">
+   Executing a feature multiple times
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#using-functions-as-arguments">
+   Using functions as arguments
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#done">
+   Done!
+  </a>
+ </li>
+</ul>
+
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="basics">
+<h1>Basics<a class="headerlink" href="#basics" title="Permalink to this headline">¶</a></h1>
+<p>This section will explain core concepts about programming with DeepTrack 2.0. The section <cite>Tutorials</cite> introduces some notebooks which more directly solve problems with DeepTrack 2. Feel free to skip directly to those if you are not interested in customizing the examples.</p>
+<p>For the following subsections we assume the following imports:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">deeptrack</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<p>Features are the core computing blocks of DeepTrack 2, and operate mainly on numpy arrays. They have two special methods with which you can interact with them: <cite>resolve</cite> and <cite>update</cite>. For now, we only need to focus on <cite>resolve</cite>, which executes the feature. The first argument is the input of the feature, which does not always have to be specified. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">add_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">11</span>
+</pre></div>
+</div>
+<p>Here we create a feature that adds 1 to the input. We resolve that feature on the input 10, which returns 11. Simple!</p>
+</div>
+<div class="section" id="chaining-features">
+<h2>Chaining features<a class="headerlink" href="#chaining-features" title="Permalink to this headline">¶</a></h2>
+<p>Features can be chained using the + operator. If two features are chained, the output of the first is passed as the input of the second.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">multiply_two</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Multiply</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">add_and_multiply</span> <span class="o">=</span> <span class="n">add_one</span> <span class="o">+</span> <span class="n">multiply_two</span>
+
+<span class="n">add_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">22</span>
+</pre></div>
+</div>
+<p>Here we have two features, <cite>add_one</cite>, which adds one to the input, and <cite>multiply_two</cite> which multiplies the input with two. We chain these features, which creates a single feature which first adds 1 to the input,
+and then multiplies it with two. Resolving this feature on the input 10 gives (10 + 1) * 2 = 22.</p>
+</div>
+<div class="section" id="executing-a-feature-multiple-times">
+<h2>Executing a feature multiple times<a class="headerlink" href="#executing-a-feature-multiple-times" title="Permalink to this headline">¶</a></h2>
+<p>You will often find that you want to execute a single feature several times in a row. This is achieved using the ** operator. The integer on the right determines how many times to execute the feature on the left.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">add_one_five_times</span> <span class="o">=</span> <span class="n">add_one</span> <span class="o">**</span> <span class="mi">5</span>
+
+<span class="n">add_one_five_times</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">15</span>
+</pre></div>
+</div>
+<p>Here, the <cite>add_one</cite> feature is executed five times. Resolving this feature on the input 10 gives 10 + 1 + 1 + 1 + 1 + 1 = 15</p>
+</div>
+<div class="section" id="using-functions-as-arguments">
+<h2>Using functions as arguments<a class="headerlink" href="#using-functions-as-arguments" title="Permalink to this headline">¶</a></h2>
+<p>The magic of DeepTrack is that any argument used to create feature can be replaced with a function that returns a value to use. The easiet example is a function that always returns the same value:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">add_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">11</span>
+</pre></div>
+</div>
+<p>However, this is not very exciting. let’s do something more interesting:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_zero_or_one</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">add_zero_or_one</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">10</span>
+</pre></div>
+</div>
+<p>Here, the value we add is randomly either 0 or 1. This time, it added zero. We can check this explicitly by running</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_zero_or_one</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">current_value</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>The first input of the Add feature is <cite>value</cite>, which we access and request its current value. Other features may have different names for their arguments, and all arguments are named arguments.</p>
+<p>To request a new value, we call <cite>update</cite>. Until update is called, it will always use the same value.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">add_zero_or_one</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+<span class="n">add_zero_or_one</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">current_value</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="done">
+<h2>Done!<a class="headerlink" href="#done" title="Permalink to this headline">¶</a></h2>
+<p>That’s it! You’re now ready to start playing with DeepTrack 2.0. However, you’re encouraged to look at the next section to learn more powerful interactions, such as dependencies between arguments or features!</p>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="tutorials.html" title="previous page">Tutorials and notebooks</a>
+    <a class='right-next' id="next-link" href="advanced.html" title="next page">Advanced Topics</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,57 @@
+DeepTrackNode
+=============
+
+.. currentmodule:: deeptrack.backend.core
+
+.. autoclass:: DeepTrackNode
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~DeepTrackNode.action
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~DeepTrackNode.__call__
+      ~DeepTrackNode.add_child
+      ~DeepTrackNode.add_dependency
+      ~DeepTrackNode.current_value
+      ~DeepTrackNode.get_citations
+      ~DeepTrackNode.invalidate
+      ~DeepTrackNode.is_valid
+      ~DeepTrackNode.old_recurse_children
+      ~DeepTrackNode.previous
+      ~DeepTrackNode.recurse_children
+      ~DeepTrackNode.recurse_dependencies
+      ~DeepTrackNode.set_value
+      ~DeepTrackNode.store
+      ~DeepTrackNode.update
+      ~DeepTrackNode.valid_index
+      ~DeepTrackNode.validate
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: action
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: __call__
+   .. automethod:: add_child
+   .. automethod:: add_dependency
+   .. automethod:: current_value
+   .. automethod:: get_citations
+   .. automethod:: invalidate
+   .. automethod:: is_valid
+   .. automethod:: old_recurse_children
+   .. automethod:: previous
+   .. automethod:: recurse_children
+   .. automethod:: recurse_dependencies
+   .. automethod:: set_value
+   .. automethod:: store
+   .. automethod:: update
+   .. automethod:: valid_index
+   .. automethod:: validate

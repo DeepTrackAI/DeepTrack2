@@ -1,0 +1,803 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>scatterers &#8212; DeepTrack 2.0 documentation</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.f6b7ca918bee2f46fd9abac01cfb07d5.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1e043a052b0af929e4d8.js">
+
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="sequences" href="sequences.html" />
+    <link rel="prev" title="properties" href="properties.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+
+    
+    <a class="navbar-brand" href="index.html">
+      <p class="title">DeepTrack</p>
+    </a>
+    
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials and notebooks
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="deeptrack.html">
+  Documentation
+ </a>
+</li>
+
+        
+      </ul>
+
+      <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l2">
+  <a class="reference internal" href="backend.html">
+   backend
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="aberrations.html">
+   aberrations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="augmentations.html">
+   augmentations
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="features.html">
+   features
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="generators.html">
+   generators
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="image.html">
+   image
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="layers.html">
+   layers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="losses.html">
+   losses
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="math.html">
+   math
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="models.html">
+   models
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="noises.html">
+   noises
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="optics.html">
+   optics
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="properties.html">
+   properties
+  </a>
+ </li>
+ <li class="toctree-l2 current active">
+  <a class="current reference internal" href="#">
+   scatterers
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="sequences.html">
+   sequences
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="test.html">
+   test
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="types.html">
+   types
+  </a>
+ </li>
+ <li class="toctree-l2">
+  <a class="reference internal" href="utils.html">
+   utils
+  </a>
+ </li>
+</ul>
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#classes">
+   Classes
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-classes">
+   Module classes
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#ellipse">
+     Ellipse
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#ellipsoid">
+     Ellipsoid
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#miescatterer">
+     MieScatterer
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#miesphere">
+     MieSphere
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#miestratifiedsphere">
+     MieStratifiedSphere
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#pointparticle">
+     PointParticle
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#scatterer">
+     Scatterer
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#sphere">
+     Sphere
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-deeptrack.scatterers">
+<span id="scatterers"></span><h1>scatterers<a class="headerlink" href="#module-deeptrack.scatterers" title="Permalink to this headline">¶</a></h1>
+<p>Implementations of Feature the model scattering objects.</p>
+<p>Provides some basic implementations of scattering objects
+that are frequently used.</p>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Scatterer</dt><dd><p>Abstract base class for scatterers</p>
+</dd>
+<dt>PointParticle</dt><dd><p>Generates point particles</p>
+</dd>
+<dt>Ellipse</dt><dd><p>Generetes 2-d elliptical particles</p>
+</dd>
+<dt>Sphere</dt><dd><p>Generates 3-d spheres</p>
+</dd>
+<dt>Ellipsoid</dt><dd><p>Generates 3-d ellipsoids</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="module-classes">
+<h2>Module classes<a class="headerlink" href="#module-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ellipse">
+<h3>Ellipse<a class="headerlink" href="#ellipse" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.scatterers.Ellipse">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Ellipse</code><span class="sig-paren">(</span><em class="sig-param">radius=1e-06</em>, <em class="sig-param">rotation=0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Ellipse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an elliptical disk scatterer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius</strong><span class="classifier">float or array_like [float (, float)]</span></dt><dd><p>Radius of the ellipse in meters. If only one value,
+assume circular.</p>
+</dd>
+<dt><strong>rotation</strong><span class="classifier">float</span></dt><dd><p>Orientation angle of the ellipse in the camera plane in radians.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
+and represents the position in the direction normal to the
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
+optics unless a more direct property is set: (eg. <cite>refractive_index</cite>
+for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
+</dd>
+<dt><strong>upsample</strong><span class="classifier">int</span></dt><dd><p>Upsamples the calculations of the pixel occupancy fraction.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="ellipsoid">
+<h3>Ellipsoid<a class="headerlink" href="#ellipsoid" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.scatterers.Ellipsoid">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Ellipsoid</code><span class="sig-paren">(</span><em class="sig-param">radius=1e-06</em>, <em class="sig-param">rotation=0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Ellipsoid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an ellipsoidal scatterer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius</strong><span class="classifier">float or array_like[float (, float, float)]</span></dt><dd><p>Radius of the ellipsoid in meters. If only one value,
+assume spherical.</p>
+</dd>
+<dt><strong>rotation</strong><span class="classifier">float</span></dt><dd><p>Rotation of the ellipsoid in about the x, y and z axis.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
+and represents the position in the direction normal to the
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
+optics unless a more direct property is set: (eg. <cite>refractive_index</cite>
+for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
+</dd>
+<dt><strong>upsample</strong><span class="classifier">int</span></dt><dd><p>Upsamples the calculations of the pixel occupancy fraction.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="miescatterer">
+<h3>MieScatterer<a class="headerlink" href="#miescatterer" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.scatterers.MieScatterer">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieScatterer</code><span class="sig-paren">(</span><em class="sig-param">coefficients</em>, <em class="sig-param">offset_z='auto'</em>, <em class="sig-param">polarization_angle=0</em>, <em class="sig-param">collection_angle='auto'</em>, <em class="sig-param">L='auto'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieScatterer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base implementation of a Mie particle.</p>
+<p>New Mie-theory scatterers can be implemented by extending this class, and
+passing a function that calculates the coefficients of the harmonics up to
+order <cite>L</cite>. To beprecise, the feature expects a wrapper function that takes
+the current values of the properties, as well as a inner function that
+takes an integer as the only parameter, and calculates the coefficients up
+to that integer. The return format is expected to be a tuple with two
+values, corresponding to <cite>an</cite> and <cite>bn</cite>. See
+<cite>deeptrack.backend.mie_coefficients</cite> for an example.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coefficients</strong><span class="classifier">Callable[int] -&gt; Tuple[ndarray, ndarray]</span></dt><dd><p>Function that returns the harmonics coefficients.</p>
+</dd>
+<dt><strong>offset_z</strong><span class="classifier">“auto” or float</span></dt><dd><p>Distance from the particle in the z direction the field is evaluated.
+If “auto”, this is calculated from the pixel size and
+<cite>collection_angle</cite></p>
+</dd>
+<dt><strong>collection_angle</strong><span class="classifier">“auto” or float</span></dt><dd><p>The maximum collection angle in radians. If “auto”, this
+is calculated from the objective NA (which is true if the objective is
+the limiting
+aperature).</p>
+</dd>
+<dt><strong>polarization_angle</strong><span class="classifier">float</span></dt><dd><p>Angle of the polarization of the incoming light relative to the x-axis.</p>
+</dd>
+<dt><strong>L</strong><span class="classifier">int or str</span></dt><dd><p>The number of terms used to evaluate the mie theory. If <cite>“auto”</cite>,
+it determines the number of terms automatically.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
+and represents the position in the direction normal to the
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="miesphere">
+<h3>MieSphere<a class="headerlink" href="#miesphere" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.scatterers.MieSphere">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieSphere</code><span class="sig-paren">(</span><em class="sig-param">radius=1e-06</em>, <em class="sig-param">refractive_index=1.45</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieSphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scattered field by a sphere</p>
+<p>Should be calculated on at least a 64 by 64 grid. Use padding in the
+optics if necessary.</p>
+<p>Calculates the scattered field by a spherical particle in a homogenous
+medium, as predicted by Mie theory. Note that the induced phase shift is
+calculated in comparison to the <cite>refractive_index_medium</cite> property of the
+optical device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius</strong><span class="classifier">float</span></dt><dd><p>Radius of the mie particle in meter.</p>
+</dd>
+<dt><strong>refractive_index</strong><span class="classifier">float</span></dt><dd><p>Refractive index of the particle</p>
+</dd>
+<dt><strong>L</strong><span class="classifier">int or str</span></dt><dd><p>The number of terms used to evaluate the mie theory. If <cite>“auto”</cite>,
+it determines the number of terms automatically.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
+and represents the position in the direction normal to the
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>offset_z</strong><span class="classifier">“auto” or float</span></dt><dd><p>Distance from the particle in the z direction the field is evaluated.
+If “auto”, this is calculated from the pixel size and
+<cite>collection_angle</cite></p>
+</dd>
+<dt><strong>collection_angle</strong><span class="classifier">“auto” or float</span></dt><dd><p>The maximum collection angle in radians. If “auto”, this
+is calculated from the objective NA (which is true if the objective
+is the limiting aperature).</p>
+</dd>
+<dt><strong>polarization_angle</strong><span class="classifier">float</span></dt><dd><p>Angle of the polarization of the incoming light relative to the x-axis.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="miestratifiedsphere">
+<h3>MieStratifiedSphere<a class="headerlink" href="#miestratifiedsphere" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.scatterers.MieStratifiedSphere">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">MieStratifiedSphere</code><span class="sig-paren">(</span><em class="sig-param">radius=[1e-06], refractive_index=[1.45], **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.MieStratifiedSphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scattered field by a stratified sphere</p>
+<p>A stratified sphere is a sphere with several concentric shells of uniform
+refractive index.</p>
+<p>Should be calculated on at least a 64 by 64 grid. Use padding in the
+optics if necessary</p>
+<p>Calculates the scattered field by in a homogenous medium, as predicted by
+Mie theory. Note that the induced phase shift is calculated in comparison
+to the <cite>refractive_index_medium</cite> property of the optical device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius</strong><span class="classifier">list of float</span></dt><dd><p>The radius of each cell in increasing order.</p>
+</dd>
+<dt><strong>refractive_index</strong><span class="classifier">list of float</span></dt><dd><p>Refractive index of each cell in the same order as <cite>radius</cite></p>
+</dd>
+<dt><strong>L</strong><span class="classifier">int or str</span></dt><dd><p>The number of terms used to evaluate the mie theory. If <cite>“auto”</cite>,
+it determines the number of terms automatically.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
+and represents the position in the direction normal to the
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>offset_z</strong><span class="classifier">“auto” or float</span></dt><dd><p>Distance from the particle in the z direction the field is evaluated.
+If “auto”, this is calculated from the pixel size and
+<cite>collection_angle</cite></p>
+</dd>
+<dt><strong>collection_angle</strong><span class="classifier">“auto” or float</span></dt><dd><p>The maximum collection angle in radians. If “auto”, this
+is calculated from the objective NA (which is true if the objective
+is the limiting aperature).</p>
+</dd>
+<dt><strong>polarization_angle</strong><span class="classifier">float</span></dt><dd><p>Angle of the polarization of the incoming light relative to the x-axis.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="pointparticle">
+<h3>PointParticle<a class="headerlink" href="#pointparticle" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.scatterers.PointParticle">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">PointParticle</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.PointParticle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a point particle</p>
+<p>A point particle is approximated by the size of a pixel. For subpixel
+positioning, the position is interpolated linearly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>position</strong><span class="classifier">array_like of length 2 or 3</span></dt><dd><p>The position of the  particle. Third index is optional,
+and represents the position in the direction normal to the
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
+optics unless a more direct property is set: (eg. <cite>refractive_index</cite>
+for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="scatterer">
+<h3>Scatterer<a class="headerlink" href="#scatterer" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.scatterers.Scatterer">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Scatterer</code><span class="sig-paren">(</span><em class="sig-param">position=(32</em>, <em class="sig-param">32)</em>, <em class="sig-param">z=0.0</em>, <em class="sig-param">value=1.0</em>, <em class="sig-param">position_unit='pixel'</em>, <em class="sig-param">upsample=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Scatterer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base abstract class for scatterers.</p>
+<p>A scatterer is defined by a 3-dimensional volume of voxels.
+To each voxel corresponds an occupancy factor, i.e., how much
+of that voxel does the scatterer occupy. However, this number is not
+necessarily limited to the [0, 1] range. It can be any number, and its
+interpretation is left to the optical device that images the scatterer.</p>
+<p>This abstract class implements the <cite>_process_properties</cite> method to convert
+the position to voxel units, as well as the <cite>_process_and_get</cite> method to
+upsample the calculation and crop empty slices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>position</strong><span class="classifier">array_like of length 2 or 3</span></dt><dd><p>The position of the  particle. Third index is optional,
+and represents the position in the direction normal to the
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
+optics unless a more direct property is set (eg. <cite>refractive_index</cite>
+for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
+</dd>
+<dt><strong>position_unit</strong><span class="classifier">“meter” or “pixel”</span></dt><dd><p>The unit of the provided position property.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Other Parameters</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>upsample_axes</strong><span class="classifier">tuple of ints</span></dt><dd><p>Sets the axes along which the calculation is upsampled (default is
+None, which implies all axes are upsampled).</p>
+</dd>
+<dt><strong>crop_zeros</strong><span class="classifier">bool</span></dt><dd><p>Whether to remove slices in which all elements are zero.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="sphere">
+<h3>Sphere<a class="headerlink" href="#sphere" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="deeptrack.scatterers.Sphere">
+<em class="property">class </em><code class="sig-prename descclassname">deeptrack.scatterers.</code><code class="sig-name descname">Sphere</code><span class="sig-paren">(</span><em class="sig-param">radius=1e-06</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#deeptrack.scatterers.Sphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a spherical scatterer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius</strong><span class="classifier">float</span></dt><dd><p>Radius of the sphere in meters.</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">array_like[float, float (, float)]</span></dt><dd><p>The position of the particle. Third index is optional,
+and represents the position in the direction normal to the
+camera plane.</p>
+</dd>
+<dt><strong>z</strong><span class="classifier">float</span></dt><dd><p>The position in the direction normal to the
+camera plane. Used if <cite>position</cite> is of length 2.</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">float</span></dt><dd><p>A default value of the characteristic of the particle. Used by
+optics unless a more direct property is set: (eg. <cite>refractive_index</cite>
+for <cite>Brightfield</cite> and <cite>intensity</cite> for <cite>Fluorescence</cite>).</p>
+</dd>
+<dt><strong>upsample</strong><span class="classifier">int</span></dt><dd><p>Upsamples the calculations of the pixel occupancy fraction.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code>([input_image, resolve_kwargs, interval])</p></td>
+<td><p>Visualizes the output of the feature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code>([image_list])</p></td>
+<td><p>Creates the image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>(**kwargs)</p></td>
+<td><p>Returns the feature</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code>(**kwargs)</p></td>
+<td><p>Updates the state of all properties.</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="properties.html" title="previous page">properties</a>
+    <a class='right-next' id="next-link" href="sequences.html" title="next page">sequences</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.1e043a052b0af929e4d8.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2020, Benjamin Midtvedt.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

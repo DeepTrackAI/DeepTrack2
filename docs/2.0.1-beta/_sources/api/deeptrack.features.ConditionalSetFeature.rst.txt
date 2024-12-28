@@ -1,0 +1,17 @@
+ConditionalSetFeature
+=====================
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: ConditionalSetFeature
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~ConditionalSetFeature.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

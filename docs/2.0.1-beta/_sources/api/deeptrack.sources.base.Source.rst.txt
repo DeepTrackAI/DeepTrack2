@@ -1,0 +1,27 @@
+Source
+======
+
+.. currentmodule:: deeptrack.sources.base
+
+.. autoclass:: Source
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Source.constants
+      ~Source.filter
+      ~Source.on_activate
+      ~Source.product
+      ~Source.set_index
+      ~Source.validate_all_same_length
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: constants
+   .. automethod:: filter
+   .. automethod:: on_activate
+   .. automethod:: product
+   .. automethod:: set_index
+   .. automethod:: validate_all_same_length

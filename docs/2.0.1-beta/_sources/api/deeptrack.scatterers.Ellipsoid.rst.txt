@@ -1,0 +1,17 @@
+Ellipsoid
+=========
+
+.. currentmodule:: deeptrack.scatterers
+
+.. autoclass:: Ellipsoid
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Ellipsoid.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

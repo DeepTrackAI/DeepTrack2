@@ -1,0 +1,17 @@
+Holography
+==========
+
+.. currentmodule:: deeptrack.optics
+
+.. autoclass:: Holography
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Holography.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

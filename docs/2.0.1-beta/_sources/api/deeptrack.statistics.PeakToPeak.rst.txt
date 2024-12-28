@@ -1,0 +1,7 @@
+PeakToPeak
+==========
+
+.. currentmodule:: deeptrack.statistics
+
+.. autoclass:: PeakToPeak
+   :show-inheritance:

@@ -1,0 +1,7 @@
+Sinh
+====
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: Sinh
+   :show-inheritance:

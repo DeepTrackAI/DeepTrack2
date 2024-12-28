@@ -1,0 +1,17 @@
+NormalizeMinMax
+===============
+
+.. currentmodule:: deeptrack.math
+
+.. autoclass:: NormalizeMinMax
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~NormalizeMinMax.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

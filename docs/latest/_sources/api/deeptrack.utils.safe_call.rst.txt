@@ -1,0 +1,6 @@
+safe_call
+=========
+
+.. currentmodule:: deeptrack.utils
+
+.. autofunction:: safe_call

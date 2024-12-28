@@ -1,0 +1,7 @@
+Exp
+===
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: Exp
+   :show-inheritance:
