@@ -40,7 +40,7 @@ Utility Functions:
 
 - `def strip(element)`
 
-    def strip(
+    strip(
         element: Union[Image, List, Tuple, Any],
     ) -> Any
     
