@@ -36,7 +36,6 @@ Simulate defocus in optics:
 
     >>> import deeptrack as dt
     >>> from matplotlib import pyplot as plt
-
     >>> particle = dt.PointParticle(z = 1 * dt.units.micrometer)
     >>> aberrated_optics = dt.Fluorescence(aberration=dt.Defocus())
     >>> defocused_particle = aberrated_optics(particle)
@@ -81,6 +80,7 @@ class Aberration(Feature):
             A list of np.ndarray with the processed images.
 
         """
+	    
         new_list = []
         for image in image_list:
             x = np.arange(image.shape[0]) - image.shape[0] / 2
@@ -113,6 +113,7 @@ class GaussianApodization(Aberration):
     sigma : float
         The standard deviation of the apodization. The edge of the pupil
         is at one deviation from the center.
+	
     offset : (float, float)
         Offsets the center of the gaussian.
 
@@ -123,6 +124,7 @@ class GaussianApodization(Aberration):
     >>> pipeline = aberrated_optics(particle)
     >>> pipeline.plot()
     >>> plt.show()
+    
     """
 
     def __init__(
@@ -168,8 +170,10 @@ class Zernike(Aberration):
     ----------
     n, m : int or list of ints
         The zernike polynomial numbers.
+	
     coefficient : float or list of floats
         The coefficient of the polynomial
+	
     """
 
     def __init__(
@@ -252,12 +256,13 @@ class Zernike(Aberration):
 
 
 class Piston(Zernike):
-    """Zernike polynomial with n=0, m=0.
+    """Zernike polynomial with n = 0, m = 0.
 
     Attributes
     ----------
     coefficient : float
-        The coefficient of the polynomial
+        The coefficient of the polynomial.
+	
     """
 
     def __init__(
@@ -268,12 +273,13 @@ class Piston(Zernike):
 
 
 class VerticalTilt(Zernike):
-    """Zernike polynomial with n=1, m=-1.
+    """Zernike polynomial with n = 1, m = -1.
 
     Attributes
     ----------
     coefficient : float
-        The coefficient of the polynomial
+        The coefficient of the polynomial.
+	
     """
 
     def __init__(
@@ -284,12 +290,13 @@ class VerticalTilt(Zernike):
 
 
 class HorizontalTilt(Zernike):
-    """Zernike polynomial with n=1, m=1.
+    """Zernike polynomial with n = 1, m = 1.
 
     Attributes
     ----------
     coefficient : float
         The coefficient of the polynomial
+	
     """
 
     def __init__(
@@ -305,7 +312,8 @@ class ObliqueAstigmatism(Zernike):
     Attributes
     ----------
     coefficient : float
-        The coefficient of the polynomial
+        The coefficient of the polynomial.
+	
     """
 
     def __init__(
@@ -332,12 +340,13 @@ class Defocus(Zernike):
 
 
 class Astigmatism(Zernike):
-    """Zernike polynomial with n=2, m=2.
+    """Zernike polynomial with n = 2, m = 2.
 
     Attributes
     ----------
     coefficient : float
-        The coefficient of the polynomial
+        The coefficient of the polynomial.
+	
     """
 
     def __init__(
@@ -348,12 +357,13 @@ class Astigmatism(Zernike):
 
 
 class ObliqueTrefoil(Zernike):
-    """Zernike polynomial with n=3, m=-3.
+    """Zernike polynomial with n = 3, m = -3.
 
     Attributes
     ----------
     coefficient : float
-        The coefficient of the polynomial
+        The coefficient of the polynomial.
+	
     """
 
     def __init__(
@@ -364,12 +374,13 @@ class ObliqueTrefoil(Zernike):
 
 
 class VerticalComa(Zernike):
-    """Zernike polynomial with n=3, m=-1.
+    """Zernike polynomial with n = 3, m = -1.
 
     Attributes
     ----------
     coefficient : float
-        The coefficient of the polynomial
+        The coefficient of the polynomial.
+	
     """
 
     def __init__(
@@ -380,12 +391,13 @@ class VerticalComa(Zernike):
 
 
 class HorizontalComa(Zernike):
-    """Zernike polynomial with n=3, m=1.
+    """Zernike polynomial with n = 3, m = 1.
 
     Attributes
     ----------
     coefficient : float
-        The coefficient of the polynomial
+        The coefficient of the polynomial.
+	
     """
 
     def __init__(
@@ -396,12 +408,13 @@ class HorizontalComa(Zernike):
 
 
 class Trefoil(Zernike):
-    """Zernike polynomial with n=3, m=3.
+    """Zernike polynomial with n = 3, m = 3.
 
     Attributes
     ----------
     coefficient : float
-        The coefficient of the polynomial
+        The coefficient of the polynomial.
+	
     """
 
     def __init__(
@@ -412,12 +425,13 @@ class Trefoil(Zernike):
 
 
 class SphericalAberration(Zernike):
-    """Zernike polynomial with n=4, m=0.
+    """Zernike polynomial with n = 4, m = 0.
 
     Attributes
     ----------
     coefficient : float
-        The coefficient of the polynomial
+        The coefficient of the polynomial.
+	
     """
 
     def __init__(
