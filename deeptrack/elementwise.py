@@ -1,7 +1,6 @@
-
 """Classes that apply functions to features elementwise.
 
-This module provides the elementwise DeepTrack2 classes
+This module provides the `elementwise` DeepTrack2 classes
 which work as a handle to perform various numpy functions 
 to features elementwise.
 
@@ -52,8 +51,9 @@ Miscellaneous Classes:
 
 """
 
-from .features import Feature
 import numpy as np
+
+from .features import Feature
 
 
 class ElementwiseFeature(Feature):
@@ -73,10 +73,6 @@ class ElementwiseFeature(Feature):
             image = self.feature()
         return self.function(image)
 
-
-"""
-Trigonometric Functions
-"""
 
 class Sin(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
@@ -106,11 +102,6 @@ class Arccos(ElementwiseFeature):
 class Arctan(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
         super().__init__(np.arctan, feature=feature, **kwargs)
-
-
-"""
-Hyperbolic Functions
-"""
 
 
 class Sinh(ElementwiseFeature):
@@ -143,10 +134,6 @@ class Arctanh(ElementwiseFeature):
         super().__init__(np.arctanh, feature=feature, **kwargs)
 
 
-"""
-Rounding
-"""
-
 
 class Round(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
@@ -161,11 +148,6 @@ class Floor(ElementwiseFeature):
 class Ceil(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
         super().__init__(np.ceil, feature=feature, **kwargs)
-
-
-"""
-Exponents and Logarithms
-"""
 
 
 class Exp(ElementwiseFeature):
@@ -187,10 +169,6 @@ class Log2(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
         super().__init__(np.log2, feature=feature, **kwargs)
 
-
-"""
-Complex Numbers
-"""
 
 
 class Angle(ElementwiseFeature):
@@ -217,11 +195,6 @@ class Conjugate(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
         super().__init__(np.conjugate, feature=feature, **kwargs)
 
-
-"""
-Miscellaneous
-
-"""
 
 
 class Sqrt(ElementwiseFeature):

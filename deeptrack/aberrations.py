@@ -1,6 +1,6 @@
 """Classes to add aberrations to optics.
 
-This module provides the aberration DeepTrack2 classes
+This module provides the `aberrations` DeepTrack2 classes
 that simulate aberratations and modify pupil functions for optics.
 
 Module Structure
@@ -196,6 +196,7 @@ class Zernike(Aberration):
         coefficient: PropertyLike[float],
         **kwargs
     ) -> ArrayLike[np.ndarray]:
+
         m_list = as_list(m)
         n_list = as_list(n)
         coefficients = as_list(coefficient)

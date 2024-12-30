@@ -28,6 +28,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.GaussianApodization(sigma=0.5),
         )
+
         aberrated_particle = aberrated_optics(self.particle)
 
         for z in (-100, 0, 100):
@@ -51,6 +52,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.Piston(coefficient=1),
         )
+
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
@@ -73,6 +75,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.VerticalTilt(coefficient=1),
         )
+
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
@@ -95,6 +98,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.HorizontalTilt(coefficient=1),
         )
+        
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
@@ -117,6 +121,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.ObliqueAstigmatism(coefficient=1),
         )
+
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
@@ -139,6 +144,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.Defocus(coefficient=1),
         )
+
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
@@ -161,6 +167,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.Astigmatism(coefficient=1),
         )
+
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
@@ -183,6 +190,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.ObliqueTrefoil(coefficient=1),
         )
+
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
@@ -205,6 +213,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.VerticalComa(coefficient=1),
         )
+
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
@@ -227,6 +236,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.HorizontalComa(coefficient=1),
         )
+
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
@@ -249,6 +259,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.Trefoil(coefficient=1),
         )
+
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
@@ -271,6 +282,7 @@ class TestAberrations(unittest.TestCase):
             padding=(64, 64, 64, 64),
             aberration=aberrations.SphericalAberration(coefficient=1),
         )
+        
         aberrated_particle = aberrated_optics(self.particle)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)

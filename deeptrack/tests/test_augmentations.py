@@ -83,7 +83,8 @@ class TestAugmentations(unittest.TestCase):
         np.random.seed(1000)
         import random
         random.seed(1000)
-        # 3D input
+
+        # 3D input.
         im = np.zeros((10, 8, 2))
         transformer = augmentations.ElasticTransformation(
             alpha=20,
@@ -112,7 +113,7 @@ class TestAugmentations(unittest.TestCase):
             lambda: np.testing.assert_allclose(out_3[:, :, 0], out_3[:, :, 1]),
         )
 
-        # 2D input
+        # 2D input.
         im = np.zeros((10, 8))
         transformer = augmentations.ElasticTransformation(
             alpha=20,

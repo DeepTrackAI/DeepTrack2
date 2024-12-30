@@ -1,6 +1,6 @@
 """Classes to augment images.
 
-This module provides the augmentation DeepTrack2 classes
+This module provides the `augmentations` DeepTrack2 classes
 that augment the image with various transformations.
 
 Module Structure
@@ -80,6 +80,7 @@ class Augmentation(Feature):
         time_consistent: PropertyLike[bool],
         **kwargs
     ) -> List[List]:
+
         if not isinstance(image_list, list):
             wrap_depth = 2
             image_list_of_lists = [[image_list]]
@@ -430,7 +431,7 @@ class Affine(Augmentation):
 
         properties = super()._process_properties(properties)
 
-        # Make translate tuple
+        # Make translate tuple.
         translate = properties["translate"]
         if isinstance(translate, (float, int)):
             translate = (translate, translate)
@@ -438,7 +439,7 @@ class Affine(Augmentation):
             translate = (translate["x"], translate["y"])
         properties["translate"] = translate
 
-        # Make scale tuple
+        # Make scale tuple.
         scale = properties["scale"]
         if isinstance(scale, (float, int)):
             scale = (scale, scale)
@@ -482,13 +483,13 @@ class Affine(Augmentation):
 
         d = center - np.dot(mapping, center) - np.array([dy, dx])
 
-        # Clean up kwargs
+        # Clean up kwargs.
         kwargs.pop("input", False)
         kwargs.pop("matrix", False)
         kwargs.pop("offset", False)
         kwargs.pop("output", False)
 
-        # Call affine_transform
+        # Call affine_transform.
         if image.ndim == 2:
             new_image = utils.safe_call(
                 ndimage.affine_transform,
@@ -512,7 +513,7 @@ class Affine(Augmentation):
                     **kwargs,
                 )
 
-        # Map positions
+        # Map positions.
         inverse_mapping = np.linalg.inv(mapping)
         for prop in image.properties:
             if "position" in prop:
@@ -723,7 +724,7 @@ class Crop(Augmentation):
         **kwargs
     ) -> Image:
 
-        # Get crop argument
+        # Get crop argument.
         if callable(crop):
             crop = crop(image)
         if isinstance(crop, int):
@@ -732,7 +733,7 @@ class Crop(Augmentation):
         crop = [c if c is not None else image.shape[i]\
         for i, c in enumerate(crop)]
 
-        # Get amount to crop from image
+        # Get amount to crop from image.
         if crop_mode == "retain":
             crop_amount = np.array(image.shape) - np.array(crop)
         elif crop_mode == "remove":
@@ -740,14 +741,16 @@ class Crop(Augmentation):
         else:
             raise ValueError("Unrecognized crop_mode {0}".format(crop_mode))
 
-        # Contain within image
+        # Contain within image.
         crop_amount = np.amax(
             (np.array(crop_amount), [0] * image.ndim),
             axis=0
         )
         crop_amount = np.amin((np.array(image.shape) - 1, crop_amount), axis=0)
-        # Get corner of crop
+
+        # Get corner of crop.
         if isinstance(corner, str) and corner == "random":
+
             # Ensure seed is consistent
             slice_start = [np.random.randint(m + 1) for m in crop_amount]
         elif callable(corner):
@@ -755,7 +758,7 @@ class Crop(Augmentation):
         else:
             slice_start = corner
 
-        # Ensure compatible with image
+        # Ensure compatible with image.
         slice_start = [c % (m + 1) for c, m in zip(slice_start, crop_amount)]
         slice_end = [
             a - c + s for a, s, c in zip(image.shape, slice_start, crop_amount)
@@ -770,7 +773,7 @@ class Crop(Augmentation):
 
         cropped_image = image[slices]
 
-        # Update positions
+        # Update positions.
         if hasattr(image, "properties"):
             cropped_image.properties =\
             [dict(prop) for prop in image.properties]
@@ -911,6 +914,7 @@ class Pad(Augmentation):
 
     def _image_wrap_process_and_get(self, images, **kwargs):
         results = [self.get(image, **kwargs) for image in images]
+
         # for idx, result in enumerate(results):
         #    if isinstance(result, tuple):
         #    results[idx] = Image(result[0]).merge_properties_from(images[idx])
