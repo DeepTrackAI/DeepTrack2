@@ -43,8 +43,7 @@ Augment image of a particle with flips:
     >>>     >> dt.FlipUD(p=1.0) >> dt.FlipLR(p=1.0)
     >>> image = np.array(augment.update()())
     >>> plt.imshow(image)
-
-
+    
 """
 
 import warnings
@@ -69,6 +68,7 @@ class Augmentation(Feature):
     ----------
     time_consistend: boolean
        Whether to augment all images in a sequence equally.
+       
     """
 
     def __init__(self, time_consistent=False, **kwargs):
@@ -170,10 +170,12 @@ class Reuse(Feature):
     ----------
     feature : Feature
        The feature to reuse.
+       
     uses : int
        Number of each stored image uses before evaluating `feature`.
        Note that the actual total number of uses is `uses * storage`.
        Should be constant.
+       
     storage : int
        Number of instances of the output of `feature` to cache.
        Should be constant.
@@ -241,6 +243,7 @@ class FlipLR(Augmentation):
     augment : bool
        Whether to perform the augmentation.
        Leaving as default is sufficient most of the time.
+       
     """
 
     def __init__(self, p=0.5, augment=None, **kwargs):
@@ -281,6 +284,7 @@ class FlipUD(Augmentation):
     augment : bool
        Whether to perform the augmentation.
        Leaving as default is sufficient most of the time.
+       
     """
 
     def __init__(self, p=0.5, augment=None, **kwargs):
@@ -322,6 +326,7 @@ class FlipDiagonal(Augmentation):
     augment : bool
        Whether to perform the augmentation.
        Leaving as default is sufficient most of the time.
+       
     """
 
     def __init__(self, p=0.5, augment=None, **kwargs):
@@ -354,15 +359,14 @@ class FlipDiagonal(Augmentation):
 
 
 class Affine(Augmentation):
-    """
-    Augmenter to apply affine transformations to images.
+    """Augmenter to apply affine transformations to images.
 
-    Affine transformations involve:
+    Affine transformations include:
 
-        - Translation
-        - Scaling
-        - Rotation
-        - Shearing
+        - `Translation`
+        - `Scaling`
+        - `Rotation`
+        - `Shearing`
 
     Some transformations involve interpolations between several pixels
     of the input image to generate output pixel values. The parameter `order`
@@ -388,7 +392,6 @@ class Affine(Augmentation):
 
     shear : float
         Shear in radians. Values in the range (-pi/4, pi/4) are common
-
 
     order : int
         Interpolation order to use. Same meaning as in ``skimage``:
@@ -584,7 +587,6 @@ class ElasticTransformation(Augmentation):
             * 3: ``Bi-cubic``
             * 4: ``Bi-quartic``
             * 5: ``Bi-quintic``
-
 
     cval : float
         The constant intensity value used to fill in new pixels.
