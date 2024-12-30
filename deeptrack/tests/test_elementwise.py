@@ -1,21 +1,18 @@
 import sys
-
-# sys.path.append(".")  # Adds the module to path
-
 import unittest
 import operator
 import itertools
-from numpy.core.numeric import array_equal
+import inspect
+# sys.path.append(".")  # Adds the module to path
 
+import numpy as np
+import numpy.testing
+from numpy.core.numeric import array_equal
 from numpy.testing._private.utils import assert_almost_equal
 
 from .. import elementwise, features, Image
-
-import numpy as np
 from deeptrack.backend._config import cupy as cp
 
-import numpy.testing
-import inspect
 
 
 def grid_test_features(
@@ -62,7 +59,8 @@ def grid_test_features(
 
                 tester.assertFalse(
                     not is_equal,
-                    "Feature output {} is not equal to expect result {}.\n Using arguments {}".format(
+                    "Feature output {} is not equal to expect result {}."
+                    "\n Using arguments {}".format(
                         output, expected_result, f_a_input
                     ),
                 )

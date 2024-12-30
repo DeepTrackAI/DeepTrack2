@@ -1,13 +1,12 @@
 import sys
-
+import unittest
 # sys.path.append(".")  # Adds the module to path
 
-import unittest
+import numpy as np
 
 from .. import augmentations, optics, scatterers
-
 from ..features import Feature
-import numpy as np
+
 
 
 class TestAugmentations(unittest.TestCase):
@@ -70,10 +69,13 @@ class TestAugmentations(unittest.TestCase):
         for _ in range(10):
             image = pipe.update().resolve()
             pmax = np.unravel_index(
-                np.argmax(image[:, :, 0], axis=None), shape=image[:, :, 0].shape
+                np.argmax(image[:, :, 0], axis=None),
+                shape=image[:, :, 0].shape,
             )
 
-            dist = np.sum(np.abs(np.array(image.get_property("position")) - pmax))
+            dist = np.sum(
+                np.abs(np.array(image.get_property("position")) - pmax)
+            )
 
             self.assertLess(dist, 3)
 
@@ -99,7 +101,9 @@ class TestAugmentations(unittest.TestCase):
         im[:, :, :] = 0
         im[0, :, :] = 1
         out_2 = transformer.update().resolve(im)
-        self.assertIsNone(np.testing.assert_allclose(out_2[:, :, 0], out_2[:, :, 1]))
+        self.assertIsNone(
+            np.testing.assert_allclose(out_2[:, :, 0], out_2[:, :, 1])
+        )
 
         transformer.ignore_last_dim.set_value(False)
         out_3 = transformer.resolve(im)
