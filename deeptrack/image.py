@@ -38,7 +38,7 @@ Classes:
 
 Utility Functions:
 
-- `def strip(element)`
+- `strip(element)`
 
     strip(
         element: Union[Image, List, Tuple, Any],
