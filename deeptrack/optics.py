@@ -207,7 +207,7 @@ class Microscope(StructuralFeature):
         sample: Feature,
         objective: Feature,
         **kwargs: Dict[str, Any],
-    ):
+    ) -> None:
         """Initialize the `Microscope` instance.
 
         Parameters
@@ -466,6 +466,7 @@ class Optics(Feature):
     Creating an `Optics` instance:
 
     >>> import deeptrack as dt
+
     >>> optics = dt.Optics(NA=0.8, wavelength=0.55e-6, magnification=20)
     >>> print(optics.NA())
     0.8
@@ -491,7 +492,7 @@ class Optics(Feature):
         illumination: Feature = None,
         upscale: int = 1,
         **kwargs: Dict[str, Any],
-    ):
+    ) -> None:
         """Initialize the `Optics` instance.
 
         Parameters
@@ -1000,6 +1001,7 @@ class Fluorescence(Optics):
     Create a `Fluorescence` instance:
 
     >>> import deeptrack as dt
+
     >>> optics = dt.Fluorescence(
     ...     NA=1.4, wavelength=0.52e-6, magnification=60,
     ... )
@@ -1048,6 +1050,7 @@ class Fluorescence(Optics):
 
         >>> import deeptrack as dt
         >>> import numpy as np
+
         >>> optics = dt.Fluorescence(
         ...     NA=1.4, wavelength=0.52e-6, magnification=60,
         ... )
@@ -1229,6 +1232,7 @@ class Brightfield(Optics):
     Create a `Brightfield` instance:
 
     >>> import deeptrack as dt
+
     >>> optics = dt.Brightfield(NA=1.4, wavelength=0.52e-6, magnification=60)
     >>> print(optics.NA())
     1.4
@@ -1281,6 +1285,7 @@ class Brightfield(Optics):
 
         >>> import deeptrack as dt
         >>> import numpy as np
+
         >>> optics = dt.Brightfield(
         ...     NA=1.4, 
         ...     wavelength=0.52e-6, 
@@ -1491,6 +1496,7 @@ class ISCAT(Brightfield):
     Creating an ISCAT instance:
     
     >>> import deeptrack as dt
+
     >>> iscat = dt.ISCAT(NA=1.4, wavelength=0.532e-6, magnification=60)
     >>> print(iscat.illumination_angle())
     3.141592653589793
@@ -1502,7 +1508,7 @@ class ISCAT(Brightfield):
         illumination_angle: float = np.pi,
         amp_factor: float = 1, 
         **kwargs: Dict[str, Any],
-    ):
+    ) -> None:
         """Initializes the ISCAT class.
 
         Parameters
@@ -1578,6 +1584,7 @@ class Darkfield(Brightfield):
     Creating a Darkfield instance:
 
     >>> import deeptrack as dt
+
     >>> darkfield = dt.Darkfield(NA=0.9, wavelength=0.532e-6)
     >>> print(darkfield.illumination_angle())
     1.5707963267948966
@@ -1588,7 +1595,7 @@ class Darkfield(Brightfield):
         self: 'Darkfield', 
         illumination_angle: float = np.pi/2, 
         **kwargs: Dict[str, Any]
-    ):
+    ) -> None:
         """Initializes the Darkfield class.
 
         Parameters
@@ -1692,7 +1699,7 @@ class IlluminationGradient(Feature):
         vmin: PropertyLike[float] = 0,
         vmax: PropertyLike[float] = np.inf,
         **kwargs: Dict[str, Any],
-    ):
+    ) -> None:
         """Initializes the IlluminationGradient class.
 
         Parameters
@@ -1752,6 +1759,7 @@ class IlluminationGradient(Feature):
         Examples
         --------
         >>> import deeptrack as dt
+
         >>> image=np.ones((100, 100))
         >>> gradient_feature = dt.IlluminationGradient(gradient=(0.3, 0.1))
         >>> properties_dict = gradient_feature.properties()
