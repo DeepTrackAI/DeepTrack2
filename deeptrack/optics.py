@@ -1,5 +1,4 @@
-"""
-Features for Optical Imaging of Samples.
+"""Features for optical imaging of samples.
 
 This module provides classes and functionalities for simulating optical
 imaging systems, enabling the generation of realistic camera images of
@@ -39,115 +38,80 @@ Key Features
 
 Module Structure
 ----------------
-### Classes:
+Classes:
 
-#### `Microscope`
-Represents a simulated optical microscope that integrates the sample and 
-optical systems. It provides an interface to simulate imaging by combining the 
-sample properties with the configured optical system.
+- `Microscope`: Represents a simulated optical microscope that integrates the 
+sample and optical systems. It provides an interface to simulate imaging by 
+combining the sample properties with the configured optical system.
 
----
+- `Optics`: An abstract base class representing a generic optical device. 
+Subclasses implement specific optical systems by defining imaging properties 
+and behaviors.
 
-#### `Optics`
-An abstract base class representing a generic optical device. Subclasses 
-implement specific optical systems by defining imaging properties and 
-behaviors.
+- `Brightfield`:  Simulates brightfield microscopy, commonly used for observing
+unstained or stained samples under transmitted light. This class serves as the 
+base for additional imaging techniques.
 
-**Key Features:**
-- Configurable parameters such as numerical aperture (NA), wavelength, and 
-magnification.
-- Provides a foundation for deriving other optical systems.
+- `Holography`: Simulates holographic imaging, capturing phase information from
+the sample. Suitable for reconstructing 3D images and measuring refractive 
+index variations.  
 
-**Subclasses:**  
-- `Brightfield`  
-- `Fluorescence`  
+- `Darkfield`: Simulates darkfield microscopy, which enhances contrast by 
+imaging scattered light against a dark background. Often used to highlight fine
+structures in samples.  
 
----
+- `ISCAT`: Simulates interferometric scattering microscopy (ISCAT), an advanced 
+technique for detecting small particles or molecules based on scattering and 
+interference.  
 
-#### `Brightfield`
-Simulates brightfield microscopy, commonly used for observing unstained or 
-stained samples under transmitted light. This class serves as the base for 
-additional imaging techniques.
+- `Fluorescence`: Simulates fluorescence microscopy, modeling emission 
+processes for fluorescent samples. Includes essential optical system 
+configurations and fluorophore behavior.
 
-**Key Features:**
-- Configurable illumination parameters.
-- Provides a basis for extensions to advanced imaging techniques.
+- `IlluminationGradient`: Adds a gradient to the illumination of the sample, 
+enabling simulations of non-uniform lighting conditions often seen in 
+real-world experiments.
 
-**Subclasses:**
+Utility Functions:
 
-- **`Holography`**  
-  Simulates holographic imaging, capturing phase information from the sample. 
-  Suitable for reconstructing 3D images and measuring refractive index 
-  variations.  
+- `_get_position(image, mode, return_z)`
 
-- **`Darkfield`**  
-  Simulates darkfield microscopy, which enhances contrast by imaging scattered 
-  light against a dark background. Often used to highlight fine structures in 
-  samples.  
+    def _get_position(
+        image: np.ndarray, mode: str = "corner", return_z: bool = False
+    ) -> Tuple[int, int, Optional[int]]
 
-- **`ISCAT`**  
-  Simulates interferometric scattering microscopy (ISCAT), an advanced 
-  technique for detecting small particles or molecules based on scattering and 
-  interference.  
+    Extracts the position of the upper-left corner of a scatterer in the image.
 
----
+- `_create_volume(list_of_scatterers:, pad, output_region, refractive_index_medium, **kwargs)`
 
-#### `Fluorescence`
-Simulates fluorescence microscopy, modeling excitation and emission processes 
-for fluorescent samples. Includes essential optical system configurations and 
-fluorophore behavior.
+    def _create_volume(
+        list_of_scatterers: List[np.ndarray],
+        pad: int,
+        output_region: Tuple[int, int, int, int],
+        refractive_index_medium: float,
+        **kwargs: Dict[str, Any],
+    ) -> np.ndarray
 
----
+    Combines multiple scatterer objects into a single 3D volume for imaging.
 
-#### `IlluminationGradient`
-Adds a gradient to the illumination of the sample, enabling simulations of 
-non-uniform lighting conditions often seen in real-world experiments.
+- `_pad_volume(volume, limits, padding, output_region, **kwargs)`
 
-**Key Features:**
-- Gradient parameters to define the plane of illumination variation.
-- Clips amplitude values using `vmin` and `vmax` for realistic illumination 
-bounds.
-- Incorporates constant offsets for fine-tuning illumination profiles.
+    def _pad_volume(
+        volume: np.ndarray,
+        limits: np.ndarray,
+        padding: Tuple[int, int, int, int],
+        output_region: Tuple[int, int, int, int],
+        **kwargs: Dict[str, Any],
+    ) -> Tuple[np.ndarray, np.ndarray]
 
----
-
-### Utility Functions:
-
-#### `_get_position(image, mode, return_z)`
-Extracts the position of the upper-left corner of a scatterer in the image.
-
-**Parameters:**
-- `image (np.ndarray)`: Input image from which to extract position.
-- `mode (str)`: Determines the position calculation method (`"corner"` 
-by default).
-- `return_z (bool)`: If `True`, includes the Z-coordinate.
-
-**Returns:**
-- `(Tuple[int, int, Optional[int]])`: Position coordinates in 2D or 3D.
-
----
-
-#### `_create_volume(list_of_scatterers, pad, output_region, 
-# refractive_index_medium, **kwargs)`
-Combines multiple scatterer objects into a single 3D volume for imaging.
-
-**Parameters:**
-- `list_of_scatterers (List[np.ndarray])`: List of scatterers to combine.
-- `pad (int)`: Padding around scatterers.
-- `output_region (Tuple[int, int, int, int])`: Defines the region of interest 
-for the output volume.
-- `refractive_index_medium (float)`: Refractive index of the medium.
-
-**Returns:**
-- `(np.ndarray)`: A combined 3D volume of the scatterers.
-
----
+    Pads a volume with zeros to avoid edge effects during imaging.
 
 Examples
 --------
-Simulating a Brightfield Image:
+Simulating an image with the `Brightfield` class:
 
 >>> import deeptrack as dt
+
 >>> scatterer = dt.PointParticle()
 >>> optics = dt.Brightfield()
 >>> image = optics(scatterer)
@@ -155,10 +119,10 @@ Simulating a Brightfield Image:
 (128, 128, 1)
 >>> image.plot(cmap="gray")
 
-Simulating a Fluorescence Image:
+Simulating an image with the `Fluorescence` class:
 
 >>> import deeptrack as dt
->>> import matplotlib.pyplot as plt
+
 >>> scatterer = dt.PointParticle()
 >>> optics = dt.Fluorescence()
 >>> image = optics(scatterer)
@@ -169,6 +133,7 @@ Simulating a Fluorescence Image:
 """
 
 from pint import Quantity
+from typing import Any, Dict, List, Tuple, Union
 from deeptrack.backend.units import (
     ConversionTable,
     create_context,
@@ -191,29 +156,41 @@ from deeptrack import image
 
 
 class Microscope(StructuralFeature):
-    """Image a sample using an optical system.
+    """Simulates imaging of a sample using an optical system.
 
-    This class wraps a feature-set defining a sample and a feature-set
-    defining the optics, enabling the simulation of optical imaging systems.
+    This class combines a feature-set that defines the sample to be imaged with
+    a feature-set defining the optical system, enabling the simulation of 
+    optical imaging processes.
 
     Parameters
     ----------
-    sample : Feature
+    sample: Feature
         A feature-set resolving a list of images describing the sample to be
         imaged.
-    objective : Feature
+    objective: Feature
         A feature-set defining the optical device that images the sample.
 
-    Arttributes
+    Attributes
     -----------
-    __distributed__ : bool
+    __distributed__: bool
         If True, the feature is distributed across multiple workers.
+    _sample: Feature
+        The feature-set defining the sample to be imaged.
+    _objective: Feature
+        The feature-set defining the optical system imaging the sample.
+
+    Methods
+    -------
+    `get(image: Image or None, **kwargs: Dict[str, Any]) -> Image`
+        Simulates the imaging process using the defined optical system and 
+        returns the resulting image.
 
     Examples
     --------
     Simulating an image using a brightfield optical system:
 
     >>> import deeptrack as dt
+
     >>> scatterer = dt.PointParticle()
     >>> optics = dt.Brightfield()
     >>> microscope = dt.Microscope(sample=scatterer, objective=optics)
@@ -225,13 +202,43 @@ class Microscope(StructuralFeature):
 
     __distributed__ = False
 
-    def __init__(self, sample: Feature, objective: Feature, **kwargs):
+    def __init__(
+        self:  'Microscope',
+        sample: Feature,
+        objective: Feature,
+        **kwargs: Dict[str, Any],
+    ):
+        """Initialize the `Microscope` instance.
+
+        Parameters
+        ----------
+        sample: Feature
+            A feature-set resolving a list of images describing the sample to be
+            imaged.
+        objective: Feature
+            A feature-set defining the optical device that images the sample.
+        **kwargs: Dict[str, Any]
+            Additional parameters passed to the base `StructuralFeature` class.
+
+        Attributes
+        ----------
+        _sample: Feature
+            The feature-set defining the sample to be imaged.
+        _objective: Feature
+            The feature-set defining the optical system imaging the sample.
+
+        """
+
         super().__init__(**kwargs)
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
         self._sample.store_properties()
 
-    def get(self, image, **kwargs):
+    def get(
+        self: 'Microscope',
+        image: Union[Image, None],
+        **kwargs:  Dict[str, Any],
+    ) -> Image:
         """Generate an image of the sample using the defined optical system.
 
         This method processes the sample through the optical system to
@@ -239,14 +246,14 @@ class Microscope(StructuralFeature):
 
         Parameters
         ----------
-        image : Image or None
+        image: Union[Image, None]
             The input image to be processed. If None, a new image is created.
-        **kwargs : dict
+        **kwargs: Dict[str, Any]
             Additional parameters for the imaging process.
 
         Returns
         -------
-        Image
+        Image: Image
             The processed image after applying the optical system.
 
         Examples
@@ -254,6 +261,7 @@ class Microscope(StructuralFeature):
         Simulating an image with specific parameters:
 
         >>> import deeptrack as dt
+        
         >>> scatterer = dt.PointParticle()
         >>> optics = dt.Brightfield()
         >>> microscope = dt.Microscope(sample=scatterer, objective=optics)
@@ -374,48 +382,84 @@ class Microscope(StructuralFeature):
     #     return self._image_wrapped_process_output(*args, **feature_input)
 
 
-# OPTICAL SYSTEMS
-
-
 class Optics(Feature):
     """Abstract base optics class.
 
-    Provides structure and methods common for most optical devices.
+    Provides structure and methods common for most optical devices. Subclasses
+    implement specific optical systems by defining imaging properties and
+    behaviors. The `Optics` class is used to define the core imaging properties
+    of an optical system, such as resolution, magnification, numerical aperture
+    (NA), and wavelength.
 
     Parameters
     ----------
-    NA : float, optional
+    NA: float, optional
         Numerical aperture (NA) of the limiting aperture, by default 0.7.
-    wavelength : float, optional
+    wavelength: float, optional
         Wavelength of the scattered light in meters, by default 0.66e-6.
-    magnification : float, optional
+    magnification: float, optional
         Magnification of the optical system, by default 10.
-    resolution : float or array_like[float], optional
+    resolution: float or array_like[float], optional
         Distance between pixels in the camera (meters). A third value can 
         define the resolution in the z-direction, by default 1e-6.
-    refractive_index_medium : float, optional
+    refractive_index_medium: float, optional
         Refractive index of the medium, by default 1.33.
-    padding : array_like[int, int, int, int], optional
+    padding: array_like[int, int, int, int], optional
         Padding applied to the sample volume to avoid edge effects, 
         by default (10, 10, 10, 10).
-    output_region : array_like[int, int, int, int], optional
+    output_region: array_like[int, int, int, int], optional
         Region of the image to output (x, y, width, height). If None, the 
         entire image is returned, by default (0, 0, 128, 128).
-    pupil : Feature, optional
+    pupil: Feature, optional
         Feature-set resolving the pupil function at focus. By default, no pupil
         is applied.
-    illumination : Feature, optional
+    illumination: Feature, optional
         Feature-set resolving the illumination source. By default, no specific 
         illumination is applied.
-    upscale : int, optional
+    upscale: int, optional
         Scaling factor for the resolution of the optical system, by default 1.
-    **kwargs : dict
+    **kwargs: Dict[str, Any]
         Additional parameters passed to the base `Feature` class.
 
     Attributes
     ----------
-    __conversion_table__ : ConversionTable
+    __conversion_table__: ConversionTable
         Table used to convert properties of the feature to desired units.
+    NA: float
+        Numerical aperture of the optical system.
+    wavelength: float
+        Wavelength of the scattered light in meters.
+    refractive_index_medium: float
+        Refractive index of the medium.
+    magnification: float
+        Magnification of the optical system.
+    resolution: float or array_like[float]
+        Pixel spacing in the camera. Optionally includes the z-direction.
+    padding: array_like[int]
+        Padding applied to the sample volume to reduce edge effects.
+    output_region: array_like[int]
+        Region of the output image to extract (x, y, width, height).
+    voxel_size: function
+        Function returning the voxel size of the optical system.
+    pixel_size: function
+        Function returning the pixel size of the optical system.
+    upscale: int
+        Scaling factor for the resolution of the optical system.
+    limits: array_like[int, int]
+        Limits of the volume to be imaged.
+    fields: list[Feature]
+        List of fields to be imaged.
+
+    Methods
+    -------
+    `_process_properties(propertydict: Dict[str, Any]) -> Dict[str, Any]`
+        Processes and validates the input properties.
+    `_pupil(shape:  array_like[int, int], NA: float, wavelength: float, refractive_index_medium: float, include_aberration: bool, defocus: float, **kwargs: Dict[str, Any]) -> array_like[complex]`
+        Calculates the pupil function at different focal points.
+    `_pad_volume(volume: array_like[complex], limits: array_like[int, int], padding: array_like[int], output_region: array_like[int], **kwargs: Dict[str, Any]) -> tuple`
+        Pads the volume with zeros to avoid edge effects.
+    `__call__(sample: Feature, **kwargs: Dict[str, Any]) -> Microscope`
+        Creates a Microscope instance with the given sample and optics.
 
     Examples
     --------
@@ -435,28 +479,139 @@ class Optics(Feature):
     )
 
     def __init__(
-        self,
+        self:  'Optics',
         NA: PropertyLike[float] = 0.7,
         wavelength: PropertyLike[float] = 0.66e-6,
         magnification: PropertyLike[float] = 10,
-        resolution: PropertyLike[float or ArrayLike[float]] = 1e-6,
+        resolution: PropertyLike[Union[float, ArrayLike[float]]] = 1e-6,
         refractive_index_medium: PropertyLike[float] = 1.33,
         padding: PropertyLike[ArrayLike[int]] = (10, 10, 10, 10),
         output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
         pupil: Feature = None,
         illumination: Feature = None,
-        upscale=1,
-        **kwargs,
+        upscale: int = 1,
+        **kwargs: Dict[str, Any],
     ):
+        """Initialize the `Optics` instance.
 
-        # Calculate the voxel size.
-        def get_voxel_size(resolution, magnification):
+        Parameters
+        ----------
+        NA: float, optional
+            Numerical aperture (NA) of the limiting aperture, by default 0.7.
+        wavelength: float, optional
+            Wavelength of the scattered light in meters, by default 0.66e-6.
+        magnification: float, optional
+            Magnification of the optical system, by default 10.
+        resolution: float or array_like[float], optional
+            Distance between pixels in the camera (meters). A third value can
+            define the resolution in the z-direction, by default 1e-6.
+        refractive_index_medium: float, optional
+            Refractive index of the medium, by default 1.33.
+        padding: array_like[int, int, int, int], optional
+            Padding applied to the sample volume to avoid edge effects,
+            by default (10, 10, 10, 10).
+        output_region: array_like[int, int, int, int], optional
+            Region of the image to output (x, y, width, height). If None, the
+            entire image is returned, by default (0, 0, 128, 128).
+        pupil: Feature, optional
+            Feature-set resolving the pupil function at focus. By default, no pupil
+            is applied.
+        illumination: Feature, optional
+            Feature-set resolving the illumination source. By default, no specific
+            illumination is applied.
+        upscale: int, optional
+            Scaling factor for the resolution of the optical system, by default 1.
+        **kwargs: Dict[str, Any]
+            Additional parameters passed to the base `Feature` class.
+
+        Attributes
+        ----------
+        NA: float
+            Numerical aperture of the optical system.
+        wavelength: float
+            Wavelength of the scattered light in meters.
+        refractive_index_medium: float
+            Refractive index of the medium.
+        magnification: float
+            Magnification of the optical system.
+        resolution: float or array_like[float]
+            Pixel spacing of the camera in meters. Optionally includes the 
+            z-direction.
+        padding: array_like[int]
+            Padding applied to the sample volume to reduce edge effects.
+        output_region: array_like[int]
+            Region of the output image to extract (x, y, width, height).
+        voxel_size: function
+            Function returning the voxel size of the optical system.
+        pixel_size: function
+            Function returning the pixel size of the optical system.
+        upscale: int
+            Scaling factor for the resolution of the optical system.
+        limits: array_like[int, int]
+            Limits of the volume to be imaged.
+        fields: list[Feature]
+            List of fields to be imaged.
+
+        Helper Functions
+        ----------------
+        `get_voxel_size(resolution: float or array_like[float], magnification: float) -> array_like[float]`
+            Calculate the voxel size.
+        `get_pixel_size(resolution: float or array_like[float], magnification: float) -> float`
+            Calculate the pixel size.
+
+        """
+
+        def get_voxel_size(
+            resolution: Union[float, ArrayLike[float]], 
+            magnification: float,
+        ) -> ArrayLike[float]:
+            """ Calculate the voxel size.
+            
+            Parameters
+            ----------
+            resolution: float or array_like[float]
+                The distance between pixels of the camera in meters. A third 
+                value can define the resolution in the z-direction.
+            magnification: float
+                The magnification of the optical system.
+
+            Returns
+            -------
+            array_like[float]
+                The voxel size of the optical system.
+
+            """
+
             props = self._normalize(resolution=resolution, magnification=magnification)
             return np.ones((3,)) * props["resolution"] / props["magnification"]
 
-        # Calculate the pixel size. It differs from the voxel size by only being a single value.
-        def get_pixel_size(resolution, magnification):
-            props = self._normalize(resolution=resolution, magnification=magnification)
+        def get_pixel_size(
+            resolution: Union[float, ArrayLike[float]],
+            magnification: float,
+        ) -> float:
+            """ Calculate the pixel size.
+
+            It differs from the voxel size by only being a single value.
+
+            Parameters
+            ----------
+            resolution: float or array_like[float]
+                The distance between pixels in the camera. A third value can
+                define the resolution in the z-direction.
+            magnification: float
+                The magnification of the optical system.
+
+            Returns
+            -------
+            float
+                The pixel size of the optical system.
+    
+            """
+            
+            props = self._normalize(
+                resolution=resolution, 
+                magnification=magnification,
+            )
             pixel_size = props["resolution"] / props["magnification"]
             if isinstance(pixel_size, Quantity):
                 return pixel_size.to(u.meter).magnitude
@@ -484,11 +639,23 @@ class Optics(Feature):
             self.add_feature(illumination) if illumination else DummyFeature()
         )
 
-    def _process_properties(self, propertydict) -> dict:
-        """
-        Processes and validates the input properties.
+    def _process_properties(
+        self:   'Optics',
+        propertydict:   Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Processes and validates the input properties.
 
         Ensures that the provided optical parameters are reasonable.
+
+        Parameters
+        ----------
+        propertydict:  Dict[str, Any]
+            The input properties.
+
+        Returns
+        -------
+        dict: Dict[str, Any]
+            The processed properties.
         
         """
         
@@ -513,39 +680,39 @@ class Optics(Feature):
         return propertydict
 
     def _pupil(
-        self,
-        shape,
-        NA,
-        wavelength,
-        refractive_index_medium,
-        include_aberration=True,
-        defocus=0,
-        **kwargs,
+        self:  'Optics',
+        shape: ArrayLike[int],
+        NA: float,
+        wavelength: float,
+        refractive_index_medium: float,
+        include_aberration: bool = True,   
+        defocus: Union[float, ArrayLike[float]] = 0,
+        **kwargs: Dict[str, Any],
     ):
         """Calculates the pupil function at different focal points.
 
         Parameters
         ----------
-        shape : array_like[int, int]
+        shape: array_like[int, int]
             The shape of the pupil function.
-        NA : float
+        NA: float
             The NA of the limiting aperture.
-        wavelength : float
+        wavelength: float
             The wavelength of the scattered light in meters.
-        refractive_index_medium : float
+        refractive_index_medium: float
             The refractive index of the medium.
-        voxel_size : array_like[float (, float, float)]
+        voxel_size: array_like[float (, float, float)]
             The distance between pixels in the camera. A third value can be
             included to define the resolution in the z-direction.
-        include_aberration : bool
+        include_aberration: bool
             If True, the aberration is included in the pupil function.
-        defocus : float or list[float]
+        defocus: float or list[float]
             The defocus of the system. If a list is given, the pupil is
             calculated for each focal point. Defocus is given in meters.
 
         Returns
         -------
-        pupil : array_like[complex]
+        pupil: array_like[complex]
             The pupil function. Shape is (z, y, x).
 
         Examples
@@ -604,7 +771,7 @@ class Optics(Feature):
 
         defocus = np.reshape(defocus, (-1, 1, 1))
         z_shift = defocus * np.expand_dims(z_shift, axis=0)
-        #print(self.pupil)
+        
         if include_aberration:
             pupil = self.pupil
             if isinstance(pupil, Feature):
@@ -619,28 +786,33 @@ class Optics(Feature):
         return pupil_functions
 
     def _pad_volume(
-        self, volume, limits=None, padding=None, output_region=None, **kwargs
-    ):
+        self:   'Optics',
+        volume: ArrayLike[complex],
+        limits: ArrayLike[int] = None,
+        padding: ArrayLike[int] = None,
+        output_region: ArrayLike[int] = None,
+        **kwargs: Dict[str, Any],
+    ) -> tuple:
         """Pads the volume with zeros to avoid edge effects.
 
         Parameters
         ----------
-        volume : array_like[complex]
+        volume: array_like[complex]
             The volume to pad.
-        limits : array_like[int, int]
+        limits: array_like[int, int]
             The limits of the volume.
-        padding : array_like[int]
+        padding: array_like[int]
             The padding to apply. Format is (left, right, top, bottom).
-        output_region : array_like[int, int]
+        output_region: array_like[int, int]
             The region of the volume to return. Used to remove regions of the
             volume that are far outside the view. If None, the full volume is
             returned.
 
         Returns
         -------
-        new_volume : array_like[complex]
+        new_volume: array_like[complex]
             The padded volume.
-        new_limits : array_like[int, int]
+        new_limits: array_like[int, int]
             The new limits of the volume.
 
         Examples
@@ -710,19 +882,23 @@ class Optics(Feature):
         ] = volume
         return new_volume, new_limits
 
-    def __call__(self, sample, **kwargs):
+    def __call__(
+        self:  'Optics',
+        sample: Feature,
+        **kwargs: Dict[str, Any],
+    ) -> Microscope:
         """Creates a Microscope instance with the given sample and optics.
 
         Parameters
         ----------
-        sample : Feature
+        sample: Feature
             The sample to be imaged.
-        **kwargs : dict
+        **kwargs: Dict[str, Any]
             Additional parameters for the Microscope.
 
         Returns
         -------
-        Microscope
+        Microscope: Microscope
             A Microscope instance configured with the sample and optics.
 
         Examples
@@ -752,8 +928,7 @@ class Optics(Feature):
 
 
 class Fluorescence(Optics):
-    """
-    Optical device for fluorescent imaging.
+    """Optical device for fluorescent imaging.
 
     The `Fluorescence` class simulates the imaging process in fluorescence
     microscopy by creating a discretized volume where each pixel represents 
@@ -762,29 +937,63 @@ class Fluorescence(Optics):
 
     Parameters
     ----------
-    NA : float
+    NA: float
         Numerical aperture of the optical system.
-    wavelength : float
+    wavelength: float
         Emission wavelength of the fluorescent light (in meters).
-    magnification : float
+    magnification: float
         Magnification of the optical system.
-    resolution : array_like[float (, float, float)]
+    resolution: array_like[float (, float, float)]
         Pixel spacing in the camera. Optionally includes the z-direction.
-    refractive_index_medium : float
+    refractive_index_medium: float
         Refractive index of the imaging medium.
-    padding : array_like[int, int, int, int]
+    padding: array_like[int, int, int, int]
         Padding applied to the sample volume to reduce edge effects.
-    output_region : array_like[int, int, int, int], optional
+    output_region: array_like[int, int, int, int], optional
         Region of the output image to extract (x, y, width, height). If None, 
         returns the full image.
-    pupil : Feature, optional
+    pupil: Feature, optional
         A feature set defining the pupil function at focus. The input is 
         the unaberrated pupil.
+    illumination: Feature, optional
+        A feature set defining the illumination source.
+    upscale: int, optional
+        Scaling factor for the resolution of the optical system.
+    **kwargs: Dict[str, Any]
 
     Attributes
     ----------
-    __gpu_compatible__ : bool
+    __gpu_compatible__: bool
         Indicates whether the class supports GPU acceleration.
+    NA: float
+        Numerical aperture of the optical system.
+    wavelength: float
+        Emission wavelength of the fluorescent light (in meters).
+    magnification: float
+        Magnification of the optical system.
+    resolution: array_like[float (, float, float)]
+        Pixel spacing in the camera. Optionally includes the z-direction.
+    refractive_index_medium: float
+        Refractive index of the imaging medium.
+    padding: array_like[int, int, int, int]
+        Padding applied to the sample volume to reduce edge effects.
+    output_region: array_like[int, int, int, int]
+        Region of the output image to extract (x, y, width, height).
+    voxel_size: function
+        Function returning the voxel size of the optical system.
+    pixel_size: function
+        Function returning the pixel size of the optical system.
+    upscale: int
+        Scaling factor for the resolution of the optical system.
+    limits: array_like[int, int]
+        Limits of the volume to be imaged.
+    fields: list[Feature]
+        List of fields to be imaged
+
+    Methods
+    -------
+    `get(illuminated_volume: array_like[complex], limits: array_like[int, int], **kwargs: Dict[str, Any]) -> Image`
+        Simulates the imaging process using a fluorescence microscope.
 
     Examples
     --------
@@ -801,27 +1010,31 @@ class Fluorescence(Optics):
 
     __gpu_compatible__ = True
 
-    def get(self, illuminated_volume, limits, **kwargs):
-        """
-        Simulates the imaging process using a fluorescence microscope.
+    def get(
+        self:  'Fluorescence', 
+        illuminated_volume: ArrayLike[complex], 
+        limits: ArrayLike[int], 
+        **kwargs: Dict[str, Any]
+    ) -> Image:
+        """Simulates the imaging process using a fluorescence microscope.
 
         This method convolves the 3D illuminated volume with a pupil function 
         to generate a 2D image projection.
 
         Parameters
         ----------
-        illuminated_volume : array_like[complex]
+        illuminated_volume: array_like[complex]
             The illuminated 3D volume to be imaged.
-        limits : array_like[int, int]
+        limits: array_like[int, int]
             Boundaries of the illuminated volume in each dimension.
-        **kwargs : dict
+        **kwargs: Dict[str, Any]
             Additional properties for the imaging process, such as:
-            - 'padding' : Padding to apply to the sample.
-            - 'output_region' : Specific region to extract from the image.
+            - 'padding': Padding to apply to the sample.
+            - 'output_region': Specific region to extract from the image.
 
         Returns
         -------
-        Image
+        Image: Image
             A 2D image object representing the fluorescence projection.
 
         Notes
@@ -912,7 +1125,7 @@ class Fluorescence(Optics):
 
         z_index = 0
 
-        # Loop through volumaeand convolve sample with pupil function
+        # Loop through volume and convolve sample with pupil function
         for i, z in zip(index_iterator, z_iterator):
 
             if zero_plane[i]:
@@ -939,8 +1152,7 @@ class Fluorescence(Optics):
 
 
 class Brightfield(Optics):
-    """
-    Simulates imaging of coherently illuminated samples.
+    """Simulates imaging of coherently illuminated samples.
 
     The `Brightfield` class models a brightfield microscopy setup, imaging 
     samples by iteratively propagating light through a discretized volume.
@@ -950,35 +1162,67 @@ class Brightfield(Optics):
 
     Parameters
     ----------
-    illumination : Feature, optional
+    illumination: Feature, optional
         Feature-set representing the complex field entering the sample. 
         Default is a uniform field with all values set to 1.
-    NA : float
+    NA: float
         Numerical aperture of the limiting aperture.
-    wavelength : float
+    wavelength: float
         Wavelength of the incident light in meters.
-    magnification : float
+    magnification: float
         Magnification of the optical system.
-    resolution : array_like[float (, float, float)]
+    resolution: array_like[float (, float, float)]
         Pixel spacing in the camera. A third value can define the 
         resolution in the z-direction.
-    refractive_index_medium : float
+    refractive_index_medium: float
         Refractive index of the medium.
-    padding : array_like[int, int, int, int]
+    padding: array_like[int, int, int, int]
         Padding added to the sample volume to minimize edge effects.
-    output_region : array_like[int, int, int, int], optional
+    output_region: array_like[int, int, int, int], optional
         Specifies the region of the image to output (x, y, width, height).
         Default is None, which outputs the entire image.
-    pupil : Feature, optional
+    pupil: Feature, optional
         Feature-set defining the pupil function. The input is the 
         unaberrated pupil.
 
     Attributes
     ----------
-    __gpu_compatible__ : bool
+    __gpu_compatible__: bool
         Indicates whether the class supports GPU acceleration.
-    __conversion_table__ : ConversionTable
+    __conversion_table__: ConversionTable
         Table used to convert properties of the feature to desired units.
+    NA: float
+        Numerical aperture of the optical system.
+    wavelength: float
+        Wavelength of the scattered light in meters.
+    magnification: float
+        Magnification of the optical system.
+    resolution: array_like[float (, float, float)]
+        Pixel spacing in the camera. Optionally includes the z-direction.
+    refractive_index_medium: float
+        Refractive index of the medium.
+    padding: array_like[int, int, int, int]
+        Padding applied to the sample volume to reduce edge effects.
+    output_region: array_like[int, int, int, int]
+        Region of the output image to extract (x, y, width, height).
+    voxel_size: function
+        Function returning the voxel size of the optical system.
+    pixel_size: function
+        Function returning the pixel size of the optical system.
+    upscale: int
+        Scaling factor for the resolution of the optical system.
+    limits: array_like[int, int]
+        Limits of the volume to be imaged.
+    fields: list[Feature]
+        List of fields to be imaged.
+
+    Methods
+    -------
+    `get(illuminated_volume: array_like[complex], 
+        limits: array_like[int, int], fields: array_like[complex], 
+        **kwargs: Dict[str, Any]) -> Image`
+        Simulates imaging with brightfield microscopy.
+
 
     Examples
     --------
@@ -997,9 +1241,14 @@ class Brightfield(Optics):
         working_distance=(u.meter, u.meter),
     )
 
-    def get(self, illuminated_volume, limits, fields, **kwargs):
-        """
-        Simulates imaging with brightfield microscopy.
+    def get(
+        self:  'Brightfield',
+        illuminated_volume: ArrayLike[complex],
+        limits: ArrayLike[int],
+        fields: ArrayLike[complex],
+        **kwargs: Dict[str, Any],
+    ) -> Image:
+        """Simulates imaging with brightfield microscopy.
 
         This method propagates light through the given volume, applying 
         pupil functions at various defocus levels and incorporating 
@@ -1008,13 +1257,13 @@ class Brightfield(Optics):
 
         Parameters
         ----------
-        illuminated_volume : array_like[complex]
+        illuminated_volume: array_like[complex]
             Discretized volume representing the sample to be imaged.
-        limits : array_like[int, int]
+        limits: array_like[int, int]
             Boundaries of the sample volume in each dimension.
-        fields : array_like[complex]
+        fields: array_like[complex]
             Input fields to be used in the imaging process.
-        **kwargs : dict
+        **kwargs: Dict[str, Any]
             Additional parameters for the imaging process, including:
             - 'padding': Padding to apply to the sample volume.
             - 'output_region': Specific region to extract from the image.
@@ -1023,7 +1272,7 @@ class Brightfield(Optics):
 
         Returns
         -------
-        Image
+        Image: Image
             Processed image after simulating the brightfield imaging process.
 
         Examples
@@ -1059,7 +1308,9 @@ class Brightfield(Optics):
 
         # Extract indexes of the output region
         pad = kwargs.get("padding", (0, 0, 0, 0))
-        output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+        output_region = np.array(
+            kwargs.get("output_region", (None, None, None, None))
+        )
         output_region[0] = (
             None
             if output_region[0] is None
@@ -1088,7 +1339,9 @@ class Brightfield(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(image.maybe_cupy(np.zeros((*padded_volume.shape[0:2], 1))))
+        output_image = Image(image.maybe_cupy(
+            np.zeros((*padded_volume.shape[0:2], 1))
+            ))
 
         index_iterator = range(padded_volume.shape[2])
         z_iterator = np.linspace(
@@ -1175,19 +1428,18 @@ class Brightfield(Optics):
 
 
 class Holography(Brightfield):
-    """
-    An alias for the Brightfield class, representing holographic 
+    """An alias for the Brightfield class, representing holographic 
     imaging setups.
 
     Holography shares the same implementation as Brightfield, as both use 
     coherent illumination and similar propagation techniques.
+
     """
     pass
 
 
 class ISCAT(Brightfield):
-    """
-    Images coherently illuminated samples using Interferometric Scattering 
+    """Images coherently illuminated samples using Interferometric Scattering 
     (ISCAT) microscopy.
 
     This class models ISCAT by creating a discretized volume where each pixel
@@ -1197,41 +1449,41 @@ class ISCAT(Brightfield):
 
     Parameters
     ----------
-    illumination : Feature
+    illumination: Feature
         Feature-set defining the complex field entering the sample. Default 
         is a field with all values set to 1.
-    NA : float
+    NA: float
         Numerical aperture (NA) of the limiting aperture.
-    wavelength : float
+    wavelength: float
         Wavelength of the scattered light, in meters.
-    magnification : float
+    magnification: float
         Magnification factor of the optical system.
-    resolution : array_like of float
+    resolution: array_like of float
         Pixel spacing in the camera. Optionally includes a third value for 
         z-direction resolution.
-    refractive_index_medium : float
+    refractive_index_medium: float
         Refractive index of the medium surrounding the sample.
-    padding : array_like of int
+    padding: array_like of int
         Padding for the sample volume to minimize edge effects. Format: 
         (left, right, top, bottom).
-    output_region : array_like of int
+    output_region: array_like of int
         Region of the image to output as (x, y, width, height). If None 
         (default), the entire image is returned.
-    pupil : Feature
+    pupil: Feature
         Feature-set defining the pupil function at focus. The feature-set 
         takes an unaberrated pupil as input.
-    illumination_angle : float, optional
+    illumination_angle: float, optional
         Angle of illumination relative to the optical axis, in radians. 
         Default is π radians.
-    amp_factor : float, optional
+    amp_factor: float, optional
         Amplitude factor of the illuminating field relative to the reference 
         field. Default is 1.
 
     Attributes
     ----------
-    illumination_angle : float
+    illumination_angle: float
         The angle of illumination, stored for reference.
-    amp_factor : float
+    amp_factor: float
         Amplitude factor of the illuminating field.
 
     Examples
@@ -1246,11 +1498,24 @@ class ISCAT(Brightfield):
     """
 
     def __init__(
-            self,
-            illumination_angle = np.pi,
-            amp_factor = 1, 
-            **kwargs
-            ):
+        self:  'ISCAT',
+        illumination_angle: float = np.pi,
+        amp_factor: float = 1, 
+        **kwargs: Dict[str, Any],
+    ):
+        """Initializes the ISCAT class.
+
+        Parameters
+        ----------
+        illumination_angle: float
+            The angle of illumination, in radians.
+        amp_factor: float
+            Amplitude factor of the illuminating field relative to the reference 
+            field.
+        **kwargs: Dict[str, Any]
+            Additional parameters for the Brightfield class.
+
+        """
 
         super().__init__(
             illumination_angle=illumination_angle,
@@ -1262,8 +1527,7 @@ class ISCAT(Brightfield):
             )
         
 class Darkfield(Brightfield):
-    """
-    Images coherently illuminated samples using Darkfield microscopy.
+    """Images coherently illuminated samples using Darkfield microscopy.
 
     This class models Darkfield microscopy by creating a discretized volume 
     where each pixel represents the effective refractive index of the sample. 
@@ -1272,32 +1536,42 @@ class Darkfield(Brightfield):
 
     Parameters
     ----------
-    illumination : Feature
+    illumination: Feature
         Feature-set defining the complex field entering the sample. Default 
         is a field with all values set to 1.
-    NA : float
+    NA: float
         Numerical aperture (NA) of the limiting aperture.
-    wavelength : float
+    wavelength: float
         Wavelength of the scattered light, in meters.
-    magnification : float
+    magnification: float
         Magnification factor of the optical system.
-    resolution : array_like of float
+    resolution: array_like of float
         Pixel spacing in the camera. Optionally includes a third value for 
         z-direction resolution.
-    refractive_index_medium : float
+    refractive_index_medium: float
         Refractive index of the medium surrounding the sample.
-    padding : array_like of int
+    padding: array_like of int
         Padding for the sample volume to minimize edge effects. Format: 
         (left, right, top, bottom).
-    output_region : array_like of int
+    output_region: array_like of int
         Region of the image to output as (x, y, width, height). If None 
         (default), the entire image is returned.
-    pupil : Feature
+    pupil: Feature
         Feature-set defining the pupil function at focus. The feature-set 
         takes an unaberrated pupil as input.
-    illumination_angle : float, optional
+    illumination_angle: float, optional
         Angle of illumination relative to the optical axis, in radians. 
         Default is π/2 radians.
+
+    Attributes
+    ----------
+    illumination_angle: float
+        The angle of illumination, stored for reference.
+
+    Methods
+    -------
+    get(illuminated_volume, limits, fields, **kwargs)
+        Retrieves the darkfield image of the illuminated volume.
 
     Examples
     --------
@@ -1308,35 +1582,47 @@ class Darkfield(Brightfield):
     >>> print(darkfield.illumination_angle())
     1.5707963267948966
 
-    Methods
-    -------
-    get(illuminated_volume, limits, fields, **kwargs)
-        Retrieves the darkfield image of the illuminated volume.
-    
     """
 
     def __init__(
-            self, 
-            illumination_angle = np.pi/2, 
-            **kwargs
-            ):
+        self: 'Darkfield', 
+        illumination_angle: float = np.pi/2, 
+        **kwargs: Dict[str, Any]
+    ):
+        """Initializes the Darkfield class.
+
+        Parameters
+        ----------
+        illumination_angle: float
+            The angle of illumination, in radians.
+        **kwargs: Dict[str, Any]
+            Additional parameters for the Brightfield class.
+
+        """
+
         super().__init__(
             illumination_angle=illumination_angle,
             **kwargs)
 
     #Retrieve get as super
-    def get(self, illuminated_volume, limits, fields, **kwargs):
+    def get(
+        self: 'Darkfield',
+        illuminated_volume: ArrayLike[complex],
+        limits: ArrayLike[int],
+        fields: ArrayLike[complex],
+        **kwargs: Dict[str, Any],
+    ) -> Image:
         """Retrieve the darkfield image of the illuminated volume.
 
         Parameters
         ----------
-        illuminated_volume : array_like
+        illuminated_volume: array_like
             The volume of the sample being illuminated.
-        limits : array_like
+        limits: array_like
             The spatial limits of the volume.
-        fields : array_like
+        fields: array_like
             The fields interacting with the sample.
-        **kwargs : dict
+        **kwargs: Dict[str, Any]
             Additional parameters passed to the super class's get method.
 
         Returns
@@ -1361,17 +1647,33 @@ class IlluminationGradient(Feature):
 
     Parameters
     ----------
-    gradient : array_like of float, optional
+    gradient: array_like of float, optional
         Gradient of the plane to add to the field amplitude, specified in 
         pixels. Default is (0, 0).
-    constant : float, optional
+    constant: float, optional
         Constant value to add to the field amplitude. Default is 0.
-    vmin : float, optional
+    vmin: float, optional
         Minimum allowed value for the amplitude. Values below this are clipped. 
         Default is 0.
-    vmax : float, optional
+    vmax: float, optional
         Maximum allowed value for the amplitude. Values above this are clipped. 
         Default is infinity.
+
+    Attributes
+    ----------
+    gradient: array_like of float
+        Gradient of the plane to add to the field amplitude.
+    constant: float
+        Constant value to add to the field amplitude.
+    vmin: float
+        Minimum allowed value for the amplitude.
+    vmax: float
+        Maximum allowed value for the amplitude.
+
+    Methods
+    -------
+    get(image, gradient, constant, vmin, vmax, **kwargs)
+        Applies the gradient and constant offset to the amplitude of the field.
 
     Examples
     --------
@@ -1384,41 +1686,68 @@ class IlluminationGradient(Feature):
     """
 
     def __init__(
-        self,
+        self: 'IlluminationGradient',
         gradient: PropertyLike[ArrayLike[float]] = (0, 0),
         constant: PropertyLike[float] = 0,
         vmin: PropertyLike[float] = 0,
         vmax: PropertyLike[float] = np.inf,
-        **kwargs,
+        **kwargs: Dict[str, Any],
     ):
+        """Initializes the IlluminationGradient class.
+
+        Parameters
+        ----------
+        gradient: array_like of float, optional
+            Gradient of the plane to add to the field amplitude, specified in 
+            pixels. Default is (0, 0).
+        constant: float, optional
+            Constant value to add to the field amplitude. Default is 0.
+        vmin: float, optional
+            Minimum allowed value for the amplitude. Values below this are 
+            clipped. Default is 0.
+        vmax: float, optional
+            Maximum allowed value for the amplitude. Values above this are 
+            clipped. Default is infinity.
+        **kwargs: Dict[str, Any]
+            Additional parameters for customization.
+
+        """
+
         super().__init__(
             gradient=gradient, constant=constant, vmin=vmin, vmax=vmax, **kwargs
         )
 
-    def get(self, image, gradient, constant, vmin, vmax, **kwargs):
-        """
-        Applies the gradient and constant offset to the amplitude of the field.
+    def get(
+        self: 'IlluminationGradient',
+        image: ArrayLike[complex],
+        gradient: ArrayLike[float],
+        constant: float,
+        vmin: float,
+        vmax: float,
+        **kwargs: Dict[str, Any],
+    ) -> ArrayLike[complex]:
+        """Applies the gradient and constant offset to the amplitude of the 
+        field.
 
         Parameters
         ----------
-        image : numpy.ndarray
+        image: numpy.ndarray
             The input field to which the gradient and constant are applied.
-        gradient : array_like of float
+        gradient: array_like of float
             Gradient of the plane to add to the field amplitude.
-        constant : float
+        constant: float
             Constant value to add to the field amplitude.
-        vmin : float
+        vmin: float
             Minimum value for clipping the amplitude.
-        vmax : float
+        vmax: float
             Maximum value for clipping the amplitude.
-        **kwargs : dict
+        **kwargs: Dict[str, Any]
             Additional parameters for customization.
 
         Returns
         -------
         numpy.ndarray
             The modified field with the gradient and constant applied.
-        
 
         Examples
         --------
@@ -1449,17 +1778,20 @@ class IlluminationGradient(Feature):
         return image
 
 
-def _get_position(image, mode="corner", return_z=False):
-    """
-    Extracts the position of the upper-left corner of a scatterer.
+def _get_position(
+    image:  Image,
+    mode: str = "corner",
+    return_z: bool = False,
+) -> np.ndarray:
+    """Extracts the position of the upper-left corner of a scatterer.
 
     Parameters
     ----------
-    image : numpy.ndarray
+    image: numpy.ndarray
         Input image or volume containing the scatterer.
-    mode : str, optional
+    mode: str, optional
         Mode for position extraction. Default is "corner".
-    return_z : bool, optional
+    return_z: bool, optional
         Whether to include the z-coordinate in the output. Default is False.
 
     Returns
@@ -1514,37 +1846,36 @@ def _get_position(image, mode="corner", return_z=False):
 
 
 def _create_volume(
-    list_of_scatterers,
-    pad=(0, 0, 0, 0),
-    output_region=(None, None, None, None),
-    refractive_index_medium=1.33,
-    **kwargs,
-):
-    """
-    Converts a list of scatterers into a volumetric representation.
+    list_of_scatterers: list,
+    pad: tuple = (0, 0, 0, 0),
+    output_region: tuple = (None, None, None, None),
+    refractive_index_medium: float = 1.33,
+    **kwargs: Dict[str, Any],
+) -> tuple:
+    """Converts a list of scatterers into a volumetric representation.
 
     Parameters
     ----------
-    list_of_scatterers : list or single scatterer
+    list_of_scatterers: list or single scatterer
         List of scatterers to include in the volume.
-    pad : tuple of int, optional
+    pad: tuple of int, optional
         Padding for the volume in the format (left, right, top, bottom).
         Default is (0, 0, 0, 0).
-    output_region : tuple of int, optional
+    output_region: tuple of int, optional
         Region to output, defined as (x_min, y_min, x_max, y_max). Default is 
         None.
-    refractive_index_medium : float, optional
+    refractive_index_medium: float, optional
         Refractive index of the medium surrounding the scatterers. Default is 
         1.33.
-    **kwargs : dict
+    **kwargs: Dict[str, Any]
         Additional arguments for customization.
 
     Returns
     -------
     tuple
-        - volume : numpy.ndarray
+        - volume: numpy.ndarray
             The generated volume containing the scatterers.
-        - limits : numpy.ndarray
+        - limits: numpy.ndarray
             Spatial limits of the volume.
 
     """
