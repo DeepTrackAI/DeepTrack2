@@ -97,6 +97,10 @@ Examples
 --------
 Perform cosine elementwise to a Feature:
 
+>>> import numpy as np
+
+>>> from deeptrack import Feature, elementwise
+
 >>> class TestFeature(Feature):
 >>>     __distributed__ = False
 >>>        def get(self, image, **kwargs):
