@@ -942,7 +942,7 @@ class Pad(Augmentation):
 
     def __init__(
         self,
-        px: Union[List[int], Tuple[int], int] = (0, 0, 0, 0),
+        px: Union[List[int], Tuple[int]] = (0, 0, 0, 0),
         mode: PropertyLike[str] = "constant",
         cval: PropertyLike[float] = 0,
         **kwargs

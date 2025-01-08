@@ -162,7 +162,29 @@ class TestAugmentations(unittest.TestCase):
         cropper = augmentations.CropToMultiplesOf(multiple=(2, 3, None))
         out = cropper.update().resolve(image)
         self.assertSequenceEqual(out.shape, (10, 9, 11))
+    
+    def test_Pad(self):
+        image = np.ones((10, 10, 10))
 
+        padder = augmentations.Pad(px=(2, 0, 2, 0, 0, 0), mode="constant")
+        out = padder.update().resolve(image)
+        self.assertSequenceEqual(out.shape, (12, 12, 10))
+
+        padder = augmentations.Pad(px=(2, 2, 2, 0, 0, 0), mode="constant")
+        out = padder.update().resolve(image)
+        self.assertSequenceEqual(out.shape, (14, 12, 10))
+
+        padder = augmentations.Pad(px=(2, 2, 2, 2, 0, 0), mode="constant")
+        out = padder.update().resolve(image)
+        self.assertSequenceEqual(out.shape, (14, 14, 10))
+
+        padder = augmentations.Pad(px=(2, 2, 2, 2, 2, 0), mode="constant")
+        out = padder.update().resolve(image)
+        self.assertSequenceEqual(out.shape, (14, 14, 12))
+
+        padder = augmentations.Pad(px=(2, 2, 2, 2, 2, 2), mode="constant")
+        out = padder.update().resolve(image)
+        self.assertSequenceEqual(out.shape, (14, 14, 14))
 
 if __name__ == "__main__":
     unittest.main()
