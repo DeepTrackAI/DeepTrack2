@@ -15,39 +15,27 @@ class TestAugmentations(unittest.TestCase):
         __distributed__ = False
 
         def get(self, image, **kwargs):
-            output = np.array([[[1], [2]], [[0], [0]]])
+            output = np.array([[1, 2],
+                               [0, 0]])
             return output
 
     def test_FlipLR(self):
         feature = self.DummyFeature()
-        augmented_feature = augmentations.FlipLR(feature)
-
-        augmented_feature.update()
-        output_1 = augmented_feature.resolve()
-        augmented_feature.update()
-        output_2 = augmented_feature.resolve()
-        self.assertTrue(np.all(output_1 == np.array([[[1], [2]], [[0], [0]]])))
-        self.assertTrue(np.all(output_2 == np.array([[[2], [1]], [[0], [0]]])))
+        augmented_feature = feature >> augmentations.FlipLR(p=1.0)
+        output = augmented_feature.resolve()
+        self.assertTrue(np.all(output == np.array([[2, 1], [0, 0]])))
 
     def test_FlipUD(self):
         feature = self.DummyFeature()
-        augmented_feature = augmentations.FlipUD(feature)
-        augmented_feature.update()
-        output_1 = augmented_feature.resolve()
-        augmented_feature.update()
-        output_2 = augmented_feature.resolve()
-        self.assertTrue(np.all(output_1 == np.array([[[1], [2]], [[0], [0]]])))
-        self.assertTrue(np.all(output_2 == np.array([[[0], [0]], [[1], [2]]])))
+        augmented_feature = feature >> augmentations.FlipUD(p=1.0)
+        output = augmented_feature.resolve()
+        self.assertTrue(np.all(output == np.array([[0, 0], [1, 2]])))
 
     def test_FlipDiagonal(self):
         feature = self.DummyFeature()
-        augmented_feature = augmentations.FlipDiagonal(feature)
-        augmented_feature.update()
-        output_1 = augmented_feature.resolve()
-        augmented_feature.update()
-        output_2 = augmented_feature.resolve()
-        self.assertTrue(np.all(output_1 == np.array([[[1], [2]], [[0], [0]]])))
-        self.assertTrue(np.all(output_2 == np.array([[[1], [0]], [[2], [0]]])))
+        augmented_feature = feature >> augmentations.FlipDiagonal(p=1.0)
+        output = augmented_feature.resolve()
+        self.assertTrue(np.all(output == np.array([[1, 0], [2, 0]])))
 
     def test_Affine(self):
         opt = optics.Fluorescence(magnification=10)
@@ -70,10 +58,13 @@ class TestAugmentations(unittest.TestCase):
         for _ in range(10):
             image = pipe.update().resolve()
             pmax = np.unravel_index(
-                np.argmax(image[:, :, 0], axis=None), shape=image[:, :, 0].shape
+                np.argmax(image[:, :, 0], axis=None),
+                shape=image[:, :, 0].shape
             )
 
-            dist = np.sum(np.abs(np.array(image.get_property("position")) - pmax))
+            dist = np.sum(
+                np.abs(np.array(image.get_property("position"))- pmax)
+            )
 
             self.assertLess(dist, 3)
 
@@ -99,7 +90,9 @@ class TestAugmentations(unittest.TestCase):
         im[:, :, :] = 0
         im[0, :, :] = 1
         out_2 = transformer.update().resolve(im)
-        self.assertIsNone(np.testing.assert_allclose(out_2[:, :, 0], out_2[:, :, 1]))
+        self.assertIsNone(
+            np.testing.assert_allclose(out_2[:, :, 0], out_2[:, :, 1])
+        )
 
         transformer.ignore_last_dim.set_value(False)
         out_3 = transformer.resolve(im)
