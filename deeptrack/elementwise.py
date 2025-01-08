@@ -129,12 +129,12 @@ class ElementwiseFeature(Feature):
     def __init__(
         self,
         function: Callable[[np.ndarray], np.ndarray],
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         self.function: Callable[[np.ndarray], np.ndarray] = function
         super().__init__(**kwargs)
-        self.feature: Optional[Feature] = self.add_feature(feature) if feature else feature
+        self.feature: = self.add_feature(feature) if feature else feature
 
         if feature:
             self.__distributed__ = False
@@ -152,7 +152,7 @@ class ElementwiseFeature(Feature):
 class Sin(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.sin, feature=feature, **kwargs)
@@ -161,7 +161,7 @@ class Sin(ElementwiseFeature):
 class Cos(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.cos, feature=feature, **kwargs)
@@ -170,7 +170,7 @@ class Cos(ElementwiseFeature):
 class Tan(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.tan, feature=feature, **kwargs)
@@ -179,7 +179,7 @@ class Tan(ElementwiseFeature):
 class Arcsin(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arcsin, feature=feature, **kwargs)
@@ -188,7 +188,7 @@ class Arcsin(ElementwiseFeature):
 class Arccos(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arccos, feature=feature, **kwargs)
@@ -197,7 +197,7 @@ class Arccos(ElementwiseFeature):
 class Arctan(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arctan, feature=feature, **kwargs)
@@ -206,7 +206,7 @@ class Arctan(ElementwiseFeature):
 class Sinh(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.sinh, feature=feature, **kwargs)
@@ -215,7 +215,7 @@ class Sinh(ElementwiseFeature):
 class Cosh(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.cosh, feature=feature, **kwargs)
@@ -224,7 +224,7 @@ class Cosh(ElementwiseFeature):
 class Tanh(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.tanh, feature=feature, **kwargs)
@@ -233,7 +233,7 @@ class Tanh(ElementwiseFeature):
 class Arcsinh(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arcsinh, feature=feature, **kwargs)
@@ -242,7 +242,7 @@ class Arcsinh(ElementwiseFeature):
 class Arccosh(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arccosh, feature=feature, **kwargs)
@@ -251,7 +251,7 @@ class Arccosh(ElementwiseFeature):
 class Arctanh(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arctanh, feature=feature, **kwargs)
@@ -260,7 +260,7 @@ class Arctanh(ElementwiseFeature):
 class Round(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.around, feature=feature, **kwargs)
@@ -269,7 +269,7 @@ class Round(ElementwiseFeature):
 class Floor(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.floor, feature=feature, **kwargs)
@@ -278,7 +278,7 @@ class Floor(ElementwiseFeature):
 class Ceil(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.ceil, feature=feature, **kwargs)
@@ -287,7 +287,7 @@ class Ceil(ElementwiseFeature):
 class Exp(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.exp, feature=feature, **kwargs)
@@ -296,7 +296,7 @@ class Exp(ElementwiseFeature):
 class Log(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.log, feature=feature, **kwargs)
@@ -305,7 +305,7 @@ class Log(ElementwiseFeature):
 class Log10(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.log10, feature=feature, **kwargs)
@@ -314,7 +314,7 @@ class Log10(ElementwiseFeature):
 class Log2(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.log2, feature=feature, **kwargs)
@@ -323,7 +323,7 @@ class Log2(ElementwiseFeature):
 class Angle(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.angle, feature=feature, **kwargs)
@@ -332,7 +332,7 @@ class Angle(ElementwiseFeature):
 class Real(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.real, feature=feature, **kwargs)
@@ -341,7 +341,7 @@ class Real(ElementwiseFeature):
 class Imag(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.imag, feature=feature, **kwargs)
@@ -350,7 +350,7 @@ class Imag(ElementwiseFeature):
 class Abs(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.abs, feature=feature, **kwargs)
@@ -359,7 +359,7 @@ class Abs(ElementwiseFeature):
 class Conjugate(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.conjugate, feature=feature, **kwargs)
@@ -368,7 +368,7 @@ class Conjugate(ElementwiseFeature):
 class Sqrt(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.sqrt, feature=feature, **kwargs)
@@ -377,7 +377,7 @@ class Sqrt(ElementwiseFeature):
 class Square(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.square, feature=feature, **kwargs)
@@ -386,7 +386,7 @@ class Square(ElementwiseFeature):
 class Sign(ElementwiseFeature):
     def __init__(
         self,
-        feature: Optional[Feature] = None,
+        feature: = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.sign, feature=feature, **kwargs)
