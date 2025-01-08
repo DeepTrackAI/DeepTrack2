@@ -1,7 +1,21 @@
 """Radial center calculation function
 
 This module provides a function to calculate the center location
-of an intensity distribution with gradients.
+of a given intensity distribution.
+
+Key Features
+------------
+
+- **Gradient-based analysis with least-squares method.**
+
+  Uses intensity gradients to determine the
+  radial symmetry of 2D intensity distributions.
+  
+
+- **Flexible output**
+
+  Allows inversion of the axis based on user preference.
+
 
 Module Structure
 ----------------
