@@ -132,7 +132,8 @@ class ElementwiseFeature(Feature):
         feature = None,
         **kwargs: Any
     ) -> None:
-        self.function: Callable[[np.ndarray], np.ndarray] = function
+
+        self.function = function
         super().__init__(**kwargs)
         self.feature = self.add_feature(feature) if feature else feature
 
@@ -145,7 +146,7 @@ class ElementwiseFeature(Feature):
         **kwargs: Any
     ) -> np.ndarray:
         if self.feature:
-            image = self.feature.get(image, **kwargs)
+            image = self.feature()
         return self.function(image)
 
 
