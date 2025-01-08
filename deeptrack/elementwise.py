@@ -1,17 +1,123 @@
-"""Features that apply functions to arrays elementwise.
+"""Classes that apply functions to features elementwise.
 
-All features defined here can be inserted into a pipeline as::
-   A >> ElementwiseFeature()
-or::
-   ElementwiseFeature(A)
+This module provides the `elementwise` DeepTrack2 classes
+which work as a handle to apply various NumPy functions 
+to `Feature` objects elementwise.
+
+Key Features
+------------
+- **Extends NumPy Functions**
+
+    The convenience of NumPy functions are extended with this module such that
+    they can be applied elementwise to a DeepTrack `Feature` object. 
+
+- **Trigonometric Functions**
+    The elementary trigonometric functions: Sin, Cos, Tan.
+
+- **Hyperbolic Functions**
+    The trigonometric hyperbolic functions: Sinh, Cosh, Tanh.
+
+- **Rounding Functions**
+    Common rounding functions: nearest integer rounding `Round`,
+    nearest lowest integer `Floor`, nearest highest integer `Ceil`.
+
+- **Exponents And Logarithm Functions**
+    Includes Exponential (exp) function, Natural Logarithm function,
+    Logarithm function with base 10, and Logarithm function with base 2.
+
+- **Complex Number Functions**
+    Functions to get various values from a complex number:
+    Angle, Absolute value, Real value, Imaginary value, Conjugate
+
+- **Miscellaneous Functions**
+    Contains Square root, Square, Sign function.
+
+Module Structure
+----------------
+
+- `ElementwiseFeature`
+   Forms the base from which other classes inherit from.
+
+- `Sin`
+
+- `Cos`
+
+- `Tan`
+
+- `ArcSin`
+
+- `Arccos`
+
+- `ArcTan`
+
+- `Sinh`
+
+- `Cosh`
+
+- `Tanh`
+
+- `ArcSinh`
+
+- `Arccosh`
+
+- `ArcTanh`
+
+- `Round`
+
+- `Floor`
+
+- `Ceil`
+
+- `Exp`
+
+- `Log`
+
+- `Log10`
+
+- `Log2`
+
+- `Angle`
+
+- `Real`
+
+- `Imag`
+
+- `Abs`
+
+- `Conjugate`
+
+- `Sqrt`
+
+- `Square`
+
+- `Sign`
+
+
+Examples
+--------
+Perform cosine elementwise to a Feature:
+
+>>> class TestFeature(Feature):
+>>>     __distributed__ = False
+>>>        def get(self, image, **kwargs):
+>>>            output = np.array([[np.pi, 0],
+...                               [np.pi / 4, 0]])
+>>>            return output
+
+>>> test_feature = TestFeature()
+>>> elementwise_cosine = test_feature >> elementwise.Cos()
+[[-1.          1.        ]
+ [ 0.70710678  1.        ]]
+
 """
 
-from .features import Feature
 import numpy as np
+
+from .features import Feature
 
 
 class ElementwiseFeature(Feature):
-
+    
     __gpu_compatible__ = True
 
     def __init__(self, function, feature=None, **kwargs):
@@ -28,20 +134,14 @@ class ElementwiseFeature(Feature):
         return self.function(image)
 
 
-"""
-Trigonometric functions
-=======================
-"""
+class Sin(ElementwiseFeature):
+    def __init__(self, feature=None, **kwargs):
+        super().__init__(np.sin, feature=feature, **kwargs)
 
 
 class Cos(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
         super().__init__(np.cos, feature=feature, **kwargs)
-
-
-class Sin(ElementwiseFeature):
-    def __init__(self, feature=None, **kwargs):
-        super().__init__(np.sin, feature=feature, **kwargs)
 
 
 class Tan(ElementwiseFeature):
@@ -62,12 +162,6 @@ class Arccos(ElementwiseFeature):
 class Arctan(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
         super().__init__(np.arctan, feature=feature, **kwargs)
-
-
-"""
-Hyperbolic functions
-=======================
-"""
 
 
 class Sinh(ElementwiseFeature):
@@ -100,11 +194,6 @@ class Arctanh(ElementwiseFeature):
         super().__init__(np.arctanh, feature=feature, **kwargs)
 
 
-"""
-Rounding
-========
-"""
-
 
 class Round(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
@@ -119,12 +208,6 @@ class Floor(ElementwiseFeature):
 class Ceil(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
         super().__init__(np.ceil, feature=feature, **kwargs)
-
-
-"""
-Exponents and logaritms
-=======================
-"""
 
 
 class Exp(ElementwiseFeature):
@@ -146,11 +229,6 @@ class Log2(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
         super().__init__(np.log2, feature=feature, **kwargs)
 
-
-"""
-Complex numbers
-===============
-"""
 
 
 class Angle(ElementwiseFeature):
@@ -177,11 +255,6 @@ class Conjugate(ElementwiseFeature):
     def __init__(self, feature=None, **kwargs):
         super().__init__(np.conjugate, feature=feature, **kwargs)
 
-
-"""
-Misc.
-=====
-"""
 
 
 class Sqrt(ElementwiseFeature):
