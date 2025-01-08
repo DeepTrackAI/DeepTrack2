@@ -123,34 +123,7 @@ from .features import Feature
 
 
 class ElementwiseFeature(Feature):
-    
-    __gpu_compatible__ = True
 
-    def __init__(
-        self,
-        function: Callable[np.ndarray],
-        feature: Optional[Feature] = None,
-        **kwargs: Any
-    ) -> None:
-        self.function = function
-        super().__init__(**kwargs)
-        self.feature = self.add_feature(feature) if feature else feature
-
-        if feature:
-            self.__distributed__ = False
-
-    def get(self, image, **kwargs):
-        if self.feature:
-            image = self.feature()
-        return self.function(image)
-
-
-import numpy as np
-from typing import Callable, Optional, Any
-from .features import Feature
-
-
-class ElementwiseFeature(Feature):
     __gpu_compatible__: bool = True
 
     def __init__(
