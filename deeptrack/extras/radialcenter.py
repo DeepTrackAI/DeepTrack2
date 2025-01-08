@@ -1,11 +1,12 @@
 """Radial center calculation function
 
 This module provides a function to calculate the center location
-of an intensity distribution.
+of an intensity distribution with gradients.
 
 Module Structure
 ----------------
 Functions:
+
 - `radialcenter`: Calculates the center of a 2D intensity distribution.
 
 Example
@@ -13,7 +14,12 @@ Example
 Calculate center of an image containing randomly generated Gaussian blur.
 
 >>> from deeptrack.extras import radialcenter as rc
->>> gaussian_blur = np.random.normal(0, 0.005, (100, 100))
+
+>>> linspace = np.linspace(-10, 10, 100)
+>>> gaussian = np.exp(-0.5 * (
+...            linspace[:, None] ** 2 + linspace[None, :] ** 2)
+...        )
+>>> intensity_map = np.random.normal(0, 0.005, (100, 100))
 >>> x, y = rc.radialcenter(gaussian_blur)
 >>> print(f"Center of distribution = {x}, {y}")
 
@@ -41,11 +47,15 @@ Calculate center of an image containing randomly generated Gaussian blur.
   Copyright 2011-2012, Raghuveer Parthasarathy
 """
 
-# import * to keep syntax similar to matlab
-from numpy import *
+from typing import Tuple
+
+import numpy as np
 import scipy.signal
 
-def radialcenter(I, invert_xy=False):
+def radialcenter(
+  I,
+  invert_xy=False
+) -> Tuple[float, float]:
   """Calculates the center of a 2D intensity distribution.
 
   Considers lines passing through each half-pixel point with slope
@@ -72,7 +82,7 @@ def radialcenter(I, invert_xy=False):
       Note that y increases with increasing row number (i.e. "downward")
 
   """
-  I = squeeze(I)
+  I = np.squeeze(I)
   Ny, Nx = I.shape[:2]
 
   # Grid coordinates are -n:n, where Nx (or Ny) = 2*n+1.
@@ -81,16 +91,16 @@ def radialcenter(I, invert_xy=False):
   #    xm = repmat(-(Nx-1)/2.0+0.5:(Nx-1)/2.0-0.5,Ny-1,1);
   # And are faster (by a factor of >15!).
   # The idea is taken from the repmat source code.
-  xm_onerow = arange(-(Nx - 1) / 2.0 + 0.5, (Nx - 1) / 2.0 + 0.5)
-  xm_onerow = reshape(xm_onerow, (1, xm_onerow.size))
+  xm_onerow = np.arange(-(Nx - 1) / 2.0 + 0.5, (Nx - 1) / 2.0 + 0.5)
+  xm_onerow = np.reshape(xm_onerow, (1, xm_onerow.size))
   xm = xm_onerow[(0,) * (Ny - 1), :]
 
   # Similarly replacing:
   #    ym = repmat((-(Ny-1)/2.0+0.5:(Ny-1)/2.0-0.5)', 1, Nx-1).
-  ym_onecol = arange(
+  ym_onecol = np.arange(
       -(Ny - 1) / 2.0 + 0.5, (Ny - 1) / 2.0 + 0.5
   )  # Note that y increases "downward."
-  ym_onecol = reshape(ym_onecol, (ym_onecol.size, 1))
+  ym_onecol = np.reshape(ym_onecol, (ym_onecol.size, 1))
   ym = ym_onecol[:, (0,) * (Nx - 1)]
 
   # Calculate derivatives along 45-degree shifted coordinates (u and v).
@@ -100,7 +110,7 @@ def radialcenter(I, invert_xy=False):
   dIdv = I[: Ny - 1, : Nx - 1] - I[1:Ny, 1:Nx]
 
   # Apply a smoothing filter.
-  h = ones((3, 3)) / 9
+  h = np.ones((3, 3)) / 9
   fdu = scipy.signal.convolve2d(dIdu, h, "same")
   fdv = scipy.signal.convolve2d(dIdv, h, "same")
 
@@ -113,10 +123,10 @@ def radialcenter(I, invert_xy=False):
   # The negative sign "flips" the array to account for y increasing
   # "downward."
   m = -(fdv + fdu) / (fdu - fdv)
-  m[isnan(m)] = 0
+  m[np.isnan(m)] = 0
 
   # Handle infinite slopes by setting them to a large value.
-  isinfbool = isinf(m)
+  isinfbool = np.isinf(m)
   m[isinfbool] = 1000000
 
   # Shorthand "b," which also happens to be the
@@ -125,10 +135,10 @@ def radialcenter(I, invert_xy=False):
 
   # Weighting: Weight by square of gradient magnitude and inverse
   # distance to gradient intensity centroid.
-  sdI2 = sum(dImag2)
-  xcentroid = sum(dImag2 * xm) / sdI2
-  ycentroid = sum(dImag2 * ym) / sdI2
-  w = dImag2 / sqrt(
+  sdI2 = np.sum(dImag2)
+  xcentroid = np.sum(dImag2 * xm) / sdI2
+  ycentroid = np.sum(dImag2 * ym) / sdI2
+  w = dImag2 / np.sqrt(
       (xm - xcentroid) * (xm - xcentroid) + (ym - ycentroid) * (ym - ycentroid)
   )
 
@@ -136,12 +146,12 @@ def radialcenter(I, invert_xy=False):
   # Inputs m, b, w are defined on a grid.
   # w are the weights for each point.
   wm2p1 = w / (m * m + 1)
-  sw = sum(wm2p1)
+  sw = np.sum(wm2p1)
   mwm2pl = m * wm2p1
-  smmw = sum(m * mwm2pl)
-  smw = sum(mwm2pl)
-  smbw = sum(sum(b * mwm2pl))
-  sbw = sum(sum(b * wm2p1))
+  smmw = np.sum(m * mwm2pl)
+  smw = np.sum(mwm2pl)
+  smbw = np.sum(np.sum(b * mwm2pl))
+  sbw = np.sum(np.sum(b * wm2p1))
   det = smw * smw - smmw * sw
   xc = (smbw * sw - smw * sbw) / det
   # Relative to image center.
