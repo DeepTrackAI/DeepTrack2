@@ -134,7 +134,7 @@ class ElementwiseFeature(Feature):
     ) -> None:
         self.function: Callable[[np.ndarray], np.ndarray] = function
         super().__init__(**kwargs)
-        self.feature: = self.add_feature(feature) if feature else feature
+        self.feature = self.add_feature(feature) if feature else feature
 
         if feature:
             self.__distributed__ = False
