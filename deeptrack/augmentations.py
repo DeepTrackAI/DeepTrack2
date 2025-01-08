@@ -8,31 +8,36 @@ data when used in a training pipeline for a machine learning model.
 Key Features
 ------------
 - **General Augmentations**
-    Basic image augmentations are provided to perform transformations
+
+    Basic image augmentation methods to perform transformations
     such as flipping an image horizontally (left-right), vertically (up-down),
-    and diagonally.
+    or along the diagonal.
 
 - **Advanced Augmentations**
+
     For users who require more control over the image transformations.
     Advanced augmentation methods allow operations like translation, scaling,
     rotation, and shearing. These operations can be customized with
-    user-specified parameters (e.g., degree of rotation, scaling factors),
+    user-specified parameters (e.g., degrees of rotation, scaling factors),
     giving flexibility in how the images are transformed.
 
 - **Caching**
+
     To avoid redundant computations, the `Reuse class` offers
     caching functionality to save the outputs of feature outputs to be reused
     later, saving time and computational resources.
 
 - **Cropping**
+
     Enables different methods to crop an image. Region-specific cropping, 
     cropping based on multiples of height/width of and image, and crop to 
-    remove empty space at edges of a 3D array.
+    remove empty space at edges of an image.
 
 - **Padding**
+
     Padding operations allow you to extend the shape of an image by
     adding extra pixels around its edges, which is essential for ensuring
-    that the spatial dimensions of the image stay consistent.
+    that the shape of the image stay consistent.
 
 Module Structure
 ----------------
@@ -198,6 +203,7 @@ class Reuse(Feature):
     `Reuse` stores the output of a feature and reuses it for subsequent calls,
     even if it is updated. This is can be used after a time-consuming feature
     to augment the output of the feature without recalculating it.
+    
     For example:
     >>> pipeline = dt.Reuse(pipeline, uses=2) >> dt.FlipLR()
 
