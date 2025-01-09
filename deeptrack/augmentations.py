@@ -781,7 +781,7 @@ class Crop(Augmentation):
 
     def get(
         self,
-        image: PropertyLike[Image],
+        image: Image,
         corner: PropertyLike[str],
         crop: PropertyLike[Union[int, int]]],
         crop_mode: PropertyLike[str],
