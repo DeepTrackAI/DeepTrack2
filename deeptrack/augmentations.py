@@ -68,19 +68,29 @@ Module Structure
 
 Examples
 --------
-Flip an image of a particle up-down then left-right:
+Flip an image of a particle up-down then flips left-right:
 
-    >>> import numpy as np
-    >>> from matplotlib import pyplot as plt
-    
     >>> import deeptrack as dt
 
     >>> particle = dt.PointParticle()
     >>> optics = dt.Fluorescence()
-    >>> augment = dt.Value(optics(particle))\ 
+    >>> image = dt.Value(optics(particle))\ 
     ...     >> dt.FlipUD(p=1.0) >> dt.FlipLR(p=1.0)
-    >>> image = np.array(augment.update()())
-    >>> plt.imshow(image)
+    image.plot()
+
+
+Reuse the output of a pipeline twice, augmented randomly by FlipLR.
+
+    >>> import numpy as np
+
+    >>> import deeptrack as dt
+    
+    >>> particle = dt.PointParticle()
+    >>> optics = dt.Fluorescence()
+    >>> pipeline = dt.Reuse(pipeline, uses=2) >> dt.FlipLR()    
+    >>> image = optics(particle) >> pipeline
+    >>> image.plot()
+
 
 """
 
@@ -203,11 +213,6 @@ class Reuse(Feature):
     `Reuse` stores the output of a feature and reuses it for subsequent calls,
     even if it is updated. This is can be used after a time-consuming feature
     to augment the output of the feature without recalculating it.
-    
-    For example:
-    >>> pipeline = dt.Reuse(pipeline, uses=2) >> dt.FlipLR()
-
-    Here, the output of pipeline is used twice, augmented randomly by FlipLR.
 
     Attributes
     ----------
