@@ -143,7 +143,6 @@ class Augmentation(Feature):
             image_list_of_lists = image_list
 
         new_list_of_lists = []
-
         for image_list in image_list_of_lists:
 
             if time_consistent:
@@ -182,7 +181,6 @@ class Augmentation(Feature):
             image_list_of_lists = image_list
 
         new_list_of_lists = []
-
         for image_list in image_list_of_lists:
 
             if time_consistent:
@@ -297,8 +295,8 @@ class FlipLR(Augmentation):
 
     def __init__(
         self,
-        p: float = 0.5,
-        augment: bool = None,
+        p: PropertyLike[float] = 0.5,
+        augment: PropertyLike[bool] = None,
         **kwargs
     ) -> None:
         super().__init__(
@@ -312,7 +310,7 @@ class FlipLR(Augmentation):
     def get(
         self,
         image: Image,
-        augment: bool,
+        augment: PropertyLike[bool],
         **kwargs
     ) -> Image:
         
@@ -323,7 +321,7 @@ class FlipLR(Augmentation):
     def update_properties(
         self,
         image: Image,
-        augment: bool,
+        augment: PropertyLike[bool],
         **kwargs
     ) -> None:
         
@@ -355,7 +353,7 @@ class FlipUD(Augmentation):
     def __init__(
         self,
         p: float = 0.5,
-        augment: bool = None,
+        augment: PropertyLike[bool] = None,
         **kwargs
     ) -> None:
         super().__init__(
@@ -369,7 +367,7 @@ class FlipUD(Augmentation):
     def get(
         self,
         image: Image,
-        augment: bool,
+        augment: PropertyLike[bool],
         **kwargs
     ) -> Image:
         
@@ -380,7 +378,7 @@ class FlipUD(Augmentation):
     def update_properties(
         self,
         image: Image,
-        augment: bool,
+        augment: PropertyLike[bool],
         **kwargs
     ) -> None:
         
@@ -411,8 +409,8 @@ class FlipDiagonal(Augmentation):
 
     def __init__(
         self,
-        p: float = 0.5,
-        augment: bool = None,
+        p: PropertyLike[float] = 0.5,
+        augment: PropertyLike[bool] = None,
         **kwargs
     ):
         super().__init__(
@@ -426,7 +424,7 @@ class FlipDiagonal(Augmentation):
     def get(
         self,
         image: Image,
-        augment: bool,
+        augment: PropertyLike[bool],
         **kwargs
     ) -> Image:
         
@@ -436,8 +434,8 @@ class FlipDiagonal(Augmentation):
 
     def update_properties(
         self,
-        image,
-        augment,
+        image: Image,
+        augment: PropertyLike[bool],
         **kwargs
     ) -> None:
         
@@ -528,8 +526,8 @@ class Affine(Augmentation):
         self,
         properties: Dict
     ) -> Dict:
+        
         properties = super()._process_properties(properties)
-
         # Make translate tuple.
         translate = properties["translate"]
         if isinstance(translate, (float, int)):
@@ -720,7 +718,7 @@ class ElasticTransformation(Augmentation):
         image: Image,
         sigma: PropertyLike[float],
         alpha: PropertyLike[float],
-        ignore_last_dim: bool,
+        ignore_last_dim: PropertyLike[bool],
         **kwargs
     ) -> Image:
 
@@ -1025,7 +1023,7 @@ class Pad(Augmentation):
 
     def _image_wrap_process_and_get(
         self,
-        images,
+        images: List[Image],
         **kwargs
     ) -> List[Image]:
         
