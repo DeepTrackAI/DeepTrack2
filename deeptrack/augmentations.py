@@ -2,8 +2,9 @@
 
 This module provides the `augmentations` DeepTrack2 classes
 that manipulates an image object with various transformations.
-These augmentations can be exploited extensively to diversify
-data when used in a training pipeline for a machine learning model.
+
+When used in a training pipeline, these augmentations synthetically
+increase the volume of training data for machine learning models.
 
 Key Features
 ------------
@@ -112,7 +113,7 @@ class Augmentation(Feature):
 
     Attributes
     ----------
-    time_consistend: boolean
+    time_consistent: boolean
        Whether to augment all images in a sequence equally.
        
     """
@@ -914,6 +915,7 @@ class CropToMultiplesOf(Crop):
         def image_to_crop(
             image: Image
         ) -> Image:
+            
             shape = image.shape
             multiple = self.multiple()
 
@@ -1026,6 +1028,7 @@ class Pad(Augmentation):
         images,
         **kwargs
     ) -> List[Image]:
+        
         results = [self.get(image, **kwargs) for image in images]
 
         # for idx, result in enumerate(results):
@@ -1058,6 +1061,7 @@ class PadToMultiplesOf(Pad):
         def amount_to_pad(
             image: Image
         ) -> List[int]:
+            
             shape = image.shape
             multiple = self.multiple()
 
