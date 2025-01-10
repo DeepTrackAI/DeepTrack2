@@ -81,8 +81,6 @@ Flip an image of a particle up-down then flips left-right:
 
 Reuse the output of a pipeline twice, augmented randomly by FlipLR.
 
-    >>> import numpy as np
-
     >>> import deeptrack as dt
     
     >>> particle = dt.PointParticle()
@@ -96,7 +94,7 @@ Reuse the output of a pipeline twice, augmented randomly by FlipLR.
 
 import warnings
 import random
-from typing import Callable, List, Union, Tuple
+from typing import Callable, List, Union, Tuple, Dict
 
 import numpy as np
 import scipy.ndimage as ndimage
@@ -123,7 +121,7 @@ class Augmentation(Feature):
         self,
         time_consistent: bool = False,
         **kwargs
-    ):
+    ) -> None:
         super().__init__(time_consistent=time_consistent, **kwargs)
 
     def _image_wrapped_process_and_get (
@@ -240,7 +238,6 @@ class Reuse(Feature):
         **kwargs
     ):
         super().__init__(uses=uses, storage=storage, **kwargs)
-
         self.feature = self.add_feature(feature)
         self.counter = 0
         self.cache = []
@@ -254,7 +251,6 @@ class Reuse(Feature):
     ) -> List[Image]:
 
         self.cache = self.cache[-storage:]
-
         output = None
 
         if len(self.cache) < storage or self.counter % (uses * storage) == 0:
@@ -303,7 +299,7 @@ class FlipLR(Augmentation):
         p: float = 0.5,
         augment: bool = None,
         **kwargs
-    ):
+    ) -> None:
         super().__init__(
             p=p,
             augment=(
@@ -312,12 +308,24 @@ class FlipLR(Augmentation):
             **kwargs,
         )
 
-    def get(self, image, augment, **kwargs):
+    def get(
+        self,
+        image: Image,
+        augment: bool,
+        **kwargs
+    ) -> Image:
+        
         if augment:
             image = image[:, ::-1]
         return image
 
-    def update_properties(self, image, augment, **kwargs):
+    def update_properties(
+        self,
+        image: Image,
+        augment: bool,
+        **kwargs
+    ) -> None:
+        
         if augment:
             for prop in image.properties:
                 if "position" in prop:
@@ -348,7 +356,7 @@ class FlipUD(Augmentation):
         p: float = 0.5,
         augment: bool = None,
         **kwargs
-    ):
+    ) -> None:
         super().__init__(
             p=p,
             augment=(
@@ -357,12 +365,24 @@ class FlipUD(Augmentation):
             **kwargs,
         )
 
-    def get(self, image, augment, **kwargs):
+    def get(
+        self,
+        image: Image,
+        augment: bool,
+        **kwargs
+    ) -> Image:
+        
         if augment:
             image = image[::-1]
         return image
 
-    def update_properties(self, image, augment, **kwargs):
+    def update_properties(
+        self,
+        image: Image,
+        augment: bool,
+        **kwargs
+    ) -> None:
+        
         if augment:
             for prop in image.properties:
                 if "position" in prop:
@@ -405,13 +425,21 @@ class FlipDiagonal(Augmentation):
     def get(
         self,
         image: Image,
-        augment: PropertyLike[float],
-        **kwargs):
+        augment: bool,
+        **kwargs
+    ) -> Image:
+        
         if augment:
             image = np.transpose(image, axes=(1, 0, *range(2, image.ndim)))
         return image
 
-    def update_properties(self, image, augment, **kwargs):
+    def update_properties(
+        self,
+        image,
+        augment,
+        **kwargs
+    ) -> None:
+        
         if augment:
             for prop in image.properties:
                 if "position" in prop:
@@ -472,14 +500,15 @@ class Affine(Augmentation):
         self,
         scale: PropertyLike[float] = 1,
         translate: PropertyLike[Union[float,  None]] = None,
-        translate_px: PropertyLike[float] = 0,
-        rotate: PropertyLike[float] = 0,
-        shear: PropertyLike[float] = 0,
+        translate_px: PropertyLike[float] = 0.0,
+        rotate: PropertyLike[float] = 0.0,
+        shear: PropertyLike[float] = 0.0,
         order: PropertyLike[int] = 1,
-        cval: PropertyLike[float] = 0,
+        cval: PropertyLike[float] = 0.0,
         mode: PropertyLike[str] = "reflect",
         **kwargs
-    ):
+    ) -> None:
+        
         if translate is None:
             translate = translate_px
         super().__init__(
@@ -494,8 +523,10 @@ class Affine(Augmentation):
             **kwargs,
         )
 
-    def _process_properties(self, properties):
-
+    def _process_properties('
+        self,
+        properties: Dict
+    ) -> Dict:
         properties = super()._process_properties(properties)
 
         # Make translate tuple.
@@ -672,7 +703,7 @@ class ElasticTransformation(Augmentation):
         cval: PropertyLike[float] = 0,
         mode: PropertyLike[str] = "constant",
         **kwargs
-    ):
+    ) -> None:
         super().__init__(
             alpha=alpha,
             sigma=sigma,
@@ -688,7 +719,7 @@ class ElasticTransformation(Augmentation):
         image: Image,
         sigma: PropertyLike[float],
         alpha: PropertyLike[float],
-        ignore_last_dim: PropertyLike[bool],
+        ignore_last_dim: bool,
         **kwargs
     ) -> Image:
 
@@ -775,7 +806,7 @@ class Crop(Augmentation):
         crop_mode: PropertyLike[str] = "retain",
         corner: PropertyLike[str] = "random",
         **kwargs
-    ):
+    ) -> None:
         super().__init__(
             *args,
             crop=crop,
@@ -788,7 +819,7 @@ class Crop(Augmentation):
         self,
         image: Image,
         corner: PropertyLike[str],
-        crop: PropertyLike[Union[int, int]]],
+        crop: Union[int, List[int], Tuple[int]],
         crop_mode: PropertyLike[str],
         **kwargs
     ) -> Image:
@@ -875,11 +906,14 @@ class CropToMultiplesOf(Crop):
         multiple: Union[int, Tuple[int], Tuple[None]] = 1,
         corner: PropertyLike[str] = "random",
         **kwargs
-    ):
+    ) -> None:
+        
         kwargs.pop("crop", False)
         kwargs.pop("crop_mode", False)
 
-        def image_to_crop(image):
+        def image_to_crop(
+            image: Image
+        ) -> Image:
             shape = image.shape
             multiple = self.multiple()
 
@@ -919,18 +953,19 @@ class CropTight(Feature):
     """
     def __init__(
         self,
-        eps: float = 1e-10,
+        eps: PropertyLike[float] = 1e-10,
         **kwargs
-    ):
+    ) -> None:
         super().__init__(eps=eps, **kwargs)
 
     def get(
         self,
         image: Image,
         eps: PropertyLike[float],
-        **kwargs):
+        **kwargs
+    ) -> Image:
+        
         image = np.asarray(image)
-
         image = image[..., np.any(image > eps, axis=(0, 1))]
         image = image[np.any(image > eps, axis=(1, 2)), ...]
         image = image[:, np.any(image > eps, axis=(0, 2)), :]
@@ -957,7 +992,7 @@ class Pad(Augmentation):
         mode: PropertyLike[str] = "constant",
         cval: PropertyLike[float] = 0,
         **kwargs
-    ):
+    ) -> None:
         super().__init__(px=px, mode=mode, cval=cval, **kwargs)
 
     def get(
@@ -965,7 +1000,7 @@ class Pad(Augmentation):
         image: Image,
         px: PropertyLike[int],
         **kwargs
-    ):
+    ) -> Image:
 
         padding = []
         if callable(px):
@@ -990,7 +1025,7 @@ class Pad(Augmentation):
         self,
         images,
         **kwargs
-        ) -> List[Image]:
+    ) -> List[Image]:
         results = [self.get(image, **kwargs) for image in images]
 
         # for idx, result in enumerate(results):
@@ -1018,8 +1053,11 @@ class PadToMultiplesOf(Pad):
         self,
         multiple: PropertyLike[Union[int, Tuple[int], Tuple[None]]] = 1,
         **kwargs
-    ):
-        def amount_to_pad(image):
+    ) -> None:
+        
+        def amount_to_pad(
+            image: Image
+        ) -> List[int]:
             shape = image.shape
             multiple = self.multiple()
 
