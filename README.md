@@ -146,15 +146,15 @@ Specific examples for graph-neural-network-based particle linking and trace char
 
 - AT225 **[Aberrations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT225_aberrations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT225_aberrations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT227 **[Image](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT227_noises.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT227_noises.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- AT227 **[Noises](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT227_noises.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT227_noises.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT229 **[Image](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT229_augmentations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT229_augmentations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- AT229 **[Augmentations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT229_augmentations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT229_augmentations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT241 **[Image](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT241_sequences.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT241_sequences.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- AT241 **[Sequences](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT241_sequences.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT241_sequences.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT281 **[Image](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT281_math.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT281_math.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- AT281 **[Math](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT281_math.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT281_math.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT283 **[Image](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT283_utils.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT283_utils.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- AT283 **[Utils](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT283_utils.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT283_utils.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
 
 # Developer Tutorials
