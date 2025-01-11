@@ -2,7 +2,7 @@
   <img width="350" src=https://github.com/softmatterlab/DeepTrack2/blob/develop/assets/logo.png?raw=true>
 </p>
 
-<h3 align="center">A comprehensive deep learning framework for digital microscopy.</h3>
+<h3 align="center">A comprehensive framework for digital microscopy.</h3>
 <p align="center">
   <a href="/LICENSE" alt="licence"><img src="https://img.shields.io/github/license/softmatterlab/DeepTrack-2.0"></a>
   <a href="https://badge.fury.io/py/deeptrack"><img src="https://badge.fury.io/py/deeptrack.svg" alt="PyPI version"></a>
@@ -20,77 +20,23 @@
   <a href="/LICENSE">License</a> 
 </p>
 
-
 DeepTrack2 is a modular Python library for generating, manipulating, and analyzing image data pipelines for machine learning and experimental imaging.
 
 <b>TensorFlow Compatibility Notice:</b> 
 DeepTrack2 version 2.0 and subsequent do not support TensorFlow. If you need TensorFlow support, please install the legacy version 1.7.
 
-# Installation
+# Quick Start Guide
 
-DeepTrack 2.1 requires at least python 3.6.
+The following quick start guide is intended for complete beginners to understand how to use DeepTrack2, from installation to training your first model. Let's get started!
 
-To install DeepTrack 2.1, open a terminal or command prompt and run:
+## Installation
 
-    pip install deeptrack
-    
-If you have a very recent version of python, you may need to install numpy _before_ DeepTrack. This is a known issue with scikit-image.
+DeepTrack2 2.0 requires at least python 3.9.
 
-### Updating to 2.1 from 2.0
-
-If you are already using DeepTrack 2.0 (pypi version 0.x.x), updating to DeepTrack 2.1 (pypi version 1.x.x) is painless. If you have followed deprecation warnings, no change to your code is needed. There are two breaking changes:
-
-- The deprecated operator `+` to chain features has been removed. It is now only possible using the `>>` operator.
-- The deprecated operator `**` to duplicate a feature has been removed. It is now only possible using the `^` operator.
-
-If you notice any other changes in behavior, please report it to us in the issues tab.
-
-# Examples of applications using DeepTrack 
-
-DeepTrack is a general purpose deep learning framework for microscopy, meaning you can use it for any task you like. Here, we show some common applications!
-
-<br/>
-<h3 align="left"> Single particle tracking </h3>
-<p align="left">
-  <img width="300" src=/assets/SPT-ideal.gif?raw=true>
-  <img width="300" src=/assets/SPT-noisy.gif?raw=true>
-  <br/>
-  <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/paper-examples/2-single_particle_tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a CNN-based single particle tracker using simulated data </a>
-  <br/>
-  <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="DOI lodestar">
-    <img src="https://img.shields.io/badge/DOI-10.1038%2Fs41467--022--35004--y-blue">
-  </a> 
-  <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/LodeSTAR/02.%20tracking_particles_of_various_shapes.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Unsupervised training of a single particle tracker using LodeSTAR </a> 
-  
-</p>
-<br/>
-
-<h3 align="left"> Multi-particle tracking </h3>
-
-<p align="left">
-  <img width="600" src=/assets/MPT-packed.gif?raw=true>
-  <br/>
-  <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="DOI lodestar">
-    <img src="https://img.shields.io/badge/DOI-10.1038%2Fs41467--022--35004--y-blue">
-  </a> <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/LodeSTAR/03.track_BF-C2DL-HSC.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training LodeSTAR to detect multiple cells from a single image </a>
-  <br/>
-  <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/paper-examples/4-multi-molecule-tracking.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Training a UNet-based multi-particle tracker using simulated data </a> 
-</p>
-<br/>
-
-<h3 align="left"> Particle tracing </h3>
-
-<p align="left">
-  <img width="600" src=/assets/Tracing.gif?raw=true>
-  <br/>
-  <a href="https://doi.org/10.48550/arXiv.2202.06355" alt="DOI magik">
-    <img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2202.0635-blue">
-  </a>  <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/develop/examples/MAGIK/cell_migration_analysis.ipynb"> <img     src="https://colab.research.google.com/assets/colab-badge.svg"> Training MAGIK to trace migrating cells </a>
-</p>
-
-# Basics to learn DeepTrack 2.1
-
-Everybody learns in different ways! Depending on your preferences, and what you want to do with DeepTrack, you may want to check out one or more of these resources.
+To install DeepTrack2, open a terminal or command prompt and run:
+```bash
+pip install deeptrack
+```
 
 ## Getting-started guides
 
