@@ -1,6 +1,8 @@
 import re
 
 def main():
+    """Create README-pypi.md from README.md."""
+
     with open("README.md", "r", encoding="utf-8") as f:
         text = f.read()
 
@@ -10,7 +12,7 @@ def main():
 
     with open("README-pypi.md", "w", encoding="utf-8") as f:
         f.write(cleaned_text)
-    
+
     print("README-pypi.md has been generated successfully!")
 
 if __name__ == "__main__":
