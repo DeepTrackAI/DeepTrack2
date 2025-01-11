@@ -4,7 +4,7 @@
 </p>
 <!-- GH_ONLY_END -->
 
-<h3 align="center">A comprehensive deep learning framework for digital microscopy.</h3>
+<h3 align="center">DeepTrack2 - A comprehensive deep learning framework for digital microscopy.</h3>
 <p align="center">
   <a href="/LICENSE" alt="licence">
     <img src="https://img.shields.io/github/license/DeepTrackAI/DeepTrack2">
