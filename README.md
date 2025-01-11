@@ -121,13 +121,6 @@ We also have examples that are specific for certain models. This includes
 - [*LodeSTAR*](examples/LodeSTAR) for label-free particle tracking.
 - [*MAGIK*](examples/MAGIK) for graph-based particle linking and trace characterization.
 
-## Documentation
-The detailed documentation of DeepTrack 2.1 is available at the following link: [https://deeptrackai.github.io/DeepTrack2](https://deeptrackai.github.io/DeepTrack2)
-
-## Video Tutorials
-
-Videos are currently being updated to match with the current version of DeepTrack.
-
 ## Cite us!
 If you use DeepTrack 2.1 in your project, please cite us here:
 
@@ -166,6 +159,32 @@ Optica 6.4 (2019): 506-513.
 Saga Helgadottir, Aykut Argun, and Giovanni Volpe.
 "DeepTrack." (2019)
 ```
+
+## Getting Started
+
+Here you find a series of notebooks that give you an overview of the core features of DeepTrack2 and how to use them:
+
+- GS101 **[Introduction to DeepTrack2](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS101_intro.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS101_intro.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Creating images combining DeepTrack2 features, extracting properties, and using them to train a neural network.
+
+- GS111 **[Loading Image Files Using Sources](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS111_datafiles.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS111_core_objects.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Using sources to load image files and to train a neural network.
+
+## Examples
+
+## Advanced Topics
+
+
+## Developer Tutorials
+
+Here you find a series of notebooks tailored for DeepTrack2's developers:
+
+
+## Documentation
+
+The detailed documentation of DeepTrack2 is available at the following link: [https://deeptrackai.github.io/DeepTrack2](https://deeptrackai.github.io/DeepTrack2)
 
 ## Funding
 
