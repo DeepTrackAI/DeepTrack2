@@ -1,6 +1,3 @@
-<p align="center"><b>TensorFlow Compatibility Notice</b></p>
-<p align="center">DeepTrack2 version 2.0++ does not support TensorFlow. If you need TensorFlow support, please install the legacy version 1.7.</p>
-
 <p align="center">
   <img width="350" src=https://github.com/softmatterlab/DeepTrack2/blob/develop/assets/logo.png?raw=true>
 </p>
@@ -24,7 +21,10 @@
 </p>
 
 
-We provide tools to create physical simulations of optical systems, to generate and train neural network models, and to analyze experimental data.
+DeepTrack2 is a modular Python library for generating, manipulating, and analyzing image data pipelines for machine learning and experimental imaging.
+
+<b>TensorFlow Compatibility Notice:</b> 
+DeepTrack2 version 2.0 and subsequent do not support TensorFlow. If you need TensorFlow support, please install the legacy version 1.7.
 
 # Installation
 
