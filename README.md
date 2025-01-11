@@ -114,6 +114,24 @@ These are examples of how DeepTrack2 can be used on real datasets:
 
   Detecting quantum dots in a low SNR image.
 
+  <p align="left">
+    <img width="600" src=/assets/MPT-packed.gif?raw=true>
+    <br/>
+    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex103_particle_sizing.ipynb">
+      <img src="https://colab.research.google.com/assets/colab-badge.svg">
+    </a>
+    <a href="https://doi.org/10.1063/5.0034891" alt="LodeSTAR article">
+      <img src="https://img.shields.io/badge/article-10.1063/5.0034891-blue">
+    </a> 
+    <br/>
+    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex301_LodeSTAR_autotracker_template.ipynb">
+      <img src="https://colab.research.google.com/assets/colab-badge.svg">
+    </a>
+    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="DOI lodestar">
+      <img src="https://img.shields.io/badge/DOI-10.1038%2Fs41467--022--35004--y-blue">
+    </a>
+  </p>
+
 - Ex104 **[Particle Feature Extraction](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex104_multi_molecule_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex104_multi_molecule_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Extracting the radius and refractive index of particles.
@@ -155,6 +173,17 @@ Specific examples for label-free particle tracking using LodeSTAR:
 Specific examples for graph-neural-network-based particle linking and trace characterization using MAGIK:
 
 - Ex401 **[MAGIK Tracing Migrating Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex401_MAGIK_cell_migration_analysis.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex401_MAGIK_cell_migration_analysis.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  <p align="left">
+    <img width="600" src=/assets/Tracing.gif?raw=true>
+    <br/>
+    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex401_MAGIK_cell_migration_analysis.ipynb">
+      <img src="https://colab.research.google.com/assets/colab-badge.svg">
+    </a>
+    <a href="https://doi.org/10.1038/s42256-022-00595-0" alt="DOI magik">
+      <img src="https://img.shields.io/badge/article-10.1038/s42256--022--00595--0-blue">
+    </a>  
+  </p>
 
 - Ex402 **[MAGIK to Track HeLa Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex402_MAGIK_tracking_hela_cells.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex402_MAGIK_tracking_hela_cells.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
@@ -223,7 +252,7 @@ Benjamin Midtvedt, Jesús Pineda, Fredrik Skärberg, Erik Olsén, Harshith Bachi
 Nature Communications, volume 13, article number 7492 (2022).
 ```
 
-<https://arxiv.org/abs/2202.06355>
+<https://www.nature.com/articles/s42256-022-00595-0>
 ```
 "Geometric deep learning reveals the spatiotemporal fingerprint ofmicroscopic motion."
 Jesús Pineda, Benjamin Midtvedt, Harshith Bachimanchi, Sergio Noé, Daniel  Midtvedt, Giovanni Volpe &  Carlo  Manzo
