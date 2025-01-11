@@ -16,6 +16,22 @@ import numpy as np
 
 
 class TestOptics(unittest.TestCase):
+    def test_Microscope(self):
+        microscope_type = optics.Fluorescence()
+        scatterer = PointParticle()
+        microscope = optics.Microscope(
+            sample=scatterer, objective=microscope_type,
+        )
+        output_image = microscope.get(None)
+        self.assertIsInstance(output_image, np.ndarray)
+        self.assertEqual(output_image.shape, (128, 128, 1))
+    
+    def test_Optics(self):
+        microscope = optics.Optics()
+        scatterer = PointParticle()
+        image = microscope(scatterer)
+        self.assertIsInstance(image, optics.Microscope)
+
     def test_Fluorescence(self):
         microscope = optics.Fluorescence(
             NA=0.7,
@@ -36,6 +52,7 @@ class TestOptics(unittest.TestCase):
         imaged_scatterer = microscope(scatterer)
         output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, np.ndarray)
+        self.assertEqual(microscope.NA(), 0.7)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_Brightfield(self):
@@ -57,6 +74,74 @@ class TestOptics(unittest.TestCase):
         )
         imaged_scatterer = microscope(scatterer)
         output_image = imaged_scatterer.resolve()
+        self.assertIsInstance(output_image, np.ndarray)
+        self.assertEqual(output_image.shape, (64, 64, 1))
+
+    def test_Holography(self):
+        microscope = optics.Holography(
+            NA=0.7,
+            wavelength=660e-9,
+            resolution=1e-6,
+            magnification=10,
+            refractive_index_medium=1.33,
+            upscale=2,
+            output_region=(0, 0, 64, 64),
+            padding=(10, 10, 10, 10),
+            aberration=None,
+        )
+        scatterer = PointParticle(
+            refractive_index=1.45 + 0.1j,
+            position_unit="pixel",
+            position=(32, 32),
+        )
+        imaged_scatterer = microscope(scatterer)
+        output_image = imaged_scatterer.resolve()
+        self.assertIsInstance(output_image, np.ndarray)
+        self.assertEqual(output_image.shape, (64, 64, 1))
+
+    def test_ISCAT(self):
+        microscope = optics.ISCAT(
+            NA=0.7,
+            wavelength=660e-9,
+            resolution=1e-6,
+            magnification=10,
+            refractive_index_medium=1.33,
+            upscale=2,
+            output_region=(0, 0, 64, 64),
+            padding=(10, 10, 10, 10),
+            aberration=None,
+        )
+        scatterer = PointParticle(
+            refractive_index=1.45 + 0.1j,
+            position_unit="pixel",
+            position=(32, 32),
+        )
+        imaged_scatterer = microscope(scatterer)
+        output_image = imaged_scatterer.resolve()
+        self.assertEqual(microscope.illumination_angle(), 3.141592653589793)
+        self.assertIsInstance(output_image, np.ndarray)
+        self.assertEqual(output_image.shape, (64, 64, 1))
+
+    def test_Darkfield(self):
+        microscope = optics.Darkfield(
+            NA=0.7,
+            wavelength=660e-9,
+            resolution=1e-6,
+            magnification=10,
+            refractive_index_medium=1.33,
+            upscale=2,
+            output_region=(0, 0, 64, 64),
+            padding=(10, 10, 10, 10),
+            aberration=None,
+        )
+        scatterer = PointParticle(
+            refractive_index=1.45 + 0.1j,
+            position_unit="pixel",
+            position=(32, 32),
+        )
+        imaged_scatterer = microscope(scatterer)
+        output_image = imaged_scatterer.resolve()
+        self.assertEqual(microscope.illumination_angle(), 1.5707963267948966)
         self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
