@@ -1,17 +1,23 @@
 name: Build PyPI README
 
+# Required so the Actions token can push code back to the repo
+permissions:
+  contents: write
+
 on:
-    push:
-        branches: ["develop"]
-    pull_request:
-        branches: ["develop"]
+  push:
+    branches: ["develop"]
+  pull_request:
+    branches: ["develop"]
 
 jobs:
   build-readme:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true  # Ensures we can push changes
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -21,10 +27,26 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          # (Optional) if you need any specific dependencies
-          # pip install -r requirements.txt
+          # (Optional) pip install -r requirements.txt
 
       - name: Generate PyPI README
         run: |
           python assets/strip_gh_only_blocks.py
-          ls -lah README-pypi.md  # Just to confirm the file is generated
+          ls -lah README-pypi.md  # Confirm file is generated
+
+      - name: Commit and push changes
+        run: |
+          # Configure git
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          # Stage the new/updated README-pypi.md
+          git add README-pypi.md
+
+          # Commit only if there are changes
+          if ! git diff --cached --exit-code; then
+            git commit -m "Auto-update README-pypi.md"
+            git push origin HEAD:develop
+          else
+            echo "No changes to commit."
+          fi
