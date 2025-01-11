@@ -1124,12 +1124,12 @@ class PadToMultiplesOf(Pad):
         def amount_to_pad(
             image: Image
         ) -> List[int]:
-        """Method to calculate number of pixels.
+            """Method to calculate number of pixels.
         
-        Calculates the number of pixels needed to pad an image 
-        for its height/width to be a multiple of a value.
+            Calculates the number of pixels needed to pad an image 
+            for its height/width to be a multiple of a value.
         
-        """
+            """
             shape = image.shape
             multiple = self.multiple()
 
