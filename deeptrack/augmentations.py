@@ -357,9 +357,9 @@ class FlipLR(Augmentation):
         augment: PropertyLike[bool],
         **kwargs
     ) -> None:
-    """Abstract method to update the properties of the image.
+        """Abstract method to update the properties of the image.
     
-    """            
+        """            
         if augment:
             for prop in image.properties:
                 if "position" in prop:
@@ -480,9 +480,9 @@ class FlipDiagonal(Augmentation):
         augment: PropertyLike[bool],
         **kwargs
     ) -> None:
-    """Abstract method to update the properties of the image.
+        """Abstract method to update the properties of the image.
     
-    """            
+        """            
         if augment:
             for prop in image.properties:
                 if "position" in prop:
