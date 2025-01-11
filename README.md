@@ -132,8 +132,8 @@ These are examples of how DeepTrack2 can be used on real datasets:
     <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex301_LodeSTAR_autotracker_template.ipynb">
       <img src="https://colab.research.google.com/assets/colab-badge.svg">
     </a>
-    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="DOI lodestar">
-      <img src="https://img.shields.io/badge/DOI-10.1038%2Fs41467--022--35004--y-blue">
+    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="Article LodeSTAR">
+      <img src="https://img.shields.io/badge/article-10.1038%2Fs41467--022--35004--y-blue">
     </a>
   </p>
   <!-- GH_ONLY_END -->
@@ -187,7 +187,7 @@ Specific examples for graph-neural-network-based particle linking and trace char
     <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex401_MAGIK_cell_migration_analysis.ipynb">
       <img src="https://colab.research.google.com/assets/colab-badge.svg">
     </a>
-    <a href="https://doi.org/10.1038/s42256-022-00595-0" alt="DOI magik">
+    <a href="https://doi.org/10.1038/s42256-022-00595-0" alt="Article MAGIK">
       <img src="https://img.shields.io/badge/article-10.1038/s42256--022--00595--0-blue">
     </a>  
   </p>
