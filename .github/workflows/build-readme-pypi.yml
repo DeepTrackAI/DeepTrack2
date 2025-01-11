@@ -1,0 +1,28 @@
+name: Build PyPI README
+
+on:
+  pull_request:  # Run this on pull requests
+    branches: ["develop"]
+
+jobs:
+  build-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          # (Optional) if you need any specific dependencies
+          # pip install -r requirements.txt
+
+      - name: Generate PyPI README
+        run: |
+          python assets/strip_gh_only_blocks.py
+          ls -lah README-pypi.md  # Just to confirm the file is generated
