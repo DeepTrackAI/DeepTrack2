@@ -565,7 +565,7 @@ class Affine(Augmentation):
             **kwargs,
         )
 
-    def _process_properties('
+    def _process_properties(
         self,
         properties: Dict
     ) -> Dict:
