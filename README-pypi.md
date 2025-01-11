@@ -1,8 +1,4 @@
-<!-- GH_ONLY_START -->
-<p align="center">
-  <img width="350" src=https://github.com/DeepTrackAI/DeepTrack2/blob/develop/assets/logo.png?raw=true>
-</p>
-<!-- GH_ONLY_END -->
+
 
 <h3 align="center">A comprehensive deep learning framework for digital microscopy.</h3>
 <p align="center">
@@ -93,50 +89,13 @@ These are examples of how DeepTrack2 can be used on real datasets:
 
   Tracks experimental videos of a single particle. (Requires opencv-python compiled with ffmpeg)
 
-  <!-- GH_ONLY_START -->
-  <p align="left">
-    <img width="300" src=/assets/SPT-ideal.gif?raw=true>
-    <img width="300" src=/assets/SPT-noisy.gif?raw=true>
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex102_single_particle_tracking.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1364/OPTICA.6.000506" alt="DeepTrack article">
-      <img src="https://img.shields.io/badge/article-10.1364/OPTICA.6.000506-blue">
-    </a> 
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex302_LodeSTAR_tracking_particles_of_various_shapes.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="LodeSTAR article">
-      <img src="https://img.shields.io/badge/article-10.1038%2Fs41467--022--35004--y-blue">
-    </a> 
-  </p>
-  <!-- GH_ONLY_END -->
+  
 
 - Ex103 **[Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex103_particle_sizing.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex103_particle_sizing.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Detecting quantum dots in a low SNR image.
 
-  <!-- GH_ONLY_START -->
-  <p align="left">
-    <img width="600" src=/assets/MPT-packed.gif?raw=true>
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex103_particle_sizing.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1063/5.0034891" alt="LodeSTAR article">
-      <img src="https://img.shields.io/badge/article-10.1063/5.0034891-blue">
-    </a> 
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex301_LodeSTAR_autotracker_template.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="DOI lodestar">
-      <img src="https://img.shields.io/badge/DOI-10.1038%2Fs41467--022--35004--y-blue">
-    </a>
-  </p>
-  <!-- GH_ONLY_END -->
+  
 
 - Ex104 **[Particle Feature Extraction](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex104_multi_molecule_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex104_multi_molecule_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
@@ -180,18 +139,7 @@ Specific examples for graph-neural-network-based particle linking and trace char
 
 - Ex401 **[MAGIK Tracing Migrating Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex401_MAGIK_cell_migration_analysis.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex401_MAGIK_cell_migration_analysis.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-  <!-- GH_ONLY_START -->
-  <p align="left">
-    <img width="600" src=/assets/Tracing.gif?raw=true>
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex401_MAGIK_cell_migration_analysis.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1038/s42256-022-00595-0" alt="DOI magik">
-      <img src="https://img.shields.io/badge/article-10.1038/s42256--022--00595--0-blue">
-    </a>  
-  </p>
-  <!-- GH_ONLY_END -->
+  
 
 - Ex402 **[MAGIK to Track HeLa Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex402_MAGIK_tracking_hela_cells.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex402_MAGIK_tracking_hela_cells.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
