@@ -111,7 +111,13 @@ from .types import ArrayLike, PropertyLike
 class Augmentation(Feature):
     """Base abstract augmentation class.
 
-    Attributes
+    This class provides the template for the other augmentation
+    classes to inherit from, and is primarily used to handle the
+    input cases of either `Image` objects or `List[Image]` objects
+    via the `_image_wrapped_process_and_get` and `_no_wrap_process_and_get`
+    methods respectively.
+
+    Parameters
     ----------
     time_consistent: boolean
        Whether to augment all images in a sequence equally.
@@ -131,7 +137,15 @@ class Augmentation(Feature):
         time_consistent: PropertyLike[bool],
         **kwargs
     ) -> List[List]:
-
+        """Augments a list of images and returns a wrapped output.
+        
+        This function handles input to ensure compatibility with nested
+        image lists and wraps the output into a new `Image` object.
+        
+        For non-wrapping, see the `_no_wrap_process_and_get` method.
+        
+        """
+        
         if not isinstance(image_list, list):
             wrap_depth = 2
             image_list_of_lists = [[image_list]]
@@ -169,7 +183,14 @@ class Augmentation(Feature):
         time_consistent: PropertyLike[bool],
         **kwargs
     ) -> List[List]:
-
+        """Augments a list of images and returns the raw output.
+        
+        This function handles input to ensure compatibility with nested
+        image lists and does not wrap the output into a new `Image` object.
+        
+        For wrapping, see the `_image_wrapped_process_and_get` method.
+        
+        """
         if not isinstance(image_list, list):
             wrap_depth = 2
             image_list_of_lists = [[image_list]]
@@ -201,6 +222,11 @@ class Augmentation(Feature):
 
 
     def update_properties(self, *args, **kwargs):
+    """Abstract method to update the properties of the image.
+
+    Currently not in use.
+    
+    """    
         pass
 
 
@@ -211,7 +237,7 @@ class Reuse(Feature):
     even if it is updated. This is can be used after a time-consuming feature
     to augment the output of the feature without recalculating it.
 
-    Attributes
+    Parameters
     ----------
     feature: Feature
        The feature to reuse.
@@ -248,6 +274,9 @@ class Reuse(Feature):
         storage: PropertyLike[int],
         **kwargs
     ) -> List[Image]:
+        """Abstract method which performs the `Reuse` augmentation.
+
+        """
 
         self.cache = self.cache[-storage:]
         output = None
@@ -282,11 +311,11 @@ class FlipLR(Augmentation):
     Updates all properties called "position" to flip the second index in the 
     image.
 
-    Attributes
-    ---------
+    Parameters
+    ----------
     p: float
-       Probability of flipping the image,
-       leaving as default is sufficient most of the time.
+       Probability of flipping the image, 
+       leaving as default (0.5 ) is sufficient most of the time.
 
     augment: bool
        Whether to perform the augmentation.
@@ -313,6 +342,9 @@ class FlipLR(Augmentation):
         augment: PropertyLike[bool],
         **kwargs
     ) -> Image:
+        """Abstract method which performs the `FlipLR` augmentation.
+
+        """
         
         if augment:
             image = image[:, ::-1]
@@ -324,7 +356,9 @@ class FlipLR(Augmentation):
         augment: PropertyLike[bool],
         **kwargs
     ) -> None:
-        
+    """Abstract method to update the properties of the image.
+    
+    """            
         if augment:
             for prop in image.properties:
                 if "position" in prop:
@@ -339,11 +373,11 @@ class FlipUD(Augmentation):
     Updates all properties called "position" to flip the first index
     in the image.
 
-    Attributes
-    ---------
+    Parameters
+    ----------
     p: float
        Probability of flipping the image,
-       leaving as default is sufficient most of the time.
+       leaving as default (0.5) is sufficient most of the time.
 
     augment: bool
        Whether to perform the augmentation.
@@ -370,6 +404,9 @@ class FlipUD(Augmentation):
         augment: PropertyLike[bool],
         **kwargs
     ) -> Image:
+        """Abstract method which performs the `FlipUD` augmentation.
+
+        """
         
         if augment:
             image = image[::-1]
@@ -381,7 +418,9 @@ class FlipUD(Augmentation):
         augment: PropertyLike[bool],
         **kwargs
     ) -> None:
-        
+    """Abstract method to update the properties of the image.
+    
+    """    
         if augment:
             for prop in image.properties:
                 if "position" in prop:
@@ -396,11 +435,11 @@ class FlipDiagonal(Augmentation):
     Updates all properties called "position" by swapping
     the first and second index.
 
-    Attributes
-    ---------
+    Parameters
+    ----------
     p: float
        Probability of flipping the image,
-       leaving as default is sufficient most of the time.
+       leaving as default (0.5) is sufficient most of the time.
 
     augment: bool
        Whether to perform the augmentation.
@@ -427,7 +466,9 @@ class FlipDiagonal(Augmentation):
         augment: PropertyLike[bool],
         **kwargs
     ) -> Image:
-        
+        """Abstract method which performs the `FlipDiagonal` augmentation.
+
+        """        
         if augment:
             image = np.transpose(image, axes=(1, 0, *range(2, image.ndim)))
         return image
@@ -438,7 +479,9 @@ class FlipDiagonal(Augmentation):
         augment: PropertyLike[bool],
         **kwargs
     ) -> None:
-        
+    """Abstract method to update the properties of the image.
+    
+    """            
         if augment:
             for prop in image.properties:
                 if "position" in prop:
@@ -463,7 +506,7 @@ class Affine(Augmentation):
     of the input image to generate output pixel values. The parameter `order`
     deals with the method of interpolation used for this.
 
-    Attributes
+    Parameters
     ----------
     scale: float or tuple of float or list of float or dict
         Scaling factor to use, where ``1.0`` denotes "no change" and
@@ -555,7 +598,15 @@ class Affine(Augmentation):
         shear: PropertyLike[float],
         **kwargs
     ) -> Image:
+        """Abstract method which performs the `Affine` augmentation.
+        
+        Affine transformations include:
+        - `Translation`
+        - `Scaling`
+        - `Rotation`
+        - `Shearing`
 
+        """    
         assert (
             image.ndim == 2 or image.ndim == 3
         ), "Affine only supports 2-dimensional or 3-dimension inputs, got {0}"\
@@ -656,7 +707,7 @@ class ElasticTransformation(Augmentation):
         Recognition, 2003.
 
 
-    Attributes
+    Parameters
     ----------
     alpha: float
         Strength of the distortion field.
@@ -721,7 +772,9 @@ class ElasticTransformation(Augmentation):
         ignore_last_dim: PropertyLike[bool],
         **kwargs
     ) -> Image:
+        """Abstract method which performs the `ElasticTransformation` augmentation.
 
+        """    
         shape = image.shape
 
         if ignore_last_dim:
@@ -775,7 +828,7 @@ class ElasticTransformation(Augmentation):
 class Crop(Augmentation):
     """Crops a regions of an image.
 
-    Attributes
+    Parameters
     ----------
     feature: Feature or list of Features
         Feature(s) to augment.
@@ -822,7 +875,9 @@ class Crop(Augmentation):
         crop_mode: PropertyLike[str],
         **kwargs
     ) -> Image:
+        """Abstract method which performs the `Crop` augmentation.
 
+        """    
         # Get crop argument.
         if callable(crop):
             crop = crop(image)
@@ -891,7 +946,7 @@ class Crop(Augmentation):
 class CropToMultiplesOf(Crop):
     """Crop images down until their height/width is a multiple of a value.
 
-    Attributes
+    Parameters
     ----------
     multiple: int or tuple of (int or None)
         Images will be cropped down until their width is a multiple of
@@ -944,7 +999,7 @@ class CropTight(Feature):
     where all values are below eps.
     Currently only works for 3D arrays.
 
-    Attributes
+    Parameters
     ----------
     eps: float
         The threshold for considering a pixel to be empty,
@@ -964,7 +1019,12 @@ class CropTight(Feature):
         eps: PropertyLike[float],
         **kwargs
     ) -> Image:
+        """Abstract method which performs the `CropTight` augmentation.
         
+        `CropTight` removes indices from the start and end of the array,
+        where all values are below eps.
+
+        """          
         image = np.asarray(image)
         image = image[..., np.any(image > eps, axis=(0, 1))]
         image = image[np.any(image > eps, axis=(1, 2)), ...]
@@ -979,7 +1039,7 @@ class Pad(Augmentation):
     Arguments match this of numpy.pad, save for pad_width, which is called px,
     and is defined as (left, right, up, down, before_axis_3, after_axis_3, ...)
 
-    Attributes
+    Parameters
     ----------
     px: int or list of int
         Ammount to pad in each direction.
@@ -1001,7 +1061,9 @@ class Pad(Augmentation):
         px: PropertyLike[int],
         **kwargs
     ) -> Image:
+        """Abstract method which performs the `Pad` augmentation.
 
+        """    
         padding = []
         if callable(px):
             px = px(image)
@@ -1026,7 +1088,9 @@ class Pad(Augmentation):
         images: List[Image],
         **kwargs
     ) -> List[Image]:
+        """Simple method which wraps an `Image` in a `List`.
         
+        """
         results = [self.get(image, **kwargs) for image in images]
 
         # for idx, result in enumerate(results):
@@ -1040,7 +1104,7 @@ class Pad(Augmentation):
 class PadToMultiplesOf(Pad):
     """Pad images until their height/width is a multiple of a value.
 
-    Attributes
+    Parameters
     ----------
 
     multiple: int or tuple of (int or None)
@@ -1059,7 +1123,12 @@ class PadToMultiplesOf(Pad):
         def amount_to_pad(
             image: Image
         ) -> List[int]:
-            
+        """Method to calculate number of pixels.
+        
+        Calculates the number of pixels needed to pad an image 
+        for its height/width to be a multiple of a value.
+        
+        """
             shape = image.shape
             multiple = self.multiple()
 
