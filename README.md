@@ -168,19 +168,18 @@ Here you find a series of notebooks that give you an overview of the core featur
 
   Creating images combining DeepTrack2 features, extracting properties, and using them to train a neural network.
 
-- GS111 **[Loading Image Files Using Sources](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS111_datafiles.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS111_core_objects.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- GS111 **[Loading Image Files Using Sources](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS111_datafiles.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS111_datafiles.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Using sources to load image files and to train a neural network.
 
 ## Examples
-
-## Advanced Topics
 
 
 ## Developer Tutorials
 
 Here you find a series of notebooks tailored for DeepTrack2's developers:
 
+- DT111 **[Style Guide](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/developers/DT111_style.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/developers/DT111_style.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
 ## Documentation
 
