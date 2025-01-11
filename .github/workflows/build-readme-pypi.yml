@@ -1,8 +1,10 @@
 name: Build PyPI README
 
 on:
-  pull_request:  # Run this on pull requests
-    branches: ["develop"]
+    push:
+        branches: ["develop"]
+    pull_request:
+        branches: ["develop"]
 
 jobs:
   build-readme:
