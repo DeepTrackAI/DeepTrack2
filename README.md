@@ -37,6 +37,15 @@ To install DeepTrack2, open a terminal or command prompt and run:
 ```bash
 pip install deeptrack
 ```
+or
+```bash
+python -m pip install deeptrack
+```
+This will automatically install the required dependencies.
+
+
+
+
 
 ## Getting-started guides
 
@@ -46,9 +55,6 @@ We have a set of four notebooks which aims to teach you all you need to know to 
 2. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorials/01.%20tracking_particle_cnn_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> Demonstrates how to track a point particle with a convolutional neural network (CNN).
 3. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorial/02.%20tracking_multiple_particles_unet_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_multiple_particles_unet_tutorial </a> Demonstrates how to track multiple particles using a U-net.
 4. <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/examples/tutorials/03.%20distinguishing_particles_in_brightfield_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> distinguishing_particles_in_brightfield_tutorial </a> Demonstrates how to use a U-net to track and distinguish particles of different sizes in brightfield microscopy. 
-
-
-
 
 ## DeepTrack 2.1 in action
 
@@ -67,44 +73,7 @@ We also have examples that are specific for certain models. This includes
 - [*LodeSTAR*](examples/LodeSTAR) for label-free particle tracking.
 - [*MAGIK*](examples/MAGIK) for graph-based particle linking and trace characterization.
 
-## Cite us!
-If you use DeepTrack 2.1 in your project, please cite us here:
 
-```
-Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt, Giovanni Volpe.
-"Quantitative Digital Microscopy with Deep Learning."
-Applied Physics Reviews 8 (2021), 011310.
-https://doi.org/10.1063/5.0034891
-```
-
-See also:
-
-<https://www.nature.com/articles/s41467-022-35004-y>:
-```
-Midtvedt, B., Pineda, J., Skärberg, F. et al. 
-"Single-shot self-supervised object detection in microscopy." 
-Nat Commun 13, 7492 (2022).
-```
-
-<https://arxiv.org/abs/2202.06355>:
-```
-Jesús Pineda, Benjamin Midtvedt, Harshith Bachimanchi, Sergio Noé, Daniel  Midtvedt, Giovanni Volpe,1 and  Carlo  Manzo
-"Geometric deep learning reveals the spatiotemporal fingerprint ofmicroscopic motion."
-arXiv 2202.06355 (2022).
-```
-
-<https://doi.org/10.1364/OPTICA.6.000506>:
-```
-Saga Helgadottir, Aykut Argun, and Giovanni Volpe.
-"Digital video microscopy enhanced by deep learning."
-Optica 6.4 (2019): 506-513.
-```
-
-<https://github.com/softmatterlab/DeepTrack.git>:
-```
-Saga Helgadottir, Aykut Argun, and Giovanni Volpe.
-"DeepTrack." (2019)
-```
 
 ## Getting Started
 
@@ -130,6 +99,48 @@ Here you find a series of notebooks tailored for DeepTrack2's developers:
 ## Documentation
 
 The detailed documentation of DeepTrack2 is available at the following link: [https://deeptrackai.github.io/DeepTrack2](https://deeptrackai.github.io/DeepTrack2)
+
+## Cite us!
+If you use DeepTrack 2.1 in your project, please cite us:
+
+<https://doi.org/10.1063/5.0034891>
+```
+"Quantitative Digital Microscopy with Deep Learning."
+Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt & Giovanni Volpe.
+Applied Physics Reviews, volume 8, article number 011310 (2021).
+```
+
+See also:
+
+<https://nostarch.com/deep-learning-crash-course>
+```
+Deep Learning Crash Course
+Benjamin Midtvedt, Jesús Pineda, Henrik Klein Moberg, Harshith Bachimanchi, Joana B. Pereira, Carlo Manzo & Giovanni Volpe.
+2025, No Starch Press (San Francisco, CA)
+ISBN-13: 9781718503922
+```
+
+
+<https://www.nature.com/articles/s41467-022-35004-y>
+```
+"Single-shot self-supervised object detection in microscopy." 
+Benjamin Midtvedt, Jesús Pineda, Fredrik Skärberg, Erik Olsén, Harshith Bachimanchi, Emelie Wesén, Elin K. Esbjörner, Erik Selander, Fredrik Höök, Daniel Midtvedt & Giovanni Volpe
+Nature Communications, volume 13, article number 7492 (2022).
+```
+
+<https://arxiv.org/abs/2202.06355>
+```
+"Geometric deep learning reveals the spatiotemporal fingerprint ofmicroscopic motion."
+Jesús Pineda, Benjamin Midtvedt, Harshith Bachimanchi, Sergio Noé, Daniel  Midtvedt, Giovanni Volpe &  Carlo  Manzo
+Nature Machine Intelligence volume 5, pages 71–82 (2023).
+```
+
+<https://doi.org/10.1364/OPTICA.6.000506>
+```
+"Digital video microscopy enhanced by deep learning."
+Saga Helgadottir, Aykut Argun & Giovanni Volpe.
+Optica, volume 6, pages 506-513 (2019).
+```
 
 ## Funding
 
