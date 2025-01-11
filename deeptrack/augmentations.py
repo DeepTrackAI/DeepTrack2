@@ -222,12 +222,13 @@ class Augmentation(Feature):
 
 
     def update_properties(self, *args, **kwargs):
+        pass
     """Abstract method to update the properties of the image.
 
     Currently not in use.
     
     """    
-        pass
+        
 
 
 class Reuse(Feature):
