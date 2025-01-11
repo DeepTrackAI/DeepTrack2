@@ -1,15 +1,23 @@
 <p align="center">
-  <img width="350" src=https://github.com/softmatterlab/DeepTrack2/blob/develop/assets/logo.png?raw=true>
+  <img width="350" src=https://github.com/DeepTrackAI/DeepTrack2/blob/develop/assets/logo.png?raw=true>
 </p>
 
-<h3 align="center">A comprehensive framework for digital microscopy.</h3>
+<h3 align="center">A comprehensive deep learning framework for digital microscopy.</h3>
 <p align="center">
-  <a href="/LICENSE" alt="licence"><img src="https://img.shields.io/github/license/softmatterlab/DeepTrack-2.0"></a>
-  <a href="https://badge.fury.io/py/deeptrack"><img src="https://badge.fury.io/py/deeptrack.svg" alt="PyPI version"></a>
-  <a href="https://deeptrackai.github.io/DeepTrack2"><img src="https://img.shields.io/badge/docs-passing-green" alt="PyPI version"></a>
-  <a href="https://badge.fury.io/py/deeptrack"><img src="https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue" alt="Python version"></a>
-  <a href="https://doi.org/10.1063/5.0034891" alt="DOI">
-    <img src="https://img.shields.io/badge/DOI-10.1063%2F5.0034891-blue">
+  <a href="/LICENSE" alt="licence">
+    <img src="https://img.shields.io/github/license/softmatterlab/DeepTrack-2.0">
+  </a>
+  <a href="https://badge.fury.io/py/deeptrack">
+    <img src="https://badge.fury.io/py/deeptrack.svg" alt="PyPI version">
+  </a>
+  <a href="https://deeptrackai.github.io/DeepTrack2">
+    <img src="https://img.shields.io/badge/docs-available-blue?logo=readthedocs">
+  </a>
+  <a href="https://badge.fury.io/py/deeptrack">
+    <img src="https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue" alt="Python version">
+  </a>
+  <a href="https://doi.org/10.1063/5.0034891">
+    <img src="https://img.shields.io/badge/cite us-10.1063%2F5.0034891-blue">
   </a>
 </p>
 <p align="center">
