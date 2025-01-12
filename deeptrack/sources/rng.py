@@ -137,7 +137,7 @@ class NumpyRNG(Source, np.random.RandomState):
     def set_index(
         self,
         index
-    ) Callable:
+    ) -> Callable:
         self.reset()
         return super().set_index(index)
     
