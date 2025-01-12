@@ -50,8 +50,9 @@ class NumpyRNG(Source, np.random.RandomState):
         The number of random number generators to create.
 
     seed: int, optional
-        The seed used to initialize the first random generator. If not provided, a 
-        random seed will be generated automatically using `np.random.randint()`.
+        The seed used to initialize the first random generator.
+        If not provided, a random seed will be generated automatically using
+        `np.random.randint()`.
 
     Attributes
     ----------
@@ -103,7 +104,9 @@ class NumpyRNG(Source, np.random.RandomState):
         seed = self._seed
 
         seed_generator = np.random.RandomState(seed)
-        return [np.random.RandomState(seed_generator.randint(0, 2**31)) for _ in range(n_states)]
+        return [np.random.RandomState(
+            seed_generator.randint(0, 2**31)
+            ) for _ in range(n_states)]
 
     def reset(
         self
@@ -115,7 +118,8 @@ class NumpyRNG(Source, np.random.RandomState):
         self,
         __name: str
     ) -> Any:
-        if hasattr(np.random.RandomState, __name) and not __name.startswith("_"):
+        if hasattr(
+            np.random.RandomState, __name) and not __name.startswith("_"):
             return self._create_lazy_callback(__name)
         return super().__getattribute__(__name)
     
@@ -127,7 +131,10 @@ class NumpyRNG(Source, np.random.RandomState):
             *args,
             **kwargs
         ) -> DeepTrackNode:
-            node = DeepTrackNode(lambda: getattr(self._dict["rng"][self._current_index()], __name)(*args, **kwargs))
+            node = DeepTrackNode(
+                lambda: getattr(
+                    self._dict["rng"][self._current_index()], __name)\
+                        (*args, **kwargs))
             node.add_dependency(self._current_index)
             self._current_index.add_child(node)
             return node
@@ -153,8 +160,8 @@ class PythonRNG(Source, random.Random):
         The number of random number generators to create.
 
     seed: int, optional
-        The seed used to initialize the first random generator. If not provided, a 
-        random seed will be generated automatically
+        The seed used to initialize the first random generator.
+        If not provided, a random seed will be generated automatically
         using `random.Random.randint()`.
 
     Attributes
@@ -208,7 +215,9 @@ class PythonRNG(Source, random.Random):
         seed = self._seed
 
         seed_generator = random.Random(seed)
-        return [random.Random(seed_generator.randint(0, 2**31)) for _ in range(n_states)]
+        return [random.Random(
+            seed_generator.randint(0, 2**31)
+        ) for _ in range(n_states)]
 
     def reset(
         self
@@ -220,7 +229,8 @@ class PythonRNG(Source, random.Random):
         self,
         __name: str
     ) -> Any:
-        if hasattr(np.random.RandomState, __name) and not __name.startswith("_"):
+        if hasattr(
+            np.random.RandomState, __name) and not __name.startswith("_"):
             return self._create_lazy_callback(__name)
         return super().__getattribute__(__name)
     
@@ -232,7 +242,11 @@ class PythonRNG(Source, random.Random):
             *args,
             **kwargs
         ) -> DeepTrackNode:
-            node = DeepTrackNode(lambda: getattr(self._dict["rng"][self._current_index()], __name)(*args, **kwargs))
+            node = DeepTrackNode(
+                lambda: getattr(
+                    self._dict["rng"][self._current_index()], __name)\
+                        (*args, **kwargs)
+                    )
             node.add_dependency(self._current_index)
             self._current_index.add_child(node)
             return node
