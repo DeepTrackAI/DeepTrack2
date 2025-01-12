@@ -122,7 +122,7 @@ class NumpyRNG(Source, np.random.RandomState):
     def _create_lazy_callback(
         self,
         __name: str
-    ) -> Callable[DeepTrackNode]:
+    ) -> Callable[[DeepTrackNode], DeepTrackNode]:
         def lazy_callback(
             *args,
             **kwargs
@@ -227,7 +227,7 @@ class PythonRNG(Source, random.Random):
     def _create_lazy_callback(
         self,
         __name: str
-    ) -> Callable[DeepTrackNode]:
+    ) -> Callable[[DeepTrackNode], DeepTrackNode]:
         def lazy_callback(
             *args,
             **kwargs
