@@ -53,27 +53,27 @@ This will automatically install the required dependencies.
 
 Here you find a series of notebooks that give you an overview of the core features of DeepTrack2 and how to use them:
 
-- GS101 **[Introduction to DeepTrack2](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS101_intro.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS101_intro.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS101 **[Introduction to DeepTrack2](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS101_intro.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS101_intro.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Overview of how to use DeepTrack 2. Creating images combining DeepTrack2 features, extracting properties, and using them to train a neural network.
 
-- GS111 **[Loading Image Files Using Sources](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS111_datafiles.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS111_datafiles.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS111 **[Loading Image Files Using Sources](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS111_datafiles.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS111_datafiles.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Using sources to load image files and to train a neural network.
 
-- GS121 **[Tracking a Point Particle with a CNN](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS121_tracking_particle_cnn.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS121_tracking_particle_cnn.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS121 **[Tracking a Point Particle with a CNN](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS121_tracking_particle_cnn.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS121_tracking_particle_cnn.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Tracking a point particle with a convolutional neural network (CNN) using simulated images in the training process.
 
-- GS131 **[Tracking a Multiple Particles with a U-Net](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS131_tracking_multiple_particles_unet.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS131_tracking_multiple_particles_unet.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS131 **[Tracking a Multiple Particles with a U-Net](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS131_tracking_multiple_particles_unet.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS131_tracking_multiple_particles_unet.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Tracking multiple particles using a U-net trained on simulated images.
 
-- GS141 **[Tracking a Multiple Particles with a U-Net](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS141_distinguishing_particles_in_brightfield.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS141_distinguishing_particles_in_brightfield.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS141 **[Tracking a Multiple Particles with a U-Net](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS141_distinguishing_particles_in_brightfield.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS141_distinguishing_particles_in_brightfield.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Tracking and distinguishing particles of different sizes in brightfield microscopy using a U-net trained on simulated images.
 
-- GS151 **[Unsupervised Object Detection](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS151_unsupervised_object_detection_with_lodestar.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/getting-started/GS151_unsupervised_object_detection_with_lodestar.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS151 **[Unsupervised Object Detection](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS151_unsupervised_object_detection_with_lodestar.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS151_unsupervised_object_detection_with_lodestar.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Single-shot unsupervised object detection a using LodeSTAR.
 
@@ -81,100 +81,100 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 These are examples of how DeepTrack2 can be used on real datasets:
 
-- Ex101 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex101_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex101_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx101 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Training a fully connected neural network to identify handwritten digits using MNIST dataset.
 
-- Ex102 **[Single Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex102_single_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex102_single_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx102 **[Single Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx202_single_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx202_single_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Tracks experimental videos of a single particle. (Requires opencv-python compiled with ffmpeg)
 
   
 
-- Ex103 **[Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex103_particle_sizing.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex103_particle_sizing.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx103 **[Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx203_particle_sizing.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx203_particle_sizing.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Detecting quantum dots in a low SNR image.
 
   
 
-- Ex104 **[Particle Feature Extraction](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex104_multi_molecule_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex104_multi_molecule_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx104 **[Particle Feature Extraction](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx204_multi_molecule_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx204_multi_molecule_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Extracting the radius and refractive index of particles.
 
-- Ex105 **[Cell Counting](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex105_inline_holography_3d_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex105_inline_holography_3d_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx105 **[Cell Counting](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx205_inline_holography_3d_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx205_inline_holography_3d_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Counting the number of cells in fluorescence images.
 
-- Ex106 **[3D Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex106_cell_counting.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex106_cell_counting.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx106 **[3D Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx206_cell_counting.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx206_cell_counting.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Tracking multiple particles in 3D for holography.
 
-- Ex107 **[GAN image generation](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex107_GAN_image_generation.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex107_GAN_image_generation.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx107 **[GAN image generation](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx207_GAN_image_generation.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx207_GAN_image_generation.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Using a GAN to create cell image from masks.
 
-Specific examples for label-free particle tracking using LodeSTAR:
+Specific examples for label-free particle tracking using **LodeSTAR**:
 
-- Ex301 **[LodeSTAR Autotracker Template](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex301_LodeSTAR_autotracker_template.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex301_LodeSTAR_autotracker_template.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231A **[LodeSTAR Autotracker Template](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- Ex302 **[LodeSTAR Detecting Particles of Various Shapes](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex302_LodeSTAR_tracking_particles_of_various_shapes.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex302_LodeSTAR_tracking_particles_of_various_shapes.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231B **[LodeSTAR Detecting Particles of Various Shapes](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231B_LodeSTAR_tracking_particles_of_various_shapes.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231B_LodeSTAR_tracking_particles_of_various_shapes.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- Ex303 **[LodeSTAR Measuring the Mass of Particles in Holography](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex303_LodeSTAR_measure_mass_experimental.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex303_LodeSTAR_measure_mass_experimental.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231C **[LodeSTAR Measuring the Mass of Particles in Holography](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231C_LodeSTAR_measure_mass_experimental.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231C_LodeSTAR_measure_mass_experimental.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- Ex304 **[LodeSTAR Detecting the Cells in the BF-C2DL-HSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex304_LodeSTAR_track_BF-C2DL-HSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex304_LodeSTAR_track_BF-C2DL-HSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231D **[LodeSTAR Detecting the Cells in the BF-C2DT-HSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DT-HSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DT-HSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- Ex305 **[LodeSTAR Detecting the Cells in the Fluo-C2DL-Huh7 Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex305_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex305_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231E **[LodeSTAR Detecting the Cells in the Fluo-C2DT-Huh7 Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DT-Huh7.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DT-Huh7.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- Ex306 **[LodeSTAR Detecting the Cells in the PhC-C2DL-PSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex306_LodeSTAR_track_PhC-C2DL-PSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex306_LodeSTAR_track_PhC-C2DL-PSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231F **[LodeSTAR Detecting the Cells in the PhC-C2DT-PSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DT-PSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DT-PSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- Ex307 **[LodeSTAR Detecting Plankton](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex307_LodeSTAR_track_plankton.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex307_LodeSTAR_track_plankton.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231G **[LodeSTAR Detecting Plankton](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- Ex308 **[LodeSTAR Detecting in 3D Holography](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex308_LodeSTAR_track_3D_holography.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex308_LodeSTAR_track_3D_holography.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231H **[LodeSTAR Detecting in 3D Holography](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231H_LodeSTAR_track_3D_holography.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231H_LodeSTAR_track_3D_holography.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- Ex309 **[LodeSTAR Measuring the Mass of Simulated Particles](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex309_LodeSTAR_measure_mass_simulated.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex309_LodeSTAR_measure_mass_simulated.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231I **[LodeSTAR Measuring the Mass of Simulated Particles](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231I_LodeSTAR_measure_mass_simulated.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231I_LodeSTAR_measure_mass_simulated.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- Ex310 **[LodeSTAR Measuring the Mass of Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex310_LodeSTAR_measure_mass_cell.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex310_LodeSTAR_measure_mass_cell.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231J **[LodeSTAR Measuring the Mass of Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/DTEx231J_LodeSTAR_measure_mass_cell.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/DTEx231J_LodeSTAR_measure_mass_cell.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-Specific examples for graph-neural-network-based particle linking and trace characterization using MAGIK:
+Specific examples for graph-neural-network-based particle linking and trace characterization using **MAGIK**:
 
-- Ex401 **[MAGIK Tracing Migrating Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex401_MAGIK_cell_migration_analysis.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex401_MAGIK_cell_migration_analysis.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx241A **[MAGIK Tracing Migrating Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx241A_MAGIK_cell_migration_analysis.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx241A_MAGIK_cell_migration_analysis.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   
 
-- Ex402 **[MAGIK to Track HeLa Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex402_MAGIK_tracking_hela_cells.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/Ex402_MAGIK_tracking_hela_cells.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx241B **[MAGIK to Track HeLa Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx241B_MAGIK_tracking_hela_cells.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx241B_MAGIK_tracking_hela_cells.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
 # Advanced Tutorials
 
-- AT201 **[Features](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT201_features.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT201_features.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT301 **[Features](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT301_features.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT301_features.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT206 **[Properties](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT206_properties.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT206_properties.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT306 **[Properties](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT306_properties.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT306_properties.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT211 **[Image](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT211_image.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT211_image.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT311 **[Image](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT311_image.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/DTAT311_image.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT221 **[Scatterers](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT221_scatterers.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT221_scatterers.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT321 **[Scatterers](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT321_scatterers.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/DTAT321_scatterers.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT223 **[Optics](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT223_optics.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT223_optics.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT323 **[Optics](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT323_optics.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/DTAT323_optics.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT225 **[Aberrations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT225_aberrations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT225_aberrations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT325 **[Aberrations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT325_aberrations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/DTAT325_aberrations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT227 **[Noises](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT227_noises.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT227_noises.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT327 **[Noises](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT327_noises.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/DTAT327_noises.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT229 **[Augmentations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT229_augmentations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT229_augmentations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT329 **[Augmentations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT329_augmentations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/DTAT329_augmentations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT241 **[Sequences](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT241_sequences.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT241_sequences.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT341 **[Sequences](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT341_sequences.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/DTAT341_sequences.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT281 **[Math](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT281_math.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT281_math.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT381 **[Math](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT381_math.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/DTAT381_math.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- AT283 **[Utils](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/advanced-topics/AT283_utils.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/AT283_utils.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT383 **[Utils](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT383_utils.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/exadvanced-topicsamples/DTAT383_utils.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
 
 # Developer Tutorials
 
 Here you find a series of notebooks tailored for DeepTrack2's developers:
 
-- DT101 **[Overview of Code Base]**
+- DTDV401 **[Overview of Code Base]**
 
-- DT111 **[Style Guide](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/developers/DT111_style.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/developers/DT111_style.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTDV411 **[Style Guide](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/4-developers/DTDV111_style.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials4-developers/DTDV411_style.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
 # Documentation
 
