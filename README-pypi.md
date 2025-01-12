@@ -211,7 +211,7 @@ Nature Communications, volume 13, article number 7492 (2022).
 <https://www.nature.com/articles/s42256-022-00595-0>
 ```
 "Geometric deep learning reveals the spatiotemporal fingerprint ofmicroscopic motion."
-Jesús Pineda, Benjamin Midtvedt, Harshith Bachimanchi, Sergio Noé, Daniel  Midtvedt, Giovanni Volpe &  Carlo  Manzo
+Jesús Pineda, Benjamin Midtvedt, Harshith Bachimanchi, Sergio Noé, Daniel Midtvedt, Giovanni Volpe & Carlo Manzo
 Nature Machine Intelligence volume 5, pages 71–82 (2023).
 ```
 
