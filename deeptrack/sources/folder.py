@@ -31,6 +31,18 @@ Module Structure
 
     Allows for processing of image sources with `Dict` data strucutres,
     splitting, naming and labeling functions.
+    
+Examples
+--------
+Print some information about a source of data:
+
+>>> from deeptrack.sources import folder
+
+>>> root = "data/train"
+>>> data_source = folder.ImageFolder(root)
+
+>>> print(f"Total images in training data: {len(train_data)}")
+>>> print(f"Classes: {train_data.classes}")
 
 """
 
