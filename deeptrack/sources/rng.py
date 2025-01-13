@@ -22,7 +22,7 @@ Examples
 --------
 Generate 3 rng's with different seeds, and get a random number from them:
 
->>> import deeptrack.sources import rng
+>>> from deeptrack.sources import rng
 
 >>> python_rng = rng.PythonRNG(n_states=3, seed=123)
 >>> for i, generator in enumerate(python_rng._generate_states()):
