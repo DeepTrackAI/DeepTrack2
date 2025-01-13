@@ -12,6 +12,8 @@ Examples
 --------
 Call a list of callbacks:
 
+>>> from deeptrack.sources import Source
+
 >>> source = Source(a=[1, 2], b=[3, 4])
 >>> @source.on_activate
 >>> def callback(item):
@@ -21,14 +23,26 @@ Equivalent to SourceItem({'a': 1, 'b': 3}).
 
 Create a node that creates child nodes when attributes are accessed:
 
+>>> from deeptrack.sources import SourceDeepTrackNode
+
 >>> node = SourceDeepTrackNode(lambda: {"a": 1, "b": 2})
 >>> child = node.a
 >>> child()
 1.
 
 
+Join multiple sources into a single access point:
 
+>>> from deeptrack.sources import Source
 
+>>> source1 = Source(a=[1, 2], b=[3, 4])
+>>> source2 = Source(a=[5, 6], b=[7, 8])
+>>> joined_source = Sources(source1, source2)
+>>> feature_a = dt.Value(joined_source.a)
+>>> feature_b = dt.Value(joined_source.b)
+>>> sum_feature = feature_a + feature_b
+>>> sum_feature(source1[0]) # returns (1 + 3) = 4
+>>> sum_feature(source2[0]) # returns (5 + 7) = 12
 
 """
 
@@ -41,6 +55,7 @@ import functools
 from typing import Any, Callable, List, Dict, Union
 
 import numpy as np
+
 from deeptrack.backend.core import DeepTrackNode
 
 class SourceDeepTrackNode(DeepTrackNode):
@@ -317,7 +332,7 @@ class Product(Source):
         dict_of_lists = {k: [] for k in kwargs.keys()}
         source_dict = {k: [] for k in __source[0].keys()}
         
-        # if overlapping keys, error
+        # If overlapping keys, error.
         if set(kwargs.keys()).intersection(set(source_dict.keys())):
             raise ValueError(
                 f"Overlapping keys in product. Duplicate keys: "
@@ -378,16 +393,6 @@ class Sources:
     Used when one of multiple sources can be passed to a feature.
     For example the sources are split into training and validation sets,
     and the user can choose which one to use.
-
-    Example:
-    >>> source1 = Source(a=[1, 2], b=[3, 4])
-    >>> source2 = Source(a=[5, 6], b=[7, 8])
-    >>> joined_source = Sources(source1, source2)
-    >>> feature_a = dt.Value(joined_source.a)
-    >>> feature_b = dt.Value(joined_source.b)
-    >>> sum_feature = feature_a + feature_b
-    >>> sum_feature(source1[0]) # returns (1 + 3) = 4
-    >>> sum_feature(source2[0]) # returns (5 + 7) = 12
 
     Parameters
     ----------
