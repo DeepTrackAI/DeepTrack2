@@ -81,35 +81,35 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 These are examples of how DeepTrack2 can be used on real datasets:
 
-- DTEx101 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx201 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Training a fully connected neural network to identify handwritten digits using MNIST dataset.
 
-- DTEx102 **[Single Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx202_single_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx202_single_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx202 **[Single Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx202_single_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx202_single_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Tracks experimental videos of a single particle. (Requires opencv-python compiled with ffmpeg)
 
   
 
-- DTEx103 **[Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx203_particle_sizing.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx203_particle_sizing.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx203 **[Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx203_particle_sizing.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx203_particle_sizing.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Detecting quantum dots in a low SNR image.
 
   
 
-- DTEx104 **[Particle Feature Extraction](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx204_multi_molecule_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx204_multi_molecule_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx204 **[Particle Feature Extraction](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx204_multi_molecule_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx204_multi_molecule_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Extracting the radius and refractive index of particles.
 
-- DTEx105 **[Cell Counting](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx205_inline_holography_3d_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx205_inline_holography_3d_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx205 **[Cell Counting](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx205_inline_holography_3d_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx205_inline_holography_3d_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Counting the number of cells in fluorescence images.
 
-- DTEx106 **[3D Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx206_cell_counting.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx206_cell_counting.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx206 **[3D Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx206_cell_counting.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx206_cell_counting.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Tracking multiple particles in 3D for holography.
 
-- DTEx107 **[GAN image generation](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx207_GAN_image_generation.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx207_GAN_image_generation.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx207 **[GAN image generation](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx207_GAN_image_generation.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx207_GAN_image_generation.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Using a GAN to create cell image from masks.
 
