@@ -1,10 +1,47 @@
+"""Single line descriptor
+this module provides...
+
+Key Features
+------------
+- ** **
+
+Module Structure
+----------------
+
+Examples
+--------
+Call a list of callbacks:
+
+>>> source = Source(a=[1, 2], b=[3, 4])
+>>> @source.on_activate
+>>> def callback(item):
+>>>     print(item)
+>>> source[0]() 
+Equivalent to SourceItem({'a': 1, 'b': 3}).
+
+Create a node that creates child nodes when attributes are accessed:
+
+>>> node = SourceDeepTrackNode(lambda: {"a": 1, "b": 2})
+>>> child = node.a
+>>> child()
+1.
+
+
+
+
+
+"""
+
+import math 
+import warnings
 import random
-from typing import Any
-import numpy as np
 import itertools
-from deeptrack.backend.core import DeepTrackNode
 import weakref
 import functools
+from typing import Any, Callable, List, Dict, Union
+
+import numpy as np
+from deeptrack.backend.core import DeepTrackNode
 
 class SourceDeepTrackNode(DeepTrackNode):
     """A node that creates child nodes when attributes are accessed.
@@ -13,57 +50,58 @@ class SourceDeepTrackNode(DeepTrackNode):
     attributes are accessed. Assumes the value of the node is dict-like
     (i.e. has a __getitem__ method that takes a string).
 
-    Example:
-    >>> node = SourceDeepTrackNode(lambda: {"a": 1, "b": 2})
-    >>> child = node.a
-    >>> child() # returns 1
-
     Parameters
     ----------
-    action : callable
+    action: callable
         The action that returns the value of the node.    
     """
 
-    def __getattr__(self, name):
+    def __getattr__(
+        self,
+        name: str
+    ) -> SourceDeeptrackNode:
         node = SourceDeepTrackNode(lambda: self()[name])
         node.add_dependency(self)
         self.add_child(node)
         return node
 
 class SourceItem(dict):
-    """ A dict-like object that calls a list of callbacks when called.
+    """A dict-like object that calls a list of callbacks when called.
 
     Used in conjunction with the Source class to call a list of callbacks
     when called. These callbacks are used to activate a certain item
     in the source, ensuring all DeepTrackNodes are updated.
 
-    Example:
-    >>> source = Source(a=[1, 2], b=[3, 4])
-    >>> @source.on_activate
-    >>> def callback(item):
-    >>>     print(item)
-    >>> source[0]() # prints SourceItem({'a': 1, 'b': 3})
 
     Parameters
     ----------
-    callbacks : list
+    callbacks: list
         A list of callables that are called when the SourceItem is called.
+        
     """
 
-    def __init__(self, callbacks, **kwargs):
+    def __init__(
+        self,
+        callbacks: List[Callable[[Any], None]],
+        **kwargs: Any
+    ) -> None:
         self._callbacks = callbacks
         super().__init__(**kwargs)
 
-    def __call__(self):
+    def __call__(
+        self
+    ) -> SourceItem:
         for callback in self._callbacks:
             callback(self)
         return self
     
-    def __repr__(self):
+    def __repr__(
+        self
+    ) -> str:
         return f"SourceItem({super().__repr__()})"
 
 class Source:
-    """ A class that represents one or more sources of data.
+    """A class that represents one or more sources of data.
 
     This class is used to represent one or more sources of data.
     When accessed, it returns a deeptrack object that can be passed
@@ -82,12 +120,15 @@ class Source:
 
     Parameters
     ----------
-    kwargs : dict
+    kwargs: dict
         A dictionary of lists or arrays. The keys of the dictionary are
         the names of the sources, and the values are the sources themselves.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        **kwargs
+    ) -> None:
         self.validate_all_same_length(kwargs)
         self._length = len(kwargs[list(kwargs.keys())[0]])
         self._current_index = DeepTrackNode(0)
@@ -97,16 +138,24 @@ class Source:
         for k in kwargs:
             setattr(self, k, self._wrap(k))
         
-    def __len__(self):
+    def __len__(
+        self
+    ) -> int:
         return self._length
 
-    def __getitem__(self, index):
+    def __getitem__(
+        self,
+        index
+    ) -> Union[SourceItem, List[SourceItem]]:
         if isinstance(index, slice):
             return self._get_slice(index)
         else:
             return self._get_item(index)
 
-    def product(self, **kwargs):
+    def product(
+        self,
+        **kwargs
+    ) -> Product:
         """Return the product of the source with the given sources.
 
         Returns a source that is the product of th
@@ -115,21 +164,26 @@ class Source:
         Example:
         >>> source = Source(a=[1, 2], b=[3, 4])
         >>> new_source = source.product(c=[5, 6])
-        >>> new_source # returns Source(c=[5, 6, 5, 6],
-                                        a=[1, 1, 2, 2],
-                                        b=[3, 3, 4, 4]
-                                    )
+        >>> new_source 
+        Source(c=[5, 6, 5, 6],
+               a=[1, 1, 2, 2],
+               b=[3, 3, 4, 4]
+        )
 
         Parameters
         ----------
-        kwargs : dict
+        kwargs: dict
             A dictionary of lists or arrays.
             The keys of the dictionary are the names of the sources,
             and the values are the sources themselves.
+            
         """
         return Product(self, **kwargs)
     
-    def constants(self, **kwargs):
+    def constants(
+        self,
+        **kwargs
+    ) -> Product:
         """Return a new source where the given values are constant.
 
         Example:
@@ -139,44 +193,62 @@ class Source:
 
         Parameters
         ----------
-        kwargs : dict
+        kwargs: dict
             A dictionary of values. The keys of the dictionary are the
             names of the sources, and the values are the values themselves.
+            
         """
         return Product(self, **{k: [v] for k, v in kwargs.items()}) 
     
-    def filter(self, predicate):
+    def filter(
+        self,
+        predicate: Callable[..., bool]
+    ) -> Subset:
         """Return a new source with only the items that satisfy the predicate.
 
         Example:
         >>> source = Source(a=[1, 2], b=[3, 4])
         >>> new_source = source.filter(lambda a, b: a > 1)
         >>> new_source # returns Source(a=[2], b=[4])
+        
         """
         indices = [i for i, item in enumerate(self) if predicate(**item)]
         return Subset(self, indices)
 
 
-    def validate_all_same_length(self, kwargs):
+    def validate_all_same_length(
+        self,
+        kwargs: Dict[str, List[Any]]
+    ) -> None:
         lengths = [len(v) for v in kwargs.values()]
         if not all([l == lengths[0] for l in lengths]):
             raise ValueError("All sources must have the same length.")
 
-
-    def _wrap(self, key):
+    def _wrap_indexable(
+        self,
+        key: str
+    ) -> SourceDeepTrackNode:
+        value_getter = SourceDeepTrackNode(
+            lambda: self._dict[key][self._current_index()]
+        )
+        value_getter.add_dependency(self._current_index)
+        self._current_index.add_child(value_getter)
+        return value_getter
+        
+    def _wrap(
+        self,
+        key: str
+    ) -> SourceDeepTrackNode:
         value = self._dict[key]
         if hasattr(value, "__getitem__"):
             return self._wrap_indexable(key)
         
         return self._wrap_iterable(key)
-
-    def _wrap_indexable(self, key):
-        value_getter = SourceDeepTrackNode(lambda: self._dict[key][self._current_index()])
-        value_getter.add_dependency(self._current_index)
-        self._current_index.add_child(value_getter)
-        return value_getter
     
-    def _wrap_iterable(self, key):
+    def _wrap_iterable(
+        self,
+        key: str
+    ) -> SourceDeepTrackNode:
         value_getter = SourceDeepTrackNode(
             lambda: list(self._dict[key])[self._current_index()]
             )
@@ -184,29 +256,43 @@ class Source:
         self._current_index.add_child(value_getter)
         return value_getter
 
-    def __iter__(self):
+    def __iter__(
+        self
+    ) -> Generator[SourceItem, None, None]:
         for i in range(len(self)):
             yield self[i]
     
-    def set_index(self, index):
+    def set_index(
+        self,
+        index: int
+    ) -> Source:
         self._current_index.set_value(index)
         return self
 
-    def _get_item(self, index):
+    def _get_item(
+        self,
+        index: int
+    ) -> SourceItem:
         values = {k: v[index] for k, v in self._dict.items()}
         callbacks = list(self._callbacks)
         callbacks.append(lambda _: self.set_index(index))
         return SourceItem(callbacks, **values)
 
-    def _get_slice(self, slice):
+    def _get_slice(
+        self,
+        slice: List[SourceItem]
+    ) -> List[SourceItem]:
 
         # Convert slice to list of indices.
-        indices = list(range(*slice.indices(len(self))))
+        indices = list(range(*slice.inslicedices(len(self))))
 
         # Get values for each index.
         return [self[i] for i in indices]
     
-    def on_activate(self, callback: callable):
+    def on_activate(
+        self,
+        callback: Callable[[Any], None]
+    ) -> None:
         self._callbacks.add(callback)
 
 class Product(Source):
@@ -220,7 +306,11 @@ class Product(Source):
     to get the value of the feature for that item.
     """
 
-    def __init__(self, __source=[{}], **kwargs):
+    def __init__(
+        self,
+        __source: Source = [{}],
+        **kwargs: List[Any]
+    ) -> None:
 
         product = itertools.product(__source, *kwargs.values())
 
@@ -229,7 +319,10 @@ class Product(Source):
         
         # if overlapping keys, error
         if set(kwargs.keys()).intersection(set(source_dict.keys())):
-            raise ValueError(f"Overlapping keys in product. Duplicate keys: {set(kwargs.keys()).intersection(set(source_dict.keys()))}")
+            raise ValueError(
+                f"Overlapping keys in product. Duplicate keys: "
+                f"{set(kwargs.keys()).intersection(set(source_dict.keys()))}"
+            )
 
         dict_of_lists.update(source_dict)
 
@@ -244,23 +337,37 @@ class Product(Source):
 
 class Subset(Source):
 
-    def __init__(self, source, indices):
+    def __init__(
+        self,
+        source: Source,
+        indices: List[int]
+    ) -> None:
         self.source = source
         self.indices = indices
         self._dict = {k: [v[i] for i in indices]
                       for k, v in source._dict.items()}
 
-    def __iter__(self):
+    def __iter__(
+        self
+    ) -> Generator[SourceItem, None, None]:
         for i in self.indices:
             yield self.source[i]
     
-    def __getitem__(self, index):
+    def __getitem__(
+        self,
+        index: int
+    ) -> SourceItem:
         return self.source[self.indices[index]]
 
-    def __len__(self):
+    def __len__(
+        self
+    ) -> int:
         return len(self.indices)
     
-    def __getattr__(self, name):
+    def __getattr__(
+        self,
+        name: str
+    ) -> Any:
         return getattr(self.source, name)
 
 
@@ -284,11 +391,16 @@ class Sources:
 
     Parameters
     ----------
-    sources : Source
+    sources: Source
+    
         The sources to join.
+        
     """
 
-    def __init__(self, *sources: Source):
+    def __init__(
+        self,
+        *sources: Source
+    ) -> None:
         self.sources = sources
 
         keys = set()
@@ -298,36 +410,50 @@ class Sources:
         self._dict = dict.fromkeys(keys)
 
         for key in keys:
-            node = SourceDeepTrackNode(functools.partial(lambda key: self._dict[key], key))
+            node = SourceDeepTrackNode(
+                functools.partial(lambda key: self._dict[key], key)
+            )
 
             setattr(self, key, node)
 
         for source in sources:
             source.on_activate(self._callback)
 
-    def _callback(self, item):
+    def _callback(
+        self,
+        item: SourceItem
+    ) -> None:
         for key in item:
             getattr(self, key).invalidate()
             getattr(self, key).set_value(item[key])
 
 Join = Sources
 
-def random_split(source, lengths, generator=np.random.default_rng()):
+def random_split(
+    source: Source,
+    lengths: List[Union[int, float]],
+    generator: np.random.Generator = np.random.default_rng()
+) -> List[Subset]:
     """Randomly split source into non-overlapping new sources of given lengths.
 
     Parameters
     ----------
-    source : Source
+    source: Source
+    
         The source to split.
-    lengths : list of int or float
+        
+    lengths: list of int or float
+    
         The lengths of the new sources. If the lengths are floats,
         they are interpreted as fractions of the source.
-    generator : numpy.random.Generator, optional
+        
+    generator: numpy.random.Generator, optional
+    
         The random number generator to use.
+        
     """
 
-    import math 
-    import warnings
+
     if math.isclose(sum(lengths), 1) and sum(lengths) <= 1:
         subset_lengths = []
         for i, frac in enumerate(lengths):
@@ -352,7 +478,7 @@ def random_split(source, lengths, generator=np.random.default_rng()):
                 warnings.warn(f"Length of split at index {i} is 0. "
                                 f"This might result in an empty source.")
                 
-        # Cannot verify that dataset is Sized
+        # Cannot verify that dataset is Sized.
     if sum(lengths) != len(source):    # type: ignore[arg-type]
         raise ValueError("Sum of input lengths does not\
                           equal the length of the input dataset!")
@@ -364,8 +490,11 @@ def random_split(source, lengths, generator=np.random.default_rng()):
 
         
 
-def _accumulate(iterable, fn=lambda x, y: x + y):
-    "Return running totals"
+def _accumulate(
+    iterable List[int],
+    fn: Callable [[int, int], int]=lambda x, y: x + y
+) -> Generator[int, None, None]:
+    "Return running totals."
     # _accumulate([1,2,3,4,5]) --> 1 3 6 10 15
     # _accumulate([1,2,3,4,5], operator.mul) --> 1 2 6 24 120
     it = iter(iterable)
