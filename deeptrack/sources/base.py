@@ -1,12 +1,62 @@
-"""Single line descriptor
-this module provides...
+"""Utility classes for data sources.
+
+This module provides a set of utility classes
+designed for managing and manipulating data sources.
+
+These tools are primarily used in scenarios where
+data needs to be dynamically manipulated, filtered, or combined
+for feature generation in machine learning pipelines.
 
 Key Features
 ------------
-- ** **
+- **Node Hierarchy**
+
+    Extends `DeepTrackNode` with utilities to create
+    nested nodes, and structured data access.
+    
+- **Dynamic Data Access**
+
+    Retrieve data items as callable objects, supporting
+    custom callbacks and dependency tracking.
+
+- **Randomized Splitting**
+
+    Enables splitting of data sources into non-overlapping
+    subsets with user-specified length.
+    
 
 Module Structure
 ----------------
+Classes:
+
+- `SourceDeepTrackNode`: Creates child nodes when accessing attributes.
+
+- `SourceItem`: Dict-like object that calls a list of callbacks when called.
+
+- `Source`: Represents one or more sources of data.
+
+- `Product`: Represents the product of the source with the given sources.
+
+    This class is used to represent the product of a source with
+    one or more sources. When accessed, it returns a deeptrack object that
+    can be passed as properties to features.
+        
+- `Subset`: Represents the subset of a `Source`.
+
+- `Sources`: Represents multiple sources as a single access point.
+
+    Used when one of multiple sources can be passed to a feature.
+
+Functions:
+
+- `random_split(source, lengths, generator)`
+
+    def random_split(
+        source: Source,
+        lengths: List[Union[int, float]],
+        generator: np.random.Generator = np.random.default_rng()
+    ) -> List[Subset]:
+        Randomly split source into non-overlapping new sources of given lengths.
 
 Examples
 --------
@@ -19,7 +69,10 @@ Call a list of callbacks:
 >>> def callback(item):
 >>>     print(item)
 >>> source[0]() 
-Equivalent to SourceItem({'a': 1, 'b': 3}).
+
+Equivalent to:
+
+>>> SourceItem({'a': 1, 'b': 3}).
 
 Create a node that creates child nodes when attributes are accessed:
 
@@ -28,11 +81,11 @@ Create a node that creates child nodes when attributes are accessed:
 >>> node = SourceDeepTrackNode(lambda: {"a": 1, "b": 2})
 >>> child = node.a
 >>> child()
-1.
-
+1
 
 Join multiple sources into a single access point:
 
+>>> import deeptrack as dt
 >>> from deeptrack.sources import Source
 
 >>> source1 = Source(a=[1, 2], b=[3, 4])
@@ -41,18 +94,21 @@ Join multiple sources into a single access point:
 >>> feature_a = dt.Value(joined_source.a)
 >>> feature_b = dt.Value(joined_source.b)
 >>> sum_feature = feature_a + feature_b
->>> sum_feature(source1[0]) # returns (1 + 3) = 4
->>> sum_feature(source2[0]) # returns (5 + 7) = 12
+
+>>> sum_feature(source1[0])
+4
+>>> sum_feature(source2[0])
+12
 
 """
 
-import math 
-import warnings
-import random
-import itertools
-import weakref
-import functools
 from typing import Any, Callable, List, Dict, Union
+import functools
+import itertools
+import math 
+import random
+import warnings
+import weakref
 
 import numpy as np
 
@@ -125,7 +181,11 @@ class Source:
     The feature can then be called with an item from the source to get the 
     value of the feature for that item. 
 
-    Example:
+    Example
+    -------
+    >>> import deeptrack as dt
+    >>> from deeptrack.sources import Source
+    
     >>> source = Source(a=[1, 2], b=[3, 4])
     >>> feature_a = dt.Value(source.a)
     >>> feature_b = dt.Value(source.b)
@@ -160,7 +220,7 @@ class Source:
 
     def __getitem__(
         self,
-        index
+        index: int
     ) -> Union[SourceItem, List[SourceItem]]:
         if isinstance(index, slice):
             return self._get_slice(index)
@@ -176,7 +236,10 @@ class Source:
         Returns a source that is the product of th
         source with the given sources.
 
-        Example:
+        Example
+        -------
+        >>> from deeptrack.sources import Source
+        
         >>> source = Source(a=[1, 2], b=[3, 4])
         >>> new_source = source.product(c=[5, 6])
         >>> new_source 
@@ -201,10 +264,15 @@ class Source:
     ) -> Product:
         """Return a new source where the given values are constant.
 
-        Example:
+        Example
+        -------
+        from deeptrack.sources import Source
+        
         >>> source = Source(a=[1, 2], b=[3, 4])
         >>> new_source = source.constants(c=5)
-        >>> new_source # returns Source(c=[5, 5], a=[1, 2], b=[3, 4])
+        >>> new_source
+        Equivalent to:
+        >>> Source(c=[5, 5], a=[1, 2], b=[3, 4]).
 
         Parameters
         ----------
@@ -221,15 +289,19 @@ class Source:
     ) -> Subset:
         """Return a new source with only the items that satisfy the predicate.
 
-        Example:
+        Example
+        -------
+        >>> from deeptrack.sources import Source
+        
         >>> source = Source(a=[1, 2], b=[3, 4])
         >>> new_source = source.filter(lambda a, b: a > 1)
-        >>> new_source # returns Source(a=[2], b=[4])
+        >>> new_source
+        Equivalent to:
+        >>> Source(a=[2], b=[4]).
         
         """
         indices = [i for i, item in enumerate(self) if predicate(**item)]
         return Subset(self, indices)
-
 
     def validate_all_same_length(
         self,
@@ -444,16 +516,13 @@ def random_split(
     Parameters
     ----------
     source: Source
-    
         The source to split.
         
     lengths: list of int or float
-    
         The lengths of the new sources. If the lengths are floats,
         they are interpreted as fractions of the source.
         
     generator: numpy.random.Generator, optional
-    
         The random number generator to use.
         
     """
@@ -499,9 +568,19 @@ def _accumulate(
     iterable List[int],
     fn: Callable [[int, int], int]=lambda x, y: x + y
 ) -> Generator[int, None, None]:
-    "Return running totals."
-    # _accumulate([1,2,3,4,5]) --> 1 3 6 10 15
-    # _accumulate([1,2,3,4,5], operator.mul) --> 1 2 6 24 120
+    """Returns running totals with user specified operator.
+    
+    Default is summation.
+    
+    Examples
+    --------
+    >>> _accumulate([1,2,3,4,5])
+    1 3 6 10 15
+    
+    >>> _accumulate([1,2,3,4,5], operator.mul)
+    1 2 6 24 120   
+    
+    """
     it = iter(iterable)
     try:
         total = next(it)
