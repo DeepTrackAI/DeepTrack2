@@ -102,7 +102,7 @@ Join multiple sources into a single access point:
 
 """
 
-from typing import Any, Callable, List, Dict, Union
+from typing import Any, Callable, List, Dict, Union, Generator
 import functools
 import itertools
 import math 
@@ -565,7 +565,7 @@ def random_split(
         
 
 def _accumulate(
-    iterable List[int],
+    iterable: List[int],
     fn: Callable [[int, int], int]=lambda x, y: x + y
 ) -> Generator[int, None, None]:
     """Returns running totals with user specified operator.
