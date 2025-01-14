@@ -103,6 +103,7 @@ Join multiple sources into a single access point:
 """
 
 from typing import Any, Callable, List, Dict, Union, Generator
+from __future__ import annotations
 import functools
 import itertools
 import math 
@@ -130,7 +131,7 @@ class SourceDeepTrackNode(DeepTrackNode):
     def __getattr__(
         self,
         name: str
-    ) -> SourceDeeptrackNode:
+    ) -> SourceDeepTrackNode:
         node = SourceDeepTrackNode(lambda: self()[name])
         node.add_dependency(self)
         self.add_child(node)
