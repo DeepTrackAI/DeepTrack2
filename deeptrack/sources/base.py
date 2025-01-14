@@ -102,8 +102,8 @@ Join multiple sources into a single access point:
 
 """
 
-from typing import Any, Callable, List, Dict, Union, Generator
 from __future__ import annotations
+from typing import Any, Callable, List, Dict, Union, Generator
 import functools
 import itertools
 import math 
