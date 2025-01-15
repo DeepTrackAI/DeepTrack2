@@ -31,7 +31,7 @@ from typing import Callable, Tuple
 
 import numpy as np
 
-from . import backend as D
+from .backend import mie
 from .features import Feature, MERGE_STRATEGY_APPEND
 from . import pad_image_to_fft, Image
 from .types import PropertyLike, ArrayLike
@@ -756,7 +756,7 @@ class MieScatterer(Scatterer):
 
         # Harmonics
         A, B = coefficients(L)
-        PI, TAU = D.mie.harmonics(illumination_angle_field, L)
+        PI, TAU = mie.harmonics(illumination_angle_field, L)
 
         # Normalization factor
         E = [(2 * i + 1) / (i * (i + 1)) for i in range(1, L + 1)]
@@ -875,7 +875,7 @@ class MieSphere(MieScatterer):
                 wavelength = wavelength.to("m").magnitude
 
             def inner(L):
-                return D.mie.coefficients(
+                return mie.coefficients(
                     refractive_index / refractive_index_medium,
                     radius * 2 * np.pi / wavelength * refractive_index_medium,
                     L,
@@ -949,7 +949,7 @@ class MieStratifiedSphere(MieScatterer):
             ), "Radius of the shells of a stratified sphere should be monotonically increasing"
 
             def inner(L):
-                return D.mie.stratified_coefficients(
+                return mie.stratified_coefficients(
                     np.array(refractive_index) / refractive_index_medium,
                     np.array(radius) * 2 * np.pi / wavelength * refractive_index_medium,
                     L,
