@@ -952,7 +952,7 @@ class MieScatterer(Scatterer):
         # Fet the angles.
         cos_theta = Z / R3
         illumination_cos_theta = (
-            np.cos(np.arccos(cos_theta) + illumination_angle
+            np.cos(np.arccos(cos_theta) + illumination_angle)
             )
         phi = np.arctan2(Y, X)
 
