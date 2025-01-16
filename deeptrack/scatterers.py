@@ -32,9 +32,6 @@ Key Features
     Mie scatterer, and a stratified spherical scatterer which is a sphere with several
     concentric shells of uniform refractive index.
     
-    
-    
-
 Module Structure
 ----------------
 Classes:
@@ -799,8 +796,8 @@ class MieScatterer(Scatterer):
 
     def get_xy_size(
         self,
-        output_region: np.ndarray,
-        padding: np.ndarray
+        output_region: ArrayLike,
+        padding: ArrayLike[int]
     ) -> np.ndarray:
         return (
             output_region[2] - output_region[0] + padding[0] + padding[2],
@@ -809,8 +806,8 @@ class MieScatterer(Scatterer):
 
     def get_XY(
         self,
-        shape: np.ndarray,
-        voxel_size: np.ndarray
+        shape: ArrayLike,
+        voxel_size: ArrayLike
     ) -> :
         x = np.arange(shape[0]) - shape[0] / 2
         y = np.arange(shape[1]) - shape[1] / 2
@@ -827,7 +824,7 @@ class MieScatterer(Scatterer):
     def get_plane_in_polar_coords(
         self,
         shape: int,
-        voxel_size: np.ndarray,
+        voxel_size: ArrayLike,
         plane_position: float,
         illumination_angle: float
     ) -> Tuple[float, float, float, float]:
@@ -854,25 +851,25 @@ class MieScatterer(Scatterer):
     def get(
         self,
         inp,
-        position: np.ndarray,
-        voxel_size: np.ndarray,
-        padding,
-        wavelength,
-        refractive_index_medium,
-        L: int,
+        position: ArrayLike,
+        voxel_size: ArrayLike,
+        padding: ArrayLike[int],
+        wavelength: float,
+        refractive_index_medium: float,
+        L: Union[int, str],
         collection_angle: float,
         input_polarization: float,
         output_polarization: float,
-        coefficients,
+        coefficients: Callable[int],
         offset_z: float,
         z: float,
         working_distance: float,
         position_objective: float,
-        return_fft,
+        return_fft: bool,
         coherence_length: float,
-        output_region,
+        output_region: ArrayLike,
         illumination_angle: float,
-        amp_factor:float,
+        amp_factor: float,
         phase_shift_correction: bool,
         **kwargs,
     ) -> np.ndarray:
