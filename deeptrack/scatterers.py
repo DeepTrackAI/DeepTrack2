@@ -64,14 +64,13 @@ Classes:
 Examples
 --------
 
-Create a ellipse scatterer and resolve it through a microscope.
+Create a ellipse scatterer and resolve it through a microscope:
 
 >>> import numpy as np
 
 >>> from deeptrack.optics import Fluorescence
 >>> from deeptrack.scatterers import Ellipse
 
-Define optics.
 >>> optics = Fluorescence(
 ...            NA=0.7,
 ...            wavelength=680e-9,
@@ -79,8 +78,6 @@ Define optics.
 ...            magnification=10,
 ...            output_region=(0, 0, 64, 64),
 ...        )
-
-Define scatterer.
 
 >>> scatterer = Ellipse(
 ...      intensity=100,
@@ -91,10 +88,44 @@ Define scatterer.
 ...      upsample=4,
 ...  )
 
-Simulate the optical image of the scatterer:
-
 >>> imaged_scatterer = optics(scatterer)
 >>> imaged_scatterer.plot(cmap="gray")
+
+Combine multiple scatterers to image a core-shell particle:
+
+>>> import numpy as np
+
+>>> from deeptrack.optics import Fluorescence
+>>> from deeptrack.scatterers import Ellipsoid
+
+>>> optics = Fluorescence(
+...    NA=1.4,
+...    wavelength=638.0e-9,
+...    refractive_index_medium=1.33,
+...    output_region=[0, 0, 64, 64],
+...    magnification=1,
+...    resolution=100e-9,
+...    return_field=False,
+... )
+
+>>> inner_sphere = Ellipsoid(
+...    position=(32, 32),
+...    z=-500e-9, # Defocus slightly.
+...    radius=450e-9,
+...    intensity=100,
+... )
+
+>>> outer_sphere = Ellipsoid(
+...    position=inner_sphere.position,
+...    z=inner_sphere.z,
+...    radius=inner_sphere.radius * 2,
+...    intensity= inner_sphere.intensity * -0.25,
+... )
+
+>>> combined_scatterer = inner_sphere >> outer_sphere
+>>> imaged_scatterer = optics(combined_scatterer)
+>>> imaged_scatterer.plot(cmap="gray")
+
 
 """
 
