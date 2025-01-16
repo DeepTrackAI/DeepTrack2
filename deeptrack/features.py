@@ -98,6 +98,7 @@ Process an input image:
 
 """
 
+from __future__ import annotations
 import itertools
 import operator
 import random
@@ -212,7 +213,11 @@ class Feature(DeepTrackNode):
 
     _wrap_array_with_image: bool = False
 
-    def __init__(self, _input: Any = [], **kwargs: Dict[str, Any]):
+    def __init__(
+        self: Feature,
+        _input: Any = [],
+        **kwargs: Dict[str, Any],
+    ):
         """
         Initialize a new Feature instance.
 
@@ -251,10 +256,10 @@ class Feature(DeepTrackNode):
         self.arguments = None
 
     def get(
-        self,
-        image: Union['Image', List['Image']],
+        self: Feature,
+        image: Image | List[Image],
         **kwargs: Dict[str, Any],
-    ) -> Union['Image', List['Image']]:
+    ) -> Image | List[Image]:
         """Transform an image [abstract method].
         
         Abstract method that defines how the feature transforms the input. The 
@@ -262,7 +267,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ---------
-        image : 'Image' or List['Image']
+        image : Image or List[Image]
             The Image or list of images to transform.
         **kwargs : Dict[str, Any]
             The current value of all properties in `properties` as well as any 
@@ -270,7 +275,7 @@ class Feature(DeepTrackNode):
 
         Returns
         -------
-        'Image' or List['Image']
+        Image or List[Image]
             The transformed image or list of images.
 
         Raises
