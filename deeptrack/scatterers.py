@@ -126,6 +126,36 @@ Combine multiple scatterers to image a core-shell particle:
 >>> imaged_scatterer = optics(combined_scatterer)
 >>> imaged_scatterer.plot(cmap="gray")
 
+Create a stratified Mie sphere and resolve it through a microscope:
+
+>>> import numpy as np
+
+>>> from deeptrack.optics import Brightfield
+>>> from deeptrack.scatterers import MieStratifiedSphere
+>>> from deeptrack.elementwise import Abs
+
+>>> optics = Brightfield(
+...    NA=0.7,
+...    wavelength=680e-9,
+...    resolution=1e-6,
+...    magnification=5,
+...    output_region=(0, 0, 64, 64),
+...    return_field=True,
+...    upscale=4,
+... )
+
+>>> scatterer = MieStratifiedSphere(
+...    radius=np.array([0.5e-6, 3e-6]),
+...    refractive_index=[1.45 + 0.1j, 1.52],
+...    position_unit="pixel",
+...    position=(128, 128),
+...    aperature_angle=0.1,
+... )
+
+>>> imaged_scatterer = optics(scatterer)
+
+>>> abs_imaged_scatterer = Abs(imaged_scatterer)
+>>> abs_imaged_scatterer.plot()
 
 """
 
