@@ -29,4 +29,6 @@ examples/**/*/models/
 *.npy
 *.db
 
+*_dataset/
+
 .DS_Store
