@@ -3,14 +3,55 @@
 This module provides classes and utilities to perform common mathematical 
 operations and transformations on images, including clipping, normalization, 
 blurring, and pooling. These are implemented as subclasses of `Feature` for 
-seamless integration with the  feature-based design of the library.
+seamless integration with the feature-based design of the library.
 
-Classes
+
+Module Structure
+-----------------
+Classes:
+
+- `Clip`: Clip the input values within a specified minimum and maximum range.
+- `NormalizeMinMax`: Perform min-max normalization on images.
+- `NormalizeStandard`: Normalize images to have mean 0 and
+                       standard deviation 1.
+- `NormalizeQuantile`: Normalize images based on specified quantiles.
+- `Blur`: Apply a blurring filter to the image.
+- `AverageBlur`: Apply average blurring to the image.
+- `GaussianBlur`: Apply Gaussian blurring to the image.
+- `MedianBlur`: Apply median blurring to the image.
+- `Pool`: Apply a pooling function to downsample the image.
+- `AveragePooling`: Apply average pooling to the image.
+- `MaxPooling`: Apply max pooling to the image.
+- `MinPooling`: Apply min pooling to the image.
+- `MedianPooling`: Apply median pooling to the image.
+- `Resize`: Resize the image to a specified size.
+- `BlurCV2`: Apply a blurring filter using OpenCV2.
+- `BilateralBlur`: Apply bilateral blurring to preserve edges while smoothing.
+
+
+Example
 -------
-Clip
-    Clip the input values within a specified minimum and maximum range.
-NormalizeMinMax
-    Perform min-max normalization on images.
+Define a simple pipeline with mathematical operations:
+
+>>> import numpy as np
+>>> from deeptrack import math
+
+Create features for clipping and normalization:
+
+>>> clip = math.Clip(min=0, max=200)
+>>> normalize = math.NormalizeMinMax()
+
+Chain features together:
+
+>>> pipeline = clip >> normalize
+
+Process an input image:
+
+>>> input_image = np.array([0, 100, 200, 400])
+>>> output_image = pipeline(input_image)
+>>> print(output_image)
+[0., 0.5, 1., 1.]
+
 """
 
 from typing import Callable, List
@@ -34,9 +75,9 @@ class Average(Feature):
 
     Parameters
     ----------
-    axis : int or tuple of ints
+    axis: int or tuple of ints
         Axis along which to average
-    features : list of features, optional
+    features: list of features, optional
     """
 
     __distributed__ = False
@@ -68,9 +109,9 @@ class Clip(Feature):
 
     Parameters
     ----------
-    min : float
+    min: float
         Clip the input to be larger than this value.
-    max : float
+    max: float
         Clip the input to be smaller than this value.
     """
 
@@ -89,15 +130,16 @@ class Clip(Feature):
 class NormalizeMinMax(Feature):
     """Image normalization.
 
-    Transforms the input to be between a minimum and a maximum value using a linear transformation.
+    Transforms the input to be between a minimum and a maximum value using
+    a linear transformation.
 
     Parameters
     ----------
-    min : float
+    min: float
         The minimum of the transformation.
-    max : float
+    max: float
         The maximum of the transformation.
-    featurewise : bool
+    featurewise: bool
         Whether to normalize each feature independently
     """
 
@@ -127,7 +169,7 @@ class NormalizeStandard(Feature):
 
     Parameters
     ----------
-    featurewise : bool
+    featurewise: bool
         Whether to normalize each feature independently
     """
 
@@ -142,19 +184,23 @@ class NormalizeStandard(Feature):
 class NormalizeQuantile(Feature):
     """Image normalization.
 
-    Center the image to the median, and divide by the difference between the quantiles
-    defined by `q_max` and `q_min`
+    Center the image to the median, and divide by the difference between the
+    quantiles defined by `q_max` and `q_min`
 
     Parameters
     ----------
-    quantiles : tuple (q_min, q_max), 0.0 < q_min < q_max < 1.0
+    quantiles: tuple (q_min, q_max), 0.0 < q_min < q_max < 1.0
        Quantile range to calculate scaling factor
-    featurewise : bool
+    featurewise: bool
         Whether to normalize each feature independently
     """
 
     def __init__(self, quantiles=(0.25, 0.75), featurewise=True, **kwargs):
-        super().__init__(self, quantiles=quantiles, featurewise=featurewise, **kwargs)
+        super().__init__(
+            self,
+            quantiles=quantiles,
+            featurewise=featurewise,
+            **kwargs)
 
     def get(self, image, quantiles, **kwargs):
         q_low, q_high, median = np.quantile(image, (*quantiles, 0.5))
@@ -162,8 +208,20 @@ class NormalizeQuantile(Feature):
 
 
 class Blur(Feature):
+    """Apply a blurring filter to an image.
+
+    Parameters
+    ----------
+    filter_function: Callable
+        The blurring function to apply.
+    mode: str
+        Border mode for handling boundaries (e.g., 'reflect').
+    """
     def __init__(
-        self, filter_function: Callable, mode: PropertyLike[str] = "reflect", **kwargs
+        self,
+        filter_function: Callable,
+        mode: PropertyLike[str] = "reflect",
+        **kwargs
     ):
         self.filter = filter_function
         super().__init__(borderType=mode, **kwargs)
@@ -176,12 +234,13 @@ class Blur(Feature):
 class AverageBlur(Blur):
     """Blur an image by computing simple means over neighbourhoods.
 
-    Performs a (N-1)D convolution if the last dimension is smaller than the kernel size.
+    Performs a (N-1)D convolution if the last dimension is smaller than
+    the kernel size.
 
     Parameters
     ----------
-    ksize : int
-        Kernel size to use.
+    ksize: int
+        Kernel size for the pooling operation.
     """
 
     def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
@@ -196,16 +255,26 @@ class AverageBlur(Blur):
 
         weights = np.ones(ksize) / np.prod(ksize)
 
-        return utils.safe_call(ndimage.convolve, input=input, weights=weights, **kwargs)
+        return utils.safe_call(
+            ndimage.convolve,
+            input=input,
+            weights=weights,
+            **kwargs,
+            )
 
 
 class GaussianBlur(Blur):
-    """Augmenter to blur images using gaussian kernels.
+    """Applies a Gaussian blur to images using Gaussian kernels for
+    image augmentation.
+
+    This class blurs images by convolving them with a Gaussian filter, which
+    smooths the image and reduces high-frequency details. The level of blurring
+    is controlled by the standard deviation (`sigma`) of the Gaussian kernel.
 
     Parameters
     ----------
-    sigma : number
-        Standard deviation of the gaussian kernel.
+    sigma: float
+        Standard deviation of the Gaussian kernel.
 
     """
 
@@ -214,11 +283,12 @@ class GaussianBlur(Blur):
 
 
 class MedianBlur(Blur):
-    """Blur an image by computing median values over neighbourhoods.
+    """Applies a median blur to images by replacing each pixel with the median
+    of its neighborhood.
 
     Parameters
     ----------
-    ksize :
+    ksize: int
         Kernel size.
 
     """
@@ -229,27 +299,34 @@ class MedianBlur(Blur):
 
 # POOLING
 
-
 class Pool(Feature):
-    """Downsamples the image by applying a function to local regions of the image.
+    """Downsamples the image by applying a function to local regions of the
+    image.
+
+    This class reduces the resolution of an image by dividing it into
+    non-overlapping blocks of size `ksize` and applying the specified pooling
+    function to each block.
 
     Parameters
     ----------
-    pooling_function : function
+    pooling_function: function
         A function that is applied to each local region of the image.
-        DOES NOT NEED TO BE WRAPPED IN A ANOTHER FUNCTIOn.
-        Must implement the axis argument. Examples include
-        np.mean, np.max, np.min, etc.
-    ksize : int
+        DOES NOT NEED TO BE WRAPPED IN A ANOTHER FUNCTION.
+        Must support the axis argument. 
+        Examples include np.mean, np.max, np.min, etc.
+    ksize: int
         Size of the pooling kernel.
-    cval : number
+    cval: number
         Value to pad edges with if necessary.
-    func_kwargs : dict
+    func_kwargs: dict
         Additional parameters sent to the pooling function.
     """
 
     def __init__(
-        self, pooling_function: Callable, ksize: PropertyLike[int] = 3, **kwargs
+        self,
+        pooling_function: Callable,
+        ksize: PropertyLike[int] = 3,
+        **kwargs
     ):
         self.pooling = pooling_function
         super().__init__(ksize=ksize, **kwargs)
@@ -268,15 +345,15 @@ class Pool(Feature):
 
 
 class AveragePooling(Pool):
-    """Apply average pooling to images.
+    """Apply average pooling to an images.
 
     Parameters
     ----------
-    ksize : int
+    ksize: int
         Size of the pooling kernel.
-    cval : number
+    cval: number
         Value to pad edges with if necessary. Default 0.
-    func_kwargs : dict
+    func_kwargs: dict
         Additional parameters sent to the pooling function.
     """
 
@@ -289,11 +366,11 @@ class MaxPooling(Pool):
 
     Parameters
     ----------
-    ksize : int
+    ksize: int
         Size of the pooling kernel.
-    cval : number
+    cval: number
         Value to pad edges with if necessary. Default 0.
-    func_kwargs : dict
+    func_kwargs: dict
         Additional parameters sent to the pooling function.
     """
 
@@ -306,11 +383,11 @@ class MinPooling(Pool):
 
     Parameters
     ----------
-    ksize : int
+    ksize: int
         Size of the pooling kernel.
-    cval : number
+    cval: number
         Value to pad edges with if necessary. Default 0.
-    func_kwargs : dict
+    func_kwargs: dict
         Additional parameters sent to the pooling function.
     """
 
@@ -323,11 +400,11 @@ class MedianPooling(Pool):
 
     Parameters
     ----------
-    ksize : int
+    ksize: int
         Size of the pooling kernel.
-    cval : number
+    cval: number
         Value to pad edges with if necessary. Default 0.
-    func_kwargs : dict
+    func_kwargs: dict
         Additional parameters sent to the pooling function.
     """
 
@@ -336,14 +413,16 @@ class MedianPooling(Pool):
 
 
 class Resize(Feature):
-    """Resize an image. This is a wrapper around cv2.resize and takes the same arguments.
-    Note that the order of the axes is different in cv2 and numpy. In cv2, the first axis is the
-    vertical axis, while in numpy it is the horizontal axis. This is reflected in the default
-    values of the arguments.
+    """Resize an image to a specified size.
+    
+    This is a wrapper around cv2.resize and takes the same arguments.
+    Note that the order of the axes is different in cv2 and numpy. In cv2, the
+    first axis is the vertical axis, while in numpy it is the horizontal axis.
+    This is reflected in the default values of the arguments.
 
     Parameters
     ----------
-    size : tuple
+    size: tuple
         Size to resize to.
     """
 
@@ -384,13 +463,18 @@ class BlurCV2(Feature):
     def __new__(cls, *args, **kwargs):
         if not IMPORTED_CV2:
             raise ImportError(
-                "opencv not installed on device, it is an optional dependency of deeptrack. To use this feature, you need to install it manually."
+                "opencv not installed on device, it is an optional "
+                "dependency of deeptrack. To use this feature, you "
+                "need to install it manually."
             )
 
         return super(BlurCV2, cls).__new__(*args, **kwargs)
 
     def __init__(
-        self, filter_function: Callable, mode: PropertyLike[str] = "refelct", **kwargs
+        self,
+        filter_function: Callable,
+        mode: PropertyLike[str] = "refelct",
+        **kwargs
     ):
         self.filter = filter_function
         borderType = _map_mode_to_cv2_borderType[mode]
@@ -412,16 +496,16 @@ class BilateralBlur(Blur):
 
     Parameters
     ----------
-    d : int
+    d: int
         Diameter of each pixel neighborhood with value range.
 
-    sigma_color : number
+    sigma_color: number
         Filter sigma in the color space with value range. A
         large value of the parameter means that farther colors within the
         pixel neighborhood (see `sigma_space`) will be mixed together,
         resulting in larger areas of semi-equal color.
 
-    sigma_space : number
+    sigma_space: number
         Filter sigma in the coordinate space with value range. A
         large value of the parameter means that farther pixels will influence
         each other as long as their colors are close enough (see
