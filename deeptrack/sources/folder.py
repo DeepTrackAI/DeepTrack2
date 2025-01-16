@@ -1,5 +1,55 @@
+"""Utility class for data sources in a directory structure.
+
+This module provies the `ImageFolder` DeepTrack2 class
+which enables control of image sources organized 
+in a directory structure.
+
+The primary usage is to facilitate naming and
+organizing of data sources.
+
+Key Features
+------------
+- **Attribute Access**
+
+    Enables accessing attributes tied to a data source such as
+    paths, directory structure, length etc.
+    
+- **Labeling**
+
+    Allows converting category names of images to integers,
+    which is more flexible and easy to process in a data pipeline.
+
+- **Category Splitting**
+
+    The sources of images can be split into subcategories of which the 
+    user specifies the name of.
+    
+
+Module Structure
+----------------
+`ImageFolder`: Data source for images organized in a directory structure.
+
+    Allows for processing of image sources with `Dict` data strucutres,
+    splitting, naming and labeling functions.
+    
+Examples
+--------
+Print some information about a source of data:
+
+>>> from deeptrack.sources import folder
+
+>>> root = "data/train"
+>>> data_source = folder.ImageFolder(root)
+
+>>> print(f"Total images in training data: {len(train_data)}")
+>>> print(f"Classes: {train_data.classes}")
+
+"""
+
 import glob
-import os 
+import os
+from typing import List, Tuple
+
 from deeptrack.sources.base import Source
 
 known_extensions = ["png", "jpg", "jpeg", "tif", "tiff", "bmp", "gif"]
@@ -26,32 +76,50 @@ class ImageFolder(Source):
 
     Parameters
     ----------
-    path : list
+    path: list
+    
         List of paths to the image files.
-    label : list
+        
+    label: list
+    
         List of corresponding labels for each image.
-    label_name : list
+        
+    label_name: list
+    
         List of category names corresponding to each label.
+        
 
     Methods
     -------
-    classes : list
+    classes: list
         Returns a list of unique class names (category names).
+        
     __init__(root: str)
+    
         Initializes the `ImageFolder` instance by scanning
         the directory structure.
+        
     __len__()
         Returns the total number of images in the dataset.
+        
     get_category_name(path: str, directory_level: int)
+    
         Retrieves the category name (directory name) for the given image path
         at a specific directory level.
+        
     label_to_name(label: int)
+    
         Converts a label index to the corresponding category name.
+        
     name_to_label(name: str)
+    
         Converts a category name to the corresponding label index.
+        
     split(*splits: str)
+    
         Splits the dataset into subsets based on the folder structure.
         The first folder name in the path will be used to define the split.
+        
     """
 
     path: str
@@ -59,10 +127,16 @@ class ImageFolder(Source):
     label_name: str
 
     @property
-    def classes(self) -> list:
+    def classes(
+        self
+    ) -> List:
         return list(self._category_to_int.keys())
 
-    def __init__(self, root):
+    def __init__(
+        self,
+        root: str
+    ) -> None:
+        
         self._root = root
 
         self._paths = glob.glob(f"{root}/**/*", recursive=True)
@@ -73,42 +147,61 @@ class ImageFolder(Source):
         self._paths.sort()
         self._length = len(self._paths)
 
-        # get category name as 1 directory down from root
+        # Get category name as 1 directory down from root.
         category_per_path = [self.get_category_name(path, 0) 
                              for path in self._paths]
         unique_categories = set(category_per_path)
 
-        # create a dictionary mapping category name to integer
+        # Create a dictionary mapping category name to integer.
         self._category_to_int = {category: i for i, category
                                   in enumerate(unique_categories)}
         self._int_to_category = {i: category for category, i 
                                  in self._category_to_int.items()}
 
-        # create a list of integers corresponding to the category of each path
+        # Create a list of integers corresponding to the category of each path.
         categories = [self._category_to_int[category] 
                       for category in category_per_path]
 
-        super().__init__(path=self._paths,
-                         label=categories,
-                         label_name=category_per_path
-                        )
+        super().__init__(
+            path=self._paths,
+            label=categories,
+            label_name=category_per_path           
+        )
 
-    def __len__(self):
+    def __len__(
+        self
+    ) -> int:
         return self._length
 
-    def get_category_name(self, path, directory_level):
+    def get_category_name(
+        self, 
+        path: str,
+        directory_level: int
+    ) -> str:
+        
         relative_path = path.replace(self._root, "", 1).lstrip(os.sep)
         folder = relative_path.split(os.sep)[directory_level] \
             if relative_path else ""
         return folder
     
-    def label_to_name(self, label):
+    def label_to_name(
+        self,
+        label: int
+    ) -> str:
+        """Gets the category corresponding to a label"""
         return self._int_to_category[label]
     
-    def name_to_label(self, name):
+    def name_to_label(
+        self,
+        name: str
+    ) -> int:
+        """Gets the label corresponding to a category"""
         return self._category_to_int[name]
     
-    def split(self, *splits: str):
+    def split(
+        self,
+        *splits: str
+    ) -> Tuple[str]:
         """Split the dataset into subsets.
         
         The splits are defined by the names of the first folder
@@ -132,8 +225,10 @@ class ImageFolder(Source):
         Parameters
         ----------
 
-        splits : str
+        splits: str
+        
             The names of the categories to split into.
+            
         """
         
         all_splits = set([self.get_category_name(path, 0) 
@@ -152,7 +247,10 @@ class ImageFolder(Source):
 
         output = []
 
-        def update_root_source(item):
+        def update_root_source(
+            item
+        ) -> None:
+            """Inner function which updates attributes of root source."""
             for key in item:
                 getattr(self, key).invalidate()
                 getattr(self, key).set_value(item[key])
