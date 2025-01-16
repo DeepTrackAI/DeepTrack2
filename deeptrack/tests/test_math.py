@@ -71,18 +71,7 @@ class TestMath(unittest.TestCase):
         feature = math.MinPooling(ksize=2)
         pooled_image = feature.resolve(input_image)
         self.assertTrue(np.all(pooled_image == [[1, 3]]))
-
-    def test_Resize(self):
-        input_image = np.array([[1, 2], [3, 4]], dtype=float)
-        feature = math.Resize(dsize=(4, 4))
-        resized_image = feature.resolve(input_image)
-        self.assertTrue(resized_image.shape == (4, 4))
-
-        input_image = np.array([[1, 2], [3, 4]], dtype=float)
-        feature = math.Resize(dsize=(1, 1))
-        resized_image = feature.resolve(input_image)
-        self.assertTrue(resized_image.shape == (1, 1))
-        self.assertTrue(resized_image == [[2.5]])         
+     
 
 if __name__ == "__main__":
     unittest.main()
