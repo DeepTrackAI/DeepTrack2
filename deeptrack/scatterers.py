@@ -822,7 +822,7 @@ class MieScatterer(Scatterer):
         output_region=None,
         polarization_angle: float=None,
         working_distance: float=1000000,  # Large value to avoid numerical issues.
-        position_objective: Tuple[float, float (, float)]=(0, 0),
+        position_objective: Tuple[float, float]=(0, 0),
         return_fft: bool=False,
         coherence_length: float=None,
         illumination_angle: float=0,
