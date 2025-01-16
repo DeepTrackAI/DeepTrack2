@@ -96,7 +96,7 @@ class Rescale(Feature):
     Parameters
     ----------
     rescale : float
-        index of z-propagator matrix
+        rescaling factor
     """
 
     def __init__(self, rescale=1, **kwargs):
