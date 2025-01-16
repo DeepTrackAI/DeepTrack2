@@ -1303,8 +1303,8 @@ class MieStratifiedSphere(MieScatterer):
         ) -> Callable:
             assert np.all(
                 radius[1:] >= radius[:-1]
-            ), "Radius of the shells of a stratified sphere should be "
-               "monotonically increasing"
+            ), ("Radius of the shells of a stratified sphere should be "
+               "monotonically increasing")
 
             def inner(
                 L: int
