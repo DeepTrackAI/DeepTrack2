@@ -15,22 +15,23 @@ Key Features
 
     The initialization parameters allow the user to choose proportions and 
     positioning of the scatterer in the image. It is also possible to combine 
-    multiple scatterers and overlay them, e.g. two ellipses orthogonal to each other
-    would form a plus-shape or combining two spheres (one small, one large) to simulate
-    a hollow core-shell particle.
+    multiple scatterers and overlay them, e.g. two ellipses orthogonal
+    to each other would form a plus-shape or combining two spheres
+    (one small, one large) to simulate a core-shell particle.
     
 - **Defocusing**
 
-    As the `z` parameter represents the scatterers position in relation to the focal
-    point of the microscope, the user can simulate defocusing by setting this parameter
-    to be non-zero.
+    As the `z` parameter represents the scatterers position in relation to the
+    focal point of the microscope, the user can simulate defocusing by setting
+    this parameter to be non-zero.
     
 - **Mie scatterers**
 
-    Implements Mie-theory scatterers that calculates harmonics up to a desired order with
-    functions and utilities from `deeptrack.backend.mie`. Includes the case of a spherical
-    Mie scatterer, and a stratified spherical scatterer which is a sphere with several
-    concentric shells of uniform refractive index.
+    Implements Mie-theory scatterers that calculates harmonics up to a desired
+    order with functions and utilities from `deeptrack.backend.mie`. Includes
+    the case of a spherical Mie scatterer, and a stratified spherical
+    scatterer which is a sphere with several concentric shells of
+    uniform refractive index.
     
 Module Structure
 ----------------
@@ -54,9 +55,9 @@ Classes:
 
 - `MieScatterer`: Mie scatterer base class.
 
-- `MieSphere`: Extends `MieScatterer` for the spherical case.
+- `MieSphere`: Extends `MieScatterer` to the spherical case.
 
-- `MieStratifiedSphere`:  Extends `MieScatterer` for the stratified sphere case.
+- `MieStratifiedSphere`:  Extends `MieScatterer` to the stratified sphere case.
 
     A stratified sphere is a sphere with several concentric shells of uniform
     refractive index.
@@ -242,8 +243,10 @@ class Scatterer(Feature):
         # Ignore warning to help with comparison with arrays.
         if upsample is not 1:  # noqa: F632
             warnings.warn(
-                f"Setting upsample != 1 is deprecated. Please, instead use dt.Upscale(f, factor={upsample})"
+                f"Setting upsample != 1 is deprecated. "
+                f"Please, instead use dt.Upscale(f, factor={upsample})"
             )
+
         self._processed_properties = False
         super().__init__(
             position=position,
@@ -275,7 +278,7 @@ class Scatterer(Feature):
         upsample_axes=None,
         crop_empty=True,
         **kwargs
-    ):
+    ) -> List[Image]:
         # Post processes the created object to handle upsampling,
         # as well as cropping empty slices.
         if not self._processed_properties:
@@ -318,14 +321,14 @@ class Scatterer(Feature):
         self,
         *args,
         **kwargs
-    ) -> list:
+    ) -> List:
         return self._image_wrapped_format_input(*args, **kwargs)
     
     def _no_wrap_process_and_get(
         self,
         *args,
         **feature_input
-    ) -> list:
+    ) -> List:
         return self._image_wrapped_process_and_get(*args, **feature_input)
     
     def _no_wrap_process_output(
@@ -480,7 +483,10 @@ class Ellipse(Scatterer):
             Y = Yt
 
         # Evaluate ellipse.
-        mask = ((X * X) / (rad[0] * rad[0]) + (Y * Y) / (rad[1] * rad[1]) < 1) * 1.0
+        mask = (
+            (X * X) / (rad[0] * rad[0]) +
+            (Y * Y) / (rad[1] * rad[1]) < 1
+            ) * 1.0
         mask = np.expand_dims(mask, axis=-1)
         return mask
 
@@ -579,8 +585,9 @@ class Ellipsoid(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
         
     transpose: bool
-        If True, the ellipse is transposed as to align the first axis of the radius with
-        the first axis of the created volume. This is applied before rotation.
+        If True, the ellipse is transposed as to align the first axis
+        of the radius with the first axis of the created volume.
+        This is applied before rotation.
         
     """
 
@@ -697,7 +704,9 @@ class Ellipsoid(Scatterer):
         ZR = (-sin[1] * X) + cos[1] * sin[2] * Y + cos[1] * cos[2] * Z
 
         mask = (
-            (XR / radius[0]) ** 2 + (YR / radius[1]) ** 2 + (ZR / radius[2]) ** 2 < 1
+            (XR / radius[0]) ** 2 +
+            (YR / radius[1]) ** 2 +
+            (ZR / radius[2]) ** 2 < 1
         ) * 1.0
         return mask
 
@@ -735,15 +744,16 @@ class MieScatterer(Scatterer):
     input_polarization: float or Quantity
     
         Defines the polarization angle of the input. For simulating circularly
-        polarized light we recommend a coherent sum of two simulated fields. For
-        unpolarized light we recommend a incoherent sum of two simulated fields. 
-        If defined as "circular", the coefficients are set to 1/2.
+        polarized light we recommend a coherent sum of two simulated fields. 
+        For unpolarized light we recommend a incoherent sum of two simulated
+        fields. If defined as "circular", the coefficients are set to 1/2.
         
     output_polarization: float or Quantity or None
     
-        If None, the output light is not polarized. Otherwise defines the angle of the
-        polarization filter after the sample. For off-axis, keep the same as input_polarization.
-        If defined as "circular", the coefficients are multiplied by 1. I.e. no change.
+        If None, the output light is not polarized. Otherwise defines the
+        angle of the polarization filter after the sample. For off-axis, keep
+        the same as input_polarization. If defined as "circular", the
+        coefficients are multiplied by 1. I.e. no change.
         
     L: int or str
     
@@ -768,18 +778,19 @@ class MieScatterer(Scatterer):
         
     coherence_length: float
     
-        The temporal coherence length of a partially coherent light given in meters. 
-        If None, the illumination is assumed to be coherent.
+        The temporal coherence length of a partially coherent light given in
+        meters. If None, the illumination is assumed to be coherent.
         
     amp_factor: float
     
         A factor that scales the amplification of the field. 
-        This is useful for scaling the field to the correct intensity. Default is 1.
+        This is useful for scaling the field to the correct intensity.
+        Default is 1.
         
     phase_shift_correction: bool
     
-        If True, the feature applies a phase shift correction to the output field. 
-        This is necessary for ISCAT simulations. 
+        If True, the feature applies a phase shift correction to the output
+        field. This is necessary for ISCAT simulations. 
         The correction depends on the k-vector and z according to the formula: 
         arr*=np.exp(1j * k * z + 1j * np.pi / 2)
         
@@ -798,7 +809,7 @@ class MieScatterer(Scatterer):
 
     def __init__(
         self,
-        coefficients: Callable[..., Callable[[int], Tuple[ArrayLike, ArrayLike]]],
+        coefficients: Callable,
         input_polarization: PropertyLike[int]=0,
         output_polarization: PropertyLike[int]=0,
         offset_z: PropertyLike[str] = "auto",
@@ -821,7 +832,8 @@ class MieScatterer(Scatterer):
     ) -> None:
         if polarization_angle is not None:
             warnings.warn(
-                "polarization_angle is deprecated. Please use input_polarization instead"
+                "polarization_angle is deprecated. " 
+                "Please use input_polarization instead"
             )
             input_polarization = polarization_angle
         kwargs.pop("is_field", None)
@@ -861,7 +873,9 @@ class MieScatterer(Scatterer):
 
         if properties["L"] == "auto":
             try:
-                v = 2 * np.pi * np.max(properties["radius"]) / properties["wavelength"]
+                v = 2 * np.pi * np.max(properties["radius"]) /
+                properties["wavelength"]
+
                 properties["L"] = int(np.floor((v + 4 * (v ** (1 / 3)) + 1)))
             except (ValueError, TypeError):
                 pass
@@ -911,7 +925,7 @@ class MieScatterer(Scatterer):
         Y: float,
         radius: float
     ) -> ArrayLike[bool]:
-        return np.sqrt(X**2 + Y**2) < radius
+        return np.sqrt(X ** 2 + Y ** 2) < radius
 
     def get_plane_in_polar_coords(
         self,
@@ -930,12 +944,14 @@ class MieScatterer(Scatterer):
         Y = Y + plane_position[1]
         Z = plane_position[2]  # Might be +z or -z.
 
-        R2_squared = X**2 + Y**2
-        R3 = np.sqrt(R2_squared + Z**2)  # Might be +z instead of -z.
+        R2_squared = X ** 2 + Y ** 2
+        R3 = np.sqrt(R2_squared + Z ** 2)  # Might be +z instead of -z.
 
         # Fet the angles.
         cos_theta = Z / R3
-        illumination_cos_theta=np.cos(np.arccos(cos_theta)+illumination_angle)
+        illumination_cos_theta = (
+            np.cos(np.arccos(cos_theta) + illumination_angle
+            )
         phi = np.arctan2(Y, X)
 
         return R3, cos_theta, illumination_cos_theta, phi
@@ -989,19 +1005,24 @@ class MieScatterer(Scatterer):
         )
 
         # Get field evaluation plane at offset_z.
-        R3_field, cos_theta_field, illumination_angle_field, phi_field = self.get_plane_in_polar_coords(
+        R3_field, cos_theta_field, illumination_angle_field, phi_field =\
+        self.get_plane_in_polar_coords(
             arr.shape, voxel_size, relative_position * ratio, illumination_angle
         )
         
         cos_phi_field, sin_phi_field = np.cos(phi_field), np.sin(phi_field)
-        # x and y position of a beam passing through field evaluation plane on the objective.
+
+        # x and y position of a beam passing through field evaluation plane
+        # on the objective.
         x_farfield = (
-            position[0]
-            + R3_field * np.sqrt(1 - cos_theta_field**2) * cos_phi_field / ratio
+            position[0] +
+            R3_field * np.sqrt(1 - cos_theta_field ** 2) *
+            cos_phi_field / ratio
         )
         y_farfield = (
-            position[1]
-            + R3_field * np.sqrt(1 - cos_theta_field**2) * sin_phi_field / ratio
+            position[1] +
+            R3_field * np.sqrt(1 - cos_theta_field ** 2) *
+            sin_phi_field / ratio
         )
 
         # If the beam is within the pupil.
@@ -1036,7 +1057,9 @@ class MieScatterer(Scatterer):
                 output_polarization = output_polarization.magnitude
 
             S1_coef *= np.sin(phi_field + output_polarization)
-            S2_coef *= np.cos(phi_field + output_polarization) * illumination_angle_field
+
+            S2_coef *= np.cos(phi_field + output_polarization) *
+            illumination_angle_field
 
         # Wave vector.
         k = 2 * np.pi / wavelength * refractive_index_medium
@@ -1049,8 +1072,13 @@ class MieScatterer(Scatterer):
         E = [(2 * i + 1) / (i * (i + 1)) for i in range(1, L + 1)]
 
         # Scattering terms.
-        S1 = sum([E[i] * A[i] * PI[i] + E[i] * B[i] * TAU[i] for i in range(0, L)])
-        S2 = sum([E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)])
+        S1 = sum(
+            [E[i] * A[i] * PI[i] + E[i] * B[i] * TAU[i] for i in range(0, L)]
+        )
+
+        S2 = sum(
+            [E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)]
+        )
         
         arr[pupil_mask] = (
             -1j
@@ -1059,7 +1087,8 @@ class MieScatterer(Scatterer):
             * (S2 * S2_coef + S1 * S1_coef)
         ) / amp_factor
         
-        # For phase shift correction (a multiplication of the field by exp(1j * k * z)).
+        # For phase shift correction (a multiplication of the field
+        # by exp(1j * k * z)).
         if phase_shift_correction:
             arr *= np.exp(1j * k * z + 1j * np.pi / 2)
 
@@ -1073,7 +1102,7 @@ class MieScatterer(Scatterer):
                 -mask.shape[0] // 2 : mask.shape[0] // 2,
                 -mask.shape[1] // 2 : mask.shape[1] // 2,
             ]
-            mask = np.exp(-0.5 * (x**2 + y**2) / ((sigma) ** 2))
+            mask = np.exp(-0.5 * (x ** 2 + y ** 2) / ((sigma) ** 2))
 
             mask = image.maybe_cupy(mask)
             arr = arr * mask
@@ -1096,7 +1125,9 @@ class MieScatterer(Scatterer):
                 + (padding[1] - arr.shape[1] / 2) * voxel_size[1]
             ),
         )
-        fourier_field = fourier_field * propagation_matrix * np.exp(-1j * k * offset_z)
+        fourier_field = (
+            fourier_field * propagation_matrix * np.exp(-1j * k * offset_z)
+        )
 
         if return_fft:
             return fourier_field[..., np.newaxis]
@@ -1270,15 +1301,16 @@ class MieStratifiedSphere(MieScatterer):
         ) -> Callable:
             assert np.all(
                 radius[1:] >= radius[:-1]
-            ), "Radius of the shells of a stratified sphere should be monotonically increasing"
+            ), "Radius of the shells of a stratified sphere should be "
+               "monotonically increasing"
 
             def inner(
                 L: int
             ):
                 return mie.stratified_coefficients(
                     np.array(refractive_index) / refractive_index_medium,
-                    np.array(radius) * 2 * np.pi / wavelength * refractive_index_medium,
-                    L,
+                    np.array(radius) * 2 * np.pi / wavelength *
+                    refractive_index_medium, L,
                 )
 
             return inner
