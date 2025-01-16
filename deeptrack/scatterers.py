@@ -160,7 +160,7 @@ Create a stratified Mie sphere and resolve it through a microscope:
 """
 
 
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Dict
 import warnings
 
 from pint import Quantity
@@ -259,8 +259,8 @@ class Scatterer(Feature):
 
     def _process_properties(
         self,
-        properties: dict
-    ) -> dict:
+        properties: Dict
+    ) -> Dict:
         
         # Rescales the position property.
         properties = super()._process_properties(properties)
@@ -270,8 +270,8 @@ class Scatterer(Feature):
     def _process_and_get(
         self,
         *args,
-        voxel_size,
-        upsample,
+        voxel_size: ArrayLike[int],
+        upsample: int,
         upsample_axes=None,
         crop_empty=True,
         **kwargs
@@ -369,7 +369,8 @@ class PointParticle(Scatterer):
         self,
         image: Image,
         **kwarg
-    ) -> np.ndarray:
+    ) -> ArrayLike[float]:
+        """Abstract method to initialize the point scatterer"""
         
         scale = get_active_scale()
         return np.ones((1, 1, 1)) * np.prod(scale)
@@ -428,8 +429,8 @@ class Ellipse(Scatterer):
 
     def _process_properties(
         self,
-        properties: dict
-    ) -> dict:
+        properties: Dict
+    ) -> Dict:
         """Preprocess the input to the method .get()
 
         Ensures that the radius is an array of length 2. If the radius
@@ -458,8 +459,8 @@ class Ellipse(Scatterer):
         voxel_size: PropertyLike[float],
         transpose: PropertyLike[bool],
         **kwargs
-    ) -> np.ndarray :
-
+    ) -> ArrayLike[float]:
+        """Abstract method to initialize the ellipse scatterer"""
         if not transpose:
             radius = radius[::-1]
             # rotation = rotation[::-1]
@@ -528,7 +529,8 @@ class Sphere(Scatterer):
         radius: PropertyLike[float],
         voxel_size: PropertyLike[float],
         **kwargs
-    ) -> np.ndarray:
+    ) -> ArrayLike[float]:
+        """Abstract method to initialize the sphere scatterer"""
 
         # Create a grid to calculate on.
         rad = radius * np.ones(3) / voxel_size
@@ -601,7 +603,7 @@ class Ellipsoid(Scatterer):
     def _process_properties(
         self,
         propertydict: Dict
-    ):
+    ) -> Dict:
         """Preprocess the input to the method .get()
 
         Ensures that the radius and the rotation properties both are arrays of
@@ -662,7 +664,8 @@ class Ellipsoid(Scatterer):
         voxel_size: PropertyLike[float],
         transpose: PropertyLike[bool],
         **kwargs
-    ):
+    ) -> ArrayLike[float]:
+        """Abstract method to initialize the ellipsoid scatterer"""
         if not transpose:
             
             # Swap the first and second value of the radius vector.
@@ -887,7 +890,7 @@ class MieScatterer(Scatterer):
         self,
         output_region: ArrayLike,
         padding: ArrayLike[int]
-    ) -> np.ndarray:
+    ) -> ArrayLike[int]:
         return (
             output_region[2] - output_region[0] + padding[0] + padding[2],
             output_region[3] - output_region[1] + padding[1] + padding[3],
@@ -895,9 +898,9 @@ class MieScatterer(Scatterer):
 
     def get_XY(
         self,
-        shape: ArrayLike,
-        voxel_size: ArrayLike
-    ) -> :
+        shape: ArrayLike[int],
+        voxel_size: ArrayLike[int]
+    ) -> ArrayLike[int] :
         x = np.arange(shape[0]) - shape[0] / 2
         y = np.arange(shape[1]) - shape[1] / 2
         return np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
@@ -907,7 +910,7 @@ class MieScatterer(Scatterer):
         X: float,
         Y: float,
         radius: float
-    ):
+    ) -> ArrayLike[bool]:
         return np.sqrt(X**2 + Y**2) < radius
 
     def get_plane_in_polar_coords(
@@ -961,7 +964,8 @@ class MieScatterer(Scatterer):
         amp_factor: float,
         phase_shift_correction: bool,
         **kwargs,
-    ) -> np.ndarray:
+    ) -> ArrayLike[float]:
+        """Abstract method to initialize the Mie scatterer"""
         # Get size of the output.
         xSize, ySize = self.get_xy_size(output_region, padding)
         voxel_size = get_active_voxel_size()
@@ -1164,7 +1168,7 @@ class MieSphere(MieScatterer):
             refractive_index: float,
             refractive_index_medium: float,
             wavelength: float
-        ):
+        ) -> Callable:
 
             if isinstance(radius, Quantity):
                 radius = radius.to("m").magnitude
@@ -1263,7 +1267,7 @@ class MieStratifiedSphere(MieScatterer):
             refractive_index: float,
             refractive_index_medium: float,
             wavelength: float
-        ):
+        ) -> Callable:
             assert np.all(
                 radius[1:] >= radius[:-1]
             ), "Radius of the shells of a stratified sphere should be monotonically increasing"
