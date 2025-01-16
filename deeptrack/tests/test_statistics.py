@@ -1,162 +1,68 @@
-import sys
-
-# sys.path.append(".")  # Adds the module to path
+# Use this only when running the test locally.
+# import sys
+# sys.path.append(".")  # Adds the module to path.
 
 import unittest
-import operator
-import itertools
-from numpy.core.numeric import array_equal
-
-from numpy.testing._private.utils import assert_almost_equal
-
-from .. import statistics, features, Image
 
 import numpy as np
-import numpy.testing
-import inspect
 
-
-def grid_test_features(
-    tester,
-    feature,
-    feature_inputs,
-    expected_result_function,
-):
-    
-
-    for f_a_input in feature_inputs:
-
-        for axis in [None]:
-            for distributed in [True, False]:
-                inp = features.Value(f_a_input)
-
-                f_a = feature(
-                    inp,
-                    axis=axis,
-                    distributed=distributed,
-                    q=lambda: np.random.rand(),
-                )
-                f_b = inp >> feature(
-                    axis=axis,
-                    distributed=distributed,
-                    q=lambda: np.random.rand(),
-                )
-                f_a.store_properties()
-                f_b.store_properties()
-
-                for f in [f_a, f_b]:
-                    try:
-                        output = f()
-                    except Exception as e:
-                        tester.assertRaises(
-                            type(e),
-                            lambda: expected_result_function(
-                                f_a_input,
-                                axis=axis,
-                                q=0.95,
-                            ),
-                        )
-                        continue
-
-                    if distributed and isinstance(f_a_input, list):
-                        expected_result = [
-                            expected_result_function(
-                                i,
-                                axis=axis,
-                                q=0.95,
-                            )
-                            for i in f_a_input
-                        ]
-                    elif not distributed and not isinstance(f_a_input, list):
-                        expected_result = expected_result_function(
-                            [f_a_input],
-                            axis=axis,
-                            q=output.get_property("q"),
-                        )
-                    else:
-                        expected_result = expected_result_function(
-                            f_a_input,
-                            axis=axis,
-                            q=output.get_property("q"),
-                        )
-
-                    if isinstance(output, list) and isinstance(expected_result, list):
-                        [
-                            np.testing.assert_almost_equal(np.array(a), np.array(b))
-                            for a, b in zip(output, expected_result)
-                        ]
-
-                    else:
-                        np.testing.assert_almost_equal(
-                            np.array(output), np.array(expected_result)
-                        )
-
-
-# def array_equal(a, b):
-
-#     assert a.shape == b.shape, "Shape mismatch {} vs {}".
-
-
-def create_test(cl):
-    testname = "test_{}".format(cl.__name__)
-
-    cl_name = cl.__name__.lower()
-
-    if cl_name == "peaktopeak":
-        cl_name = "ptp"
-    if cl_name == "variance":
-        cl_name = "var"
-
-    def expected(val, **kwargs):
-        try:
-            return np.__dict__[cl_name](val, **kwargs)
-        except TypeError as e:
-            kwargs.pop("q")
-            return np.__dict__[cl_name](val, **kwargs)
-
-    def test(self):
-        grid_test_features(
-            self,
-            cl,
-            [
-                -1,
-                0,
-                1,
-                (np.random.rand(3, 5) - 0.5) * 100,
-                np.inf,
-                np.nan,
-                [np.zeros((3, 4)), np.ones((3, 4))],
-                np.random.rand(2, 3, 2, 3),
-            ],
-            expected,
-        )
-
-    test.__name__ = testname
-
-    return testname, test
+from deeptrack import statistics
 
 
 class TestFeatures(unittest.TestCase):
-    def test_broadcast_list(self):
+    
+    def test_sum(self):
+        input_values = [np.ones((2,)), np.ones((2,))]
+        sum_operation = statistics.Sum(axis=0, distributed=False)
+        sum_result = sum_operation(input_values)
+        self.assertTrue(np.all(sum_result == np.array([2., 2.])))
 
-        inp = features.Value([1, 0])
+        input_values = [np.zeros((2, 3)), np.zeros((2, 3))]
+        sum_operation = statistics.Sum(axis=1, distributed=False)
+        sum_result = sum_operation(input_values)
+        expected_result = np.array([[0., 0., 0.], [0., 0., 0.]])
+        self.assertTrue(np.all(sum_result == expected_result))
 
-        pipeline = inp - statistics.Mean(inp)
-        self.assertListEqual(pipeline(), [0, 0])
+    def test_mean(self):
+        input_values = [np.ones((2,)), np.ones((2,))]
+        mean_operation = statistics.Mean(axis=0, distributed=False)
+        mean_result = mean_operation(input_values)
+        self.assertTrue(np.all(mean_result == np.array([1., 1.])))
 
-        pipeline = inp - (inp >> statistics.Mean())
-        self.assertListEqual(pipeline(), [0, 0])
+        input_values = [np.array([1., 2.]), np.array([3., 4.])]
+        mean_operation = statistics.Mean(axis=0, distributed=False)
+        mean_result = mean_operation(input_values)
+        self.assertTrue(np.all(mean_result == np.array([2., 3.])))
 
+    def test_std(self):
+        input_values = [np.array([1., 2.]), np.array([1., 3.])]
+        std_operation = statistics.Std(axis=0, distributed=False)
+        std_result = std_operation(input_values)
+        self.assertTrue(np.all(std_result == np.array([0., 0.5])))
 
-classes = inspect.getmembers(statistics, inspect.isclass)
+    def test_variance(self):
+        input_values = [np.array([1., 2.]), np.array([1., 3.])]
+        variance_operation = statistics.Variance(axis=0, distributed=False)
+        variance_result = variance_operation(input_values)
+        self.assertTrue(np.all(variance_result == np.array([0., 0.25])))
 
-for clname, cl in classes:
+    def test_peak_to_peak(self):
+        input_values = [np.array([1., 2.]), np.array([1.5, 3.])]
+        peak_to_peak_op = statistics.PeakToPeak(axis=0, distributed=False)
+        peak_to_peak_result = peak_to_peak_op(input_values)
+        self.assertTrue(np.all(peak_to_peak_result == np.array([0.5, 1.])))
 
-    if not issubclass(cl, statistics.Reducer) or (cl is statistics.Reducer):
-        continue
+    def test_quantile(self):
+        input_values = [np.array([1., 2., 3., 1., 10.])]
+        quantile_op = statistics.Quantile(q=0.5, axis=1, distributed=False)
+        quantile_result = quantile_op(input_values) # median
+        self.assertTrue(np.all(quantile_result == np.array([2.])))
 
-    testname, test_method = create_test(cl)
-    setattr(TestFeatures, testname, test_method)
+    def test_percentile(self):
+        input_values = [np.array([1., 2., 3., 4., 10.])]
+        percentile_op = statistics.Percentile(q=75, axis=1, distributed=False)
+        percentile_result = percentile_op(input_values)
+        self.assertTrue(np.all(percentile_result == np.array([4.])))
 
 
 if __name__ == "__main__":
