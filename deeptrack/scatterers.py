@@ -161,7 +161,7 @@ Create a stratified Mie sphere and resolve it through a microscope:
 """
 
 
-from typing import Callable, Tuple, Dict
+from typing import Callable, Tuple, Dict, List, Union
 import warnings
 
 from pint import Quantity
@@ -457,7 +457,7 @@ class Ellipse(Scatterer):
     def get(
         self,
         *ignore,
-        radius: Union[ArrayLike[float], Float],
+        radius: Union[ArrayLike[float], float],
         rotation: PropertyLike[float],
         voxel_size: PropertyLike[float],
         transpose: PropertyLike[bool],
