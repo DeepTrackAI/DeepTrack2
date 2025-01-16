@@ -152,9 +152,9 @@ Create a stratified Mie sphere and resolve it through a microscope:
 ...    aperature_angle=0.1,
 ... )
 
->>> imaged_scatterer = optics(scatterer)
-
+>>> imaged_scatterer = optics(scatterer) # Creates an array of complex numbers.
 >>> abs_imaged_scatterer = Abs(imaged_scatterer)
+
 >>> abs_imaged_scatterer.plot()
 
 """
