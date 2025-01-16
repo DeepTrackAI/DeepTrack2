@@ -25,13 +25,13 @@ class TestMath(unittest.TestCase):
     def test_NormalizeMinMax(self):
         feature = math.NormalizeMinMax(min=-5, max=5)
         input_image = np.array([[10, 4], [4, -10]])
-        normalized_image = feature(input_image)
+        normalized_image = feature.resolve(input_image)
         self.assertTrue(np.all(normalized_image == [[5, 2], [2, -5]]))
 
     def test_NormalizeStandard(self):
         feature = math.NormalizeStandard()
         input_image = np.array([[1, 2], [3, 4]], dtype=float)
-        normalized_image = feature(input_image)
+        normalized_image = feature.resolve(input_image)
         self.assertEqual(np.mean(normalized_image), 0)
         self.assertEqual(np.std(normalized_image), 1)
 
@@ -56,31 +56,31 @@ class TestMath(unittest.TestCase):
 
     def test_AveragePooling(self):
         input_image = np.array([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
-        feature = math.AveragePooling()
-        pooled_image = feature.resolve(input_image, ksize=2)
+        feature = math.AveragePooling(ksize=2)
+        pooled_image = feature.resolve(input_image)
         self.assertTrue(np.all(pooled_image == [[3.5, 5.5]]))
     
     def test_MaxPooling(self):
         input_image = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-        feature = math.MaxPooling()
-        pooled_image = feature.get(input_image, ksize=2)
+        feature = math.MaxPooling(ksize=2)
+        pooled_image = feature.resolve(input_image)
         self.assertTrue(np.all(pooled_image == [[5, 6], [8, 9]]))
 
     def test_MinPooling(self):
         input_image = np.array([[1, 2, 3, 4], [5, 6, 7, 8]])
-        feature = math.MinPooling()
-        pooled_image = feature.get(input_image, ksize=2)
+        feature = math.MinPooling(ksize=2)
+        pooled_image = feature.resolve(input_image)
         self.assertTrue(np.all(pooled_image == [[1, 3]]))
 
     def test_Resize(self):
         input_image = np.array([[1, 2], [3, 4]], dtype=float)
-        feature = math.Resize()
-        resized_image = feature.get(input_image, dsize=(4, 4))
+        feature = math.Resize(dsize=(4, 4))
+        resized_image = feature.resolve(input_image)
         self.assertTrue(resized_image.shape == (4, 4))
 
         input_image = np.array([[1, 2], [3, 4]], dtype=float)
-        feature = math.Resize()
-        resized_image = feature.get(input_image, dsize=(1, 1))
+        feature = math.Resize(dsize=(1, 1))
+        resized_image = feature.resolve(input_image)
         self.assertTrue(resized_image.shape == (1, 1))
         self.assertTrue(resized_image == [[2.5]])         
 
