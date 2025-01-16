@@ -1,9 +1,71 @@
+"""
+Provides features for manipulating optical fields using Fourier transforms and 
+propagation matrices.
+
+This module includes operations to simulate optical field propagation and
+perform transformations in the frequency domain. These features can be combined
+in processing pipelines for optical simulations and holographic
+reconstructions.
+
+Module Structure
+----------------
+Functions:
+- `get_propagation_matrix`: Computes the propagation matrix.
+
+Classes:
+- `Rescale`: Rescales an optical field by subtracting the real part of the
+    field before multiplication.
+- `FourierTransform`: Creates matrices for propagating an optical field.
+- `InverseFourierTransform`: Creates matrices for propagating an optical field.
+- `FourierTransformTransformation`: Applies a power of the forward or inverse
+    propagation matrix to an optical field.
+
+Example
+-------
+Simulate optical field propagation with Fourier transforms:
+
+>>> from deeptrack import holography
+>>> import numpy as np
+>>> field = np.random.rand(128, 128, 2)  # Random optical field
+>>> rescale_op = holography.Rescale(0.5)
+>>> scaled_field = rescale_op(field)
+>>> ft_op = holography.FourierTransform()
+>>> transformed_field = ft_op(scaled_field)
+>>> ift_op = holography.InverseFourierTransform()
+>>> reconstructed_field = ift_op(transformed_field)
+
+"""
+
 from deeptrack.image import maybe_cupy
-from .features import Feature
+from deeptrack import Feature
 import numpy as np
 
 
 def get_propagation_matrix(shape, to_z, pixel_size, wavelength, dx=0, dy=0):
+    """
+    Computes the propagation matrix for simulating the propagation of an
+    optical field.
+
+    Parameters
+    ----------
+    shape : tuple of int
+        Shape of the optical field (height, width).
+    to_z : float
+        Propagation distance along the z-axis.
+    pixel_size : float
+        Size of each pixel in the field.
+    wavelength : float
+        Wavelength of the optical field.
+    dx : float, optional
+        Lateral shift in the x-direction (default is 0).
+    dy : float, optional
+        Lateral shift in the y-direction (default is 0).
+
+    Returns
+    -------
+    ndarray
+        The computed propagation matrix as a complex-valued array.
+    """
 
     k = 2 * np.pi / wavelength
     yr, xr, *_ = shape
@@ -27,7 +89,9 @@ def get_propagation_matrix(shape, to_z, pixel_size, wavelength, dx=0, dy=0):
 
 
 class Rescale(Feature):
-    """Rescales an optical field by subtracting the real part of the field before multiplication.
+    """
+    Rescales an optical field by subtracting the real part of the field
+    before multiplication.
 
     Parameters
     ----------
@@ -47,12 +111,14 @@ class Rescale(Feature):
 
 
 class FourierTransform(Feature):
-    """Creates matrices for propagating an optical field.
-
+    """
+    Computes the Fourier transform of an optical field with optional 
+    symmetric padding.
+    
     Parameters
     ----------
-    i : int
-        index of z-propagator matrix
+    padding : int, optional
+        Number of pixels to pad symmetrically around the image (default is 32).
     """
 
     def __init__(self, **kwargs):
@@ -61,18 +127,24 @@ class FourierTransform(Feature):
     def get(self, image, padding=32, **kwargs):
 
         im = np.copy(image[..., 0] + 1j * image[..., 1])
-        im = np.pad(im, ((padding, padding), (padding, padding)), mode="symmetric")
+        im = np.pad(
+            im,
+            ((padding, padding), (padding, padding)),
+            mode="symmetric"
+            )
         f1 = np.fft.fft2(im)
         return f1
 
 
 class InverseFourierTransform(Feature):
-    """Creates matrices for propagating an optical field.
+    """
+    Computes the inverse Fourier transform and removes padding.
 
     Parameters
     ----------
-    i : int
-        index of z-propagator matrix
+    padding : int, optional
+        Number of pixels removed symmetrically after inverse transformation
+        (default is 32).
     """
 
     def __init__(self, **kwargs):
@@ -89,6 +161,20 @@ class InverseFourierTransform(Feature):
 
 
 class FourierTransformTransformation(Feature):
+    """
+    Applies a power of the forward or inverse propagation matrix to an optical
+    field.
+
+    Parameters
+    ----------
+    Tz : ndarray
+        Forward propagation matrix.
+    Tzinv : ndarray
+        Inverse propagation matrix.
+    i : int
+        Power of the propagation matrix to apply. Negative values apply the
+        inverse.
+    """
     def __init__(self, Tz, Tzinv, i, **kwargs):
         super().__init__(Tz=Tz, Tzinv=Tzinv, i=i, **kwargs)
 
