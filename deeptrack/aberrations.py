@@ -1,4 +1,4 @@
-""" Features that aberrate and modify pupil functions.
+"""Features that aberrate and modify pupil functions.
 
 This module provides tools to simulate optical aberrations in microscopy 
 by modifying the pupil function of an image. These aberrations can be used 
@@ -112,7 +112,7 @@ class Aberration(Feature):
     __distributed__ = True
 
     def _process_and_get(
-        self:  Feature,
+        self: Feature,
         image_list: List[np.ndarray],
         **kwargs: Dict[str, np.ndarray]
     ) -> List[np.ndarray]:
@@ -135,7 +135,7 @@ class Aberration(Feature):
             A list of processed images with added pupil coordinates.
 
         """
-        
+
         new_list = []
         for image in image_list:
             x = np.arange(image.shape[0]) - image.shape[0] / 2
@@ -149,6 +149,7 @@ class Aberration(Feature):
                 [image], rho=rho, theta=theta, **kwargs
             )
         return new_list
+
 
 class GaussianApodization(Aberration):
     """Introduces pupil apodization.
@@ -195,17 +196,17 @@ class GaussianApodization(Aberration):
         **kwargs: Dict[str, Any]
     ) -> None:
         """Initializes the GaussianApodization class.
-        
+ 
         Initializes the GaussianApodization class with parameters that control
         the Gaussian distribution applied to the pupil function.
 
         Parameters
         ----------
         sigma: float, optional
-            The standard deviation of the Gaussian apodization. A smaller 
+            The standard deviation of the Gaussian apodization. A smaller
             value results in more rapid attenuation at the edges. Default is 1.
         offset: tuple of float, optional
-            The (x, y) coordinates of the Gaussian center's offset relative 
+            The (x, y) coordinates of the Gaussian center's offset relative
             to the geometric center of the pupil. Default is (0, 0).
         **kwargs: dict, optional
             Additional parameters passed to the parent class `Aberration`.
