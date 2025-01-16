@@ -166,7 +166,7 @@ class SourceItem(dict):
         for callback in self._callbacks:
             callback(self)
         return self
-    
+
     def __repr__(
         self
     ) -> str:
@@ -372,7 +372,7 @@ class Source:
     ) -> List[SourceItem]:
 
         # Convert slice to list of indices.
-        indices = list(range(*slice.inslicedices(len(self))))
+        indices = list(range(*slice.indices(len(self))))
 
         # Get values for each index.
         return [self[i] for i in indices]
