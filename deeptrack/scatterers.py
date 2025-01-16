@@ -816,7 +816,7 @@ class MieScatterer(Scatterer):
         collection_angle: PropertyLike[str] = "auto",
         L: PropertyLike[str] = "auto",
         refractive_index_medium: float=None,
-        wavelength=: float=None,
+        wavelength: float=None,
         NA: float=None,
         padding=(0,) * 4,
         output_region=None,
