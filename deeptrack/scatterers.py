@@ -64,11 +64,42 @@ Classes:
 Examples
 --------
 
+Create a ellipse scatterer and resolve it through a microscope.
 
+>>> import numpy as np
+
+>>> from deeptrack.optics import Fluorescence
+>>> from deeptrack.scatterers import Ellipse
+
+Define optics.
+>>> optics = Fluorescence(
+...            NA=0.7,
+...            wavelength=680e-9,
+...            resolution=1e-6,
+...            magnification=10,
+...            output_region=(0, 0, 64, 64),
+...        )
+
+Define scatterer.
+
+>>> scatterer = Ellipse(
+...      intensity=100,
+...      position_unit="pixel",
+...      position=(32, 32),
+...      radius=(1e-6, 0.5e-6),
+...      rotation=np.pi / 4,
+...      upsample=4,
+...  )
+
+Simulate the optical image of the scatterer:
+
+>>> imaged_scatterer = optics(scatterer)
+>>> imaged_scatterer.plot(cmap="gray")
 
 """
 
 
+from typing import Callable, Tuple
 import warnings
 
 from pint import Quantity
@@ -81,9 +112,6 @@ from deeptrack.backend.units import (
     get_active_scale,
     get_active_voxel_size,
 )
-from typing import Callable, Tuple
-
-
 from .backend import mie
 from .features import Feature, MERGE_STRATEGY_APPEND
 from . import pad_image_to_fft, Image
