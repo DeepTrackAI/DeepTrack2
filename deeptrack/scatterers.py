@@ -809,7 +809,7 @@ class MieScatterer(Scatterer):
 
     def __init__(
         self,
-        coefficients: Callable,
+        coefficients,
         input_polarization: PropertyLike[int]=0,
         output_polarization: PropertyLike[int]=0,
         offset_z: PropertyLike[str] = "auto",
@@ -970,7 +970,7 @@ class MieScatterer(Scatterer):
         collection_angle: float,
         input_polarization: float,
         output_polarization: float,
-        coefficients: Callable[int],
+        coefficients,
         offset_z: float,
         z: float,
         working_distance: float,
@@ -1203,7 +1203,7 @@ class MieSphere(MieScatterer):
             refractive_index: float,
             refractive_index_medium: float,
             wavelength: float
-        ) -> Callable:
+        ):
 
             if isinstance(radius, Quantity):
                 radius = radius.to("m").magnitude
@@ -1302,7 +1302,7 @@ class MieStratifiedSphere(MieScatterer):
             refractive_index: float,
             refractive_index_medium: float,
             wavelength: float
-        ) -> Callable:
+        ):
             assert np.all(
                 radius[1:] >= radius[:-1]
             ), ("Radius of the shells of a stratified sphere should be "
