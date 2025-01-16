@@ -1,13 +1,13 @@
-import sys
-
-# sys.path.append(".")  # Adds the module to path
+# Use this only when running the test locally.
+# import sys
+# sys.path.append(".")  # Adds the module to path.
 
 import unittest
 
-from .. import noises
-
-from ..image import Image
 import numpy as np
+
+from deeptrack.image import Image
+from deeptrack import noises
 
 
 class TestNoises(unittest.TestCase):
@@ -33,6 +33,14 @@ class TestNoises(unittest.TestCase):
         output_image = noise.resolve(input_image)
         self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (256, 256))
+
+    def test_ComplexGaussian(self):
+        noise = noises.ComplexGaussian(mu=0.1, sigma=0.05)
+        input_image = Image(np.zeros((256, 256)))
+        output_image = noise.resolve(input_image)
+        self.assertIsInstance(output_image, np.ndarray)
+        self.assertEqual(output_image.shape, (256, 256))
+        self.assertTrue(np.iscomplexobj(output_image))
 
     def test_Poisson(self):
         noise = noises.Poisson(snr=20)
