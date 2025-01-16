@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from deeptrack import statistics
+from deeptrack import statistics, features
 
 
 class TestFeatures(unittest.TestCase):
@@ -63,6 +63,82 @@ class TestFeatures(unittest.TestCase):
         percentile_op = statistics.Percentile(q=75, axis=1, distributed=False)
         percentile_result = percentile_op(input_values)
         self.assertTrue(np.all(percentile_result == np.array([4.])))
+
+    def test_prod(self):
+        input_values = [np.array([1., 2.]), np.array([3., 4.])]
+        prod_operation = statistics.Prod(axis=0, distributed=False)
+        prod_result = prod_operation(input_values)
+        self.assertTrue(np.all(prod_result == np.array([3., 8.])))
+
+    def test_median(self):
+        input_values = [np.array([10., 3., 1., 4., 2.])]
+        median_op = statistics.Median(axis=1, distributed=False)
+        median_result = median_op(input_values)
+        self.assertTrue(np.all(median_result == np.array([3.])))
+
+    def test_cumsum(self):
+        input_values = [np.array([1., 2., 3.]), np.array([1., 1., 1.])]
+        cumsum_op = statistics.Cumsum(axis=1, distributed=False)
+        cumsum_result = cumsum_op(input_values)
+        expected_result = np.array([[1., 3., 6.], [1., 2., 3.]])
+        self.assertTrue(np.all(cumsum_result == expected_result))
+
+    def test_nan(self):
+        input_values = [np.array([1., 2., np.nan]), np.array([np.nan, 1., 1.])]
+        mean_op = statistics.Mean(axis=0, distributed=False)
+        mean_result = mean_op(input_values)
+        self.assertTrue(np.isnan(mean_result[0]))
+        self.assertTrue(mean_result[1] == 1.5)
+        self.assertTrue(np.isnan(mean_result[2]))
+
+        prod_op = statistics.Prod(axis=0, distributed=False)
+        prod_result = prod_op(input_values)
+        self.assertTrue(np.isnan(prod_result[0]))
+        self.assertTrue(prod_result[1] == 2)
+        self.assertTrue(np.isnan(prod_result[2]))
+
+    def test_inf(self):
+        input_values = [np.array([1., 2., np.inf]), np.array([np.inf, 1., 1.])]
+        mean_op = statistics.Mean(axis=0, distributed=False)
+        mean_result = mean_op(input_values)
+        self.assertTrue(np.isinf(mean_result[0]))
+        self.assertTrue(mean_result[1] == 1.5)
+        self.assertTrue(np.isinf(mean_result[2]))
+
+    def test_edge_cases(self):
+        edge_cases = [
+            -1,
+            0,
+            1,
+            (np.random.rand(3, 5) - 0.5) * 100,
+            np.inf,
+            np.nan,
+            [np.zeros((3, 4)), np.ones((3, 4))],
+            np.random.rand(2, 3, 2, 3),
+        ]
+    
+        for case in edge_cases:
+            self._test_single_case(case, statistics.Sum)
+            self._test_single_case(case, statistics.Mean)
+            self._test_single_case(case, statistics.Prod)
+            self._test_single_case(case, statistics.Median)
+            self._test_single_case(case, statistics.Std)
+            self._test_single_case(case, statistics.Variance)
+            self._test_single_case(case, statistics.PeakToPeak)
+            self._test_single_case(case, statistics.Quantile)
+            self._test_single_case(case, statistics.Percentile)
+
+    def _test_single_case(self, case, feature_class):
+        feature = feature_class(axis=0, distributed=False)
+        result = feature([case])
+        self.assertIsNotNone(result)
+
+    def test_broadcast_list(self):
+        inp = features.Value([1, 0])
+        pipeline = inp - statistics.Mean(inp)
+        self.assertListEqual(pipeline(), [0, 0])
+        pipeline = inp - (inp >> statistics.Mean())
+        self.assertListEqual(pipeline(), [0, 0])
 
 
 if __name__ == "__main__":
