@@ -197,28 +197,59 @@ Specific examples for graph-neural-network-based particle linking and trace char
 
 # Advanced Tutorials
 
-- DTAT301 **[Features](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT301_features.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT301_features.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT301 **[deeptrack.features](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT301_features.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT301_features.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTAT306 **[Properties](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT306_properties.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT306_properties.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT306 **[deeptrack.properties](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT306_properties.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT306_properties.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTAT311 **[Image](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT311_image.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT311_image.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT311 **[deeptrack.image](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT311_image.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT311_image.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTAT321 **[Scatterers](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT321_scatterers.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT321_scatterers.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT321 **[deeptrack.scatterers](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT321_scatterers.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT321_scatterers.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTAT323 **[Optics](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT323_optics.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT323_optics.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT323 **[deeptrack.optics](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT323_optics.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT323_optics.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTAT325 **[Aberrations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT325_aberrations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT325_aberrations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT324 **[deeptrack.holography]**
 
-- DTAT327 **[Noises](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT327_noises.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT327_noises.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT325 **[deeptrack.aberrations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT325_aberrations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT325_aberrations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTAT329 **[Augmentations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT329_augmentations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT329_augmentations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT327 **[deeptrack.noises](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT327_noises.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT327_noises.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTAT341 **[Sequences](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT341_sequences.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT341_sequences.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT329 **[deeptrack.augmentations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT329_augmentations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT329_augmentations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTAT381 **[Math](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT381_math.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT381_math.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT341 **[deeptrack.sequences](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT341_sequences.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT341_sequences.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTAT383 **[Utils](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT383_utils.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT383_utils.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT381 **[deeptrack.math](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT381_math.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT381_math.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
+- DTAT383 **[deeptrack.utils](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT383_utils.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT383_utils.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+- DTAT385 **[deeptrack.statistics]**
+
+- DTAT387 **[deeptrack.types]**
+
+- DTAT389 **[deeptrack.elementwise]**
+
+- DTAT391A **[deeptrack.sources.base]**
+
+- DTAT391B **[deeptrack.sources.folder]**
+
+- DTAT391C **[deeptrack.sources.rng]**
+
+- DTAT393A **[deeptrack.pytorch.data]**
+
+- DTAT393B **[deeptrack.pytorch.features]**
+
+- DTAT395 **[deeptrack.extras.radialcenter]**
+
+- DTAT399A **[deeptrack.backend.core]**
+  
+- DTAT399B **[deeptrack.backend.pint_definition]**
+  
+- DTAT399C **[deeptrack.backend.units]**
+  
+- DTAT399D **[deeptrack.backend.polynomials]**
+  
+- DTAT399E **[deeptrack.backend.mie]**
+  
+- DTAT399E **[deeptrack.backend._config]**
 
 # Developer Tutorials
 
