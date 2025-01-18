@@ -663,25 +663,26 @@ class Affine(Augmentation):
                 )
 
         # Map positions.
-        inverse_mapping = np.linalg.inv(mapping)
-        for prop in image.properties:
-            if "position" in prop:
-                position = np.array(prop["position"])
+        if hasattr(image, "properties"):
+            inverse_mapping = np.linalg.inv(mapping)
+            for prop in image.properties:
+                if "position" in prop:
+                    position = np.array(prop["position"])
 
-                inverted = (
-                    np.dot(
-                        inverse_mapping,
-                        (position[..., :2] - center + np.array([dy, dx]))[
-                            ..., np.newaxis
-                        ],
-                    )
-                    .squeeze()
-                    .transpose()
-                ) + center
+                    inverted = (
+                        np.dot(
+                            inverse_mapping,
+                            (position[..., :2] - center + np.array([dy, dx]))[
+                                ..., np.newaxis
+                            ],
+                        )
+                        .squeeze()
+                        .transpose()
+                    ) + center
 
-                position[..., :2] = inverted
+                    position[..., :2] = inverted
 
-                prop["position"] = position
+                    prop["position"] = position
 
         return image
 
