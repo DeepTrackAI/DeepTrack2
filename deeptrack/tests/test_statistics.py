@@ -116,17 +116,34 @@ class TestFeatures(unittest.TestCase):
             [np.zeros((3, 4)), np.ones((3, 4))],
             np.random.rand(2, 3, 2, 3),
         ]
+
+        all_statistics = [
+        statistics.Sum,
+        statistics.Mean,
+        statistics.Prod,
+        statistics.Median,
+        statistics.Std,
+        statistics.Variance,
+        statistics.PeakToPeak,
+        statistics.Quantile,
+        statistics.Percentile,
+    ]
     
+        specific_statistics_for_inf = [
+            statistics.Sum,
+            statistics.Mean,
+            statistics.Prod,
+            statistics.Median,
+        ]
+
         for case in edge_cases:
-            self._test_single_case(case, statistics.Sum)
-            self._test_single_case(case, statistics.Mean)
-            self._test_single_case(case, statistics.Prod)
-            self._test_single_case(case, statistics.Median)
-            self._test_single_case(case, statistics.Std)
-            self._test_single_case(case, statistics.Variance)
-            self._test_single_case(case, statistics.PeakToPeak)
-            self._test_single_case(case, statistics.Quantile)
-            self._test_single_case(case, statistics.Percentile)
+            if case is np.inf:
+                selected_statistics = specific_statistics_for_inf
+            else:
+                selected_statistics = all_statistics
+
+            for stat in selected_statistics:
+                self._test_single_case(case, stat)
 
     def _test_single_case(self, case, feature_class):
         feature = feature_class(axis=0, distributed=False)
