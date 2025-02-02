@@ -69,11 +69,11 @@ Here you find a series of notebooks that give you an overview of the core featur
 
   Tracking a point particle with a convolutional neural network (CNN) using simulated images in the training process.
 
-- DTGS131 **[Tracking a Multiple Particles with a U-Net](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS131_tracking_multiple_particles_unet.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS131_tracking_multiple_particles_unet.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS131 **[Tracking Multiple Particles with a U-Net](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS131_tracking_multiple_particles_unet.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS131_tracking_multiple_particles_unet.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Tracking multiple particles using a U-net trained on simulated images.
 
-- DTGS141 **[Tracking a Multiple Particles with a U-Net](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS141_distinguishing_particles_in_brightfield.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS141_distinguishing_particles_in_brightfield.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS141 **[Distinguishing Particles with a U-Net](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS141_distinguishing_particles_in_brightfield.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS141_distinguishing_particles_in_brightfield.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Tracking and distinguishing particles of different sizes in brightfield microscopy using a U-net trained on simulated images.
 
@@ -293,7 +293,7 @@ Nature Communications, volume 13, article number 7492 (2022).
 
 <https://www.nature.com/articles/s42256-022-00595-0>
 ```
-"Geometric deep learning reveals the spatiotemporal fingerprint ofmicroscopic motion."
+"Geometric deep learning reveals the spatiotemporal fingerprint of microscopic motion."
 Jesús Pineda, Benjamin Midtvedt, Harshith Bachimanchi, Sergio Noé, Daniel Midtvedt, Giovanni Volpe & Carlo Manzo
 Nature Machine Intelligence volume 5, pages 71–82 (2023).
 ```
