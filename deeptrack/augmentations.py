@@ -126,13 +126,13 @@ class Augmentation(Feature):
 
     Methods
     -------
-    `_image_wrapped_process_and_get(self: Augmentation, image_list: list[Image], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
+    `_image_wrapped_process_and_get(image_list: list[Image], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
         Augments a list of images and returns a wrapped output.
         
-    `_no_wrap_process_and_get(self: Augmentation, image_list: list[Image], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
+    `_no_wrap_process_and_get(image_list: list[Image], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
         Augments a list of images and returns the raw output.
         
-    `update_properties(self: Augmentation, *args, **kwargs)`
+    `update_properties(*args, **kwargs)`
         Abstract method to update the properties of the image.
     
     """
@@ -266,7 +266,7 @@ class Reuse(Feature):
 
     Methods
     -------
-    `get(self: Reuse, image: Image, uses: PropertyLike[int], storage: PropertyLike[int], **kwargs) -> list[Image]`
+    `get(image: Image, uses: PropertyLike[int], storage: PropertyLike[int], **kwargs) -> list[Image]`
         Abstract method which performs the `Reuse` augmentation.
 
     """
@@ -340,10 +340,10 @@ class FlipLR(Augmentation):
 
     Methods
     -------
-    `get(self: FlipLR, image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
+    `get(image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
         Abstract method which performs the `FlipLR` augmentation.
 
-    `update_properties(self: FlipLR, image: Image, augment: PropertyLike[bool], **kwargs) -> None`
+    `update_properties(image: Image, augment: PropertyLike[bool], **kwargs) -> None`
         Abstract method to update the properties of the image.
        
     """
@@ -410,9 +410,9 @@ class FlipUD(Augmentation):
 
     Methods
     -------
-    `get(self: FlipUD, image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
+    `get(image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
         Abstract method which performs the `FlipUD` augmentation.
-    `update_properties(self: FlipUD, image: Image, augment: PropertyLike[bool], **kwargs) -> None`
+    `update_properties(image: Image, augment: PropertyLike[bool], **kwargs) -> None`
         Abstract method to update the properties of the image.
        
     """
@@ -479,9 +479,9 @@ class FlipDiagonal(Augmentation):
        
     Methods
     -------
-    `get(self: FlipDiagonal, image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
+    `get(image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
         Abstract method which performs the `FlipDiagonal` augmentation.
-    `update_properties(self: FlipDiagonal, image: Image, augment: PropertyLike[bool], **kwargs) -> None`
+    `update_properties(image: Image, augment: PropertyLike[bool], **kwargs) -> None`
         Abstract method to update the properties of the image.
 
     """
@@ -588,9 +588,9 @@ class Affine(Augmentation):
 
     Methods
     -------
-    `_process_properties(self: Affine, properties: dict) -> dict`
+    `_process_properties(properties: dict) -> dict`
         Processes the properties of the image.
-    `get(self: Affine, image: Image, scale: PropertyLike[float], translate: PropertyLike[float], rotate: PropertyLike[float], shear: PropertyLike[float], **kwargs) -> Image`
+    `get(image: Image, scale: PropertyLike[float], translate: PropertyLike[float], rotate: PropertyLike[float], shear: PropertyLike[float], **kwargs) -> Image`
         Abstract method which performs the `Affine` augmentation.
 
     """
@@ -802,7 +802,7 @@ class ElasticTransformation(Augmentation):
 
     Methods
     -------
-    `get(self: ElasticTransformation, image: Image, sigma: PropertyLike[float], alpha: PropertyLike[float], ignore_last_dim: PropertyLike[bool], **kwargs) -> Image`
+    `get(image: Image, sigma: PropertyLike[float], alpha: PropertyLike[float], ignore_last_dim: PropertyLike[bool], **kwargs) -> Image`
         Abstract method which performs the `ElasticTransformation` augmentation.
 
     """
@@ -914,7 +914,7 @@ class Crop(Augmentation):
 
     Methods
     -------
-    `get(self: Crop, image: Image, corner: PropertyLike[str], crop: PropertyLike[int], crop_mode: PropertyLike[str], **kwargs) -> Image`
+    `get(image: Image, corner: PropertyLike[str], crop: PropertyLike[int], crop_mode: PropertyLike[str], **kwargs) -> Image`
         Abstract method which performs the `Crop` augmentation.
 
     """
@@ -1083,7 +1083,7 @@ class CropTight(Feature):
 
     Methods
     -------
-    `get(self: CropTight, image: Image, eps: PropertyLike[float], **kwargs) -> Image`
+    `get(image: Image, eps: PropertyLike[float], **kwargs) -> Image`
         Abstract method which performs the `CropTight` augmentation.
 
     """
@@ -1136,9 +1136,9 @@ class Pad(Augmentation):
 
     Methods
     -------
-    `get(self: Pad, image: Image, px: PropertyLike[int], **kwargs) -> Image`
+    `get(image: Image, px: PropertyLike[int], **kwargs) -> Image`
         Abstract method which performs the `Pad` augmentation.
-    `_image_wrap_process_and_get(self: Pad, images: list[Image], **kwargs) -> list[Image]`
+    `_image_wrap_process_and_get(images: list[Image], **kwargs) -> list[Image]`
         Simple method which wraps an `Image` in a `list`.
 
     Returns
