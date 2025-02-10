@@ -569,8 +569,8 @@ class Affine(Augmentation):
 
     def _process_properties(
         self: Affine,
-        properties: Dict
-    ) -> Dict:
+        properties: dict
+    ) -> dict:
         
         properties = super()._process_properties(properties)
         # Make translate tuple.
