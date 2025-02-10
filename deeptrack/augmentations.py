@@ -123,7 +123,18 @@ class Augmentation(Feature):
     ----------
     time_consistent: boolean
        Whether to augment all images in a sequence equally.
-       
+
+    Methods
+    -------
+    `_image_wrapped_process_and_get(self: Augmentation, image_list: list[Image], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
+        Augments a list of images and returns a wrapped output.
+        
+    `_no_wrap_process_and_get(self: Augmentation, image_list: list[Image], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
+        Augments a list of images and returns the raw output.
+        
+    `update_properties(self: Augmentation, *args, **kwargs)`
+        Abstract method to update the properties of the image.
+    
     """
 
     def __init__(
@@ -230,7 +241,6 @@ class Augmentation(Feature):
     Currently not in use.
     
     """    
-        
 
 
 class Reuse(Feature):
@@ -253,6 +263,11 @@ class Reuse(Feature):
     storage: int
        Number of instances of the output of `feature` to cache.
        Should be constant.
+
+    Methods
+    -------
+    `get(self: Reuse, image: Image, uses: PropertyLike[int], storage: PropertyLike[int], **kwargs) -> list[Image]`
+        Abstract method which performs the `Reuse` augmentation.
 
     """
 
@@ -322,6 +337,14 @@ class FlipLR(Augmentation):
 
     augment: bool
        Whether to perform the augmentation.
+
+    Methods
+    -------
+    `get(self: FlipLR, image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
+        Abstract method which performs the `FlipLR` augmentation.
+
+    `update_properties(self: FlipLR, image: Image, augment: PropertyLike[bool], **kwargs) -> None`
+        Abstract method to update the properties of the image.
        
     """
 
@@ -384,6 +407,13 @@ class FlipUD(Augmentation):
 
     augment: bool
        Whether to perform the augmentation.
+
+    Methods
+    -------
+    `get(self: FlipUD, image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
+        Abstract method which performs the `FlipUD` augmentation.
+    `update_properties(self: FlipUD, image: Image, augment: PropertyLike[bool], **kwargs) -> None`
+        Abstract method to update the properties of the image.
        
     """
 
@@ -447,6 +477,13 @@ class FlipDiagonal(Augmentation):
     augment: bool
        Whether to perform the augmentation.
        
+    Methods
+    -------
+    `get(self: FlipDiagonal, image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
+        Abstract method which performs the `FlipDiagonal` augmentation.
+    `update_properties(self: FlipDiagonal, image: Image, augment: PropertyLike[bool], **kwargs) -> None`
+        Abstract method to update the properties of the image.
+
     """
 
     def __init__(
@@ -539,6 +576,23 @@ class Affine(Augmentation):
             * ``3``: ``Bi-cubic``
             * ``4``: ``Bi-quartic``
             * ``5``: ``Bi-quintic``
+
+    cval: float
+        The constant intensity value used to fill in new pixels.
+        This value is only used if `mode` is set to ``constant``.
+
+    mode: str
+        Parameter that defines newly created pixels.
+        May take the same values as in :func:`scipy.ndimage.affine_transform`,
+        i.e. ``constant``, ``nearest``, ``reflect`` or ``wrap``.
+
+    Methods
+    -------
+    `_process_properties(self: Affine, properties: dict) -> dict`
+        Processes the properties of the image.
+    `get(self: Affine, image: Image, scale: PropertyLike[float], translate: PropertyLike[float], rotate: PropertyLike[float], shear: PropertyLike[float], **kwargs) -> Image`
+        Abstract method which performs the `Affine` augmentation.
+
     """
 
     def __init__(
@@ -746,6 +800,11 @@ class ElasticTransformation(Augmentation):
         May take the same values as in :func:`scipy.ndimage.map_coordinates`,
         i.e. ``constant``, ``nearest``, ``reflect`` or ``wrap``.
 
+    Methods
+    -------
+    `get(self: ElasticTransformation, image: Image, sigma: PropertyLike[float], alpha: PropertyLike[float], ignore_last_dim: PropertyLike[bool], **kwargs) -> Image`
+        Abstract method which performs the `ElasticTransformation` augmentation.
+
     """
 
     def __init__(
@@ -853,6 +912,11 @@ class Crop(Augmentation):
         If corner is placed so that the cropping cannot be performed,
         the modulo of the corner with the allowed region is used.
 
+    Methods
+    -------
+    `get(self: Crop, image: Image, corner: PropertyLike[str], crop: PropertyLike[int], crop_mode: PropertyLike[str], **kwargs) -> Image`
+        Abstract method which performs the `Crop` augmentation.
+
     """
 
     def __init__(
@@ -958,6 +1022,12 @@ class CropToMultiplesOf(Crop):
         Images will be cropped down until their width is a multiple of
         this value. If a tuple, it is assumed to be a multiple per axis.
         A value of None or -1 indicates to skip that axis.
+    
+    corner: str
+        Top left corner of the cropped region. Can be a tuple of ints,
+        a function that returns a tuple of ints or the string random.
+        If corner is placed so that the cropping cannot be performed,
+        the modulo of the corner with the allowed region is used.
 
     """
 
@@ -1011,6 +1081,11 @@ class CropTight(Feature):
         The threshold for considering a pixel to be empty,
         by default 1e-10.
 
+    Methods
+    -------
+    `get(self: CropTight, image: Image, eps: PropertyLike[float], **kwargs) -> Image`
+        Abstract method which performs the `CropTight` augmentation.
+
     """
 
     def __init__(
@@ -1052,6 +1127,19 @@ class Pad(Augmentation):
     px : list of ints or tuple of ints
         Amount of padding for each axis, specified as a tuple (left, right, 
         top, bottom, etc.).
+
+    mode : str
+        Padding mode, same as in `numpy.pad`.
+
+    cval : float
+        Value to fill in new pixels, same as in `numpy.pad`.
+
+    Methods
+    -------
+    `get(self: Pad, image: Image, px: PropertyLike[int], **kwargs) -> Image`
+        Abstract method which performs the `Pad` augmentation.
+    `_image_wrap_process_and_get(self: Pad, images: list[Image], **kwargs) -> list[Image]`
+        Simple method which wraps an `Image` in a `list`.
 
     Returns
     -------
