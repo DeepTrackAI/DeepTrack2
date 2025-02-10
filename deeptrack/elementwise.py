@@ -138,7 +138,12 @@ class ElementwiseFeature(Feature):
     feature : Feature or None, optional
         The input feature to which the function will be applied. If None, 
         the function will be applied to the input array directly.
-    
+
+    Methods
+    -------
+    `get(image: np.ndarray, **kwargs: Any) -> np.ndarray`
+        Returns the result of applying the function to the input array.
+
     """
     
     __gpu_compatible__: bool = True
