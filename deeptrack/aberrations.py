@@ -72,6 +72,7 @@ Applying Gaussian Apodization
 """
 
 from __future__ import annotations
+from typing import Any
 
 import numpy as np
 import math
