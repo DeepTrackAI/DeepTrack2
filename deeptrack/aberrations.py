@@ -71,7 +71,7 @@ Applying Gaussian Apodization
 
 """
 
-from typing import List, Tuple, Dict, Any, Union
+from __future__ import annotations
 
 import numpy as np
 import math
@@ -102,20 +102,19 @@ class Aberration(Feature):
 
     Methods
     -------
-    `_process_and_get(image_list: List[np.ndarray], **kwargs: dict) -> List[np.ndarray]`
+    `_process_and_get(image_list: list[np.ndarray], **kwargs: dict) -> list[np.ndarray]`
         Processes a list of input images to compute pupil coordinates (rho and
         theta) and passes them, along with the original images, to the 
         superclass method for further processing.
 
     """
-
-    __distributed__ = True
+    __distributed__: bool = True
 
     def _process_and_get(
         self: Feature,
-        image_list: List[np.ndarray],
-        **kwargs: Dict[str, np.ndarray]
-    ) -> List[np.ndarray]:
+        image_list: list[np.ndarray],
+        **kwargs: dict[str, np.ndarray]
+    ) -> list[np.ndarray]:
         """Computes pupil coordinates.
         
         Computes pupil coordinates (rho and theta) for each input image and 
@@ -123,15 +122,15 @@ class Aberration(Feature):
 
         Parameters
         ----------
-        image_list: List[np.ndarray]
+        image_list: list[np.ndarray]
             A list of 2D input images to be processed.
-        **kwargs: Dict[str, np.ndarray]
+        **kwargs: dict[str, np.ndarray]
             Additional parameters to be passed to the superclass's 
             `_process_and_get` method.
 
         Returns
         -------
-        list: List[np.ndarray]
+        list: list[np.ndarray]
             A list of processed images with added pupil coordinates.
 
         """
@@ -171,7 +170,7 @@ class GaussianApodization(Aberration):
 
     Methods
     -------
-    `get(pupil: np.ndarray, offset: Tuple[float, float], sigma: float, rho: np.ndarray, **kwargs: Dict[str, Any]) -> np.ndarray`
+    `get(pupil: np.ndarray, offset: tuple[float, float], sigma: float, rho: np.ndarray, **kwargs: dict[str, Any]) -> np.ndarray`
         Applies Gaussian apodization to the input pupil function.
 
     Examples
@@ -190,10 +189,10 @@ class GaussianApodization(Aberration):
     """
 
     def __init__(
-        self: 'GaussianApodization',
+        self: GaussianApodization,
         sigma: PropertyLike[float] = 1,
-        offset: PropertyLike[Tuple[int, int]] = (0, 0),
-        **kwargs: Dict[str, Any]
+        offset: PropertyLike[tuple[int, int]] = (0, 0),
+        **kwargs: dict[str, Any]
     ) -> None:
         """Initializes the GaussianApodization class.
  
@@ -216,12 +215,12 @@ class GaussianApodization(Aberration):
         super().__init__(sigma=sigma, offset=offset, **kwargs)
 
     def get(
-        self: 'GaussianApodization', 
+        self: GaussianApodization, 
         pupil: np.ndarray, 
-        offset: Tuple[float, float], 
+        offset: tuple[float, float], 
         sigma: float, 
         rho: np.ndarray, 
-        **kwargs: Dict[str, Any]
+        **kwargs: dict[str, Any]
     ) -> np.ndarray:
         """Applies Gaussian apodization to the input pupil function.
 
@@ -302,7 +301,7 @@ class Zernike(Aberration):
     pupil function. The Zernike polynomials are used to model various optical 
     aberrations such as defocus, astigmatism, and coma.
 
-    The Zernike polynomial is defined by the radial index `n` and the azimuthal 
+    The Zernike polynomial is defined by the radial index `n` and the azimuthal
     index `m`. The phase contribution is weighted by a specified `coefficient`. 
     When multiple values are provided for `n`, `m`, and `coefficient`, the 
     corresponding Zernike polynomials are summed and applied to the pupil 
@@ -310,25 +309,25 @@ class Zernike(Aberration):
 
     Parameters
     ----------
-    n: PropertyLike[Union[int, List[int]]]
+    n: PropertyLike[int or list of ints]
         The radial index or indices of the Zernike polynomials.
-    m: PropertyLike[Union[int, List[int]]]
+    m: PropertyLike[int or list of ints]
         The azimuthal index or indices of the Zernike polynomials.
-    coefficient: PropertyLike[Union[float, List[float]]]
+    coefficient: PropertyLike[float or list of floats]
         The scaling coefficient(s) for the Zernike polynomials.
 
     Attributes
     ----------
-    n: PropertyLike[Union[int, List[int]]]
+    n: PropertyLike[int or list of ints]
         The radial index or indices of the Zernike polynomials.
-    m: PropertyLike[Union[int, List[int]]]
+    m: PropertyLike[int or list of ints]
         The azimuthal index or indices of the Zernike polynomials.
-    coefficient: PropertyLike[Union[float, List[float]]]
+    coefficient: PropertyLike[float or list of floats]
         The scaling coefficient(s) for the Zernike polynomials.
 
     Methods
     -------
-    `get(pupil: np.ndarray, rho: np.ndarray, theta: np.ndarray, n: Union[int, List[int]], m: Union[int, List[int]], coefficient: Union[float, List[float]], **kwargs: Dict[str, Any]) -> np.ndarray`
+    `get(pupil: np.ndarray, rho: np.ndarray, theta: np.ndarray, n: int | list[int], m: int | list[int], coefficient: float | list[float], **kwargs: dict[str, Any]) -> np.ndarray`
         Applies the Zernike phase aberration to the input pupil function.
     
     Notes
@@ -358,10 +357,10 @@ class Zernike(Aberration):
 
     def __init__(
         self: "Zernike",
-        n: PropertyLike[Union[int, List[int]]],
-        m: PropertyLike[Union[int, List[int]]],
-        coefficient: PropertyLike[Union[float, List[float]]] = 1,
-        **kwargs: Dict[str, Any]
+        n: PropertyLike[int | list[int]],
+        m: PropertyLike[int | list[int]],
+        coefficient: PropertyLike[float | list[float]] = 1,
+        **kwargs: dict[str, Any]
     ) -> None:
         """ Initializes the Zernike class. 
         
@@ -390,14 +389,14 @@ class Zernike(Aberration):
         super().__init__(n=n, m=m, coefficient=coefficient, **kwargs)
 
     def get(
-        self: "Zernike",
+        self: Zernike,
         pupil: np.ndarray,
         rho: np.ndarray,
         theta: np.ndarray,
-        n: Union[int, List[int]],
-        m: Union[int, List[int]],
-        coefficient: Union[float, List[float]],
-        **kwargs: Dict[str, Any],
+        n: int | list[int],
+        m: int | list[int],
+        coefficient: float | list[float],
+        **kwargs: dict[str, Any],
     ) -> np.ndarray:
         """Applies the Zernike phase aberration to the input pupil function.
 
@@ -531,7 +530,7 @@ class Piston(Zernike):
 
     Parameters
     ----------
-    coefficient: PropertyLike[float or List[float]], optional
+    coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
 
     Attributes
@@ -540,7 +539,7 @@ class Piston(Zernike):
         The radial index of the Zernike polynomial (always 0 for Piston).
     m: int
         The azimuthal index of the Zernike polynomial (always 0 for Piston).
-    coefficient: PropertyLike[float or List[float]]
+    coefficient: PropertyLike[float or list of floats]
         The coefficient of the polynomial.
 
     Examples
@@ -562,9 +561,9 @@ class Piston(Zernike):
 
     def __init__(
         self: "Piston", 
-        *args: Tuple[Any, ...], 
-        coefficient: PropertyLike[Union[float, List[float]]] = 1,
-        **kwargs: Dict[str, Any],
+        *args: tuple[Any, ...], 
+        coefficient: PropertyLike[float | list[float]] = 1,
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initializes the Piston class.
 
@@ -591,7 +590,7 @@ class VerticalTilt(Zernike):
 
     Parameters
     ----------
-    coefficient: PropertyLike[float or List[float]], optional
+    coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
 
     Attributes
@@ -600,7 +599,7 @@ class VerticalTilt(Zernike):
         The radial index of the Zernike polynomial (always 1 for VerticalTilt).
     m: int
         The azimuthal index of the Zernike polynomial (always -1 for VerticalTilt).
-    coefficient: PropertyLike[float or List[float]]
+    coefficient: PropertyLike[float or list of floats]
         The coefficient of the polynomial.
 
     Examples
@@ -620,10 +619,10 @@ class VerticalTilt(Zernike):
     """
 
     def __init__(
-        self: "VerticalTilt", 
-        *args: Tuple[Any, ...], 
-        coefficient: PropertyLike[Union[float, List[float]]] = 1, 
-        **kwargs: Dict[str, Any],
+        self: VerticalTilt, 
+        *args: tuple[Any, ...], 
+        coefficient: PropertyLike[float | list[float]] = 1, 
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initializes the VerticalTilt class.
 
@@ -648,7 +647,7 @@ class HorizontalTilt(Zernike):
 
     Parameters
     ----------
-    coefficient: PropertyLike[float or List[float]], optional
+    coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
 
     Attributes
@@ -659,7 +658,7 @@ class HorizontalTilt(Zernike):
     m: int
         The azimuthal index of the Zernike polynomial (always 1 for 
         HorizontalTilt).
-    coefficient: PropertyLike[float or List[float]]
+    coefficient: PropertyLike[float or list of floats]
         The coefficient of the polynomial.
 
     Examples
@@ -679,10 +678,10 @@ class HorizontalTilt(Zernike):
     """
 
     def __init__(
-        self: "HorizontalTilt",
-        *args: Tuple[Any, ...],
-        coefficient: PropertyLike[Union[float, List[float]]] = 1,
-        **kwargs: Dict[str, Any],
+        self: HorizontalTilt,
+        *args: tuple[Any, ...],
+        coefficient: PropertyLike[float | list[float]] = 1,
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initializes the HorizontalTilt class.
 
@@ -709,7 +708,7 @@ class ObliqueAstigmatism(Zernike):
 
     Parameters
     ----------
-    coefficient: PropertyLike[float or List[float]], optional
+    coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
 
     Attributes
@@ -720,7 +719,7 @@ class ObliqueAstigmatism(Zernike):
     m: int
         The azimuthal index of the Zernike polynomial (always -2 for 
         ObliqueAstigmatism).
-    coefficient: PropertyLike[float or List[float]]
+    coefficient: PropertyLike[float or list of floats]
         The coefficient of the polynomial.
 
     Examples
@@ -740,10 +739,10 @@ class ObliqueAstigmatism(Zernike):
     """
 
     def __init__(
-        self: "ObliqueAstigmatism",
-        *args: Tuple[Any, ...],
-        coefficient: PropertyLike[Union[float, List[float]]] = 1,
-        **kwargs: Dict[str, Any],
+        self: ObliqueAstigmatism,
+        *args: tuple[Any, ...],
+        coefficient: PropertyLike[float | list[float]] = 1,
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initializes the ObliqueAstigmatism class.
 
@@ -770,7 +769,7 @@ class Defocus(Zernike):
 
     Parameters
     ----------
-    coefficient: PropertyLike[float or List[float]], optional
+    coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
 
     Attributes
@@ -779,7 +778,7 @@ class Defocus(Zernike):
         The radial index of the Zernike polynomial (always 2 for Defocus).
     m: int
         The azimuthal index of the Zernike polynomial (always 0 for Defocus).
-    coefficient: PropertyLike[float or List[float]]
+    coefficient: PropertyLike[float or list of floats]
         The coefficient of the polynomial.
 
     Examples
@@ -799,10 +798,10 @@ class Defocus(Zernike):
     """
 
     def __init__(
-        self: "Defocus",
-        *args: Tuple[Any, ...],
-        coefficient: PropertyLike[Union[float, List[float]]] = 1,
-        **kwargs: Dict[str, Any],
+        self: Defocus,
+        *args: tuple[Any, ...],
+        coefficient: PropertyLike[float | list[float]] = 1,
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initializes the Defocus class.
 
@@ -829,7 +828,7 @@ class Astigmatism(Zernike):
 
     Parameters
     ----------
-    coefficient: PropertyLike[float or List[float]], optional
+    coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
 
     Attributes
@@ -838,7 +837,7 @@ class Astigmatism(Zernike):
         The radial index of the Zernike polynomial (always 2 for Astigmatism).
     m: int
         The azimuthal index of the Zernike polynomial (always 2 for Astigmatism).
-    coefficient: PropertyLike[float or List[float]]
+    coefficient: PropertyLike[float or list of floats]
         The coefficient of the polynomial.
 
     Examples
@@ -858,10 +857,10 @@ class Astigmatism(Zernike):
     """
 
     def __init__(
-        self: "Astigmatism",
-        *args: Tuple[Any, ...],
-        coefficient: PropertyLike[Union[float, List[float]]] = 1,
-        **kwargs: Dict[str, Any],
+        self: Astigmatism,
+        *args: tuple[Any, ...],
+        coefficient: PropertyLike[float | list[float]] = 1,
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initializes the Astigmatism class.
 
@@ -886,7 +885,7 @@ class ObliqueTrefoil(Zernike):
 
     Parameters
     ----------
-    coefficient: PropertyLike[float or List[float]], optional
+    coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
 
     Examples
@@ -906,10 +905,10 @@ class ObliqueTrefoil(Zernike):
     """
 
     def __init__(
-        self: "ObliqueTrefoil",
-        *args: Tuple[Any, ...],
-        coefficient: PropertyLike[Union[float, List[float]]] = 1,
-        **kwargs: Dict[str, Any],
+        self: ObliqueTrefoil,
+        *args: tuple[Any, ...],
+        coefficient: PropertyLike[float | list[float]] = 1,
+        **kwargs: dict[str, Any],
     ) -> None:
         super().__init__(*args, n=3, m=-3, coefficient=coefficient, **kwargs)
 
@@ -922,15 +921,15 @@ class VerticalComa(Zernike):
 
     Parameters
     ----------
-    coefficient: PropertyLike[float or List[float]], optional
+    coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
     """
 
     def __init__(
-        self: "VerticalComa",
-        *args: Tuple[Any, ...],
-        coefficient: PropertyLike[Union[float, List[float]]] = 1,
-        **kwargs: Dict[str, Any],
+        self: VerticalComa,
+        *args: tuple[Any, ...],
+        coefficient: PropertyLike[float | list[float]] = 1,
+        **kwargs: dict[str, Any],
     ) -> None:
         super().__init__(*args, n=3, m=-1, coefficient=coefficient, **kwargs)
 
@@ -943,15 +942,15 @@ class HorizontalComa(Zernike):
 
     Parameters
     ----------
-    coefficient: PropertyLike[float or List[float]], optional
+    coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
     """
 
     def __init__(
-        self: "HorizontalComa",
-        *args: Tuple[Any, ...],
-        coefficient: PropertyLike[Union[float, List[float]]] = 1,
-        **kwargs: Dict[str, Any],
+        self: HorizontalComa,
+        *args: tuple[Any, ...],
+        coefficient: PropertyLike[float | list[float]] = 1,
+        **kwargs: dict[str, Any],
     ) -> None:
         super().__init__(*args, n=3, m=1, coefficient=coefficient, **kwargs)
 
@@ -964,15 +963,15 @@ class Trefoil(Zernike):
 
     Parameters
     ----------
-    coefficient: PropertyLike[float or List[float]], optional
+    coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
     """
 
     def __init__(
-        self: "Trefoil",
-        *args: Tuple[Any, ...],
-        coefficient: PropertyLike[Union[float, List[float]]] = 1,
-        **kwargs: Dict[str, Any],
+        self: Trefoil,
+        *args: tuple[Any, ...],
+        coefficient: PropertyLike[float | list[float]] = 1,
+        **kwargs: dict[str, Any],
     ) -> None:
         super().__init__(*args, n=3, m=3, coefficient=coefficient, **kwargs)
 
@@ -985,14 +984,14 @@ class SphericalAberration(Zernike):
 
     Parameters
     ----------
-    coefficient: PropertyLike[float or List[float]], optional
+    coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
     """
 
     def __init__(
-        self: "SphericalAberration",
-        *args: Tuple[Any, ...],
-        coefficient: PropertyLike[Union[float, List[float]]] = 1,
-        **kwargs: Dict[str, Any],
+        self: SphericalAberration,
+        *args: tuple[Any, ...],
+        coefficient: PropertyLike[float | list[float]] = 1,
+        **kwargs: dict[str, Any],
     ) -> None:
         super().__init__(*args, n=4, m=0, coefficient=coefficient, **kwargs)
