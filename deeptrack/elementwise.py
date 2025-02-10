@@ -117,7 +117,7 @@ Apply cosine elementwise to a Feature:
 """
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 
