@@ -94,6 +94,7 @@ Reuse the output of a pipeline twice, augmented randomly by FlipLR.
 """
 
 from __future__ import annotations
+from typing import Callable, Any
 
 import warnings
 import random
@@ -857,7 +858,9 @@ class Crop(Augmentation):
     def __init__(
         self: Crop,
         *args,
-        crop: list[int] | tuple[int] | int  = (64, 64),
+        crop: int | list[int] | tuple[int] | Callable[[Image], tuple[int]] = (
+            64, 64
+        ),        
         crop_mode: PropertyLike[str] = "retain",
         corner: PropertyLike[str] = "random",
         **kwargs
