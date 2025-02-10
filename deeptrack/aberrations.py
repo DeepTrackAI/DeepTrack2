@@ -76,9 +76,9 @@ from __future__ import annotations
 import numpy as np
 import math
 
-from .features import Feature
-from .types import PropertyLike
-from .utils import as_list
+from deeptrack.features import Feature
+from deeptrack.types import PropertyLike
+from deeptrack.utils import as_list
 
 
 class Aberration(Feature):
