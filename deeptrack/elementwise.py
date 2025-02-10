@@ -705,7 +705,7 @@ class Sign(ElementwiseFeature):
         super().__init__(np.sign, feature=feature, **kwargs)
 
 
-## NEXT Consider creating classes dynamically
+## TODO Consider creating classes dynamically
 
 # def create_elementwise_class(name: str, np_function: Callable) -> type:
 #    """Factory function to create an ElementwiseFeature subclass."""
