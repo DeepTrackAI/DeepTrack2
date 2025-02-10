@@ -34,6 +34,7 @@ Key Features
 
 Module Structure
 ----------------
+Classes:
 
 - `ElementwiseFeature`
    Forms the base from which other classes inherit from.
@@ -95,7 +96,7 @@ Module Structure
 
 Examples
 --------
-Perform cosine elementwise to a Feature:
+Apply cosine elementwise to a Feature:
 
 >>> import numpy as np
 
@@ -115,33 +116,49 @@ Perform cosine elementwise to a Feature:
 
 """
 
-from typing import Callable, Optional, Any
+from __future__ import annotations
+from typing import Any
 
 import numpy as np
 
-from .features import Feature
+from deeptrack.features import Feature
 
 
 class ElementwiseFeature(Feature):
+    """
+    Base class for applying NumPy functions elementwise.
 
+    This class provides the foundation for subclasses that apply specific 
+    NumPy functions (e.g., sin, cos, exp) to the elements of an input array.
+
+    Parameters
+    ----------
+    function : Callable[[np.ndarray], np.ndarray]
+        The NumPy function to be applied elementwise.
+    feature : Feature or None, optional
+        The input feature to which the function will be applied. If None, 
+        the function will be applied to the input array directly.
+    
+    """
+    
     __gpu_compatible__: bool = True
 
     def __init__(
-        self,
+        self: ElementwiseFeature,
         function: Callable[[np.ndarray], np.ndarray],
-        feature = None,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
-
-        self.function = function
         super().__init__(**kwargs)
-        self.feature = self.add_feature(feature) if feature else feature
-
+        self.function = function
+        self.feature = (
+           self.add_feature(feature) if feature is not None else None
+        )
         if feature:
             self.__distributed__ = False
 
     def get(
-        self,
+        self: ElementwiseFeature,
         image: np.ndarray,
         **kwargs: Any
     ) -> np.ndarray:
@@ -151,243 +168,556 @@ class ElementwiseFeature(Feature):
 
 
 class Sin(ElementwiseFeature):
+    """
+    Applies the sine function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the sine function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+    
     def __init__(
-        self,
-        feature = None,
+        self: Sin,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.sin, feature=feature, **kwargs)
 
 
 class Cos(ElementwiseFeature):
+    """
+    Applies the cosine function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the cosine function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Cos,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.cos, feature=feature, **kwargs)
 
 
 class Tan(ElementwiseFeature):
+    """
+    Applies the tangent function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the tangent function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Tan,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.tan, feature=feature, **kwargs)
 
 
 class Arcsin(ElementwiseFeature):
+    """
+    Applies the arcsine function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the arcsine function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Arcsin,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arcsin, feature=feature, **kwargs)
 
 
 class Arccos(ElementwiseFeature):
+    """
+    Applies the arccosine function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the arccosine function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Arccos,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arccos, feature=feature, **kwargs)
 
 
 class Arctan(ElementwiseFeature):
+    """
+    Applies the arctangent function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the arctangent function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
     def __init__(
-        self,
-        feature = None,
+        self: Arctan,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arctan, feature=feature, **kwargs)
 
 
 class Sinh(ElementwiseFeature):
+    """
+    Applies the hyperbolic sine function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the hyperbolic sine function will be 
+        applied. If None, the function is applied to the input array directly.
+    
+    """
     def __init__(
-        self,
-        feature = None,
+        self: Sinh,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.sinh, feature=feature, **kwargs)
 
 
 class Cosh(ElementwiseFeature):
+    """
+    Applies the hyperbolic cosine function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the hyperbolic cosine function will be 
+        applied. If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Cosh,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.cosh, feature=feature, **kwargs)
 
 
 class Tanh(ElementwiseFeature):
+    """
+    Applies the hyperbolic tangent function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the hyperbolic tangent function will be 
+        applied. If None, the function is applied to the input array directly.
+    
+    """
+        
     def __init__(
-        self,
-        feature = None,
+        self: Tanh,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.tanh, feature=feature, **kwargs)
 
 
 class Arcsinh(ElementwiseFeature):
+    """
+    Applies the hyperbolic arcsine function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the hyperbolic arcsine function will be 
+        applied. If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Arcsinh,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arcsinh, feature=feature, **kwargs)
 
 
 class Arccosh(ElementwiseFeature):
+    """
+    Applies the hyperbolic arccosine function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the hyperbolic arccosine function will be 
+        applied. If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Arccosh,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arccosh, feature=feature, **kwargs)
 
 
 class Arctanh(ElementwiseFeature):
+    """
+    Applies the hyperbolic arctangent function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the hyperbolic arctangent function will be 
+        applied. If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Arctanh,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.arctanh, feature=feature, **kwargs)
 
 
 class Round(ElementwiseFeature):
+    """
+    Applies the round function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the round function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Round,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.around, feature=feature, **kwargs)
 
 
 class Floor(ElementwiseFeature):
+    """
+    Applies the floor function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the floor function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Floor,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.floor, feature=feature, **kwargs)
 
 
 class Ceil(ElementwiseFeature):
+    """
+    Applies the ceil function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the ceil function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Ceil,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.ceil, feature=feature, **kwargs)
 
 
 class Exp(ElementwiseFeature):
+    """
+    Applies the exponential function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the exponential function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Exp,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.exp, feature=feature, **kwargs)
 
 
 class Log(ElementwiseFeature):
+    """
+    Applies the natural logarithm function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the natural logarithm function will be 
+        applied. If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Log,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.log, feature=feature, **kwargs)
 
 
 class Log10(ElementwiseFeature):
+    """
+    Applies the logarithm function with base 10 elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the logarithm function with base 10 will be
+        applied. If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Log10,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.log10, feature=feature, **kwargs)
 
 
 class Log2(ElementwiseFeature):
+    """
+    Applies the logarithm function with base 2 elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the logarithm function with base 2 will be 
+        applied. If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Log2,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.log2, feature=feature, **kwargs)
 
 
 class Angle(ElementwiseFeature):
+    """
+    Applies the angle function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the angle function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Angle,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.angle, feature=feature, **kwargs)
 
 
 class Real(ElementwiseFeature):
+    """
+    Applies the real function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the real function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Real,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.real, feature=feature, **kwargs)
 
 
 class Imag(ElementwiseFeature):
+    """
+    Applies the imaginary function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the imaginary function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Imag,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.imag, feature=feature, **kwargs)
 
 
 class Abs(ElementwiseFeature):
+    """
+    Applies the absolute value function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the absolute value function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Abs,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.abs, feature=feature, **kwargs)
 
 
 class Conjugate(ElementwiseFeature):
+    """
+    Applies the conjugate function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the conjugate function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Conjugate,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.conjugate, feature=feature, **kwargs)
 
 
 class Sqrt(ElementwiseFeature):
+    """
+    Applies the square root function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the square root function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Sqrt,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.sqrt, feature=feature, **kwargs)
 
 
 class Square(ElementwiseFeature):
+    """
+    Applies the square function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the square function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Square,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.square, feature=feature, **kwargs)
 
 
 class Sign(ElementwiseFeature):
+    """
+    Applies the sign function elementwise.
+
+    Parameters
+    ----------
+    feature : Feature or None, optional
+        The input feature to which the sign function will be applied. 
+        If None, the function is applied to the input array directly.
+    
+    """
+
     def __init__(
-        self,
-        feature = None,
+        self: Sign,
+        feature: Feature | None = None,
         **kwargs: Any
     ) -> None:
         super().__init__(np.sign, feature=feature, **kwargs)
+
+
+## NEXT Consider creating classes dynamically
+
+# def create_elementwise_class(name: str, np_function: Callable) -> type:
+#    """Factory function to create an ElementwiseFeature subclass."""
+#    return type(
+#        name,
+#        (ElementwiseFeature,),
+#        {
+#            "__init__": lambda self, feature=None, **kwargs: ElementwiseFeature.__init__(self, np_function, feature, **kwargs),
+#        },
+#    )
+
+
+# Sin = create_elementwise_class("Sin", np.sin)
+# Cos = create_elementwise_class("Cos", np.cos)
+# Tan = create_elementwise_class("Tan", np.tan)
