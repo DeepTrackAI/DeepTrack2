@@ -93,13 +93,14 @@ Reuse the output of a pipeline twice, augmented randomly by FlipLR.
 
 """
 
+from __future__ import annotations
+
 import warnings
 import random
-from typing import Callable, List, Union, Tuple, Dict
 
 import numpy as np
 import scipy.ndimage as ndimage
-from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
 
 from . import utils
@@ -113,7 +114,7 @@ class Augmentation(Feature):
 
     This class provides the template for the other augmentation
     classes to inherit from, and is primarily used to handle the
-    input cases of either `Image` objects or `List[Image]` objects
+    input cases of either `Image` objects or `list[Image]` objects
     via the `_image_wrapped_process_and_get` and `_no_wrap_process_and_get`
     methods respectively.
 
@@ -125,18 +126,18 @@ class Augmentation(Feature):
     """
 
     def __init__(
-        self,
+        self: Augmentation,
         time_consistent: bool = False,
         **kwargs
     ) -> None:
         super().__init__(time_consistent=time_consistent, **kwargs)
 
     def _image_wrapped_process_and_get (
-        self,
-        image_list: List[Image],
+        self: Augmentation,
+        image_list: list[Image],
         time_consistent: PropertyLike[bool],
         **kwargs
-    ) -> List[List]:
+    ) -> list[list]:
         """Augments a list of images and returns a wrapped output.
         
         This function handles input to ensure compatibility with nested
@@ -178,11 +179,11 @@ class Augmentation(Feature):
         return new_list_of_lists
     
     def _no_wrap_process_and_get(
-        self,
-        image_list: List[Image],
+        self: Augmentation,
+        image_list: list[Image],
         time_consistent: PropertyLike[bool],
         **kwargs
-    ) -> List[List]:
+    ) -> list[list]:
         """Augments a list of images and returns the raw output.
         
         This function handles input to ensure compatibility with nested
@@ -257,7 +258,7 @@ class Reuse(Feature):
     __distributed__ = False
 
     def __init__(
-        self,
+        self: Reuse,
         feature: Feature,
         uses: int = 2,
         storage:int = 1,
@@ -269,12 +270,12 @@ class Reuse(Feature):
         self.cache = []
 
     def get(
-        self,
+        self: Reuse,
         image: Image,
         uses: PropertyLike[int],
         storage: PropertyLike[int],
         **kwargs
-    ) -> List[Image]:
+    ) -> list[Image]:
         """Abstract method which performs the `Reuse` augmentation.
 
         """
@@ -324,7 +325,7 @@ class FlipLR(Augmentation):
     """
 
     def __init__(
-        self,
+        self: FlipLR,
         p: PropertyLike[float] = 0.5,
         augment: PropertyLike[bool] = None,
         **kwargs
@@ -338,7 +339,7 @@ class FlipLR(Augmentation):
         )
 
     def get(
-        self,
+        self: FlipLR,
         image: Image,
         augment: PropertyLike[bool],
         **kwargs
@@ -352,7 +353,7 @@ class FlipLR(Augmentation):
         return image
 
     def update_properties(
-        self,
+        self: FlipLR,
         image: Image,
         augment: PropertyLike[bool],
         **kwargs
@@ -386,7 +387,7 @@ class FlipUD(Augmentation):
     """
 
     def __init__(
-        self,
+        self: FlipUD,
         p: float = 0.5,
         augment: PropertyLike[bool] = None,
         **kwargs
@@ -400,7 +401,7 @@ class FlipUD(Augmentation):
         )
 
     def get(
-        self,
+        self: FlipUD,
         image: Image,
         augment: PropertyLike[bool],
         **kwargs
@@ -414,7 +415,7 @@ class FlipUD(Augmentation):
         return image
 
     def update_properties(
-        self,
+        self: FlipUD,
         image: Image,
         augment: PropertyLike[bool],
         **kwargs
@@ -448,7 +449,7 @@ class FlipDiagonal(Augmentation):
     """
 
     def __init__(
-        self,
+        self: FlipDiagonal,
         p: PropertyLike[float] = 0.5,
         augment: PropertyLike[bool] = None,
         **kwargs
@@ -462,7 +463,7 @@ class FlipDiagonal(Augmentation):
         )
 
     def get(
-        self,
+        self: FlipDiagonal,
         image: Image,
         augment: PropertyLike[bool],
         **kwargs
@@ -475,7 +476,7 @@ class FlipDiagonal(Augmentation):
         return image
 
     def update_properties(
-        self,
+        self: FlipDiagonal,
         image: Image,
         augment: PropertyLike[bool],
         **kwargs
@@ -509,16 +510,16 @@ class Affine(Augmentation):
 
     Parameters
     ----------
-    scale: float or tuple of float or list of float or dict
+    scale: float or tuple of floats or list of floats or dict
         Scaling factor to use, where ``1.0`` denotes "no change" and
         ``0.5`` is zoomed out to ``50`` percent of the original size.
         If two values are provided (using tuple, list, or dict),
         the two first dimensions of the input are scaled individually.
 
-    translate: float or tuple of float or list of float or dict
+    translate: float or tuple of floats or list of floats or dict
         Translation in pixels.
 
-    translate_px: float or tuple of float or list of float or dict
+    translate_px: float or tuple of floats or list of floats or dict
         DEPRECATED, use translate.
 
     rotate: float
@@ -540,9 +541,9 @@ class Affine(Augmentation):
     """
 
     def __init__(
-        self,
+        self: Affine,
         scale: PropertyLike[float] = 1,
-        translate: PropertyLike[Union[float,  None]] = None,
+        translate: PropertyLike[float |  None] = None,
         translate_px: PropertyLike[float] = 0.0,
         rotate: PropertyLike[float] = 0.0,
         shear: PropertyLike[float] = 0.0,
@@ -567,7 +568,7 @@ class Affine(Augmentation):
         )
 
     def _process_properties(
-        self,
+        self: Affine,
         properties: Dict
     ) -> Dict:
         
@@ -591,7 +592,7 @@ class Affine(Augmentation):
         return properties
 
     def get(
-        self,
+        self: Affine,
         image: Image,
         scale: PropertyLike[float],
         translate: PropertyLike[float],
@@ -747,7 +748,7 @@ class ElasticTransformation(Augmentation):
     """
 
     def __init__(
-        self,
+        self: ElasticTransformation,
         alpha: PropertyLike[float] = 20,
         sigma: PropertyLike[float] = 2,
         ignore_last_dim: PropertyLike[bool] = True,
@@ -767,7 +768,7 @@ class ElasticTransformation(Augmentation):
         )
 
     def get(
-        self,
+        self: ElasticTransformation,
         image: Image,
         sigma: PropertyLike[float],
         alpha: PropertyLike[float],
@@ -835,7 +836,7 @@ class Crop(Augmentation):
     feature: Feature or list of Features
         Feature(s) to augment.
 
-    crop: int or tuple of int or list of int or Callable[Image]->tuple of ints
+    crop: int or tuple of ints or list of ints or Callable[Image]->tuple of ints
         Number of pixels to remove or retain (depending in `crop_mode`)
         If a tuple or list, it is assumed to be per axis.
         Can also be a function that returns any of the other types.
@@ -854,9 +855,9 @@ class Crop(Augmentation):
     """
 
     def __init__(
-        self,
+        self: Crop,
         *args,
-        crop: Union[List[int], Tuple[int], int] = (64, 64),
+        crop: list[int] | tuple[int] | int  = (64, 64),
         crop_mode: PropertyLike[str] = "retain",
         corner: PropertyLike[str] = "random",
         **kwargs
@@ -870,10 +871,10 @@ class Crop(Augmentation):
         )
 
     def get(
-        self,
+        self: Crop,
         image: Image,
         corner: PropertyLike[str],
-        crop: Union[int, List[int], Tuple[int]],
+        crop: int | list[int] | tuple[int],
         crop_mode: PropertyLike[str],
         **kwargs
     ) -> Image:
@@ -950,7 +951,7 @@ class CropToMultiplesOf(Crop):
 
     Parameters
     ----------
-    multiple: int or tuple of (int or None)
+    multiple: int or tuple of ints or tuple of none
         Images will be cropped down until their width is a multiple of
         this value. If a tuple, it is assumed to be a multiple per axis.
         A value of None or -1 indicates to skip that axis.
@@ -958,8 +959,8 @@ class CropToMultiplesOf(Crop):
     """
 
     def __init__(
-        self,
-        multiple: Union[int, Tuple[int], Tuple[None]] = 1,
+        self: CropToMultiplesOf,
+        multiple: int | tuple[int] | tuple[None] = 1,
         corner: PropertyLike[str] = "random",
         **kwargs
     ) -> None:
@@ -1008,15 +1009,16 @@ class CropTight(Feature):
         by default 1e-10.
 
     """
+
     def __init__(
-        self,
+        self: CropTight,
         eps: PropertyLike[float] = 1e-10,
         **kwargs
     ) -> None:
         super().__init__(eps=eps, **kwargs)
 
     def get(
-        self,
+        self: CropTight,
         image: Image,
         eps: PropertyLike[float],
         **kwargs
@@ -1036,21 +1038,28 @@ class CropTight(Feature):
 
 
 class Pad(Augmentation):
-    """Pads the image.
+    """Pads an image by adding extra pixels along specified axes.
 
-    Arguments match this of numpy.pad, save for pad_width, which is called px,
-    and is defined as (left, right, up, down, before_axis_3, after_axis_3, ...)
+    This augmentation uses `numpy.pad` internally but redefines `pad_width` 
+    as `px`, allowing padding along multiple axes (left, right, top, bottom, 
+    before_axis_3, after_axis_3, ...).
 
     Parameters
     ----------
-    px: int or list of int
-        Ammount to pad in each direction.
+    px : list of ints or tuple of ints
+        Amount of padding for each axis, specified as a tuple (left, right, 
+        top, bottom, etc.).
+
+    Returns
+    -------
+    Image
+    The padded image.
 
     """
 
     def __init__(
-        self,
-        px: Union[List[int], Tuple[int]] = (0, 0, 0, 0),
+        self: Pad,
+        px: list[int] | tuple[int] = (0, 0, 0, 0),
         mode: PropertyLike[str] = "constant",
         cval: PropertyLike[float] = 0,
         **kwargs
@@ -1058,7 +1067,7 @@ class Pad(Augmentation):
         super().__init__(px=px, mode=mode, cval=cval, **kwargs)
 
     def get(
-        self,
+        self: Pad,
         image: Image,
         px: PropertyLike[int],
         **kwargs
@@ -1086,11 +1095,11 @@ class Pad(Augmentation):
  
 
     def _image_wrap_process_and_get(
-        self,
-        images: List[Image],
+        self: Pad,
+        images: list[Image],
         **kwargs
-    ) -> List[Image]:
-        """Simple method which wraps an `Image` in a `List`.
+    ) -> list[Image]:
+        """Simple method which wraps an `Image` in a `list`.
         
         """
         results = [self.get(image, **kwargs) for image in images]
@@ -1109,7 +1118,7 @@ class PadToMultiplesOf(Pad):
     Parameters
     ----------
 
-    multiple: int or tuple of (int or None)
+    multiple: int or tuple of int or tuple of none
         Images will be padded until their width is a multiple of
         this value. If a tuple, it is assumed to be a multiple per axis.
         A value of None or -1 indicates to skip that axis.
@@ -1117,14 +1126,14 @@ class PadToMultiplesOf(Pad):
     """
 
     def __init__(
-        self,
-        multiple: PropertyLike[Union[int, Tuple[int], Tuple[None]]] = 1,
+        self: PadToMultiplesOf,
+        multiple: PropertyLike[int | tuple[int] | tuple[None]] = 1,
         **kwargs
     ) -> None:
         
         def amount_to_pad(
             image: Image
-        ) -> List[int]:
+        ) -> list[int]:
             """Method to calculate number of pixels.
         
             Calculates the number of pixels needed to pad an image 
