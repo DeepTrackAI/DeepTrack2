@@ -165,7 +165,6 @@ class Feature(DeepTrackNode):
     __list_merge_strategy__ : int
         Specifies how the output of `.get(image, **kwargs)` is merged with the 
         input list. Options include:
-        
         - `MERGE_STRATEGY_OVERRIDE` (0, default): The input list is replaced by
         the new list.
         - `MERGE_STRATEGY_APPEND` (1): The new list is appended to the end of 
@@ -204,7 +203,7 @@ class Feature(DeepTrackNode):
     """
 
     properties: PropertyDict
-    _input: DeepTrackNode'
+    _input: DeepTrackNode
     _random_seed: DeepTrackNode
     arguments: Feature | None
 
@@ -220,7 +219,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         _input: Any = [],
         **kwargs: dict[str, Any],
-    ):
+    ) -> None:
         """
         Initialize a new Feature instance.
 
@@ -291,7 +290,7 @@ class Feature(DeepTrackNode):
         raise NotImplementedError
 
     def __call__(
-        self,
+        self: Feature,
         image_list: Image | list[Image] = None,
         _ID: tuple[int, ...] = (),
         **kwargs: dict[str, Any],
@@ -369,7 +368,7 @@ class Feature(DeepTrackNode):
     resolve = __call__
 
     def store_properties(
-        self,
+        self: Feature,
         toggle: bool = True,
         recursive: bool = True,
     ) -> None:
@@ -395,9 +394,9 @@ class Feature(DeepTrackNode):
                     dependency.store_properties(toggle, recursive=False)
 
     def torch(
-        self, 
-        dtype=None, 
-        device=None, 
+        self: 'Feature', 
+        dtype: torch.dtype = None, 
+        device: torch.device = None,
         permute_mode: str = "never",
     ) -> 'Feature':
         """Convert the feature to a PyTorch feature.
@@ -431,7 +430,10 @@ class Feature(DeepTrackNode):
         
         return self >> tensor_feature
 
-    def batch(self, batch_size: int = 32) -> tuple | list[Image]:
+    def batch(
+        self: Feature,
+        batch_size: int = 32
+    ) -> tuple | list[Image]:
         """Batch the feature.
 
         It produces a batch of outputs by repeatedly calling `update()` and 
@@ -467,7 +469,7 @@ class Feature(DeepTrackNode):
         return tuple(results)
 
     def action(
-        self,
+        self: Feature,
         _ID: tuple[int, ...] = (),
     ) -> Image | list[Image]:
         """Core logic to create or transform the image.
@@ -524,7 +526,11 @@ class Feature(DeepTrackNode):
         else:
             return image_list
 
-    def __use_gpu__(self, inp, **_):
+    def __use_gpu__(
+        self: Feature,
+        inp: Image,
+        **_: Any,
+    ) -> bool:
         """Determine if the feature should use the GPU.
         
         Parameters
@@ -544,7 +550,10 @@ class Feature(DeepTrackNode):
 
         return self.__gpu_compatible__ and np.prod(np.shape(inp)) > (90000)
 
-    def update(self, **global_arguments) -> 'Feature':
+    def update(
+        self: Feature,
+        **global_arguments: Any,
+    ) -> Feature:
         """Refresh the feature to create a new image.
 
         Per default, when a feature is called multiple times, it will return 
@@ -571,7 +580,10 @@ class Feature(DeepTrackNode):
 
         return self
 
-    def add_feature(self, feature: 'Feature') -> 'Feature':
+    def add_feature(
+        self: Feature,
+        feature: Feature,
+    ) -> Feature:
         """Adds a feature to the dependecy graph of this one.
 
         Parameters
@@ -591,7 +603,10 @@ class Feature(DeepTrackNode):
 
         return feature
 
-    def seed(self, _ID: tuple[int, ...] = ()) -> None:
+    def seed(
+        self: Feature,
+        _ID: tuple[int, ...] = (),
+    ) -> None:
         """Seed the random number generator.
 
         Parameters
@@ -603,7 +618,10 @@ class Feature(DeepTrackNode):
 
         np.random.seed(self._random_seed(_ID=_ID))
 
-    def bind_arguments(self, arguments: 'Feature') -> 'Feature':
+    def bind_arguments(
+        self: Feature,
+        arguments: Feature,
+    ) -> Feature:
         """Bind another feature’s properties as arguments to this feature.
 
         Often used internally by advanced features or pipelines. 
@@ -616,8 +634,30 @@ class Feature(DeepTrackNode):
 
         return self
 
-    def _normalize(self, **properties):
-        # Handles all unit normalizations and conversions
+    def _normalize(
+        self: Feature,
+        **properties: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Normalize the properties.
+
+        Handles all unit normalizations and conversions. For each class in the 
+        method resolution order (MRO), it checks if the class has a 
+        `__conversion_table__` attribute. If it does, it calls the 
+        `convert` method of the conversion table with the properties as 
+        arguments.
+
+        Parameters
+        ----------
+        **properties : dict
+            The properties to normalize.
+
+        Returns
+        -------
+        dict
+            The normalized properties.
+
+        """
+
         for cl in type(self).mro():
             if hasattr(cl, "__conversion_table__"):
                 properties = cl.__conversion_table__.convert(**properties)
@@ -628,12 +668,12 @@ class Feature(DeepTrackNode):
         return properties
 
     def plot(
-        self,
+        self: Feature,
         input_image: Image or list[Image] = None,
         resolve_kwargs: dict = None,
         interval: float = None,
         **kwargs
-    ):
+    ) -> Any:
         """Visualizes the output of the feature.
 
         Resolves the feature and visualizes the result. If the output is an Image,
@@ -713,14 +753,20 @@ class Feature(DeepTrackNode):
                     ),
                 )
 
-    def _process_properties(self, propertydict) -> dict:
+    def _process_properties(
+        self: Feature,
+        propertydict: dict[str, Any],
+    ) -> dict[str, Any]:
         # Optional hook for subclasses to preprocess input before calling
         # the method .get()
 
         propertydict = self._normalize(**propertydict)
         return propertydict
 
-    def _activate_sources(self, x):
+    def _activate_sources(
+        self: Feature,
+        x: Any,
+    ) -> None:
         if isinstance(x, SourceItem):
             x()
         else:
@@ -729,7 +775,10 @@ class Feature(DeepTrackNode):
                     if isinstance(source, SourceItem):
                         source()
 
-    def __getattr__(self, key: str) -> Any:
+    def __getattr__(
+        self: Feature,
+        key: str,
+    ) -> Any:
         """Custom attribute access for the Feature class.
 
         This method allows properties of the `Feature` instance to be accessed 
@@ -769,14 +818,21 @@ class Feature(DeepTrackNode):
         raise AttributeError(f"'{self.__class__.__name__}' object has "
                              "no attribute '{key}'")
 
-    def __iter__(self):
+    def __iter__(
+        self: Feature,
+    ) -> Iterable:
         while True:
             yield from next(self)
 
-    def __next__(self):
+    def __next__(
+        self: Feature,
+    ) -> Any:
         yield self.update().resolve()
 
-    def __rshift__(self, other) -> 'Feature':
+    def __rshift__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         # Allows chaining of features. For example,
         # feature1 >> feature2 >> feature3
         # or
@@ -793,7 +849,10 @@ class Feature(DeepTrackNode):
         # The operator is not implemented for other inputs.
         return NotImplemented
 
-    def __rrshift__(self, other: 'Feature') -> 'Feature':
+    def __rrshift__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         # Allows chaining of features. For example,
         # some_function << feature1 << feature2
         # or
@@ -807,80 +866,152 @@ class Feature(DeepTrackNode):
 
         return NotImplemented
 
-    def __add__(self, other) -> 'Feature':
+    def __add__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         # Overrides add operator
         return self >> Add(other)
 
-    def __radd__(self, other) -> 'Feature':
+    def __radd__(
+        self: Feature, 
+        other: Any,
+    ) -> Feature:
         # Overrides add operator
         return Value(other) >> Add(self)
 
-    def __sub__(self, other) -> 'Feature':
+    def __sub__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         # Overrides add operator
         return self >> Subtract(other)
 
-    def __rsub__(self, other) -> 'Feature':
+    def __rsub__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         # Overrides add operator
         return Value(other) >> Subtract(self)
 
-    def __mul__(self, other) -> 'Feature':
+    def __mul__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return self >> Multiply(other)
 
-    def __rmul__(self, other) -> 'Feature':
+    def __rmul__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return Value(other) >> Multiply(self)
 
-    def __truediv__(self, other) -> 'Feature':
+    def __truediv__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return self >> Divide(other)
 
-    def __rtruediv__(self, other) -> 'Feature':
+    def __rtruediv__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return Value(other) >> Divide(self)
 
-    def __floordiv__(self, other) -> 'Feature':
+    def __floordiv__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return self >> FloorDivide(other)
 
-    def __rfloordiv__(self, other) -> 'Feature':
+    def __rfloordiv__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return Value(other) >> FloorDivide(self)
 
-    def __pow__(self, other) -> 'Feature':
+    def __pow__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return self >> Power(other)
 
-    def __rpow__(self, other) -> 'Feature':
+    def __rpow__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return Value(other) >> Power(self)
 
-    def __gt__(self, other) -> 'Feature':
+    def __gt__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return self >> GreaterThan(other)
 
-    def __rgt__(self, other) -> 'Feature':
+    def __rgt__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return Value(other) >> GreaterThan(self)
 
-    def __lt__(self, other) -> 'Feature':
+    def __lt__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return self >> LessThan(other)
 
-    def __rlt__(self, other) -> 'Feature':
+    def __rlt__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return Value(other) >> LessThan(self)
 
-    def __le__(self, other) -> 'Feature':
+    def __le__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return self >> LessThanOrEquals(other)
 
-    def __rle__(self, other) -> 'Feature':
+    def __rle__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return Value(other) >> LessThanOrEquals(self)
 
-    def __ge__(self, other) -> 'Feature':
+    def __ge__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return self >> GreaterThanOrEquals(other)
 
-    def __rge__(self, other) -> 'Feature':
+    def __rge__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return Value(other) >> GreaterThanOrEquals(self)
 
-    def __xor__(self, other) -> 'Feature':
+    def __xor__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return Repeat(self, other)
 
-    def __and__(self, other) -> 'Feature':
+    def __and__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return self >> Stack(other)
 
-    def __rand__(self, other) -> 'Feature':
+    def __rand__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
         return Value(other) >> Stack(self)
 
-    def __getitem__(self, slices) -> 'Feature':
+    def __getitem__(
+        self: Feature,
+        slices: Any,
+    ) -> 'Feature':
         # Allows direct slicing of the data.
         if not isinstance(slices, tuple):
             slices = (slices,)
@@ -912,7 +1043,11 @@ class Feature(DeepTrackNode):
         else:
             return self._no_wrap_process_output
 
-    def _image_wrapped_format_input(self, image_list, **kwargs) -> list[Image]:
+    def _image_wrapped_format_input(
+        self: Feature,
+        image_list: Image | list[Image],
+        **kwargs: dict[str, Any],
+    ) -> list[Image]:
         # Ensures the input is a list of Image.
 
         if image_list is None:
@@ -924,7 +1059,11 @@ class Feature(DeepTrackNode):
         inputs = [(Image(image)) for image in image_list]
         return self._coerce_inputs(inputs, **kwargs)
 
-    def _no_wrap_format_input(self, image_list, **kwargs) -> list:
+    def _no_wrap_format_input(
+        self: Feature, 
+        image_list: Image | list[Image],
+        **kwargs: dict[str, Any],
+    ) -> list[Image]:
         # Ensures the input is a list of Image.
 
         if image_list is None:
@@ -935,7 +1074,11 @@ class Feature(DeepTrackNode):
 
         return image_list
 
-    def _no_wrap_process_and_get(self, image_list, **feature_input) -> list:
+    def _no_wrap_process_and_get(
+        self: Feature,
+        image_list: Image | list[Image],
+        **feature_input: dict[str, Any],
+    ) -> list[Image]:
         # Controls how the get function is called
 
         if self.__distributed__:
@@ -951,7 +1094,11 @@ class Feature(DeepTrackNode):
 
             return new_list
 
-    def _image_wrapped_process_and_get(self, image_list, **feature_input) -> list[Image]:
+    def _image_wrapped_process_and_get(
+        self: Feature,
+        image_list: Image | list[Image],
+        **feature_input: dict[str, Any],
+    ) -> list[Image]:
         # Controls how the get function is called
 
         if self.__distributed__:
@@ -981,7 +1128,11 @@ class Feature(DeepTrackNode):
                     new_list[idx] = Image(image)
             return new_list
 
-    def _image_wrapped_process_output(self, image_list, feature_input):
+    def _image_wrapped_process_output(
+        self: Feature,
+        image_list: Image | list[Image], 
+        feature_input: dict[str, Any],
+    ) -> None:
         for index, image in enumerate(image_list):
 
             if self.arguments:
@@ -989,13 +1140,21 @@ class Feature(DeepTrackNode):
 
             image.append(feature_input)
 
-    def _no_wrap_process_output(self, image_list, feature_input):
+    def _no_wrap_process_output(
+        self: Feature,
+        image_list: Image | list[Image],
+        feature_input: dict[str, Any],
+    ) -> None:
         for index, image in enumerate(image_list):
 
             if isinstance(image, Image):
                 image_list[index] = image._value
 
-    def _coerce_inputs(self, inputs, **kwargs):
+    def _coerce_inputs(
+        self: Feature,
+        inputs: list[Image],
+        **kwargs: dict[str, Any],
+    ) -> list[Image]:
         # Coerces inputs to the correct type (numpy array or tensor or cupyy array).
         if config.gpu_enabled:
 
@@ -1010,7 +1169,10 @@ class Feature(DeepTrackNode):
             return [i.to_numpy() for i in inputs]
 
 
-def propagate_data_to_dependencies(feature: Feature, **kwargs: dict[str, Any]):
+def propagate_data_to_dependencies(
+    feature: Feature,
+    **kwargs: dict[str, Any]
+) -> None:
     """Updates the properties of dependencies in a feature's dependency tree.
 
     This function iterates over all the dependencies of the given feature and 
@@ -1063,6 +1225,7 @@ class StructuralFeature(Feature):
         If set to False, the feature’s `get` method is called on the 
         entire list rather than each element individually.
 
+
     """
 
     __property_verbosity__: int = 2  # Hide properties from logs or output.
@@ -1085,6 +1248,11 @@ class Chain(StructuralFeature):
     **kwargs : dict[str, Any]
         Additional keyword arguments passed to the parent `StructuralFeature` 
         (and thus `Feature`).
+
+    Methods
+    -------
+    `get(image: Image | list[Image], _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Image | list[Image]`
+        Apply the two features in sequence on the given input image
     
     Example
     -------
@@ -1161,7 +1329,7 @@ class Chain(StructuralFeature):
         self.feature_2 = self.add_feature(feature_2)
 
     def get(
-        self,
+        self: Feature,
         image: Image | list[Image],
         _ID: tuple[int, ...] = (),
         **kwargs: dict[str, Any],
@@ -1214,6 +1382,11 @@ class DummyFeature(Feature):
         Additional keyword arguments are wrapped as `Property` instances and 
         stored in `self.properties`.
 
+    Methods
+    -------
+    `get(image: Image | list[Image], **kwargs: dict[str, Any]) -> Image | list[Image]`
+        Simply returns the input image(s) unchanged
+
     Example
     -------
     >>> import numpy as np
@@ -1246,7 +1419,7 @@ class DummyFeature(Feature):
     """
 
     def get(
-        self, 
+        self: Feature,
         image: Image | list[Image], 
         **kwargs: Any,
     )-> Image | list[Image]:
@@ -1293,6 +1466,11 @@ class Value(Feature):
         Set to False, indicating that this feature’s `get(...)` method
         processes the entire list of images (or data) at once, rather than
         distributing calls for each item.
+
+    Methods
+    -------
+    `get(image: Any, value: float, **kwargs: dict[str, Any]) -> float`
+        Return the stored value, ignoring the input image.
 
     Examples
     --------
@@ -1343,7 +1521,12 @@ class Value(Feature):
 
         super().__init__(value=value, **kwargs)
 
-    def get(self, image: Any, value: float, **kwargs: dict[str, Any]) -> float:
+    def get(
+        self: Feature,
+        image: Any, 
+        value: float, 
+        **kwargs: dict[str, Any]
+    ) -> float:
         """Return the stored value, ignoring the input image.
 
         Parameters
@@ -1393,6 +1576,11 @@ class ArithmeticOperationFeature(Feature):
         distributing calls for each item.
     __gpu_compatible__ : bool
         Set to `True`, indicating compatibility with GPU processing.
+
+    Methods
+    -------
+    `get(image: Any | list[Any], value: float | int | list[float | int], **kwargs: dict[str, Any]) -> list[Any]`
+        Apply the operation element-wise to the input data.
 
     Example
     -------
@@ -1444,7 +1632,7 @@ class ArithmeticOperationFeature(Feature):
         super().__init__(value=value, **kwargs)
 
     def get(
-        self,
+        self: Feature,
         image: Any | list[Any],
         value: float | int | list[float | int],
         **kwargs: Any,
@@ -1754,7 +1942,7 @@ class FloorDivide(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self,
+        self: Feature,
         value: PropertyLike[float] = 0,
         **kwargs: dict[str, Any],
     ):
@@ -1868,7 +2056,7 @@ class LessThan(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self,
+        self: Feature,
         value: PropertyLike[float] = 0,
         **kwargs: dict[str, Any],
     ):
@@ -1925,7 +2113,7 @@ class LessThanOrEquals(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self,
+        self: Feature,
         value: PropertyLike[float] = 0,
         **kwargs: dict[str, Any],
     ):
@@ -1985,7 +2173,7 @@ class GreaterThan(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self,
+        self: Feature,
         value: PropertyLike[float] = 0,
         **kwargs: dict[str, Any],
     ):
@@ -2042,7 +2230,7 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self,
+        self: Feature,
         value: PropertyLike[float] = 0,
         **kwargs: dict[str, Any],
     ):
@@ -2082,7 +2270,7 @@ class Equals(ArithmeticOperationFeature):
     #TODO: Why __eq__ and __req__ are not defined in DeepTrackNode and Feature?
 
     def __init__(
-        self,
+        self: Feature,
         value: PropertyLike[float] = 0,
         **kwargs: dict[str, Any],
     ):
@@ -2152,7 +2340,7 @@ class Stack(Feature):
     __distributed__: bool = False
 
     def __init__(
-        self,
+        self: Feature,
         value: PropertyLike[Any],
         **kwargs: dict[str, Any],
     ):
@@ -2169,7 +2357,7 @@ class Stack(Feature):
         super().__init__(value=value, **kwargs)
 
     def get(
-        self,
+        self: Feature,
         image: Any | list[Any],
         value: Any | list[Any],
         **kwargs: dict[str, Any],
@@ -2219,7 +2407,7 @@ class Arguments(Feature):
 
     Methods
     -------
-    get(image, **kwargs)
+    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
         Passes the input image through unchanged, while allowing for property 
         overrides.
 
@@ -2291,7 +2479,12 @@ class Arguments(Feature):
 
     """
 
-    def get(self, image: Any, **kwargs: dict[str, Any]) -> Any:
+    def get(
+        self: Feature,
+        image: Any,
+        **kwargs: dict[str, Any]
+    ) -> Any:
+
         """Process the input image and allow property overrides.
 
         This method does not modify the input image but provides a mechanism
@@ -2338,7 +2531,7 @@ class Probability(StructuralFeature):
 
     Methods
     -------
-    get(image, feature, probability, random_number, **kwargs)
+    `get(image: np.ndarray, feature: Feature, probability: float, random_number: float, **kwargs: dict[str, Any]) -> np.ndarray`
         Resolves the feature if the sampled random number is less than the 
         specified probability.
 
@@ -2368,7 +2561,7 @@ class Probability(StructuralFeature):
     #TODO: verify example + add unit test.
 
     def __init__(
-        self,
+        self: Feature,
         feature: Feature,
         probability: PropertyLike[float],
         *args: list[Any],
@@ -2400,13 +2593,13 @@ class Probability(StructuralFeature):
         )
 
     def get(
-        self,
+        self: Feature,
         image: np.ndarray,
         feature: Feature,
         probability: float,
         random_number: float,
-        **kwargs
-    ):
+        **kwargs: dict[str, Any],
+    ) -> np.ndarray:
         """Resolve the feature if a random number is less than the probability.
 
         Parameters
@@ -2461,6 +2654,12 @@ class Repeat(Feature):
         Indicates whether this feature distributes computation across inputs. 
         Always `False` for `Repeat`, as it processes sequentially.
 
+    Methods
+    -------
+    `get(image: Any, N: int, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
+        Sequentially applies the feature `N` times, passing the output of each 
+        iteration as the input to the next.
+
     Example
     -------
     Start by creating a pipeline using Repeat:
@@ -2480,7 +2679,7 @@ class Repeat(Feature):
     __distributed__: bool = False
 
     def __init__(
-        self, 
+        self: Feature, 
         feature: 'Feature', 
         N: int, 
         **kwargs: dict[str, Any],
@@ -2503,12 +2702,12 @@ class Repeat(Feature):
         self.feature = self.add_feature(feature)
 
     def get(
-        self,
+        self: Feature,
         image: Any,
         N: int,
         _ID: tuple[int, ...] = (),
         **kwargs: dict[str, Any],
-    ):
+    ) -> Any:
         """Apply sequentially the feature a set number of times.
 
         Sequentially applies the feature `N` times, passing the output of each 
@@ -2564,7 +2763,7 @@ class Combine(StructuralFeature):
 
     Methods
     -------
-    get(image_list, **kwargs)
+    `get(image_list: Any, **kwargs: dict[str, Any]) -> list[Any]`
         Resolves each feature in the `features` list on the input image and 
         returns their results as a list.
 
@@ -2595,7 +2794,11 @@ class Combine(StructuralFeature):
 
     __distributed__: bool = False
 
-    def __init__(self, features: list[Feature], **kwargs: dict[str, Any]):
+    def __init__(
+        self: Feature, 
+        features: list[Feature], 
+        **kwargs: dict[str, Any]
+    ):
         """Initialize the Combine feature.
 
         Parameters
@@ -2612,7 +2815,11 @@ class Combine(StructuralFeature):
         self.features = [self.add_feature(f) for f in features]
         super().__init__(**kwargs)
 
-    def get(self, image_list: Any, **kwargs: dict[str, Any]) -> list[Any]:
+    def get(
+        self: Feature, 
+        image_list: Any,
+        **kwargs: dict[str, Any]
+    ) -> list[Any]:
         """Resolve each feature in the `features` list on the input image.
 
         Parameters
@@ -2647,6 +2854,11 @@ class Slice(Feature):
         dimension in the input image.
     **kwargs : dict
         Additional keyword arguments passed to the parent `Feature` class.
+
+    Methods
+    -------
+    `get(image: np.ndarray, slices: tuple[Any, ...], **kwargs: dict[str, Any]) -> np.ndarray`
+        Applies the specified slices to the input image.
 
     Examples
     --------
@@ -2685,10 +2897,10 @@ class Slice(Feature):
     #TODO: verify examples + add unit tests.
 
     def __init__(
-        self,
+        self: Feature,
         slices: PropertyLike[
             Iterable[
-                PropertyLike[int] or PropertyLike[slice] or PropertyLike[...]
+                PropertyLike[int] | PropertyLike[slice] | PropertyLike[...]
             ]
         ],
         **kwargs: dict[str, Any],
@@ -2707,7 +2919,7 @@ class Slice(Feature):
         super().__init__(slices=slices, **kwargs)
 
     def get(
-        self,
+        self: Feature,
         image: np.ndarray,
         slices: tuple[Any, ...] | Any,
         **kwargs: dict[str, Any],
@@ -2755,6 +2967,11 @@ class Bind(StructuralFeature):
     **kwargs : dict[str, Any]
         Properties to send to child
 
+    Methods
+    -------
+    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
+        Resolves the child feature with the provided arguments.
+
     Example
     -------
     Dynamically modify the behavior of a feature:
@@ -2773,7 +2990,11 @@ class Bind(StructuralFeature):
 
     __distributed__: bool = False
 
-    def __init__(self, feature: Feature, **kwargs: dict[str, Any]):
+    def __init__(
+        self: Feature, 
+        feature: Feature, 
+        **kwargs: dict[str, Any]
+    ):
         """Initialize the Bind feature.
 
         Parameters
@@ -2788,7 +3009,11 @@ class Bind(StructuralFeature):
         super().__init__(**kwargs)
         self.feature = self.add_feature(feature)
 
-    def get(self, image: Any, **kwargs: dict[str, Any]) -> Any:
+    def get(
+        self: Feature, 
+        image: Any, 
+        **kwargs: dict[str, Any]
+    ) -> Any:
         """Resolve the child feature with the dynamically provided arguments.
 
         Parameters
@@ -2827,6 +3052,11 @@ class BindUpdate(StructuralFeature):
     **kwargs : dict[str, Any]
         Properties to send to the child feature during updates.
 
+    Methods
+    -------
+    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
+        Resolves the child feature with the provided arguments.
+
     Warnings
     --------
     This feature is deprecated and may be removed in a future release. 
@@ -2853,7 +3083,11 @@ class BindUpdate(StructuralFeature):
 
     __distributed__: bool = False
 
-    def __init__(self, feature: Feature, **kwargs: dict[str, Any]):
+    def __init__(
+        self: Feature, 
+        feature: Feature, 
+        **kwargs: dict[str, Any]
+    ):
         """Initialize the BindUpdate feature.
 
         Parameters
@@ -2882,7 +3116,11 @@ class BindUpdate(StructuralFeature):
         super().__init__(**kwargs)
         self.feature = self.add_feature(feature)
 
-    def get(self, image: Any, **kwargs: dict[str, Any]) -> Any:
+    def get(
+        self: Feature, 
+        image: Any, 
+        **kwargs: dict[str, Any]
+    ) -> Any:
         """Resolve the child feature with the provided arguments.
 
         Parameters
@@ -2927,6 +3165,12 @@ class ConditionalSetProperty(StructuralFeature):
         The properties to be applied to the child feature if `condition` is 
         `True`.
 
+    Methods
+    -------
+    `get(image: Any, condition: str | bool, **kwargs: dict[str, Any]) -> Any`
+        Resolves the child feature, conditionally applying the specified 
+        properties
+
     Example
     -------
     >>> import deeptrack as dt
@@ -2944,7 +3188,7 @@ class ConditionalSetProperty(StructuralFeature):
     __distributed__: bool = False
 
     def __init__(
-        self,
+        self: Feature,
         feature: Feature,
         condition=PropertyLike[str or bool],
         **kwargs: dict[str, Any],
@@ -2969,11 +3213,11 @@ class ConditionalSetProperty(StructuralFeature):
         self.feature = self.add_feature(feature)
 
     def get(
-        self,
+        self: Feature,
         image: Any,
         condition: str | bool,
         **kwargs: dict[str, Any],
-    ):
+    ) -> Any:
         """Resolve the child, conditionally applying specified properties.
 
         Parameters
@@ -3039,6 +3283,11 @@ class ConditionalSetFeature(StructuralFeature):
     **kwargs : dict[str, Any]
         Additional keyword arguments passed to the parent `StructuralFeature`.
 
+    Methods
+    -------
+    `get(image: Any, condition: str | bool, **kwargs: dict[str, Any]) -> Any`
+        Resolves the appropriate feature based on the condition.
+
     Example
     -------
     >>> import deeptrack as dt
@@ -3060,7 +3309,7 @@ class ConditionalSetFeature(StructuralFeature):
     __distributed__: bool = False
 
     def __init__(
-        self,
+        self: Feature,
         on_false: Feature | None = None,
         on_true: Feature | None = None,
         condition: PropertyLike[str | bool] = "is_label",
@@ -3094,7 +3343,7 @@ class ConditionalSetFeature(StructuralFeature):
         self.on_false = on_false
 
     def get(
-        self,
+        self: Feature,
         image: Any,
         *,
         condition: str | bool,
@@ -3157,6 +3406,11 @@ class Lambda(Feature):
     **kwargs : dict[str, Any]
         Additional parameters passed to the parent `Feature` class.
 
+    Methods
+    -------
+    `get(image: Image, function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image`
+        Apply the custom function to the input image.
+
     Example
     -------
     >>> import numpy as np
@@ -3189,7 +3443,7 @@ class Lambda(Feature):
     #TODO: Check example + add unit test.
 
     def __init__(
-        self,
+        self: Feature,
         function: Callable[..., Callable[[Image], Image]],
         **kwargs: dict[str, Any],
     ):
@@ -3207,11 +3461,11 @@ class Lambda(Feature):
         super().__init__(function=function, **kwargs)
 
     def get(
-        self,
+        self: Feature,
         image: Image,
         function: Callable[[Image], Image],
         **kwargs: dict[str, Any],
-    ):
+    ) -> Image:
         """Apply the custom function to the image.
 
         Parameters
@@ -3254,6 +3508,11 @@ class Merge(Feature):
     **kwargs : dict[str, Any]
         Additional parameters passed to the parent `Feature` class.
 
+    Methods
+    -------
+    `get(list_of_images: list[Image], function: Callable[[list[Image]], Image or list[Image]], **kwargs: dict[str, Any]) -> Image or list[Image]`
+        Apply the custom function to the list of images.
+
     Example
     -------
     >>> import numpy as np
@@ -3289,7 +3548,7 @@ class Merge(Feature):
     __distributed__: bool = False
 
     def __init__(
-        self,
+        self: Feature,
         function: Callable[..., 
                            Callable[[list[Image]], Image | list[Image]]],
         **kwargs: dict[str, Any]
@@ -3308,7 +3567,7 @@ class Merge(Feature):
         super().__init__(function=function, **kwargs)
 
     def get(
-        self,
+        self: Feature,
         list_of_images: list[Image],
         function: Callable[[list[Image]], Image | list[Image]],
         **kwargs: dict[str, Any],
@@ -3361,7 +3620,10 @@ class OneOf(Feature):
 
     Methods
     -------
-    get(image, key, _ID=(), **kwargs)
+    `_process_properties(propertydict: dict) -> dict`
+        Process the properties to select the feature index.
+
+    `get(image: Any, key: int, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
         Resolves the selected feature on the input image.
 
     Example
@@ -3392,7 +3654,7 @@ class OneOf(Feature):
     __distributed__: bool = False
 
     def __init__(
-        self,
+        self: Feature,
         collection: Iterable[Feature],
         key: int | None = None,
         **kwargs: dict[str, Any],
@@ -3419,7 +3681,7 @@ class OneOf(Feature):
             self.add_feature(feature)
 
     def _process_properties(
-        self, 
+        self: Feature, 
         propertydict: dict,
     ) -> dict:
         """Process the properties to select the feature index.
@@ -3445,12 +3707,12 @@ class OneOf(Feature):
         return propertydict
 
     def get(
-        self,
+        self: Feature,
         image: Any,
         key: int,
         _ID: tuple[int, ...] = (),
         **kwargs: dict[str, Any],
-    ):
+    ) -> Any:
         """Resolve the selected feature on the input image.
 
         Parameters
@@ -3503,7 +3765,10 @@ class OneOfDict(Feature):
 
     Methods
     -------
-    get(image, key, _ID=(), **kwargs)
+    `_process_properties(propertydict: dict) -> dict`
+        Process the properties to select the feature key.
+    
+    `get(image: Any, key: Any, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
         Resolves the selected feature from the dictionary and applies it to the 
         input image.
 
@@ -3537,7 +3802,7 @@ class OneOfDict(Feature):
     __distributed__: bool = False
 
     def __init__(
-        self,
+        self: Feature,
         collection: dict[Any, Feature],
         key: Any | None = None,
         **kwargs: dict[str, Any],
@@ -3565,7 +3830,10 @@ class OneOfDict(Feature):
         for feature in self.collection.values():
             self.add_feature(feature)
 
-    def _process_properties(self, propertydict: dict) -> dict:
+    def _process_properties(
+        self: Feature, 
+        propertydict: dict
+    ) -> dict:
         """Process the properties to select the feature key.
 
         Parameters
@@ -3589,7 +3857,7 @@ class OneOfDict(Feature):
         return propertydict
 
     def get(
-        self,
+        self: Feature,
         image: Any,
         key: Any,
         _ID: tuple[int, ...] = (),
@@ -3650,7 +3918,7 @@ class Label(Feature):
     __distributed__: bool = False
 
     def __init__(
-        self,
+        self: Feature,
         output_shape: PropertyLike[int] = None,
         **kwargs: dict[str, Any],
     ):
@@ -3669,7 +3937,7 @@ class Label(Feature):
         super().__init__(output_shape=output_shape, **kwargs)
 
     def get(
-        self,
+        self: Feature,
         image: Any,
         output_shape: tuple[int, ...] | None = None,
         **kwargs: dict[str, Any],
@@ -4555,7 +4823,7 @@ class NonOverlapping(Feature):
     __distributed__: bool = False
 
     def __init__(
-        self,
+        self: NonOverlapping,
         feature: Feature,
         min_distance: float = 1,
         max_attempts: int = 100,
