@@ -13,6 +13,7 @@ import unittest
 import numpy as np
 
 from deeptrack import features, properties, scatterers, units
+from deeptrack.noises import Gaussian
 
 
 def grid_test_features(
@@ -637,6 +638,26 @@ class TestFeatures(unittest.TestCase):
         B.key.set_value("c")
         self.assertEqual(C.prop(), 12)
 
+    def test_Combine_feature(self):
+
+        noise_feature = Gaussian(mu=0, sigma=2)
+        add_feature = features.Add(value=10)
+        combined_feature = features.Combine([noise_feature, add_feature])
+
+        input_image = np.ones((10, 10))
+        output_list = combined_feature.resolve(input_image)
+
+        assert isinstance(output_list, list), "Output should be a list"
+        assert len(output_list) == 2, "Output list should contain results of both features"
+
+        for output in output_list:
+            assert output.shape == input_image.shape, "Output shape mismatch"
+
+        noisy_image = output_list[0]
+        added_image = output_list[1]
+
+        assert not np.all(noisy_image == 1), "Gaussian noise was not applied"
+        assert np.allclose(added_image, input_image + 10), "Add operation failed"
 
     def test_Slice_constant(self):
 
@@ -703,6 +724,21 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(a2.tolist(), input[:, ...].tolist())
         self.assertEqual(a3.tolist(), input[0:2, ...].tolist())
 
+    def test_Slice_static_dynamic(self):
+        self.image = np.arange(27).reshape((3, 3, 3))
+        self.expected_output = self.image[:, 1:2, ::-2]
+
+        feature = features.DummyFeature()
+
+        static_slicing = feature[:, 1:2, ::-2]
+        static_output = static_slicing.resolve(self.image)
+        np.testing.assert_array_equal(static_output, self.expected_output)
+
+        dynamic_slicing = feature >> features.Slice(
+            slices=(slice(None), slice(1, 2), slice(None, None, -2))
+        )
+        dinamic_output = dynamic_slicing.resolve(self.image)
+        np.testing.assert_array_equal(dinamic_output, self.expected_output)
 
     def test_Chain(self):
 
@@ -882,6 +918,24 @@ class TestFeatures(unittest.TestCase):
         res = pipeline_with_small_input.update(input_value=10).resolve()
         self.assertEqual(res, 11)
 
+    def test_BindUpdate_gaussian_noise(self):
+        # Define the Gaussian noise feature and bind its properties
+        gaussian_noise = Gaussian()
+        bound_feature = features.BindUpdate(gaussian_noise, mu=5, sigma=3)
+
+        # Create the input image
+        input_image = np.zeros((512, 512))
+
+        # Resolve the feature to get the output image
+        output_image = bound_feature.resolve(input_image)
+
+        # Calculate the mean and standard deviation of the output
+        output_mean = np.mean(output_image)
+        output_std = np.std(output_image)
+
+        # Assert that the mean and standard deviation are close to the bound values
+        self.assertAlmostEqual(output_mean, 5, delta=0.2, msg="Mean is not within the expected range")
+        self.assertAlmostEqual(output_std, 3, delta=0.2, msg="Standard deviation is not within the expected range")
 
     def test_Bind(self):
 
@@ -898,6 +952,25 @@ class TestFeatures(unittest.TestCase):
 
         res = pipeline_with_small_input.update(input_value=10).resolve()
         self.assertEqual(res, 11)
+
+    def test_Bind_gaussian_noise(self):
+        # Define the Gaussian noise feature and bind its properties
+        gaussian_noise = Gaussian()
+        bound_feature = features.Bind(gaussian_noise, mu=-5, sigma=2)
+
+        # Create the input image
+        input_image = np.zeros((512, 512))
+
+        # Resolve the feature to get the output image
+        output_image = bound_feature.resolve(input_image)
+
+        # Calculate the mean and standard deviation of the output
+        output_mean = np.mean(output_image)
+        output_std = np.std(output_image)
+
+        # Assert that the mean and standard deviation are close to the bound values
+        self.assertAlmostEqual(output_mean, -5, delta=0.2, msg="Mean is not within the expected range")
+        self.assertAlmostEqual(output_std, 2, delta=0.2, msg="Standard deviation is not within the expected range")
 
 
     def test_BindResolve(self):
