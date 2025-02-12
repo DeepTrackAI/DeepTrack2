@@ -13,6 +13,7 @@ import unittest
 import numpy as np
 
 from deeptrack import features, properties, scatterers, units
+from deeptrack.image import Image
 from deeptrack.noises import Gaussian
 
 
@@ -288,8 +289,6 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_Feature_store_properties_in_image(self):
-
-        from deeptrack.image import Image
 
         class FeatureAddValue(features.Feature):
             def get(self, image, value_to_add=0, **kwargs):
@@ -659,6 +658,137 @@ class TestFeatures(unittest.TestCase):
         assert not np.all(noisy_image == 1), "Gaussian noise was not applied"
         assert np.allclose(added_image, input_image + 10), "Add operation failed"
 
+    # def test_ConditionalSetProperty(self):
+    #     """Test that ConditionalSetProperty correctly modifies properties based on condition."""
+
+    #     gaussian_noise = Gaussian(sigma = 0)
+
+    #     # Wrap it with ConditionalSetProperty
+    #     conditional_feature = features.ConditionalSetProperty(
+    #         gaussian_noise, condition="is_noisy", sigma=5,
+    #     )
+
+    #     input_image = np.ones((10, 10))
+
+    #     # Case 1: Condition is True → Should apply sigma=5
+    #     output_noisy = conditional_feature.resolve(input_image, is_noisy=True)
+    #     assert output_noisy.std() > 0, \
+    #         "Expected noise to be applied when condition is True."
+
+    #     # Case 2: Condition is False → Should NOT apply sigma=5
+    #     output_clean = conditional_feature.resolve(input_image, is_noisy=False)
+    #     assert np.array_equal(input_image, output_clean), \
+    #         "Expected input to remain unchanged when condition is False."
+
+    #     # Case 3: Condition as a direct boolean (True)
+    #     conditional_feature_direct = features.ConditionalSetProperty(
+    #         gaussian_noise, condition=True, sigma=3
+    #     )
+    #     output_direct = conditional_feature_direct.resolve(input_image)
+    #     assert output_direct.std() > 0, \
+    #         "Expected noise when condition is set to True."
+
+    #     # Case 4: Condition as a direct boolean (False)
+    #     conditional_feature_direct_false = features.ConditionalSetProperty(
+    #         gaussian_noise, condition=False, sigma=3
+    #     )
+    #     output_direct_false = conditional_feature_direct_false.resolve(
+    #         input_image
+    #     )
+    #     assert np.array_equal(input_image, output_direct_false), \
+    #         "Expected input to remain unchanged when condition is explicitly False."
+
+    def test_Lambda_scaling(self):
+        def scale_function_factory(scale=2):
+            def scale_function(image):
+                return image * scale
+            return scale_function
+
+        self.lambda_feature = features.Lambda(function=scale_function_factory, scale=5)
+        self.input_image = Image(np.ones((5, 5)))
+
+        output_image = self.lambda_feature.resolve(self.input_image)
+
+        expected_output = np.ones((5, 5)) * 5
+        np.testing.assert_array_equal(output_image, expected_output)
+
+        lambda_feature = features.Lambda(function=scale_function_factory, scale=3)
+        output_image = lambda_feature.resolve(self.input_image)
+
+        expected_output = np.ones((5, 5)) * 3
+        np.testing.assert_array_equal(output_image, expected_output)
+
+    def test_Merge(self):
+
+        def merge_function_factory():
+            def merge_function(images):
+                return np.mean(np.stack(images), axis=0)
+            return merge_function
+
+        self.merge_feature = dt.Merge(function=merge_function_factory())
+
+        image_1 = np.ones((5, 5)) * 2
+        image_2 = np.ones((5, 5)) * 4
+        expected_output = np.ones((5, 5)) * 3
+        output_image = self.merge_feature.resolve([image_1, image_2])
+        np.testing.assert_array_almost_equal(
+            output_image, expected_output,
+            err_msg="Merge feature did not correctly compute the mean of the \
+                input images."
+        )
+
+        image_1 = np.ones((5, 5)) * 2
+        image_2 = np.ones((3, 3)) * 4 
+        with self.assertRaises(ValueError):
+            self.merge_feature.resolve([image_1, image_2])
+
+        image_1 = np.ones((5, 5)) * 2
+        output_image = self.merge_feature.resolve([image_1])
+        np.testing.assert_array_almost_equal(
+            output_image, image_1,
+            err_msg="Merge feature should return the same image when given a \
+                single input."
+        )
+
+    def test_Merge(self):
+        """Set up the features and input image for testing."""
+        self.feature_1 = features.Add(value=10)
+        self.feature_2 = features.Multiply(value=2)
+        self.input_image = np.array([1, 2, 3])
+
+        """Test that OneOf applies one of the features randomly."""
+        one_of_feature = features.OneOf([self.feature_1, self.feature_2])
+        output_image = one_of_feature.resolve(self.input_image)
+        
+        # The output should either be:
+        # - self.input_image + 10 (if feature_1 is chosen)
+        # - self.input_image * 2  (if feature_2 is chosen)
+        expected_outputs = [
+            self.input_image + 10,
+            self.input_image * 2
+        ]
+        self.assertTrue(
+            any(np.array_equal(output_image, expected) for expected in expected_outputs),
+            f"Output {output_image} did not match any expected transformations."
+        )
+
+        """Test that OneOf applies the selected feature when `key` is provided."""
+        controlled_feature = features.OneOf([self.feature_1, self.feature_2], key=0)
+        output_image = controlled_feature.resolve(self.input_image)
+        expected_output = self.input_image + 10
+        np.testing.assert_array_equal(
+            output_image, expected_output,
+            f"Expected {expected_output}, but got {output_image}"
+        )
+
+        controlled_feature = dt.OneOf([self.feature_1, self.feature_2], key=1)
+        output_image = controlled_feature.resolve(self.input_image)
+        expected_output = self.input_image * 2
+        np.testing.assert_array_equal(
+            output_image, expected_output,
+            f"Expected {expected_output}, but got {output_image}"
+        )
+
     def test_Slice_constant(self):
 
         input = np.arange(9).reshape((3, 3))
@@ -902,12 +1032,62 @@ class TestFeatures(unittest.TestCase):
         #TODO: complete unit test with asserts.
 
 
+    def test_Probability(self):
+        np.random.seed(42)  # Set seed for reproducibility
+
+        add_feature = features.Add(value=2)
+        probabilistic_feature = features.Probability(
+            feature = add_feature, 
+            probability=0.7
+        )
+        
+        input_image = np.ones((5, 5))
+
+        applied_count = 0
+        total_runs = 300
+
+        for _ in range(total_runs):
+            output_image = probabilistic_feature.update().resolve(input_image)
+
+            if not np.array_equal(output_image, input_image): 
+                applied_count += 1
+                assert np.array_equal(output_image, input_image + 2)
+
+        observed_probability = applied_count / total_runs
+        assert 0.65 <= observed_probability <= 0.75, f"Observed probability: {observed_probability}"
+
+    def test_Repeat(self):
+        add_ten = features.Add(value=10)
+
+        pipeline = features.Repeat(add_ten, N=3)
+
+        input_data = [1, 2, 3]
+        expected_output = [31, 32, 33]
+
+        output_data = pipeline.resolve(input_data)
+
+        assert np.array_equal(output_data, expected_output), \
+            f"Expected {expected_output}, got {output_data}"
+
+        pipeline_shorthand = features.Add(value=10) ^ 3
+        output_data_shorthand = pipeline_shorthand.resolve(input_data)
+
+        assert np.array_equal(output_data_shorthand, expected_output), \
+            f"Shorthand failed. Expected {expected_output}, \
+                got {output_data_shorthand}"
+
     def test_BindUpdate(self):
 
-        value = features.Value(value=lambda input_value: input_value, input_value=10)
+        value = features.Value(
+            value=lambda input_value: input_value, 
+            input_value=10,
+            )
         pipeline = (value + 10) / value
 
-        pipeline_with_small_input = features.BindUpdate(pipeline, input_value=1)
+        pipeline_with_small_input = features.BindUpdate(
+            pipeline, 
+            input_value=1,
+        )
 
         res = pipeline.update().resolve()
         self.assertEqual(res, 2)
@@ -934,12 +1114,17 @@ class TestFeatures(unittest.TestCase):
         output_std = np.std(output_image)
 
         # Assert that the mean and standard deviation are close to the bound values
-        self.assertAlmostEqual(output_mean, 5, delta=0.2, msg="Mean is not within the expected range")
-        self.assertAlmostEqual(output_std, 3, delta=0.2, msg="Standard deviation is not within the expected range")
+        self.assertAlmostEqual(output_mean, 5, \
+            delta=0.2, msg="Mean is not within the expected range")
+        self.assertAlmostEqual(output_std, 3, \
+            delta=0.2, msg="Standard deviation is not within the expected range")
 
     def test_Bind(self):
 
-        value = features.Value(value=lambda input_value: input_value, input_value=10)
+        value = features.Value(
+            value=lambda input_value: input_value,
+            input_value=10,
+        )
         pipeline = (value + 10) / value
 
         pipeline_with_small_input = features.Bind(pipeline, input_value=1)
@@ -969,16 +1154,24 @@ class TestFeatures(unittest.TestCase):
         output_std = np.std(output_image)
 
         # Assert that the mean and standard deviation are close to the bound values
-        self.assertAlmostEqual(output_mean, -5, delta=0.2, msg="Mean is not within the expected range")
-        self.assertAlmostEqual(output_std, 2, delta=0.2, msg="Standard deviation is not within the expected range")
+        self.assertAlmostEqual(output_mean, -5, delta=0.2, \
+            msg="Mean is not within the expected range")
+        self.assertAlmostEqual(output_std, 2, delta=0.2, \
+            msg="Standard deviation is not within the expected range")
 
 
     def test_BindResolve(self):
 
-        value = features.Value(value=lambda input_value: input_value, input_value=10)
+        value = features.Value(
+            value=lambda input_value: input_value,
+            input_value=10,
+        )
         pipeline = (value + 10) / value
 
-        pipeline_with_small_input = features.BindResolve(pipeline, input_value=1)
+        pipeline_with_small_input = features.BindResolve(
+            pipeline,
+            input_value=1
+        )
 
         res = pipeline.update().resolve()
         self.assertEqual(res, 2)
