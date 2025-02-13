@@ -3975,63 +3975,61 @@ class OneOf(Feature):
 
 
 class OneOfDict(Feature):
-    """Resolve one feature from a dictionary.
+    """Resolve one feature from a dictionary and apply it to an input.
 
-    This feature selects one feature from a dictionary of features and applies 
-    it to the input. By default, the selection is made randomly from the 
-    dictionary's values, but it can be controlled by specifying a `key`.
+    This feature selects a feature from a dictionary and applies it to an input. 
+    The selection is made randomly by default, but it can be controlled using 
+    the `key` argument.
 
-    Its default behaviour is to sample the values diction uniformly random. 
-    This can be controlled by the `key` argument, where the feature resolved is 
-    chosen as `collection[key]`.
+    If `key` is not specified, a random key from the dictionary is selected, 
+    and the corresponding feature is applied. Otherwise, the feature mapped to 
+    `key` is resolved.
 
     Parameters
     ----------
-    collection: dict[Any, Feature]
-        A dictionary where keys are identifiers and values are features to 
-        choose from.
-    key: Any | None, optional
-        The key of the feature to resolve from the dictionary. If not provided, 
-        a key is selected randomly.
-    **kwargs: : dict of str to Any
-        Additional keyword arguments passed to the parent `Feature` class.
+    collection : dict[Any, Feature]
+        A dictionary where keys are identifiers and values are features.
+    key : Any | None, optional
+        The key of the feature to resolve from the dictionary. If `None`, 
+        a random key is selected.
+    **kwargs : dict of str to Any
+        Additional parameters passed to the parent `Feature` class.
 
     Attributes
     ----------
-    collection: dict[Any, Feature]
-        The dictionary of features to choose from.
+    collection : dict[Any, Feature]
+        A dictionary mapping keys to available features.
 
     Methods
     -------
     `_process_properties(propertydict: dict) -> dict`
-        Process the properties to select the feature key.
+        Determines which feature to use based on `key`.
     
     `get(image: Any, key: Any, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
-        Resolves the selected feature from the dictionary and applies it to the 
-        input image.
+        Resolves the selected feature and applies it to the input image.
 
     Example
     -------
+    >>> import deeptrack as dt
     >>> import numpy as np
-    >>> from deeptrack.features import OneOfDict, Add, Multiply
 
-    Create a dictionary of features:
+    Define a dictionary of features:
     
     >>> features_dict = {
-    ...     "add": Add(value=10),
-    ...     "multiply": Multiply(value=2),
+    ...     "add": dt.Add(value=10),
+    ...     "multiply": dt.Multiply(value=2),
     ... }
-    >>> one_of_dict_feature = OneOfDict(features_dict)
+    >>> one_of_dict_feature = dt.OneOfDict(features_dict)
 
-    Apply the feature randomly to an input image:
+    Apply a randomly selected feature:
     
     >>> input_image = np.array([1, 2, 3])
     >>> output_image = one_of_dict_feature(input_image)
-    >>> print(output_image)  # Output depends on randomly selected feature.
+    >>> print(output_image)  # The output depends on the randomly selected feature.
 
-    Specify a key to control the selected feature:
+    Use a specific key to apply a predefined feature:
     
-    >>> controlled_feature = OneOfDict(features_dict, key="add")
+    >>> controlled_feature = dt.OneOfDict(features_dict, key="add")
     >>> output_image = controlled_feature(input_image)
     >>> print(output_image)  # Adds 10 to each element.
 
@@ -4049,14 +4047,13 @@ class OneOfDict(Feature):
 
         Parameters
         ----------
-        collection: dict[Any, Feature]
-            A dictionary where keys are identifiers and values are features to 
-            choose from.
-        key: Any | None, optional
-            The key of the feature to resolve from the dictionary. If not 
-            provided, a key is selected randomly.
-        **kwargs: : dict of str to Any
-            Additional keyword arguments passed to the parent `Feature` class.
+        collection : dict[Any, Feature]
+            A dictionary where keys are identifiers and values are features.
+        key : Any | None, optional
+            The key of the feature to resolve from the dictionary. If `None`, 
+            a random key is selected.
+        **kwargs : dict of str to Any
+            Additional parameters passed to the parent `Feature` class.
 
         """
 
@@ -4071,12 +4068,14 @@ class OneOfDict(Feature):
         self: Feature, 
         propertydict: dict
     ) -> dict:
-        """Process the properties to select the feature key.
+        """Determine which feature to apply based on the selected key.
+
+        If no key is provided, a random key from `collection` is selected.
 
         Parameters
         ----------
-        propertydict: dict
-            The property dictionary for the feature.
+        propertydict : dict
+            The dictionary containing feature properties.
 
         Returns
         -------
@@ -4100,124 +4099,37 @@ class OneOfDict(Feature):
         _ID: tuple[int, ...] = (),
         **kwargs: dict[str, Any],
     )-> Any:
-        """Resolve selected feature and applies it to the input image.
-
-        This method resolves the selected feature from the dictionary and 
-        applies it to the input image.
+        """Resolve the selected feature and apply it to the input.
 
         Parameters
         ----------
-        image: Any
-            The input image to process.
-        key: Any
+        image : Any
+            The input image or data to be processed.
+        key : Any
             The key of the feature to apply from the dictionary.
-        _ID: tuple[int, ...], optional
-            A unique identifier for caching and parallel processing.
-        **kwargs: Any
-            Additional keyword arguments.
+        _ID : tuple[int, ...], optional
+            A unique identifier for caching and parallel execution.
+        **kwargs : dict of str to Any
+            Additional parameters passed to the selected feature.
 
         Returns
         -------
         Any
-            The output of the selected feature applied to the input image.
+            The output of the selected feature applied to the input.
 
         """
 
         return self.collection[key](image, _ID=_ID)
 
 
-class Label(Feature):
-    """Output the properties of this feature.
-
-    This feature can be used to extract properties in a feature set and combine 
-    them into a numpy array. Specifically, it extracts specified properties 
-    from a feature set and combines them into a NumPy array. Optionally, the 
-    output array can be reshaped to a specified shape.
-
-    Parameters
-    ----------
-    output_shape: PropertyLike[tuple[int, ...]] | None, optional
-        Specifies the desired shape of the output array. If `None`, the output 
-        array will be one-dimensional.
-    **kwargs: : dict of str to Any
-        Additional keyword arguments passed to the parent `Feature` class.
-
-    Methods
-    -------
-    get(image, output_shape=None, **kwargs)
-        Extracts and combines properties into a NumPy array, reshaping it 
-        if `output_shape` is specified.
-
-    """
-
-    #TODO: add example.
-
-    __distributed__: bool = False
-
-    def __init__(
-        self: Feature,
-        output_shape: PropertyLike[int] = None,
-        **kwargs: dict[str, Any],
-    ):
-        """Initialize the Label feature.
-
-        Parameters
-        ----------
-        output_shape: PropertyLike[tuple[int, ...]], optional
-            Specifies the desired shape of the output array. If `None`, the 
-            output array will be one-dimensional.
-        **kwargs: : dict of str to Any
-            Additional keyword arguments passed to the parent `Feature` class.
-
-        """
-
-        super().__init__(output_shape=output_shape, **kwargs)
-
-    def get(
-        self: Feature,
-        image: Any,
-        output_shape: tuple[int, ...] | None = None,
-        **kwargs: dict[str, Any],
-    ) -> np.ndarray:
-        """Extract and combine properties into a NumPy array.
-
-        Parameters
-        ----------
-        image: Any
-            The input image (not used in this feature).
-        output_shape: tuple[int, ...], optional
-            Specifies the desired shape of the output array. If `None`, the 
-            output array will be one-dimensional.
-        **kwargs: : dict of str to Any
-            Additional properties passed to the feature.
-
-        Returns
-        -------
-        np.ndarray
-            The extracted properties combined into a NumPy array. If 
-            `output_shape` is specified, the array is reshaped accordingly.
-
-        """
-
-        result = []
-        for key in self.properties.keys():
-            if key in kwargs:
-                result.append(kwargs[key])
-
-        if output_shape:
-            result = np.reshape(np.array(result), output_shape)
-
-        return np.array(result)
-
-
 class LoadImage(Feature):
-    """Load an image from disk.
+    """Load an image from disk and preprocess it.
 
-    This feature attempts to load an image file using a series of file readers 
+    This feature loads an image file using multiple fallback file readers 
     (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a suitable reader is 
-    found. Additional options allow for converting the image to grayscale, 
-    reshaping it to a specified number of dimensions, or treating the first 
-    dimension as a list of images.
+    found. The image can be optionally converted to grayscale, reshaped to 
+    ensure a minimum number of dimensions, or treated as a list of images if 
+    multiple paths are provided.
 
     Parameters
     ----------
@@ -4225,7 +4137,7 @@ class LoadImage(Feature):
         The path(s) to the image(s) to load. Can be a single string or a list 
         of strings.
     load_options: PropertyLike[dict[str, Any]], optional
-        Options passed to the file reader. Defaults to `None`.
+        Additional options passed to the file reader. Defaults to `None`.
     as_list: PropertyLike[bool], optional
         If `True`, the first dimension of the image will be treated as a list. 
         Defaults to `False`.
@@ -4239,7 +4151,7 @@ class LoadImage(Feature):
 
     Methods
     -------
-    `get(image: Any, path: str | list[str], load_options: dict[str, Any] | None, ndim: int, to_grayscale: bool, as_list: bool, get_one_random: bool, **kwargs: dict[str, Any]) -> np.ndarray`
+    get(image: Any, path: str | list[str], load_options: dict[str, Any] | None, ndim: int, to_grayscale: bool, as_list: bool, get_one_random: bool, **kwargs: dict[str, Any]) -> np.ndarray
         Load the image(s) from disk and process them.
 
     Raises
@@ -4247,6 +4159,34 @@ class LoadImage(Feature):
     IOError
         If no file reader could parse the file or the file does not exist.
 
+    Example
+    -------
+    >>> import deeptrack as dt
+    >>> import numpy as np
+    >>> from tempfile import NamedTemporaryFile
+
+    Create a temporary image file:
+
+    >>> temp_file = NamedTemporaryFile(suffix=".npy", delete=False)
+    >>> np.save(temp_file.name, np.random.rand(100, 100))
+
+    Load the image using `LoadImage`:
+
+    >>> load_image_feature = dt.LoadImage(path=temp_file.name, to_grayscale=True)
+    >>> loaded_image = load_image_feature.resolve()
+
+    Print image shape:
+
+    >>> print(loaded_image.shape)
+
+    If `to_grayscale=True`, the image is converted to grayscale (single channel).
+    If `ndim=4`, additional dimensions are added if necessary.
+
+    Cleanup:
+
+    >>> import os
+    >>> os.remove(temp_file.name)
+    
     """
 
     #TODO: add example.
@@ -4268,19 +4208,25 @@ class LoadImage(Feature):
         Parameters
         ----------
         path: PropertyLike[str or list[str]]
-            The path(s) to the image(s) to load.
-        load_options: PropertyLike[dict[str, Any]] | None, optional
-            Options passed to the file reader.
+            The path(s) to the image(s) to load. Can be a single string or a list 
+            of strings.
+        load_options: PropertyLike[dict[str, Any]], optional
+            Additional options passed to the file reader (e.g., `mode` for OpenCV, 
+            `allow_pickle` for NumPy). Defaults to `None`.
         as_list: PropertyLike[bool], optional
-            Whether to treat the first dimension of the image as a list.
+            If `True`, treats the first dimension of the image as a list of images. 
+            Defaults to `False`.
         ndim: PropertyLike[int], optional
-            Ensures the image has at least this many dimensions.
+            Ensures the image has at least this many dimensions. If the loaded image 
+            has fewer dimensions, extra dimensions are added. Defaults to `3`.
         to_grayscale: PropertyLike[bool], optional
-            Whether to convert the image to grayscale.
+            If `True`, converts the image to grayscale. Defaults to `False`.
         get_one_random: PropertyLike[bool], optional
-            Whether to extract a single random image from a stack.
-        **kwargs: Any
-            Additional keyword arguments passed to the parent `Feature` class.
+            If `True`, selects a single random image from a stack when `as_list=True`. 
+            Defaults to `False`.
+        **kwargs: dict of str to Any
+            Additional keyword arguments passed to the parent `Feature` class, 
+            allowing further customization.
 
         """
 
@@ -4305,35 +4251,46 @@ class LoadImage(Feature):
         get_one_random: bool,
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
-        """
-        Load the image(s) from disk and process them.
+        """Load and process an image or a list of images from disk.
+
+        This method attempts to load an image using multiple file readers 
+        (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a valid format is found. 
+        It supports optional processing steps such as ensuring a minimum number of 
+        dimensions, grayscale conversion, and treating multi-frame images as lists.
 
         Parameters
         ----------
         path: str or list of str
-            The path(s) to the image(s) to load.
-        load_options: : dict of str to Any or None
-            Options passed to the file reader.
+            The file path(s) to the image(s) to be loaded. A single string loads 
+            one image, while a list of paths loads multiple images.
+        load_options: dict of str to Any, optional
+            Additional options passed to the file reader (e.g., `allow_pickle` for 
+            NumPy, `mode` for OpenCV). Defaults to `None`.
         ndim: int
-            Ensures the image has at least this many dimensions.
+            Ensures the image has at least this many dimensions. If the loaded 
+            image has fewer dimensions, extra dimensions are added.
         to_grayscale: bool
-            Whether to convert the image to grayscale.
+            If `True`, converts the image to grayscale. Defaults to `False`.
         as_list: bool
-            Whether to treat the first dimension as a list.
+            If `True`, treats the first dimension as a list of images instead of 
+            stacking them into a NumPy array.
         get_one_random: bool
-            Whether to extract a single random image from a stack.
-        **kwargs: : dict of str to Any
+            If `True`, selects a single random image from a multi-frame stack when 
+            `as_list=True`. Defaults to `False`.
+        **kwargs: dict[str, Any]
             Additional keyword arguments.
 
         Returns
         -------
         np.ndarray
-            The loaded and processed image(s).
+            The loaded and processed image(s). If `as_list=True`, returns a list of 
+            images; otherwise, returns a single NumPy array.
 
         Raises
         ------
         IOError
-            If no file reader could parse the file or the file does not exist.
+            If no valid file reader is found or if the specified file does not 
+            exist.
 
         """
 
@@ -6187,7 +6144,7 @@ class TakeProperties(Feature):
     
     Example
     -------
-    >>> from deeptrack.features import Feature, TakeProperties
+    >>> import deeptrack as dt
     >>> from deeptrack.properties import Property
     
     >>> class ExampleFeature(Feature):
@@ -6200,11 +6157,19 @@ class TakeProperties(Feature):
 
     Use `TakeProperties` to extract the property:
     
-    >>> take_properties = TakeProperties(feature, "my_property")
+    >>> take_properties = dt.TakeProperties(feature, "my_property")
     >>> output = take_properties.get(image=None, names=["my_property"])
     >>> print(output)
     [42]
+
+    >>> add_feature = dt.Add(value = 12)
     
+
+    >>> take_properties = dt.TakeProperties(add_feature, "value")
+    >>> output = take_properties.get(image=None, names=["value"])
+    >>> print(output)
+    [12]
+
     """
 
     __distributed__: bool = False
