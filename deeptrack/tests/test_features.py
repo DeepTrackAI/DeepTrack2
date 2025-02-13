@@ -16,6 +16,10 @@ from deeptrack import features, properties, scatterers, units
 from deeptrack.image import Image
 from deeptrack.noises import Gaussian
 
+from PIL import Image as PIL_Image
+from tempfile import NamedTemporaryFile
+import os
+
 
 def grid_test_features(
     tester,
@@ -637,6 +641,7 @@ class TestFeatures(unittest.TestCase):
         B.key.set_value("c")
         self.assertEqual(C.prop(), 12)
 
+
     def test_Combine_feature(self):
 
         noise_feature = Gaussian(mu=0, sigma=2)
@@ -657,6 +662,7 @@ class TestFeatures(unittest.TestCase):
 
         assert not np.all(noisy_image == 1), "Gaussian noise was not applied"
         assert np.allclose(added_image, input_image + 10), "Add operation failed"
+
 
     # def test_ConditionalSetProperty(self):
     #     """Test that ConditionalSetProperty correctly modifies properties based on condition."""
@@ -698,6 +704,7 @@ class TestFeatures(unittest.TestCase):
     #     assert np.array_equal(input_image, output_direct_false), \
     #         "Expected input to remain unchanged when condition is explicitly False."
 
+
     def test_Lambda_scaling(self):
         def scale_function_factory(scale=2):
             def scale_function(image):
@@ -717,6 +724,7 @@ class TestFeatures(unittest.TestCase):
 
         expected_output = np.ones((5, 5)) * 3
         np.testing.assert_array_equal(output_image, expected_output)
+
 
     def test_Merge(self):
 
@@ -750,7 +758,8 @@ class TestFeatures(unittest.TestCase):
                 single input."
         )
 
-    def test_Merge(self):
+
+    def test_OneOf(self):
         """Set up the features and input image for testing."""
         self.feature_1 = features.Add(value=10)
         self.feature_2 = features.Multiply(value=2)
@@ -781,7 +790,7 @@ class TestFeatures(unittest.TestCase):
             f"Expected {expected_output}, but got {output_image}"
         )
 
-        controlled_feature = dt.OneOf([self.feature_1, self.feature_2], key=1)
+        controlled_feature = features.OneOf([self.feature_1, self.feature_2], key=1)
         output_image = controlled_feature.resolve(self.input_image)
         expected_output = self.input_image * 2
         np.testing.assert_array_equal(
@@ -789,12 +798,43 @@ class TestFeatures(unittest.TestCase):
             f"Expected {expected_output}, but got {output_image}"
         )
 
-    def test_Slice_constant(self):
 
+    def test_OneOfDict(self):
+        self.features_dict = {
+            "add": features.Add(value=10),
+            "multiply": features.Multiply(value=2),
+        }
+        self.one_of_dict_feature = features.OneOfDict(self.features_dict)
+
+        self.input_image = np.array([1, 2, 3])
+
+        """Test that OneOfDict selects a feature randomly and applies it correctly."""
+        output_image = self.one_of_dict_feature.resolve(self.input_image)
+        expected_outputs = [
+            self.input_image + 10,  # "add"
+            self.input_image * 2,   # "multiply"
+        ]
+        self.assertTrue(
+            any(np.array_equal(output_image, expected) for expected in expected_outputs),
+            f"Output {output_image} did not match any expected transformations."
+        )
+
+        """Test that OneOfDict selects the correct feature when a key is specified."""
+        controlled_feature = features.OneOfDict(self.features_dict, key="add")
+        output_image = controlled_feature.resolve(self.input_image)
+        expected_output = self.input_image + 10  # The "add" feature should be applied
+        np.testing.assert_array_equal(output_image, expected_output, "Controlled feature selection (key='add') failed.")
+
+        controlled_feature = features.OneOfDict(self.features_dict, key="multiply")
+        output_image = controlled_feature.resolve(self.input_image)
+        expected_output = self.input_image * 2  # The "multiply" feature should be applied
+        np.testing.assert_array_equal(output_image, expected_output, "Controlled feature selection (key='multiply') failed.")
+
+
+    def test_Slice_constant(self):
         input = np.arange(9).reshape((3, 3))
 
         A = features.DummyFeature()
-
         A0 = A[0]
         A1 = A[1]
         A22 = A[2, 2]
@@ -854,6 +894,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(a2.tolist(), input[:, ...].tolist())
         self.assertEqual(a3.tolist(), input[0:2, ...].tolist())
 
+
     def test_Slice_static_dynamic(self):
         self.image = np.arange(27).reshape((3, 3, 3))
         self.expected_output = self.image[:, 1:2, ::-2]
@@ -869,6 +910,7 @@ class TestFeatures(unittest.TestCase):
         )
         dinamic_output = dynamic_slicing.resolve(self.image)
         np.testing.assert_array_equal(dinamic_output, self.expected_output)
+
 
     def test_Chain(self):
 
@@ -1350,16 +1392,44 @@ class TestFeatures(unittest.TestCase):
         self.assertRaises(KeyError, lambda: values.update().resolve(key="4"))
 
 
-    def test_Label(self):
-        pass 
-
-        #TODO: add unit test.
-
-
     def test_LoadImage(self):
-        pass
+        """Create temporary image files in multiple formats for testing."""
+        self.test_image_array = (np.random.rand(50, 50) * 255).astype(np.uint8)
+        self.temp_npy = NamedTemporaryFile(suffix=".npy", delete=False)
+        np.save(self.temp_npy.name, self.test_image_array)
+        self.temp_png = NamedTemporaryFile(suffix=".png", delete=False)
+        PIL_Image.fromarray(self.test_image_array).save(self.temp_png.name)
+        self.temp_jpg = NamedTemporaryFile(suffix=".jpg", delete=False)
+        PIL_Image.fromarray(self.test_image_array).convert("RGB").save(self.temp_jpg.name)
 
-        #TODO: add unit test.
+        """Test loading a .npy file."""
+        load_feature = features.LoadImage(path=self.temp_npy.name)
+        loaded_image = load_feature.resolve()
+        self.assertEqual(loaded_image.shape[:2], self.test_image_array.shape[:2])
+
+        """Test loading a .png file."""
+        load_feature = features.LoadImage(path=self.temp_png.name)
+        loaded_image = load_feature.resolve()
+        self.assertEqual(loaded_image.shape[:2], self.test_image_array.shape[:2])
+
+        """Test loading a .jpg file."""
+        load_feature = features.LoadImage(path=self.temp_jpg.name)
+        loaded_image = load_feature.resolve()
+        self.assertEqual(loaded_image.shape[:2], self.test_image_array.shape[:2])
+        
+        """Test loading an image and converting it to grayscale."""
+        load_feature = features.LoadImage(path=self.temp_png.name, to_grayscale=True)
+        loaded_image = load_feature.resolve()
+        self.assertEqual(loaded_image.shape[-1], 1) 
+
+        """Test ensuring a minimum number of dimensions."""
+        load_feature = features.LoadImage(path=self.temp_png.name, ndim=4)
+        loaded_image = load_feature.resolve()
+        self.assertGreaterEqual(len(loaded_image.shape), 4)  
+
+        """Delete temporary test images after testing."""
+        for file in [self.temp_npy.name, self.temp_png.name, self.temp_jpg.name]:
+            os.remove(file)
 
 
     def test_SampleToMasks(self):
@@ -1424,7 +1494,6 @@ class TestFeatures(unittest.TestCase):
         )()
 
         # Test.
-
         self.assertEqual(volume_1.get_property("position"), positions_no_unit[0])
         self.assertEqual(
             volume_2.get_property("position"),
@@ -1440,9 +1509,7 @@ class TestFeatures(unittest.TestCase):
             positions_with_unit[1].to("px").magnitude,
         )
 
-
     def test_NonOverlapping_check_volumes_non_overlapping(self):
-
         nonOverlapping = features.NonOverlapping(
             features.Value(value=1),
         )
@@ -1722,7 +1789,6 @@ class TestFeatures(unittest.TestCase):
             )
         )
 
-
     def test_Store(self):
 
         value_feature = features.Value(lambda: np.random.rand())
@@ -1803,7 +1869,7 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_TakeProperties(self):
-
+        # with custom feature
         class ExampleFeature(features.Feature):
             def __init__(self, my_property, **kwargs):
                 super().__init__(my_property=my_property, **kwargs)
@@ -1814,6 +1880,13 @@ class TestFeatures(unittest.TestCase):
         take_properties = features.TakeProperties(feature, "my_property")
         output = take_properties.get(image=None, names=["my_property"])
         self.assertEqual(output, [42])
+
+        # with `Add` feature 
+        add_feature = Add(value=12)
+        
+        take_properties = features.TakeProperties(add_feature, "value")
+        output = take_properties.get(image=None, names=["value"])
+        self.assertEqual(output, [12])
 
 
 if __name__ == "__main__":
