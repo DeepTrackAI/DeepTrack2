@@ -89,7 +89,7 @@ These are examples of how DeepTrack2 can be used on real datasets:
 
   Training a fully connected neural network to identify handwritten digits using MNIST dataset.
 
-- DTEx202 **[Single Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx202_single_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx202_single_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx202 **Single Particle Tracking**
 
   Tracks experimental videos of a single particle. (Requires opencv-python compiled with ffmpeg)
 
@@ -114,8 +114,8 @@ These are examples of how DeepTrack2 can be used on real datasets:
   </p>
   <!-- GH_ONLY_END -->
 
-- DTEx203 **[Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx203_particle_sizing.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx203_particle_sizing.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-
+- DTEx203 **Multi-Particle tracking**
+- 
   Detecting quantum dots in a low SNR image.
 
   <!-- GH_ONLY_START -->
@@ -138,47 +138,47 @@ These are examples of how DeepTrack2 can be used on real datasets:
   </p>
   <!-- GH_ONLY_END -->
 
-- DTEx204 **[Particle Feature Extraction](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx204_multi_molecule_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx204_multi_molecule_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-
+- DTEx204 **Particle Feature Extraction**
+- 
   Extracting the radius and refractive index of particles.
 
-- DTEx205 **[Cell Counting](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx205_inline_holography_3d_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx205_inline_holography_3d_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx205 **Cell Counting**
 
   Counting the number of cells in fluorescence images.
 
-- DTEx206 **[3D Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx206_cell_counting.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx206_cell_counting.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx206 **3D Multi-Particle tracking**
 
   Tracking multiple particles in 3D for holography.
 
-- DTEx207 **[GAN image generation](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx207_GAN_image_generation.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx207_GAN_image_generation.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx207 **GAN image generation**
 
   Using a GAN to create cell image from masks.
 
 Specific examples for label-free particle tracking using **LodeSTAR**:
 
-- DTEx231A **[LodeSTAR Autotracker Template](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231A **LodeSTAR Autotracker Template**
 
-- DTEx231B **[LodeSTAR Detecting Particles of Various Shapes](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231B_LodeSTAR_tracking_particles_of_various_shapes.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231B_LodeSTAR_tracking_particles_of_various_shapes.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231B **LodeSTAR Detecting Particles of Various Shapes**
 
-- DTEx231C **[LodeSTAR Measuring the Mass of Particles in Holography](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231C_LodeSTAR_measure_mass_experimental.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231C_LodeSTAR_measure_mass_experimental.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231C **LodeSTAR Measuring the Mass of Particles in Holography**
 
-- DTEx231D **[LodeSTAR Detecting the Cells in the BF-C2DT-HSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DL-HSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DL-HSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231D **LodeSTAR Detecting the Cells in the BF-C2DT-HSC Dataset**
 
-- DTEx231E **[LodeSTAR Detecting the Cells in the Fluo-C2DT-Huh7 Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231E **LodeSTAR Detecting the Cells in the Fluo-C2DT-Huh7 Dataset**
+  
+- DTEx231F **LodeSTAR Detecting the Cells in the PhC-C2DT-PSC Dataset**
+  
+- DTEx231G **LodeSTAR Detecting Plankton**
+  
+- DTEx231H **LodeSTAR Detecting in 3D Holography**
 
-- DTEx231F **[LodeSTAR Detecting the Cells in the PhC-C2DT-PSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DL-PSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DL-PSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-
-- DTEx231G **[LodeSTAR Detecting Plankton](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-
-- DTEx231H **[LodeSTAR Detecting in 3D Holography](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231H_LodeSTAR_track_3D_holography.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231H_LodeSTAR_track_3D_holography.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-
-- DTEx231I **[LodeSTAR Measuring the Mass of Simulated Particles](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231I_LodeSTAR_measure_mass_simulated.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231I_LodeSTAR_measure_mass_simulated.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-
-- DTEx231J **[LodeSTAR Measuring the Mass of Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/examples/DTEx231J_LodeSTAR_measure_mass_cell.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231J_LodeSTAR_measure_mass_cell.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231I **LodeSTAR Measuring the Mass of Simulated Particles**
+  
+- DTEx231J **LodeSTAR Measuring the Mass of Cells**
 
 Specific examples for graph-neural-network-based particle linking and trace characterization using **MAGIK**:
 
-- DTEx241A **[MAGIK Tracing Migrating Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx241A_MAGIK_cell_migration_analysis.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx241A_MAGIK_cell_migration_analysis.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx241A **MAGIK Tracing Migrating Cells**
 
   <!-- GH_ONLY_START -->
   <p align="left">
@@ -193,7 +193,7 @@ Specific examples for graph-neural-network-based particle linking and trace char
   </p>
   <!-- GH_ONLY_END -->
 
-- DTEx241B **[MAGIK to Track HeLa Cells](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx241B_MAGIK_tracking_hela_cells.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx241B_MAGIK_tracking_hela_cells.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx241B **MAGIK to Track HeLa Cells**
 
 # Advanced Tutorials
 
