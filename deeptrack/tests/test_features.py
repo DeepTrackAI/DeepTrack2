@@ -16,11 +16,6 @@ from deeptrack import features, properties, scatterers, units
 from deeptrack.image import Image
 from deeptrack.noises import Gaussian
 
-from PIL import Image as PIL_Image
-from tempfile import NamedTemporaryFile
-import os
-
-
 def grid_test_features(
     tester,
     feature_a,
@@ -1393,6 +1388,10 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_LoadImage(self):
+        from tempfile import NamedTemporaryFile
+        from PIL import Image as PIL_Image
+        import os
+
         """Create temporary image files in multiple formats for testing."""
         self.test_image_array = (np.random.rand(50, 50) * 255).astype(np.uint8)
         self.temp_npy = NamedTemporaryFile(suffix=".npy", delete=False)
@@ -1808,15 +1807,15 @@ class TestFeatures(unittest.TestCase):
 
     def test_Squeeze(self):
 
-        input_image = np.array([[[[1], [2], [3]]]])  # shape (1, 1, 3, 1)
+        input_image = np.array([[[[3], [2], [1]]],[[[1], [2], [3]]]])
 
-        squeeze_feature = features.Squeeze(axis=0)
+        squeeze_feature = features.Squeeze(axis=1)
         output_image = squeeze_feature(input_image)
-        self.assertEqual(output_image.shape, (1, 3, 1))
+        self.assertEqual(output_image.shape, (2, 3, 1))
 
         squeeze_feature = features.Squeeze()
         output_image = squeeze_feature(input_image)
-        self.assertEqual(output_image.shape, (3,))
+        self.assertEqual(output_image.shape, (2,3))
 
 
     def test_Unsqueeze(self):
@@ -1877,15 +1876,17 @@ class TestFeatures(unittest.TestCase):
 
         feature = ExampleFeature(my_property=properties.Property(42))
 
-        take_properties = features.TakeProperties(feature, "my_property")
+        take_properties = features.TakeProperties(feature)
         output = take_properties.get(image=None, names=["my_property"])
         self.assertEqual(output, [42])
 
-        # with `Add` feature 
-        add_feature = Add(value=12)
+        # with `Gaussian` feature 
+        noise_feature = Gaussian(mu=7, sigma=12)
         
-        take_properties = features.TakeProperties(add_feature, "value")
-        output = take_properties.get(image=None, names=["value"])
+        take_properties = features.TakeProperties(noise_feature)
+        output = take_properties.get(image=None, names=["mu"])
+        self.assertEqual(output, [7])
+        output = take_properties.get(image=None, names=["sigma"])
         self.assertEqual(output, [12])
 
 
