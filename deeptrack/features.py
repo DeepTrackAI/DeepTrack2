@@ -103,13 +103,14 @@ from __future__ import annotations
 import itertools
 import operator
 import random
-import warnings
 from typing import Any, Callable, Iterable
 
 import numpy as np
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 from pint import Quantity
-import skimage
-import skimage.measure
+from scipy.spatial.distance import cdist
+
 
 from deeptrack import units
 from deeptrack.backend import config
@@ -119,6 +120,7 @@ from deeptrack.image import Image
 from deeptrack.properties import PropertyDict
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
+from deeptrack.optics import _get_position
 
 
 #TODO: for all features check whether image should be Image, np.ndarray, or both.
@@ -517,7 +519,7 @@ class Feature(DeepTrackNode):
 
         """
 
-        from .pytorch import ToTensor
+        from deeptrack.pytorch.features import ToTensor
 
         tensor_feature = ToTensor(
             dtype=dtype, 
@@ -667,6 +669,7 @@ class Feature(DeepTrackNode):
         """
 
         if global_arguments:
+            import warnings
             # Deptracated, but not necessary to raise hard error.
             warnings.warn(
                 "Passing information through .update is no longer supported. "
@@ -802,8 +805,6 @@ class Feature(DeepTrackNode):
 
         """
 
-        import matplotlib.animation as animation
-        import matplotlib.pyplot as plt
         from IPython.display import HTML, display
 
         # if input_image is not None:
@@ -1647,6 +1648,7 @@ class Value(Feature):
     Initialize a constant value and retrieve it:
 
     >>> import deeptrack as dt
+
     >>> value = dt.Value(42)
     >>> print(value())
     42
@@ -3075,6 +3077,7 @@ class Slice(Feature):
     
     >>> import deeptrack as dt
     >>> import numpy as np
+
     >>> feature = dt.DummyFeature()
     >>> static_slicing = feature[:, 1:2, ::-2]
     >>> result = static_slicing.resolve(np.arange(27).reshape((3, 3, 3)))
@@ -3179,7 +3182,7 @@ class Bind(StructuralFeature):
     -------
     Dynamically modify the behavior of a feature:
 
-    >>> >>> import deeptrack as dt
+    >>> import deeptrack as dt
     >>> import numpy as np
 
     >>> gaussian_noise = dt.Gaussian()
@@ -3510,6 +3513,7 @@ class ConditionalSetFeature(StructuralFeature):
     Example
     -------
     >>> import deeptrack as dt
+
     >>> true_feature = dt.GaussianNoise(sigma=5)
     >>> false_feature = dt.GaussianNoise(sigma=0)
     >>> conditional_feature = ConditionalSetFeature(
@@ -4997,6 +5001,8 @@ class Upscale(Feature):
             image = self.feature(image)
 
         # Downscale the result to the original resolution.
+        import skimage.measure
+        
         image = skimage.measure.block_reduce(
             image, (factor[0], factor[1]) + (1,) * (image.ndim - 2), np.mean
         )
@@ -5055,24 +5061,38 @@ class NonOverlapping(Feature):
     import numpy as np
     import matplotlib.pyplot as plt
 
+    # Define an ellipsoid scatterer with randomly positioned objects
+
     scatterer = dt.Ellipsoid(
         position=lambda: np.random.uniform(5, 115, size=2)
     )
+
+    # Define fluorescence optics for visualization
+    
     optics = dt.Fluorescence()
+    
+    # Create multiple scatterers with possible overlap
+    
     scatterers = (scatterer^10)
+
+    # Generate an image with overlapping scatterers
 
     image_with_overlap=optics(scatterers)
 
+    # Apply the NonOverlapping feature to enforce minimum spacing between objects
+
     non_overlap = dt.NonOverlapping(scatterers, min_distance=1)
+
+    # Apply the NonOverlapping feature to enforce minimum spacing between objects
+
     image_without_overlap = optics(non_overlap)
 
+    # Create a figure with two subplots to visualize the difference
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-
     axes[0].imshow(image_with_overlap(), cmap="gray")
     axes[0].set_title("Overlapping Objects")
     axes[0].axis("off")
-
     axes[1].imshow(image_without_overlap(), cmap="gray")
     axes[1].set_title("Non-Overlapping Objects")
     axes[1].axis("off")
@@ -5188,15 +5208,14 @@ class NonOverlapping(Feature):
 
         """
 
-        from skimage.morphology import isotropic_erosion
+        from skimage.morphology import isotropic_erosion, isotropic_dilation
 
-        from .augmentations import CropTight
-        from .optics import _get_position
+        from deeptrack.augmentations import CropTight, Pad
 
         min_distance = self.min_distance()
+        crop = CropTight()
+        
         if min_distance < 0:
-            crop = CropTight()
-            # print([np.sum(volume != 0) for volume in list_of_volumes])
             list_of_volumes = [
                 Image(
                     crop(isotropic_erosion(volume != 0, -min_distance/2)),
@@ -5204,9 +5223,17 @@ class NonOverlapping(Feature):
                 ).merge_properties_from(volume) 
                 for volume in list_of_volumes
             ]
-            # print([np.sum(volume != 0) for volume in list_of_volumes])
+        else:
+            pad = Pad(px = [int(np.ceil(min_distance/2))]*6, keep_size=True)
+            list_of_volumes = [    
+                Image(
+                    crop(isotropic_dilation(pad(volume) != 0, min_distance/2)),
+                    copy=False,
+                ).merge_properties_from(volume) 
+            for volume in list_of_volumes 
+            ]
 
-            min_distance = 1
+        min_distance = 1
 
         # The position of the top left corner of each volume (index (0, 0, 0)).
         volume_positions_1 = [
@@ -5228,6 +5255,7 @@ class NonOverlapping(Feature):
         ]
 
         for i, j in itertools.combinations(range(len(list_of_volumes)), 2):
+
             # If the bounding cubes do not overlap, the volumes do not overlap.
             if self._check_bounding_cubes_non_overlapping(
                 volume_bounding_cube[i], volume_bounding_cube[j], min_distance
@@ -5307,12 +5335,12 @@ class NonOverlapping(Feature):
         # bounding_cube_1 and bounding_cube_2 are (x1, y1, z1, x2, y2, z2).
         # Check that the bounding cubes are non-overlapping.
         return (
-            bounding_cube_1[0] > bounding_cube_2[3] + min_distance
-            or bounding_cube_1[1] > bounding_cube_2[4] + min_distance
-            or bounding_cube_1[2] > bounding_cube_2[5] + min_distance
-            or bounding_cube_1[3] < bounding_cube_2[0] - min_distance
-            or bounding_cube_1[4] < bounding_cube_2[1] - min_distance
-            or bounding_cube_1[5] < bounding_cube_2[2] - min_distance
+        (bounding_cube_1[0] >= bounding_cube_2[3] + min_distance) or
+        (bounding_cube_2[0] >= bounding_cube_1[3] + min_distance) or
+        (bounding_cube_1[1] >= bounding_cube_2[4] + min_distance) or
+        (bounding_cube_2[1] >= bounding_cube_1[4] + min_distance) or
+        (bounding_cube_1[2] >= bounding_cube_2[5] + min_distance) or
+        (bounding_cube_2[2] >= bounding_cube_1[5] + min_distance)
         )
 
     def _get_overlapping_cube(
@@ -5372,8 +5400,8 @@ class NonOverlapping(Feature):
         bounding_cube: tuple[float, float, float, float, float, float],
         overlapping_cube: tuple[float, float, float, float, float, float],
     ) -> np.ndarray:
-        """
-        Returns the overlapping region of the volume and the overlapping cube.
+        """Returns the overlapping region of the volume and the overlapping 
+        cube.
 
         Parameters
         ----------
@@ -5451,8 +5479,11 @@ class NonOverlapping(Feature):
         positions_1 = np.argwhere(volume_1)
         positions_2 = np.argwhere(volume_2)
 
-        # If the volumes are not the same size, the positions of the non-zero 
-        # voxels of each volume need to be scaled.
+        # if positions_1.size == 0 or positions_2.size == 0:
+        #     return True  # If either volume is empty, they are "non-overlapping"
+
+        # # If the volumes are not the same size, the positions of the non-zero 
+        # # voxels of each volume need to be scaled.
         if volume_1.shape != volume_2.shape:
             positions_1 = (
                 positions_1 * np.array(volume_2.shape) 
@@ -5460,12 +5491,10 @@ class NonOverlapping(Feature):
             )
             positions_1 = positions_1.astype(int)
 
-        # Check that the non-zero voxels of the volumes are at least 
-        # min_distance apart.
-        import scipy.spatial.distance as distance
-
+        # # Check that the non-zero voxels of the volumes are at least 
+        # # min_distance apart.
         return np.all(
-            distance.cdist(positions_1, positions_2) > min_distance
+            cdist(positions_1, positions_2) > min_distance
         )
 
     def _resample_volume_position(
@@ -5539,14 +5568,14 @@ class Store(Feature):
 
     Example
     -------
+    >>> import deeptrack as dt
     >>> import numpy as np
-    >>> from deeptrack.features import Store, Value
 
-    >>> value_feature = Value(lambda: np.random.rand())
+    >>> value_feature = dt.Value(lambda: np.random.rand())
 
     Create a `Store` feature with a key:
 
-    >>> store_feature = Store(feature=value_feature, key="example")
+    >>> store_feature = dt.Store(feature=value_feature, key="example")
 
     Retrieve and store the value:
 
@@ -5577,8 +5606,7 @@ class Store(Feature):
         replace: bool = False,
         **kwargs: dict[str, Any],
     ):
-        """
-        Initialize the Store feature.
+        """Initialize the Store feature.
 
         Parameters
         ----------
@@ -5751,8 +5779,8 @@ class Unsqueeze(Feature):
 
     Example
     -------
+    >>> import deeptrack as dt
     >>> import numpy as np
-    >>> from deeptrack.features import Unsqueeze
 
     Create an input array:
     
@@ -5762,14 +5790,14 @@ class Unsqueeze(Feature):
 
     Apply an Unsqueeze feature:
     
-    >>> unsqueeze_feature = Unsqueeze(axis=0)
+    >>> unsqueeze_feature = dt.Unsqueeze(axis=0)
     >>> output_image = unsqueeze_feature(input_image)
     >>> print(output_image.shape)
     (1, 3)
 
     Without specifying an axis:
 
-    >>> unsqueeze_feature = Unsqueeze()
+    >>> unsqueeze_feature = dt.Unsqueeze()
     >>> output_image = unsqueeze_feature(input_image)
     >>> print(output_image.shape)
     (3, 1)
@@ -5849,8 +5877,8 @@ class MoveAxis(Feature):
 
     Example
     -------
+    >>> import deeptrack as dt
     >>> import numpy as np
-    >>> from deeptrack.features import MoveAxis
 
     Create an input array:
     
@@ -5860,7 +5888,7 @@ class MoveAxis(Feature):
 
     Apply a MoveAxis feature:
     
-    >>> move_axis_feature = MoveAxis(source=0, destination=2)
+    >>> move_axis_feature = dt.MoveAxis(source=0, destination=2)
     >>> output_image = move_axis_feature(input_image)
     >>> print(output_image.shape)
     (3, 4, 2)
@@ -5939,8 +5967,8 @@ class Transpose(Feature):
 
     Example
     -------
+    >>> import deeptrack as dt
     >>> import numpy as np
-    >>> from deeptrack.features import Transpose
 
     Create an input array:
 
@@ -5950,14 +5978,14 @@ class Transpose(Feature):
 
     Apply a Transpose feature:
     
-    >>> transpose_feature = Transpose(axes=(1, 2, 0))
+    >>> transpose_feature = dt.Transpose(axes=(1, 2, 0))
     >>> output_image = transpose_feature(input_image)
     >>> print(output_image.shape)
     (3, 4, 2)
 
     Without specifying axes:
     
-    >>> transpose_feature = Transpose()
+    >>> transpose_feature = dt.Transpose()
     >>> output_image = transpose_feature(input_image)
     >>> print(output_image.shape)
     (4, 3, 2)
@@ -6035,8 +6063,9 @@ class OneHot(Feature):
 
     Example
     -------
+    >>> import deeptrack as dt
     >>> import numpy as np
-    >>> from deeptrack.features import OneHot
+    
 
     Create an input array of class labels:
 
@@ -6044,7 +6073,7 @@ class OneHot(Feature):
 
     Apply a OneHot feature:
 
-    >>> one_hot_feature = OneHot(num_classes=3)
+    >>> one_hot_feature = dt.OneHot(num_classes=3)
     >>> one_hot_encoded = one_hot_feature.get(input_data, num_classes=3)
     >>> print(one_hot_encoded)
     [[1. 0. 0.]
@@ -6077,8 +6106,7 @@ class OneHot(Feature):
         num_classes: int,
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
-        """
-        Convert the input array of class labels into a one-hot encoded array.
+        """Convert the input array of labels into a one-hot encoded array.
 
         Parameters
         ----------
@@ -6157,18 +6185,20 @@ class TakeProperties(Feature):
 
     Use `TakeProperties` to extract the property:
     
-    >>> take_properties = dt.TakeProperties(feature, "my_property")
+    >>> take_properties = dt.TakeProperties(feature)
     >>> output = take_properties.get(image=None, names=["my_property"])
     >>> print(output)
     [42]
 
-    >>> add_feature = dt.Add(value = 12)
+    Create a `Gaussian` feature:
+    >>> add_feature = dt.Gaussian(mu=7, sigma=12)
     
+    Use `TakeProperties` to extract the property:
 
-    >>> take_properties = dt.TakeProperties(add_feature, "value")
-    >>> output = take_properties.get(image=None, names=["value"])
+    >>> take_properties = dt.TakeProperties(add_feature)
+    >>> output = take_properties.get(image=None, names=["mu"])
     >>> print(output)
-    [12]
+    [7]
 
     """
 
@@ -6181,18 +6211,17 @@ class TakeProperties(Feature):
         *names: str,
         **kwargs: dict[str, Any],
     ):
-        """
-        Initialize the TakeProperties feature.
+        """Initialize the TakeProperties feature.
 
         Parameters
         ----------
-        feature: Feature
+        feature : Feature
             The feature from which to extract properties.
-        *names: list[str]
+        *names : str
             One or more names of the properties to extract.
-        **kwargs: : dict of str to Any
+        **kwargs : dict[str, Any], optional
             Additional keyword arguments passed to the parent `Feature` class.
-
+        
         """
 
         super().__init__(names=names, **kwargs)
@@ -6205,20 +6234,22 @@ class TakeProperties(Feature):
         _ID: tuple[int, ...] = (),
         **kwargs: dict[str, Any],
     ) -> np.ndarray | tuple[np.ndarray, ...]:
-        """
-        Extract the specified properties from the feature pipeline.
+        """Extract the specified properties from the feature pipeline.
+
+        This method retrieves the values of the specified properties from the 
+        feature's dependency graph and returns them as NumPy arrays.
 
         Parameters
         ----------
-        image: Any
+        image : Any
             The input image (unused in this method).
-        names: tuple[str, ...]
+        names : tuple[str, ...]
             The names of the properties to extract.
-        _ID: tuple[int, ...], optional
-            A unique identifier for the current computation, used to match 
-            dependencies. Defaults to an empty tuple.
-        **kwargs: Any
-            Additional keyword arguments (unused here).
+        _ID : tuple[int, ...], optional
+            A unique identifier for the current computation, ensuring that 
+            dependencies are correctly matched. Defaults to an empty tuple.
+        **kwargs : dict[str, Any], optional
+            Additional keyword arguments (unused in this method).
 
         Returns
         -------
