@@ -2223,17 +2223,13 @@ class TestFeatures(unittest.TestCase):
     def test_Squeeze(self):
 
         input_image = np.array([[[[3], [2], [1]]],[[[1], [2], [3]]]])
-        input_image = np.array([[[[3], [2], [1]]],[[[1], [2], [3]]]])
 
         squeeze_feature = features.Squeeze(axis=1)
-        squeeze_feature = features.Squeeze(axis=1)
         output_image = squeeze_feature(input_image)
-        self.assertEqual(output_image.shape, (2, 3, 1))
         self.assertEqual(output_image.shape, (2, 3, 1))
 
         squeeze_feature = features.Squeeze()
         output_image = squeeze_feature(input_image)
-        self.assertEqual(output_image.shape, (2,3))
         self.assertEqual(output_image.shape, (2,3))
 
 
@@ -2288,11 +2284,9 @@ class TestFeatures(unittest.TestCase):
 
     def test_TakeProperties(self):
         # with custom feature
-        # with custom feature
         class ExampleFeature(features.Feature):
             def __init__(self, my_property, **kwargs):
                 super().__init__(my_property=my_property, **kwargs)
-
 
         feature = ExampleFeature(my_property=properties.Property(42))
 

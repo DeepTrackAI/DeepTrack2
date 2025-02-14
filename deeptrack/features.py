@@ -3356,21 +3356,8 @@ class Repeat(Feature):
         controlled by `N`, and each iteration has its own dynamically updated 
         properties.
 
-        This feature applies `feature` iteratively, passing the output of each 
-        iteration as the input to the next. The number of repetitions is 
-        controlled by `N`, and each iteration has its own dynamically updated 
-        properties.
-
         Parameters
         ----------
-        feature: Feature
-            The feature to be applied sequentially `N` times.
-        N: int
-            The number of times to sequentially apply `feature`, passing the 
-            output of each iteration as the input to the next.
-        **kwargs: dict of str to Any
-            Keyword arguments that override properties dynamically at each 
-            iteration and are also passed to the parent `Feature` class.
         feature: Feature
             The feature to be applied sequentially `N` times.
         N: int
@@ -3381,21 +3368,14 @@ class Repeat(Feature):
             iteration and are also passed to the parent `Feature` class.
 
         """
-        
-        super().__init__(N = N, **kwargs)
-        
+                
         super().__init__(N = N, **kwargs)
         self.feature = self.add_feature(feature)
 
     def get(
         self: Feature,
-        self: Feature,
         image: Any,
         N: int,
-        _ID: tuple[int, ...] = (),
-        **kwargs: dict[str, Any],
-    ) -> Any:
-        """Sequentially apply the feature `N` times.
         _ID: tuple[int, ...] = (),
         **kwargs: dict[str, Any],
     ) -> Any:
@@ -3411,15 +3391,7 @@ class Repeat(Feature):
         Parameters
         ----------
         image: Any
-        image: Any
             The input data to be transformed by the repeated feature.
-        N: int
-            The number of times to sequentially apply the feature, where each 
-            iteration builds on the previous output.
-        _ID: tuple[int, ...], optional
-            A unique identifier for tracking the iteration index, ensuring 
-            reproducibility, caching, and dynamic property updates.
-        **kwargs: dict of str to Any
         N: int
             The number of times to sequentially apply the feature, where each 
             iteration builds on the previous output.
@@ -3432,9 +3404,6 @@ class Repeat(Feature):
         Returns
         -------
         Any
-            The output of the final iteration after `N` sequential applications 
-            of the feature.
-
             The output of the final iteration after `N` sequential applications 
             of the feature.
 
@@ -3463,10 +3432,8 @@ class Combine(StructuralFeature):
     Parameters
     ----------
     features: list[Feature]
-    features: list[Feature]
         A list of features to combine. Each feature will be resolved in the 
         order they appear in the list.
-    **kwargs: dict of str to Any, optional
     **kwargs: dict of str to Any, optional
         Additional keyword arguments passed to the parent `StructuralFeature` 
         class.
@@ -3483,17 +3450,13 @@ class Combine(StructuralFeature):
     `Add` features applied to the input image.
 
     >>> import deeptrack as dt
-    >>> import deeptrack as dt
     >>> import numpy as np
 
     Define a list of features to combine:
     >>> blur_feature = dt.GaussianBlur(sigma=2)
     >>> add_feature = dt.Add(value=10)
-    >>> blur_feature = dt.GaussianBlur(sigma=2)
-    >>> add_feature = dt.Add(value=10)
 
     Combine the features:
-    >>> combined_feature = dt.Combine([blur_feature, add_feature])
     >>> combined_feature = dt.Combine([blur_feature, add_feature])
 
     Define an input image:
@@ -3511,20 +3474,13 @@ class Combine(StructuralFeature):
         features: list[Feature], 
         **kwargs: dict[str, Any]
     ):
-    def __init__(
-        self: Feature, 
-        features: list[Feature], 
-        **kwargs: dict[str, Any]
-    ):
         """Initialize the Combine feature.
 
         Parameters
         ----------
         features: list of Features
-        features: list of Features
             A list of features to combine. Each feature is added as a 
             dependency to ensure proper execution in the computation graph.
-        **kwargs: dict of str to Any, optional
         **kwargs: dict of str to Any, optional
             Additional keyword arguments passed to the parent 
             `StructuralFeature` class.
@@ -3533,13 +3489,7 @@ class Combine(StructuralFeature):
 
         super().__init__(**kwargs)
         self.features = [self.add_feature(f) for f in features]
-        self.features = [self.add_feature(f) for f in features]
 
-    def get(
-        self: Feature, 
-        image_list: Any,
-        **kwargs: dict[str, Any]
-    ) -> list[Any]:
     def get(
         self: Feature, 
         image_list: Any,
@@ -3550,15 +3500,12 @@ class Combine(StructuralFeature):
         Parameters
         ----------
         image_list: Any
-        image_list: Any
             The input image or list of images to process.
-        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Additional arguments passed to each feature's `resolve` method.
 
         Returns
         -------
-        list[Any]
         list[Any]
             A list containing the outputs of each feature applied to the input.
 
@@ -3574,19 +3521,9 @@ class Slice(Feature):
     slice objects, or ellipses (`...`). While normal array indexing is preferred 
     for static cases, `Slice` is useful when the slicing parameters **must be 
     computed dynamically** based on other properties.
-    """Dynamically applies array indexing to input Image(s).
-    
-    This feature allows **dynamic slicing** of an image using integer indices, 
-    slice objects, or ellipses (`...`). While normal array indexing is preferred 
-    for static cases, `Slice` is useful when the slicing parameters **must be 
-    computed dynamically** based on other properties.
 
     Parameters
     ----------
-    slices : Iterable[int | slice | ...]
-        The slicing instructions for each dimension. Each element corresponds 
-        to a dimension in the input image.
-    **kwargs : dict of str to Any
     slices : Iterable[int | slice | ...]
         The slicing instructions for each dimension. Each element corresponds 
         to a dimension in the input image.
@@ -3598,18 +3535,10 @@ class Slice(Feature):
     `get(image: np.ndarray, slices: tuple[int | slice | ...], **kwargs: dict[str, Any]) -> np.ndarray`
         Applies the specified slices to the input image.
 
-    Methods
-    -------
-    `get(image: np.ndarray, slices: tuple[int | slice | ...], **kwargs: dict[str, Any]) -> np.ndarray`
-        Applies the specified slices to the input image.
-
     Examples
     --------
     **Recommended Approach: Use Normal Indexing for Static Slicing**
-    **Recommended Approach: Use Normal Indexing for Static Slicing**
     
-    >>> import deeptrack as dt
-    >>> import numpy as np
     >>> import deeptrack as dt
     >>> import numpy as np
 
@@ -3617,20 +3546,11 @@ class Slice(Feature):
     >>> static_slicing = feature[:, 1:2, ::-2]
     >>> result = static_slicing.resolve(np.arange(27).reshape((3, 3, 3)))
     >>> print(result)
-    >>> static_slicing = feature[:, 1:2, ::-2]
-    >>> result = static_slicing.resolve(np.arange(27).reshape((3, 3, 3)))
-    >>> print(result)
 
     **Using `Slice` for Dynamic Slicing (when necessary)**
-    
     If slices depend on computed properties, use `Slice`:
-    **Using `Slice` for Dynamic Slicing (when necessary)**
     
-    If slices depend on computed properties, use `Slice`:
-
     >>> feature = dt.DummyFeature()
-    >>> dynamic_slicing = feature >> dt.Slice(
-    ...     slices=(slice(None), slice(1, 2), slice(None, None, -2))
     >>> dynamic_slicing = feature >> dt.Slice(
     ...     slices=(slice(None), slice(1, 2), slice(None, None, -2))
     ... )
@@ -3641,34 +3561,20 @@ class Slice(Feature):
     properties.
 
     """
-    >>> result = dynamic_slicing.resolve(np.arange(27).reshape((3, 3, 3)))
-    >>> print(result)
-
-    In both cases, slices can be defined dynamically based on feature 
-    properties.
-
-    """
 
     def __init__(
-        self: Feature,
         self: Feature,
         slices: PropertyLike[
             Iterable[
                 PropertyLike[int] | PropertyLike[slice] | PropertyLike[...]
-                PropertyLike[int] | PropertyLike[slice] | PropertyLike[...]
             ]
         ],
-        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ):
         """Initialize the Slice feature.
 
         Parameters
         ----------
-        slices : list[int | slice | ...] or tuple[int | slice | ...]
-            The slicing instructions for each dimension, specified as a 
-            list or tuple of integers, slice objects, or ellipses (`...`).
-        **kwargs : dict of str to Any
         slices : list[int | slice | ...] or tuple[int | slice | ...]
             The slicing instructions for each dimension, specified as a 
             list or tuple of integers, slice objects, or ellipses (`...`).
@@ -3681,10 +3587,7 @@ class Slice(Feature):
 
     def get(
         self: Feature,
-        self: Feature,
         image: np.ndarray,
-        slices: tuple[Any, ...] | Any,
-        **kwargs: dict[str, Any],
         slices: tuple[Any, ...] | Any,
         **kwargs: dict[str, Any],
     ):
@@ -3694,11 +3597,6 @@ class Slice(Feature):
         ----------
         image : np.ndarray
             The input image to be sliced.
-        slices : tuple[int | slice | ellipsis, ...] | int | slice | ellipsis
-            The slicing instructions for the input image. Each element in the
-            tuple corresponds to a dimension in the input image. If a single
-            element is provided, it is converted to a tuple.
-        **kwargs : dict of str to Any
         slices : tuple[int | slice | ellipsis, ...] | int | slice | ellipsis
             The slicing instructions for the input image. Each element in the
             tuple corresponds to a dimension in the input image. If a single
@@ -3734,16 +3632,9 @@ class Bind(StructuralFeature):
     Parameters
     ----------
     feature: Feature
-    feature: Feature
         The child feature
     **kwargs: dict of str to Any
-    **kwargs: dict of str to Any
         Properties to send to child
-
-    Methods
-    -------
-    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
-        Resolves the child feature with the provided arguments.
 
     Methods
     -------
@@ -3760,19 +3651,11 @@ class Bind(StructuralFeature):
     >>> gaussian_noise = dt.Gaussian()
     >>> bound_feature = dt.Bind(gaussian_noise, mu = -5, sigma=2)
     >>> input_image = np.zeros((512, 512))
-    >>> import numpy as np
 
-    >>> gaussian_noise = dt.Gaussian()
-    >>> bound_feature = dt.Bind(gaussian_noise, mu = -5, sigma=2)
-    >>> input_image = np.zeros((512, 512))
     >>> output_image = bound_feature.resolve(input_image)
     >>> print(np.mean(output_image), np.std(output_image))
     -4.9954959040123152 1.9975296489398942
-    >>> print(np.mean(output_image), np.std(output_image))
-    -4.9954959040123152 1.9975296489398942
 
-    In this example, the `mu` and `sigma` parameters are dynamically set to -5
-    and 2 when resolving the `gaussian_noise` feature.
     In this example, the `mu` and `sigma` parameters are dynamically set to -5
     and 2 when resolving the `gaussian_noise` feature.
 
@@ -3785,19 +3668,12 @@ class Bind(StructuralFeature):
         feature: Feature, 
         **kwargs: dict[str, Any]
     ):
-    def __init__(
-        self: Feature, 
-        feature: Feature, 
-        **kwargs: dict[str, Any]
-    ):
         """Initialize the Bind feature.
 
         Parameters
         ----------
         feature: Feature
-        feature: Feature
             The child feature to bind.
-        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Properties or arguments to pass to the child feature.
 
@@ -3811,19 +3687,12 @@ class Bind(StructuralFeature):
         image: Any, 
         **kwargs: dict[str, Any]
     ) -> Any:
-    def get(
-        self: Feature, 
-        image: Any, 
-        **kwargs: dict[str, Any]
-    ) -> Any:
         """Resolve the child feature with the dynamically provided arguments.
 
         Parameters
         ----------
         image: Any
-        image: Any
             The input data or image to process.
-        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Properties or arguments to pass to the child feature during
             resolution.
@@ -3852,16 +3721,9 @@ class BindUpdate(StructuralFeature):
     Parameters
     ----------
     feature: Feature
-    feature: Feature
         The child feature to bind with specific arguments.
     **kwargs: dict of str to Any
-    **kwargs: dict of str to Any
         Properties to send to the child feature during updates.
-
-    Methods
-    -------
-    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
-        Resolves the child feature with the provided arguments.
 
     Methods
     -------
@@ -3880,9 +3742,7 @@ class BindUpdate(StructuralFeature):
 
     Example
     -------
-Dynamically modify the behavior of a feature:
-
-Dynamically modify the behavior of a feature:
+    Dynamically modify the behavior of a feature:
 
     >>> import deeptrack as dt
     >>> import numpy as np
@@ -3894,18 +3754,6 @@ Dynamically modify the behavior of a feature:
     >>> print(np.mean(output_image), np.std(output_image))
     4.998501486851294 3.0020269383538176
 
-    >>> import numpy as np
-
-    >>> gaussian_noise = dt.Gaussian()
-    >>> bound_feature = dt.BindUpdate(gaussian_noise, mu = 5, sigma=3)
-    >>> input_image = np.zeros((512, 512))
-    >>> output_image = bound_feature.resolve(input_image)
-    >>> print(np.mean(output_image), np.std(output_image))
-    4.998501486851294 3.0020269383538176
-
-
-    In this example, the `mu` and `sigma` parameters are dynamically set to 5
-    and 3 when resolving the `gaussian_noise` feature.
     In this example, the `mu` and `sigma` parameters are dynamically set to 5
     and 3 when resolving the `gaussian_noise` feature.
 
@@ -3918,19 +3766,12 @@ Dynamically modify the behavior of a feature:
         feature: Feature, 
         **kwargs: dict[str, Any]
     ):
-    def __init__(
-        self: Feature, 
-        feature: Feature, 
-        **kwargs: dict[str, Any]
-    ):
         """Initialize the BindUpdate feature.
 
         Parameters
         ----------
         feature: Feature
-        feature: Feature
             The child feature to bind with specific arguments.
-        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Properties to send to the child feature during updates.
 
@@ -3958,19 +3799,12 @@ Dynamically modify the behavior of a feature:
         image: Any, 
         **kwargs: dict[str, Any]
     ) -> Any:
-    def get(
-        self: Feature, 
-        image: Any, 
-        **kwargs: dict[str, Any]
-    ) -> Any:
         """Resolve the child feature with the provided arguments.
 
         Parameters
         ----------
         image: Any
-        image: Any
             The input data or image to process.
-        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Properties or arguments to pass to the child feature during 
             resolution.
@@ -3988,20 +3822,12 @@ Dynamically modify the behavior of a feature:
 
 class ConditionalSetProperty(StructuralFeature):
     """Conditionally override the properties of a child feature.
-    """Conditionally override the properties of a child feature.
 
     This feature modifies the properties of a child feature only when a 
     specified condition is met. If the condition evaluates to `True`, 
     the given properties are applied; otherwise, the child feature remains 
     unchanged.
-    This feature modifies the properties of a child feature only when a 
-    specified condition is met. If the condition evaluates to `True`, 
-    the given properties are applied; otherwise, the child feature remains 
-    unchanged.
 
-    **Note**: It is advisable to use `dt.Arguments` instead when possible, 
-    since this feature **overwrites** properties, which may affect future 
-    calls to the feature.
     **Note**: It is advisable to use `dt.Arguments` instead when possible, 
     since this feature **overwrites** properties, which may affect future 
     calls to the feature.
@@ -4015,20 +3841,14 @@ class ConditionalSetProperty(StructuralFeature):
         property in the feature’s property dictionary. If the condition 
         evaluates to `True`, the specified properties are applied.
     **kwargs : dict[str, Any]
-        The child feature whose properties will be modified conditionally.
-    condition : PropertyLike[str] or PropertyLike[bool]
-        Either a boolean value (`True`/`False`) or the name of a boolean 
-        property in the feature’s property dictionary. If the condition 
-        evaluates to `True`, the specified properties are applied.
-    **kwargs : dict[str, Any]
         The properties to be applied to the child feature if `condition` is 
         `True`.
 
-    Methods
-    -------
-    get(image: Any, condition: str | bool, **kwargs: dict[str, Any]) -> Any
-        Resolves the child feature, conditionally applying the specified 
-        properties.
+    Attributes
+    ----------
+    __distributed__: bool
+        Indicates whether this feature distributes computation across inputs.
+
 
     Methods
     -------
@@ -4044,24 +3864,13 @@ class ConditionalSetProperty(StructuralFeature):
     >>> gaussian_noise = dt.Gaussian()
 
     Apply `sigma=5` **only if** `is_noisy=True`:
-
-    Define a Gaussian noise feature:
-    >>> gaussian_noise = dt.Gaussian()
-
-    Apply `sigma=5` **only if** `is_noisy=True`:
     >>> conditional_feature = dt.ConditionalSetProperty(
     ...     gaussian_noise, condition="is_noisy", sigma=5
     ... )
 
     Resolve with condition met:
     >>> noisy_image = conditional_feature.resolve(is_noisy=True)
-    Resolve with condition met:
-    >>> noisy_image = conditional_feature.resolve(is_noisy=True)
-
-    Resolve without condition:
-    >>> clean_image = conditional_feature.resolve(is_noisy=False)
-
-    """
+   
     Resolve without condition:
     >>> clean_image = conditional_feature.resolve(is_noisy=False)
 
@@ -6398,30 +6207,22 @@ class NonOverlapping(Feature):
 
     def _get_overlapping_volume(
         self: NonOverlapping,
-        self: NonOverlapping,
         volume: np.ndarray,  # 3D array.
         bounding_cube: tuple[float, float, float, float, float, float],
         overlapping_cube: tuple[float, float, float, float, float, float],
-        bounding_cube: tuple[float, float, float, float, float, float],
-        overlapping_cube: tuple[float, float, float, float, float, float],
     ) -> np.ndarray:
-        """Returns the overlapping region of the volume and the overlapping 
-        cube.
         """Returns the overlapping region of the volume and the overlapping 
         cube.
 
         Parameters
         ----------
         volume: np.ndarray
-        volume: np.ndarray
             The volume (3D array) to be checked for non-overlapping.
-        bounding_cube: tuple[float, float, float, float, float, float]
         bounding_cube: tuple[float, float, float, float, float, float]
             The bounding cube of the volume (list of 6 floats). The first three
             elements are the position of the top left corner of the volume, and
             the last three elements are the position of the bottom right corner
             of the volume.
-        overlapping_cube: tuple[float, float, float, float, float, float]
         overlapping_cube: tuple[float, float, float, float, float, float]
             The overlapping cube of the volume and the other volume (list of 6 
             floats).
@@ -6456,7 +6257,6 @@ class NonOverlapping(Feature):
 
     def _check_volumes_non_overlapping(
         self: NonOverlapping,
-        self: NonOverlapping,
         volume_1: np.ndarray,
         volume_2: np.ndarray,
         min_distance: float,
@@ -6471,12 +6271,9 @@ class NonOverlapping(Feature):
         Parameters
         ----------
         volume_1: np.ndarray
-        volume_1: np.ndarray
             The first 3D volume to check for non-overlapping.
         volume_2: np.ndarray
-        volume_2: np.ndarray
             The second 3D volume to check for non-overlapping.
-        min_distance: float
         min_distance: float
             The minimum distance required between any two non-zero voxels in
             the two volumes.
@@ -6521,7 +6318,6 @@ class NonOverlapping(Feature):
 
     def _resample_volume_position(
         self: NonOverlapping,
-        self: NonOverlapping,
         volume: Image,
     ) -> Image:
         """Draws a new position for the volume.
@@ -6533,7 +6329,6 @@ class NonOverlapping(Feature):
 
         Parameters
         ----------
-        volume: Image
         volume: Image
             The input volume whose position needs to be resampled. The volume
             is expected to have a `properties` attribute containing 
@@ -6568,33 +6363,22 @@ class Store(Feature):
     Parameters
     ----------
     feature: Feature
-    feature: Feature
         The feature to evaluate and store.
-    key: Any
     key: Any
         The key used to identify the stored output.
     replace: bool, optional
-    replace: bool, optional
         If `True`, replaces the stored value with a new computation. Defaults 
         to `False`.
-    **kwargs: : dict of str to Any
     **kwargs: : dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
     ----------
     __distributed__: bool
-    __distributed__: bool
         Indicates whether this feature distributes computation across inputs.
         Always `False` for `Store`, as it handles caching locally.
     _store: dict[Any, Image]
-    _store: dict[Any, Image]
         A dictionary used to store the outputs of the evaluated feature.
-
-    Methods
-    -------
-    `get(_: Any, key: Any, replace: bool, **kwargs: dict[str, Any]) -> Any`
-        Evaluate and store the feature output, or return the cached result.
 
     Methods
     -------
@@ -6604,15 +6388,12 @@ class Store(Feature):
     Example
     -------
     >>> import deeptrack as dt
-    >>> import deeptrack as dt
     >>> import numpy as np
 
-    >>> value_feature = dt.Value(lambda: np.random.rand())
     >>> value_feature = dt.Value(lambda: np.random.rand())
 
     Create a `Store` feature with a key:
 
-    >>> store_feature = dt.Store(feature=value_feature, key="example")
     >>> store_feature = dt.Store(feature=value_feature, key="example")
 
     Retrieve and store the value:
@@ -6639,14 +6420,11 @@ class Store(Feature):
 
     def __init__(
         self: Store,
-        self: Store,
         feature: Feature,
         key: Any,
         replace: bool = False,
         **kwargs: dict[str, Any],
-        **kwargs: dict[str, Any],
     ):
-        """Initialize the Store feature.
         """Initialize the Store feature.
 
         Parameters
@@ -6685,15 +6463,11 @@ class Store(Feature):
         Parameters
         ----------
         _: Any
-        _: Any
             Placeholder for unused image input.
-        key: Any
         key: Any
             The key used to identify the stored output.
         replace: bool
-        replace: bool
             If `True`, replaces the stored value with a new computation.
-        **kwargs: Any
         **kwargs: Any
             Additional keyword arguments passed to the feature.
 
@@ -6725,16 +6499,9 @@ class Squeeze(Feature):
     Parameters
     ----------
     axis: int or tuple[int, ...], optional
-    axis: int or tuple[int, ...], optional
         The axis or axes to squeeze. Defaults to `None`, squeezing all axes.
     **kwargs: : dict of str to Any
-    **kwargs: : dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
-
-    Methods
-    -------
-    `get(image: np.ndarray, axis: int | tuple[int, ...], **kwargs: dict[str, Any]) -> np.ndarray`
-        Squeeze the input image by removing singleton dimensions.
 
     Methods
     -------
@@ -6781,10 +6548,8 @@ class Squeeze(Feature):
         Parameters
         ----------
         axis: int or tuple[int, ...], optional
-        axis: int or tuple[int, ...], optional
             The axis or axes to squeeze. Defaults to `None`, which squeezes 
             all axes.
-        **kwargs: : dict of str to Any
         **kwargs: : dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
@@ -6806,13 +6571,10 @@ class Squeeze(Feature):
         Parameters
         ----------
         image: np.ndarray
-        image: np.ndarray
             The input image to process.
-        axis: int or tuple[int, ...], optional
         axis: int or tuple[int, ...], optional
             The axis or axes to squeeze. Defaults to `None`, which squeezes 
             all axes.
-        **kwargs: : dict of str to Any
         **kwargs: : dict of str to Any
             Additional keyword arguments (unused here).
 
@@ -6836,10 +6598,8 @@ class Unsqueeze(Feature):
     Parameters
     ----------
     axis: int or tuple[int, ...], optional
-    axis: int or tuple[int, ...], optional
         The axis or axes where new singleton dimensions should be added. 
         Defaults to `None`, which adds a singleton dimension at the last axis.
-    **kwargs: : dict of str to Any
     **kwargs: : dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
@@ -6848,14 +6608,8 @@ class Unsqueeze(Feature):
     `get(image: np.ndarray, axis: int | tuple[int, ...] | None, **kwargs: dict[str, Any]) -> np.ndarray`
         Add singleton dimensions to the input image.
 
-    Methods
-    -------
-    `get(image: np.ndarray, axis: int | tuple[int, ...] | None, **kwargs: dict[str, Any]) -> np.ndarray`
-        Add singleton dimensions to the input image.
-
     Example
     -------
-    >>> import deeptrack as dt
     >>> import deeptrack as dt
     >>> import numpy as np
 
@@ -6868,14 +6622,12 @@ class Unsqueeze(Feature):
     Apply an Unsqueeze feature:
     
     >>> unsqueeze_feature = dt.Unsqueeze(axis=0)
-    >>> unsqueeze_feature = dt.Unsqueeze(axis=0)
     >>> output_image = unsqueeze_feature(input_image)
     >>> print(output_image.shape)
     (1, 3)
 
     Without specifying an axis:
 
-    >>> unsqueeze_feature = dt.Unsqueeze()
     >>> unsqueeze_feature = dt.Unsqueeze()
     >>> output_image = unsqueeze_feature(input_image)
     >>> print(output_image.shape)
@@ -6887,19 +6639,14 @@ class Unsqueeze(Feature):
         self: Unsqueeze,
         axis: int | tuple[int, ...] | None = -1,
         **kwargs: dict[str, Any],
-        self: Unsqueeze,
-        axis: int | tuple[int, ...] | None = -1,
-        **kwargs: dict[str, Any],
     ):
         """Initialize the Unsqueeze feature.
 
         Parameters
         ----------
         axis: int or tuple[int, ...], optional
-        axis: int or tuple[int, ...], optional
             The axis or axes where new singleton dimensions should be added. 
             Defaults to -1, which adds a singleton dimension at the last axis.
-        **kwargs: : dict of str to Any
         **kwargs: : dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
@@ -6909,25 +6656,20 @@ class Unsqueeze(Feature):
 
     def get(
         self: Unsqueeze,
-        self: Unsqueeze,
         image: np.ndarray,
         axis: int | tuple[int, ...] | None = -1,
         **kwargs: dict[str, Any],
-        axis: int | tuple[int, ...] | None = -1,
-        **kwargs: dict[str, Any],
+
     ) -> np.ndarray:
         """Add singleton dimensions to the input image.
 
         Parameters
         ----------
         image: np.ndarray
-        image: np.ndarray
             The input image to process.
-        axis: int or tuple[int, ...], optional
         axis: int or tuple[int, ...], optional
             The axis or axes where new singleton dimensions should be added. 
             Defaults to -1, which adds a singleton dimension at the last axis.
-        **kwargs: : dict of str to Any
         **kwargs: : dict of str to Any
             Additional keyword arguments (unused here).
 
@@ -6954,12 +6696,9 @@ class MoveAxis(Feature):
     Parameters
     ----------
     source: int
-    source: int
         The axis to move.
     destination: int
-    destination: int
         The destination position of the axis.
-    **kwargs: : dict of str to Any
     **kwargs: : dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
@@ -6968,14 +6707,8 @@ class MoveAxis(Feature):
     `get(image: np.ndarray, source: int, destination: int, **kwargs: dict[str, Any]) -> np.ndarray`
         Move the specified axis of the input image to a new position.
 
-    Methods
-    -------
-    `get(image: np.ndarray, source: int, destination: int, **kwargs: dict[str, Any]) -> np.ndarray`
-        Move the specified axis of the input image to a new position.
-
     Example
     -------
-    >>> import deeptrack as dt
     >>> import deeptrack as dt
     >>> import numpy as np
 
@@ -6987,7 +6720,6 @@ class MoveAxis(Feature):
 
     Apply a MoveAxis feature:
     
-    >>> move_axis_feature = dt.MoveAxis(source=0, destination=2)
     >>> move_axis_feature = dt.MoveAxis(source=0, destination=2)
     >>> output_image = move_axis_feature(input_image)
     >>> print(output_image.shape)
