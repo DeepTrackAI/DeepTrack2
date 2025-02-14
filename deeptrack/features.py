@@ -2766,9 +2766,7 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
         Parameters
         ----------
         value: PropertyLike[float], optional
-        value: PropertyLike[float], optional
             The value to compare (>=) with the input. Defaults to 0.
-        **kwargs: Any
         **kwargs: Any
             Additional keyword arguments.
 
@@ -2844,15 +2842,23 @@ class Stack(Feature):
     Parameters
     ----------
     value: PropertyLike[Any]
+    value: PropertyLike[Any]
         The feature or data to stack with the input.
+    **kwargs: dict of str to Any
     **kwargs: dict of str to Any
         Additional arguments passed to the parent `Feature` class.
 
     Attributes
     ----------
     __distributed__: bool
+    __distributed__: bool
         Indicates whether this feature distributes computation across inputs. 
         Always `False` for `Stack`, as it processes all inputs at once.
+
+    Methods
+    -------
+    `get(image: Any, value: Any, **kwargs: dict[str, Any]) -> list[Any]`
+        Concatenate the input with the value.
 
     Methods
     -------
@@ -2881,7 +2887,9 @@ class Stack(Feature):
 
     def __init__(
         self: Feature,
+        self: Feature,
         value: PropertyLike[Any],
+        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ):
         """Initialize the Stack feature.
@@ -2889,7 +2897,9 @@ class Stack(Feature):
         Parameters
         ----------
         value: PropertyLike[Any]
+        value: PropertyLike[Any]
             The feature or data to stack with the input.
+        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Additional arguments passed to the parent `Feature` class.
         """
@@ -2897,6 +2907,11 @@ class Stack(Feature):
         super().__init__(value=value, **kwargs)
 
     def get(
+        self: Feature,
+        image: Any | list[Any],
+        value: Any | list[Any],
+        **kwargs: dict[str, Any],
+    ) -> list[Any]:
         self: Feature,
         image: Any | list[Any],
         value: Any | list[Any],
@@ -2910,15 +2925,19 @@ class Stack(Feature):
         Parameters
         ----------
         image: Any or list[Any]
+        image: Any or list[Any]
             The input data to stack. Can be a single element or a list.
+        value: Any or list[Any]
         value: Any or list[Any]
             The feature or data to stack with the input. Can be a single 
             element or a list.
+        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Additional keyword arguments (not used here).
 
         Returns
         -------
+        list[Any]
         list[Any]
             A list containing all elements from `image` and `value`.
 
@@ -2947,6 +2966,7 @@ class Arguments(Feature):
 
     Methods
     -------
+    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
     `get(image: Any, **kwargs: dict[str, Any]) -> Any`
         Passes the input image through unchanged, while allowing for property 
         overrides.
@@ -3024,6 +3044,13 @@ class Arguments(Feature):
         image: Any,
         **kwargs: dict[str, Any]
     ) -> Any:
+
+    def get(
+        self: Feature,
+        image: Any,
+        **kwargs: dict[str, Any]
+    ) -> Any:
+
         """Process the input image and allow property overrides.
 
         This method does not modify the input image but provides a mechanism
@@ -3032,7 +3059,9 @@ class Arguments(Feature):
         Parameters
         ----------
         image: Any
+        image: Any
             The input image to be passed through unchanged.
+        **kwargs: Any
         **kwargs: Any
             Key-value pairs for overriding pipeline properties.
 
@@ -3048,9 +3077,12 @@ class Arguments(Feature):
 
 class Probability(StructuralFeature):
     """Resolve a feature with a certain probability.
+    """Resolve a feature with a certain probability.
 
     This feature conditionally applies a given feature to an input image based 
     on a specified probability. A random number is sampled, and if it is less 
+    than `probability`, the feature is resolved; otherwise, the input image 
+    remains unchanged.
     than `probability`, the feature is resolved; otherwise, the input image 
     remains unchanged.
 
@@ -3061,13 +3093,18 @@ class Probability(StructuralFeature):
     probability : PropertyLike[float]
         The probability (between 0 and 1) of resolving the feature.
     *args : list[Any], optional
+    probability : PropertyLike[float]
+        The probability (between 0 and 1) of resolving the feature.
+    *args : list[Any], optional
         Positional arguments passed to the parent `StructuralFeature` class.
+    **kwargs : dict of str to Any, optional
     **kwargs : dict of str to Any, optional
         Additional keyword arguments passed to the parent `StructuralFeature` 
         class.
 
     Methods
     -------
+    `get(image: np.ndarray, probability: float, random_number: float, **kwargs: dict[str, Any]) -> np.ndarray`
     `get(image: np.ndarray, probability: float, random_number: float, **kwargs: dict[str, Any]) -> np.ndarray`
         Resolves the feature if the sampled random number is less than the 
         specified probability.
@@ -3076,17 +3113,24 @@ class Probability(StructuralFeature):
     -------
     In this example, the `Add` feature is applied to the input image with 
     a 70% chance.
+    In this example, the `Add` feature is applied to the input image with 
+    a 70% chance.
 
+    >>> import deeptrack as dt
     >>> import deeptrack as dt
     >>> import numpy as np
 
     Define a feature and wrap it with `Probability`:
+    Define a feature and wrap it with `Probability`:
 
+    >>> add_feature = dt.Add(value=2)
+    >>> probabilistic_feature = dt.Probability(add_feature, probability=0.7)
     >>> add_feature = dt.Add(value=2)
     >>> probabilistic_feature = dt.Probability(add_feature, probability=0.7)
 
     Define an input image:
 
+    >>> input_image = np.ones((5, 5))
     >>> input_image = np.ones((5, 5))
 
     Apply the feature:
@@ -3124,6 +3168,7 @@ class Probability(StructuralFeature):
 
         """
         
+        
         super().__init__(
             *args, 
             probability=probability, 
@@ -3135,6 +3180,7 @@ class Probability(StructuralFeature):
             **kwargs,
         )
         self.feature = self.add_feature(feature) 
+        self.feature = self.add_feature(feature) 
 
     def get(
         self: Feature,
@@ -3142,6 +3188,8 @@ class Probability(StructuralFeature):
         image: np.ndarray,
         probability: float,
         random_number: float,
+        **kwargs: dict[str, Any],
+    ) -> np.ndarray:
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
         """Resolve the feature if a random number is less than the probability.
@@ -3156,6 +3204,7 @@ class Probability(StructuralFeature):
             A random number sampled to determine whether to resolve the 
             feature.
         **kwargs : dict of str to Any
+        **kwargs : dict of str to Any
             Additional arguments passed to the feature's `resolve` method.
 
         Returns
@@ -3168,6 +3217,7 @@ class Probability(StructuralFeature):
 
         """
         
+        
         if random_number < probability:
             image = self.feature.resolve(image, **kwargs)
             image = self.feature.resolve(image, **kwargs)
@@ -3177,7 +3227,17 @@ class Probability(StructuralFeature):
 
 class Repeat(Feature):
     """Applies a feature multiple times in sequence.
+    """Applies a feature multiple times in sequence.
 
+    The `Repeat` feature iteratively applies another feature, passing the 
+    output of each iteration as the input to the next. This enables chained 
+    transformations, where each iteration builds upon the previous one. The 
+    number of repetitions is defined by `N`.
+
+    Each iteration operates with its own set of properties, and the index of 
+    the current iteration is accessible via `_ID` or `replicate_index`. 
+    `_ID` is extended to include the current iteration index, ensuring 
+    deterministic behavior when needed.
     The `Repeat` feature iteratively applies another feature, passing the 
     output of each iteration as the input to the next. This enables chained 
     transformations, where each iteration builds upon the previous one. The 
@@ -3191,7 +3251,11 @@ class Repeat(Feature):
     Parameters
     ----------
     feature: Feature
+    feature: Feature
         The feature to be repeated.
+    N: int
+        The number of times to apply the feature in sequence.
+    **kwargs: dict of str to Any
     N: int
         The number of times to apply the feature in sequence.
     **kwargs: dict of str to Any
@@ -3208,9 +3272,21 @@ class Repeat(Feature):
     `get(image: Any, N: int, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
         Applies the feature `N` times in sequence, passing the output of each 
         iteration as the input to the next.
+    __distributed__: bool
+        Always `False` for `Repeat`, since it processes sequentially rather 
+        than distributing computation across inputs.
+
+    Methods
+    -------
+    `get(image: Any, N: int, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
+        Applies the feature `N` times in sequence, passing the output of each 
+        iteration as the input to the next.
 
     Example
     -------
+    Suppose we have a simple addition feature:
+    Suppose we have a simple addition feature:
+
     >>> import deeptrack as dt
     
     Define a feature that adds `10` to its input:
@@ -3218,6 +3294,17 @@ class Repeat(Feature):
     >>> add_ten = dt.Add(value=10)
 
     Apply this feature **3 times** using `Repeat`:
+    >>> import deeptrack as dt
+    
+    Define a feature that adds `10` to its input:
+    
+    >>> add_ten = dt.Add(value=10)
+
+    Apply this feature **3 times** using `Repeat`:
+    
+    >>> pipeline = dt.Repeat(add_ten, N=3)
+
+    Process an input list:
 
     >>> pipeline = dt.Repeat(add_ten, N=3)
 
@@ -3226,6 +3313,7 @@ class Repeat(Feature):
     >>> print(pipeline.resolve([1, 2, 3]))
     [31, 32, 33]
 
+    Step-by-step breakdown:
     Step-by-step breakdown:
     
     - Iteration 1: `[1, 2, 3] + 10 → [11, 12, 13]`
@@ -3237,7 +3325,17 @@ class Repeat(Feature):
     >>> pipeline = dt.Add(value=10) ^ 3
     >>> print(pipeline.resolve([1, 2, 3]))
     [31, 32, 33]
-        
+    
+    - Iteration 1: `[1, 2, 3] + 10 → [11, 12, 13]`
+    - Iteration 2: `[11, 12, 13] + 10 → [21, 22, 23]`
+    - Iteration 3: `[21, 22, 23] + 10 → [31, 32, 33]`
+
+    Alternative shorthand using `^` operator:
+
+    >>> pipeline = dt.Add(value=10) ^ 3
+    >>> print(pipeline.resolve([1, 2, 3]))
+    [31, 32, 33]
+    
     """
 
     __distributed__: bool = False
@@ -3245,10 +3343,18 @@ class Repeat(Feature):
     def __init__(
         self: Feature,
         feature: Feature, 
+        self: Feature,
+        feature: Feature, 
         N: int, 
+        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ):
         """Initialize the Repeat feature.
+
+        This feature applies `feature` iteratively, passing the output of each 
+        iteration as the input to the next. The number of repetitions is 
+        controlled by `N`, and each iteration has its own dynamically updated 
+        properties.
 
         This feature applies `feature` iteratively, passing the output of each 
         iteration as the input to the next. The number of repetitions is 
@@ -3265,16 +3371,31 @@ class Repeat(Feature):
         **kwargs: dict of str to Any
             Keyword arguments that override properties dynamically at each 
             iteration and are also passed to the parent `Feature` class.
+        feature: Feature
+            The feature to be applied sequentially `N` times.
+        N: int
+            The number of times to sequentially apply `feature`, passing the 
+            output of each iteration as the input to the next.
+        **kwargs: dict of str to Any
+            Keyword arguments that override properties dynamically at each 
+            iteration and are also passed to the parent `Feature` class.
 
         """
-                
+        
+        super().__init__(N = N, **kwargs)
+        
         super().__init__(N = N, **kwargs)
         self.feature = self.add_feature(feature)
 
     def get(
         self: Feature,
+        self: Feature,
         image: Any,
         N: int,
+        _ID: tuple[int, ...] = (),
+        **kwargs: dict[str, Any],
+    ) -> Any:
+        """Sequentially apply the feature `N` times.
         _ID: tuple[int, ...] = (),
         **kwargs: dict[str, Any],
     ) -> Any:
@@ -3283,11 +3404,22 @@ class Repeat(Feature):
         This method applies the feature `N` times, passing the output of each 
         iteration as the input to the next. The `_ID` tuple is updated at 
         each iteration, ensuring dynamic property updates and reproducibility.
+        This method applies the feature `N` times, passing the output of each 
+        iteration as the input to the next. The `_ID` tuple is updated at 
+        each iteration, ensuring dynamic property updates and reproducibility.
 
         Parameters
         ----------
         image: Any
+        image: Any
             The input data to be transformed by the repeated feature.
+        N: int
+            The number of times to sequentially apply the feature, where each 
+            iteration builds on the previous output.
+        _ID: tuple[int, ...], optional
+            A unique identifier for tracking the iteration index, ensuring 
+            reproducibility, caching, and dynamic property updates.
+        **kwargs: dict of str to Any
         N: int
             The number of times to sequentially apply the feature, where each 
             iteration builds on the previous output.
@@ -3300,6 +3432,9 @@ class Repeat(Feature):
         Returns
         -------
         Any
+            The output of the final iteration after `N` sequential applications 
+            of the feature.
+
             The output of the final iteration after `N` sequential applications 
             of the feature.
 
@@ -3328,8 +3463,10 @@ class Combine(StructuralFeature):
     Parameters
     ----------
     features: list[Feature]
+    features: list[Feature]
         A list of features to combine. Each feature will be resolved in the 
         order they appear in the list.
+    **kwargs: dict of str to Any, optional
     **kwargs: dict of str to Any, optional
         Additional keyword arguments passed to the parent `StructuralFeature` 
         class.
@@ -3346,13 +3483,17 @@ class Combine(StructuralFeature):
     `Add` features applied to the input image.
 
     >>> import deeptrack as dt
+    >>> import deeptrack as dt
     >>> import numpy as np
 
     Define a list of features to combine:
     >>> blur_feature = dt.GaussianBlur(sigma=2)
     >>> add_feature = dt.Add(value=10)
+    >>> blur_feature = dt.GaussianBlur(sigma=2)
+    >>> add_feature = dt.Add(value=10)
 
     Combine the features:
+    >>> combined_feature = dt.Combine([blur_feature, add_feature])
     >>> combined_feature = dt.Combine([blur_feature, add_feature])
 
     Define an input image:
@@ -3370,13 +3511,20 @@ class Combine(StructuralFeature):
         features: list[Feature], 
         **kwargs: dict[str, Any]
     ):
+    def __init__(
+        self: Feature, 
+        features: list[Feature], 
+        **kwargs: dict[str, Any]
+    ):
         """Initialize the Combine feature.
 
         Parameters
         ----------
         features: list of Features
+        features: list of Features
             A list of features to combine. Each feature is added as a 
             dependency to ensure proper execution in the computation graph.
+        **kwargs: dict of str to Any, optional
         **kwargs: dict of str to Any, optional
             Additional keyword arguments passed to the parent 
             `StructuralFeature` class.
@@ -3385,7 +3533,13 @@ class Combine(StructuralFeature):
 
         super().__init__(**kwargs)
         self.features = [self.add_feature(f) for f in features]
+        self.features = [self.add_feature(f) for f in features]
 
+    def get(
+        self: Feature, 
+        image_list: Any,
+        **kwargs: dict[str, Any]
+    ) -> list[Any]:
     def get(
         self: Feature, 
         image_list: Any,
@@ -3396,12 +3550,15 @@ class Combine(StructuralFeature):
         Parameters
         ----------
         image_list: Any
+        image_list: Any
             The input image or list of images to process.
+        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Additional arguments passed to each feature's `resolve` method.
 
         Returns
         -------
+        list[Any]
         list[Any]
             A list containing the outputs of each feature applied to the input.
 
@@ -3417,9 +3574,19 @@ class Slice(Feature):
     slice objects, or ellipses (`...`). While normal array indexing is preferred 
     for static cases, `Slice` is useful when the slicing parameters **must be 
     computed dynamically** based on other properties.
+    """Dynamically applies array indexing to input Image(s).
+    
+    This feature allows **dynamic slicing** of an image using integer indices, 
+    slice objects, or ellipses (`...`). While normal array indexing is preferred 
+    for static cases, `Slice` is useful when the slicing parameters **must be 
+    computed dynamically** based on other properties.
 
     Parameters
     ----------
+    slices : Iterable[int | slice | ...]
+        The slicing instructions for each dimension. Each element corresponds 
+        to a dimension in the input image.
+    **kwargs : dict of str to Any
     slices : Iterable[int | slice | ...]
         The slicing instructions for each dimension. Each element corresponds 
         to a dimension in the input image.
@@ -3431,10 +3598,18 @@ class Slice(Feature):
     `get(image: np.ndarray, slices: tuple[int | slice | ...], **kwargs: dict[str, Any]) -> np.ndarray`
         Applies the specified slices to the input image.
 
+    Methods
+    -------
+    `get(image: np.ndarray, slices: tuple[int | slice | ...], **kwargs: dict[str, Any]) -> np.ndarray`
+        Applies the specified slices to the input image.
+
     Examples
     --------
     **Recommended Approach: Use Normal Indexing for Static Slicing**
+    **Recommended Approach: Use Normal Indexing for Static Slicing**
     
+    >>> import deeptrack as dt
+    >>> import numpy as np
     >>> import deeptrack as dt
     >>> import numpy as np
 
@@ -3442,12 +3617,20 @@ class Slice(Feature):
     >>> static_slicing = feature[:, 1:2, ::-2]
     >>> result = static_slicing.resolve(np.arange(27).reshape((3, 3, 3)))
     >>> print(result)
+    >>> static_slicing = feature[:, 1:2, ::-2]
+    >>> result = static_slicing.resolve(np.arange(27).reshape((3, 3, 3)))
+    >>> print(result)
+
+    **Using `Slice` for Dynamic Slicing (when necessary)**
     
+    If slices depend on computed properties, use `Slice`:
     **Using `Slice` for Dynamic Slicing (when necessary)**
     
     If slices depend on computed properties, use `Slice`:
 
     >>> feature = dt.DummyFeature()
+    >>> dynamic_slicing = feature >> dt.Slice(
+    ...     slices=(slice(None), slice(1, 2), slice(None, None, -2))
     >>> dynamic_slicing = feature >> dt.Slice(
     ...     slices=(slice(None), slice(1, 2), slice(None, None, -2))
     ... )
@@ -3458,20 +3641,34 @@ class Slice(Feature):
     properties.
 
     """
+    >>> result = dynamic_slicing.resolve(np.arange(27).reshape((3, 3, 3)))
+    >>> print(result)
+
+    In both cases, slices can be defined dynamically based on feature 
+    properties.
+
+    """
 
     def __init__(
+        self: Feature,
         self: Feature,
         slices: PropertyLike[
             Iterable[
                 PropertyLike[int] | PropertyLike[slice] | PropertyLike[...]
+                PropertyLike[int] | PropertyLike[slice] | PropertyLike[...]
             ]
         ],
+        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ):
         """Initialize the Slice feature.
 
         Parameters
         ----------
+        slices : list[int | slice | ...] or tuple[int | slice | ...]
+            The slicing instructions for each dimension, specified as a 
+            list or tuple of integers, slice objects, or ellipses (`...`).
+        **kwargs : dict of str to Any
         slices : list[int | slice | ...] or tuple[int | slice | ...]
             The slicing instructions for each dimension, specified as a 
             list or tuple of integers, slice objects, or ellipses (`...`).
@@ -3484,7 +3681,10 @@ class Slice(Feature):
 
     def get(
         self: Feature,
+        self: Feature,
         image: np.ndarray,
+        slices: tuple[Any, ...] | Any,
+        **kwargs: dict[str, Any],
         slices: tuple[Any, ...] | Any,
         **kwargs: dict[str, Any],
     ):
@@ -3494,6 +3694,11 @@ class Slice(Feature):
         ----------
         image : np.ndarray
             The input image to be sliced.
+        slices : tuple[int | slice | ellipsis, ...] | int | slice | ellipsis
+            The slicing instructions for the input image. Each element in the
+            tuple corresponds to a dimension in the input image. If a single
+            element is provided, it is converted to a tuple.
+        **kwargs : dict of str to Any
         slices : tuple[int | slice | ellipsis, ...] | int | slice | ellipsis
             The slicing instructions for the input image. Each element in the
             tuple corresponds to a dimension in the input image. If a single
@@ -3529,9 +3734,16 @@ class Bind(StructuralFeature):
     Parameters
     ----------
     feature: Feature
+    feature: Feature
         The child feature
     **kwargs: dict of str to Any
+    **kwargs: dict of str to Any
         Properties to send to child
+
+    Methods
+    -------
+    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
+        Resolves the child feature with the provided arguments.
 
     Methods
     -------
@@ -3548,13 +3760,19 @@ class Bind(StructuralFeature):
     >>> gaussian_noise = dt.Gaussian()
     >>> bound_feature = dt.Bind(gaussian_noise, mu = -5, sigma=2)
     >>> input_image = np.zeros((512, 512))
+    >>> import numpy as np
 
+    >>> gaussian_noise = dt.Gaussian()
+    >>> bound_feature = dt.Bind(gaussian_noise, mu = -5, sigma=2)
+    >>> input_image = np.zeros((512, 512))
     >>> output_image = bound_feature.resolve(input_image)
     >>> print(np.mean(output_image), np.std(output_image))
     -4.9954959040123152 1.9975296489398942
     >>> print(np.mean(output_image), np.std(output_image))
     -4.9954959040123152 1.9975296489398942
 
+    In this example, the `mu` and `sigma` parameters are dynamically set to -5
+    and 2 when resolving the `gaussian_noise` feature.
     In this example, the `mu` and `sigma` parameters are dynamically set to -5
     and 2 when resolving the `gaussian_noise` feature.
 
@@ -3567,12 +3785,19 @@ class Bind(StructuralFeature):
         feature: Feature, 
         **kwargs: dict[str, Any]
     ):
+    def __init__(
+        self: Feature, 
+        feature: Feature, 
+        **kwargs: dict[str, Any]
+    ):
         """Initialize the Bind feature.
 
         Parameters
         ----------
         feature: Feature
+        feature: Feature
             The child feature to bind.
+        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Properties or arguments to pass to the child feature.
 
@@ -3596,7 +3821,9 @@ class Bind(StructuralFeature):
         Parameters
         ----------
         image: Any
+        image: Any
             The input data or image to process.
+        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Properties or arguments to pass to the child feature during
             resolution.
@@ -3625,9 +3852,16 @@ class BindUpdate(StructuralFeature):
     Parameters
     ----------
     feature: Feature
+    feature: Feature
         The child feature to bind with specific arguments.
     **kwargs: dict of str to Any
+    **kwargs: dict of str to Any
         Properties to send to the child feature during updates.
+
+    Methods
+    -------
+    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
+        Resolves the child feature with the provided arguments.
 
     Methods
     -------
@@ -3646,7 +3880,9 @@ class BindUpdate(StructuralFeature):
 
     Example
     -------
-    Dynamically modify the behavior of a feature:
+Dynamically modify the behavior of a feature:
+
+Dynamically modify the behavior of a feature:
 
     >>> import deeptrack as dt
     >>> import numpy as np
@@ -3658,6 +3894,18 @@ class BindUpdate(StructuralFeature):
     >>> print(np.mean(output_image), np.std(output_image))
     4.998501486851294 3.0020269383538176
 
+    >>> import numpy as np
+
+    >>> gaussian_noise = dt.Gaussian()
+    >>> bound_feature = dt.BindUpdate(gaussian_noise, mu = 5, sigma=3)
+    >>> input_image = np.zeros((512, 512))
+    >>> output_image = bound_feature.resolve(input_image)
+    >>> print(np.mean(output_image), np.std(output_image))
+    4.998501486851294 3.0020269383538176
+
+
+    In this example, the `mu` and `sigma` parameters are dynamically set to 5
+    and 3 when resolving the `gaussian_noise` feature.
     In this example, the `mu` and `sigma` parameters are dynamically set to 5
     and 3 when resolving the `gaussian_noise` feature.
 
@@ -3670,12 +3918,19 @@ class BindUpdate(StructuralFeature):
         feature: Feature, 
         **kwargs: dict[str, Any]
     ):
+    def __init__(
+        self: Feature, 
+        feature: Feature, 
+        **kwargs: dict[str, Any]
+    ):
         """Initialize the BindUpdate feature.
 
         Parameters
         ----------
         feature: Feature
+        feature: Feature
             The child feature to bind with specific arguments.
+        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Properties to send to the child feature during updates.
 
@@ -3703,12 +3958,19 @@ class BindUpdate(StructuralFeature):
         image: Any, 
         **kwargs: dict[str, Any]
     ) -> Any:
+    def get(
+        self: Feature, 
+        image: Any, 
+        **kwargs: dict[str, Any]
+    ) -> Any:
         """Resolve the child feature with the provided arguments.
 
         Parameters
         ----------
         image: Any
+        image: Any
             The input data or image to process.
+        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Properties or arguments to pass to the child feature during 
             resolution.
@@ -3725,6 +3987,7 @@ class BindUpdate(StructuralFeature):
 
 
 class ConditionalSetProperty(StructuralFeature):
+    """Conditionally override the properties of a child feature.
     """Conditionally override the properties of a child feature.
 
     This feature modifies the properties of a child feature only when a 
@@ -3752,8 +4015,20 @@ class ConditionalSetProperty(StructuralFeature):
         property in the feature’s property dictionary. If the condition 
         evaluates to `True`, the specified properties are applied.
     **kwargs : dict[str, Any]
+        The child feature whose properties will be modified conditionally.
+    condition : PropertyLike[str] or PropertyLike[bool]
+        Either a boolean value (`True`/`False`) or the name of a boolean 
+        property in the feature’s property dictionary. If the condition 
+        evaluates to `True`, the specified properties are applied.
+    **kwargs : dict[str, Any]
         The properties to be applied to the child feature if `condition` is 
         `True`.
+
+    Methods
+    -------
+    get(image: Any, condition: str | bool, **kwargs: dict[str, Any]) -> Any
+        Resolves the child feature, conditionally applying the specified 
+        properties.
 
     Methods
     -------
@@ -3766,18 +4041,27 @@ class ConditionalSetProperty(StructuralFeature):
     >>> import deeptrack as dt
 
     Define a Gaussian noise feature:
-
-    >>> gaussian_noise = dt.Gaussian(sigma=0)
+    >>> gaussian_noise = dt.Gaussian()
 
     Apply `sigma=5` **only if** `is_noisy=True`:
 
+    Define a Gaussian noise feature:
+    >>> gaussian_noise = dt.Gaussian()
+
+    Apply `sigma=5` **only if** `is_noisy=True`:
     >>> conditional_feature = dt.ConditionalSetProperty(
     ...     gaussian_noise, condition="is_noisy", sigma=5
     ... )
 
     Resolve with condition met:
     >>> noisy_image = conditional_feature.resolve(is_noisy=True)
+    Resolve with condition met:
+    >>> noisy_image = conditional_feature.resolve(is_noisy=True)
 
+    Resolve without condition:
+    >>> clean_image = conditional_feature.resolve(is_noisy=False)
+
+    """
     Resolve without condition:
     >>> clean_image = conditional_feature.resolve(is_noisy=False)
 
@@ -3787,7 +4071,10 @@ class ConditionalSetProperty(StructuralFeature):
 
     def __init__(
         self: Feature,
+        self: Feature,
         feature: Feature,
+        condition=PropertyLike[str | bool],
+        **kwargs: dict[str, Any],
         condition=PropertyLike[str | bool],
         **kwargs: dict[str, Any],
     ):
@@ -3802,6 +4089,7 @@ class ConditionalSetProperty(StructuralFeature):
             property dictionary. If the condition evaluates to `True`, the 
             specified properties are applied.
         **kwargs: dict of str to Any
+        **kwargs: dict of str to Any
             Properties to apply to the child feature if the condition is 
             `True`.
 
@@ -3812,7 +4100,11 @@ class ConditionalSetProperty(StructuralFeature):
 
     def get(
         self: Feature,
+        self: Feature,
         image: Any,
+        condition: str | bool,
+        **kwargs: dict[str, Any],
+    ) -> Any:
         condition: str | bool,
         **kwargs: dict[str, Any],
     ) -> Any:
@@ -3821,11 +4113,14 @@ class ConditionalSetProperty(StructuralFeature):
         Parameters
         ----------
         image: Any
+        image: Any
             The input data or image to process.
+        condition: str or  bool
         condition: str or  bool
             A boolean value or the name of a boolean property in the feature's 
             property dictionary. If the condition evaluates to `True`, the 
             specified properties are applied.
+        **kwargs: : dict of str to Any
         **kwargs: : dict of str to Any
             Additional properties to apply to the child feature if the 
             condition is `True`.
@@ -3870,16 +4165,25 @@ class ConditionalSetFeature(StructuralFeature):
     Parameters
     ----------
     on_false: Feature, optional
+    on_false: Feature, optional
         The feature to resolve if the conditional property evaluates to `False`. 
         If not provided, the input image remains unchanged in this case.
+    on_true: Feature, optional
     on_true: Feature, optional
         The feature to resolve if the conditional property evaluates to `True`. 
         If not provided, the input image remains unchanged in this case.
     condition: str or bool, optional
+    condition: str or bool, optional
         The name of the conditional property, or a boolean value. Defaults to 
         `"is_label"`.
     **kwargs: : dict of str to Any
+    **kwargs: : dict of str to Any
         Additional keyword arguments passed to the parent `StructuralFeature`.
+
+    Methods
+    -------
+    `get(image: Any, condition: str | bool, **kwargs: dict[str, Any]) -> Any`
+        Resolves the appropriate feature based on the condition.
 
     Methods
     -------
@@ -3889,6 +4193,7 @@ class ConditionalSetFeature(StructuralFeature):
     Example
     -------
     >>> import deeptrack as dt
+
 
     >>> true_feature = dt.GaussianNoise(sigma=5)
     >>> false_feature = dt.GaussianNoise(sigma=0)
@@ -3924,12 +4229,16 @@ class ConditionalSetFeature(StructuralFeature):
         Parameters
         ----------
         on_false: Feature, optional
+        on_false: Feature, optional
             The feature to resolve if the condition evaluates to `False`.
+        on_true: Feature, optional
         on_true: Feature, optional
             The feature to resolve if the condition evaluates to `True`.
         condition: str or bool, optional
+        condition: str or bool, optional
             The name of the property to listen to, or a boolean value. Defaults 
             to `"is_label"`.
+        **kwargs: : dict of str to Any
         **kwargs: : dict of str to Any
             Additional keyword arguments for the parent `StructuralFeature`.
 
@@ -3961,11 +4270,14 @@ class ConditionalSetFeature(StructuralFeature):
         Parameters
         ----------
         image: Any
+        image: Any
             The input image to process.
+        condition: str or bool
         condition: str or bool
             The name of the conditional property or a boolean value. If a 
             string is provided, it is looked up in `kwargs` to get the actual 
             boolean value.
+        **kwargs: : dict of str to Any
         **kwargs: : dict of str to Any
             Additional keyword arguments to pass to the resolved feature.
 
@@ -3998,6 +4310,7 @@ class ConditionalSetFeature(StructuralFeature):
 
 class Lambda(Feature):
     """Apply a user-defined function to each image in the input.
+    """Apply a user-defined function to each image in the input.
 
     This feature allows applying a custom function to individual images in the
     input pipeline. The `function` parameter must be wrapped in an 
@@ -4021,12 +4334,24 @@ class Lambda(Feature):
     -------
     get(image: Image, function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image
         Applies the custom function to the input image.
-    
+        A callable that produces a function. The outer function can accept 
+        additional arguments from the pipeline, while the inner function 
+        operates on a single image.
+    **kwargs : dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Methods
+    -------
+    get(image: Image, function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image
+        Applies the custom function to the input image.
+
     Example
     -------
     >>> import deeptrack as dt
+    >>> import deeptrack as dt
     >>> import numpy as np
 
+    Define a factory function that returns a scaling function:
     Define a factory function that returns a scaling function:
     
     >>> def scale_function_factory(scale=2):
@@ -4035,14 +4360,23 @@ class Lambda(Feature):
     ...     return scale_function
 
     Create a `Lambda` feature that scales images by a factor of 5:
+    Create a `Lambda` feature that scales images by a factor of 5:
     
+    >>> lambda_feature = dt.Lambda(function=scale_function_factory, scale=5)
     >>> lambda_feature = dt.Lambda(function=scale_function_factory, scale=5)
 
     Apply the feature to an image:
     
     >>> input_image = dt.Image(np.ones((5, 5)))
+    >>> input_image = dt.Image(np.ones((5, 5)))
     >>> output_image = lambda_feature(input_image)
     >>> print(output_image)
+    [[5. 5. 5. 5. 5.]
+     [5. 5. 5. 5. 5.]
+     [5. 5. 5. 5. 5.]
+     [5. 5. 5. 5. 5.]
+     [5. 5. 5. 5. 5.]]
+    
     [[5. 5. 5. 5. 5.]
      [5. 5. 5. 5. 5.]
      [5. 5. 5. 5. 5.]
@@ -4053,10 +4387,16 @@ class Lambda(Feature):
 
     def __init__(
         self: Feature,
+        self: Feature,
         function: Callable[..., Callable[[Image], Image]],
+        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ):
         """Initialize the Lambda feature.
+
+        This feature applies a user-defined function to process an image. The 
+        `function` parameter must be a callable that returns another function, 
+        where the inner function operates on the image.
 
         This feature applies a user-defined function to process an image. The 
         `function` parameter must be a callable that returns another function, 
@@ -4070,12 +4410,18 @@ class Lambda(Feature):
             processes a single image.
         **kwargs : dict[str, Any]
             Additional keyword arguments passed to the parent `Feature` class.
-    
+            A callable that produces a function. The outer function can accept 
+            additional arguments from the pipeline, while the inner function 
+            processes a single image.
+        **kwargs : dict[str, Any]
+            Additional keyword arguments passed to the parent `Feature` class.
+
         """
 
         super().__init__(function=function, **kwargs)
 
     def get(
+        self: Feature,
         self: Feature,
         image: Image,
         function: Callable[[Image], Image],
@@ -4155,7 +4501,6 @@ class Merge(Feature):
 
     >>> image_1 = np.ones((5, 5)) * 2
     >>> image_2 = np.ones((5, 5)) * 4
-
     >>> output_image = merge_feature([image_1, image_2])
     >>> print(output_image)
     [[3. 3. 3. 3. 3.]
@@ -4170,7 +4515,8 @@ class Merge(Feature):
 
     def __init__(
         self: Feature,
-        function: Callable[..., Callable[[list[Image]], Image | list[Image]]],
+        function: Callable[..., 
+                           Callable[[list[Image]], Image | list[Image]]],
         **kwargs: dict[str, Any]
     ):
         """Initialize the Merge feature.
@@ -4250,7 +4596,7 @@ class OneOf(Feature):
         Processes the properties to determine the selected feature index.
     `get(image: Any, key: int, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
         Applies the selected feature to the input image.
-    
+  
     Example
     -------
     >>> import deeptrack as dt
@@ -4283,10 +4629,7 @@ class OneOf(Feature):
 
     def __init__(
         self: Feature,
-        self: Feature,
         collection: Iterable[Feature],
-        key: int | None = None,
-        **kwargs: dict[str, Any],
         key: int | None = None,
         **kwargs: dict[str, Any],
     ):
@@ -4318,7 +4661,7 @@ class OneOf(Feature):
         """Process the properties to determine the feature index.
 
         If `key` is not provided, a random feature index is assigned.
-
+        
         Parameters
         ----------
         propertydict : dict
@@ -4340,7 +4683,6 @@ class OneOf(Feature):
         return propertydict
 
     def get(
-        self: Feature,
         self: Feature,
         image: Any,
         key: int,
@@ -4376,11 +4718,11 @@ class OneOfDict(Feature):
     This feature selects a feature from a dictionary and applies it to an input. 
     The selection is made randomly by default, but it can be controlled using 
     the `key` argument.
-    
+
     If `key` is not specified, a random key from the dictionary is selected, 
     and the corresponding feature is applied. Otherwise, the feature mapped to 
     `key` is resolved.
-    
+
     Parameters
     ----------
     collection : dict[Any, Feature]
@@ -4402,7 +4744,7 @@ class OneOfDict(Feature):
         Determines which feature to use based on `key`.
     `get(image: Any, key: Any, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
         Resolves the selected feature and applies it to the input image.
-
+   
     Example
     -------
     >>> import deeptrack as dt
@@ -4453,6 +4795,13 @@ class OneOfDict(Feature):
             a random key is selected.
         **kwargs : dict of str to Any
             Additional parameters passed to the parent `Feature` class.
+        collection : dict[Any, Feature]
+            A dictionary where keys are identifiers and values are features.
+        key : Any | None, optional
+            The key of the feature to resolve from the dictionary. If `None`, 
+            a random key is selected.
+        **kwargs : dict of str to Any
+            Additional parameters passed to the parent `Feature` class.
 
         """
 
@@ -4470,10 +4819,18 @@ class OneOfDict(Feature):
         """Determine which feature to apply based on the selected key.
 
         If no key is provided, a random key from `collection` is selected.
+    def _process_properties(
+        self: Feature, 
+        propertydict: dict
+    ) -> dict:
+        """Determine which feature to apply based on the selected key.
+
+        If no key is provided, a random key from `collection` is selected.
 
         Parameters
         ----------
         propertydict : dict
+            The dictionary containing feature properties.
             The dictionary containing feature properties.
 
         Returns
@@ -4493,19 +4850,28 @@ class OneOfDict(Feature):
 
     def get(
         self: Feature,
+        self: Feature,
         image: Any,
         key: Any,
         _ID: tuple[int, ...] = (),
         **kwargs: dict[str, Any],
+        _ID: tuple[int, ...] = (),
+        **kwargs: dict[str, Any],
     )-> Any:
+        """Resolve the selected feature and apply it to the input.
         """Resolve the selected feature and apply it to the input.
 
         Parameters
         ----------
         image : Any
             The input image or data to be processed.
+            The input image or data to be processed.
         key : Any
             The key of the feature to apply from the dictionary.
+        _ID : tuple[int, ...], optional
+            A unique identifier for caching and parallel execution.
+        **kwargs : dict of str to Any
+            Additional parameters passed to the selected feature.
         _ID : tuple[int, ...], optional
             A unique identifier for caching and parallel execution.
         **kwargs : dict of str to Any
@@ -4514,6 +4880,7 @@ class OneOfDict(Feature):
         Returns
         -------
         Any
+            The output of the selected feature applied to the input.
             The output of the selected feature applied to the input.
 
         """
@@ -5725,7 +6092,6 @@ class NonOverlapping(Feature):
 
     def __init__(
         self: NonOverlapping,
-        self: NonOverlapping,
         feature: Feature,
         min_distance: float = 1,
         max_attempts: int = 100,
@@ -5745,13 +6111,8 @@ class NonOverlapping(Feature):
         Parameters
         ----------
         feature: Feature
-        feature: Feature
             The feature that creates the list of volumes to be placed 
             non-overlapping.
-        min_distance: float, optional
-            The minimum distance between volumes in pixels, by default 1. 
-            It can be negative to allow for partial overlap.
-        max_attempts: int, optional
         min_distance: float, optional
             The minimum distance between volumes in pixels, by default 1. 
             It can be negative to allow for partial overlap.
@@ -5767,24 +6128,18 @@ class NonOverlapping(Feature):
 
     def get(
         self: NonOverlapping,
-        self: NonOverlapping,
         _: Any,
         min_distance: float,
         max_attempts: int,
-        **kwargs: dict[str, Any],
-    ) -> list[np.ndarray]:
         **kwargs: dict[str, Any],
     ) -> list[np.ndarray]:
         """
         Parameters
         ----------
         _: Any
-        _: Any
             Placeholder for unused input image.
         min_distance: float
-        min_distance: float
             The minimum distance between volumes in pixels.
-        max_attempts: int
         max_attempts: int
             The maximum number of attempts to place the volumes 
             non-overlapping. If this number is exceeded, a new list of volumes 
@@ -5792,7 +6147,6 @@ class NonOverlapping(Feature):
 
         Returns
         -------
-        list[np.ndarray]
         list[np.ndarray]
             A list of non-overlapping 3D volumes.
 
@@ -5820,8 +6174,6 @@ class NonOverlapping(Feature):
     def _check_non_overlapping(
         self: NonOverlapping, 
         list_of_volumes: list[np.ndarray],
-        self: NonOverlapping, 
-        list_of_volumes: list[np.ndarray],
     ) -> bool:
         """Check if all volumes in the list are non-overlapping.
 
@@ -5834,7 +6186,6 @@ class NonOverlapping(Feature):
         Parameters
         ----------
         list_of_volumes: list of 3d arrays
-        list_of_volumes: list of 3d arrays
             The volumes to be checked for non-overlapping.
 
         Returns
@@ -5845,15 +6196,11 @@ class NonOverlapping(Feature):
         """
 
         from skimage.morphology import isotropic_erosion, isotropic_dilation
-        from skimage.morphology import isotropic_erosion, isotropic_dilation
 
         from deeptrack.augmentations import CropTight, Pad
         from deeptrack.optics import _get_position
 
         min_distance = self.min_distance()
-        crop = CropTight()
-        
-        if min_distance < 0:
         crop = CropTight()
         
         if min_distance < 0:
@@ -5873,17 +6220,6 @@ class NonOverlapping(Feature):
                 ).merge_properties_from(volume) 
             for volume in list_of_volumes 
             ]
-        else:
-            pad = Pad(px = [int(np.ceil(min_distance/2))]*6, keep_size=True)
-            list_of_volumes = [    
-                Image(
-                    crop(isotropic_dilation(pad(volume) != 0, min_distance/2)),
-                    copy=False,
-                ).merge_properties_from(volume) 
-            for volume in list_of_volumes 
-            ]
-
-        min_distance = 1
         min_distance = 1
 
         # The position of the top left corner of each volume (index (0, 0, 0)).
@@ -5906,7 +6242,6 @@ class NonOverlapping(Feature):
         ]
 
         for i, j in itertools.combinations(range(len(list_of_volumes)), 2):
-
 
             # If the bounding cubes do not overlap, the volumes do not overlap.
             if self._check_bounding_cubes_non_overlapping(
@@ -6008,10 +6343,6 @@ class NonOverlapping(Feature):
         )
 
     def _get_overlapping_cube(
-        self: NonOverlapping,
-        bounding_cube_1: list[int],
-        bounding_cube_2: list[int],
-    ) -> list[int]:
         self: NonOverlapping,
         bounding_cube_1: list[int],
         bounding_cube_2: list[int],
@@ -7121,7 +7452,6 @@ class TakeProperties(Feature):
 
         Returns
         -------
-        np.ndarray or tuple[np.ndarray, ...]
         np.ndarray or tuple[np.ndarray, ...]
             If a single property name is provided, a NumPy array containing the 
             property values is returned. If multiple property names are 
