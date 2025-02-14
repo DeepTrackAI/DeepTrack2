@@ -78,13 +78,6 @@ def grid_test_features(
                     f_a.properties(), output.properties
                 ),
             )
-        if not isinstance(output, list):
-            tester.assertFalse(
-                not any(p == f_a.properties() for p in output.properties),
-                "Feature_a properties {} not in output Image, with properties {}".format(
-                    f_a.properties(), output.properties
-                ),
-            )
 
 
 def test_operator(self, operator, emulated_operator=None):
@@ -109,14 +102,6 @@ def test_operator(self, operator, emulated_operator=None):
     grid_test_features(
         self,
         features.Value,
-        features.Value,
-        [
-            {"value": 1},
-            {"value": 0.5},
-            {"value": np.nan},
-            {"value": np.inf},
-            {"value": np.random.rand(10, 10)},
-        ],
         [
             {"value": 1},
             {"value": 0.5},
@@ -195,9 +180,6 @@ class TestFeatures(unittest.TestCase):
 
         feature = ConcreteFeature(prop_a=1)
         self.assertEqual(len(list_of_inputs), 0)
-
-        feature()
-        self.assertEqual(len(list_of_inputs), 1)
 
         feature()
         self.assertEqual(len(list_of_inputs), 1)
