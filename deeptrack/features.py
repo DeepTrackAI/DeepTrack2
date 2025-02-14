@@ -120,7 +120,6 @@ from deeptrack.image import Image
 from deeptrack.properties import PropertyDict
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
-from deeptrack.optics import _get_position
 
 
 #TODO: for all features check whether image should be Image, np.ndarray, or both.
@@ -5016,7 +5015,12 @@ class NonOverlapping(Feature):
     This feature ensures that a list of 3D volumes are positioned such that 
     their non-zero voxels do not overlap. If volumes overlap, their positions 
     are resampled until they are non-overlapping. If the maximum number of 
-    attempts is exceeded, the feature regenerates the list of volumes.
+    attempts is exceeded, the feature regenerates the list of volumes and 
+    raises a warning if non-overlapping placement cannot be achieved.
+    
+    Note: `min_distance` refers to the distance between the edges of volumes, 
+    not their centers. Due to the way volumes are calculated, slight rounding 
+    errors may affect the final distance.
     
     This feature is incompatible with non-volumetric scatterers such as 
     `MieScatterers`.
@@ -5024,10 +5028,11 @@ class NonOverlapping(Feature):
     Parameters
     ----------
     feature: Feature
-        The feature that generates the list of volumes to place non-overlapping.
+        The feature that generates the list of volumes to place 
+        non-overlapping.
     min_distance: float, optional
-        The minimum distance between volumes in pixels. Defaults to `1`. It can
-        be negative to allow for partial overlap.
+        The minimum distance between volumes in pixels. Defaults to `1`. 
+        It can be negative to allow for partial overlap.
     max_attempts: int, optional
         The maximum number of attempts to place volumes without overlap. If 
         exceeded, a new list of volumes is generated. Defaults to `100`.
@@ -5054,52 +5059,90 @@ class NonOverlapping(Feature):
         Check if two volumes are non-overlapping.
     `_resample_volume_position(volume: Image) -> Image`
         Resample the position of a volume to avoid overlap.
-      
+    
     Example
     --------
-    import deeptrack as dt
-    import numpy as np
-    import matplotlib.pyplot as plt
+    >>> import deeptrack as dt
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
 
-    # Define an ellipsoid scatterer with randomly positioned objects
-
-    scatterer = dt.Ellipsoid(
-        position=lambda: np.random.uniform(5, 115, size=2)
-    )
-
-    # Define fluorescence optics for visualization
+    # Define an ellips scatterer with randomly positioned objects
     
-    optics = dt.Fluorescence()
+    >>> scatterer = dt.Ellipse(
+    >>>    radius= 13 * dt.units.pixels,
+    >>>    position=lambda: np.random.uniform(5, 115, size=2)* dt.units.pixels,
+    >>> )
+
+    # Create multiple scatterers
     
-    # Create multiple scatterers with possible overlap
+    >>>    scatterers = (scatterer ^ 8)  
+
+    # Define the optics and create the image with possible overlap
+
+    >>> optics = dt.Fluorescence()
+    >>> im_with_overlap = optics(scatterers)
+    >>> im_with_overlap.store_properties()
+    >>> im_with_overlap_resolved = image_with_overlap()
+
+
+    # Gather position from image
+
+    >>> pos_with_overlap = np.array(
+    >>>     im_with_overlap_resolved.get_property(
+    >>>         "position", 
+    >>>         get_one=False
+    >>>     )
+    >>> )
+
+    # Enforce non-overlapping and create the image without overlap
     
-    scatterers = (scatterer^10)
+    >>> non_overlapping_scatterers = dt.NonOverlapping(scatterers, min_distance=4)
+    >>> im_without_overlap =  optics(non_overlapping_scatterers)
+    >>> im_without_overlap.store_properties()
+    >>> im_without_overlap_resolved = im_without_overlap()
 
-    # Generate an image with overlapping scatterers
+    # Gather position from image
 
-    image_with_overlap=optics(scatterers)
-
-    # Apply the NonOverlapping feature to enforce minimum spacing between objects
-
-    non_overlap = dt.NonOverlapping(scatterers, min_distance=1)
-
-    # Apply the NonOverlapping feature to enforce minimum spacing between objects
-
-    image_without_overlap = optics(non_overlap)
+    >>> pos_without_overlap = np.array(
+    >>>     im_without_overlap_resolved.get_property(
+    >>>         "position",
+    >>>        get_one=False
+    >>>     )
+    >>> )
 
     # Create a figure with two subplots to visualize the difference
 
-    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-    axes[0].imshow(image_with_overlap(), cmap="gray")
-    axes[0].set_title("Overlapping Objects")
-    axes[0].axis("off")
-    axes[1].imshow(image_without_overlap(), cmap="gray")
-    axes[1].set_title("Non-Overlapping Objects")
-    axes[1].axis("off")
+    >>> fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+    
+    >>> axes[0].imshow(im_with_overlap_resolved, cmap="gray")
+    >>> axes[0].scatter(pos_with_overlap[:,1],pos_with_overlap[:,0])
+    >>> axes[0].set_title("Overlapping Objects")
+    >>> axes[0].axis("off")
 
-    plt.tight_layout()
-    plt.show()
+    >>> axes[1].imshow(im_without_overlap_resolved, cmap="gray")
+    >>> axes[1].scatter(pos_without_overlap[:,1],pos_without_overlap[:,0])
+    >>> axes[1].set_title("Non-Overlapping Objects")
+    >>> axes[1].axis("off")
 
+    >>> plt.tight_layout()
+    >>> plt.show()
+
+    # Define function to calculate minimum distance
+    
+    >>> def calculate_min_distance(positions):
+    >>> distances = [
+    >>>     np.linalg.norm(positions[i] - positions[j])
+    >>>     for i in range(len(positions))
+    >>>         for j in range(i + 1, len(positions))
+    >>> ]
+    >>> return min(distances)
+
+    # Print minimum distances with and without overlap
+    >>> print(calculate_min_distance(pos_with_overlap))
+    10.768742383382174
+    >>> print(calculate_min_distance(pos_without_overlap))
+    30.82531120942446
+        
     """
 
     __distributed__: bool = False
@@ -5211,6 +5254,7 @@ class NonOverlapping(Feature):
         from skimage.morphology import isotropic_erosion, isotropic_dilation
 
         from deeptrack.augmentations import CropTight, Pad
+        from deeptrack.optics import _get_position
 
         min_distance = self.min_distance()
         crop = CropTight()

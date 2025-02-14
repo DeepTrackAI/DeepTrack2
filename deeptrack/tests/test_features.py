@@ -12,7 +12,7 @@ import unittest
 
 import numpy as np
 
-from deeptrack import features, properties, scatterers, units
+from deeptrack import features, properties, scatterers, units, optics
 from deeptrack.image import Image
 from deeptrack.noises import Gaussian
 
@@ -1787,6 +1787,67 @@ class TestFeatures(unittest.TestCase):
                 [volume_test5_a, volume_test5_b],
             )
         )
+
+    def test_NonOverlapping_ellipses(self):
+        """Set up common test objects before each test."""
+        min_distance = 5  # Minimum distance in pixels
+        radius = 10
+        scatterer = scatterers.Ellipse(
+            radius=radius * units.pixels,
+            position=lambda: np.random.uniform(5, 115, size=2) * units.pixels,
+        )
+        random_scatterers = scatterer ^ 6
+        fluo_optics = optics.Fluorescence()
+
+        def calculate_min_distance(positions):
+            """Calculate the minimum pairwise distance between objects."""
+            distances = [
+                np.linalg.norm(positions[i] - positions[j])
+                for i in range(len(positions))
+                for j in range(i + 1, len(positions))
+            ]
+            return min(distances)
+
+        # Generate image with possible non-overlapping objects
+        image_with_overlap = fluo_optics(random_scatterers)
+        image_with_overlap.store_properties()
+        im_with_overlap_resolved = image_with_overlap()
+        pos_with_overlap = np.array(
+            im_with_overlap_resolved.get_property(
+                "position", 
+                get_one=False
+            )
+        )
+
+        # Generate image with enforced non-overlapping objects
+        non_overlapping_scatterers = features.NonOverlapping(
+            random_scatterers, 
+            min_distance=min_distance
+        )
+        image_without_overlap = fluo_optics(non_overlapping_scatterers)
+        image_without_overlap.store_properties()
+        im_without_overlap_resolved = image_without_overlap()
+        pos_without_overlap = np.array(
+            im_without_overlap_resolved.get_property(
+                "position",
+                get_one=False
+            )
+        )
+
+        # Compute minimum distances
+        min_distance_before = calculate_min_distance(pos_with_overlap)
+        min_distance_after = calculate_min_distance(pos_without_overlap)
+
+        print(f"Min distance before: {min_distance_before}, \
+            should be smaller than {2*radius + min_distance}")
+        print(f"Min distance after: {min_distance_after}, should be larger \
+            than {2*radius + min_distance} with some tolerance")
+
+        # Assert that the non-overlapping case respects min_distance (with 
+        # slight rounding tolerance)
+        self.assertLess(min_distance_before, 2*radius + min_distance)  
+        self.assertGreaterEqual(min_distance_after,2*radius + min_distance - 2)  
+
 
     def test_Store(self):
 
