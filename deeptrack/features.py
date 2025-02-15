@@ -2805,6 +2805,8 @@ class Arguments(Feature):
 
     Examples
     --------
+    >>> import deeptrack as dt
+
     A typical use-case is:
 
     >>> arguments = Arguments(is_label=False)
@@ -5294,25 +5296,25 @@ class NonOverlapping(Feature):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
 
-    # Define an ellips scatterer with randomly positioned objects
+    Define an ellips scatterer with randomly positioned objects
     
     >>> scatterer = dt.Ellipse(
     >>>    radius= 13 * dt.units.pixels,
     >>>    position=lambda: np.random.uniform(5, 115, size=2)* dt.units.pixels,
     >>> )
 
-    # Create multiple scatterers
+    Create multiple scatterers
     
     >>> scatterers = (scatterer ^ 8)  
 
-    # Define the optics and create the image with possible overlap
+    Define the optics and create the image with possible overlap
 
     >>> optics = dt.Fluorescence()
     >>> im_with_overlap = optics(scatterers)
     >>> im_with_overlap.store_properties()
     >>> im_with_overlap_resolved = image_with_overlap()
 
-    # Gather position from image
+    Gather position from image
 
     >>> pos_with_overlap = np.array(
     >>>     im_with_overlap_resolved.get_property(
@@ -5321,14 +5323,14 @@ class NonOverlapping(Feature):
     >>>     )
     >>> )
 
-    # Enforce non-overlapping and create the image without overlap
+    Enforce non-overlapping and create the image without overlap
     
     >>> non_overlapping_scatterers = dt.NonOverlapping(scatterers, min_distance=4)
     >>> im_without_overlap =  optics(non_overlapping_scatterers)
     >>> im_without_overlap.store_properties()
     >>> im_without_overlap_resolved = im_without_overlap()
 
-    # Gather position from image
+    Gather position from image
 
     >>> pos_without_overlap = np.array(
     >>>     im_without_overlap_resolved.get_property(
@@ -5337,7 +5339,7 @@ class NonOverlapping(Feature):
     >>>     )
     >>> )
 
-    # Create a figure with two subplots to visualize the difference
+    Create a figure with two subplots to visualize the difference
 
     >>> fig, axes = plt.subplots(1, 2, figsize=(10, 5))
     
@@ -5352,7 +5354,7 @@ class NonOverlapping(Feature):
     >>> plt.tight_layout()
     >>> plt.show()
 
-    # Define function to calculate minimum distance
+    Define function to calculate minimum distance
     
     >>> def calculate_min_distance(positions):
     >>> distances = [
@@ -5362,7 +5364,7 @@ class NonOverlapping(Feature):
     >>> ]
     >>> return min(distances)
 
-    # Print minimum distances with and without overlap
+    Print minimum distances with and without overlap
     >>> print(calculate_min_distance(pos_with_overlap))
     10.768742383382174
     >>> print(calculate_min_distance(pos_without_overlap))
