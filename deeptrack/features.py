@@ -739,12 +739,26 @@ class Feature(DeepTrackNode):
         self: Feature,
         arguments: Feature,
     ) -> Feature:
-        """Bind another feature’s properties as arguments to this feature.
+        """Binds another feature’s properties as arguments to this feature.
 
-        Often used internally by advanced features or pipelines. 
+        This method allows properties of `arguments` to be dynamically linked 
+        to this feature, enabling shared configurations across multiple features.
+        It is commonly used in advanced feature pipelines.
 
-        See `features.Arguments`.
+        See Also
+        --------
+        features.Arguments
+            A utility that helps manage and propagate feature arguments efficiently.
 
+        Parameters
+        ----------
+        arguments : Feature
+            The feature whose properties will be bound as arguments to this feature.
+
+        Returns
+        -------
+        Feature
+            The current feature instance with bound arguments.
         """
 
         self.arguments = arguments
@@ -755,30 +769,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         **properties: dict[str, Any],
     ) -> dict[str, Any]:
-        """Normalize the properties.
-
-        This method handles all unit normalizations and conversions. For each class in 
-        the method resolution order (MRO), it checks if the class has a 
-        `__conversion_table__` attribute. If found, it calls the `convert` method of 
-        the conversion table using the properties as arguments.
-
-        Parameters
-        ----------
-        **properties : dict of str to Any
-            The properties to be normalized and converted.
-
-        Returns
-        -------
-        dict of str to Any
-            The normalized and converted properties.
-
-        """
-
-    def _normalize(
-        self: Feature,
-        **properties: dict[str, Any],
-    ) -> dict[str, Any]:
-        """Normalize the properties.
+        """Normalizes the properties.
 
         This method handles all unit normalizations and conversions. For each class in 
         the method resolution order (MRO), it checks if the class has a 
@@ -903,8 +894,30 @@ class Feature(DeepTrackNode):
         self: Feature,
         propertydict: dict[str, Any],
     ) -> dict[str, Any]:
-        # Optional hook for subclasses to preprocess input before calling
-        # the method .get()
+        """Preprocesses the input properties before calling `.get()`.
+
+        This method acts as a preprocessing hook for subclasses, allowing them 
+        to modify or normalize input properties before the feature's main 
+        computation.
+
+        Parameters
+        ----------
+        propertydict : dict[str, Any]
+            The dictionary of properties to be processed before being passed 
+            to the `.get()` method.
+
+        Returns
+        -------
+        dict[str, Any]
+            The processed property dictionary after normalization.
+
+        Notes
+        -----
+        - Calls `_normalize()` internally to standardize input properties.
+        - Subclasses may override this method to implement additional 
+          preprocessing steps.
+        
+        """
 
         propertydict = self._normalize(**propertydict)
         return propertydict
@@ -913,6 +926,26 @@ class Feature(DeepTrackNode):
         self: Feature,
         x: Any,
     ) -> None:
+        """Activates source items within the given input.
+
+        This method checks if `x` or its elements (if `x` is a list) are 
+        instances of `SourceItem`, and if so, calls them to trigger their 
+        behavior.
+
+        Parameters
+        ----------
+        x : Any
+            The input to process. If `x` is a `SourceItem`, it is activated.
+            If `x` is a list, each `SourceItem` within the list is activated.
+
+        Notes
+        -----
+        - Non-`SourceItem` elements in `x` are ignored.
+        - This method is used to ensure that all source-dependent computations
+          are properly triggered when required.
+        
+        """
+        
         if isinstance(x, SourceItem):
             x()
         else:
@@ -1004,22 +1037,30 @@ class Feature(DeepTrackNode):
     def __iter__(
         self: Feature,
     ) -> Iterable:
+        """ Returns an infinite iterator that continuously yields feature 
+        values.
+
+        """
+
         while True:
             yield from next(self)
 
     def __next__(
         self: Feature,
     ) -> Any:
+        """Returns the next resolved feature in the sequence.
+        
+        """
+
         yield self.update().resolve()
 
     def __rshift__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        # Allows chaining of features. For example,
-        # feature1 >> feature2 >> feature3
-        # or
-        # feature1 >> some_function
+        """Chains this feature with another feature or function using '>>'.
+        
+        """
 
         if isinstance(other, DeepTrackNode):
             return Chain(self, other)
@@ -1036,10 +1077,9 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        # Allows chaining of features. For example,
-        # some_function << feature1 << feature2
-        # or
-        # some_function << feature1
+        """Chains another feature or function with this feature using '<<'.
+        
+        """
 
         if isinstance(other, Feature):
             return Chain(other, self)
@@ -1050,171 +1090,244 @@ class Feature(DeepTrackNode):
         return NotImplemented
 
     def __add__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides add operator
+        """Adds another value or feature using '+'.
+        
+        """
+    
         return self >> Add(other)
 
     def __radd__(
         self: Feature, 
-        other: Any,
+        other: Any
     ) -> Feature:
-        # Overrides right add operator
+        """Adds this feature to another value using right '+'.
+        
+        """
+    
         return Value(other) >> Add(self)
 
     def __sub__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides subtraction operator
+        """Subtracts another value or feature using '-'.
+        
+        """
+        
         return self >> Subtract(other)
 
     def __rsub__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides right subtraction operator
+        """Subtracts this feature from another value using right '-'.
+        
+    """
         return Value(other) >> Subtract(self)
 
     def __mul__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides multiplication operator
+        """Multiplies this feature with another value using '*'.
+        
+        """
+    
         return self >> Multiply(other)
 
     def __rmul__(
-        self: Feature,
-        other: Any,
-        # Overrides right multiplication operator
+        self: Feature, 
+        other: Any
     ) -> Feature:
+        """Multiplies another value with this feature using right '*'.
+        
+        """
+
         return Value(other) >> Multiply(self)
 
     def __truediv__(
-        self: Feature,
-        other: Any,
-        # Overrides division operator
-    ) -> Feature:
+        self: Feature, 
+        other: Any
+        ) -> Feature:
+        """Divides this feature by another value using '/'.
+        
+        """
+        
         return self >> Divide(other)
 
     def __rtruediv__(
-        self: Feature,
-        other: Any,
-        # Overrides right division operator
+        self: Feature, 
+        other: Any
     ) -> Feature:
+        """Divides another value by this feature using right '/'.
+        
+        """
+    
         return Value(other) >> Divide(self)
 
     def __floordiv__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides floor division operator
+        """Performs floor division using '//'.
+        
+        """
+        
         return self >> FloorDivide(other)
 
     def __rfloordiv__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides right floor division operator
+        """Performs right floor division using '//'.
+        
+        """
+        
         return Value(other) >> FloorDivide(self)
 
     def __pow__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides power operator
+        """Raises this feature to a power using '**'.
+        
+        """
+        
         return self >> Power(other)
 
     def __rpow__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides right power operator
+        """Raises another value to this feature as a power using right '**'.
+        
+        """
+        
         return Value(other) >> Power(self)
 
     def __gt__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides greater than operator
+        """Checks if this feature is greater than another using '>'."""
         return self >> GreaterThan(other)
 
     def __rgt__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides right greater than operator
+        """Checks if another value is greater than this feature using 
+        right '>'.
+        
+        """
+        
         return Value(other) >> GreaterThan(self)
 
     def __lt__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides less than operator
+        """Checks if this feature is less than another using '<'.
+        
+        """
+        
         return self >> LessThan(other)
 
     def __rlt__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides right less than operator
+        """Checks if another value is less than this feature using 
+        right '<'.
+        
+        """
+        
         return Value(other) >> LessThan(self)
 
     def __le__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides less than or equal to operator
+        """Checks if this feature is less than or equal to another using '<='.
+        
+        """
+        
         return self >> LessThanOrEquals(other)
 
     def __rle__(
         self: Feature,
-        other: Any,
+        other: Any
     ) -> Feature:
-        # Overrides right less than or equal to operator
+        """Checks if another value is less than or equal to this feature using 
+        right '<='.
+        
+        """
+        
         return Value(other) >> LessThanOrEquals(self)
 
     def __ge__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides greater than or equal to operator
+        """Checks if this feature is greater than or equal to another 
+        using '>='.
+        
+        """
+        
         return self >> GreaterThanOrEquals(other)
 
     def __rge__(
-        self: Feature,
-        other: Any,
+        self: Feature, 
+        other: Any
     ) -> Feature:
-        # Overrides right greater than or equal to operator
+        """Checks if another value is greater than or equal to this feature 
+        using right '>='.
+        
+        """
+
         return Value(other) >> GreaterThanOrEquals(self)
 
     def __xor__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        # Overrides XOR operator
+        """Repeats the feature a given number of times using '^'.
+        
+        """
+
         return Repeat(self, other)
 
     def __and__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        # Overrides AND operator
+        """Stacks this feature with another using '&'.
+        
+        """
+
         return self >> Stack(other)
 
     def __rand__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        # Overrides right AND operator
+        """Stacks another value with this feature using right '&'.
+        
+        """
+        
         return Value(other) >> Stack(self)
 
     def __getitem__(
         self: Feature,
         slices: Any,
     ) -> 'Feature':
-        # Allows direct slicing of the data.
+        """Allows direct slicing of the feature's output.
+        
+        """
+        
         if not isinstance(slices, tuple):
             slices = (slices,)
 
@@ -1227,6 +1340,11 @@ class Feature(DeepTrackNode):
     # private properties to dispatch based on config
     @property
     def _format_input(self):
+        """Selects the appropriate input formatting function based on 
+        configuration.
+        
+        """
+
         if self._wrap_array_with_image:
             return self._image_wrapped_format_input
         else:
@@ -1234,6 +1352,10 @@ class Feature(DeepTrackNode):
 
     @property
     def _process_and_get(self):
+        """Selects the appropriate processing function based on configuration.
+        
+        """
+
         if self._wrap_array_with_image:
             return self._image_wrapped_process_and_get
         else:
@@ -1241,6 +1363,11 @@ class Feature(DeepTrackNode):
 
     @property
     def _process_output(self):
+        """Selects the appropriate output processing function based on 
+        configuration.
+        
+        """
+
         if self._wrap_array_with_image:
             return self._image_wrapped_process_output
         else:
@@ -1251,7 +1378,9 @@ class Feature(DeepTrackNode):
         image_list: Image | list[Image],
         **kwargs: dict[str, Any],
     ) -> list[Image]:
-        # Ensures the input is a list of Image.
+        """Wraps input data as Image instances before processing.
+        
+        """
 
         if image_list is None:
             return []
@@ -1267,7 +1396,9 @@ class Feature(DeepTrackNode):
         image_list: Image | list[Image],
         **kwargs: dict[str, Any],
     ) -> list[Image]:
-        # Ensures the input is a list of Image.
+        """Processes input data without wrapping it as Image instances.
+       
+        """
 
         if image_list is None:
             return []
@@ -1282,7 +1413,10 @@ class Feature(DeepTrackNode):
         image_list: Image | list[Image],
         **feature_input: dict[str, Any],
     ) -> list[Image]:
-        # Controls how the get function is called
+        """Processes input data without additional wrapping and retrieves 
+        results.
+        
+        """
 
         if self.__distributed__:
             # Call get on each image in list, and merge properties from 
@@ -1303,7 +1437,9 @@ class Feature(DeepTrackNode):
         image_list: Image | list[Image],
         **feature_input: dict[str, Any],
     ) -> list[Image]:
-        # Controls how the get function is called
+        """Processes input data while maintaining Image properties.
+        
+        """
 
         if self.__distributed__:
             # Call get on each image in list, and merge properties from 
@@ -1338,6 +1474,10 @@ class Feature(DeepTrackNode):
         image_list: Image | list[Image], 
         feature_input: dict[str, Any],
     ) -> None:
+        """Appends feature properties and input data to each Image.
+        
+        """
+
         for index, image in enumerate(image_list):
 
             if self.arguments:
@@ -1350,6 +1490,10 @@ class Feature(DeepTrackNode):
         image_list: Image | list[Image],
         feature_input: dict[str, Any],
     ) -> None:
+        """Extracts and updates raw values from Image instances.
+        
+        """
+
         for index, image in enumerate(image_list):
 
             if isinstance(image, Image):
@@ -1360,8 +1504,11 @@ class Feature(DeepTrackNode):
         inputs: list[Image],
         **kwargs: dict[str, Any],
     ) -> list[Image]:
-        # Coerces inputs to the correct type (numpy array or tensor or cupy 
-        # array).
+        """Converts inputs to the appropriate data type based on 
+        GPU availability.
+        
+        """
+
         if config.gpu_enabled:
 
             return [
@@ -1410,10 +1557,12 @@ def propagate_data_to_dependencies(
 
     Examples
     --------
+    >>> import deeptrack as dt
+
     Update the properties of a feature and its dependencies:
 
-    >>> feature = SomeFeature(value=10)
-    >>> propagate_data_to_dependencies(feature, value=20)
+    >>> feature = dt.DummyFeature(value=10)
+    >>> dt.propagate_data_to_dependencies(feature, value=20)
     >>> feature.value()
     20
 
@@ -1421,22 +1570,6 @@ def propagate_data_to_dependencies(
     dependencies, provided they have a property named `value`.
         recursively traversed to ensure that all relevant nodes in the 
         dependency tree are considered.
-    **kwargs : dict of str, Any
-        Key-value pairs specifying the property names and their corresponding 
-        values to be set in the dependencies. Only properties that exist in the
-        `PropertyDict` of a dependency will be updated.
-
-    Examples
-    --------
-    Update the properties of a feature and its dependencies:
-
-    >>> feature = SomeFeature(value=10)
-    >>> propagate_data_to_dependencies(feature, value=20)
-    >>> feature.value()
-    20
-
-    This will update the `value` property of the `feature` and its 
-    dependencies, provided they have a property named `value`.
 
     """
 
@@ -1470,19 +1603,7 @@ class StructuralFeature(Feature):
         Controls whether this feature’s properties are included in the output 
         image’s property list. A value of `2` means that this feature’s 
         properties are not included.
-        Controls whether this feature’s properties are included in the output 
-        image’s property list. A value of `2` means that this feature’s 
-        properties are not included.
     __distributed__ : bool
-        Determines whether the feature’s `get` method is applied to each 
-        element in the input list (`__distributed__ = True`) or to the entire 
-        list as a whole (`__distributed__ = False`).
-
-    Notes
-    -----
-    Structural features are typically used for tasks like grouping or chaining 
-    features, applying sequential or conditional logic, or structuring 
-    pipelines without directly modifying the data.
         Determines whether the feature’s `get` method is applied to each 
         element in the input list (`__distributed__ = True`) or to the entire 
         list as a whole (`__distributed__ = False`).
@@ -1503,12 +1624,8 @@ class Chain(StructuralFeature):
     """Resolve two features sequentially.
 
     This feature applies two features sequentially, passing the output of the 
-    first feature as the input to the second. It enables building feature chains 
-    that execute complex transformations by combining simple operations.
-
-    This feature applies two features sequentially, passing the output of the 
-    first feature as the input to the second. It enables building feature chains 
-    that execute complex transformations by combining simple operations.
+    first feature as the input to the second. It enables building feature 
+    chains that execute complex transformations by combining simple operations.
 
     Parameters
     ----------
@@ -1518,16 +1635,12 @@ class Chain(StructuralFeature):
         The second feature in the chain, which processes the output from 
         `feature_1`.
     **kwargs : dict of str to Any, optional
-    **kwargs : dict of str to Any, optional
         Additional keyword arguments passed to the parent `StructuralFeature` 
         (and, therefore, `Feature`).
 
     Methods
-        (and, therefore, `Feature`).
-
-    Methods
     -------
-    get(image: Image or list[Image], _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Image or list[Image]
+    `get(image: Image or list[Image], _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Image or list[Image]`
         Apply the two features in sequence on the given input image.
 
     Notes
@@ -1538,33 +1651,12 @@ class Chain(StructuralFeature):
 
     Examples
     --------
-    Create a feature chain where the first feature adds a constant offset, and the 
-    second feature multiplies the result by a constant:
-
-    >>> import deeptrack as dt
-    get(image: Image or list[Image], _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Image or list[Image]
-        Apply the two features in sequence on the given input image.
-
-    Notes
-    -----
-    This feature is used to combine simple operations into a pipeline without the 
-    need for explicit function chaining. It is syntactic sugar for creating 
-    sequential feature pipelines.
-
-    Examples
-    --------
-    Create a feature chain where the first feature adds a constant offset, and the 
-    second feature multiplies the result by a constant:
-
     >>> import deeptrack as dt
     >>> import numpy as np
 
-
-    Define the features:
-
-    >>> A = dt.Add(value=10)
-    >>> M = dt.Multiply(value=0.5)
-
+    Create a feature chain where the first feature adds a constant offset, and 
+    the second feature multiplies the result by a constant:
+    
     >>> A = dt.Add(value=10)
     >>> M = dt.Multiply(value=0.5)
 
@@ -1572,10 +1664,7 @@ class Chain(StructuralFeature):
 
     >>> chain = A >> M  
 
-
     Equivalent to: 
-
-    >>> chain = dt.Chain(A, M)
 
     >>> chain = dt.Chain(A, M)
 
@@ -1583,25 +1672,16 @@ class Chain(StructuralFeature):
 
     >>> dummy_image = np.ones((2, 4))
 
-    >>> dummy_image = np.ones((2, 4))
-
     Apply the chained features:
-
 
     >>> transformed_image = chain(dummy_image)
     >>> print(transformed_image)
     [[5.5 5.5 5.5 5.5]
     [5.5 5.5 5.5 5.5]]
-    >>> print(transformed_image)
-    [[5.5 5.5 5.5 5.5]
-    [5.5 5.5 5.5 5.5]]
 
-    In this example, the input image is first passed through the `Add` feature to 
-    add an offset of 10, and then through the `Multiply` feature to multiply the 
-    result by 0.5.
-    In this example, the input image is first passed through the `Add` feature to 
-    add an offset of 10, and then through the `Multiply` feature to multiply the 
-    result by 0.5.
+    In this example, the input image is first passed through the `Add` feature 
+    to add an offset of 10, and then through the `Multiply` feature to multiply
+    the result by 0.5.
 
     """
 
@@ -1613,10 +1693,10 @@ class Chain(StructuralFeature):
     ):
         """Initialize the chain with two sub-features.
 
-        This constructor initializes the feature chain by setting `feature_1` and 
-        `feature_2` as dependencies. Updates to these sub-features automatically 
-        propagate through the DeepTrack computation graph, ensuring consistent 
-        evaluation and execution.
+        This constructor initializes the feature chain by setting `feature_1` 
+        and `feature_2` as dependencies. Updates to these sub-features 
+        automatically propagate through the DeepTrack computation graph, 
+        ensuring consistent evaluation and execution.
 
         Parameters
         ----------
@@ -1689,10 +1769,8 @@ class DummyFeature(Feature):
     Parameters
     ----------
     _input : Image or list of Images, optional
-    _input : Image or list of Images, optional
         An optional input (image or list of images) that can be set for 
         the feature. By default, an empty list.
-    **kwargs : dict of str to Any
     **kwargs : dict of str to Any
         Additional keyword arguments are wrapped as `Property` instances and 
         stored in `self.properties`.
@@ -1702,28 +1780,18 @@ class DummyFeature(Feature):
     get(image : Image or list of Images, **kwargs : dict of str to Any) -> Image or list of Images
         Simply returns the input image(s) unchanged.
 
-    Methods
-    -------
-    get(image : Image or list of Images, **kwargs : dict of str to Any) -> Image or list of Images
-        Simply returns the input image(s) unchanged.
 
     Example
     -------
-    Create an image and pass it through a `DummyFeature` to demonstrate 
-    no changes to the input data:
-
-    >>> import deeptrack as dt
-    Create an image and pass it through a `DummyFeature` to demonstrate 
-    no changes to the input data:
-
     >>> import deeptrack as dt
     >>> import numpy as np
 
-    Create an image:
+    Create an image and pass it through a `DummyFeature` to demonstrate 
+    no changes to the input data:
+    
     >>> dummy_image = np.ones((60, 80))
 
     Initialize the DummyFeature:
-    >>> dummy_feature = dt.DummyFeature(value=42)
     >>> dummy_feature = dt.DummyFeature(value=42)
 
     Pass the image through the DummyFeature:
@@ -1731,12 +1799,9 @@ class DummyFeature(Feature):
 
     Verify the output is identical to the input:
     >>> print(np.array_equal(dummy_image, output_image))
-    Verify the output is identical to the input:
-    >>> print(np.array_equal(dummy_image, output_image))
     True
 
     Access the properties stored in DummyFeature:
-    >>> print(dummy_feature.properties["value"]())
     >>> print(dummy_feature.properties["value"]())
     42
 
@@ -1781,9 +1846,6 @@ class Value(Feature):
     This feature holds a constant value (e.g., a scalar or array) and supplies 
     it on demand to other parts of the pipeline. It does not transform the 
     input image but instead returns the stored value.
-    This feature holds a constant value (e.g., a scalar or array) and supplies 
-    it on demand to other parts of the pipeline. It does not transform the 
-    input image but instead returns the stored value.
 
     Parameters
     ----------
@@ -1794,7 +1856,6 @@ class Value(Feature):
         a warning is issued recommending conversion to a NumPy array for 
         performance reasons.
     **kwargs : dict of str to Any
-    **kwargs : dict of str to Any
         Additional named properties passed to the `Feature` constructor.
 
     Attributes
@@ -1802,30 +1863,19 @@ class Value(Feature):
     __distributed__ : bool
         Set to `False`, indicating that this feature’s `get(...)` method 
         processes the entire list of images (or data) at once, rather than 
-        Set to `False`, indicating that this feature’s `get(...)` method 
-        processes the entire list of images (or data) at once, rather than 
         distributing calls for each item.
 
     Methods
     -------
-    get(image: Any, value: float, **kwargs: dict[str, Any]) -> float
+    `get(image: Any, value: float, **kwargs: dict[str, Any]) -> float`
         Returns the stored value, ignoring the input image.
 
-    Methods
-    -------
-    get(image: Any, value: float, **kwargs: dict[str, Any]) -> float
-        Returns the stored value, ignoring the input image.
 
     Examples
     --------
-    Initialize a constant value and retrieve it:
-
     >>> import deeptrack as dt
 
-    >>> value = dt.Value(42)
     Initialize a constant value and retrieve it:
-
-    >>> import deeptrack as dt
 
     >>> value = dt.Value(42)
     >>> print(value())
@@ -1833,18 +1883,8 @@ class Value(Feature):
 
     Override the value at call time:
 
-    Override the value at call time:
-
     >>> print(value(value=100))
     100
-
-    The original value is retained if overridden during execution:
-
-    The original value is retained if overridden during execution:
-
-    >>> print(value())
-    100
-
 
     """
 
@@ -1877,7 +1917,6 @@ class Value(Feature):
             import warnings
             warnings.warn(
                 "Setting dt.Value value as an Image object is likely to lead "
-                "to performance deterioration. Consider converting it to a "
                 "to performance deterioration. Consider converting it to a "
                 "numpy array using np.array."
             )
@@ -1934,13 +1973,6 @@ class ArithmeticOperationFeature(Feature):
         The second operand for the operation. Defaults to 0. If a list is 
         provided, the operation will apply element-wise.
     **kwargs : dict of str to Any
-    op : Callable[[Any, Any], Any]
-        The arithmetic operation to apply, such as a built-in operator 
-        (`operator.add`, `operator.mul`) or a custom callable.
-    value : float or int or list of float or int, optional
-        The second operand for the operation. Defaults to 0. If a list is 
-        provided, the operation will apply element-wise.
-    **kwargs : dict of str to Any
         Additional keyword arguments passed to the parent `Feature`.
 
     Attributes
@@ -1948,29 +1980,24 @@ class ArithmeticOperationFeature(Feature):
     __distributed__ : bool
         Indicates that this feature’s `get(...)` method processes the input as 
         a whole (`False`) rather than distributing calls for individual items.
-        Indicates that this feature’s `get(...)` method processes the input as 
-        a whole (`False`) rather than distributing calls for individual items.
     __gpu_compatible__ : bool
         Specifies that the feature is compatible with GPU processing (`True`).
 
     Methods
     -------
-    get(image: Any or list of Any, value: float or int or list of float or int, **kwargs: dict of str to Any) -> list of Any
+    `get(image: Any or list of Any, value: float or int or list of float or int, **kwargs: dict of str to Any) -> list of Any`
         Apply the arithmetic operation element-wise to the input data.
 
     Example
     -------
+    >>> import deeptrack as dt
     >>> import operator
-    >>> import numpy as np
-    >>> from deeptrack.features import ArithmeticOperationFeature
 
     Define a simple addition operation:
 
-
-    >>> addition = ArithmeticOperationFeature(operator.add, value=10)
+    >>> addition = dt.ArithmeticOperationFeature(operator.add, value=10)
 
     Create a list of input values:
-
 
     >>> input_values = [1, 2, 3, 4]
 
@@ -2026,18 +2053,19 @@ class ArithmeticOperationFeature(Feature):
             The input data, either a single value or a list of values, to be 
             transformed by the arithmetic operation.
         value : float, int, or list of float or int
-            The second operand(s) for the operation. If a single value is provided, 
-            it is broadcast to match the input size. If a list is provided, it will 
-            be cycled to match the length of the input list.
+            The second operand(s) for the operation. If a single value is 
+            provided, it is broadcast to match the input size. If a list is 
+            provided, it will be cycled to match the length of the input list.
         **kwargs : dict of str to Any
-            Additional parameters or property overrides. These are generally unused 
-            in this context but provided for compatibility with the `Feature` interface.
+            Additional parameters or property overrides. These are generally 
+            unused in this context but provided for compatibility with the 
+            `Feature` interface.
 
         Returns
         -------
         list of Any
-            A list containing the results of applying the operation to the input data 
-            element-wise.
+            A list containing the results of applying the operation to the 
+            input data element-wise.
             
         """
 
@@ -2069,26 +2097,26 @@ class Add(ArithmeticOperationFeature):
 
     Example
     -------
-    Increment each element in the input array by 5.
+    In this example, each element in the input array is increased by 5.
+
+    >>> import deeptrack as dt
 
     Create a pipeline using `Add`:
-
-    >>> from deeptrack.features import Add, Value
     
-    >>> pipeline = Value([1, 2, 3]) >> Add(value=5)
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Add(value=5)
     >>> pipeline.resolve()
     [6, 7, 8]
     
     Alternatively, the pipeline can be created using operator overloading:
 
-    >>> pipeline = Value([1, 2, 3]) + 5
+    >>> pipeline = dt.Value([1, 2, 3]) + 5
     
-    >>> pipeline = 5 + Value([1, 2, 3])
+    >>> pipeline = 5 + dt.Value([1, 2, 3])
     
     Or, more explicitly:
 
-    >>> input_value = Value([1, 2, 3])
-    >>> add_feature = Add(value=5)
+    >>> input_value = dt.Value([1, 2, 3])
+    >>> add_feature = dt.Add(value=5)
     >>> pipeline = add_feature(input_value)
 
     """
@@ -2130,22 +2158,22 @@ class Subtract(ArithmeticOperationFeature):
 
     Create a pipeline using `Subtract`:
 
-    >>> from deeptrack.features import Subtract, Value
+    >>> import deeptrack as dt
     
-    >>> pipeline = Value([1, 2, 3]) >> Subtract(value=2)
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Subtract(value=2)
     >>> pipeline.resolve()
     [-1, 0, 1]
     
     Alternatively, the pipeline can be created using operator overloading:
 
-    >>> pipeline = Value([1, 2, 3]) - 2
+    >>> pipeline = dt.Value([1, 2, 3]) - 2
     
-    >>> pipeline = -2 + Value([1, 2, 3])
+    >>> pipeline = -2 + dt.Value([1, 2, 3])
     
     Or, more explicitly:
 
-    >>> input_value = Value([1, 2, 3])
-    >>> sub_feature = Subtract(value=2)
+    >>> input_value = dt.Value([1, 2, 3])
+    >>> sub_feature = dt.Subtract(value=2)
     >>> pipeline = sub_feature(input_value)
 
     """
@@ -2185,18 +2213,20 @@ class Multiply(ArithmeticOperationFeature):
     -------
     In this example, each element in the input array is multiplied by 5.
 
-    Start by creating a pipeline using Multiply:
-
     >>> from deeptrack.features import Multiply, Value
+
+    Start by creating a pipeline using Multiply:
     
-    >>> pipeline = Value([1, 2, 3]) >> Multiply(value=5)
+    >>> pipeline = dtValue([1, 2, 3]) >> Multiply(value=5)
     >>> pipeline.resolve()
     [5, 10, 15]
     
     Equivalently, this pipeline can be created using:
     
     >>> pipeline = Value([1, 2, 3]) * 5
-    
+
+    Or
+
     >>> pipeline = 5 * Value([1, 2, 3])
     
     Or, more explicitly:
@@ -2710,9 +2740,9 @@ class Stack(Feature):
 
     Example
     -------
-    Start by creating a pipeline using Stack:
-
     >>> import deeptrack as dt
+
+    Start by creating a pipeline using Stack:
     
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Stack(value=[4, 5])
     >>> print(pipeline.resolve())
@@ -2722,6 +2752,8 @@ class Stack(Feature):
     
     >>> pipeline = dt.Value([1, 2, 3]) & [4, 5]
 
+    Or
+    
     >>> pipeline = [4, 5] & dt.Value([1, 2, 3])  # Different result.
 
     """
@@ -3584,7 +3616,7 @@ class ConditionalSetProperty(StructuralFeature):
 
     Methods
     -------
-    get(image: Any, condition: str | bool, **kwargs: dict[str, Any]) -> Any
+    `get(image: Any, condition: str | bool, **kwargs: dict[str, Any]) -> Any`
         Resolves the child feature, conditionally applying the specified 
         properties.
 
@@ -3837,7 +3869,7 @@ class Lambda(Feature):
 
     Methods
     -------
-    get(image: Image, function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image
+    `get(image: Image, function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image`
         Applies the custom function to the input image.
 
     Example
@@ -4370,7 +4402,7 @@ class LoadImage(Feature):
 
     Methods
     -------
-    get(image: Any, path: str | list[str], load_options: dict[str, Any] | None, ndim: int, to_grayscale: bool, as_list: bool, get_one_random: bool, **kwargs: dict[str, Any]) -> np.ndarray
+    `get(image: Any, path: str | list[str], load_options: dict[str, Any] | None, ndim: int, to_grayscale: bool, as_list: bool, get_one_random: bool, **kwargs: dict[str, Any]) -> np.ndarray`
         Load the image(s) from disk and process them.
 
     Raises
