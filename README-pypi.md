@@ -155,7 +155,7 @@ Specific examples for graph-neural-network-based particle linking and trace char
 
 - DTAT323 **[deeptrack.optics](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT323_optics.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT323_optics.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTAT324 **[deeptrack.holography]**
+- DTAT324 **[deeptrack.holography](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT324_holography.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT324_holography.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 - DTAT325 **[deeptrack.aberrations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT325_aberrations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT325_aberrations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
@@ -169,7 +169,7 @@ Specific examples for graph-neural-network-based particle linking and trace char
 
 - DTAT383 **[deeptrack.utils](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT383_utils.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT383_utils.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTAT385 **[deeptrack.statistics]**
+- DTAT385 **[deeptrack.statistics](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT385_statistics.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT385_statistics.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 - DTAT387 **[deeptrack.types]**
 
@@ -193,7 +193,7 @@ Specific examples for graph-neural-network-based particle linking and trace char
   
 - DTAT399C **[deeptrack.backend.units]**
   
-- DTAT399D **[deeptrack.backend.polynomials]**
+- DTAT399D **[deeptrack.backend.polynomials](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399D_polynomials.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399D_polynomials.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
   
 - DTAT399E **[deeptrack.backend.mie]**
   
