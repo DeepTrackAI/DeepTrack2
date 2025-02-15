@@ -2714,17 +2714,17 @@ class Stack(Feature):
     -------
     Start by creating a pipeline using Stack:
 
-    >>> from deeptrack.features import Stack, Value
+    >>> import deeptrack as dt
     
-    >>> pipeline = Value([1, 2, 3]) >> Stack(value=[4, 5])
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Stack(value=[4, 5])
     >>> print(pipeline.resolve())
     [1, 2, 3, 4, 5]
 
     Equivalently, this pipeline can be created using:
     
-    >>> pipeline = Value([1, 2, 3]) & [4, 5]
+    >>> pipeline = dt.Value([1, 2, 3]) & [4, 5]
 
-    >>> pipeline = [4, 5] & Value([1, 2, 3])  # Different result.
+    >>> pipeline = [4, 5] & dt.Value([1, 2, 3])  # Different result.
 
     """
 
@@ -2743,6 +2743,7 @@ class Stack(Feature):
             The feature or data to stack with the input.
         **kwargs: dict of str to Any
             Additional arguments passed to the parent `Feature` class.
+        
         """
 
         super().__init__(value=value, **kwargs)
@@ -5366,7 +5367,7 @@ class NonOverlapping(Feature):
     10.768742383382174
     >>> print(calculate_min_distance(pos_without_overlap))
     30.82531120942446
-        
+
     """
 
     __distributed__: bool = False
@@ -5494,8 +5495,8 @@ class NonOverlapping(Feature):
         self: NonOverlapping, 
         list_of_volumes: list[np.ndarray],
     ) -> bool:
-        """
-        Determines whether all volumes in the provided list are non-overlapping.
+        """Determines whether all volumes in the provided list are 
+        non-overlapping.
 
         This method verifies that the non-zero voxels of each 3D volume in 
         `list_of_volumes` are at least `min_distance` apart. It first checks 
@@ -5638,11 +5639,13 @@ class NonOverlapping(Feature):
         -------
         bool
             `True` if the bounding cubes are non-overlapping (separated by at 
-            least `min_distance` along **at least one axis**), otherwise `False`.
+            least `min_distance` along **at least one axis**), otherwise 
+            `False`.
 
         Notes
         -----
-        - This function **only checks bounding cubes**, **not actual voxel data**.
+        - This function **only checks bounding cubes**, **not actual voxel 
+          data**.
         - If the bounding cubes are non-overlapping, the corresponding 
           **volumes are also non-overlapping**.
         - This check is much **faster** than full voxel-based comparisons.
@@ -5816,8 +5819,8 @@ class NonOverlapping(Feature):
         - If the volumes are of different sizes, voxel positions are scaled 
           or adjusted for accurate distance measurement.
         - Uses **Euclidean distance** for separation checking.
-        - If either volume is empty (i.e., no non-zero voxels), they are considered 
-          non-overlapping.
+        - If either volume is empty (i.e., no non-zero voxels), they are 
+          considered non-overlapping.
         
         """
 
