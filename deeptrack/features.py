@@ -191,7 +191,6 @@ class Feature(DeepTrackNode):
     `get(image: Image | list[Image], **kwargs: Any) -> Image | list[Image]`
         Abstract method that defines how the feature transforms the input.
     `__call__(image_list: Image | list[Image] | None = None, _ID: tuple[int, ...] = (), **kwargs: Any) -> Any`
-    `__call__(image_list: Image | list[Image] | None = None, _ID: tuple[int, ...] = (), **kwargs: Any) -> Any`
         Executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
     `store_properties(x: bool = True, recursive: bool = True) -> None`
@@ -323,7 +322,6 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        _input : Image or list of Images, optional
         _input : Image or list of Images, optional
             The initial input(s) for the feature, often images or other data. 
             If not provided, defaults to an empty list.
@@ -487,7 +485,6 @@ class Feature(DeepTrackNode):
     resolve = __call__
 
     def store_properties(
-        self: Feature,
         self: Feature,
         toggle: bool = True,
         recursive: bool = True,
@@ -689,8 +686,7 @@ class Feature(DeepTrackNode):
 
         if global_arguments:
             import warnings
-            import warnings
-            # Deptracated, but not necessary to raise hard error.
+            # Deprecated, but not necessary to raise hard error.
             warnings.warn(
                 "Passing information through .update is no longer supported. "
                 "A quick fix is to pass the information when resolving the feature. "
@@ -734,7 +730,6 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        _ID: tuple[int, ...], optional
         _ID: tuple[int, ...], optional
             Unique identifier for parallel evaluations.
 
@@ -1755,15 +1750,9 @@ class DummyFeature(Feature):
     def get(
         self: Feature,
         image: Image | list[Image], 
-        self: Feature,
-        image: Image | list[Image], 
         **kwargs: Any,
     )-> Image | list[Image]:
         """Return the input image or list of images unchanged.
-
-        This method simply returns the input without applying any transformation. 
-        It adheres to the `Feature` interface by accepting additional keyword 
-        arguments for consistency, although they are not used in this method.
 
         This method simply returns the input without applying any transformation. 
         It adheres to the `Feature` interface by accepting additional keyword 
@@ -1773,8 +1762,6 @@ class DummyFeature(Feature):
         ----------
         image : Image or list of Images
             The image or list of images to pass through without modification.
-        image : Image or list of Images
-            The image or list of images to pass through without modification.
         **kwargs : Any
             Additional properties sampled from `self.properties` or passed 
             externally. These are unused here but provided for consistency 
@@ -1782,7 +1769,6 @@ class DummyFeature(Feature):
 
         Returns
         -------
-        Image or list of Images
         Image or list of Images
             The same `image` object that was passed in.
 
@@ -1890,6 +1876,7 @@ class Value(Feature):
         """
 
         if isinstance(value, Image):
+            import warnings
             warnings.warn(
                 "Setting dt.Value value as an Image object is likely to lead "
                 "to performance deterioration. Consider converting it to a "
@@ -2156,10 +2143,7 @@ class Subtract(ArithmeticOperationFeature):
     >>> pipeline = Value([1, 2, 3]) - 2
     
     >>> pipeline = -2 + Value([1, 2, 3])
-    >>> pipeline = -2 + Value([1, 2, 3])
     
-    Or, more explicitly:
-
     Or, more explicitly:
 
     >>> input_value = Value([1, 2, 3])
@@ -2459,9 +2443,7 @@ class LessThan(ArithmeticOperationFeature):
 
     def __init__(
         self: Feature,
-        self: Feature,
         value: PropertyLike[float] = 0,
-        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ):
         """Initialize the LessThan feature.
@@ -2508,7 +2490,7 @@ class LessThanOrEquals(ArithmeticOperationFeature):
     
     >>> pipeline = 2 <= Value([1, 2, 3])  # Different result.
     
-    Or, most explicitly:
+    Or, more explicitly:
     
     >>> input_value = Value([1, 2, 3])
     >>> le_feature = LessThanOrEquals(value=2)
@@ -2518,9 +2500,7 @@ class LessThanOrEquals(ArithmeticOperationFeature):
 
     def __init__(
         self: Feature,
-        self: Feature,
         value: PropertyLike[float] = 0,
-        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ):
         """Initialize the LessThanOrEquals feature.
@@ -2580,9 +2560,7 @@ class GreaterThan(ArithmeticOperationFeature):
 
     def __init__(
         self: Feature,
-        self: Feature,
         value: PropertyLike[float] = 0,
-        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ):
         """Initialize the GreaterThan feature.
@@ -2667,9 +2645,7 @@ class Equals(ArithmeticOperationFeature):
     Parameters
     ----------
     value: PropertyLike[int or float], optional
-    value: PropertyLike[int or float], optional
         The value to compare (==) with the input. Defaults to 0.
-    **kwargs: Any
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
@@ -2681,9 +2657,7 @@ class Equals(ArithmeticOperationFeature):
 
     def __init__(
         self: Feature,
-        self: Feature,
         value: PropertyLike[float] = 0,
-        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ):
         """Initialize the Equals feature.
@@ -2691,9 +2665,7 @@ class Equals(ArithmeticOperationFeature):
         Parameters
         ----------
         value: PropertyLike[float], optional
-        value: PropertyLike[float], optional
             The value to compare (==) with the input. Defaults to 0.
-        **kwargs: Any
         **kwargs: Any
             Additional keyword arguments.
 
@@ -2723,23 +2695,15 @@ class Stack(Feature):
     Parameters
     ----------
     value: PropertyLike[Any]
-    value: PropertyLike[Any]
         The feature or data to stack with the input.
-    **kwargs: dict of str to Any
     **kwargs: dict of str to Any
         Additional arguments passed to the parent `Feature` class.
 
     Attributes
     ----------
     __distributed__: bool
-    __distributed__: bool
         Indicates whether this feature distributes computation across inputs. 
         Always `False` for `Stack`, as it processes all inputs at once.
-
-    Methods
-    -------
-    `get(image: Any, value: Any, **kwargs: dict[str, Any]) -> list[Any]`
-        Concatenate the input with the value.
 
     Methods
     -------
@@ -2768,9 +2732,7 @@ class Stack(Feature):
 
     def __init__(
         self: Feature,
-        self: Feature,
         value: PropertyLike[Any],
-        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ):
         """Initialize the Stack feature.
@@ -2778,9 +2740,7 @@ class Stack(Feature):
         Parameters
         ----------
         value: PropertyLike[Any]
-        value: PropertyLike[Any]
             The feature or data to stack with the input.
-        **kwargs: dict of str to Any
         **kwargs: dict of str to Any
             Additional arguments passed to the parent `Feature` class.
         """
@@ -2838,7 +2798,6 @@ class Arguments(Feature):
 
     Methods
     -------
-    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
     `get(image: Any, **kwargs: dict[str, Any]) -> Any`
         Passes the input image through unchanged, while allowing for property 
         overrides.
@@ -2917,12 +2876,6 @@ class Arguments(Feature):
         **kwargs: dict[str, Any]
     ) -> Any:
 
-    def get(
-        self: Feature,
-        image: Any,
-        **kwargs: dict[str, Any]
-    ) -> Any:
-
         """Process the input image and allow property overrides.
 
         This method does not modify the input image but provides a mechanism
@@ -2931,9 +2884,7 @@ class Arguments(Feature):
         Parameters
         ----------
         image: Any
-        image: Any
             The input image to be passed through unchanged.
-        **kwargs: Any
         **kwargs: Any
             Key-value pairs for overriding pipeline properties.
 
@@ -3019,10 +2970,6 @@ class Probability(StructuralFeature):
         """
         
         super().__init__(
-            *args, 
-            probability=probability, 
-            random_number=np.random.rand, 
-            **kwargs,
             *args, 
             probability=probability, 
             random_number=np.random.rand, 
@@ -3664,10 +3611,7 @@ class ConditionalSetProperty(StructuralFeature):
 
     def __init__(
         self: Feature,
-        self: Feature,
         feature: Feature,
-        condition=PropertyLike[str | bool],
-        **kwargs: dict[str, Any],
         condition=PropertyLike[str | bool],
         **kwargs: dict[str, Any],
     ):
@@ -3691,7 +3635,6 @@ class ConditionalSetProperty(StructuralFeature):
         self.feature = self.add_feature(feature)
 
     def get(
-        self: Feature,
         self: Feature,
         image: Any,
         condition: str | bool,
@@ -4312,10 +4255,6 @@ class OneOfDict(Feature):
         collection: dict[Any, Feature],
         key: Any | None = None,
         **kwargs: dict[str, Any],
-        self: Feature,
-        collection: dict[Any, Feature],
-        key: Any | None = None,
-        **kwargs: dict[str, Any],
     ):
         """Initialize the OneOfDict feature.
 
@@ -4519,17 +4458,13 @@ class LoadImage(Feature):
 
     def get(
         self: Feature,
-        self: Feature,
         *ign: Any,
-        path: str | list[str],
-        load_options: dict[str, Any] | None,
         path: str | list[str],
         load_options: dict[str, Any] | None,
         ndim: int,
         to_grayscale: bool,
         as_list: bool,
         get_one_random: bool,
-        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
         """Load and process an image or a list of images from disk.
@@ -4703,10 +4638,8 @@ class SampleToMasks(Feature):
 
     def get(
         self: Feature,
-        self: Feature,
         image: Image,
         transformation_function: Callable[[Image], Image],
-        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ) -> Image:
         """Apply the transformation function to the input image.
@@ -5026,10 +4959,8 @@ class AsType(Feature):
 
     def get(
         self: Feature,
-        self: Feature,
         image: np.ndarray,
         dtype: str,
-        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
         """Convert the data type of the input image.
@@ -5218,10 +5149,7 @@ class Upscale(Feature):
 
     def __init__(
         self: Feature,
-        self: Feature,
         feature: Feature,
-        factor: int | tuple[int, int, int] = 1,
-        **kwargs: dict[str, Any],
         factor: int | tuple[int, int, int] = 1,
         **kwargs: dict[str, Any],
     ):
@@ -5246,10 +5174,7 @@ class Upscale(Feature):
 
     def get(
         self: Feature,
-        self: Feature,
         image: np.ndarray,
-        factor: int | tuple[int, int, int],
-        **kwargs: dict[str, Any],
         factor: int | tuple[int, int, int],
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
@@ -5326,8 +5251,11 @@ class NonOverlapping(Feature):
         The minimum distance between volumes in pixels. Defaults to `1`. 
         It can be negative to allow for partial overlap.
     max_attempts: int, optional
-        The maximum number of attempts to place volumes without overlap. If 
-        exceeded, a new list of volumes is generated. Defaults to `100`.
+        The maximum number of attempts to place volumes without overlap.
+        Defaults to `5`. 
+    max_iters: int, optional
+        The maximum number of resamplings. If this number is exceeded, a 
+            new list of volumes is generated. Defaults to `100`.
 
     Attributes
     ----------
@@ -5352,6 +5280,13 @@ class NonOverlapping(Feature):
     `_resample_volume_position(volume: Image) -> Image`
         Resample the position of a volume to avoid overlap.
     
+    Notes
+    -----
+    - This feature performs **bounding cube checks first** to **quickly 
+      reject** obvious overlaps before voxel-level checks.
+    - If the bounding cubes overlap, precise **voxel-based checks** are 
+      performed.
+
     Example
     --------
     >>> import deeptrack as dt
@@ -5375,7 +5310,6 @@ class NonOverlapping(Feature):
     >>> im_with_overlap = optics(scatterers)
     >>> im_with_overlap.store_properties()
     >>> im_with_overlap_resolved = image_with_overlap()
-
 
     # Gather position from image
 
@@ -5410,12 +5344,10 @@ class NonOverlapping(Feature):
     >>> axes[0].scatter(pos_with_overlap[:,1],pos_with_overlap[:,0])
     >>> axes[0].set_title("Overlapping Objects")
     >>> axes[0].axis("off")
-
     >>> axes[1].imshow(im_without_overlap_resolved, cmap="gray")
     >>> axes[1].scatter(pos_without_overlap[:,1],pos_without_overlap[:,0])
     >>> axes[1].set_title("Non-Overlapping Objects")
     >>> axes[1].axis("off")
-
     >>> plt.tight_layout()
     >>> plt.show()
 
@@ -5443,35 +5375,37 @@ class NonOverlapping(Feature):
         self: NonOverlapping,
         feature: Feature,
         min_distance: float = 1,
-        max_attempts: int = 100,
+        max_attempts: int = 5,
+        max_iters: int = 100,
         **kwargs: dict[str, Any],
-=    ):
-        """Places a list of volumes non-overlapping.
+    ):
+        """Initializes the NonOverlapping feature.
 
-        Ensures that the volumes are placed non-overlapping by resampling the
-        position of the volumes until they are non-overlapping. If the maximum 
-        number of attempts is exceeded, a new list of volumes is generated by 
-        updating feature.
-
-        This feature does not work with non-volumetric scatterers, such as 
-        `MieScatterers`.
+        Ensures that volumes are placed **non-overlapping** by iteratively 
+        resampling their positions. If the maximum number of attempts is 
+        exceeded, the feature regenerates the list of volumes.
 
         Parameters
         ----------
-        feature: Feature
-            The feature that creates the list of volumes to be placed 
-            non-overlapping.
-        min_distance: float, optional
-            The minimum distance between volumes in pixels, by default 1. 
-            It can be negative to allow for partial overlap.
-        max_attempts: int, optional
-            The maximum number of attempts to place the volumes
-            non-overlapping. If this number is exceeded, a new list of volumes 
-            is generated, by default 100.
-
+        feature : Feature
+            The feature that generates the list of volumes.
+        min_distance : float, optional
+            The minimum separation distance **between volume edges**, in 
+            pixels. Defaults to `1`. Negative values allow for partial overlap.
+        max_attempts : int, optional
+            The maximum number of attempts to place the volumes without 
+            overlap. Defaults to `5`.
+        max_iters : int, optional
+            The maximum number of resampling iterations per attempt. If 
+            exceeded, a new list of volumes is generated. Defaults to `100`.
+        
         """
 
-        super().__init__(min_distance=min_distance, max_attempts=max_attempts, **kwargs)
+        super().__init__(
+            min_distance=min_distance, 
+            max_attempts=max_attempts, 
+            max_iters=max_iters,
+            **kwargs)
         self.feature = self.add_feature(feature, **kwargs)
 
     def get(
@@ -5479,34 +5413,62 @@ class NonOverlapping(Feature):
         _: Any,
         min_distance: float,
         max_attempts: int,
+        max_iters: int,
         **kwargs: dict[str, Any],
     ) -> list[np.ndarray]:
-        """
+        """Generates a list of non-overlapping 3D volumes within a defined 
+        field of view (FOV).
+
+        This method **iteratively** attempts to place volumes while ensuring 
+        they maintain at least `min_distance` separation. If non-overlapping 
+        placement is not achieved within `max_attempts`, a warning is issued, 
+        and the best available configuration is returned.
+
         Parameters
         ----------
-        _: Any
-            Placeholder for unused input image.
-        min_distance: float
-            The minimum distance between volumes in pixels.
-        max_attempts: int
-            The maximum number of attempts to place the volumes 
-            non-overlapping. If this number is exceeded, a new list of volumes 
-            is generated.
+        _ : Any
+            Placeholder parameter, typically for an input image.
+        min_distance : float
+            The minimum required separation distance between volumes, in 
+            pixels.
+        max_attempts : int
+            The maximum number of attempts to generate a valid non-overlapping 
+            configuration.
+        max_iters : int
+            The maximum number of resampling iterations per attempt.
+        **kwargs : dict[str, Any]
+            Additional parameters that may be used by subclasses.
 
         Returns
         -------
         list[np.ndarray]
-            A list of non-overlapping 3D volumes.
+            A list of 3D volumes represented as NumPy arrays. If 
+            non-overlapping placement is unsuccessful, the best available 
+            configuration is returned.
 
+        Warns
+        -----
+        UserWarning
+            If non-overlapping placement is **not** achieved within 
+            `max_attempts`, suggesting parameter adjustments such as increasing
+            the FOV or reducing `min_distance`.
+
+        Notes
+        -----
+        - The placement process **prioritizes bounding cube checks** for 
+          efficiency.
+        - If bounding cubes overlap, **voxel-based overlap checks** are 
+          performed.
+        
         """
 
-        while True:
+        for _ in range(max_attempts):
             list_of_volumes = self.feature()
 
             if not isinstance(list_of_volumes, list):
                 list_of_volumes = [list_of_volumes]
 
-            for _ in range(max_attempts):
+            for _ in range(max_iters):
 
                 list_of_volumes = [
                     self._resample_volume_position(volume) 
@@ -5519,27 +5481,48 @@ class NonOverlapping(Feature):
             # Generate a new list of volumes if max_attempts is exceeded.
             self.feature.update()
 
+        import warnings
+        warnings.warn(
+            "Non-overlapping placement could not be achieved. Consider "
+            "adjusting parameters: reduce object radius, increase FOV, "
+            "or decrease min_distance.",
+            UserWarning
+        )
+        return list_of_volumes
+
     def _check_non_overlapping(
         self: NonOverlapping, 
         list_of_volumes: list[np.ndarray],
     ) -> bool:
-        """Check if all volumes in the list are non-overlapping.
+        """
+        Determines whether all volumes in the provided list are non-overlapping.
 
-        Checks that the non-zero voxels of the volumes in list_of_volumes are 
-        at least min_distance apart. Each volume is a 3 dimnesional array. The 
-        first two dimensions are the x and y dimensions, and the third 
-        dimension is the z dimension. The volumes are expected to have a 
-        position attribute.
+        This method verifies that the non-zero voxels of each 3D volume in 
+        `list_of_volumes` are at least `min_distance` apart. It first checks 
+        bounding boxes for early rejection and then examines actual voxel 
+        overlap when necessary. Volumes are assumed to have a `position` 
+        attribute indicating their placement in 3D space.
 
         Parameters
         ----------
-        list_of_volumes: list of 3d arrays
-            The volumes to be checked for non-overlapping.
+        list_of_volumes : list[np.ndarray]
+            A list of 3D arrays representing the volumes to be checked for 
+            overlap. Each volume is expected to have a position attribute.
 
         Returns
         -------
         bool
             `True` if all volumes are non-overlapping, otherwise `False`.
+
+        Notes
+        -----
+        - If `min_distance` is negative, volumes are shrunk using isotropic 
+          erosion before checking overlap.
+        - If `min_distance` is positive, volumes are padded and expanded using 
+          isotropic dilation.
+        - Overlapping checks are first performed on bounding cubes for 
+            efficiency.
+        - If bounding cubes overlap, voxel-level checks are performed.
 
         """
 
@@ -5634,37 +5617,36 @@ class NonOverlapping(Feature):
         bounding_cube_2: list[int], 
         min_distance: float,
     ) -> bool:
-        """Checks whether two bounding cubes are non-overlapping.
+        """Determines whether two 3D bounding cubes are non-overlapping.
 
-        This method determines if two 3D bounding cubes, defined by their
-        corner coordinates, are separated by at least a minimum distance
-        (`min_distance`). The bounding cubes are represented as lists of six
-        integers, where:
-
-        - The first three integers (`x1, y1, z1`) represent the coordinates of
-        the top-left corner.
-        - The last three integers (`x2, y2, z2`) represent the coordinates of
-        the bottom-right corner.
-
-        Two bounding cubes are considered non-overlapping if the distance
-        between their closest edges is greater than or equal to `min_distance` 
-        along any of the three spatial axes.
+        This method checks whether the bounding cubes of two volumes are 
+        **separated by at least** `min_distance` along **any** spatial axis.
 
         Parameters
         ----------
-        bounding_cube_1: list[int]
-            The first bounding cube, defined as `[x1, y1, z1, x2, y2, z2]`.
-        bounding_cube_2: list[int]
-            The second bounding cube, defined as `[x1, y1, z1, x2, y2, z2]`.
-        min_distance: float
-            The minimum distance allowed between the two bounding cubes.
+        bounding_cube_1 : list[int]
+            A list of six integers `[x1, y1, z1, x2, y2, z2]` representing 
+            the first bounding cube.
+        bounding_cube_2 : list[int]
+            A list of six integers `[x1, y1, z1, x2, y2, z2]` representing 
+            the second bounding cube.
+        min_distance : float
+            The required **minimum separation distance** between the two 
+            bounding cubes.
 
         Returns
         -------
         bool
             `True` if the bounding cubes are non-overlapping (separated by at 
-            least `min_distance`), otherwise `False`.
+            least `min_distance` along **at least one axis**), otherwise `False`.
 
+        Notes
+        -----
+        - This function **only checks bounding cubes**, **not actual voxel data**.
+        - If the bounding cubes are non-overlapping, the corresponding 
+          **volumes are also non-overlapping**.
+        - This check is much **faster** than full voxel-based comparisons.
+        
         """
 
         # bounding_cube_1 and bounding_cube_2 are (x1, y1, z1, x2, y2, z2).
@@ -5683,41 +5665,43 @@ class NonOverlapping(Feature):
         bounding_cube_1: list[int],
         bounding_cube_2: list[int],
     ) -> list[int]:
-        """Return the overlapping region of the two bounding cubes.
+        """Computes the overlapping region between two 3D bounding cubes.
 
-        This method calculates the coordinates of the overlapping region 
-        between two 3D bounding cubes. The bounding cubes are represented as 
-        lists of six integers, where:
+        This method calculates the coordinates of the intersection of two 
+        axis-aligned bounding cubes, each represented as a list of six 
+        integers:
 
-        - The first three integers (`x1, y1, z1`) represent the coordinates of
-        the top-left corner.
-        - The last three integers (`x2, y2, z2`) represent the coordinates of
-        the bottom-right corner.
+        - `[x1, y1, z1]`: Coordinates of the **top-left-front** corner.
+        - `[x2, y2, z2]`: Coordinates of the **bottom-right-back** corner.
 
-        The overlapping region is defined as the maximum of the minimum 
-        coordinates and the minimum of the maximum coordinates along each axis. 
-        If the cubes do not overlap, the resulting coordinates will not 
-        represent a valid cube (i.e., `x1 > x2`, `y1 > y2`, or `z1 > z2`).
+        The resulting overlapping region is determined by:
+        - Taking the **maximum** of the starting coordinates (`x1, y1, z1`).
+        - Taking the **minimum** of the ending coordinates (`x2, y2, z2`).
 
-        If the two bounding cubes do not overlap, the coordinates in the result
-        will not define a valid cube (e.g., `x1 > x2`).
-
-        The method does not validate the input; it assumes the input is
-        correctly formatted.
+        If the cubes **do not** overlap, the resulting coordinates will not 
+        form a valid cube (i.e., `x1 > x2`, `y1 > y2`, or `z1 > z2`).
 
         Parameters
         ----------
-        bounding_cube_1: list[int]
-            The first bounding cube, defined as `[x1, y1, z1, x2, y2, z2]`.
-        bounding_cube_2: list[int]
-            The second bounding cube, defined as `[x1, y1, z1, x2, y2, z2]`.
+        bounding_cube_1 : list[int]
+            The first bounding cube, formatted as `[x1, y1, z1, x2, y2, z2]`.
+        bounding_cube_2 : list[int]
+            The second bounding cube, formatted as `[x1, y1, z1, x2, y2, z2]`.
 
         Returns
         -------
         list[int]
-            A list of six integers representing the overlapping bounding cube, 
-            formatted as `[x1, y1, z1, x2, y2, z2]`.
+            A list of six integers `[x1, y1, z1, x2, y2, z2]` representing the 
+            overlapping bounding cube. If no overlap exists, the coordinates 
+            will **not** define a valid cube.
 
+        Notes
+        -----
+        - This function does **not** check for valid input or ensure the 
+          resulting cube is well-formed.
+        - If no overlap exists, downstream functions must handle the invalid 
+          result.
+        
         """
 
         return [
@@ -5735,28 +5719,44 @@ class NonOverlapping(Feature):
         bounding_cube: tuple[float, float, float, float, float, float],
         overlapping_cube: tuple[float, float, float, float, float, float],
     ) -> np.ndarray:
-        """Returns the overlapping region of the volume and the overlapping 
-        cube.
+        """Extracts the overlapping region of a 3D volume within the specified 
+        overlapping cube.
+
+        This method identifies and returns the subregion of `volume` that 
+        lies within the `overlapping_cube`. The bounding information of the 
+        volume is provided via `bounding_cube`.
 
         Parameters
         ----------
-        volume: np.ndarray
-            The volume (3D array) to be checked for non-overlapping.
-        bounding_cube: tuple[float, float, float, float, float, float]
-            The bounding cube of the volume (list of 6 floats). The first three
-            elements are the position of the top left corner of the volume, and
-            the last three elements are the position of the bottom right corner
-            of the volume.
-        overlapping_cube: tuple[float, float, float, float, float, float]
-            The overlapping cube of the volume and the other volume (list of 6 
-            floats).
+        volume : np.ndarray
+            A 3D NumPy array representing the volume from which the 
+            overlapping region is extracted.
+        bounding_cube : tuple[float, float, float, float, float, float]
+            The bounding cube of the volume, given as a tuple of six floats: 
+            `(x1, y1, z1, x2, y2, z2)`. The first three values define the 
+            **top-left-front** corner, while the last three values define the 
+            **bottom-right-back** corner.
+        overlapping_cube : tuple[float, float, float, float, float, float]
+            The overlapping region between the volume and another volume, 
+            represented in the same format as `bounding_cube`.
 
         Returns
         -------
         np.ndarray
-            The region of the volume that lies within the overlapping cube, as a 
-            3D NumPy array.
+            A 3D NumPy array representing the portion of `volume` that 
+            lies within `overlapping_cube`. If the overlap does not exist, 
+            an empty array may be returned.
 
+        Notes
+        -----
+        - The method computes the relative indices of `overlapping_cube` 
+          within `volume` by subtracting the bounding cube's starting 
+          position.
+        - The extracted region is determined by integer indices, meaning 
+          coordinates are implicitly **floored to integers**.
+        - If `overlapping_cube` extends beyond `volume` boundaries, the 
+          returned subregion is **cropped** to fit within `volume`.
+        
         """
 
         # The position of the top left corner of the overlapping cube in the volume
@@ -5785,29 +5785,40 @@ class NonOverlapping(Feature):
         volume_2: np.ndarray,
         min_distance: float,
     ) -> bool:
-        """Check if non-zero voxels of two volumes are minimum distance apart.
+        """Determines whether the non-zero voxels in two 3D volumes are at 
+        least `min_distance` apart.
 
-        This method determines whether the non-zero voxels (active regions) in
-        two 3D volumes are separated by at least `min_distance`. If the volumes
-        are of different sizes, the voxel positions of one volume are scaled to
-        match the other's size for comparison.
+        This method checks whether the active regions (non-zero voxels) in 
+        `volume_1` and `volume_2` maintain a minimum separation of 
+        `min_distance`. If the volumes differ in size, the positions of their 
+        non-zero voxels are adjusted accordingly to ensure a fair comparison.
 
         Parameters
         ----------
-        volume_1: np.ndarray
-            The first 3D volume to check for non-overlapping.
-        volume_2: np.ndarray
-            The second 3D volume to check for non-overlapping.
-        min_distance: float
-            The minimum distance required between any two non-zero voxels in
-            the two volumes.
+        volume_1 : np.ndarray
+            A 3D NumPy array representing the first volume.
+        volume_2 : np.ndarray
+            A 3D NumPy array representing the second volume.
+        min_distance : float
+            The minimum Euclidean distance required between any two non-zero 
+            voxels in the two volumes.
 
         Returns
         -------
         bool
-            `True` if all non-zero voxels in `volume_1` and `volume_2` are at
-            least `min_distance` apart. `False` otherwise.
+            `True` if all non-zero voxels in `volume_1` and `volume_2` are at 
+            least `min_distance` apart, otherwise `False`.
 
+        Notes
+        -----
+        - This function assumes both volumes are correctly aligned within a 
+          shared coordinate space.
+        - If the volumes are of different sizes, voxel positions are scaled 
+          or adjusted for accurate distance measurement.
+        - Uses **Euclidean distance** for separation checking.
+        - If either volume is empty (i.e., no non-zero voxels), they are considered 
+          non-overlapping.
+        
         """
 
         # Get the positions of the non-zero voxels of each volume.
@@ -5833,10 +5844,7 @@ class NonOverlapping(Feature):
 
         # # Check that the non-zero voxels of the volumes are at least 
         # # min_distance apart.
-        # # Check that the non-zero voxels of the volumes are at least 
-        # # min_distance apart.
         return np.all(
-            cdist(positions_1, positions_2) > min_distance
             cdist(positions_1, positions_2) > min_distance
         )
 
@@ -5844,26 +5852,35 @@ class NonOverlapping(Feature):
         self: NonOverlapping,
         volume: Image,
     ) -> Image:
-        """Draws a new position for the volume.
+        """Resamples the position of a 3D volume using its internal position 
+        sampler.
 
-        This method updates the position of a 3D volume by sampling a new 
-        position using the `_position_sampler` property in the volume's 
-        properties. The `position` property of the volume is updated with the 
-        newly sampled value.
+        This method updates the `position` property of the given `volume` by 
+        drawing a new position from the `_position_sampler` stored in the 
+        volume's `properties`. If the sampled position is a `Quantity`, it is 
+        converted to pixel units.
 
         Parameters
         ----------
-        volume: Image
-            The input volume whose position needs to be resampled. The volume
-            is expected to have a `properties` attribute containing 
-            dictionaries with `position` and `_position_sampler` keys.
+        volume : Image
+            The 3D volume whose position is to be resampled. The volume must 
+            have a `properties` attribute containing dictionaries with 
+            `position` and `_position_sampler` keys.
 
         Returns
         -------
         Image
-            The input volume with its `position` property updated to the newly 
-            sampled value.
+            The same input volume with its `position` property updated to the 
+            newly sampled value.
 
+        Notes
+        -----
+        - The `_position_sampler` function is expected to return a **tuple of 
+        three floats** (e.g., `(x, y, z)`).
+        - If the sampled position is a `Quantity`, it is converted to pixels.
+        - **Only** dictionaries in `volume.properties` that contain both 
+        `position` and `_position_sampler` keys are modified.
+        
         """
 
         for pdict in volume.properties:
@@ -5971,11 +5988,9 @@ class Store(Feature):
 
     def get(
         self: Store,
-        self: Store,
         _: Any,
         key: Any,
         replace: bool,
-        **kwargs: dict[str, Any],
         **kwargs: dict[str, Any],
     ) -> Any:
         """Evaluate and store the feature output, or return the cached result.
@@ -6339,9 +6354,6 @@ class Transpose(Feature):
     """
 
     def __init__(
-        self: Transpose,
-        axes: tuple[int, ...] | None = None,
-        **kwargs: dict[str, Any],
         self: Transpose,
         axes: tuple[int, ...] | None = None,
         **kwargs: dict[str, Any],

@@ -102,6 +102,14 @@ def test_operator(self, operator, emulated_operator=None):
     grid_test_features(
         self,
         features.Value,
+        features.Value,
+        [
+            {"value": 1},
+            {"value": 0.5},
+            {"value": np.nan},
+            {"value": np.inf},
+            {"value": np.random.rand(10, 10)},
+        ],
         [
             {"value": 1},
             {"value": 0.5},
@@ -808,7 +816,6 @@ class TestFeatures(unittest.TestCase):
         np.testing.assert_array_equal(output_image, expected_output, "Controlled feature selection (key='multiply') failed.")
 
 
-    def test_Slice_constant(self):
     def test_Combine_feature(self):
 
         noise_feature = Gaussian(mu=0, sigma=2)
@@ -1258,30 +1265,6 @@ class TestFeatures(unittest.TestCase):
         #TODO: complete unit test with asserts.
 
 
-    def test_Probability(self):
-        np.random.seed(42)  # Set seed for reproducibility
-
-        add_feature = features.Add(value=2)
-        probabilistic_feature = features.Probability(
-            feature = add_feature, 
-            probability=0.7
-        )
-        
-        input_image = np.ones((5, 5))
-
-        applied_count = 0
-        total_runs = 300
-
-        for _ in range(total_runs):
-            output_image = probabilistic_feature.update().resolve(input_image)
-
-            if not np.array_equal(output_image, input_image): 
-                applied_count += 1
-                assert np.array_equal(output_image, input_image + 2)
-
-        observed_probability = applied_count / total_runs
-        assert 0.65 <= observed_probability <= 0.75, f"Observed probability: {observed_probability}"
-
     def test_Repeat(self):
         add_ten = features.Add(value=10)
 
@@ -1325,6 +1308,7 @@ class TestFeatures(unittest.TestCase):
 
         observed_probability = applied_count / total_runs
         assert 0.65 <= observed_probability <= 0.75, f"Observed probability: {observed_probability}"
+
 
     def test_Repeat(self):
         add_ten = features.Add(value=10)
@@ -1723,47 +1707,49 @@ class TestFeatures(unittest.TestCase):
         """Delete temporary test images after testing."""
         for file in [self.temp_npy.name, self.temp_png.name, self.temp_jpg.name]:
             os.remove(file)
+
+
     def test_LoadImage(self):
         from tempfile import NamedTemporaryFile
         from PIL import Image as PIL_Image
         import os
 
         """Create temporary image files in multiple formats for testing."""
-        self.test_image_array = (np.random.rand(50, 50) * 255).astype(np.uint8)
-        self.temp_npy = NamedTemporaryFile(suffix=".npy", delete=False)
-        np.save(self.temp_npy.name, self.test_image_array)
-        self.temp_png = NamedTemporaryFile(suffix=".png", delete=False)
-        PIL_Image.fromarray(self.test_image_array).save(self.temp_png.name)
-        self.temp_jpg = NamedTemporaryFile(suffix=".jpg", delete=False)
-        PIL_Image.fromarray(self.test_image_array).convert("RGB").save(self.temp_jpg.name)
+        test_image_array = (np.random.rand(50, 50) * 255).astype(np.uint8)
+        temp_npy = NamedTemporaryFile(suffix=".npy", delete=False)
+        np.save(temp_npy.name, test_image_array)
+        temp_png = NamedTemporaryFile(suffix=".png", delete=False)
+        PIL_Image.fromarray(test_image_array).save(temp_png.name)
+        temp_jpg = NamedTemporaryFile(suffix=".jpg", delete=False)
+        PIL_Image.fromarray(test_image_array).convert("RGB").save(temp_jpg.name)
 
         """Test loading a .npy file."""
-        load_feature = features.LoadImage(path=self.temp_npy.name)
+        load_feature = features.LoadImage(path=temp_npy.name)
         loaded_image = load_feature.resolve()
-        self.assertEqual(loaded_image.shape[:2], self.test_image_array.shape[:2])
+        self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
 
         """Test loading a .png file."""
-        load_feature = features.LoadImage(path=self.temp_png.name)
+        load_feature = features.LoadImage(path=temp_png.name)
         loaded_image = load_feature.resolve()
-        self.assertEqual(loaded_image.shape[:2], self.test_image_array.shape[:2])
+        self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
 
         """Test loading a .jpg file."""
-        load_feature = features.LoadImage(path=self.temp_jpg.name)
+        load_feature = features.LoadImage(path=temp_jpg.name)
         loaded_image = load_feature.resolve()
-        self.assertEqual(loaded_image.shape[:2], self.test_image_array.shape[:2])
+        self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
         
         """Test loading an image and converting it to grayscale."""
-        load_feature = features.LoadImage(path=self.temp_png.name, to_grayscale=True)
+        load_feature = features.LoadImage(path=temp_png.name, to_grayscale=True)
         loaded_image = load_feature.resolve()
         self.assertEqual(loaded_image.shape[-1], 1) 
 
         """Test ensuring a minimum number of dimensions."""
-        load_feature = features.LoadImage(path=self.temp_png.name, ndim=4)
+        load_feature = features.LoadImage(path=temp_png.name, ndim=4)
         loaded_image = load_feature.resolve()
         self.assertGreaterEqual(len(loaded_image.shape), 4)  
 
         """Delete temporary test images after testing."""
-        for file in [self.temp_npy.name, self.temp_png.name, self.temp_jpg.name]:
+        for file in [temp_npy.name, temp_png.name, temp_jpg.name]:
             os.remove(file)
 
 
@@ -2126,7 +2112,7 @@ class TestFeatures(unittest.TestCase):
 
     def test_NonOverlapping_ellipses(self):
         """Set up common test objects before each test."""
-        min_distance = 5  # Minimum distance in pixels
+        min_distance = 7  # Minimum distance in pixels
         radius = 10
         scatterer = scatterers.Ellipse(
             radius=radius * units.pixels,
