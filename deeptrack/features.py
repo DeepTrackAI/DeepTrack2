@@ -372,7 +372,6 @@ class Feature(DeepTrackNode):
     ) -> Image | list[Image]:
         """Transform an image [abstract method].
 
-
         Abstract method that defines how the feature transforms the input. The 
         current value of all properties will be passed as keyword arguments.
 
@@ -383,23 +382,15 @@ class Feature(DeepTrackNode):
         **kwargs : dict of str to Any
             The current value of all properties in `properties`, as well as any 
             global arguments passed to the feature.
-        ----------
-        image : Image or list of Images
-            The image or list of images to transform.
-        **kwargs : dict of str to Any
-            The current value of all properties in `properties`, as well as any 
-            global arguments passed to the feature.
 
         Returns
         -------
-        Image or list of Images
         Image or list of Images
             The transformed image or list of images.
 
         Raises
         ------
         NotImplementedError
-            Raised if this method is not overridden by subclasses.
             Raised if this method is not overridden by subclasses.
 
         """
@@ -482,7 +473,9 @@ class Feature(DeepTrackNode):
 
         return output
 
+
     resolve = __call__
+
 
     def store_properties(
         self: Feature,
@@ -671,17 +664,23 @@ class Feature(DeepTrackNode):
         self: Feature,
         **global_arguments: Any,
     ) -> Feature:
-        """Refresh the feature to create a new image.
+        """Refreshes the feature to generate a new output.
 
-        Per default, when a feature is called multiple times, it will return 
-        the same value. To tell the feature to return a new value, first call 
-        `update()`.
-        
+        By default, when a feature is called multiple times, it returns the 
+        same value. Calling `update()` forces the feature to recompute and 
+        return a new value the next time it is evaluated.
+
+        Parameters
+        ----------
+        **global_arguments : Any
+            Optional global arguments that can be passed to modify the 
+            feature update behavior.
+
         Returns
         -------
         Feature
-            The updated feature.
-
+            The updated feature instance, ensuring the next evaluation produces 
+            a fresh result.
         """
 
         if global_arguments:
@@ -706,7 +705,6 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        feature: Feature
         feature: Feature
             The feature to add as a dependency.
 
