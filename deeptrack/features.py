@@ -2702,8 +2702,6 @@ class Equals(ArithmeticOperationFeature):
     - This means that the standard `==` operator is overloaded only for 
       expressions involving `Feature` instances but not for comparisons 
       involving regular Python objects.
-    - Using `Equals(value=2)(input_feature)` incorrectly evaluates the feature
-      instead of returning a pipeline.
     - Always use `>>` to apply `Equals` correctly in a feature chain.
     
     Example
@@ -2890,51 +2888,64 @@ class Arguments(Feature):
     Examples
     --------
     >>> import deeptrack as dt
+    >>> from tempfile import NamedTemporaryFile
+    >>> from PIL import Image as PIL_Image
+    >>> import os
+
+    Create a temporary image:
+
+    >>> test_image_array = (np.ones((50, 50)) * 128).astype(np.uint8)
+    >>> temp_png = NamedTemporaryFile(suffix=".png", delete=False)
+    >>> PIL_Image.fromarray(test_image_array).save(temp_png.name)
 
     A typical use-case is:
 
-    >>> arguments = Arguments(is_label=False)
-    >>> image_loader = (
-    ...     LoadImage(path="./image.png") >>
-    ...     GaussianNoise(sigma = (1 - arguments.is_label) * 5)
-    ...     )
-    >>> image_loader.bind_arguments(arguments)
+    >>> arguments = dt.Arguments(is_label=False)
+    >>> image_pipeline = (
+    ...     dt.LoadImage(path=temp_png.name) >>
+    ...     dt.Gaussian(sigma = (1 - arguments.is_label) * 5)
+    ... )
+    >>> image_pipeline.bind_arguments(arguments)
 
-    >>> image_loader()  # Image with added noise.
-    >>> image_loader(is_label=True)  # Raw image with no noise.
+    >>> image = image_pipeline()  # Image with added noise.
+    >>> print(image.std())
+    5.041072178933536
+
+    Change the argument:
+    >>> image = image_pipeline(is_label=True)
+    >>> print(image.std())
+    0.0
 
     For a non-mathematical dependence, create a local link to the property as 
     follows:
 
     >>> arguments = Arguments(is_label=False)
-    >>> image_loader = (
-    ...     LoadImage(path="./image.png") >>
-    ...     GaussianNoise(
+    >>> image_pipeline = (
+    ...     dt.LoadImage(path=temp_png.name) >>
+    ...     dt.Gaussian(
     ...         is_label=arguments.is_label,
     ...         sigma=lambda is_label: 0 if is_label else 5
     ...     )
     ... )
-    >>> image_loader.bind_arguments(arguments)
-
-    >>> image_loader()              # Image with added noise
-    >>> image_loader(is_label=True) # Raw image with no noise
+    >>> image_pipeline.bind_arguments(arguments)
 
     Keep in mind that, if any dependent property is non-deterministic, they may 
     permanently change:
     
     >>> arguments = Arguments(noise_max_sigma=5)
-    >>> image_loader = (
-    ...     LoadImage(path="./image.png") >>
-    ...     GaussianNoise(
-    ...         noise_max_sigma=5,
-    ...         sigma=lambda noise_max_sigma: rand() * noise_max_sigma
+    >>> image_pipeline = (
+    ...     dt.LoadImage(path=temp_png.name) >>
+    ...     dt.Gaussian(
+    ...         noise_max_sigma=arguments.noise_max_sigma,
+    ...         sigma=lambda noise_max_sigma: np.random.rand()*noise_max_sigma
     ...     )
     ... )
+    >>> image_pipeline.bind_arguments(arguments)
+    >>> image_pipeline.store_properties()
 
-    >>> image_loader.bind_arguments(arguments)
+    >>> image_pipeline().get_property("sigma")
 
-    >>> image_loader().get_property("sigma") # Example: 3.27...
-    >>> image_loader(noise_max_sigma=0) # 0
+    >>> image_loader(noise_max_sigma=0)
     >>> image_loader().get_property("sigma") # Example: 1.93...
 
     As with any feature, all arguments can be passed by deconstructing the 

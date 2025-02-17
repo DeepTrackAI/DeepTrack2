@@ -1203,9 +1203,19 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_Equals(self):
-        # test_operator(self, operator.eq)
-        #TODO: Why the tests work diffeent for Equals?
+        """
+        Notes
+        -----
+        - Unlike other arithmetic operators, `Equals` does not define `__eq__` 
+          (`==`) and `__req__` (`==`) in `DeepTrackNode` and `Feature`, as this 
+          would affect Python’s built-in identity comparison.
+        - This means that the standard `==` operator is overloaded only for 
+          expressions involving `Feature` instances but not for comparisons 
+          involving regular Python objects.
+        - Always use `>>` to apply `Equals` correctly in a feature chain.
 
+        """
+        
         equals_feature = features.Equals(value=2)
         input_values = np.array([1, 2, 3])
         output_values = equals_feature(input_values)
@@ -1249,41 +1259,136 @@ class TestFeatures(unittest.TestCase):
             operator.__and__,
         )
 
+    def test_Arguments_feature_passing(self):
+        """Tests that arguments are correctly passed and updated in a feature pipeline."""
+
+        # Define Arguments with static and dynamic values
+        arguments = features.Arguments(
+            a="foo",
+            b="bar",
+            c=lambda a, b: a + b,  # "foobar"
+            d=np.random.rand,  # Random float in [0, 1]
+        )
+
+        # First feature with dependencies on arguments
+        f1 = features.DummyFeature(
+            p1=arguments.a,  # "foo"
+            p2=lambda p1: p1 + "baz"  # "foobaz"
+        )
+
+        # Second feature dependent on the first
+        f2 = features.DummyFeature(
+            p1=f1.p2,  # Should be "foobaz"
+            p2=arguments.d,  # Random value
+        )
+
+        # Assertions
+        self.assertEqual(f1.properties['p1'](), "foo")  # Check that p1 is set correctly
+        self.assertEqual(f1.properties['p2'](), "foobaz")  # Check lambda evaluation
+
+        self.assertEqual(f2.properties['p1'](), "foobaz")  # Check dependency resolution
+
+        # Ensure p2 in f2 is a valid float between 0 and 1
+        self.assertTrue(0 <= f2.properties['p2']() <= 1)
+
+        # Ensure `c` was computed correctly
+        self.assertEqual(arguments.c(), "foobar")  # Should concatenate "foo" + "bar"
+
+        # Test that d is dynamic (generates new values)
+        first_d = arguments.d.update()()
+        second_d = arguments.d.update()()
+        self.assertNotEqual(first_d, second_d)  # Check that values change
+
 
     def test_Arguments(self):
+        from tempfile import NamedTemporaryFile
+        from PIL import Image as PIL_Image
+        import os 
 
-        arguments = features.Arguments(
-            a="foo", b="bar", c=lambda a, b: a + b, d=np.random.rand
+        """Creates a temporary test image."""
+        test_image_array = (np.ones((50, 50)) * 128).astype(np.uint8)
+        temp_png = NamedTemporaryFile(suffix=".png", delete=False)
+        temp_filename = temp_png.name
+        temp_png.close()  # Close the file so DeepTrack can access it
+        PIL_Image.fromarray(test_image_array).save(temp_filename)
+
+        """Tests pipeline behavior when toggling `is_label`."""
+        arguments = features.Arguments(is_label=False)
+        image_pipeline = (
+            features.LoadImage(path=temp_filename) >>
+            Gaussian(sigma=(1 - arguments.is_label) * 5)
         )
+        image_pipeline.bind_arguments(arguments)
 
-        f1 = features.DummyFeature(p1=arguments.a, p2=lambda p1: p1 + "baz")
-        f2 = features.DummyFeature(
-            p1=f1.p2,
-            p2=arguments.d,
+        # Test noisy image
+        image = image_pipeline()
+        self.assertGreater(image.std(), 0)  # Expecting noise around 5
+
+        # Test raw image with `is_label=True`
+        image = image_pipeline(is_label=True)
+        self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
+
+        """Tests pipeline behavior with dynamically computed sigma."""
+        arguments = features.Arguments(is_label=False)
+        image_pipeline = (
+            features.LoadImage(path=temp_filename) >>
+            Gaussian(
+                is_label=arguments.is_label,
+                sigma=lambda is_label: 0 if is_label else 5
+            )
         )
+        image_pipeline.bind_arguments(arguments)
 
-        #TODO: complete unit test with asserts.
+        # Test noisy image
+        image = image_pipeline()
+        self.assertGreater(image.std(), 0)  # Expecting noise around 5
 
+        # Test raw image with `is_label=True`
+        image = image_pipeline(is_label=True)
+        self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
 
-    def test_Repeat(self):
-        add_ten = features.Add(value=10)
+        """Tests property storage and modification in the pipeline."""
+        arguments = features.Arguments(noise_max_sigma=5)
+        image_pipeline = (
+            features.LoadImage(path=temp_filename) >>
+            Gaussian(
+                noise_max_sigma=arguments.noise_max_sigma,
+                sigma=lambda noise_max_sigma: np.random.rand() * noise_max_sigma
+            )
+        )
+        image_pipeline.bind_arguments(arguments)
+        image_pipeline.store_properties()
 
-        pipeline = features.Repeat(add_ten, N=3)
+        # Check if sigma is within expected range
+        image = image_pipeline()
+        sigma_value = image.get_property("sigma")
+        self.assertTrue(0 <= sigma_value <= 5)
 
-        input_data = [1, 2, 3]
-        expected_output = [31, 32, 33]
+        # Override sigma by setting noise_max_sigma=0
+        image = image_pipeline(noise_max_sigma=0)
+        self.assertEqual(image.get_property("sigma"), 0.0)
 
-        output_data = pipeline.resolve(input_data)
+        """Tests passing arguments dynamically using `**arguments.properties`."""
+        arguments = features.Arguments(is_label=False, noise_sigma=5)
+        image_pipeline = (
+            features.LoadImage(path=temp_filename) >>
+            Gaussian(
+                sigma=lambda is_label, noise_sigma: 0 if is_label else noise_sigma,
+                **arguments.properties
+            )
+        )
+        image_pipeline.bind_arguments(arguments)
 
-        assert np.array_equal(output_data, expected_output), \
-            f"Expected {expected_output}, got {output_data}"
+        # Test noisy image
+        image = image_pipeline()
+        self.assertGreater(image.std(), 0)  # Expecting noise around 5
 
-        pipeline_shorthand = features.Add(value=10) ^ 3
-        output_data_shorthand = pipeline_shorthand.resolve(input_data)
+        # Test raw image with `is_label=True`
+        image = image_pipeline(is_label=True)
+        self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
 
-        assert np.array_equal(output_data_shorthand, expected_output), \
-            f"Shorthand failed. Expected {expected_output}, \
-                got {output_data_shorthand}"
+        os.remove(temp_filename)
+
 
     def test_Probability(self):
         np.random.seed(42)  # Set seed for reproducibility
@@ -1359,27 +1464,8 @@ class TestFeatures(unittest.TestCase):
 
         res = pipeline_with_small_input.update(input_value=10).resolve()
         self.assertEqual(res, 11)
-
-    def test_BindUpdate_gaussian_noise(self):
-        # Define the Gaussian noise feature and bind its properties
-        gaussian_noise = Gaussian()
-        bound_feature = features.BindUpdate(gaussian_noise, mu=5, sigma=3)
-
-        # Create the input image
-        input_image = np.zeros((512, 512))
-
-        # Resolve the feature to get the output image
-        output_image = bound_feature.resolve(input_image)
-
-        # Calculate the mean and standard deviation of the output
-        output_mean = np.mean(output_image)
-        output_std = np.std(output_image)
-
-        # Assert that the mean and standard deviation are close to the bound values
-        self.assertAlmostEqual(output_mean, 5, \
-            delta=0.2, msg="Mean is not within the expected range")
-        self.assertAlmostEqual(output_std, 3, \
-            delta=0.2, msg="Standard deviation is not within the expected range")
+    
+    
     def test_BindUpdate_gaussian_noise(self):
         # Define the Gaussian noise feature and bind its properties
         gaussian_noise = Gaussian()
@@ -1424,26 +1510,6 @@ class TestFeatures(unittest.TestCase):
         res = pipeline_with_small_input.update(input_value=10).resolve()
         self.assertEqual(res, 11)
 
-    def test_Bind_gaussian_noise(self):
-        # Define the Gaussian noise feature and bind its properties
-        gaussian_noise = Gaussian()
-        bound_feature = features.Bind(gaussian_noise, mu=-5, sigma=2)
-
-        # Create the input image
-        input_image = np.zeros((512, 512))
-
-        # Resolve the feature to get the output image
-        output_image = bound_feature.resolve(input_image)
-
-        # Calculate the mean and standard deviation of the output
-        output_mean = np.mean(output_image)
-        output_std = np.std(output_image)
-
-        # Assert that the mean and standard deviation are close to the bound values
-        self.assertAlmostEqual(output_mean, -5, delta=0.2, \
-            msg="Mean is not within the expected range")
-        self.assertAlmostEqual(output_std, 2, delta=0.2, \
-            msg="Standard deviation is not within the expected range")
 
     def test_Bind_gaussian_noise(self):
         # Define the Gaussian noise feature and bind its properties
@@ -1663,50 +1729,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(values.update().resolve(key="3"), 3)
 
         self.assertRaises(KeyError, lambda: values.update().resolve(key="4"))
-
-
-    def test_LoadImage(self):
-        from tempfile import NamedTemporaryFile
-        from PIL import Image as PIL_Image
-        import os
-
-        """Create temporary image files in multiple formats for testing."""
-        self.test_image_array = (np.random.rand(50, 50) * 255).astype(np.uint8)
-        self.temp_npy = NamedTemporaryFile(suffix=".npy", delete=False)
-        np.save(self.temp_npy.name, self.test_image_array)
-        self.temp_png = NamedTemporaryFile(suffix=".png", delete=False)
-        PIL_Image.fromarray(self.test_image_array).save(self.temp_png.name)
-        self.temp_jpg = NamedTemporaryFile(suffix=".jpg", delete=False)
-        PIL_Image.fromarray(self.test_image_array).convert("RGB").save(self.temp_jpg.name)
-
-        """Test loading a .npy file."""
-        load_feature = features.LoadImage(path=self.temp_npy.name)
-        loaded_image = load_feature.resolve()
-        self.assertEqual(loaded_image.shape[:2], self.test_image_array.shape[:2])
-
-        """Test loading a .png file."""
-        load_feature = features.LoadImage(path=self.temp_png.name)
-        loaded_image = load_feature.resolve()
-        self.assertEqual(loaded_image.shape[:2], self.test_image_array.shape[:2])
-
-        """Test loading a .jpg file."""
-        load_feature = features.LoadImage(path=self.temp_jpg.name)
-        loaded_image = load_feature.resolve()
-        self.assertEqual(loaded_image.shape[:2], self.test_image_array.shape[:2])
-        
-        """Test loading an image and converting it to grayscale."""
-        load_feature = features.LoadImage(path=self.temp_png.name, to_grayscale=True)
-        loaded_image = load_feature.resolve()
-        self.assertEqual(loaded_image.shape[-1], 1) 
-
-        """Test ensuring a minimum number of dimensions."""
-        load_feature = features.LoadImage(path=self.temp_png.name, ndim=4)
-        loaded_image = load_feature.resolve()
-        self.assertGreaterEqual(len(loaded_image.shape), 4)  
-
-        """Delete temporary test images after testing."""
-        for file in [self.temp_npy.name, self.temp_png.name, self.temp_jpg.name]:
-            os.remove(file)
 
 
     def test_LoadImage(self):
