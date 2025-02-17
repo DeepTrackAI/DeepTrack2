@@ -2111,13 +2111,15 @@ class Add(ArithmeticOperationFeature):
 
     >>> pipeline = dt.Value([1, 2, 3]) + 5
     
+    Or:
+
     >>> pipeline = 5 + dt.Value([1, 2, 3])
     
     Or, more explicitly:
 
     >>> input_value = dt.Value([1, 2, 3])
-    >>> add_feature = dt.Add(value=5)
-    >>> pipeline = add_feature(input_value)
+    >>> sum_feature = dt.Add(value=5)
+    >>> pipeline = sum_feature(input_value)
 
     """
 
@@ -2156,10 +2158,10 @@ class Subtract(ArithmeticOperationFeature):
     -------
     In this example, each element in the input array is decreased by 2.
 
+    >>> import deeptrack as dt
+
     Create a pipeline using `Subtract`:
 
-    >>> import deeptrack as dt
-    
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Subtract(value=2)
     >>> pipeline.resolve()
     [-1, 0, 1]
@@ -2168,6 +2170,8 @@ class Subtract(ArithmeticOperationFeature):
 
     >>> pipeline = dt.Value([1, 2, 3]) - 2
     
+    Or:
+
     >>> pipeline = -2 + dt.Value([1, 2, 3])
     
     Or, more explicitly:
@@ -2213,27 +2217,27 @@ class Multiply(ArithmeticOperationFeature):
     -------
     In this example, each element in the input array is multiplied by 5.
 
-    >>> from deeptrack.features import Multiply, Value
+    >>> import deeptrack as dt
 
     Start by creating a pipeline using Multiply:
     
-    >>> pipeline = dtValue([1, 2, 3]) >> Multiply(value=5)
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Multiply(value=5)
     >>> pipeline.resolve()
     [5, 10, 15]
     
-    Equivalently, this pipeline can be created using:
+    Alternatively, this pipeline can be created using:
     
-    >>> pipeline = Value([1, 2, 3]) * 5
+    >>> pipeline = dt.Value([1, 2, 3]) * 5
 
-    Or
+    Or:
 
-    >>> pipeline = 5 * Value([1, 2, 3])
+    >>> pipeline = 5 * dt.Value([1, 2, 3])
     
     Or, more explicitly:
     
-    >>> input_value = Value([1, 2, 3])
-    >>> sub_feature = Multiply(value=5)
-    >>> pipeline = sub_feature(input_value)
+    >>> input_value = dt.Value([1, 2, 3])
+    >>> mul_feature = dt.Multiply(value=5)
+    >>> pipeline = mul_feature(input_value)
 
     """
 
@@ -2272,10 +2276,10 @@ class Divide(ArithmeticOperationFeature):
     -------
     In this example, each element in the input array is divided by 5.
 
+    >>> import deeptrack as dt
+
     Start by creating a pipeline using Divide:
 
-    >>> from deeptrack.features import Divide, Value
-    
     >>> pipeline = Value([1, 2, 3]) >> Divide(value=5)
     >>> pipeline.resolve()
     [0.2 0.4 0.6]
@@ -2333,25 +2337,27 @@ class FloorDivide(ArithmeticOperationFeature):
     -------
     In this example, each element in the input array is floor-divided by 5.
 
+    >>> import deeptrack as dt
+
     Start by creating a pipeline using FloorDivide:
 
-    >>> from deeptrack.features import FloorDivide, Value
-    
-    >>> pipeline = Value([-3, 3, 6]) >> FloorDivide(value=5)
+    >>> pipeline = dt.Value([-3, 3, 6]) >> dt.FloorDivide(value=5)
     >>> pipeline.resolve()
     [0.2 0.4 0.6]
     
     Equivalently, this pipeline can be created using:
     
-    >>> pipeline = Value([-3, 3, 6]) // 5
+    >>> pipeline = dt.Value([-3, 3, 6]) // 5
     
-    >>> pipeline = 5 // Value([-3, 3, 6])  # Different result.
+    Which is not equivalent to:
+
+    >>> pipeline = 5 // dt.Value([-3, 3, 6])  # Different result.
     
-    Or, most explicitly:
+    Or, more explicitly:
     
-    >>> input_value = Value([-3, 3, 6])
-    >>> floordiv_feature = FloorDivide(value=5)
-    >>> pipeline = floordiv_feature(input_value)
+    >>> input_value = dt.Value([-3, 3, 6])
+    >>> floordiv_feature = dt.FloorDivide(value=5)
+    >>> pipeline = feature(floordiv_input_value)
 
     """
 
@@ -2390,23 +2396,25 @@ class Power(ArithmeticOperationFeature):
     -------
     In this example, each element in the input array is elevated to the 3.
 
+    >>> import deeptrack as dt
+
     Start by creating a pipeline using Power:
 
-    >>> from deeptrack.features import Power, Value
-    
-    >>> pipeline = Value([1, 2, 3]) >> Power(value=3)
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Power(value=3)
     >>> pipeline.resolve()
     [1, 8, 27]
     
     Equivalently, this pipeline can be created using:
     
-    >>> pipeline = Value([1, 2, 3]) ** 3
+    >>> pipeline = dt.Value([1, 2, 3]) ** 3
     
-    >>> pipeline = 3 ** Value([1, 2, 3])  # Different result.
+    Which is not equivalent to:
+
+    >>> pipeline = 3 ** dt.Value([1, 2, 3])  # Different result.
     
     Or, more explicitly:
     
-    >>> input_value = Value([1, 2, 3])
+    >>> input_value = dt.Value([1, 2, 3])
     >>> pow_feature = Power(value=3)
     >>> pipeline = pow_feature(input_value)
 
@@ -2447,24 +2455,26 @@ class LessThan(ArithmeticOperationFeature):
     -------
     In this example, each element in the input array is compared (<) with 2.
 
-    Start by creating a pipeline using LessThan:
+    >>> import deeptrack as dt
 
-    >>> from deeptrack.features import LessThan, Value
+    Start by creating a pipeline using LessThan:
     
-    >>> pipeline = Value([1, 2, 3]) >> LessThan(value=2)
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThan(value=2)
     >>> pipeline.resolve()
-    [ True False False]
+    [True False False]
     
     Equivalently, this pipeline can be created using:
     
-    >>> pipeline = Value([1, 2, 3]) < 2
+    >>> pipeline = dt.Value([1, 2, 3]) < 2
     
-    >>> pipeline = 2 < Value([1, 2, 3])  # Different result.
+    Which is not equivalent to:
+
+    >>> pipeline = 2 < dt.Value([1, 2, 3])  # Different result.
     
     Or, most explicitly:
     
-    >>> input_value = Value([1, 2, 3])
-    >>> lt_feature = LessThan(value=2)
+    >>> input_value = dt.Value([1, 2, 3])
+    >>> lt_feature = dt.LessThan(value=2)
     >>> pipeline = lt_feature(input_value)
 
     """
@@ -2504,24 +2514,26 @@ class LessThanOrEquals(ArithmeticOperationFeature):
     -------
     In this example, each element in the input array is compared (<=) with 2.
 
+    >>> import deeptrack as dt
+
     Start by creating a pipeline using LessThanOrEquals:
 
-    >>> from deeptrack.features import LessThanOrEquals, Value
-    
-    >>> pipeline = Value([1, 2, 3]) >> LessThanOrEquals(value=2)
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThanOrEquals(value=2)
     >>> pipeline.resolve()
-    [ True  True False]
+    [True  True False]
     
     Equivalently, this pipeline can be created using:
     
-    >>> pipeline = Value([1, 2, 3]) <= 2
+    >>> pipeline = dt.Value([1, 2, 3]) <= 2
     
-    >>> pipeline = 2 <= Value([1, 2, 3])  # Different result.
+    Which is not equivalent to:
+
+    >>> pipeline = 2 <= dt.Value([1, 2, 3])  # Different result.
     
     Or, more explicitly:
     
-    >>> input_value = Value([1, 2, 3])
-    >>> le_feature = LessThanOrEquals(value=2)
+    >>> input_value = dt.Value([1, 2, 3])
+    >>> le_feature = dt.LessThanOrEquals(value=2)
     >>> pipeline = le_feature(input_value)
 
     """
@@ -2564,24 +2576,26 @@ class GreaterThan(ArithmeticOperationFeature):
     -------
     In this example, each element in the input array is compared (>) with 2.
 
+    >>> import deeptrack as dt
+
     Start by creating a pipeline using GreaterThan:
 
-    >>> from deeptrack.features import GreaterThan, Value
-    
-    >>> pipeline = Value([1, 2, 3]) >> GreaterThan(value=2)
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThan(value=2)
     >>> pipeline.resolve()
     [False False  True]
     
     Equivalently, this pipeline can be created using:
     
-    >>> pipeline = Value([1, 2, 3]) > 2
+    >>> pipeline = dt.Value([1, 2, 3]) > 2
+
+    Which is not equivalent to:
     
-    >>> pipeline = 2 > Value([1, 2, 3])  # Different result.
+    >>> pipeline = 2 > dt.Value([1, 2, 3])  # Different result.
     
     Or, most explicitly:
     
-    >>> input_value = Value([1, 2, 3])
-    >>> gt_feature = GreaterThan(value=2)
+    >>> input_value = dt.Value([1, 2, 3])
+    >>> gt_feature = dt.GreaterThan(value=2)
     >>> pipeline = gt_feature(input_value)
 
     """
@@ -2621,24 +2635,26 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
     -------
     In this example, each element in the input array is compared (>=) with 2.
 
-    Start by creating a pipeline using GreaterThanOrEquals:
+    >>> import deeptrack as dt
 
-    >>> from deeptrack.features import GreaterThanOrEquals, Value
+    Start by creating a pipeline using GreaterThanOrEquals:
     
-    >>> pipeline = Value([1, 2, 3]) >> GreaterThanOrEquals(value=2)
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThanOrEquals(value=2)
     >>> pipeline.resolve()
     [False  True  True]
     
     Equivalently, this pipeline can be created using:
     
-    >>> pipeline = Value([1, 2, 3]) >= 2
-    
-    >>> pipeline = 2 >= Value([1, 2, 3])  # Different result.
+    >>> pipeline = dt.Value([1, 2, 3]) >= 2
+
+    Which is not equivalent to:
+
+    >>> pipeline = 2 >= dt.Value([1, 2, 3])  # Different result.
     
     Or, most explicitly:
     
-    >>> input_value = Value([1, 2, 3])
-    >>> ge_feature = GreaterThanOrEquals(value=2)
+    >>> input_value = dt.Value([1, 2, 3])
+    >>> ge_feature = dt.GreaterThanOrEquals(value=2)
     >>> pipeline = ge_feature(input_value)
 
     """
@@ -2666,9 +2682,10 @@ GreaterThanOrEqual = GreaterThanOrEquals
 
 
 class Equals(ArithmeticOperationFeature):
-    """Determine whether input is equal to value.
+    """Determine whether input is equal to a given value.
 
-    This feature performs element-wise comparison (==) of the input.
+    This feature performs element-wise comparison (==) between the input and a
+    specified value.
 
     Parameters
     ----------
@@ -2677,11 +2694,48 @@ class Equals(ArithmeticOperationFeature):
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
-    """
+    Notes
+    -----
+    - Unlike other arithmetic operators, `Equals` does not define `__eq__` 
+      (`==`) and `__req__` (`==`) in `DeepTrackNode` and `Feature`, as this 
+      would affect Python’s built-in identity comparison.
+    - This means that the standard `==` operator is overloaded only for 
+      expressions involving `Feature` instances but not for comparisons 
+      involving regular Python objects.
+    - Using `Equals(value=2)(input_feature)` incorrectly evaluates the feature
+      instead of returning a pipeline.
+    - Always use `>>` to apply `Equals` correctly in a feature chain.
+    
+    Example
+    -------
+    In this example, each element in the input array is compared (==) with 2.
 
-    #TODO: Example for Equals.
-    #TODO: Why Equals behaves differently from the other operators?
-    #TODO: Why __eq__ and __req__ are not defined in DeepTrackNode and Feature?
+    >>> import deeptrack as dt
+
+    Start by creating a pipeline using Equals:
+    
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Equals(value=2)
+    >>> pipeline.resolve()
+    [False  True  False]
+    
+    This is the **only correct way** to apply `Equals` in a feature pipeline.
+
+    ### Incorrect Approaches
+    Using `==` directly on a `Feature` instance **does not work** because 
+    `Feature` does not override `__eq__`:
+
+    >>> pipeline = dt.Value([1, 2, 3]) == 2  # Incorrect
+    >>> pipeline.resolve()  
+    AttributeError: 'bool' object has no attribute 'resolve'
+
+    Similarly, directly calling `Equals` on an input feature **immediately 
+    evaluates the comparison**, returning a boolean instead of a `Feature`:
+
+    >>> pipeline = dt.Equals(value=2)(dt.Value([1, 2, 3]))  # Incorrect
+    >>> pipeline.resolve()
+    AttributeError: 'bool' object has no attribute 'resolve'
+
+    """
 
     def __init__(
         self: Feature,
