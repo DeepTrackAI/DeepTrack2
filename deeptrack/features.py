@@ -71,26 +71,21 @@ Define a simple pipeline with features:
 >>> import numpy as np
 
 Create a basic addition feature:
-
 >>> class BasicAdd(dt.Feature):
 ...     def get(self, image, value, **kwargs):
 ...         return image + value
 
 Create two features:
-
 >>> add_five = BasicAdd(value=5)
 >>> add_ten = BasicAdd(value=10)
 
 Chain features together:
-
 >>> pipeline = dt.Chain(add_five, add_ten)
 
 or equivalently:
-
 >>> pipeline = add_five >> add_ten
 
 Process an input image:
-
 >>> input_image = np.array([[1, 2, 3], [4, 5, 6]])
 >>> output_image = pipeline(input_image)
 >>> print(output_image)
@@ -1535,14 +1530,6 @@ def propagate_data_to_dependencies(
     By dynamically updating the properties in the dependency tree, this 
     function ensures that any changes in the feature's context or configuration
     are propagated correctly to its dependencies.
-    This function traverses the dependency tree of the given feature and 
-    updates the properties of each dependency based on the provided keyword 
-    arguments. Only properties that already exist in the `PropertyDict` of a 
-    dependency are updated.
-
-    By dynamically updating the properties in the dependency tree, this 
-    function ensures that any changes in the feature's context or configuration
-    are propagated correctly to its dependencies.
 
     Parameters
     ----------
@@ -1582,13 +1569,6 @@ def propagate_data_to_dependencies(
 
 class StructuralFeature(Feature):
     """Provides the structure of a feature set without input transformations.
-
-    A `StructuralFeature` does not directly transform the input data or add new 
-    properties. Instead, it is commonly used as a logical or organizational 
-    tool to structure and manage feature sets within a pipeline.
-
-    Since `StructuralFeature` does not override the `__init__` or `get` 
-    methods, it inherits the behavior of the base `Feature` class.
 
     A `StructuralFeature` does not directly transform the input data or add new 
     properties. Instead, it is commonly used as a logical or organizational 
@@ -2912,14 +2892,18 @@ class Arguments(Feature):
     5.041072178933536
 
     Change the argument:
-    >>> image = image_pipeline(is_label=True)
+    >>> image = image_pipeline(is_label=True) # Image with no noise.
     >>> print(image.std())
     0.0
+
+    Remove the temporary image:
+
+    >>> os.remove(temp_png.name)
 
     For a non-mathematical dependence, create a local link to the property as 
     follows:
 
-    >>> arguments = Arguments(is_label=False)
+    >>> arguments = dt.Arguments(is_label=False)
     >>> image_pipeline = (
     ...     dt.LoadImage(path=temp_png.name) >>
     ...     dt.Gaussian(
@@ -2932,7 +2916,7 @@ class Arguments(Feature):
     Keep in mind that, if any dependent property is non-deterministic, they may 
     permanently change:
     
-    >>> arguments = Arguments(noise_max_sigma=5)
+    >>> arguments = dt.Arguments(noise_max_sigma=5)
     >>> image_pipeline = (
     ...     dt.LoadImage(path=temp_png.name) >>
     ...     dt.Gaussian(
@@ -2943,28 +2927,36 @@ class Arguments(Feature):
     >>> image_pipeline.bind_arguments(arguments)
     >>> image_pipeline.store_properties()
 
-    >>> image_pipeline().get_property("sigma")
+    >>> image = image_pipeline()
+    >>> print(image.get_property("sigma"))
+    1.1838819055669947
 
-    >>> image_loader(noise_max_sigma=0)
-    >>> image_loader().get_property("sigma") # Example: 1.93...
+    >>> image = image_pipeline(noise_max_sigma=0)
+    >>> print(image.get_property("sigma"))
+    0.0
 
     As with any feature, all arguments can be passed by deconstructing the 
     properties dict:
 
-    >>> arguments = Arguments(is_label=False, noise_sigma=5)
-    >>> image_loader = (
-    ...     LoadImage(path="./image.png") >>
-    ...     GaussianNoise(
+    >>> arguments = dt.Arguments(is_label=False, noise_sigma=5)
+    >>> image_pipeline = (
+    ...     dt.LoadImage(path=temp_png.name) >>
+    ...     dt.Gaussian(
     ...         sigma=lambda is_label, noise_sigma: (
     ...             0 if is_label else noise_sigma
     ...         )
     ...         **arguments.properties
     ...     )
     ... )
-    >>> image_loader.bind_arguments(arguments)
+    >>> image_pipeline.bind_arguments(arguments)
 
-    >>> image_loader()  # Image with added noise.
-    >>> image_loader(is_label=True)  # Raw image with no noise.
+    >>> image = image_pipeline()  # Image with added noise.
+    >>> print(image.std())
+    5.002151761964336
+
+    >>> image = image_pipeline(is_label=True)  # Raw image with no noise.
+    >>> print(image.std())
+    0.0
 
     """
 
@@ -3024,12 +3016,11 @@ class Probability(StructuralFeature):
 
     Example
     -------
-    In this example, the `Add` feature is applied to the input image with 
-    a 70% chance.
-
     >>> import deeptrack as dt
     >>> import numpy as np
-
+    
+    In this example, the `Add` feature is applied to the input image with 
+    a 70% chance.
     Define a feature and wrap it with `Probability`:
 
     >>> add_feature = dt.Add(value=2)
@@ -3685,24 +3676,54 @@ class ConditionalSetProperty(StructuralFeature):
         Resolves the child feature, conditionally applying the specified 
         properties.
 
+    Notes
+    -----
+    - If `condition` is a string, the condition must be explicitly passed when
+      resolving.
+    - The properties applied **do not persist** unless explicitly stored.
+
     Example
     -------
     >>> import deeptrack as dt
+    >>> import numpy as np
 
     Define a Gaussian noise feature:
-    >>> gaussian_noise = dt.Gaussian()
+    >>> gaussian_noise = dt.GaussianNoise(sigma=0)
 
-    Apply `sigma=5` **only if** `is_noisy=True`:
+    Apply `sigma=5` **only if** `condition=True`:
     >>> conditional_feature = dt.ConditionalSetProperty(
-    ...     gaussian_noise, condition="is_noisy", sigma=5
+    ...     gaussian_noise, sigma=5
+    ... )
+
+    Define an image:
+    >>> image = np.ones((512, 512))
+
+    Resolve with condition met:
+    >>> noisy_image = conditional_feature(image, condition=True)
+    >>> print(noisy_image.std())  # Should be ~5
+    4.987707046984823
+
+    Resolve without condition:
+    >>> clean_image = conditional_feature(image, condition=False)
+    >>> print(clean_image.std())  # Should be 0
+    0.0
+
+    --- Using a string-based condition ---
+    Define condition as a string:
+    >>> conditional_feature = dt.ConditionalSetProperty(
+    ...     gaussian_noise, sigma=5, condition="is_noisy"
     ... )
 
     Resolve with condition met:
-    >>> noisy_image = conditional_feature.resolve(is_noisy=True)
-   
-    Resolve without condition:
-    >>> clean_image = conditional_feature.resolve(is_noisy=False)
+    >>> noisy_image = conditional_feature(image, is_noisy=True)
+    >>> print(noisy_image.std())  # Should be ~5
+    5.006310381139811
 
+    Resolve without condition:
+    >>> clean_image = conditional_feature(image, is_noisy=False)
+    >>> print(clean_image.std())  # Should be 0
+    0.0
+    
     """
 
     __distributed__: bool = False
@@ -3728,6 +3749,9 @@ class ConditionalSetProperty(StructuralFeature):
             `True`.
 
         """
+
+        if isinstance(condition, str):
+            kwargs.setdefault(condition, True)
 
         super().__init__(condition=condition, **kwargs)
         self.feature = self.add_feature(feature)
@@ -4325,7 +4349,6 @@ class OneOfDict(Feature):
     >>> import numpy as np
 
     Define a dictionary of features:
-    
     >>> features_dict = {
     ...     "add": dt.Add(value=10),
     ...     "multiply": dt.Multiply(value=2),
@@ -4333,13 +4356,11 @@ class OneOfDict(Feature):
     >>> one_of_dict_feature = dt.OneOfDict(features_dict)
 
     Apply a randomly selected feature:
-    
     >>> input_image = np.array([1, 2, 3])
     >>> output_image = one_of_dict_feature(input_image)
     >>> print(output_image)
 
     Use a specific key to apply a predefined feature:
-    
     >>> controlled_feature = dt.OneOfDict(features_dict, key="add")
     >>> output_image = controlled_feature(input_image)
     >>> print(output_image)  # Adds 10 to each element.
@@ -4482,24 +4503,20 @@ class LoadImage(Feature):
     >>> from tempfile import NamedTemporaryFile
 
     Create a temporary image file:
-
     >>> temp_file = NamedTemporaryFile(suffix=".npy", delete=False)
     >>> np.save(temp_file.name, np.random.rand(100, 100))
 
     Load the image using `LoadImage`:
-
     >>> load_image_feature = dt.LoadImage(path=temp_file.name, to_grayscale=True)
     >>> loaded_image = load_image_feature.resolve()
 
     Print image shape:
-
     >>> print(loaded_image.shape)
 
     If `to_grayscale=True`, the image is converted to grayscale (single channel).
     If `ndim=4`, additional dimensions are added if necessary.
 
     Cleanup:
-
     >>> import os
     >>> os.remove(temp_file.name)
     
@@ -5019,18 +5036,15 @@ class AsType(Feature):
     >>> from deeptrack.features import AsType
 
     Create an input array:
-
     >>> input_image = np.array([1.5, 2.5, 3.5])
 
     Apply an AsType feature to convert to `int32`:
-
     >>> astype_feature = AsType(dtype="int32")
     >>> output_image = astype_feature.get(input_image, dtype="int32")
     >>> print(output_image)
     [1 2 3]
 
     Verify the data type:
-    
     >>> print(output_image.dtype)
     int32
 
@@ -5108,26 +5122,22 @@ class ChannelFirst2d(Feature):
     >>> from deeptrack.features import ChannelFirst2d
 
     Create a 2D input array:
-
     >>> input_image_2d = np.random.rand(10, 10)
     >>> print(input_image_2d.shape)
     (10, 10)
 
     Convert it to channel-first format:
-
     >>> channel_first_feature = ChannelFirst2d()
     >>> output_image = channel_first_feature.get(input_image_2d, axis=-1)
     >>> print(output_image.shape)
     (1, 10, 10)
 
     Create a 3D input array:
-
     >>> input_image_3d = np.random.rand(10, 10, 3)
     >>> print(input_image_3d.shape)
     (10, 10, 3)
 
     Convert it to channel-first format:
-
     >>> output_image = channel_first_feature.get(input_image_3d, axis=-1)
     >>> print(output_image.shape)
     (3, 10, 10)
@@ -5391,8 +5401,7 @@ class NonOverlapping(Feature):
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
 
-    Define an ellips scatterer with randomly positioned objects
-    
+    Define an ellipse scatterer with randomly positioned objects
     >>> scatterer = dt.Ellipse(
     >>>    radius= 13 * dt.units.pixels,
     >>>    position=lambda: np.random.uniform(5, 115, size=2)* dt.units.pixels,
@@ -6034,22 +6043,18 @@ class Store(Feature):
     >>> value_feature = dt.Value(lambda: np.random.rand())
 
     Create a `Store` feature with a key:
-
     >>> store_feature = dt.Store(feature=value_feature, key="example")
 
     Retrieve and store the value:
-
     >>> output = store_feature(None, key="example", replace=False)
 
     Retrieve the stored value without recomputing:
-
     >>> value_feature.update()
     >>> cached_output = store_feature(None, key="example", replace=False)
     >>> print(cached_output == output)
     True
 
     Retrieve the stored value recomputing:
-
     >>> value_feature.update()
     >>> cached_output = store_feature(None, key="example", replace=True)
     >>> print(cached_output == output)
@@ -6149,20 +6154,17 @@ class Squeeze(Feature):
     >>> from deeptrack.features import Squeeze
 
     Create an input array with extra dimensions:
-    
     >>> input_image = np.array([[[[1], [2], [3]]]])
     >>> print(input_image.shape)
     (1, 1, 3, 1)
 
     Create a Squeeze feature:
-    
     >>> squeeze_feature = Squeeze(axis=0)
     >>> output_image = squeeze_feature(input_image)
     >>> print(output_image.shape)
     (1, 3, 1)
 
     Without specifying an axis:
-    
     >>> squeeze_feature = Squeeze()
     >>> output_image = squeeze_feature(input_image)
     >>> print(output_image.shape)
@@ -6243,20 +6245,17 @@ class Unsqueeze(Feature):
     >>> import numpy as np
 
     Create an input array:
-    
     >>> input_image = np.array([1, 2, 3])
     >>> print(input_image.shape)
     (3,)
 
     Apply an Unsqueeze feature:
-    
     >>> unsqueeze_feature = dt.Unsqueeze(axis=0)
     >>> output_image = unsqueeze_feature(input_image)
     >>> print(output_image.shape)
     (1, 3)
 
     Without specifying an axis:
-
     >>> unsqueeze_feature = dt.Unsqueeze()
     >>> output_image = unsqueeze_feature(input_image)
     >>> print(output_image.shape)
@@ -6342,13 +6341,11 @@ class MoveAxis(Feature):
     >>> import numpy as np
 
     Create an input array:
-    
     >>> input_image = np.random.rand(2, 3, 4)
     >>> print(input_image.shape)
     (2, 3, 4)
 
     Apply a MoveAxis feature:
-    
     >>> move_axis_feature = dt.MoveAxis(source=0, destination=2)
     >>> output_image = move_axis_feature(input_image)
     >>> print(output_image.shape)
@@ -6432,20 +6429,17 @@ class Transpose(Feature):
     >>> import numpy as np
 
     Create an input array:
-
     >>> input_image = np.random.rand(2, 3, 4)
     >>> print(input_image.shape)
     (2, 3, 4)
 
     Apply a Transpose feature:
-    
     >>> transpose_feature = dt.Transpose(axes=(1, 2, 0))
     >>> output_image = transpose_feature(input_image)
     >>> print(output_image.shape)
     (3, 4, 2)
 
     Without specifying axes:
-    
     >>> transpose_feature = dt.Transpose()
     >>> output_image = transpose_feature(input_image)
     >>> print(output_image.shape)
@@ -6528,11 +6522,9 @@ class OneHot(Feature):
     >>> import numpy as np
     
     Create an input array of class labels:
-
     >>> input_data = np.array([0, 1, 2])
 
     Apply a OneHot feature:
-
     >>> one_hot_feature = dt.OneHot(num_classes=3)
     >>> one_hot_feature = dt.OneHot(num_classes=3)
     >>> one_hot_encoded = one_hot_feature.get(input_data, num_classes=3)
@@ -6637,11 +6629,9 @@ class TakeProperties(Feature):
     ...         super().__init__(my_property=my_property, **kwargs)
 
     Create an example feature with a property:
-    
     >>> feature = ExampleFeature(my_property=Property(42))
 
     Use `TakeProperties` to extract the property:
-    
     >>> take_properties = dt.TakeProperties(feature)
     >>> output = take_properties.get(image=None, names=["my_property"])
     >>> print(output)
@@ -6651,7 +6641,6 @@ class TakeProperties(Feature):
     >>> noise_feature = dt.Gaussian(mu=7, sigma=12)
     
     Use `TakeProperties` to extract the property:
-
     >>> take_properties = dt.TakeProperties(noise_feature)
     >>> output = take_properties.get(image=None, names=["mu"])
     >>> print(output)

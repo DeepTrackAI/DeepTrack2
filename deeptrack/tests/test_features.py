@@ -636,58 +636,51 @@ class TestFeatures(unittest.TestCase):
         input_image = np.ones((10, 10))
         output_list = combined_feature.resolve(input_image)
 
-        assert isinstance(output_list, list), "Output should be a list"
-        assert len(output_list) == 2, "Output list should contain results of both features"
+        self.assertTrue(isinstance(output_list, list), "Output should be a list")
+        self.assertTrue(len(output_list) == 2, "Output list should contain results of both features")
 
         for output in output_list:
-            assert output.shape == input_image.shape, "Output shape mismatch"
+            self.assertTrue(output.shape == input_image.shape, "Output shape mismatch")
 
         noisy_image = output_list[0]
         added_image = output_list[1]
 
-        assert not np.all(noisy_image == 1), "Gaussian noise was not applied"
-        assert np.allclose(added_image, input_image + 10), "Add operation failed"
+        self.assertFalse(np.all(noisy_image == 1), "Gaussian noise was not applied")
+        self.assertTrue(np.allclose(added_image, input_image + 10), "Add operation failed")
 
 
-    # def test_ConditionalSetProperty(self):
+    def test_ConditionalSetProperty(self):
     #     """Test that ConditionalSetProperty correctly modifies properties based on condition."""
 
-    #     gaussian_noise = Gaussian(sigma = 0)
+        """Set up a Gaussian feature and a test image before each test."""
+        gaussian_noise = Gaussian(sigma=0)
+        image = np.ones((128, 128))
 
-    #     # Wrap it with ConditionalSetProperty
-    #     conditional_feature = features.ConditionalSetProperty(
-    #         gaussian_noise, condition="is_noisy", sigma=5,
-    #     )
+        """Test that sigma is correctly applied when condition is a boolean."""
+        conditional_feature = dt.ConditionalSetProperty(
+            gaussian_noise, sigma=5
+        )
+        print(PUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERAPUPPEAPERA)
+        # Test with condition met (should apply sigma=5)
+        noisy_image = conditional_feature(image, condition=True)
+        self.assertAlmostEqual(noisy_image.std(), 5, delta=0.5)
 
-    #     input_image = np.ones((10, 10))
+        # Test without condition met (should apply sigma=0)
+        clean_image = conditional_feature(image, condition=False)
+        self.assertEqual(clean_image.std(), 0)
 
-    #     # Case 1: Condition is True → Should apply sigma=5
-    #     output_noisy = conditional_feature.resolve(input_image, is_noisy=True)
-    #     assert output_noisy.std() > 0, \
-    #         "Expected noise to be applied when condition is True."
+        """Test that sigma is correctly applied when condition is a string property."""
+        conditional_feature = dt.ConditionalSetProperty(
+            gaussian_noise, sigma=5, condition="is_noisy"
+        )
 
-    #     # Case 2: Condition is False → Should NOT apply sigma=5
-    #     output_clean = conditional_feature.resolve(input_image, is_noisy=False)
-    #     assert np.array_equal(input_image, output_clean), \
-    #         "Expected input to remain unchanged when condition is False."
+        # Test with condition met (should apply sigma=5)
+        noisy_image = conditional_feature(image, is_noisy=True)
+        self.assertAlmostEqual(noisy_image.std(), 5, delta=0.5)
 
-    #     # Case 3: Condition as a direct boolean (True)
-    #     conditional_feature_direct = features.ConditionalSetProperty(
-    #         gaussian_noise, condition=True, sigma=3
-    #     )
-    #     output_direct = conditional_feature_direct.resolve(input_image)
-    #     assert output_direct.std() > 0, \
-    #         "Expected noise when condition is set to True."
-
-    #     # Case 4: Condition as a direct boolean (False)
-    #     conditional_feature_direct_false = features.ConditionalSetProperty(
-    #         gaussian_noise, condition=False, sigma=3
-    #     )
-    #     output_direct_false = conditional_feature_direct_false.resolve(
-    #         input_image
-    #     )
-    #     assert np.array_equal(input_image, output_direct_false), \
-    #         "Expected input to remain unchanged when condition is explicitly False."
+        # Test without condition met (should apply sigma=0)
+        clean_image = conditional_feature(image, is_noisy=False)
+        self.assertEqual(clean_image.std(), 0)
 
 
     def test_Lambda_scaling(self):
@@ -696,16 +689,16 @@ class TestFeatures(unittest.TestCase):
                 return image * scale
             return scale_function
 
-        self.lambda_feature = features.Lambda(function=scale_function_factory, scale=5)
-        self.input_image = Image(np.ones((5, 5)))
+        lambda_feature = features.Lambda(function=scale_function_factory, scale=5)
+        input_image = Image(np.ones((5, 5)))
 
-        output_image = self.lambda_feature.resolve(self.input_image)
+        output_image = lambda_feature.resolve(input_image)
 
         expected_output = np.ones((5, 5)) * 5
         np.testing.assert_array_equal(output_image, expected_output)
 
         lambda_feature = features.Lambda(function=scale_function_factory, scale=3)
-        output_image = lambda_feature.resolve(self.input_image)
+        output_image = lambda_feature.resolve(input_image)
 
         expected_output = np.ones((5, 5)) * 3
         np.testing.assert_array_equal(output_image, expected_output)
@@ -814,28 +807,6 @@ class TestFeatures(unittest.TestCase):
         output_image = controlled_feature.resolve(self.input_image)
         expected_output = self.input_image * 2  # The "multiply" feature should be applied
         np.testing.assert_array_equal(output_image, expected_output, "Controlled feature selection (key='multiply') failed.")
-
-
-    def test_Combine_feature(self):
-
-        noise_feature = Gaussian(mu=0, sigma=2)
-        add_feature = features.Add(value=10)
-        combined_feature = features.Combine([noise_feature, add_feature])
-
-        input_image = np.ones((10, 10))
-        output_list = combined_feature.resolve(input_image)
-
-        assert isinstance(output_list, list), "Output should be a list"
-        assert len(output_list) == 2, "Output list should contain results of both features"
-
-        for output in output_list:
-            assert output.shape == input_image.shape, "Output shape mismatch"
-
-        noisy_image = output_list[0]
-        added_image = output_list[1]
-
-        assert not np.all(noisy_image == 1), "Gaussian noise was not applied"
-        assert np.allclose(added_image, input_image + 10), "Add operation failed"
 
 
     # def test_ConditionalSetProperty(self):
@@ -1409,10 +1380,10 @@ class TestFeatures(unittest.TestCase):
 
             if not np.array_equal(output_image, input_image): 
                 applied_count += 1
-                assert np.array_equal(output_image, input_image + 2)
+                self.assertTrue(np.array_equal(output_image, input_image + 2))
 
         observed_probability = applied_count / total_runs
-        assert 0.65 <= observed_probability <= 0.75, f"Observed probability: {observed_probability}"
+        self.assertTrue(0.65 <= observed_probability <= 0.75, f"Observed probability: {observed_probability}")
 
 
     def test_Repeat(self):
@@ -1425,15 +1396,15 @@ class TestFeatures(unittest.TestCase):
 
         output_data = pipeline.resolve(input_data)
 
-        assert np.array_equal(output_data, expected_output), \
-            f"Expected {expected_output}, got {output_data}"
+        self.assertTrue(np.array_equal(output_data, expected_output), \
+            f"Expected {expected_output}, got {output_data}")
 
         pipeline_shorthand = features.Add(value=10) ^ 3
         output_data_shorthand = pipeline_shorthand.resolve(input_data)
 
-        assert np.array_equal(output_data_shorthand, expected_output), \
+        self.assertTrue(np.array_equal(output_data_shorthand, expected_output), \
             f"Shorthand failed. Expected {expected_output}, \
-                got {output_data_shorthand}"
+                got {output_data_shorthand}")
 
     def test_BindUpdate(self):
 
