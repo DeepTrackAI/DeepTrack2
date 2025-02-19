@@ -66,7 +66,6 @@ Module Highlights
 Example
 -------
 Define a simple pipeline with features:
-
 >>> import deeptrack as dt
 >>> import numpy as np
 
@@ -82,7 +81,7 @@ Create two features:
 Chain features together:
 >>> pipeline = dt.Chain(add_five, add_ten)
 
-or equivalently:
+Or equivalently:
 >>> pipeline = add_five >> add_ten
 
 Process an input image:
@@ -990,31 +989,15 @@ class Feature(DeepTrackNode):
 
         Examples
         --------
-        Accessing an attribute as if it were a property:
+        >>> import deptrack as dt 
 
-        >>> feature = MyFeature(value=42)
+        Accessing an attribute as if it were a property:
+        >>> feature = dt.DummyFeature(value=42)
         >>> feature.value()
         42
 
-        If the property does not exist, an `AttributeError` is raised:
-
-        >>> feature.nonexistent_property
-        AttributeError: 'MyFeature' object has no attribute 
-        'nonexistent_property'
-        
-            If the `properties` attribute is not defined for the instance or 
-            if the `key` does not exist in `properties`.
-
-        Examples
-        --------
-        Accessing an attribute as if it were a property:
-
-        >>> feature = MyFeature(value=42)
-        >>> feature.value()
-        42
-
-        If the property does not exist, an `AttributeError` is raised:
-
+        If the `properties` attribute is not defined for the instance or if the
+        `key` does not exist in `properties`, an `AttributeError` is raised:
         >>> feature.nonexistent_property
         AttributeError: 'MyFeature' object has no attribute 
         'nonexistent_property'
@@ -1547,7 +1530,6 @@ def propagate_data_to_dependencies(
     >>> import deeptrack as dt
 
     Update the properties of a feature and its dependencies:
-
     >>> feature = dt.DummyFeature(value=10)
     >>> dt.propagate_data_to_dependencies(feature, value=20)
     >>> feature.value()
@@ -1555,8 +1537,6 @@ def propagate_data_to_dependencies(
 
     This will update the `value` property of the `feature` and its 
     dependencies, provided they have a property named `value`.
-        recursively traversed to ensure that all relevant nodes in the 
-        dependency tree are considered.
 
     """
 
@@ -1641,27 +1621,19 @@ class Chain(StructuralFeature):
     >>> M = dt.Multiply(value=0.5)
 
     Chain the features:
-
     >>> chain = A >> M  
 
     Equivalent to: 
-
     >>> chain = dt.Chain(A, M)
 
     Create a dummy image:
-
     >>> dummy_image = np.ones((2, 4))
 
     Apply the chained features:
-
     >>> transformed_image = chain(dummy_image)
     >>> print(transformed_image)
     [[5.5 5.5 5.5 5.5]
     [5.5 5.5 5.5 5.5]]
-
-    In this example, the input image is first passed through the `Add` feature 
-    to add an offset of 10, and then through the `Multiply` feature to multiply
-    the result by 0.5.
 
     """
 
@@ -1761,14 +1733,13 @@ class DummyFeature(Feature):
         Simply returns the input image(s) unchanged.
 
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
     Create an image and pass it through a `DummyFeature` to demonstrate 
     no changes to the input data:
-    
     >>> dummy_image = np.ones((60, 80))
 
     Initialize the DummyFeature:
@@ -1784,9 +1755,6 @@ class DummyFeature(Feature):
     Access the properties stored in DummyFeature:
     >>> print(dummy_feature.properties["value"]())
     42
-
-    This example illustrates that the `DummyFeature` can act as a container
-    for properties, while the data itself remains unaltered.
 
     """
 
@@ -1856,13 +1824,11 @@ class Value(Feature):
     >>> import deeptrack as dt
 
     Initialize a constant value and retrieve it:
-
     >>> value = dt.Value(42)
     >>> print(value())
     42
 
     Override the value at call time:
-
     >>> print(value(value=100))
     100
 
@@ -1968,27 +1934,22 @@ class ArithmeticOperationFeature(Feature):
     `get(image: Any or list of Any, value: float or int or list of float or int, **kwargs: dict of str to Any) -> list of Any`
         Apply the arithmetic operation element-wise to the input data.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import operator
 
     Define a simple addition operation:
-
     >>> addition = dt.ArithmeticOperationFeature(operator.add, value=10)
 
     Create a list of input values:
-
     >>> input_values = [1, 2, 3, 4]
 
     Apply the operation:
-
     >>> output_values = addition(input_values)
     >>> print(output_values)
     [11, 12, 13, 14]
 
-    In this example, each value in the input list is incremented by 10.
-    
     """
 
     __distributed__: bool = False
@@ -2075,28 +2036,22 @@ class Add(ArithmeticOperationFeature):
     **kwargs : dict of str to Any
         Additional keyword arguments passed to the parent constructor.
 
-    Example
-    -------
-    In this example, each element in the input array is increased by 5.
-
+    Examples
+    --------
     >>> import deeptrack as dt
 
     Create a pipeline using `Add`:
-    
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Add(value=5)
     >>> pipeline.resolve()
     [6, 7, 8]
     
     Alternatively, the pipeline can be created using operator overloading:
-
     >>> pipeline = dt.Value([1, 2, 3]) + 5
     
     Or:
-
     >>> pipeline = 5 + dt.Value([1, 2, 3])
     
     Or, more explicitly:
-
     >>> input_value = dt.Value([1, 2, 3])
     >>> sum_feature = dt.Add(value=5)
     >>> pipeline = sum_feature(input_value)
@@ -2134,28 +2089,22 @@ class Subtract(ArithmeticOperationFeature):
     **kwargs : dict of str to Any
         Additional keyword arguments passed to the parent constructor.
 
-    Example
-    -------
-    In this example, each element in the input array is decreased by 2.
-
+    Examples
+    --------
     >>> import deeptrack as dt
 
     Create a pipeline using `Subtract`:
-
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Subtract(value=2)
     >>> pipeline.resolve()
     [-1, 0, 1]
     
     Alternatively, the pipeline can be created using operator overloading:
-
     >>> pipeline = dt.Value([1, 2, 3]) - 2
     
     Or:
-
     >>> pipeline = -2 + dt.Value([1, 2, 3])
     
     Or, more explicitly:
-
     >>> input_value = dt.Value([1, 2, 3])
     >>> sub_feature = dt.Subtract(value=2)
     >>> pipeline = sub_feature(input_value)
@@ -2193,28 +2142,22 @@ class Multiply(ArithmeticOperationFeature):
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
-    Example
-    -------
-    In this example, each element in the input array is multiplied by 5.
-
+    Examples
+    --------
     >>> import deeptrack as dt
 
-    Start by creating a pipeline using Multiply:
-    
+    Start by creating a pipeline using `Multiply`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Multiply(value=5)
     >>> pipeline.resolve()
     [5, 10, 15]
     
     Alternatively, this pipeline can be created using:
-    
     >>> pipeline = dt.Value([1, 2, 3]) * 5
 
     Or:
-
     >>> pipeline = 5 * dt.Value([1, 2, 3])
     
     Or, more explicitly:
-    
     >>> input_value = dt.Value([1, 2, 3])
     >>> mul_feature = dt.Multiply(value=5)
     >>> pipeline = mul_feature(input_value)
@@ -2252,26 +2195,22 @@ class Divide(ArithmeticOperationFeature):
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
-    Example
-    -------
-    In this example, each element in the input array is divided by 5.
-
+    Examples
+    --------
     >>> import deeptrack as dt
 
-    Start by creating a pipeline using Divide:
-
+    Start by creating a pipeline using `Divide`:
     >>> pipeline = Value([1, 2, 3]) >> Divide(value=5)
     >>> pipeline.resolve()
     [0.2 0.4 0.6]
     
     Equivalently, this pipeline can be created using:
-    
     >>> pipeline = Value([1, 2, 3]) / 5
     
+    Which is not equivalent to:
     >>> pipeline = 5 / Value([1, 2, 3])  # Different result.
     
     Or, more explicitly:
-    
     >>> input_value = Value([1, 2, 3])
     >>> truediv_feature = Divide(value=5)
     >>> pipeline = truediv_feature(input_value)
@@ -2313,28 +2252,22 @@ class FloorDivide(ArithmeticOperationFeature):
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
-    Example
-    -------
-    In this example, each element in the input array is floor-divided by 5.
-
+    Examples
+    --------
     >>> import deeptrack as dt
 
-    Start by creating a pipeline using FloorDivide:
-
+    Start by creating a pipeline using `FloorDivide`:
     >>> pipeline = dt.Value([-3, 3, 6]) >> dt.FloorDivide(value=5)
     >>> pipeline.resolve()
     [0.2 0.4 0.6]
     
     Equivalently, this pipeline can be created using:
-    
     >>> pipeline = dt.Value([-3, 3, 6]) // 5
     
     Which is not equivalent to:
-
     >>> pipeline = 5 // dt.Value([-3, 3, 6])  # Different result.
     
     Or, more explicitly:
-    
     >>> input_value = dt.Value([-3, 3, 6])
     >>> floordiv_feature = dt.FloorDivide(value=5)
     >>> pipeline = feature(floordiv_input_value)
@@ -2372,28 +2305,22 @@ class Power(ArithmeticOperationFeature):
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
-    Example
-    -------
-    In this example, each element in the input array is elevated to the 3.
-
+    Examples
+    --------
     >>> import deeptrack as dt
 
-    Start by creating a pipeline using Power:
-
+    Start by creating a pipeline using `Power`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Power(value=3)
     >>> pipeline.resolve()
     [1, 8, 27]
     
     Equivalently, this pipeline can be created using:
-    
     >>> pipeline = dt.Value([1, 2, 3]) ** 3
     
     Which is not equivalent to:
-
     >>> pipeline = 3 ** dt.Value([1, 2, 3])  # Different result.
     
     Or, more explicitly:
-    
     >>> input_value = dt.Value([1, 2, 3])
     >>> pow_feature = Power(value=3)
     >>> pipeline = pow_feature(input_value)
@@ -2431,28 +2358,22 @@ class LessThan(ArithmeticOperationFeature):
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
-    Example
-    -------
-    In this example, each element in the input array is compared (<) with 2.
-
+    Examples
+    --------
     >>> import deeptrack as dt
 
-    Start by creating a pipeline using LessThan:
-    
+    Start by creating a pipeline using `LessThan`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThan(value=2)
     >>> pipeline.resolve()
     [True False False]
     
     Equivalently, this pipeline can be created using:
-    
     >>> pipeline = dt.Value([1, 2, 3]) < 2
     
     Which is not equivalent to:
-
     >>> pipeline = 2 < dt.Value([1, 2, 3])  # Different result.
     
-    Or, most explicitly:
-    
+    Or, more explicitly:
     >>> input_value = dt.Value([1, 2, 3])
     >>> lt_feature = dt.LessThan(value=2)
     >>> pipeline = lt_feature(input_value)
@@ -2490,28 +2411,22 @@ class LessThanOrEquals(ArithmeticOperationFeature):
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
-    Example
-    -------
-    In this example, each element in the input array is compared (<=) with 2.
-
+    Examples
+    --------
     >>> import deeptrack as dt
 
-    Start by creating a pipeline using LessThanOrEquals:
-
+    Start by creating a pipeline using `LessThanOrEquals`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThanOrEquals(value=2)
     >>> pipeline.resolve()
     [True  True False]
     
     Equivalently, this pipeline can be created using:
-    
     >>> pipeline = dt.Value([1, 2, 3]) <= 2
     
     Which is not equivalent to:
-
     >>> pipeline = 2 <= dt.Value([1, 2, 3])  # Different result.
     
     Or, more explicitly:
-    
     >>> input_value = dt.Value([1, 2, 3])
     >>> le_feature = dt.LessThanOrEquals(value=2)
     >>> pipeline = le_feature(input_value)
@@ -2552,28 +2467,22 @@ class GreaterThan(ArithmeticOperationFeature):
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
-    Example
-    -------
-    In this example, each element in the input array is compared (>) with 2.
-
+    Examples
+    --------
     >>> import deeptrack as dt
 
-    Start by creating a pipeline using GreaterThan:
-
+    Start by creating a pipeline using `GreaterThan`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThan(value=2)
     >>> pipeline.resolve()
     [False False  True]
     
     Equivalently, this pipeline can be created using:
-    
     >>> pipeline = dt.Value([1, 2, 3]) > 2
 
     Which is not equivalent to:
-    
     >>> pipeline = 2 > dt.Value([1, 2, 3])  # Different result.
     
     Or, most explicitly:
-    
     >>> input_value = dt.Value([1, 2, 3])
     >>> gt_feature = dt.GreaterThan(value=2)
     >>> pipeline = gt_feature(input_value)
@@ -2611,28 +2520,22 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
-    Example
-    -------
-    In this example, each element in the input array is compared (>=) with 2.
-
+    Examples
+    --------
     >>> import deeptrack as dt
 
-    Start by creating a pipeline using GreaterThanOrEquals:
-    
+    Start by creating a pipeline using `GreaterThanOrEquals`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThanOrEquals(value=2)
     >>> pipeline.resolve()
     [False  True  True]
     
     Equivalently, this pipeline can be created using:
-    
     >>> pipeline = dt.Value([1, 2, 3]) >= 2
 
     Which is not equivalent to:
-
     >>> pipeline = 2 >= dt.Value([1, 2, 3])  # Different result.
     
-    Or, most explicitly:
-    
+    Or, more explicitly:
     >>> input_value = dt.Value([1, 2, 3])
     >>> ge_feature = dt.GreaterThanOrEquals(value=2)
     >>> pipeline = ge_feature(input_value)
@@ -2684,31 +2587,26 @@ class Equals(ArithmeticOperationFeature):
       involving regular Python objects.
     - Always use `>>` to apply `Equals` correctly in a feature chain.
     
-    Example
-    -------
-    In this example, each element in the input array is compared (==) with 2.
-
+    Examples
+    --------
     >>> import deeptrack as dt
 
-    Start by creating a pipeline using Equals:
-    
+    Start by creating a pipeline using `Equals`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Equals(value=2)
     >>> pipeline.resolve()
     [False  True  False]
     
     This is the **only correct way** to apply `Equals` in a feature pipeline.
-
+    
     ### Incorrect Approaches
     Using `==` directly on a `Feature` instance **does not work** because 
     `Feature` does not override `__eq__`:
-
     >>> pipeline = dt.Value([1, 2, 3]) == 2  # Incorrect
     >>> pipeline.resolve()  
     AttributeError: 'bool' object has no attribute 'resolve'
 
     Similarly, directly calling `Equals` on an input feature **immediately 
     evaluates the comparison**, returning a boolean instead of a `Feature`:
-
     >>> pipeline = dt.Equals(value=2)(dt.Value([1, 2, 3]))  # Incorrect
     >>> pipeline.resolve()
     AttributeError: 'bool' object has no attribute 'resolve'
@@ -2770,22 +2668,19 @@ class Stack(Feature):
     `get(image: Any, value: Any, **kwargs: dict[str, Any]) -> list[Any]`
         Concatenate the input with the value.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
 
-    Start by creating a pipeline using Stack:
-    
+    Start by creating a pipeline using `Stack`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Stack(value=[4, 5])
     >>> print(pipeline.resolve())
     [1, 2, 3, 4, 5]
 
     Equivalently, this pipeline can be created using:
-    
     >>> pipeline = dt.Value([1, 2, 3]) & [4, 5]
 
-    Or
-    
+    Or:
     >>> pipeline = [4, 5] & dt.Value([1, 2, 3])  # Different result.
 
     """
@@ -2873,13 +2768,11 @@ class Arguments(Feature):
     >>> import os
 
     Create a temporary image:
-
     >>> test_image_array = (np.ones((50, 50)) * 128).astype(np.uint8)
     >>> temp_png = NamedTemporaryFile(suffix=".png", delete=False)
     >>> PIL_Image.fromarray(test_image_array).save(temp_png.name)
 
     A typical use-case is:
-
     >>> arguments = dt.Arguments(is_label=False)
     >>> image_pipeline = (
     ...     dt.LoadImage(path=temp_png.name) >>
@@ -2897,12 +2790,10 @@ class Arguments(Feature):
     0.0
 
     Remove the temporary image:
-
     >>> os.remove(temp_png.name)
 
     For a non-mathematical dependence, create a local link to the property as 
     follows:
-
     >>> arguments = dt.Arguments(is_label=False)
     >>> image_pipeline = (
     ...     dt.LoadImage(path=temp_png.name) >>
@@ -2915,7 +2806,6 @@ class Arguments(Feature):
 
     Keep in mind that, if any dependent property is non-deterministic, they may 
     permanently change:
-    
     >>> arguments = dt.Arguments(noise_max_sigma=5)
     >>> image_pipeline = (
     ...     dt.LoadImage(path=temp_png.name) >>
@@ -2937,7 +2827,6 @@ class Arguments(Feature):
 
     As with any feature, all arguments can be passed by deconstructing the 
     properties dict:
-
     >>> arguments = dt.Arguments(is_label=False, noise_sigma=5)
     >>> image_pipeline = (
     ...     dt.LoadImage(path=temp_png.name) >>
@@ -3014,24 +2903,20 @@ class Probability(StructuralFeature):
         Resolves the feature if the sampled random number is less than the 
         specified probability.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
     
     In this example, the `Add` feature is applied to the input image with 
-    a 70% chance.
-    Define a feature and wrap it with `Probability`:
-
+    a 70% chance. Define a feature and wrap it with `Probability`:
     >>> add_feature = dt.Add(value=2)
     >>> probabilistic_feature = dt.Probability(add_feature, probability=0.7)
 
     Define an input image:
-
     >>> input_image = np.ones((5, 5))
 
     Apply the feature:
-
     >>> output_image = probabilistic_feature(input_image)
 
     """
@@ -3134,31 +3019,26 @@ class Repeat(Feature):
         Applies the feature `N` times in sequence, passing the output of each 
         iteration as the input to the next.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     
-    Define a feature that adds `10` to its input:
-    
+    Define an `Add` feature that adds `10` to its input:
     >>> add_ten = dt.Add(value=10)
 
     Apply this feature **3 times** using `Repeat`:
-    
     >>> pipeline = dt.Repeat(add_ten, N=3)
 
     Process an input list:
-
     >>> print(pipeline.resolve([1, 2, 3]))
     [31, 32, 33]
 
     Step-by-step breakdown:
-    
     - Iteration 1: `[1, 2, 3] + 10 → [11, 12, 13]`
     - Iteration 2: `[11, 12, 13] + 10 → [21, 22, 23]`
     - Iteration 3: `[21, 22, 23] + 10 → [31, 32, 33]`
 
     Alternative shorthand using `^` operator:
-
     >>> pipeline = dt.Add(value=10) ^ 3
     >>> print(pipeline.resolve([1, 2, 3]))
     [31, 32, 33]
@@ -3265,15 +3145,12 @@ class Combine(StructuralFeature):
         Resolves each feature in the `features` list on the input image and 
         returns their results as a list.
 
-    Example
-    -------
-    The result is a list containing the outputs of the `GaussianBlur` and 
-    `Add` features applied to the input image.
-
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
-    Define a list of features to combine:
+    Define a list of features to combine `GaussianBlur` and `Add`:
     >>> blur_feature = dt.GaussianBlur(sigma=2)
     >>> add_feature = dt.Add(value=10)
 
@@ -3358,11 +3235,10 @@ class Slice(Feature):
 
     Examples
     --------
-    **Recommended Approach: Use Normal Indexing for Static Slicing**
-    
     >>> import deeptrack as dt
     >>> import numpy as np
 
+    **Recommended Approach: Use Normal Indexing for Static Slicing**
     >>> feature = dt.DummyFeature()
     >>> static_slicing = feature[:, 1:2, ::-2]
     >>> result = static_slicing.resolve(np.arange(27).reshape((3, 3, 3)))
@@ -3370,7 +3246,6 @@ class Slice(Feature):
 
     **Using `Slice` for Dynamic Slicing (when necessary)**
     If slices depend on computed properties, use `Slice`:
-    
     >>> feature = dt.DummyFeature()
     >>> dynamic_slicing = feature >> dt.Slice(
     ...     slices=(slice(None), slice(1, 2), slice(None, None, -2))
@@ -3462,23 +3337,21 @@ class Bind(StructuralFeature):
     `get(image: Any, **kwargs: dict[str, Any]) -> Any`
         Resolves the child feature with the provided arguments.
 
-    Example
-    -------
-    Dynamically modify the behavior of a feature:
-
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
+    Start by creating a `Gaussian` feature: 
     >>> gaussian_noise = dt.Gaussian()
-    >>> bound_feature = dt.Bind(gaussian_noise, mu = -5, sigma=2)
-    >>> input_image = np.zeros((512, 512))
 
+    Dynamically modify the behavior of the feature using `Bind`:
+    >>> bound_feature = dt.Bind(gaussian_noise, mu = -5, sigma=2)
+    
+    >>> input_image = np.zeros((512, 512))
     >>> output_image = bound_feature.resolve(input_image)
     >>> print(np.mean(output_image), np.std(output_image))
     -4.9954959040123152 1.9975296489398942
-
-    In this example, the `mu` and `sigma` parameters are dynamically set to -5
-    and 2 when resolving the `gaussian_noise` feature.
 
     """
 
@@ -3561,22 +3434,21 @@ class BindUpdate(StructuralFeature):
     The current implementation is not guaranteed to be exactly equivalent to 
     prior implementations.
 
-    Example
-    -------
-    Dynamically modify the behavior of a feature:
-
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
+    Start by creating a `Gaussian` feature:
     >>> gaussian_noise = dt.Gaussian()
+
+    Dynamically modify the behavior of the feature using `BindUpdate`:
     >>> bound_feature = dt.BindUpdate(gaussian_noise, mu = 5, sigma=3)
+    
     >>> input_image = np.zeros((512, 512))
     >>> output_image = bound_feature.resolve(input_image)
     >>> print(np.mean(output_image), np.std(output_image))
     4.998501486851294 3.0020269383538176
-
-    In this example, the `mu` and `sigma` parameters are dynamically set to 5
-    and 3 when resolving the `gaussian_noise` feature.
 
     """
 
@@ -3682,14 +3554,15 @@ class ConditionalSetProperty(StructuralFeature):
       resolving.
     - The properties applied **do not persist** unless explicitly stored.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
-    Define a Gaussian noise feature:
-    >>> gaussian_noise = dt.GaussianNoise(sigma=0)
+    Define a `Gaussian` noise feature:
+    >>> gaussian_noise = dt.Gaussian(sigma=0)
 
+    --- Using a boolean condition ---
     Apply `sigma=5` **only if** `condition=True`:
     >>> conditional_feature = dt.ConditionalSetProperty(
     ...     gaussian_noise, sigma=5
@@ -3699,12 +3572,12 @@ class ConditionalSetProperty(StructuralFeature):
     >>> image = np.ones((512, 512))
 
     Resolve with condition met:
-    >>> noisy_image = conditional_feature(image, condition=True)
+    >>> noisy_image = conditional_feature.update(image, condition=True)
     >>> print(noisy_image.std())  # Should be ~5
     4.987707046984823
 
     Resolve without condition:
-    >>> clean_image = conditional_feature(image, condition=False)
+    >>> clean_image = conditional_feature.update(image, condition=False)
     >>> print(clean_image.std())  # Should be 0
     0.0
 
@@ -3715,12 +3588,12 @@ class ConditionalSetProperty(StructuralFeature):
     ... )
 
     Resolve with condition met:
-    >>> noisy_image = conditional_feature(image, is_noisy=True)
+    >>> noisy_image = conditional_feature.update(image, is_noisy=True)
     >>> print(noisy_image.std())  # Should be ~5
     5.006310381139811
 
     Resolve without condition:
-    >>> clean_image = conditional_feature(image, is_noisy=False)
+    >>> clean_image = conditional_feature.update(image, is_noisy=False)
     >>> print(clean_image.std())  # Should be 0
     0.0
     
@@ -3802,34 +3675,36 @@ class ConditionalSetFeature(StructuralFeature):
     features depending on whether a specified condition evaluates to `True` or 
     `False`.
     
-    The `condition` parameter specifies the name of the property to listen to. 
-    For example, if the `condition` is `"is_label"`, the selected feature can 
-    be toggled by calling:
-
-    >>> feature.resolve(is_label=True)  # Resolves on_true feature.
-    >>> feature.resolve(is_label=False)  # Resolves on_false feature.
-    >>> feature.update(is_label=True)  # Updates both features.
-
-    Both `on_true` and `on_false` features are updated in either case, even if 
-    only one of them is resolved.
+    The `condition` parameter specifies either:
+    - A boolean value (default is `True`).
+    - The name of a property to listen to. For example, if 
+    `condition="is_label"`, the selected feature can be toggled as follows:
     
+    >>> feature.resolve(is_label=True)   # Resolves `on_true`
+    >>> feature.resolve(is_label=False)  # Resolves `on_false`
+    >>> feature.update(is_label=True)    # Updates both features
+
+    Both `on_true` and `on_false` are updated during each call, even if only 
+    one is resolved.
+
     Parameters
     ----------
-    on_false: Feature, optional
-        The feature to resolve if the conditional property evaluates to `False`. 
-        If not provided, the input image remains unchanged in this case.
-    on_true: Feature, optional
-        The feature to resolve if the conditional property evaluates to `True`. 
-        If not provided, the input image remains unchanged in this case.
-    condition: str or bool, optional
-        The name of the conditional property, or a boolean value. Defaults to 
-        `"is_label"`.
-    **kwargs: : dict of str to Any
+    on_false : Feature, optional
+        The feature to resolve if the condition is `False`. If not provided, 
+        the input image remains unchanged.
+    on_true : Feature, optional
+        The feature to resolve if the condition is `True`. If not provided, 
+        the input image remains unchanged.
+    condition : str or bool, optional
+        The name of the conditional property or a boolean value. If a string 
+        is provided, its value is retrieved from `kwargs` or `self.properties`. 
+        If not found, the default value is `True`.
+    **kwargs : dict of str to Any
         Additional keyword arguments passed to the parent `StructuralFeature`.
 
     Attributes
     ----------
-    __distributed__: bool
+    __distributed__ : bool
         Indicates whether this feature distributes computation across inputs.
 
     Methods
@@ -3837,24 +3712,57 @@ class ConditionalSetFeature(StructuralFeature):
     `get(image: Any, condition: str | bool, **kwargs: dict[str, Any]) -> Any`
         Resolves the appropriate feature based on the condition.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
+    >>> import numpy as np
 
-    >>> true_feature = dt.GaussianNoise(sigma=5)
-    >>> false_feature = dt.GaussianNoise(sigma=0)
-    >>> conditional_feature = ConditionalSetFeature(
+    Define two `Gaussian` noise features:
+    >>> true_feature = dt.Gaussian(sigma=0)
+    >>> false_feature = dt.Gaussian(sigma=5)
+    
+    --- Using a boolean condition ---
+    Combine the features into a conditional set feature. 
+    If not provided explicitely, condition is assumed to be True:
+    >>> conditional_feature = dt.ConditionalSetFeature(
     ...     on_true=true_feature, 
     ...     on_false=false_feature, 
-    ...     condition="is_label"
     ... )
-    >>> # Resolve based on the condition.
-    >>> image_with_noise = conditional_feature.resolve(is_label=False)
-    >>> image_without_noise = conditional_feature.resolve(is_label=True)
+
+    Define an image:
+    >>> image = np.ones((512, 512))
+
+    Resolve based on the condition:
+    >>> clean_image = conditional_feature(image) # If not specified, default is True
+    >>> print(clean_image.std())  # Should be 0
+    0.0
+    
+    >>> noisy_image = conditional_feature(image, condition=False)
+    >>> print(noisy_image.std())  # Should be ~5
+    4.987707046984823
+
+    >>> clean_image = conditional_feature(image, condition=True)
+    >>> print(clean_image.std())  # Should be 0
+    0.0
+
+    --- Using a string-based condition ---
+    Define condition as a string:
+    >>> conditional_feature = dt.ConditionalSetFeature(
+    ...     on_true=true_feature, 
+    ...     on_false=false_feature, 
+    ...     condition = "is_noisy",
+    ... )
+
+    Resolve based on the conditions:
+    >>> noisy_image = conditional_feature(image, is_noisy=False)
+    >>> print(noisy_image.std())  # Should be ~5
+    5.006310381139811
+
+    >>> clean_image = conditional_feature(image, is_noisy=True)
+    >>> print(clean_image.std())  # Should be 0
+    0.0
 
     """
-
-    #TODO: Verify example and unit test.
 
     __distributed__: bool = False
 
@@ -3862,7 +3770,7 @@ class ConditionalSetFeature(StructuralFeature):
         self: Feature,
         on_false: Feature | None = None,
         on_true: Feature | None = None,
-        condition: PropertyLike[str | bool] = "is_label",
+        condition: PropertyLike[str | bool] = True,
         **kwargs: dict[str, Any],
     ):
         """Initialize the ConditionalSetFeature.
@@ -3880,6 +3788,9 @@ class ConditionalSetFeature(StructuralFeature):
             Additional keyword arguments for the parent `StructuralFeature`.
 
         """
+
+        if isinstance(condition, str):
+            kwargs.setdefault(condition, True)
 
         super().__init__(condition=condition, **kwargs)
         
@@ -3961,25 +3872,22 @@ class Lambda(Feature):
     `get(image: Image, function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image`
         Applies the custom function to the input image.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
     Define a factory function that returns a scaling function:
-    
     >>> def scale_function_factory(scale=2):
     ...     def scale_function(image):
     ...         return image * scale
     ...     return scale_function
 
     Create a `Lambda` feature that scales images by a factor of 5:
-    
     >>> lambda_feature = dt.Lambda(function=scale_function_factory, scale=5)
 
     Apply the feature to an image:
-    
-    >>> input_image = dt.Image(np.ones((5, 5)))
+    >>> input_image = np.ones((5, 5))
     >>> output_image = lambda_feature(input_image)
     >>> print(output_image)
     [[5. 5. 5. 5. 5.]
@@ -4079,24 +3987,21 @@ class Merge(Feature):
     `get(list_of_images: list[Image], function: Callable[[list[Image]], Image | list[Image]], **kwargs: dict[str, Any]) -> Image | list[Image]`
         Applies the custom function to the list of images.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
     Define a merge function that averages multiple images:
-
     >>> def merge_function_factory():
     ...     def merge_function(images):
     ...         return np.mean(np.stack(images), axis=0)
     ...     return merge_function
 
     Create a Merge feature:
-
     >>> merge_feature = dt.Merge(function=merge_function_factory)
 
     Apply the feature to a list of images:
-
     >>> image_1 = np.ones((5, 5)) * 2
     >>> image_2 = np.ones((5, 5)) * 4
     >>> output_image = merge_feature([image_1, image_2])
@@ -4195,28 +4100,24 @@ class OneOf(Feature):
     `get(image: Any, key: int, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
         Applies the selected feature to the input image.
   
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
     Define multiple features:
-
     >>> feature_1 = dt.Add(value=10)
     >>> feature_2 = dt.Multiply(value=2)
     
     Create a `OneOf` feature that randomly selects a transformation:
-    
     >>> one_of_feature = dt.OneOf([feature_1, feature_2])
 
     Apply it to an input image:
-    
     >>> input_image = np.array([1, 2, 3])
     >>> output_image = one_of_feature(input_image)
     >>> print(output_image)  # The output depends on the randomly selected feature.
 
     Use a `key` to apply a specific feature:
-
     >>> controlled_feature = dt.OneOf([feature_1, feature_2], key=0)
     >>> output_image = controlled_feature(input_image)
     >>> print(output_image)  # Adds 10 to each element.
@@ -4343,8 +4244,8 @@ class OneOfDict(Feature):
     `get(image: Any, key: Any, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
         Resolves the selected feature and applies it to the input image.
    
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
@@ -4496,8 +4397,8 @@ class LoadImage(Feature):
     IOError
         If no file reader could parse the file or the file does not exist.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
     >>> from tempfile import NamedTemporaryFile
@@ -4516,7 +4417,7 @@ class LoadImage(Feature):
     If `to_grayscale=True`, the image is converted to grayscale (single channel).
     If `ndim=4`, additional dimensions are added if necessary.
 
-    Cleanup:
+    Cleanup the temporary file:
     >>> import os
     >>> os.remove(temp_file.name)
     
@@ -4687,33 +4588,91 @@ class LoadImage(Feature):
 class SampleToMasks(Feature):
     """Creates a mask from a list of images.
 
-    Calls `transformation_function` for each input image, and merges the 
-    outputs to a single image with `number_of_masks` layers. Each input image 
-    needs to have a defined property `position` to place it within the image. 
-    If used with scatterers, note that the scatterers need to be passed the 
-    property `voxel_size` to correctly size the objects.
+    This feature applies a transformation function to each input image and 
+    merges the resulting masks into a single multi-layer image. Each input 
+    image must have a `position` property that determines its placement within 
+    the final mask. When used with scatterers, the `voxel_size` property must 
+    be provided for correct object sizing.
 
     Parameters
     ----------
-    transformation_function: Callable[[Image], Image]
-        Function that takes an image as input, and outputs another image with 
+    transformation_function : Callable[[Image], Image]
+        A function that transforms each input image into a mask with 
         `number_of_masks` layers.
-    number_of_masks: PropertyLike[int], optional
-        The number of masks to create.
-    output_region: PropertyLike[tuple[int, int, int, int]], optional
-        Size and relative position of the mask. Should generally be the same as
+    number_of_masks : PropertyLike[int], optional
+        The number of mask layers to generate. Default is 1.
+    output_region : PropertyLike[tuple[int, int, int, int]], optional
+        The size and position of the output mask, typically aligned with 
         `optics.output_region`.
-    merge_method: PropertyLike[str or Callable or list[str or Callable]]
-        How to merge the individual masks to a single image. If a list, the 
-        merge_metod is per mask. Can be:
-        - "add": Adds the masks together.
-        - "overwrite": later masks overwrite earlier masks.
-        - "or": 1 if either any mask is non-zero at that pixel.
-        - function: a function that accepts two images. The first is the
-            current value of the output image where a new mask will be places, 
-            and the second is the mask to merge with the output image.
-    **kwargs: : dict of str to Any
+    merge_method : PropertyLike[str | Callable | list[str | Callable]], optional
+        Method for merging individual masks into the final image. Can be:
+        - "add" (default): Sum the masks.
+        - "overwrite": Later masks overwrite earlier masks.
+        - "or": Combine masks using a logical OR operation.
+        - "mul": Multiply masks.
+        - Function: Custom function taking two images and merging them.
+
+    **kwargs : dict[str, Any]
         Additional keyword arguments passed to the parent `Feature` class.
+
+    Methods
+    -------
+    `get(image: Image, transformation_function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image`
+        Applies the transformation function to the input image.
+    `_process_and_get(images: list[Image] | Image, **kwargs: dict[str, Any]) -> Image | np.ndarray`
+        Processes a list of images and generates a multi-layer mask.
+
+    Returns
+    -------
+    Image or np.ndarray
+        The final mask image with the specified number of layers.
+
+    Raises
+    ------
+    ValueError
+        If `merge_method` is invalid.
+
+    Example
+    -------
+    >>> import deeptrack as dt
+    >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
+
+    Define number of particles:
+    >>> n_particles = 12
+
+    Define optics and particles:
+    >>> optics = dt.Fluorescence(output_region=(0, 0, 64, 64))
+    >>> particle = dt.PointParticle(
+    >>>     position=lambda: np.random.uniform(5, 55, size=2)
+    >>> )
+    >>> particles = particle ^ n_particles
+
+    Define pipelines:
+    >>> sim_im_pip = optics(particles)
+    >>> sim_mask_pip = particles >> dt.SampleToMasks(
+    ...     lambda: lambda particles: particles > 0,
+    ...     output_region=optics.output_region,
+    ...     merge_method="or"
+    ... )
+    >>> pipeline = sim_im_pip & sim_mask_pip
+    >>> pipeline.store_properties()
+
+    Generate image and mask:
+    >>> image, mask = pipeline.update()()
+
+    Get particle positions:
+    >>> positions = np.array(image.get_property("position", get_one=False))
+
+    Visualize results:
+    >>> plt.subplot(1, 2, 1)
+    >>> plt.imshow(image, cmap="gray")
+    >>> plt.title("Original Image")
+    >>> plt.subplot(1, 2, 2)
+    >>> plt.imshow(mask, cmap="gray")
+    >>> plt.scatter(positions[:,1], positions[:,0], c="r", marker="x", s = 10)
+    >>> plt.title("Mask")
+    >>> plt.show()
 
     """
 
@@ -4729,18 +4688,17 @@ class SampleToMasks(Feature):
 
         Parameters
         ----------
-        transformation_function: Callable[[Image], Image]
-            The function used to transform input images into masks.
-        number_of_masks: PropertyLike[int], optional
-            Number of masks to generate. Defaults to 1.
-        output_region: PropertyLike[tuple[int, int, int, int]], optional
-            Defines the output mask region. Defaults to None.
-        merge_method: PropertyLike[str or Callable or list[str or Callable]], optional
-            Specifies the method to merge individual masks into a single image. 
-            Defaults to "add".
-        **kwargs: : dict of str to Any
-            Additional parameters passed to the parent `Feature` class.
-
+        transformation_function : Callable[[Image], Image]
+            Function to transform input images into masks.
+        number_of_masks : PropertyLike[int], optional
+            Number of mask layers. Default is 1.
+        output_region : PropertyLike[tuple[int, int, int, int]], optional
+            Output region of the mask. Default is None.
+        merge_method : PropertyLike[str | Callable | list[str | Callable]], optional
+            Method to merge masks. Default is "add".
+        **kwargs : dict[str, Any]
+            Additional keyword arguments passed to the parent class.
+        
         """
 
         super().__init__(
@@ -4757,15 +4715,15 @@ class SampleToMasks(Feature):
         transformation_function: Callable[[Image], Image],
         **kwargs: dict[str, Any],
     ) -> Image:
-        """Apply the transformation function to the input image.
+        """Apply the transformation function to a single image.
 
         Parameters
         ----------
-        image: Image
-            The input image to transform.
-        transformation_function: Callable[[Image], Image]
-            The function used to transform the input image.
-        **kwargs: Any
+        image : Image
+            The input image.
+        transformation_function : Callable[[Image], Image]
+            Function to transform the image.
+        **kwargs : dict[str, Any]
             Additional parameters.
 
         Returns
@@ -4786,17 +4744,17 @@ class SampleToMasks(Feature):
 
         Parameters
         ----------
-        images: Image or list[Image]
-            A list of input images or a single image.
-        **kwargs: Any
+        images : Image or list[Image]
+            List of input images or a single image.
+        **kwargs : dict[str, Any]
             Additional parameters including `output_region`, `number_of_masks`, 
             and `merge_method`.
 
         Returns
         -------
         Image or np.ndarray
-            The generated mask image with the specified number of layers.
-
+            The final mask image.
+            
         """
 
         # Handle list of images.
@@ -4831,90 +4789,91 @@ class SampleToMasks(Feature):
             )
         )
 
+        from deeptrack.optics import _get_position
+
         # Merge masks into the output.
         for label in list_of_labels:
-            positions = _get_position(label)
-            for position in positions:
-                p0 = np.round(position - output_region[0:2])
+            position = _get_position(label)
+            p0 = np.round(position - output_region[0:2])
 
-                if np.any(p0 > output.shape[0:2]) or \
-                    np.any(p0 + label.shape[0:2] < 0):
-                    continue
+            if np.any(p0 > output.shape[0:2]) or \
+                np.any(p0 + label.shape[0:2] < 0):
+                continue
 
-                crop_x = int(-np.min([p0[0], 0]))
-                crop_y = int(-np.min([p0[1], 0]))
-                crop_x_end = int(
-                    label.shape[0]
-                    - np.max([p0[0] + label.shape[0] - output.shape[0], 0])
-                )
-                crop_y_end = int(
-                    label.shape[1]
-                    - np.max([p0[1] + label.shape[1] - output.shape[1], 0])
-                )
+            crop_x = int(-np.min([p0[0], 0]))
+            crop_y = int(-np.min([p0[1], 0]))
+            crop_x_end = int(
+                label.shape[0]
+                - np.max([p0[0] + label.shape[0] - output.shape[0], 0])
+            )
+            crop_y_end = int(
+                label.shape[1]
+                - np.max([p0[1] + label.shape[1] - output.shape[1], 0])
+            )
 
-                labelarg = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
+            labelarg = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
 
-                p0[0] = np.max([p0[0], 0])
-                p0[1] = np.max([p0[1], 0])
+            p0[0] = np.max([p0[0], 0])
+            p0[1] = np.max([p0[1], 0])
 
-                p0 = p0.astype(int)
+            p0 = p0.astype(int)
 
-                output_slice = output[
-                    p0[0] : p0[0] + labelarg.shape[0],
-                    p0[1] : p0[1] + labelarg.shape[1],
-                ]
+            output_slice = output[
+                p0[0] : p0[0] + labelarg.shape[0],
+                p0[1] : p0[1] + labelarg.shape[1],
+            ]
 
-                for label_index in range(kwargs["number_of_masks"]):
+            for label_index in range(kwargs["number_of_masks"]):
 
-                    if isinstance(kwargs["merge_method"], list):
-                        merge = kwargs["merge_method"][label_index]
-                    else:
-                        merge = kwargs["merge_method"]
+                if isinstance(kwargs["merge_method"], list):
+                    merge = kwargs["merge_method"][label_index]
+                else:
+                    merge = kwargs["merge_method"]
 
-                    if merge == "add":
-                        output[
-                            p0[0] : p0[0] + labelarg.shape[0],
-                            p0[1] : p0[1] + labelarg.shape[1],
-                            label_index,
-                        ] += labelarg[..., label_index]
+                if merge == "add":
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] += labelarg[..., label_index]
 
-                    elif merge == "overwrite":
-                        output_slice[
-                            labelarg[..., label_index] != 0, label_index
-                        ] = labelarg[labelarg[..., label_index] != 0, \
-                            label_index]
-                        output[
-                            p0[0] : p0[0] + labelarg.shape[0],
-                            p0[1] : p0[1] + labelarg.shape[1],
-                            label_index,
-                        ] = output_slice[..., label_index]
+                elif merge == "overwrite":
+                    output_slice[
+                        labelarg[..., label_index] != 0, label_index
+                    ] = labelarg[labelarg[..., label_index] != 0, \
+                        label_index]
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] = output_slice[..., label_index]
 
-                    elif merge == "or":
-                        output[
-                            p0[0] : p0[0] + labelarg.shape[0],
-                            p0[1] : p0[1] + labelarg.shape[1],
-                            label_index,
-                        ] = (output_slice[..., label_index] != 0) | (
-                            labelarg[..., label_index] != 0
-                        )
+                elif merge == "or":
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] = (output_slice[..., label_index] != 0) | (
+                        labelarg[..., label_index] != 0
+                    )
 
-                    elif merge == "mul":
-                        output[
-                            p0[0] : p0[0] + labelarg.shape[0],
-                            p0[1] : p0[1] + labelarg.shape[1],
-                            label_index,
-                        ] *= labelarg[..., label_index]
+                elif merge == "mul":
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] *= labelarg[..., label_index]
 
-                    else:
-                        # No match, assume function
-                        output[
-                            p0[0] : p0[0] + labelarg.shape[0],
-                            p0[1] : p0[1] + labelarg.shape[1],
-                            label_index,
-                        ] = merge(
-                            output_slice[..., label_index],
-                            labelarg[..., label_index],
-                        )
+                else:
+                    # No match, assume function
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] = merge(
+                        output_slice[..., label_index],
+                        labelarg[..., label_index],
+                    )
 
         if not self._wrap_array_with_image:
             return output
@@ -4922,93 +4881,6 @@ class SampleToMasks(Feature):
         for label in list_of_labels:
             output.merge_properties_from(label)
         return output
-
-
-def _get_position(
-    image: Any,
-    mode: str = "corner",
-    return_z: bool = False,
-) -> list[np.ndarray]:
-    """Extracts the position of the upper left corner of a scatterer.
-    
-    This function calculates the position of scatterers in an image, 
-    adjusting for the specified mode. It can also include the z-coordinate 
-    if `return_z` is `True`.
-
-    The `image` must have a `get_property` method that retrieves scatterer
-    positions as a list of 2D or 3D coordinates.
-
-    If `mode` is "corner", positions are adjusted by subtracting half the
-    image dimensions (shift).
-
-    Parameters
-    ----------
-    image: Any
-        The input image containing scatterer information. This image is 
-        expected to have a `get_property` method to retrieve properties like 
-        "position".
-    mode: str, optional
-        The calculation mode. Defaults to "corner".
-        - "corner": Adjusts the position based on the upper-left corner.
-        - Any other value: Does not adjust for the corner; assumes positions 
-          are given directly.
-    return_z: bool, optional
-        If `True`, includes the z-coordinate in the output. Defaults to 
-        `False`.
-
-    Returns
-    -------
-    list[np.ndarray]
-        A list of position arrays, each representing the (x, y) or (x, y, z) 
-        coordinates of a scatterer. Adjustments are made based on the mode.
-
-    """
-
-    #TODO: should this function be moved?
-    #TODO: add example + unit test.
-
-    # Determine the shift based on the mode.
-    if mode == "corner":
-        # Shift corresponds to the half dimensions of the image.
-        shift = (np.array(image.shape) - 1) / 2
-    else:
-        # No shift if mode is not "corner".
-        shift = np.zeros((3 if return_z else 2))
-
-    # Retrieve positions from the image properties.
-    positions = image.get_property("position", False, [])
-    positions_out = []
-    
-    # Process each position in the list.
-    for position in positions:
-        if len(position) == 3:  # 3D position.
-            if return_z:
-                # Adjust for shift and include z-coordinate.
-                return positions_out.append(position - shift)
-            else:
-                # Adjust for shift and exclude z-coordinate.
-                return positions_out.append(position[0:2] - shift[0:2])
-
-        elif len(position) == 2:  # 2D position.
-            if return_z:
-                # Construct a 3D position by adding a z-coordinate 
-                # (default to 0).
-                outp = (
-                    np.array(
-                        [
-                            position[0],
-                            position[1],
-                            image.get_property("z", default=0),
-                        ]
-                    )
-                    - shift
-                )
-                positions_out.append(outp)
-            else:
-                # Adjust for shift without adding a z-coordinate.
-                positions_out.append(position - shift[0:2])
-
-    return positions_out
 
 
 class AsType(Feature):
@@ -5030,8 +4902,8 @@ class AsType(Feature):
     `get(image: np.ndarray, dtype: str, **kwargs: dict[str, Any]) -> np.ndarray`
         Convert the data type of the input image.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from deeptrack.features import AsType
 
@@ -5116,8 +4988,8 @@ class ChannelFirst2d(Feature):
     `get(image: np.ndarray, axis: int, **kwargs: dict[str, Any]) -> np.ndarray`
         Rearrange the axes of an image to channel-first format.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from deeptrack.features import ChannelFirst2d
 
@@ -5210,7 +5082,7 @@ class ChannelFirst2d(Feature):
 
 
 class Upscale(Feature):
-    """Perform the simulation at a higher resolution.
+    """Simulate a pipeline at a higher resolution.
 
     This feature scales up the resolution of the input pipeline by a specified 
     factor, performs computations at the higher resolution, and then 
@@ -5218,8 +5090,9 @@ class Upscale(Feature):
     simulating effects at a finer resolution while preserving compatibility 
     with lower-resolution pipelines.
     
-    It redefines the sizes of internal units to scale up the simulation. 
-    The resulting image is then downscaled back to the original size.
+    Internally, this feature redefines the scale of physical units (e.g., 
+    `units.pixel`) to achieve the effect of upscaling. It does not resize the 
+    input image itself but affects features that rely on physical units.
 
     Parameters
     ----------
@@ -5229,7 +5102,7 @@ class Upscale(Feature):
         The factor by which to upscale the simulation. If a single integer is 
         provided, it is applied uniformly across all axes. If a tuple of three 
         integers is provided, each axis is scaled individually. Defaults to 1.
-    **kwargs: : dict of str to Any
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
@@ -5240,17 +5113,52 @@ class Upscale(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray, factor: int | tuple[int, int, int], **kwargs: dict[str, Any]) -> np.ndarray`
-        Scales up the pipeline, performs computations, and scales down result.
+    `get(image: np.ndarray | Image, factor: int | tuple[int, int, int], **kwargs) -> np.ndarray`
+        Simulates the pipeline at a higher resolution and returns the result at 
+        the original resolution.
 
-    Example
-    -------
+    Notes
+    -----
+    - This feature does **not** directly resize the image. Instead, it modifies
+      the unit conversions within the pipeline, making physical units smaller, 
+      which results in more detail being simulated.
+    - The final output is downscaled back to the original resolution using 
+      `block_reduce` from `skimage.measure`.
+    - The effect is only noticeable if features use physical units (e.g., 
+      `units.pixel`, `units.meter`). Otherwise, the result will be identical.
+
+    Examples
+    --------
     >>> import deeptrack as dt
+    >>> import matplotlib.pyplot as plt
+
+    Define an optical pipeline and a spherical particle:
     >>> optics = dt.Fluorescence()
     >>> particle = dt.Sphere()
-    >>> pipeline = optics(particle)
-    >>> upscaled_pipeline = dt.Upscale(pipeline, factor=4)
+    >>> simple_pipeline = optics(particle)
 
+    Create an upscaled pipeline with a factor of 4:
+    >>> upscaled_pipeline = dt.Upscale(optics(particle), factor=4) 
+    
+    Resolve the pipelines:
+    >>> image = simple_pipeline()
+    >>> upscaled_image = upscaled_pipeline()
+
+    Visualize the images:
+    >>> plt.subplot(1, 2, 1)
+    >>> plt.imshow(image, cmap="gray")
+    >>> plt.title("Original Image")
+    >>> plt.subplot(1, 2, 2)
+    >>> plt.imshow(upscaled_image, cmap="gray")
+    >>> plt.title("Simulated at Higher Resolution")
+    >>> plt.show()
+    
+    Compare the shapes (both are the same due to downscaling):
+    >>> print(image.shape)
+    (128, 128, 1)
+    >>> print(upscaled_image.shape)
+    (128, 128, 1)
+    
     """
 
     __distributed__: bool = False
@@ -5269,10 +5177,10 @@ class Upscale(Feature):
             The pipeline or feature to resolve at a higher resolution.
         factor: int | tuple[int, int, int], optional
             The factor by which to upscale the simulation. If a single integer 
-            is provided, it is applied uniformly across all axes. If a tuple of 
+            is provided, it is applied uniformly across all axes. If a tuple of
             three integers is provided, each axis is scaled individually. 
             Defaults to `1`.
-        **kwargs: : dict of str to Any
+        **kwargs: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -5286,7 +5194,7 @@ class Upscale(Feature):
         factor: int | tuple[int, int, int],
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
-        """Scale up resolution of feature pipeline and scale down result.
+        """Simulate the pipeline at a higher resolution and return result.
 
         Parameters
         ----------
@@ -5294,9 +5202,9 @@ class Upscale(Feature):
             The input image to process.
         factor: int or tuple[int, int, int]
             The factor by which to upscale the simulation. If a single integer 
-            is provided, it is applied uniformly across all axes. If a tuple of 
+            is provided, it is applied uniformly across all axes. If a tuple of
             three integers is provided, each axis is scaled individually.
-        **kwargs: : dict of str to Any
+        **kwargs: dict of str to Any
             Additional keyword arguments passed to the feature.
 
         Returns
@@ -5395,31 +5303,28 @@ class NonOverlapping(Feature):
     - If the bounding cubes overlap, precise **voxel-based checks** are 
       performed.
 
-    Example
-    --------
+    Examples
+    ---------
     >>> import deeptrack as dt
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
 
-    Define an ellipse scatterer with randomly positioned objects
+    Define an ellipse scatterer with randomly positioned objects:
     >>> scatterer = dt.Ellipse(
     >>>    radius= 13 * dt.units.pixels,
     >>>    position=lambda: np.random.uniform(5, 115, size=2)* dt.units.pixels,
     >>> )
 
-    Create multiple scatterers
-    
+    Create multiple scatterers:
     >>> scatterers = (scatterer ^ 8)  
 
-    Define the optics and create the image with possible overlap
-
+    Define the optics and create the image with possible overlap:
     >>> optics = dt.Fluorescence()
     >>> im_with_overlap = optics(scatterers)
     >>> im_with_overlap.store_properties()
     >>> im_with_overlap_resolved = image_with_overlap()
 
-    Gather position from image
-
+    Gather position from image:
     >>> pos_with_overlap = np.array(
     >>>     im_with_overlap_resolved.get_property(
     >>>         "position", 
@@ -5427,15 +5332,13 @@ class NonOverlapping(Feature):
     >>>     )
     >>> )
 
-    Enforce non-overlapping and create the image without overlap
-    
+    Enforce non-overlapping and create the image without overlap:
     >>> non_overlapping_scatterers = dt.NonOverlapping(scatterers, min_distance=4)
     >>> im_without_overlap =  optics(non_overlapping_scatterers)
     >>> im_without_overlap.store_properties()
     >>> im_without_overlap_resolved = im_without_overlap()
 
-    Gather position from image
-
+    Gather position from image:
     >>> pos_without_overlap = np.array(
     >>>     im_without_overlap_resolved.get_property(
     >>>         "position",
@@ -5443,8 +5346,7 @@ class NonOverlapping(Feature):
     >>>     )
     >>> )
 
-    Create a figure with two subplots to visualize the difference
-
+    Create a figure with two subplots to visualize the difference:
     >>> fig, axes = plt.subplots(1, 2, figsize=(10, 5))
     
     >>> axes[0].imshow(im_with_overlap_resolved, cmap="gray")
@@ -5458,8 +5360,7 @@ class NonOverlapping(Feature):
     >>> plt.tight_layout()
     >>> plt.show()
 
-    Define function to calculate minimum distance
-    
+    Define function to calculate minimum distance:
     >>> def calculate_min_distance(positions):
     >>> distances = [
     >>>     np.linalg.norm(positions[i] - positions[j])
@@ -5468,7 +5369,7 @@ class NonOverlapping(Feature):
     >>> ]
     >>> return min(distances)
 
-    Print minimum distances with and without overlap
+    Print minimum distances with and without overlap:
     >>> print(calculate_min_distance(pos_with_overlap))
     10.768742383382174
     >>> print(calculate_min_distance(pos_without_overlap))
@@ -5942,8 +5843,8 @@ class NonOverlapping(Feature):
         # if positions_1.size == 0 or positions_2.size == 0:
         #     return True  # If either volume is empty, they are "non-overlapping"
 
-        # # If the volumes are not the same size, the positions of the non-zero 
-        # # voxels of each volume need to be scaled.
+        # If the volumes are not the same size, the positions of the non-zero 
+        # voxels of each volume need to be scaled.
         if volume_1.shape != volume_2.shape:
             positions_1 = (
                 positions_1 * np.array(volume_2.shape) 
@@ -5951,8 +5852,8 @@ class NonOverlapping(Feature):
             )
             positions_1 = positions_1.astype(int)
 
-        # # Check that the non-zero voxels of the volumes are at least 
-        # # min_distance apart.
+        # Check that the non-zero voxels of the volumes are at least 
+        # min_distance apart.
         return np.all(
             cdist(positions_1, positions_2) > min_distance
         )
@@ -6035,8 +5936,8 @@ class Store(Feature):
     `get(_: Any, key: Any, replace: bool, **kwargs: dict[str, Any]) -> Any`
         Evaluate and store the feature output, or return the cached result.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
@@ -6148,8 +6049,8 @@ class Squeeze(Feature):
     `get(image: np.ndarray, axis: int | tuple[int, ...], **kwargs: dict[str, Any]) -> np.ndarray`
         Squeeze the input image by removing singleton dimensions.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from deeptrack.features import Squeeze
 
@@ -6239,8 +6140,8 @@ class Unsqueeze(Feature):
     `get(image: np.ndarray, axis: int | tuple[int, ...] | None, **kwargs: dict[str, Any]) -> np.ndarray`
         Add singleton dimensions to the input image.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
@@ -6335,8 +6236,8 @@ class MoveAxis(Feature):
     `get(image: np.ndarray, source: int, destination: int, **kwargs: dict[str, Any]) -> np.ndarray`
         Move the specified axis of the input image to a new position.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
@@ -6423,8 +6324,8 @@ class Transpose(Feature):
     `get(image: np.ndarray, axes: tuple[int, ...] | None, **kwargs: dict[str, Any]) -> np.ndarray`
         Transpose the axes of the input image
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
 
@@ -6516,8 +6417,8 @@ class OneHot(Feature):
     `get(image: np.ndarray, num_classes: int, **kwargs: dict[str, Any]) -> np.ndarray`
         Convert the input array of class labels into a one-hot encoded array.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> import numpy as np
     
@@ -6620,8 +6521,8 @@ class TakeProperties(Feature):
     `get(image: Any, names: tuple[str, ...], **kwargs: dict[str, Any]) -> np.ndarray | tuple[np.ndarray, ...]`
         Extract the specified properties from the feature pipeline.
     
-    Example
-    -------
+    Examples
+    --------
     >>> import deeptrack as dt
     
     >>> class ExampleFeature(Feature):
