@@ -140,10 +140,12 @@ class Feature(DeepTrackNode):
 
     Parameters
     ----------
-    _input: Image or list of Image, optional
-        A list of `DeepTrackNode` objects or a single `Image` object 
-        representing the input data for the feature. This parameter specifies 
-        what the feature will process. If left empty, no initial input is set.
+    _input: np.ndarray or list of np.ndarray or Image or list of Image, 
+        optional.
+        A list of np.ndarray or `DeepTrackNode` objects or a single np.ndarray 
+        or an `Image` object representing the input data for the feature. This
+        parameter specifies what the feature will process. If left empty, no 
+        initial input is set.
     **kwargs: dict of str and Any
         Keyword arguments to configure the feature. Each keyword argument is 
         wrapped as a `Property` and added to the `properties` attribute, 
@@ -182,9 +184,9 @@ class Feature(DeepTrackNode):
 
     Methods
     -------
-    `get(image: Image | list[Image], **kwargs: Any) -> Image | list[Image]`
+    `get(image: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> Image | list[Image]`
         Abstract method that defines how the feature transforms the input.
-    `__call__(image_list: Image | list[Image] | None = None, _ID: tuple[int, ...] = (), **kwargs: Any) -> Any`
+    `__call__(image_list: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, _ID: tuple[int, ...] = (), **kwargs: Any) -> Any`
         Executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
     `store_properties(x: bool = True, recursive: bool = True) -> None`
@@ -195,7 +197,7 @@ class Feature(DeepTrackNode):
         Batches the feature for repeated execution.
     `action(_ID: tuple[int, ...] = ()) -> Image | list[Image]`
         Core logic to create or transform the image.
-    `__use_gpu__(inp: Image, **_: Any) -> bool`
+    `__use_gpu__(inp: np.ndarrary | Image, **_: Any) -> bool`
         Determines if the feature should use the GPU.
     `update(**global_arguments: Any) -> Feature`
         Refreshes the feature to create a new image.
@@ -207,7 +209,7 @@ class Feature(DeepTrackNode):
         Binds another feature’s properties as arguments to this feature.
     `_normalize(**properties: dict[str, Any]) -> dict[str, Any]`
         Normalizes the properties of the feature.
-    `plot(input_image: Image | list[Image] | None = None, resolve_kwargs: dict | None = None, interval: float | None = None, **kwargs) -> Any`
+    `plot(input_image: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, resolve_kwargs: dict | None = None, interval: float | None = None, **kwargs) -> Any`
         Visualizes the output of the feature.
     `_process_properties(propertydict: dict[str, Any]) -> dict[str, Any]`
         Preprocesses the input properties before calling the `get` method.
@@ -271,25 +273,25 @@ class Feature(DeepTrackNode):
         Overrides right AND operator.
     `__getitem__(key: Any) -> Feature`
         Allows direct slicing of the data.
-    `_format_input(image_list: Image | list[Image], **kwargs: Any) -> list[Image]`
+    `_format_input(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
         Formats the input data for the feature.
-    `_process_and_get(image_list: Image | list[Image], **kwargs: Any) -> list[Image]`
+    `_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
         Calls the `get` method according to the `__distributed__` attribute.
-    `_process_output(image_list: Image | list[Image], **kwargs: Any) -> None`
+    `_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
         Processes the output of the feature.
-    `_image_wrapped_format_input(image_list: Image | list[Image], **kwargs: Any) -> list[Image]`
+    `_image_wrapped_format_input(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
         Ensures the input is a list of Image.
-    `_no_wrap_format_input(image_list: Image | list[Image], **kwargs: Any) -> list[Image]`
+    `_no_wrap_format_input(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
         Ensures the input is a list of Image.
-    `_no_wrap_process_and_get(image_list: Image | list[Image], **kwargs: Any) -> list[Image]`
+    `_no_wrap_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
         Calls the `get` method according to the `__distributed__` attribute.
-    `_image_wrapped_process_and_get(image_list: Image | list[Image], **kwargs: Any) -> list[Image]`
+    `_image_wrapped_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
         Calls the `get` method according to the `__distributed__` attribute.
-    `_image_wrapped_process_output(image_list: Image | list[Image], **kwargs: Any) -> None`
+    `_image_wrapped_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
         Processes the output of the feature.
-    `_no_wrap_process_output(image_list: Image | list[Image], **kwargs: Any) -> None`
+    `_no_wrap_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
         Processes the output of the feature.
-    `_coerce_inputs(image_list: Image | list[Image], **kwargs: Any) -> list[Image]`
+    `_coerce_inputs(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
         Coerces the input to a list of Image.
 
     """
@@ -316,18 +318,14 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        _input : Image or list of Images, optional
+        _input: np.ndarray or list[np.ndarray] or Image or list of Images, optional
             The initial input(s) for the feature, often images or other data. 
             If not provided, defaults to an empty list.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Keyword arguments that are wrapped into `Property` instances and 
             stored in `self.properties`, allowing for dynamic or parameterized
             behavior.
             If not provided, defaults to an empty list.
-        **kwargs : dict of str to Any
-            Keyword arguments that are wrapped into `Property` instances and 
-            stored in `self.properties`, allowing for dynamic or parameterized
-            behavior.
         
         """
 
@@ -361,7 +359,7 @@ class Feature(DeepTrackNode):
 
     def get(
         self: Feature,
-        image: Image | list[Image],
+        image: np.ndarray | list[np.ndarray] | Image | list[Image],
         **kwargs: dict[str, Any],
     ) -> Image | list[Image]:
         """Transform an image [abstract method].
@@ -371,9 +369,9 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        image : Image or list of Images
+        image: np.ndarray or list of np.ndarray or Image or list of Images
             The image or list of images to transform.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             The current value of all properties in `properties`, as well as any 
             global arguments passed to the feature.
 
@@ -393,7 +391,7 @@ class Feature(DeepTrackNode):
 
     def __call__(
         self: Feature,
-        image_list: Image | list[Image] = None,
+        image_list: np.ndarray | list[np.ndarray] | Image | list[Image] = None,
         _ID: tuple[int, ...] = (),
         **kwargs: dict[str, Any],
     ) -> Any:
@@ -409,10 +407,10 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        image_list : Image or list of Images, optional
+        image_list: np.ndarrray or list[np.ndarrray] or Image or list of Images, optional
             The input to the feature or pipeline. If `None`, the feature uses 
             previously set input values or propagates properties.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional parameters passed to the pipeline. These override 
             properties with matching names. For example, calling 
             `feature(x, value=4)` executes `feature` on the input `x` while 
@@ -545,7 +543,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        batch_size : int
+        batch_size: int
             The number of times to sample or generate data.
 
         Returns
@@ -583,7 +581,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        _ID : tuple of int
+        _ID: tuple of int
             The unique identifier for the current execution.
 
         Returns
@@ -632,14 +630,14 @@ class Feature(DeepTrackNode):
 
     def __use_gpu__(
         self: Feature,
-        inp: Image,
+        inp: np.ndarray | Image,
         **_: Any,
     ) -> bool:
         """Determine if the feature should use the GPU.
         
         Parameters
         ----------
-        inp: Image
+        inp: np.ndarray or Image
             The input image to check.
         **_: Any
             Additional arguments (unused).
@@ -666,7 +664,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        **global_arguments : Any
+        **global_arguments: Any
             Optional global arguments that can be passed to modify the 
             feature update behavior.
 
@@ -746,7 +744,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        arguments : Feature
+        arguments: Feature
             The feature whose properties will be bound as arguments to this feature.
 
         Returns
@@ -772,7 +770,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        **properties : dict of str to Any
+        **properties: dict of str to Any
             The properties to be normalized and converted.
 
         Returns
@@ -793,7 +791,7 @@ class Feature(DeepTrackNode):
 
     def plot(
         self: Feature,
-        input_image: Image | list[Image] = None,
+        input_image: np.ndarray | list[np.ndarray] | Image | list[Image] = None,
         resolve_kwargs: dict = None,
         interval: float = None,
         **kwargs
@@ -810,15 +808,15 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        input_image : Image or list of Image, optional
+        input_image: np.ndarray or list np.ndarray or Image or list of Image, optional
             The input image or list of images passed as an argument to the `resolve` 
             call. If `None`, uses previously set input values or propagates properties.
-        resolve_kwargs : dict, optional
+        resolve_kwargs: dict, optional
             Additional keyword arguments passed to the `resolve` call.
-        interval : float, optional
+        interval: float, optional
             The time between frames in the animation, in milliseconds. The default 
             value is 33 ms.
-        **kwargs : dict, optional
+        **kwargs: dict, optional
             Additional keyword arguments passed to `pyplot.imshow`.
        
         Returns
@@ -896,7 +894,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        propertydict : dict[str, Any]
+        propertydict: dict[str, Any]
             The dictionary of properties to be processed before being passed 
             to the `.get()` method.
 
@@ -928,7 +926,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        x : Any
+        x: Any
             The input to process. If `x` is a `SourceItem`, it is activated.
             If `x` is a list, each `SourceItem` within the list is activated.
 
@@ -972,7 +970,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        key : str
+        key: str
             The name of the attribute being accessed.
 
         Returns
@@ -1353,7 +1351,7 @@ class Feature(DeepTrackNode):
 
     def _image_wrapped_format_input(
         self: Feature,
-        image_list: Image | list[Image],
+        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
         **kwargs: dict[str, Any],
     ) -> list[Image]:
         """Wraps input data as Image instances before processing.
@@ -1371,7 +1369,7 @@ class Feature(DeepTrackNode):
 
     def _no_wrap_format_input(
         self: Feature, 
-        image_list: Image | list[Image],
+        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
         **kwargs: dict[str, Any],
     ) -> list[Image]:
         """Processes input data without wrapping it as Image instances.
@@ -1388,7 +1386,7 @@ class Feature(DeepTrackNode):
 
     def _no_wrap_process_and_get(
         self: Feature,
-        image_list: Image | list[Image],
+        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
         **feature_input: dict[str, Any],
     ) -> list[Image]:
         """Processes input data without additional wrapping and retrieves 
@@ -1412,7 +1410,7 @@ class Feature(DeepTrackNode):
 
     def _image_wrapped_process_and_get(
         self: Feature,
-        image_list: Image | list[Image],
+        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
         **feature_input: dict[str, Any],
     ) -> list[Image]:
         """Processes input data while maintaining Image properties.
@@ -1449,7 +1447,7 @@ class Feature(DeepTrackNode):
 
     def _image_wrapped_process_output(
         self: Feature,
-        image_list: Image | list[Image], 
+        image_list: np.ndarray | list[np.ndarray] | Image | list[Image], 
         feature_input: dict[str, Any],
     ) -> None:
         """Appends feature properties and input data to each Image.
@@ -1465,7 +1463,7 @@ class Feature(DeepTrackNode):
 
     def _no_wrap_process_output(
         self: Feature,
-        image_list: Image | list[Image],
+        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
         feature_input: dict[str, Any],
     ) -> None:
         """Extracts and updates raw values from Image instances.
@@ -1479,7 +1477,7 @@ class Feature(DeepTrackNode):
 
     def _coerce_inputs(
         self: Feature,
-        inputs: list[Image],
+        inputs: list[np.ndarray] | list[Image],
         **kwargs: dict[str, Any],
     ) -> list[Image]:
         """Converts inputs to the appropriate data type based on 
@@ -1516,11 +1514,11 @@ def propagate_data_to_dependencies(
 
     Parameters
     ----------
-    feature : Feature
+    feature: Feature
         The feature whose dependencies are to be updated. The dependencies are 
         recursively traversed to ensure that all relevant nodes in the 
         dependency tree are considered.
-    **kwargs : dict of str, Any
+    **kwargs: dict of str, Any
         Key-value pairs specifying the property names and their corresponding 
         values to be set in the dependencies. Only properties that exist in the
         `PropertyDict` of a dependency will be updated.
@@ -1559,11 +1557,11 @@ class StructuralFeature(Feature):
 
     Attributes
     ----------
-    __property_verbosity__ : int
+    __property_verbosity__: int
         Controls whether this feature’s properties are included in the output 
         image’s property list. A value of `2` means that this feature’s 
         properties are not included.
-    __distributed__ : bool
+    __distributed__: bool
         Determines whether the feature’s `get` method is applied to each 
         element in the input list (`__distributed__ = True`) or to the entire 
         list as a whole (`__distributed__ = False`).
@@ -1589,18 +1587,18 @@ class Chain(StructuralFeature):
 
     Parameters
     ----------
-    feature_1 : Feature
+    feature_1: Feature
         The first feature in the chain. Its output is passed to `feature_2`.
-    feature_2 : Feature
+    feature_2: Feature
         The second feature in the chain, which processes the output from 
         `feature_1`.
-    **kwargs : dict of str to Any, optional
+    **kwargs: dict of str to Any, optional
         Additional keyword arguments passed to the parent `StructuralFeature` 
         (and, therefore, `Feature`).
 
     Methods
     -------
-    `get(image: Image or list[Image], _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Image or list[Image]`
+    `get(image: np.ndarray | list[np.ndarray] | Image | list[Image], _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Image | list[Image]`
         Apply the two features in sequence on the given input image.
 
     Notes
@@ -1652,11 +1650,11 @@ class Chain(StructuralFeature):
 
         Parameters
         ----------
-        feature_1 : Feature
+        feature_1: Feature
             The first feature to be applied.
-        feature_2 : Feature
+        feature_2: Feature
             The second feature, applied after `feature_1`.
-        **kwargs : dict of str to Any, optional
+        **kwargs: dict of str to Any, optional
             Additional keyword arguments passed to the parent constructor (e.g., 
             name, properties).
 
@@ -1669,7 +1667,7 @@ class Chain(StructuralFeature):
 
     def get(
         self: Feature,
-        image: Image | list[Image],
+        image: np.ndarray | list[np.ndarray] | Image | list[Image],
         _ID: tuple[int, ...] = (),
         **kwargs: dict[str, Any],
     ) -> Image | list[Image]:
@@ -1680,13 +1678,13 @@ class Chain(StructuralFeature):
 
         Parameters
         ----------
-        image : Image or list of Images
+        image: np.ndarray or list np.ndarray or Image or list of Image
             The input data, which can be an `Image` or a list of `Image` objects, 
             to transform sequentially.
-        _ID : tuple of int, optional
+        _ID: tuple of int, optional
             A unique identifier for caching or parallel execution. Defaults to an 
             empty tuple.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional parameters passed to or sampled by the features. These are 
             generally unused here, as each sub-feature fetches its required properties 
             internally.
@@ -1720,16 +1718,16 @@ class DummyFeature(Feature):
 
     Parameters
     ----------
-    _input : Image or list of Images, optional
+    _input: np.ndarray or list np.ndarray or Image or list of Images, optional
         An optional input (image or list of images) that can be set for 
         the feature. By default, an empty list.
-    **kwargs : dict of str to Any
+    **kwargs: dict of str to Any
         Additional keyword arguments are wrapped as `Property` instances and 
         stored in `self.properties`.
 
     Methods
     -------
-    get(image : Image or list of Images, **kwargs : dict of str to Any) -> Image or list of Images
+    `get(image: np.ndarray | list np.ndarray | Image | list[Image], **kwargs: dict[str, Any]) -> Image | list[Image]`
         Simply returns the input image(s) unchanged.
 
 
@@ -1760,7 +1758,7 @@ class DummyFeature(Feature):
 
     def get(
         self: Feature,
-        image: Image | list[Image], 
+        image: np.ndarray | list[np.ndarray] | Image | list[Image], 
         **kwargs: Any,
     )-> Image | list[Image]:
         """Return the input image or list of images unchanged.
@@ -1771,9 +1769,9 @@ class DummyFeature(Feature):
 
         Parameters
         ----------
-        image : Image or list of Images
+        image: np.ndarray or list np.ndarray or Image or list of Image
             The image or list of images to pass through without modification.
-        **kwargs : Any
+        **kwargs: Any
             Additional properties sampled from `self.properties` or passed 
             externally. These are unused here but provided for consistency 
             with the `Feature` interface.
@@ -1797,18 +1795,18 @@ class Value(Feature):
 
     Parameters
     ----------
-    value : PropertyLike[float], optional
+    value: PropertyLike[float], optional
         The numerical value to store. Defaults to 0. If an `Image` is provided,
         a warning is issued recommending conversion to a NumPy array for 
         The numerical value to store. Defaults to 0. If an `Image` is provided,
         a warning is issued recommending conversion to a NumPy array for 
         performance reasons.
-    **kwargs : dict of str to Any
+    **kwargs: dict of str to Any
         Additional named properties passed to the `Feature` constructor.
 
     Attributes
     ----------
-    __distributed__ : bool
+    __distributed__: bool
         Set to `False`, indicating that this feature’s `get(...)` method 
         processes the entire list of images (or data) at once, rather than 
         distributing calls for each item.
@@ -1850,10 +1848,10 @@ class Value(Feature):
 
         Parameters
         ----------
-        value : PropertyLike[float], optional
+        value: PropertyLike[float], optional
             The initial value to store. If an `Image` is provided, a warning is
             raised. Defaults to 0.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional keyword arguments passed to the `Feature` constructor, 
             such as custom properties or the feature name.
 
@@ -1882,15 +1880,15 @@ class Value(Feature):
 
         Parameters
         ----------
-        image : Any
-            Input data typically processed by features. For `Value`, this is ignored 
-            and does not affect the output.
-        value : float
-            The current value to return. This may be the initial value or an overridden 
-            value supplied during the method call.
-        **kwargs : dict of str to Any
-            Additional keyword arguments, which are ignored but included for consistency 
-            with the feature interface.
+        image: Any
+            Input data typically processed by features. For `Value`, this is 
+            ignored and does not affect the output.
+        value: float
+            The current value to return. This may be the initial value or an 
+            overridden value supplied during the method call.
+        **kwargs: dict of str to Any
+            Additional keyword arguments, which are ignored but included for 
+            consistency with the feature interface.
 
         Returns
         -------
@@ -1912,26 +1910,26 @@ class ArithmeticOperationFeature(Feature):
 
     Parameters
     ----------
-    op : Callable[[Any, Any], Any]
+    op: Callable[[Any, Any], Any]
         The arithmetic operation to apply, such as a built-in operator 
         (`operator.add`, `operator.mul`) or a custom callable.
-    value : float or int or list of float or int, optional
+    value: float or int or list of float or int, optional
         The second operand for the operation. Defaults to 0. If a list is 
         provided, the operation will apply element-wise.
-    **kwargs : dict of str to Any
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature`.
 
     Attributes
     ----------
-    __distributed__ : bool
+    __distributed__: bool
         Indicates that this feature’s `get(...)` method processes the input as 
         a whole (`False`) rather than distributing calls for individual items.
-    __gpu_compatible__ : bool
+    __gpu_compatible__: bool
         Specifies that the feature is compatible with GPU processing (`True`).
 
     Methods
     -------
-    `get(image: Any or list of Any, value: float or int or list of float or int, **kwargs: dict of str to Any) -> list of Any`
+    `get(image: Any | list of Any, value: float | int | list[float] | int, **kwargs: dict[str, Any]) -> list[Any]`
         Apply the arithmetic operation element-wise to the input data.
 
     Examples
@@ -1966,13 +1964,13 @@ class ArithmeticOperationFeature(Feature):
 
         Parameters
         ----------
-        op : Callable[[Any, Any], Any]
+        op: Callable[[Any, Any], Any]
             The arithmetic operation to apply, such as `operator.add`, `operator.mul`, 
             or any custom callable that takes two arguments.
-        value : float or int or list of float or int, optional
+        value: float or int or list of float or int, optional
             The second operand(s) for the operation. If a list is provided, the 
             operation is applied element-wise. Defaults to 0.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` constructor.
 
         """
@@ -1990,14 +1988,14 @@ class ArithmeticOperationFeature(Feature):
 
         Parameters
         ----------
-        image : Any or list of Any
+        image: Any or list of Any
             The input data, either a single value or a list of values, to be 
             transformed by the arithmetic operation.
-        value : float, int, or list of float or int
+        value: float, int, or list of float or int
             The second operand(s) for the operation. If a single value is 
             provided, it is broadcast to match the input size. If a list is 
             provided, it will be cycled to match the length of the input list.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional parameters or property overrides. These are generally 
             unused in this context but provided for compatibility with the 
             `Feature` interface.
@@ -2031,9 +2029,9 @@ class Add(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value : PropertyLike[int or float], optional
+    value: PropertyLike[int or float], optional
         The value to add to the input. Defaults to 0.
-    **kwargs : dict of str to Any
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent constructor.
 
     Examples
@@ -2067,9 +2065,9 @@ class Add(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value : PropertyLike[float], optional
+        value: PropertyLike[float], optional
             The value to add to the input. Defaults to 0.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional keyword arguments passed to the parent `Feature`.
 
         """
@@ -2084,9 +2082,9 @@ class Subtract(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    value : PropertyLike[int or float], optional
+    value: PropertyLike[int or float], optional
         The value to subtract from the input. Defaults to 0.
-    **kwargs : dict of str to Any
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent constructor.
 
     Examples
@@ -2120,9 +2118,9 @@ class Subtract(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value : PropertyLike[float], optional
+        value: PropertyLike[float], optional
             The value to subtract from the input. Defaults to 0.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional keyword arguments passed to the parent `Feature`.
        
         """
@@ -2887,13 +2885,13 @@ class Probability(StructuralFeature):
 
     Parameters
     ----------
-    feature : Feature
+    feature: Feature
         The feature to resolve conditionally.
-    probability : PropertyLike[float]
+    probability: PropertyLike[float]
         The probability (between 0 and 1) of resolving the feature.
-    *args : list[Any], optional
+    *args: list[Any], optional
         Positional arguments passed to the parent `StructuralFeature` class.
-    **kwargs : dict of str to Any, optional
+    **kwargs: dict of str to Any, optional
         Additional keyword arguments passed to the parent `StructuralFeature` 
         class.
 
@@ -2932,13 +2930,13 @@ class Probability(StructuralFeature):
 
         Parameters
         ----------
-        feature : Feature
+        feature: Feature
             The feature to resolve conditionally.
-        probability : PropertyLike[float]
+        probability: PropertyLike[float]
             The probability (between 0 and 1) of resolving the feature.
-        *args : list[Any], optional
+        *args: list[Any], optional
             Positional arguments passed to the parent `StructuralFeature` class.
-        **kwargs : dict of str to Any, optional
+        **kwargs: dict of str to Any, optional
             Additional keyword arguments passed to the parent `StructuralFeature` class.
 
         """
@@ -2962,14 +2960,14 @@ class Probability(StructuralFeature):
 
         Parameters
         ----------
-        image : np.ndarray
+        image: np.ndarray
             The input image to process.
-        probability : float
+        probability: float
             The probability (between 0 and 1) of resolving the feature.
-        random_number : float
+        random_number: float
             A random number sampled to determine whether to resolve the 
             feature.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional arguments passed to the feature's `resolve` method.
 
         Returns
@@ -3132,7 +3130,7 @@ class Combine(StructuralFeature):
 
     Parameters
     ----------
-    features: list[Feature]
+    features: list of Features
         A list of features to combine. Each feature will be resolved in the 
         order they appear in the list.
     **kwargs: dict of str to Any, optional
@@ -3222,10 +3220,10 @@ class Slice(Feature):
 
     Parameters
     ----------
-    slices : Iterable[int | slice | ...]
+    slices: Iterable[int | slice | ...]
         The slicing instructions for each dimension. Each element corresponds 
         to a dimension in the input image.
-    **kwargs : dict of str to Any
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
@@ -3271,10 +3269,10 @@ class Slice(Feature):
 
         Parameters
         ----------
-        slices : list[int | slice | ...] or tuple[int | slice | ...]
+        slices: list[int | slice | ...] or tuple[int | slice | ...]
             The slicing instructions for each dimension, specified as a 
             list or tuple of integers, slice objects, or ellipses (`...`).
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -3291,13 +3289,13 @@ class Slice(Feature):
 
         Parameters
         ----------
-        image : np.ndarray
+        image: np.ndarray
             The input image to be sliced.
-        slices : tuple[int | slice | ellipsis, ...] | int | slice | ellipsis
+        slices: tuple[int | slice | ellipsis, ...] | int | slice | ellipsis
             The slicing instructions for the input image. Each element in the
             tuple corresponds to a dimension in the input image. If a single
             element is provided, it is converted to a tuple.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional keyword arguments (unused in this implementation).
 
         Returns
@@ -3527,13 +3525,13 @@ class ConditionalSetProperty(StructuralFeature):
 
     Parameters
     ----------
-    feature : Feature
+    feature: Feature
         The child feature whose properties will be modified conditionally.
-    condition : PropertyLike[str] or PropertyLike[bool]
+    condition: PropertyLike[str] or PropertyLike[bool]
         Either a boolean value (`True`/`False`) or the name of a boolean 
         property in the feature’s property dictionary. If the condition 
         evaluates to `True`, the specified properties are applied.
-    **kwargs : dict[str, Any]
+    **kwargs: dict[str, Any]
         The properties to be applied to the child feature if `condition` is 
         `True`.
 
@@ -3645,7 +3643,7 @@ class ConditionalSetProperty(StructuralFeature):
             A boolean value or the name of a boolean property in the feature's 
             property dictionary. If the condition evaluates to `True`, the 
             specified properties are applied.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional properties to apply to the child feature if the 
             condition is `True`.
 
@@ -3689,22 +3687,22 @@ class ConditionalSetFeature(StructuralFeature):
 
     Parameters
     ----------
-    on_false : Feature, optional
+    on_false: Feature, optional
         The feature to resolve if the condition is `False`. If not provided, 
         the input image remains unchanged.
-    on_true : Feature, optional
+    on_true: Feature, optional
         The feature to resolve if the condition is `True`. If not provided, 
         the input image remains unchanged.
-    condition : str or bool, optional
+    condition: str or bool, optional
         The name of the conditional property or a boolean value. If a string 
         is provided, its value is retrieved from `kwargs` or `self.properties`. 
         If not found, the default value is `True`.
-    **kwargs : dict of str to Any
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `StructuralFeature`.
 
     Attributes
     ----------
-    __distributed__ : bool
+    __distributed__: bool
         Indicates whether this feature distributes computation across inputs.
 
     Methods
@@ -3784,7 +3782,7 @@ class ConditionalSetFeature(StructuralFeature):
         condition: str or bool, optional
             The name of the property to listen to, or a boolean value. Defaults 
             to `"is_label"`.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments for the parent `StructuralFeature`.
 
         """
@@ -3820,7 +3818,7 @@ class ConditionalSetFeature(StructuralFeature):
             The name of the conditional property or a boolean value. If a 
             string is provided, it is looked up in `kwargs` to get the actual 
             boolean value.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments to pass to the resolved feature.
 
         Returns
@@ -3860,16 +3858,16 @@ class Lambda(Feature):
 
     Parameters
     ----------
-    function : Callable[..., Callable[[Image], Image]]
+    function: Callable[..., Callable[[Image], Image]]
         A callable that produces a function. The outer function can accept 
         additional arguments from the pipeline, while the inner function 
         operates on a single image.
-    **kwargs : dict[str, Any]
+    **kwargs: dict[str, Any]
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: Image, function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image`
+    `get(image: np.ndarray | Image, function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image`
         Applies the custom function to the input image.
 
     Examples
@@ -3911,11 +3909,11 @@ class Lambda(Feature):
 
         Parameters
         ----------
-        function : Callable[..., Callable[[Image], Image]]
+        function: Callable[..., Callable[[Image], Image]]
             A callable that produces a function. The outer function can accept 
             additional arguments from the pipeline, while the inner function 
             processes a single image.
-        **kwargs : dict[str, Any]
+        **kwargs: dict[str, Any]
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -3924,7 +3922,7 @@ class Lambda(Feature):
 
     def get(
         self: Feature,
-        image: Image,
+        image: np.ndarray | Image,
         function: Callable[[Image], Image],
         **kwargs: dict[str, Any],
     ) -> Image:
@@ -3936,12 +3934,12 @@ class Lambda(Feature):
 
         Parameters
         ----------
-        image : Image
+        image: np.ndarray or Image
             The input image to be processed.
-        function : Callable[[Image], Image]
+        function: Callable[[Image], Image]
             A callable function that takes an image and returns a transformed 
             image.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional keyword arguments (unused in this implementation).
 
         Returns
@@ -3969,12 +3967,12 @@ class Merge(Feature):
 
     Parameters
     ----------
-    function : Callable[..., Callable[[list[Image]], Image | list[Image]]]
+    function: Callable[..., Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]]]
         A callable that produces a function. The **outer function** can depend 
         on other properties of the pipeline, while the **inner function** 
         processes a list of images and returns either a single image or a list 
         of images.
-    **kwargs : dict[str, Any]
+    **kwargs: dict[str, Any]
         Additional parameters passed to the parent `Feature` class.
 
     Attributes
@@ -3984,7 +3982,7 @@ class Merge(Feature):
 
     Methods
     -------
-    `get(list_of_images: list[Image], function: Callable[[list[Image]], Image | list[Image]], **kwargs: dict[str, Any]) -> Image | list[Image]`
+    `get(list_of_images: list[np.ndarray] | list[Image], function: Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]], **kwargs: dict[str, Any]) -> Image | list[Image]`
         Applies the custom function to the list of images.
 
     Examples
@@ -4019,19 +4017,19 @@ class Merge(Feature):
     def __init__(
         self: Feature,
         function: Callable[..., 
-                           Callable[[list[Image]], Image | list[Image]]],
+                           Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]]],
         **kwargs: dict[str, Any]
     ):
         """Initialize the Merge feature.
 
         Parameters
         ----------
-        function : Callable[..., Callable[[list[Image]], Image | list[Image]]]
+        function: Callable[..., Callable[list[np.ndarray] | [list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]]]
             A callable that returns a function for processing a list of images.
             - The **outer function** can depend on other properties in the pipeline.
             - The **inner function** takes a list of images as input and 
               returns either a single image or a list of images.
-        **kwargs : dict[str, Any]
+        **kwargs: dict[str, Any]
             Additional parameters passed to the parent `Feature` class.
 
         """
@@ -4040,21 +4038,21 @@ class Merge(Feature):
 
     def get(
         self: Feature,
-        list_of_images: list[Image],
-        function: Callable[[list[Image]], Image | list[Image]],
+        list_of_images: list[np.ndarray] | list[Image],
+        function: Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]],
         **kwargs: dict[str, Any],
     ) -> Image | list[Image]:
         """Apply the custom function to a list of images.
 
         Parameters
         ----------
-        list_of_images : list[Image]
+        list_of_images: list[np.ndarray] or list[Image]
             A list of images to be processed by the function.
-        function : Callable[[list[Image]], Image | list[Image]]
+        function: Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]]
             The function that processes the list of images and returns either:
               - A single transformed image (`Image`)
               - A list of transformed images (`list[Image]`)
-        **kwargs : dict[str, Any]
+        **kwargs: dict[str, Any]
             Additional arguments (unused in this implementation).
 
         Returns
@@ -4080,12 +4078,12 @@ class OneOf(Feature):
 
     Parameters
     ----------
-    collection : Iterable[Feature]
+    collection: Iterable[Feature]
         A collection of features to choose from.
-    key : int | None, optional
+    key: int | None, optional
         The index of the feature to resolve from the collection. If not 
         provided, a feature is selected randomly at each execution.
-    **kwargs : dict of str to Any
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
@@ -4136,12 +4134,12 @@ class OneOf(Feature):
 
         Parameters
         ----------
-        collection : Iterable[Feature]
+        collection: Iterable[Feature]
             A collection of features to choose from. It will be stored as a tuple.
-        key : int | None, optional
+        key: int | None, optional
             The index of the feature to resolve from the collection. If not 
             provided, a feature is selected randomly at execution.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -4163,7 +4161,7 @@ class OneOf(Feature):
         
         Parameters
         ----------
-        propertydict : dict
+        propertydict: dict
             The dictionary containing properties of the feature.
 
         Returns
@@ -4192,13 +4190,13 @@ class OneOf(Feature):
 
         Parameters
         ----------
-        image : Any
+        image: Any
             The input image or data to process.
-        key : int
+        key: int
             The index of the feature to apply from the collection.
-        _ID : tuple[int, ...], optional
+        _ID: tuple[int, ...], optional
             A unique identifier for caching and parallel processing.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional parameters passed to the selected feature.
 
         Returns
@@ -4224,12 +4222,12 @@ class OneOfDict(Feature):
 
     Parameters
     ----------
-    collection : dict[Any, Feature]
+    collection: dict[Any, Feature]
         A dictionary where keys are identifiers and values are features.
-    key : Any | None, optional
+    key: Any | None, optional
         The key of the feature to resolve from the dictionary. If `None`, 
         a random key is selected.
-    **kwargs : dict of str to Any
+    **kwargs: dict of str to Any
         Additional parameters passed to the parent `Feature` class.
 
     Attributes
@@ -4280,12 +4278,12 @@ class OneOfDict(Feature):
 
         Parameters
         ----------
-        collection : dict[Any, Feature]
+        collection: dict[Any, Feature]
             A dictionary where keys are identifiers and values are features.
-        key : Any | None, optional
+        key: Any | None, optional
             The key of the feature to resolve from the dictionary. If `None`, 
             a random key is selected.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional parameters passed to the parent `Feature` class.
 
         """
@@ -4307,7 +4305,7 @@ class OneOfDict(Feature):
 
         Parameters
         ----------
-        propertydict : dict
+        propertydict: dict
             The dictionary containing feature properties.
 
         Returns
@@ -4336,13 +4334,13 @@ class OneOfDict(Feature):
 
         Parameters
         ----------
-        image : Any
+        image: Any
             The input image or data to be processed.
-        key : Any
+        key: Any
             The key of the feature to apply from the dictionary.
-        _ID : tuple[int, ...], optional
+        _ID: tuple[int, ...], optional
             A unique identifier for caching and parallel execution.
-        **kwargs : dict of str to Any
+        **kwargs: dict of str to Any
             Additional parameters passed to the selected feature.
 
         Returns
@@ -4596,15 +4594,15 @@ class SampleToMasks(Feature):
 
     Parameters
     ----------
-    transformation_function : Callable[[Image], Image]
+    transformation_function: Callable[[Image], Image]
         A function that transforms each input image into a mask with 
         `number_of_masks` layers.
-    number_of_masks : PropertyLike[int], optional
+    number_of_masks: PropertyLike[int], optional
         The number of mask layers to generate. Default is 1.
-    output_region : PropertyLike[tuple[int, int, int, int]], optional
+    output_region: PropertyLike[tuple[int, int, int, int]], optional
         The size and position of the output mask, typically aligned with 
         `optics.output_region`.
-    merge_method : PropertyLike[str | Callable | list[str | Callable]], optional
+    merge_method: PropertyLike[str | Callable | list[str | Callable]], optional
         Method for merging individual masks into the final image. Can be:
         - "add" (default): Sum the masks.
         - "overwrite": Later masks overwrite earlier masks.
@@ -4612,14 +4610,14 @@ class SampleToMasks(Feature):
         - "mul": Multiply masks.
         - Function: Custom function taking two images and merging them.
 
-    **kwargs : dict[str, Any]
+    **kwargs: dict[str, Any]
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: Image, transformation_function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image`
+    `get(image: np.ndarray | Image, transformation_function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image`
         Applies the transformation function to the input image.
-    `_process_and_get(images: list[Image] | Image, **kwargs: dict[str, Any]) -> Image | np.ndarray`
+    `_process_and_get(images: list[np.ndarray] | np.ndarray | list[Image] | Image, **kwargs: dict[str, Any]) -> Image | np.ndarray`
         Processes a list of images and generates a multi-layer mask.
 
     Returns
@@ -4688,15 +4686,15 @@ class SampleToMasks(Feature):
 
         Parameters
         ----------
-        transformation_function : Callable[[Image], Image]
+        transformation_function: Callable[[Image], Image]
             Function to transform input images into masks.
-        number_of_masks : PropertyLike[int], optional
+        number_of_masks: PropertyLike[int], optional
             Number of mask layers. Default is 1.
-        output_region : PropertyLike[tuple[int, int, int, int]], optional
+        output_region: PropertyLike[tuple[int, int, int, int]], optional
             Output region of the mask. Default is None.
-        merge_method : PropertyLike[str | Callable | list[str | Callable]], optional
+        merge_method: PropertyLike[str | Callable | list[str | Callable]], optional
             Method to merge masks. Default is "add".
-        **kwargs : dict[str, Any]
+        **kwargs: dict[str, Any]
             Additional keyword arguments passed to the parent class.
         
         """
@@ -4711,7 +4709,7 @@ class SampleToMasks(Feature):
 
     def get(
         self: Feature,
-        image: Image,
+        image: np.ndarray | Image,
         transformation_function: Callable[[Image], Image],
         **kwargs: dict[str, Any],
     ) -> Image:
@@ -4719,11 +4717,11 @@ class SampleToMasks(Feature):
 
         Parameters
         ----------
-        image : Image
+        image: np.ndarray | Image
             The input image.
-        transformation_function : Callable[[Image], Image]
+        transformation_function: Callable[[Image], Image]
             Function to transform the image.
-        **kwargs : dict[str, Any]
+        **kwargs: dict[str, Any]
             Additional parameters.
 
         Returns
@@ -4737,16 +4735,16 @@ class SampleToMasks(Feature):
 
     def _process_and_get(
         self: Feature,
-        images: list[Image] | Image,
+        images: list[np.ndarray] | np.ndarray | list[Image] | Image,
         **kwargs: dict[str, Any],
     ) -> Image | np.ndarray:
         """Process a list of images and generate a multi-layer mask.
 
         Parameters
         ----------
-        images : Image or list[Image]
+        images: np.ndarray or list[np.ndarrray] or  Image or list[Image]
             List of input images or a single image.
-        **kwargs : dict[str, Any]
+        **kwargs: dict[str, Any]
             Additional parameters including `output_region`, `number_of_masks`, 
             and `merge_method`.
 
@@ -4894,7 +4892,7 @@ class AsType(Feature):
     ----------
     dtype: PropertyLike[Any], optional
         The desired data type for the image. Defaults to `"float64"`.
-    **kwargs: : dict of str to Any
+    **kwargs:: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
@@ -4934,7 +4932,7 @@ class AsType(Feature):
         ----------
         dtype: PropertyLike[Any], optional
             The desired data type for the image. Defaults to `"float64"`.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -4980,7 +4978,7 @@ class ChannelFirst2d(Feature):
     ----------
     axis: int, optional
         The axis to move to the first position. Defaults to `-1` (last axis).
-    **kwargs: : dict of str to Any
+    **kwargs:: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
@@ -5028,7 +5026,7 @@ class ChannelFirst2d(Feature):
         axis: int, optional
             The axis to move to the first position. 
             Defaults to `-1` (last axis).
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -5175,7 +5173,7 @@ class Upscale(Feature):
         ----------
         feature: Feature
             The pipeline or feature to resolve at a higher resolution.
-        factor: int | tuple[int, int, int], optional
+        factor: int or tuple[int, int, int], optional
             The factor by which to upscale the simulation. If a single integer 
             is provided, it is applied uniformly across all axes. If a tuple of
             three integers is provided, each axis is scaled individually. 
@@ -5293,7 +5291,7 @@ class NonOverlapping(Feature):
         Get the overlapping volume between a volume and a bounding cube.
     `_check_volumes_non_overlapping(volume_1: np.ndarray, volume_2: np.ndarray, min_distance: float) -> bool`
         Check if two volumes are non-overlapping.
-    `_resample_volume_position(volume: Image) -> Image`
+    `_resample_volume_position(volume: np.ndarray | Image) -> Image`
         Resample the position of a volume to avoid overlap.
     
     Notes
@@ -5395,15 +5393,15 @@ class NonOverlapping(Feature):
 
         Parameters
         ----------
-        feature : Feature
+        feature: Feature
             The feature that generates the list of volumes.
-        min_distance : float, optional
+        min_distance: float, optional
             The minimum separation distance **between volume edges**, in 
             pixels. Defaults to `1`. Negative values allow for partial overlap.
-        max_attempts : int, optional
+        max_attempts: int, optional
             The maximum number of attempts to place the volumes without 
             overlap. Defaults to `5`.
-        max_iters : int, optional
+        max_iters: int, optional
             The maximum number of resampling iterations per attempt. If 
             exceeded, a new list of volumes is generated. Defaults to `100`.
         
@@ -5434,17 +5432,17 @@ class NonOverlapping(Feature):
 
         Parameters
         ----------
-        _ : Any
+        _: Any
             Placeholder parameter, typically for an input image.
-        min_distance : float
+        min_distance: float
             The minimum required separation distance between volumes, in 
             pixels.
-        max_attempts : int
+        max_attempts: int
             The maximum number of attempts to generate a valid non-overlapping 
             configuration.
-        max_iters : int
+        max_iters: int
             The maximum number of resampling iterations per attempt.
-        **kwargs : dict[str, Any]
+        **kwargs: dict[str, Any]
             Additional parameters that may be used by subclasses.
 
         Returns
@@ -5513,7 +5511,7 @@ class NonOverlapping(Feature):
 
         Parameters
         ----------
-        list_of_volumes : list[np.ndarray]
+        list_of_volumes: list[np.ndarray]
             A list of 3D arrays representing the volumes to be checked for 
             overlap. Each volume is expected to have a position attribute.
 
@@ -5632,13 +5630,13 @@ class NonOverlapping(Feature):
 
         Parameters
         ----------
-        bounding_cube_1 : list[int]
+        bounding_cube_1: list[int]
             A list of six integers `[x1, y1, z1, x2, y2, z2]` representing 
             the first bounding cube.
-        bounding_cube_2 : list[int]
+        bounding_cube_2: list[int]
             A list of six integers `[x1, y1, z1, x2, y2, z2]` representing 
             the second bounding cube.
-        min_distance : float
+        min_distance: float
             The required **minimum separation distance** between the two 
             bounding cubes.
 
@@ -5693,9 +5691,9 @@ class NonOverlapping(Feature):
 
         Parameters
         ----------
-        bounding_cube_1 : list[int]
+        bounding_cube_1: list[int]
             The first bounding cube, formatted as `[x1, y1, z1, x2, y2, z2]`.
-        bounding_cube_2 : list[int]
+        bounding_cube_2: list[int]
             The second bounding cube, formatted as `[x1, y1, z1, x2, y2, z2]`.
 
         Returns
@@ -5738,15 +5736,15 @@ class NonOverlapping(Feature):
 
         Parameters
         ----------
-        volume : np.ndarray
+        volume: np.ndarray
             A 3D NumPy array representing the volume from which the 
             overlapping region is extracted.
-        bounding_cube : tuple[float, float, float, float, float, float]
+        bounding_cube: tuple[float, float, float, float, float, float]
             The bounding cube of the volume, given as a tuple of six floats: 
             `(x1, y1, z1, x2, y2, z2)`. The first three values define the 
             **top-left-front** corner, while the last three values define the 
             **bottom-right-back** corner.
-        overlapping_cube : tuple[float, float, float, float, float, float]
+        overlapping_cube: tuple[float, float, float, float, float, float]
             The overlapping region between the volume and another volume, 
             represented in the same format as `bounding_cube`.
 
@@ -5805,11 +5803,11 @@ class NonOverlapping(Feature):
 
         Parameters
         ----------
-        volume_1 : np.ndarray
+        volume_1: np.ndarray
             A 3D NumPy array representing the first volume.
-        volume_2 : np.ndarray
+        volume_2: np.ndarray
             A 3D NumPy array representing the second volume.
-        min_distance : float
+        min_distance: float
             The minimum Euclidean distance required between any two non-zero 
             voxels in the two volumes.
 
@@ -5860,7 +5858,7 @@ class NonOverlapping(Feature):
 
     def _resample_volume_position(
         self: NonOverlapping,
-        volume: Image,
+        volume: np.ndarray | Image,
     ) -> Image:
         """Resamples the position of a 3D volume using its internal position 
         sampler.
@@ -5872,7 +5870,7 @@ class NonOverlapping(Feature):
 
         Parameters
         ----------
-        volume : Image
+        volume: np.ndarray or Image
             The 3D volume whose position is to be resampled. The volume must 
             have a `properties` attribute containing dictionaries with 
             `position` and `_position_sampler` keys.
@@ -5920,7 +5918,7 @@ class Store(Feature):
     replace: bool, optional
         If `True`, replaces the stored value with a new computation. Defaults 
         to `False`.
-    **kwargs: : dict of str to Any
+    **kwargs:: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
@@ -5983,7 +5981,7 @@ class Store(Feature):
         replace: bool, optional
             If `True`, replaces the stored value with a new computation. 
             Defaults to `False`.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -6041,7 +6039,7 @@ class Squeeze(Feature):
     ----------
     axis: int or tuple[int, ...], optional
         The axis or axes to squeeze. Defaults to `None`, squeezing all axes.
-    **kwargs: : dict of str to Any
+    **kwargs:: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
@@ -6085,7 +6083,7 @@ class Squeeze(Feature):
         axis: int or tuple[int, ...], optional
             The axis or axes to squeeze. Defaults to `None`, which squeezes 
             all axes.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -6107,7 +6105,7 @@ class Squeeze(Feature):
         axis: int or tuple[int, ...], optional
             The axis or axes to squeeze. Defaults to `None`, which squeezes 
             all axes.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments (unused here).
 
         Returns
@@ -6132,7 +6130,7 @@ class Unsqueeze(Feature):
     axis: int or tuple[int, ...], optional
         The axis or axes where new singleton dimensions should be added. 
         Defaults to `None`, which adds a singleton dimension at the last axis.
-    **kwargs: : dict of str to Any
+    **kwargs:: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
@@ -6176,7 +6174,7 @@ class Unsqueeze(Feature):
         axis: int or tuple[int, ...], optional
             The axis or axes where new singleton dimensions should be added. 
             Defaults to -1, which adds a singleton dimension at the last axis.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -6199,7 +6197,7 @@ class Unsqueeze(Feature):
         axis: int or tuple[int, ...], optional
             The axis or axes where new singleton dimensions should be added. 
             Defaults to -1, which adds a singleton dimension at the last axis.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments (unused here).
 
         Returns
@@ -6228,7 +6226,7 @@ class MoveAxis(Feature):
         The axis to move.
     destination: int
         The destination position of the axis.
-    **kwargs: : dict of str to Any
+    **kwargs:: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
@@ -6268,7 +6266,7 @@ class MoveAxis(Feature):
             The axis to move.
         destination: int
             The destination position of the axis.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -6292,7 +6290,7 @@ class MoveAxis(Feature):
             The axis to move.
         destination: int
             The destination position of the axis.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments (unused here).
 
         Returns
@@ -6316,7 +6314,7 @@ class Transpose(Feature):
     axes: tuple[int, ...], optional
         A tuple specifying the permutation of the axes. If `None`, the axes are 
         reversed by default.
-    **kwargs: : dict of str to Any
+    **kwargs:: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
@@ -6360,7 +6358,7 @@ class Transpose(Feature):
         axes: tuple[int, ...], optional
             A tuple specifying the permutation of the axes. If `None`, the 
             axes are reversed by default.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
         
         """
@@ -6409,7 +6407,7 @@ class OneHot(Feature):
     ----------
     num_classes: int
         The total number of classes for the one-hot encoding.
-    **kwargs: : dict of str to Any
+    **kwargs:: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
@@ -6447,7 +6445,7 @@ class OneHot(Feature):
         ----------
         num_classes: int
             The total number of classes for the one-hot encoding.
-        **kwargs: : dict of str to Any
+        **kwargs:: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -6504,7 +6502,7 @@ class TakeProperties(Feature):
         The feature from which to extract properties.
     names: list[str]
         The names of the properties to extract
-    **kwargs: : dict of str to Any
+    **kwargs:: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
@@ -6562,11 +6560,11 @@ class TakeProperties(Feature):
 
         Parameters
         ----------
-        feature : Feature
+        feature: Feature
             The feature from which to extract properties.
-        *names : str
+        *names: str
             One or more names of the properties to extract.
-=        **kwargs : dict[str, Any], optional
+=        **kwargs: dict[str, Any], optional
             Additional keyword arguments passed to the parent `Feature` class.
         
         """
@@ -6588,14 +6586,14 @@ class TakeProperties(Feature):
 
         Parameters
         ----------
-        image : Any
+        image: Any
             The input image (unused in this method).
-        names : tuple[str, ...]
+        names: tuple[str, ...]
             The names of the properties to extract.
-        _ID : tuple[int, ...], optional
+        _ID: tuple[int, ...], optional
             A unique identifier for the current computation, ensuring that 
             dependencies are correctly matched. Defaults to an empty tuple.
-        **kwargs : dict[str, Any], optional
+        **kwargs: dict[str, Any], optional
             Additional keyword arguments (unused in this method).
 
         Returns
