@@ -1158,7 +1158,7 @@ class TestFeatures(unittest.TestCase):
 
         """Test that sigma is correctly applied when condition is a boolean."""
         conditional_feature = features.ConditionalSetProperty(
-            gaussian_noise, sigma=5
+            gaussian_noise, sigma=5,
         )
 
         # Test with condition met (should apply sigma=5)

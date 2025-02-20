@@ -3602,7 +3602,7 @@ class ConditionalSetProperty(StructuralFeature):
     def __init__(
         self: Feature,
         feature: Feature,
-        condition: PropertyLike[str | bool],
+        condition: PropertyLike[str | bool] | None = None,
         **kwargs: dict[str, Any],
     ):
         """Initialize the ConditionalSetProperty feature.
