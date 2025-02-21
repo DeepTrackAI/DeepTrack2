@@ -788,14 +788,13 @@ class TestFeatures(unittest.TestCase):
         """Creates a temporary test image."""
         test_image_array = (np.ones((50, 50)) * 128).astype(np.uint8)
         with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
-            temp_filename = temp_png.name
-            PIL_Image.fromarray(test_image_array).save(temp_filename)
+            PIL_Image.fromarray(test_image_array).save(temp_png.name)
 
         try: 
             """Tests pipeline behavior when toggling `is_label`."""
             arguments = features.Arguments(is_label=False)
             image_pipeline = (
-                features.LoadImage(path=temp_filename) >>
+                features.LoadImage(path=temp_png.name) >>
                 Gaussian(sigma=(1 - arguments.is_label) * 5)
             )
             image_pipeline.bind_arguments(arguments)
@@ -811,7 +810,7 @@ class TestFeatures(unittest.TestCase):
             """Tests pipeline behavior with dynamically computed sigma."""
             arguments = features.Arguments(is_label=False)
             image_pipeline = (
-                features.LoadImage(path=temp_filename) >>
+                features.LoadImage(path=temp_png.name) >>
                 Gaussian(
                     is_label=arguments.is_label,
                     sigma=lambda is_label: 0 if is_label else 5
@@ -830,7 +829,7 @@ class TestFeatures(unittest.TestCase):
             """Tests property storage and modification in the pipeline."""
             arguments = features.Arguments(noise_max_sigma=5)
             image_pipeline = (
-                features.LoadImage(path=temp_filename) >>
+                features.LoadImage(path=temp_png.name) >>
                 Gaussian(
                     noise_max_sigma=arguments.noise_max_sigma,
                     sigma=lambda noise_max_sigma: np.random.rand() * noise_max_sigma
@@ -851,7 +850,7 @@ class TestFeatures(unittest.TestCase):
             """Tests passing arguments dynamically using `**arguments.properties`."""
             arguments = features.Arguments(is_label=False, noise_sigma=5)
             image_pipeline = (
-                features.LoadImage(path=temp_filename) >>
+                features.LoadImage(path=temp_png.name) >>
                 Gaussian(
                     sigma=lambda is_label, noise_sigma: 0 if is_label else noise_sigma,
                     **arguments.properties
@@ -868,8 +867,8 @@ class TestFeatures(unittest.TestCase):
             self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
         
         finally:
-            if os.path.exists(temp_filename):
-                os.remove(temp_filename)
+            if os.path.exists(temp_png.name):
+                os.remove(temp_png.name)
 
 
     def test_Probability(self):
@@ -1533,22 +1532,16 @@ class TestFeatures(unittest.TestCase):
         try:
             with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy:
                 np.save(temp_npy.name, test_image_array)
-                npy_filename = temp_npy.name
+                # npy_filename = temp_npy.name
 
             with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
                 PIL_Image.fromarray(test_image_array).save(temp_png.name)
-                png_filename = temp_png.name
+                # png_filename = temp_png.name
 
             with NamedTemporaryFile(suffix=".jpg", delete=False) as temp_jpg:
                 PIL_Image.fromarray(test_image_array).convert("RGB").save(temp_jpg.name)
-                jpg_filename = temp_jpg.name
+                # jpg_filename = temp_jpg.name
 
-            # temp_npy = NamedTemporaryFile(suffix=".npy", delete=False)
-            # np.save(temp_npy.name, test_image_array)
-            # temp_png = NamedTemporaryFile(suffix=".png", delete=False)
-            # PIL_Image.fromarray(test_image_array).save(temp_png.name)
-            # temp_jpg = NamedTemporaryFile(suffix=".jpg", delete=False)
-            # PIL_Image.fromarray(test_image_array).convert("RGB").save(temp_jpg.name)
 
             """Test loading a .npy file."""
             load_feature = features.LoadImage(path=temp_npy.name)
