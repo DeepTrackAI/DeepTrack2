@@ -1543,12 +1543,12 @@ class TestFeatures(unittest.TestCase):
                 PIL_Image.fromarray(test_image_array).convert("RGB").save(temp_jpg.name)
                 jpg_filename = temp_jpg.name
 
-            temp_npy = NamedTemporaryFile(suffix=".npy", delete=False)
-            np.save(temp_npy.name, test_image_array)
-            temp_png = NamedTemporaryFile(suffix=".png", delete=False)
-            PIL_Image.fromarray(test_image_array).save(temp_png.name)
-            temp_jpg = NamedTemporaryFile(suffix=".jpg", delete=False)
-            PIL_Image.fromarray(test_image_array).convert("RGB").save(temp_jpg.name)
+            # temp_npy = NamedTemporaryFile(suffix=".npy", delete=False)
+            # np.save(temp_npy.name, test_image_array)
+            # temp_png = NamedTemporaryFile(suffix=".png", delete=False)
+            # PIL_Image.fromarray(test_image_array).save(temp_png.name)
+            # temp_jpg = NamedTemporaryFile(suffix=".jpg", delete=False)
+            # PIL_Image.fromarray(test_image_array).convert("RGB").save(temp_jpg.name)
 
             """Test loading a .npy file."""
             load_feature = features.LoadImage(path=temp_npy.name)
