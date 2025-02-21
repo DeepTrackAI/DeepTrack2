@@ -787,87 +787,89 @@ class TestFeatures(unittest.TestCase):
 
         """Creates a temporary test image."""
         test_image_array = (np.ones((50, 50)) * 128).astype(np.uint8)
-        temp_png = NamedTemporaryFile(suffix=".png", delete=False)
-        temp_filename = temp_png.name
-        temp_png.close()  # Close the file so DeepTrack can access it
-        PIL_Image.fromarray(test_image_array).save(temp_filename)
+        with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
+            temp_filename = temp_png.name
+            PIL_Image.fromarray(test_image_array).save(temp_filename)
 
-        """Tests pipeline behavior when toggling `is_label`."""
-        arguments = features.Arguments(is_label=False)
-        image_pipeline = (
-            features.LoadImage(path=temp_filename) >>
-            Gaussian(sigma=(1 - arguments.is_label) * 5)
-        )
-        image_pipeline.bind_arguments(arguments)
-
-        # Test noisy image
-        image = image_pipeline()
-        self.assertGreater(image.std(), 0)  # Expecting noise around 5
-
-        # Test raw image with `is_label=True`
-        image = image_pipeline(is_label=True)
-        self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
-
-        """Tests pipeline behavior with dynamically computed sigma."""
-        arguments = features.Arguments(is_label=False)
-        image_pipeline = (
-            features.LoadImage(path=temp_filename) >>
-            Gaussian(
-                is_label=arguments.is_label,
-                sigma=lambda is_label: 0 if is_label else 5
+        try: 
+            """Tests pipeline behavior when toggling `is_label`."""
+            arguments = features.Arguments(is_label=False)
+            image_pipeline = (
+                features.LoadImage(path=temp_filename) >>
+                Gaussian(sigma=(1 - arguments.is_label) * 5)
             )
-        )
-        image_pipeline.bind_arguments(arguments)
+            image_pipeline.bind_arguments(arguments)
 
-        # Test noisy image
-        image = image_pipeline()
-        self.assertGreater(image.std(), 0)  # Expecting noise around 5
+            # Test noisy image
+            image = image_pipeline()
+            self.assertGreater(image.std(), 0)  # Expecting noise around 5
 
-        # Test raw image with `is_label=True`
-        image = image_pipeline(is_label=True)
-        self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
+            # Test raw image with `is_label=True`
+            image = image_pipeline(is_label=True)
+            self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
 
-        """Tests property storage and modification in the pipeline."""
-        arguments = features.Arguments(noise_max_sigma=5)
-        image_pipeline = (
-            features.LoadImage(path=temp_filename) >>
-            Gaussian(
-                noise_max_sigma=arguments.noise_max_sigma,
-                sigma=lambda noise_max_sigma: np.random.rand() * noise_max_sigma
+            """Tests pipeline behavior with dynamically computed sigma."""
+            arguments = features.Arguments(is_label=False)
+            image_pipeline = (
+                features.LoadImage(path=temp_filename) >>
+                Gaussian(
+                    is_label=arguments.is_label,
+                    sigma=lambda is_label: 0 if is_label else 5
+                )
             )
-        )
-        image_pipeline.bind_arguments(arguments)
-        image_pipeline.store_properties()
+            image_pipeline.bind_arguments(arguments)
 
-        # Check if sigma is within expected range
-        image = image_pipeline()
-        sigma_value = image.get_property("sigma")
-        self.assertTrue(0 <= sigma_value <= 5)
+            # Test noisy image
+            image = image_pipeline()
+            self.assertGreater(image.std(), 0)  # Expecting noise around 5
 
-        # Override sigma by setting noise_max_sigma=0
-        image = image_pipeline(noise_max_sigma=0)
-        self.assertEqual(image.get_property("sigma"), 0.0)
+            # Test raw image with `is_label=True`
+            image = image_pipeline(is_label=True)
+            self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
 
-        """Tests passing arguments dynamically using `**arguments.properties`."""
-        arguments = features.Arguments(is_label=False, noise_sigma=5)
-        image_pipeline = (
-            features.LoadImage(path=temp_filename) >>
-            Gaussian(
-                sigma=lambda is_label, noise_sigma: 0 if is_label else noise_sigma,
-                **arguments.properties
+            """Tests property storage and modification in the pipeline."""
+            arguments = features.Arguments(noise_max_sigma=5)
+            image_pipeline = (
+                features.LoadImage(path=temp_filename) >>
+                Gaussian(
+                    noise_max_sigma=arguments.noise_max_sigma,
+                    sigma=lambda noise_max_sigma: np.random.rand() * noise_max_sigma
+                )
             )
-        )
-        image_pipeline.bind_arguments(arguments)
+            image_pipeline.bind_arguments(arguments)
+            image_pipeline.store_properties()
 
-        # Test noisy image
-        image = image_pipeline()
-        self.assertGreater(image.std(), 0)  # Expecting noise around 5
+            # Check if sigma is within expected range
+            image = image_pipeline()
+            sigma_value = image.get_property("sigma")
+            self.assertTrue(0 <= sigma_value <= 5)
 
-        # Test raw image with `is_label=True`
-        image = image_pipeline(is_label=True)
-        self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
+            # Override sigma by setting noise_max_sigma=0
+            image = image_pipeline(noise_max_sigma=0)
+            self.assertEqual(image.get_property("sigma"), 0.0)
 
-        os.remove(temp_filename)
+            """Tests passing arguments dynamically using `**arguments.properties`."""
+            arguments = features.Arguments(is_label=False, noise_sigma=5)
+            image_pipeline = (
+                features.LoadImage(path=temp_filename) >>
+                Gaussian(
+                    sigma=lambda is_label, noise_sigma: 0 if is_label else noise_sigma,
+                    **arguments.properties
+                )
+            )
+            image_pipeline.bind_arguments(arguments)
+
+            # Test noisy image
+            image = image_pipeline()
+            self.assertGreater(image.std(), 0)  # Expecting noise around 5
+
+            # Test raw image with `is_label=True`
+            image = image_pipeline(is_label=True)
+            self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
+        
+        finally:
+            if os.path.exists(temp_filename):
+                os.remove(temp_filename)
 
 
     def test_Probability(self):
@@ -1527,41 +1529,55 @@ class TestFeatures(unittest.TestCase):
 
         """Create temporary image files in multiple formats for testing."""
         test_image_array = (np.random.rand(50, 50) * 255).astype(np.uint8)
-        temp_npy = NamedTemporaryFile(suffix=".npy", delete=False)
-        np.save(temp_npy.name, test_image_array)
-        temp_png = NamedTemporaryFile(suffix=".png", delete=False)
-        PIL_Image.fromarray(test_image_array).save(temp_png.name)
-        temp_jpg = NamedTemporaryFile(suffix=".jpg", delete=False)
-        PIL_Image.fromarray(test_image_array).convert("RGB").save(temp_jpg.name)
 
-        """Test loading a .npy file."""
-        load_feature = features.LoadImage(path=temp_npy.name)
-        loaded_image = load_feature.resolve()
-        self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
+        try:
+            with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy:
+                np.save(temp_npy.name, test_image_array)
+                npy_filename = temp_npy.name
 
-        """Test loading a .png file."""
-        load_feature = features.LoadImage(path=temp_png.name)
-        loaded_image = load_feature.resolve()
-        self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
+            with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
+                PIL_Image.fromarray(test_image_array).save(temp_png.name)
+                png_filename = temp_png.name
 
-        """Test loading a .jpg file."""
-        load_feature = features.LoadImage(path=temp_jpg.name)
-        loaded_image = load_feature.resolve()
-        self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
-        
-        """Test loading an image and converting it to grayscale."""
-        load_feature = features.LoadImage(path=temp_png.name, to_grayscale=True)
-        loaded_image = load_feature.resolve()
-        self.assertEqual(loaded_image.shape[-1], 1) 
+            with NamedTemporaryFile(suffix=".jpg", delete=False) as temp_jpg:
+                PIL_Image.fromarray(test_image_array).convert("RGB").save(temp_jpg.name)
+                jpg_filename = temp_jpg.name
 
-        """Test ensuring a minimum number of dimensions."""
-        load_feature = features.LoadImage(path=temp_png.name, ndim=4)
-        loaded_image = load_feature.resolve()
-        self.assertGreaterEqual(len(loaded_image.shape), 4)  
+            temp_npy = NamedTemporaryFile(suffix=".npy", delete=False)
+            np.save(temp_npy.name, test_image_array)
+            temp_png = NamedTemporaryFile(suffix=".png", delete=False)
+            PIL_Image.fromarray(test_image_array).save(temp_png.name)
+            temp_jpg = NamedTemporaryFile(suffix=".jpg", delete=False)
+            PIL_Image.fromarray(test_image_array).convert("RGB").save(temp_jpg.name)
 
-        """Delete temporary test images after testing."""
-        for file in [temp_npy.name, temp_png.name, temp_jpg.name]:
-            os.remove(file)
+            """Test loading a .npy file."""
+            load_feature = features.LoadImage(path=temp_npy.name)
+            loaded_image = load_feature.resolve()
+            self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
+
+            """Test loading a .png file."""
+            load_feature = features.LoadImage(path=temp_png.name)
+            loaded_image = load_feature.resolve()
+            self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
+
+            """Test loading a .jpg file."""
+            load_feature = features.LoadImage(path=temp_jpg.name)
+            loaded_image = load_feature.resolve()
+            self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
+            
+            """Test loading an image and converting it to grayscale."""
+            load_feature = features.LoadImage(path=temp_png.name, to_grayscale=True)
+            loaded_image = load_feature.resolve()
+            self.assertEqual(loaded_image.shape[-1], 1) 
+
+            """Test ensuring a minimum number of dimensions."""
+            load_feature = features.LoadImage(path=temp_png.name, ndim=4)
+            loaded_image = load_feature.resolve()
+            self.assertGreaterEqual(len(loaded_image.shape), 4)  
+
+        finally:
+            for file in [temp_npy.name, temp_png.name, temp_jpg.name]:
+                os.remove(file)
 
 
     def test_SampleToMasks(self):
@@ -2028,10 +2044,10 @@ class TestFeatures(unittest.TestCase):
         min_distance_before = calculate_min_distance(pos_with_overlap)
         min_distance_after = calculate_min_distance(pos_without_overlap)
 
-        print(f"Min distance before: {min_distance_before}, \
-            should be smaller than {2*radius + min_distance}")
-        print(f"Min distance after: {min_distance_after}, should be larger \
-            than {2*radius + min_distance} with some tolerance")
+        # print(f"Min distance before: {min_distance_before}, \
+        #     should be smaller than {2*radius + min_distance}")
+        # print(f"Min distance after: {min_distance_after}, should be larger \
+        #     than {2*radius + min_distance} with some tolerance")
 
         # Assert that the non-overlapping case respects min_distance (with 
         # slight rounding tolerance)
