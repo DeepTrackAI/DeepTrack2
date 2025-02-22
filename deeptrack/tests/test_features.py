@@ -1533,14 +1533,17 @@ class TestFeatures(unittest.TestCase):
             with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy:
                 np.save(temp_npy.name, test_image_array)
                 # npy_filename = temp_npy.name
+        temp_npy.close()
 
             with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
                 PIL_Image.fromarray(test_image_array).save(temp_png.name)
                 # png_filename = temp_png.name
+        temp_png.close()
 
             with NamedTemporaryFile(suffix=".jpg", delete=False) as temp_jpg:
                 PIL_Image.fromarray(test_image_array).convert("RGB").save(temp_jpg.name)
                 # jpg_filename = temp_jpg.name
+        temp_jpg.close()
 
 
             """Test loading a .npy file."""
