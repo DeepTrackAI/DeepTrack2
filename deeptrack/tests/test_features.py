@@ -1569,7 +1569,7 @@ class TestFeatures(unittest.TestCase):
             self.assertGreaterEqual(len(loaded_image.shape), 4)  
 
         finally:
-            for file in [temp_npy.name, temp_png.name, temp_jpg.name]:
+            for file in [temp_npz.name, temp_png.name, temp_jpg.name]:
                 os.remove(file)
 
 
