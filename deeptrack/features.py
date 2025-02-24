@@ -4533,7 +4533,7 @@ class LoadImage(Feature):
 
         # Try to load the image using various readers.
         try:
-            import imageio.v3 as iio
+            import imageio
 
             image = [imageio.v3.imread(file) for file in path]
         except (IOError, ImportError, AttributeError, KeyError):
