@@ -4536,7 +4536,7 @@ class LoadImage(Feature):
             import imageio
 
             image = [imageio.v3.imread(file) for file in path]
-        except (IOError, ImportError, AttributeError):
+        except (IOError, ImportError, AttributeError, KeyError):
             try:
                 image = [np.load(file, **load_options) for file in path]
             except (IOError, ValueError):
