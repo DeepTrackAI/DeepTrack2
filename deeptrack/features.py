@@ -4533,9 +4533,9 @@ class LoadImage(Feature):
 
         # Try to load the image using various readers.
         try:
-            import imageio
+            import imageio.v3 as iio
 
-            image = [imageio.v3.imread(file) for file in path]
+            image = [iio.imread(file) for file in path]
         except (IOError, ImportError, AttributeError):
             try:
                 image = [np.load(file, **load_options) for file in path]
