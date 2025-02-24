@@ -1530,8 +1530,8 @@ class TestFeatures(unittest.TestCase):
         test_image_array = (np.random.rand(50, 50) * 255).astype(np.uint8)
 
         try:
-            with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy:
-                np.save(temp_npy.name, test_image_array)
+            with NamedTemporaryFile(suffix=".npz", delete=False) as temp_npz:
+                np.save(temp_npz.name, test_image_array)
                 # npy_filename = temp_npy.name
 
             with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
@@ -1543,8 +1543,8 @@ class TestFeatures(unittest.TestCase):
                 # jpg_filename = temp_jpg.name
 
 
-            """Test loading a .npy file."""
-            load_feature = features.LoadImage(path=temp_npy.name)
+            """Test loading a .npz file."""
+            load_feature = features.LoadImage(path=temp_npz.name)
             loaded_image = load_feature.resolve()
             self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
 
