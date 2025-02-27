@@ -81,35 +81,35 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 These are examples of how DeepTrack2 can be used on real datasets:
 
-- DTEx201 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx211 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Training a fully connected neural network to identify handwritten digits using MNIST dataset.
 
-- DTEx202 **Single Particle Tracking**
+- DTEx212 **Single Particle Tracking**
 
   Tracks experimental videos of a single particle. (Requires opencv-python compiled with ffmpeg)
 
   
 
-- DTEx203 **Multi-Particle tracking**
+- DTEx213 **Multi-Particle tracking**
 - 
   Detecting quantum dots in a low SNR image.
 
   
 
-- DTEx204 **Particle Feature Extraction**
+- DTEx214 **Particle Feature Extraction**
 - 
   Extracting the radius and refractive index of particles.
 
-- DTEx205 **Cell Counting**
+- DTEx215 **Cell Counting**
 
   Counting the number of cells in fluorescence images.
 
-- DTEx206 **3D Multi-Particle tracking**
+- DTEx216 **3D Multi-Particle tracking**
 
   Tracking multiple particles in 3D for holography.
 
-- DTEx207 **GAN image generation**
+- DTEx217 **GAN image generation**
 
   Using a GAN to create cell image from masks.
 
