@@ -30,11 +30,11 @@ Key Features
   The `_create_volume` function facilitates combining multiple scatterers
   into a single unified volume, supporting 3D imaging.
 
-- **Integration with DeepTrack**
+- **Integration with feature pipelines**
 
-  Full compatibility with DeepTrack's feature pipeline allows for dynamic
-  and complex simulations, incorporating physics-based models and real-time
-  adjustments to sample and imaging properties.
+  Full compatibility with feature pipelines, allows for dynamic and complex
+  simulations, incorporating physics-based models and real-time adjustments to
+  sample and imaging properties.
 
 Module Structure
 ----------------
