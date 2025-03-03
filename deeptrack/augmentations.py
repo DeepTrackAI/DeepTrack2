@@ -79,7 +79,6 @@ Flip an image of a particle up-down then flips left-right:
     ...     >> dt.FlipUD(p=1.0) >> dt.FlipLR(p=1.0)
     image.plot()
 
-
 Reuse the output of a pipeline twice, augmented randomly by FlipLR.
 
     >>> import deeptrack as dt
@@ -89,6 +88,9 @@ Reuse the output of a pipeline twice, augmented randomly by FlipLR.
     >>> pipeline = dt.Reuse(pipeline, uses=2) >> dt.FlipLR()    
     >>> image = optics(particle) >> pipeline
     >>> image.plot()
+
+    >>> # Save as numpy array.
+    >>> image_array = image.resolve()
 
 Augment an image with random rotations and translations, followed by elastic transformations.
 
@@ -124,6 +126,9 @@ Augment an image with random rotations and translations, followed by elastic tra
     >>> )
     >>> augmented_image.plot()
 
+    >>> # Save as numpy array.
+    >>> image_array = augmented_image.resolve()
+
     
 
 """
@@ -139,10 +144,10 @@ import scipy.ndimage as ndimage
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
 
-from . import utils
-from .features import Feature
-from .image import Image
-from .types import ArrayLike, PropertyLike
+from deeptrack import utils
+from deeptrack.features import Feature
+from deeptrack.image import Image
+from deeptrack.types import ArrayLike, PropertyLike
 
 
 class Augmentation(Feature):
