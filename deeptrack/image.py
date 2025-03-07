@@ -1857,7 +1857,7 @@ def maybe_cupy(
 
     from deeptrack.backend import _config
 
-    if config.gpu_enabled:
+    if _config.gpu_enabled:
         return cupy.array(array)
 
     return array
