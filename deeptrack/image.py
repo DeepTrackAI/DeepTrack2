@@ -101,7 +101,7 @@ from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
 
 import numpy as np
 
-from deeptrack.backend import _config
+from deeptrack.backend._config import cupy, gpu_enabled
 from deeptrack.properties import Property
 from deeptrack.types import NumberLike
 
@@ -1855,7 +1855,7 @@ def maybe_cupy(
 
     """
 
-    if _config.gpu_enabled:
-        return _config.cupy.array(array)
+    if gpu_enabled:
+        return cupy.array(array)
 
     return array
