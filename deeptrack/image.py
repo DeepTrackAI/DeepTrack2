@@ -69,7 +69,7 @@ Methods
 
     maybe_cupy(
         array: Union[np.ndarray, List, Tuple],
-    ) -> Union['cupy.ndarray', np.ndarray]
+    ) -> Union[cupy.ndarray, np.ndarray]
 
     Convert an array to a CuPy array if GPU is available and enabled.
 
@@ -634,7 +634,7 @@ class Image:
 
     >>> gpu_img = img.to_cupy()
     >>> print(type(gpu_img._value))
-    <class 'cupy.ndarray'>
+    <class cupy.ndarray>
 
     >>> converted_back = gpu_img.to_numpy()
     >>> print(type(converted_back._value))
@@ -1707,7 +1707,7 @@ def coerce(
     >>> img3 = Image(cupy.array([7, 8, 9]))
     >>> result = coerce([img1, img3])
     >>> print([type(img._value) for img in result])
-    [<class 'cupy.ndarray'>, <class 'cupy.ndarray'>]
+    [<class cupy.ndarray>, <class cupy.ndarray>]
 
     """
 
@@ -1809,7 +1809,7 @@ def pad_image_to_fft(
 
 def maybe_cupy(
     array: Union[np.ndarray, List, Tuple],
-) -> Union['cupy.ndarray', np.ndarray]:
+) -> Union[cupy.ndarray, np.ndarray]:
     """Convert an array to a CuPy array if GPU is available and enabled.
 
     This function checks if GPU computation is enabled in the configuration. 
@@ -1844,7 +1844,7 @@ def maybe_cupy(
     >>> array = np.array([1, 2, 3])
     >>> gpu_array = maybe_cupy(array)
     >>> type(gpu_array)
-    <class 'cupy.ndarray'>
+    <class cupy.ndarray>
 
     If GPU is not enabled:
     
