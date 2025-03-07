@@ -129,7 +129,7 @@ def _binary_method(
 
     Parameters
     ----------
-    op : Callable[[NumberLike, NumberLike], NumberLike]
+    op: Callable[[NumberLike, NumberLike], NumberLike]
         The operator function (e.g., `operator.add`, `operator.sub`) that 
         defines the binary operation.
 
@@ -215,7 +215,7 @@ def _reflected_binary_method(
 
     Parameters
     ----------
-    op : Callable[[NumberLike, NumberLike], NumberLike]
+    op: Callable[[NumberLike, NumberLike], NumberLike]
         The operator function (e.g., `operator.add`, `operator.sub`) that 
         defines the reflected binary operation.
 
@@ -297,7 +297,7 @@ def _inplace_binary_method(
 
     Parameters
     ----------
-    op : Callable[[NumberLike, NumberLike], NumberLike]
+    op: Callable[[NumberLike, NumberLike], NumberLike]
         The operator function (e.g., `operator.iadd`, `operator.imul`) that 
         defines the in-place binary operation.
 
@@ -375,7 +375,7 @@ def _numeric_methods(
 
     Parameters
     ----------
-    op : Callable[[NumberLike, NumberLike], NumberLike]
+    op: Callable[[NumberLike, NumberLike], NumberLike]
         A callable representing the numeric operator (e.g., `operator.add`, 
         `operator.mul`) to implement the methods for.
 
@@ -442,7 +442,7 @@ def _unary_method(
 
     Parameters
     ----------
-    op : Callable[[NumberLike], NumberLike]
+    op: Callable[[NumberLike], NumberLike]
         A callable representing the unary operation (e.g., `operator.neg`, 
         `operator.abs`).
 
@@ -508,19 +508,19 @@ class Image:
 
     Attributes
     ----------
-    _value : np.ndarray
+    _value: np.ndarray
         The underlying data stored in the Image object as NumPy.
-    properties : List[Dict[str, Property]]
+    properties: List[Dict[str, Property]]
         A list of property dictionaries associated with the Image.
 
     Parameters
     ----------
-    value : np.ndarray or list or int or float or bool or Image
+    value: np.ndarray or list or int or float or bool or Image
         The array-like object to be converted to a NumPy array and stored in 
         the Image object. If it is an Image, the value and properties of the 
         image are copied or referenced depening on the value of the `copy` 
         parameter.
-    copy : bool, optional
+    copy: bool, optional
         If `True`, the `value` is copied to ensure independence (default).
         If `False`, a reference to the original value is maintained.
 
@@ -643,11 +643,11 @@ class Image:
     """
 
     # Attributes.
-    _value : np.ndarray
-    properties : List[Dict[str, Property]]
+    _value: np.ndarray
+    properties: List[Dict[str, Property]]
 
     def __init__(
-        self : Image,
+        self: Image,
         value: Union[np.ndarray, list, int, float, bool, Image],
         copy: bool = True,
     ):
@@ -659,20 +659,20 @@ class Image:
 
         Parameters
         ----------
-        value : np.ndarray or list or int or float or bool or Image
+        value: np.ndarray or list or int or float or bool or Image
             The array-like object to be converted to a NumPy array and stored 
             in the Image object. If it is an Image, the value and properties of
             the image are copied or referenced depening on the value of the 
             `copy` parameter.
-        copy : bool, optional
+        copy: bool, optional
             If `True`, the `value` is copied to ensure independence (default).
             If `False`, a reference to the original value is maintained.
 
         Attributes
         ----------
-        _value : np.ndarray
+        _value: np.ndarray
             The underlying data stored in the Image object as NumPy.
-        properties : List[Dict[str, Property]]
+        properties: List[Dict[str, Property]]
             A list of property dictionaries associated with the Image.
 
         """
@@ -696,7 +696,7 @@ class Image:
             self.properties = []
 
     def append(
-        self : Image,
+        self: Image,
         property_dict: Dict[str, Property],
     ) -> Image:
         """Append a dictionary to the properties list.
@@ -710,7 +710,7 @@ class Image:
 
         Parameters
         ----------
-        property_dict : Dict[str, Property]
+        property_dict: Dict[str, Property]
             A dictionary to append to the property list.
 
         Returns
@@ -755,7 +755,7 @@ class Image:
         return self
 
     def get_property(
-        self : Image,
+        self: Image,
         key: str,
         get_one: bool = True,
         default: Any = None,
@@ -770,12 +770,12 @@ class Image:
 
         Parameters
         ----------
-        key : str
+        key: str
             The name of the property.
         get_one: bool, optional
             Whether to return only the first instance of the property (default
             behavior for `True`) or all instances of the property (`False`).           
-        default : Any, optional
+        default: Any, optional
             The value to be returned as default, which is by default `None`.
 
         Returns
@@ -831,7 +831,7 @@ class Image:
         ] or default
 
     def merge_properties_from(
-        self : Image,
+        self: Image,
         other: Union[np.ndarray, Image, Iterable],
     ) -> Image:
         """Merge properties with those from another Image.
@@ -847,7 +847,7 @@ class Image:
 
         Parameters
         ----------
-        other : Image or np.ndarray or Iterable
+        other: Image or np.ndarray or Iterable
             The data to retrieve properties from. It can be an Image, a NumPy
             array (which has no properties), or an iterable object.
 
@@ -944,7 +944,7 @@ class Image:
         return self
 
     def _view(
-        self : Image,
+        self: Image,
         value: Union[np.ndarray, list, int, float, bool, Image],
     ) -> np.ndarray:
         """Convert the value to NumPy array for storage in the Image object.
@@ -963,7 +963,7 @@ class Image:
         
         Parameters
         ----------
-        value : np.ndarray or list or int or float or bool or Image
+        value: np.ndarray or list or int or float or bool or Image
             The input value to be transformed to a NumPy array.
 
         Returns
@@ -1001,13 +1001,13 @@ class Image:
 
         Parameters
         ----------
-        ufunc : np.ufunc
+        ufunc: np.ufunc
             The NumPy ufunc being called.
-        method : str
+        method: str
             The method of the ufunc being called (e.g., "__call__", "reduce").
-        *inputs : Tuple[Any, ...]
+        *inputs: Tuple[Any, ...]
             Positional arguments passed to the ufunc.
-        **kwargs : Dict[str, Any]
+        **kwargs: Dict[str, Any]
             Keyword arguments passed to the ufunc.
 
         Returns
@@ -1104,13 +1104,13 @@ class Image:
 
         Parameters
         ----------
-        func : Callable
+        func: Callable
             The NumPy function being called (e.g., `np.mean`, `np.dot`).
-        types : Tuple[type, ...]
+        types: Tuple[type, ...]
             The types of the arguments involved in the function.
-        args : Tuple[Any, ...]
+        args: Tuple[Any, ...]
             The positional arguments for the function.
-        kwargs : Dict[str, Any]
+        kwargs: Dict[str, Any]
             The keyword arguments for the function.
 
         Returns
@@ -1205,9 +1205,9 @@ class Image:
 
         Parameters
         ----------
-        *args : Tuple[Any, ...]
+        *args: Tuple[Any, ...]
             Positional arguments passed to `numpy.array`.
-        **kwargs : Dict[str, Any]
+        **kwargs: Dict[str, Any]
             Keyword arguments passed to `numpy.array`.
 
         Returns
@@ -1348,7 +1348,7 @@ class Image:
 
         Parameters
         ----------
-        key : str
+        key: str
             The name of the attribute to access.
 
         Returns
@@ -1378,7 +1378,7 @@ class Image:
 
         Parameters
         ----------
-        idx : int or slice or Tuple[int or slice, ...] or Any
+        idx: int or slice or Tuple[int or slice, ...] or Any
             The index or indices used to access elements of the Image.
 
         Returns
@@ -1428,12 +1428,12 @@ class Image:
 
         Parameters
         ----------
-        key : int or slice or Tuple[int or slice, ...] or List[int]
+        key: int or slice or Tuple[int or slice, ...] or List[int]
             The index or slice to update. It can be a single integer to update
             a specific position, a slice to update a range of positions, a
             tuple of integers or slices for multi-dimensional indexing, or a
             list of integers for advanced indexing.
-        value : Image or numpy.ndarray or int or float or bool or complex
+        value: Image or numpy.ndarray or int or float or bool or complex
             The value to assign to the specified index or slice. If `value` is
             an `Image`, its `_value` attribute is extracted before assignment.
             Other types are assigned directly after being stripped if
@@ -1533,7 +1533,7 @@ class Image:
 
         Parameters
         ----------
-        ndigits : int, optional
+        ndigits: int, optional
             The number of decimal places to round to (default is 0).
 
         Returns
@@ -1622,7 +1622,7 @@ def strip(
 
     Parameters
     ----------
-    element : Image or List or Tuple or Any
+    element: Image or List or Tuple or Any
         The input to process.
 
     Returns
@@ -1675,7 +1675,7 @@ def coerce(
 
     Parameters
     ----------
-    images : List[Union[Image, np.ndarray]]
+    images: List[Union[Image, np.ndarray]]
         A list of images to be coerced. Each image can be an `Image` instance 
         or a NumPy array.
 
@@ -1743,10 +1743,10 @@ def pad_image_to_fft(
 
     Parameters
     ----------
-    image : Image or np.ndarray
+    image: Image or np.ndarray
         The input image to pad. It should be an instance of the `Image` class 
         or any array-like structure compatible with FFT operations.
-    axes : Iterable[int], optional
+    axes: Iterable[int], optional
         The axes along which to apply padding. Defaults to `(0, 1)`.
 
     Returns
@@ -1821,7 +1821,7 @@ def maybe_cupy(
 
     Parameters
     ----------
-    array : np.ndarray or List or Tuple
+    array: np.ndarray or List or Tuple
         The input array to be potentially converted to a CuPy array.
 
     Returns
