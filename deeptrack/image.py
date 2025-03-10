@@ -1,4 +1,4 @@
-"""Image class and relative functions.
+"""Containers for array-like structures.
 
 This module defines the `Image` class and related utility functions for 
 managing array-like structures and their associated properties. The `Image` 
@@ -32,14 +32,14 @@ Main Concepts
 
 Key Classes
 -----------
+- `Image`: Core class for managing array-like data and their properties.
 
-- `Image`:
-    Core class for managing array-like data and their properties.
-
+    Encapsulates array-like data structures (e.g., NumPy arrays, lists, 
+    Torch tensors) while providing a unified interface for array operations and
+    property management.
 
 Methods
 -------
-
 - `strip(element)`
 
     strip(
