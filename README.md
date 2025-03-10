@@ -101,7 +101,6 @@ We have two separate series of notebooks which aims to teach you all you need to
 The second series focuses on individual topics, introducing them in a natural order. 
 
 1. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/1.7/examples/get-started/01.%20deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Introducing how to create simulation pipelines and train models. </a>
-2. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/1.7/examples/get-started/02.%20using_deeptrack_generators.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Demonstrating data generators. </a> 
 
 ## DeepTrack 2.1 in action
 
