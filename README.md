@@ -91,16 +91,12 @@ Everybody learns in different ways! Depending on your preferences, and what you 
 
 ## Getting-started guides
 
-We have two separate series of notebooks which aims to teach you all you need to know to use DeepTrack to its fullest. The first is a set of six notebooks with a focus on the application.
-
+We have a set of notebooks which aims to teach you all you need to know to use DeepTrack to its fullest, which consists of four notebooks with a focus on the application.
 
 1. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/1.7/examples/tutorials/01.%20tracking_particle_cnn_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_cnn_tutorial </a> demonstrates how to track a point particle with a convolutional neural network (CNN).
 2. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/1.7/examples/tutorials/02.%20tracking_multiple_particles_unet_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> tracking_particle_unet_tutorial </a> demonstrates how to track multiple particles using a U-net.
 3. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/1.7/examples/tutorials/03.%20distinguishing_particles_in_brightfield_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> distinguishing_particles_in_brightfield_tutorial </a> demonstrates how to use a U-net to track and distinguish particles of different sizes in brightfield microscopy. 
-
-The second series focuses on individual topics, introducing them in a natural order. 
-
-1. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/1.7/examples/get-started/01.%20deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Introducing how to create simulation pipelines and train models. </a>
+4. <a href="https://colab.research.google.com/github/softmatterlab/DeepTrack-2.0/blob/1.7/examples/get-started/01.%20deeptrack_introduction_tutorial.ipynb"> <img src="https://colab.research.google.com/assets/colab-badge.svg"> Introducing how to create simulation pipelines and train models. </a>
 
 ## DeepTrack 2.1 in action
 
