@@ -10,7 +10,6 @@ object for a given optical setup (NA, wavelength, Refractive Index etc.).
 
 Key Features
 ------------
-
 - **Customizable geometries**
 
     The initialization parameters allow the user to choose proportions and 
@@ -168,17 +167,17 @@ from pint import Quantity
 import numpy as np
 
 from deeptrack.holography import get_propagation_matrix
-from . import image
+from deeptrack import image
 from deeptrack.backend.units import (
     ConversionTable,
     get_active_scale,
     get_active_voxel_size,
 )
-from .backend import mie
-from .features import Feature, MERGE_STRATEGY_APPEND
-from . import pad_image_to_fft, Image
-from .types import PropertyLike, ArrayLike
-from . import units as u
+from deeptrack.backend import mie
+from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
+from deeptrack.image import pad_image_to_fft, Image
+from deeptrack.types import PropertyLike, ArrayLike
+from deeptrack import units as u
 
 class Scatterer(Feature):
     """Base abstract class for scatterers.
