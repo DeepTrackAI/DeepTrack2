@@ -55,7 +55,7 @@ Module Structure
 
 - `Affine`: Translation, scaling, rotation, shearing.
 
-- 'ElasticTransformation': Transform using a displacement field.
+- `ElasticTransformation`: Transform using a displacement field.
 
 - `Crop`: Crop regions of an image.
 
