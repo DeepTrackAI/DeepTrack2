@@ -63,7 +63,7 @@ Module Highlights
     DeepTrack2 supports lazy evaluation of features, ensuring that data is 
     processed only when needed, which improves performance and scalability.
 
-Example
+Examples
 -------
 Define a simple pipeline with features:
 >>> import deeptrack as dt
@@ -114,9 +114,6 @@ from deeptrack.image import Image
 from deeptrack.properties import PropertyDict
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
-
-
-#TODO: for all features check whether image should be Image, np.ndarray, or both.
 
 MERGE_STRATEGY_OVERRIDE: int = 0
 MERGE_STRATEGY_APPEND: int = 1
@@ -4630,7 +4627,7 @@ class SampleToMasks(Feature):
     ValueError
         If `merge_method` is invalid.
 
-    Example
+    Examples
     -------
     >>> import deeptrack as dt
     >>> import matplotlib.pyplot as plt
