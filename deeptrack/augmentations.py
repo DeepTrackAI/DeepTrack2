@@ -89,8 +89,6 @@ Reuse the output of a pipeline twice, augmented randomly by FlipLR.
     >>> image = optics(particle) >> pipeline
     >>> image.plot()
 
-    >>> # Save as numpy array.
-    >>> image_array = image.resolve()
 
 Augment an image with random rotations and translations, followed by elastic transformations.
 
@@ -125,10 +123,6 @@ Augment an image with random rotations and translations, followed by elastic tra
     ...         mode="constant",)
     >>> )
     >>> augmented_image.plot()
-
-    >>> # Save as numpy array.
-    >>> image_array = augmented_image.resolve()
-
     
 
 """
