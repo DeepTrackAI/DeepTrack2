@@ -82,8 +82,8 @@ Basic usage of the `Image` class:
 
 >>> img = Image(np.array([[1, 2], [3, 4]]))
 >>> print(img + 1)
-... Image([[2, 3],
-...        [4, 5]])
+Image([[2, 3],
+[4, 5]])
 
 Property tracking:
 
