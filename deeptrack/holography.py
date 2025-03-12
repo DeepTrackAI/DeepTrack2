@@ -46,7 +46,8 @@ Reconstruct the field using the inverse Fourier transform:
 """
 
 from __future__ import annotations
-from deeptrack.image import maybe_cupy
+from typing import Any
+from deeptrack.image import maybe_cupy, Image
 from deeptrack import Feature
 import numpy as np
 
@@ -70,12 +71,11 @@ def get_propagation_matrix(
     shape: tuple[int, int]
         The dimensions of the optical field (height, width).
     to_z: float
-        Propagation distance along the z-axis (in micrometers or meters?).
+        Propagation distance along the z-axis.
     pixel_size: float
-        The physical size of each pixel in the optical field (same unit as 
-        `to_z`).
+        The physical size of each pixel in the optical field.
     wavelength: float
-        The wavelength of the optical field (same unit as `to_z`).
+        The wavelength of the optical field.
     dx: float, optional
         Lateral shift in the x-direction (default: 0).
     dy: float, optional
