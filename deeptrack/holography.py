@@ -6,25 +6,64 @@ perform transformations in the frequency domain. These features can be combined
 in processing pipelines for optical simulations and holographic
 reconstructions.
 
+Key Features
+------------
+- **Optical Field Processing**
+
+    Provides Fourier transforms, rescaling, and wavefront propagation for 
+    complex-valued optical fields, handling both real and imaginary components.
+
+- **Fourier Optics and Wave Propagation**
+
+    Implements Fourier transforms with optional padding for accurate 
+    frequency-domain analysis and propagation matrices to simulate free-space 
+    wavefront propagation with spatial and frequency domain shifts.
+
+- **Phase & Amplitude Manipulation**
+
+    Enables scaling, normalization, and modulation of phase and amplitude to 
+    preserve intensity distribution and enhance wavefront reconstruction.
+
+Module Structure
+----------------
 Classes:
--------
-- `Rescale`: Rescales an optical field by subtracting the real part of the
+
+- `Rescale`:
+    
+    Rescales an optical field by subtracting the real part of the
     field before multiplication.
 
-- `FourierTransform`: Creates matrices for propagating an optical field.
+- `FourierTransform`:
+    
+    Creates matrices for propagating an optical field.
 
-- `InverseFourierTransform`: Creates matrices for propagating an optical field.
+- `InverseFourierTransform`:
+    
+    Creates matrices for propagating an optical field.
 
-- `FourierTransformTransformation`: Applies a power of the forward or inverse
+- `FourierTransformTransformation`:
+    
+    Applies a power of the forward or inverse
     propagation matrix to an optical field.
 
 Functions:
----------
-- `get_propagation_matrix`: Computes the propagation matrix.
+
+- `get_propagation_matrix`
+
+    def get_propagation_matrix(
+        shape: tuple[int, int],
+        to_z: float,
+        pixel_size: float,
+        wavelength: float,
+        dx: float = 0,
+        dy: float = 0
+    ) -> np.ndarray
+
+    Computes the propagation matrix.
 
 
 Examples
--------
+--------
 Simulate optical field propagation with Fourier transforms:
 
 >>> import deeptrack as dt
