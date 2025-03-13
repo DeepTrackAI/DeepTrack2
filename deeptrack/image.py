@@ -1367,7 +1367,7 @@ class Image:
 
     def __getitem__(
         self: Image,
-        idx: int | slice | tuple[int | slice, ...], Any,
+        idx: int | slice | tuple[int | slice, ...] | Any,
     ) -> Image | int | float | bool | complex | np.ndarray:
         """Access and return an item or a slice from the Image.
 
