@@ -160,7 +160,7 @@ Create a stratified Mie sphere and resolve it through a microscope:
 """
 
 
-from typing import Callable, Tuple, Dict, List, Union
+from typing import Callable 
 import warnings
 
 from pint import Quantity
@@ -261,8 +261,8 @@ class Scatterer(Feature):
 
     def _process_properties(
         self,
-        properties: Dict
-    ) -> Dict:
+        properties: dict
+    ) -> dict:
         
         # Rescales the position property.
         properties = super()._process_properties(properties)
@@ -277,7 +277,7 @@ class Scatterer(Feature):
         upsample_axes=None,
         crop_empty=True,
         **kwargs
-    ) -> List[Image]:
+    ) -> list[Image] | list[np.ndarray]:
         # Post processes the created object to handle upsampling,
         # as well as cropping empty slices.
         if not self._processed_properties:
@@ -320,21 +320,21 @@ class Scatterer(Feature):
         self,
         *args,
         **kwargs
-    ) -> List:
+    ) -> list:
         return self._image_wrapped_format_input(*args, **kwargs)
     
     def _no_wrap_process_and_get(
         self,
         *args,
         **feature_input
-    ) -> List:
+    ) -> list:
         return self._image_wrapped_process_and_get(*args, **feature_input)
     
     def _no_wrap_process_output(
         self,
         *args,
         **feature_input
-    ) -> List:
+    ) -> list:
         return self._image_wrapped_process_output(*args, **feature_input)
 
 class PointParticle(Scatterer):
@@ -431,8 +431,8 @@ class Ellipse(Scatterer):
 
     def _process_properties(
         self,
-        properties: Dict
-    ) -> Dict:
+        properties: dict
+    ) -> dict:
         """Preprocess the input to the method .get()
 
         Ensures that the radius is an array of length 2. If the radius
@@ -456,7 +456,7 @@ class Ellipse(Scatterer):
     def get(
         self,
         *ignore,
-        radius: Union[ArrayLike[float], float],
+        radius: ArrayLike[float] | float,
         rotation: PropertyLike[float],
         voxel_size: PropertyLike[float],
         transpose: PropertyLike[bool],
@@ -485,7 +485,7 @@ class Ellipse(Scatterer):
         mask = (
             (X * X) / (rad[0] * rad[0]) +
             (Y * Y) / (rad[1] * rad[1]) < 1
-            ) * 1.0
+            ).astype(float)
         mask = np.expand_dims(mask, axis=-1)
         return mask
 
@@ -530,7 +530,7 @@ class Sphere(Scatterer):
 
     def get(
         self,
-        image: Image,
+        image: Image | np.ndarray,
         radius: PropertyLike[float],
         voxel_size: PropertyLike[float],
         **kwargs
@@ -550,7 +550,7 @@ class Sphere(Scatterer):
             (z / rad[2]) ** 2
         )
 
-        mask = (X + Y + Z <= 1) * 1.0
+        mask = (X + Y + Z <= 1).astype(float)
         return mask
 
 
@@ -608,8 +608,8 @@ class Ellipsoid(Scatterer):
 
     def _process_properties(
         self,
-        propertydict: Dict
-    ) -> Dict:
+        propertydict: dict
+    ) -> dict:
         """Preprocess the input to the method .get()
 
         Ensures that the radius and the rotation properties both are arrays of
@@ -666,7 +666,7 @@ class Ellipsoid(Scatterer):
         self,
         image: Image,
         radius: PropertyLike[float],
-        rotation: Union[ArrayLike[float], float],
+        rotation: ArrayLike[float] | float,
         voxel_size: PropertyLike[float],
         transpose: PropertyLike[bool],
         **kwargs
@@ -706,7 +706,7 @@ class Ellipsoid(Scatterer):
             (XR / radius[0]) ** 2 +
             (YR / radius[1]) ** 2 +
             (ZR / radius[2]) ** 2 < 1
-        ) * 1.0
+        ).astype(float)
         return mask
 
 
@@ -724,7 +724,7 @@ class MieScatterer(Scatterer):
 
     Attributes
     ----------
-    coefficients: Callable[int] -> Tuple[ndarray, ndarray]
+    coefficients: Callable[int] -> tuple[ndarray, ndarray]
     
         Function that returns the harmonics coefficients.
         
@@ -821,7 +821,7 @@ class MieScatterer(Scatterer):
         output_region=None,
         polarization_angle: float=None,
         working_distance: float=1000000,  # Large value to avoid numerical issues.
-        position_objective: Tuple[float, float]=(0, 0),
+        position_objective: tuple[float, float]=(0, 0),
         return_fft: bool=False,
         coherence_length: float=None,
         illumination_angle: float=0,
@@ -865,8 +865,8 @@ class MieScatterer(Scatterer):
 
     def _process_properties(
         self,
-        properties: Dict
-    ) -> Dict:
+        properties: dict
+    ) -> dict:
 
         properties = super()._process_properties(properties)
 
@@ -934,7 +934,7 @@ class MieScatterer(Scatterer):
         voxel_size: ArrayLike,
         plane_position: float,
         illumination_angle: float
-    ) -> Tuple[float, float, float, float]:
+    ) -> tuple[float, float, float, float]:
 
         X, Y = self.get_XY(shape, voxel_size)
         X = image.maybe_cupy(X)
@@ -965,7 +965,7 @@ class MieScatterer(Scatterer):
         padding: ArrayLike[int],
         wavelength: float,
         refractive_index_medium: float,
-        L: Union[int, str],
+        L: int | str,
         collection_angle: float,
         input_polarization: float,
         output_polarization: float,
@@ -1297,7 +1297,7 @@ class MieStratifiedSphere(MieScatterer):
         **kwargs,
     ) -> None:
         def coeffs(
-            radius: Union[int, str],
+            radius: int | str,
             refractive_index: float,
             refractive_index_medium: float,
             wavelength: float
