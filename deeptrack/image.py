@@ -68,7 +68,7 @@ Methods
 - `maybe_cupy(array)`
 
     maybe_cupy(
-        array: Union[np.ndarray, list, tuple],
+        array: np.ndarray | list | tuple,
     ) -> cupy.ndarray | np.ndarray
 
     Convert an array to a CuPy array if GPU is available and enabled.
@@ -108,7 +108,7 @@ from deeptrack.types import NumberLike
 
 def _binary_method(
     op: Callable[[NumberLike, NumberLike], NumberLike],
-) -> Callable[[Image, Union[Image, NumberLike]], Image]:
+) -> Callable[[Image, Image | NumberLike], Image]:
     """Implement a binary operator for the Image class.
 
     This function generates a binary method (e.g., `__add__`, `__sub__`) for
@@ -135,7 +135,7 @@ def _binary_method(
 
     Returns
     -------
-    Callable[[Image, Union[Image, NumberLike]], Image]
+    Callable[[Image, Image | NumberLike], Image]
         A method that can be assigned to a binary operator (e.g., `__add__`) 
         of the `Image` class.
 
@@ -221,7 +221,7 @@ def _reflected_binary_method(
 
     Returns
     -------
-    Callable[[Image, Union[Image, NumberLike]], Image]
+    Callable[[Image, Image | NumberLike], Image]
         A method that can be assigned to a reflected binary operator (e.g.,
         `__radd__`) of the `Image` class.
 
@@ -303,7 +303,7 @@ def _inplace_binary_method(
 
     Returns
     -------
-    Callable[[Image, Union[Image, NumberLike]], None]
+    Callable[[Image, Image | NumberLike], None]
         A method that can be assigned to an in-place binary operator (e.g.,
         `__iadd__`) of the `Image` class.
 
@@ -382,9 +382,9 @@ def _numeric_methods(
     Returns
     -------
     tuple[
-        Callable[[Image, Union[Image, NumberLike]], Image],
-        Callable[[Union[Image, NumberLike], Image], Image],
-        Callable[[Image, Union[Image, NumberLike]], Image]
+        Callable[[Image, Image | NumberLike], Image],
+        Callable[[Image | NumberLike, Image], Image],
+        Callable[[Image, Image | NumberLike], Image]
     ]
         A tuple containing three callables:
         (1) The forward binary method (`_binary_method`).
@@ -1115,7 +1115,7 @@ class Image:
 
         Returns
         -------
-        Union[Image, tuple[Image, ...], Any]
+        Image | tuple[Image, ...] | Any
             The result of the NumPy function. If the function returns a single
             value, it may be wrapped as an Image object. If it returns a tuple,
             each element is wrapped as an Image. Constants remain unwrapped.
@@ -1675,7 +1675,7 @@ def coerce(
 
     Parameters
     ----------
-    images: list[Union[Image, np.ndarray]]
+    images: list[Image | np.ndarray]
         A list of images to be coerced. Each image can be an `Image` instance 
         or a NumPy array.
 
