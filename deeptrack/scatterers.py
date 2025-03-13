@@ -159,7 +159,7 @@ Create a stratified Mie sphere and resolve it through a microscope:
 
 """
 
-
+from __future__ import annotations
 from typing import Callable 
 import warnings
 
@@ -167,7 +167,6 @@ from pint import Quantity
 import numpy as np
 
 from deeptrack.holography import get_propagation_matrix
-from deeptrack import image
 from deeptrack.backend.units import (
     ConversionTable,
     get_active_scale,
@@ -175,6 +174,7 @@ from deeptrack.backend.units import (
 )
 from deeptrack.backend import mie
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
+from deeptrack import image
 from deeptrack.image import pad_image_to_fft, Image
 from deeptrack.types import PropertyLike, ArrayLike
 from deeptrack import units as u
