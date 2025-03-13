@@ -170,7 +170,7 @@ from deeptrack.backend.units import (
 )
 from deeptrack.backend import mie
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
-from deeptrack.image import pad_image_to_fft, maybe_cupy Image
+from deeptrack.image import pad_image_to_fft, maybe_cupy, Image
 from deeptrack.types import ArrayLike
 from deeptrack import units as u
 
