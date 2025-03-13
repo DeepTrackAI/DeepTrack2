@@ -104,10 +104,10 @@ import scipy.ndimage as ndimage
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
 
-from . import utils
-from .features import Feature
-from .image import Image
-from .types import ArrayLike, PropertyLike
+from deeptrack import utils
+from deeptrack.features import Feature
+from deeptrack.image import Image
+from deeptrack.types import ArrayLike, PropertyLike
 
 
 class Augmentation(Feature):
