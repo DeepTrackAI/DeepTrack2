@@ -43,7 +43,7 @@ Methods
 - `strip(element)`
 
     strip(
-        element: Image | List | Tuple | Any,
+        element: Image | list | tuple | Any,
     ) -> Any
     
     Recursively extract the underlying value from an Image object.
@@ -68,7 +68,7 @@ Methods
 - `maybe_cupy(array)`
 
     maybe_cupy(
-        array: Union[np.ndarray, List, Tuple],
+        array: Union[np.ndarray, list, tuple],
     ) -> cupy.ndarray | np.ndarray
 
     Convert an array to a CuPy array if GPU is available and enabled.
@@ -358,7 +358,7 @@ def _inplace_binary_method(
 
 def _numeric_methods(
     op: Callable[[NumberLike, NumberLike], NumberLike],
-) -> Tuple[
+) -> tuple[
     Callable[[Image, Image | NumberLike], Image],
     Callable[[Image | NumberLike, Image], Image],
     Callable[[Image, Image | NumberLike], Image]
@@ -381,7 +381,7 @@ def _numeric_methods(
 
     Returns
     -------
-    Tuple[
+    tuple[
         Callable[[Image, Union[Image, NumberLike]], Image],
         Callable[[Union[Image, NumberLike], Image], Image],
         Callable[[Image, Union[Image, NumberLike]], Image]
@@ -510,7 +510,7 @@ class Image:
     ----------
     _value: np.ndarray
         The underlying data stored in the Image object as NumPy.
-    properties: List[Dict[str, Property]]
+    properties: list[dict[str, Property]]
         A list of property dictionaries associated with the Image.
 
     Parameters
@@ -530,10 +530,10 @@ class Image:
     
     `append(property_dict: dict) -> Image`
         Add a dictionary of properties to the `Image`.
-    `get_property(key: str, get_one: bool = True, default: Any = None) -> Any | List[Any]`
+    `get_property(key: str, get_one: bool = True, default: Any = None) -> Any | list[Any]`
         Retrieve a property by key. If `get_one` is `True`, returns the first
         match; otherwise, returns a list of matches.
-    `merge_properties_from(other: Image | List[Image] | np.ndarray) -> Image`  
+    `merge_properties_from(other: Image | list[Image] | np.ndarray) -> Image`  
         Merge properties from another `Image`, list of `Image`s, or a NumPy
         array.
 
@@ -545,12 +545,12 @@ class Image:
     `to_numpy() -> Image`
       Convert the `Image` to a numpy array if the underlying value is a CuPy
       array.
-    `__array__(*args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> np.ndarray`  
+    `__array__(*args: tuple[Any, ...], **kwargs: dict[str, Any]) -> np.ndarray`  
       Convert the `Image` to a numpy array. Used implicitly by numpy functions.
 
     **NumPy Compatibility
     
-    `__array_ufunc__(ufunc: Callable, method: str, *inputs: Tuple[Any], **kwargs: Dict[str, Any]) -> Image | Tuple[Image, ...] | None`
+    `__array_ufunc__(ufunc: Callable, method: str, *inputs: tuple[Any], **kwargs: dict[str, Any]) -> Image | tuple[Image, ...] | None`
         Enable compatibility with numpy's universal functions (ufuncs).
         Examples include `np.add`, `np.multiply`, and `np.sin`.
         
@@ -644,11 +644,11 @@ class Image:
 
     # Attributes.
     _value: np.ndarray
-    properties: List[Dict[str, Property]]
+    properties: list[dict[str, Property]]
 
     def __init__(
         self: Image,
-        value: np.ndarray | list | int | float |  bool | Image],
+        value: np.ndarray | list | int | float |  bool | Image,
         copy: bool = True,
     ):
         """Initialize an Image object.
@@ -672,7 +672,7 @@ class Image:
         ----------
         _value: np.ndarray
             The underlying data stored in the Image object as NumPy.
-        properties: List[Dict[str, Property]]
+        properties: list[dict[str, Property]]
             A list of property dictionaries associated with the Image.
 
         """
@@ -710,7 +710,7 @@ class Image:
 
         Parameters
         ----------
-        property_dict: Dict[str, Property]
+        property_dict: dict[str, Property]
             A dictionary to append to the property list.
 
         Returns
@@ -780,7 +780,7 @@ class Image:
 
         Returns
         -------
-        Any or List[Any]
+        Any or list[Any]
             The value of the property (if `get_one` is `True`) or all instances
             as a list (if `get_one` is `True`). If the property is not found,
             it returns `default`.
@@ -1005,14 +1005,14 @@ class Image:
             The NumPy ufunc being called.
         method: str
             The method of the ufunc being called (e.g., "__call__", "reduce").
-        *inputs: Tuple[Any, ...]
+        *inputs: tuple[Any, ...]
             Positional arguments passed to the ufunc.
-        **kwargs: Dict[str, Any]
+        **kwargs: dict[str, Any]
             Keyword arguments passed to the ufunc.
 
         Returns
         -------
-        Image or Tuple[Image, ...] or None]
+        Image or tuple[Image, ...] or None]
             The result of the ufunc applied to the Image object(s). If the
             ufunc returns a tuple, each element is wrapped in an Image. For the
             `at` method, returns `None`.
@@ -1106,16 +1106,16 @@ class Image:
         ----------
         func: Callable
             The NumPy function being called (e.g., `np.mean`, `np.dot`).
-        types: Tuple[type, ...]
+        types: tuple[type, ...]
             The types of the arguments involved in the function.
-        args: Tuple[Any, ...]
+        args: tuple[Any, ...]
             The positional arguments for the function.
-        kwargs: Dict[str, Any]
+        kwargs: dict[str, Any]
             The keyword arguments for the function.
 
         Returns
         -------
-        Union[Image, Tuple[Image, ...], Any]
+        Union[Image, tuple[Image, ...], Any]
             The result of the NumPy function. If the function returns a single
             value, it may be wrapped as an Image object. If it returns a tuple,
             each element is wrapped as an Image. Constants remain unwrapped.
@@ -1205,9 +1205,9 @@ class Image:
 
         Parameters
         ----------
-        *args: Tuple[Any, ...]
+        *args: tuple[Any, ...]
             Positional arguments passed to `numpy.array`.
-        **kwargs: Dict[str, Any]
+        **kwargs: dict[str, Any]
             Keyword arguments passed to `numpy.array`.
 
         Returns
@@ -1378,7 +1378,7 @@ class Image:
 
         Parameters
         ----------
-        idx: int or slice or Tuple[int or slice, ...] or Any
+        idx: int or slice or tuple[int or slice, ...] or Any
             The index or indices used to access elements of the Image.
 
         Returns
@@ -1428,7 +1428,7 @@ class Image:
 
         Parameters
         ----------
-        key: int or slice or Tuple[int or slice, ...] or List[int]
+        key: int or slice or tuple[int or slice, ...] or list[int]
             The index or slice to update. It can be a single integer to update
             a specific position, a slice to update a range of positions, a
             tuple of integers or slices for multi-dimensional indexing, or a
@@ -1622,7 +1622,7 @@ def strip(
 
     Parameters
     ----------
-    element: Image or List or Tuple or Any
+    element: Image or list or tuple or Any
         The input to process.
 
     Returns
@@ -1675,13 +1675,13 @@ def coerce(
 
     Parameters
     ----------
-    images: List[Union[Image, np.ndarray]]
+    images: list[Union[Image, np.ndarray]]
         A list of images to be coerced. Each image can be an `Image` instance 
         or a NumPy array.
 
     Returns
     -------
-    List[Image]
+    list[Image]
         A list of `Image` instances where all elements are coerced to the same
         type (CuPy if CuPy arrays are present in any image).
 
@@ -1821,7 +1821,7 @@ def maybe_cupy(
 
     Parameters
     ----------
-    array: np.ndarray or List or Tuple
+    array: np.ndarray or list or tuple
         The input array to be potentially converted to a CuPy array.
 
     Returns
