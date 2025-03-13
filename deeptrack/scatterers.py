@@ -1226,8 +1226,7 @@ class MieSphere(MieScatterer):
         )
 
 
-class MieStratified
-Sphere(MieScatterer):
+class MieStratifiedSphere(MieScatterer):
     """Scattered field by a stratified sphere
 
     A stratified sphere is a sphere with several concentric shells of uniform
