@@ -97,7 +97,7 @@ Property tracking:
 
 from __future__ import annotations
 import operator as ops
-from typing import Any, Callable #Dict, Iterable, Tuple, Union
+from typing import Any, Callable, Iterable
 
 import numpy as np
 
