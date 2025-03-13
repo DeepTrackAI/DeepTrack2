@@ -43,7 +43,7 @@ Methods
 - `strip(element)`
 
     strip(
-        element: Image | list | tuple | Any,
+        element: Image | np.ndarray | list | tuple | Any,
     ) -> Any
     
     Recursively extract the underlying value from an Image object.
@@ -166,8 +166,8 @@ def _binary_method(
     """
 
     def func(
-        self: Image,
-        other: Image | NumberLike,
+        self: Image | np.ndarray,
+        other: Image | np.ndarray | NumberLike,
     ) -> Image:
 
         # Coerce inputs to compatible types.
@@ -252,8 +252,8 @@ def _reflected_binary_method(
     """
 
     def func(
-        self: Image,
-        other: Image | NumberLike,
+        self: Image | np.ndarray,
+        other: Image | np.ndarray | NumberLike,
     ) -> Image:
 
         # Coerce inputs to compatible types.
@@ -334,8 +334,8 @@ def _inplace_binary_method(
     """
 
     def func(
-        self: Image,
-        other: Image | NumberLike,
+        self: Image | np.ndarray,
+        other: Image | np.ndarray | NumberLike,
     ) -> Image:
 
         # Coerce inputs to compatible types.
@@ -472,7 +472,7 @@ def _unary_method(
     """
 
     def func(
-        self: Image,
+        self: Image | np.ndarray,
     ) -> Image:
 
         # Apply the unary operator to the Image instance.
@@ -515,7 +515,7 @@ class Image:
 
     Parameters
     ----------
-    value: np.ndarray or list or int or float or bool or Image
+    value: np.ndarray | list | int | float | bool | Image
         The array-like object to be converted to a NumPy array and stored in 
         the Image object. If it is an Image, the value and properties of the 
         image are copied or referenced depening on the value of the `copy` 
@@ -528,12 +528,22 @@ class Image:
     -------
     **Property Management**
     
-    `append(property_dict: dict) -> Image`
+    `append(
+        property_dict: dict
+    ) -> Image`
         Add a dictionary of properties to the `Image`.
-    `get_property(key: str, get_one: bool = True, default: Any = None) -> Any | list[Any]`
+
+    `get_property(
+        key: str,
+        get_one: bool = True,
+        default: Any = None
+    ) -> Any | list[Any]`
         Retrieve a property by key. If `get_one` is `True`, returns the first
         match; otherwise, returns a list of matches.
-    `merge_properties_from(other: Image | list[Image] | np.ndarray) -> Image`  
+
+    `merge_properties_from(
+        other: Image | list[Image] | np.ndarray | list[np.ndarray]
+    ) -> Image`  
         Merge properties from another `Image`, list of `Image`s, or a NumPy
         array.
 
@@ -550,27 +560,37 @@ class Image:
 
     **NumPy Compatibility
     
-    `__array_ufunc__(ufunc: Callable, method: str, *inputs: tuple[Any], **kwargs: dict[str, Any]) -> Image | tuple[Image, ...] | None`
+    `__array_ufunc__(
+        ufunc: Callable,
+        method: str,
+        *inputs: tuple[Any],
+        **kwargs: dict[str, Any]
+    ) -> Image | tuple[Image, ...] | None`
         Enable compatibility with numpy's universal functions (ufuncs).
         Examples include `np.add`, `np.multiply`, and `np.sin`.
         
-        The following NumPy universal functions (ufuncs) are supported:
+    The following NumPy universal functions (ufuncs) are supported:
 
-        - Arithmetic: 
-            `np.add`, `np.subtract`, `np.multiply`, `np.divide`, `np.power`,
-            `np.mod`, etc.
-        - Trigonometric:
-            `np.sin`, `np.cos`, `np.tan`, `np.arcsin`, `np.arccos`,
-            `np.arctan`, etc.
-        - Exponential and logarithmic:
-            `np.exp`, `np.log`, `np.log10`, etc.
-        - Comparison:
-            `np.equal`, `np.not_equal`, `np.less`, `np.less_equal`,
-            `np.greater`, `np.greater_equal`, etc.
-        - Bitwise:
-            `np.bitwise_and`, `np.bitwise_or`, `np.bitwise_xor`, etc.
+    - Arithmetic: 
+        `np.add`, `np.subtract`, `np.multiply`, `np.divide`, `np.power`,
+        `np.mod`, etc.
+    - Trigonometric:
+        `np.sin`, `np.cos`, `np.tan`, `np.arcsin`, `np.arccos`,
+        `np.arctan`, etc.
+    - Exponential and logarithmic:
+        `np.exp`, `np.log`, `np.log10`, etc.
+    - Comparison:
+        `np.equal`, `np.not_equal`, `np.less`, `np.less_equal`,
+        `np.greater`, `np.greater_equal`, etc.
+    - Bitwise:
+        `np.bitwise_and`, `np.bitwise_or`, `np.bitwise_xor`, etc.
 
-    `__array_function__(func: Callable[..., Any], types: tuple[type, ...], args: tuple[Any, ...], kwargs: dict[str, Any]) -> Image | tuple[Image, ...] | Any`
+    `__array_function__(
+        func: Callable[..., Any],
+        types: tuple[type, ...],
+        args: tuple[Any, ...],
+        kwargs: dict[str, Any]
+    ) -> Image | tuple[Image, ...] | Any`
         Enable compatibility with numpy's general functions, such as `np.mean`,
         `np.dot`, and `np.concatenate`.
         
@@ -585,10 +605,15 @@ class Image:
 
     **Indexing and Assignment**
     
-    `__getitem__(idx: Any) -> Image | Any`
+    `__getitem__(
+        idx: Any
+    ) -> Image | Any`
         Access array elements using standard indexing or slicing. If the result
         is scalar, returns it; otherwise, returns an `Image`.
-    `__setitem__(key: Any, value: Any) -> None` 
+    `__setitem__(
+        key: Any,
+        value: Any
+    ) -> None` 
         Assign values to specific array elements. Updates the properties of the
         `Image` accordingly.
 
@@ -647,8 +672,8 @@ class Image:
     properties: list[dict[str, Property]]
 
     def __init__(
-        self: Image,
-        value: np.ndarray | list | int | float |  bool | Image,
+        self: Image | np.ndarray,
+        value: Image | np.ndarray | list | int | float |  bool,
         copy: bool = True,
     ):
         """Initialize an Image object.
@@ -659,7 +684,7 @@ class Image:
 
         Parameters
         ----------
-        value: np.ndarray or list or int or float or bool or Image
+        value: np.ndarray | list | int | float | bool | Image
             The array-like object to be converted to a NumPy array and stored 
             in the Image object. If it is an Image, the value and properties of
             the image are copied or referenced depening on the value of the 
@@ -696,7 +721,7 @@ class Image:
             self.properties = []
 
     def append(
-        self: Image,
+        self: Image | np.ndarray,
         property_dict: dict[str, Property],
     ) -> Image:
         """Append a dictionary to the properties list.
@@ -755,7 +780,7 @@ class Image:
         return self
 
     def get_property(
-        self: Image,
+        self: Image | np.ndarray,
         key: str,
         get_one: bool = True,
         default: Any = None,
@@ -780,7 +805,7 @@ class Image:
 
         Returns
         -------
-        Any or list[Any]
+        Any | list[Any]
             The value of the property (if `get_one` is `True`) or all instances
             as a list (if `get_one` is `True`). If the property is not found,
             it returns `default`.
@@ -831,7 +856,7 @@ class Image:
         ] or default
 
     def merge_properties_from(
-        self: Image,
+        self: Image | np.ndarray,
         other: np.ndarray | Image | Iterable,
     ) -> Image:
         """Merge properties with those from another Image.
@@ -847,7 +872,7 @@ class Image:
 
         Parameters
         ----------
-        other: Image or np.ndarray or Iterable
+        other: Image | np.ndarray | Iterable
             The data to retrieve properties from. It can be an Image, a NumPy
             array (which has no properties), or an iterable object.
 
@@ -944,8 +969,8 @@ class Image:
         return self
 
     def _view(
-        self: Image,
-        value: np.ndarray | list | int | float | bool | Image,
+        self: Image | np.ndarray,
+        value: Image | np.ndarray | list | int | float | bool,
     ) -> np.ndarray:
         """Convert the value to NumPy array for storage in the Image object.
 
@@ -963,7 +988,7 @@ class Image:
         
         Parameters
         ----------
-        value: np.ndarray or list or int or float or bool or Image
+        value: np.ndarray | list | int | float | bool | Image
             The input value to be transformed to a NumPy array.
 
         Returns
@@ -987,7 +1012,7 @@ class Image:
         return value
 
     def __array_ufunc__(
-        self: Image,
+        self: Image | np.ndarray,
         ufunc: np.ufunc,
         method: str,
         *inputs: tuple[Any, ...],
@@ -1012,7 +1037,7 @@ class Image:
 
         Returns
         -------
-        Image or tuple[Image, ...] or None]
+        Image | tuple[Image, ...] | None]
             The result of the ufunc applied to the Image object(s). If the
             ufunc returns a tuple, each element is wrapped in an Image. For the
             `at` method, returns `None`.
@@ -1090,7 +1115,7 @@ class Image:
             return result
 
     def __array_function__(
-        self: Image,
+        self: Image | np.ndarray,
         func: Callable[..., Any],
         types: tuple[type, ...],
         args: tuple[Any, ...],
@@ -1189,7 +1214,7 @@ class Image:
             return result
 
     def __array__(
-        self: Image,
+        self: Image | np.ndarray,
         *args: tuple[Any, ...],
         **kwargs: dict[str, Any],
     ) -> np.ndarray:
@@ -1236,7 +1261,7 @@ class Image:
         return np.array(self.to_numpy()._value, *args)
 
     def to_cupy(
-        self: Image,
+        self: Image | np.ndarray,
     ) -> Image:
         """Convert the image's underlying value to a CuPy array.
 
@@ -1285,7 +1310,7 @@ class Image:
         return self
 
     def to_numpy(
-        self: Image,
+        self: Image | np.ndarray,
     ) -> Image:
         """Convert the image's underlying value to a NumPy array.
 
@@ -1337,7 +1362,7 @@ class Image:
         return self
 
     def __getattr__(
-        self: Image,
+        self: Image | np.ndarray,
         key: str,
     ) -> Any:
         """Access attributes of the underlying value.
@@ -1366,7 +1391,7 @@ class Image:
         return getattr(self._value, key)
 
     def __getitem__(
-        self: Image,
+        self: Image | np.ndarray,
         idx: int | slice | tuple[int | slice, ...] | Any,
     ) -> Image | int | float | bool | complex | np.ndarray:
         """Access and return an item or a slice from the Image.
@@ -1378,12 +1403,12 @@ class Image:
 
         Parameters
         ----------
-        idx: int or slice or tuple[int or slice, ...] or Any
+        idx: int | slice | tuple[int | slice, ...] | Any
             The index or indices used to access elements of the Image.
 
         Returns
         -------
-        Image or int or float or bool or complex or np.ndarray
+        Image | int | float | bool | complex | np.ndarray
             The accessed value, either as an Image (for array-like results) or 
             as a scalar for single-element results.
 
@@ -1416,7 +1441,7 @@ class Image:
         return out
 
     def __setitem__(
-        self: Image,
+        self: Image | np.ndarray,
         key: int | slice | tuple[int | slice, ...] | list[int],
         value: int | slice | tuple[int | slice, ...] | list[int],
     ) -> None:
@@ -1428,12 +1453,12 @@ class Image:
 
         Parameters
         ----------
-        key: int or slice or tuple[int or slice, ...] or list[int]
+        key: int | slice | tuple[int | slice, ...] | list[int]
             The index or slice to update. It can be a single integer to update
             a specific position, a slice to update a range of positions, a
             tuple of integers or slices for multi-dimensional indexing, or a
             list of integers for advanced indexing.
-        value: Image or numpy.ndarray or int or float or bool or complex
+        value: Image | numpy.ndarray | int | float | bool | complex
             The value to assign to the specified index or slice. If `value` is
             an `Image`, its `_value` attribute is extracted before assignment.
             Other types are assigned directly after being stripped if
@@ -1498,7 +1523,7 @@ class Image:
         return int(self._value)
 
     def __float__(
-        self: Image,
+        self: Image | np.ndarray,
     ) -> float:
         """Convert the Image's value to a float.
 
@@ -1512,7 +1537,7 @@ class Image:
         return float(self._value)
 
     def __bool__(
-        self: Image,
+        self: Image | np.ndarray,
     ) -> bool:
         """Check if the Image's value is truthy.
 
@@ -1526,7 +1551,7 @@ class Image:
         return bool(self._value)
 
     def __round__(
-        self: Image,
+        self: Image | np.ndarray,
         ndigits: int = 0,
     ) -> float:
         """Round the Image's value to a specified number of digits.
@@ -1546,7 +1571,7 @@ class Image:
         return round(self._value, ndigits)
 
     def __len__(
-        self: Image,
+        self: Image | np.ndarray,
     ) -> int:
         """Return the length of the Image's value.
 
@@ -1560,7 +1585,7 @@ class Image:
         return len(self._value)
 
     def __repr__(
-        self: Image,
+        self: Image | np.ndarray,
     ) -> str:
         """Return the string representation of the Image.
 
@@ -1611,7 +1636,7 @@ class Image:
 
 
 def strip(
-    element: Image | list | tuple | Any,
+    element: Image | np.ndarray | list | tuple | Any,
 ) -> Any:
     """Recursively extract the underlying value from an Image object.
 
@@ -1622,7 +1647,7 @@ def strip(
 
     Parameters
     ----------
-    element: Image or list or tuple or Any
+    element: Image | np.ndarray | list | tuple | Any
         The input to process.
 
     Returns
@@ -1732,7 +1757,7 @@ _FASTEST_SIZES = np.sort(_FASTEST_SIZES)
 
 
 def pad_image_to_fft(
-    image: Image | np.ndarray,
+    image: Image | np.ndarray | np.ndarray,
     axes: Iterable[int] = (0, 1),
 ) -> Image | np.ndarray:
     """Pads an image to optimize Fast Fourier Transform (FFT) performance.
@@ -1743,7 +1768,7 @@ def pad_image_to_fft(
 
     Parameters
     ----------
-    image: Image or np.ndarray
+    image: Image | np.ndarray
         The input image to pad. It should be an instance of the `Image` class 
         or any array-like structure compatible with FFT operations.
     axes: Iterable[int], optional
@@ -1751,7 +1776,7 @@ def pad_image_to_fft(
 
     Returns
     -------
-    Image or np.ndarray
+    Image | np.ndarray
         The padded image with dimensions optimized for FFT performance.
 
     Raises
@@ -1821,12 +1846,12 @@ def maybe_cupy(
 
     Parameters
     ----------
-    array: np.ndarray or list or tuple
+    array: np.ndarray | list | tuple
         The input array to be potentially converted to a CuPy array.
 
     Returns
     -------
-    cupy.ndarray or np.ndarray
+    cupy.ndarray | np.ndarray
         A CuPy array if GPU is enabled, otherwise the original array.
 
     Raises
