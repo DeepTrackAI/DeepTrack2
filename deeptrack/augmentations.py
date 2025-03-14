@@ -378,7 +378,7 @@ class FlipLR(Augmentation):
 
     def update_properties(
         self: FlipLR,
-        image: Image,
+        image: Image | np.ndarray,
         augment: PropertyLike[bool],
         **kwargs
     ) -> None:
