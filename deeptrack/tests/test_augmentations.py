@@ -4,10 +4,10 @@ import sys
 
 import unittest
 
-from .. import augmentations, optics, scatterers
-
-from ..features import Feature
 import numpy as np
+
+from deeptrack import augmentations, optics, scatterers
+from deeptrack.features import Feature
 
 
 class TestAugmentations(unittest.TestCase):
@@ -73,6 +73,7 @@ class TestAugmentations(unittest.TestCase):
         import random
         random.seed(1000)
         # 3D input
+        
         im = np.zeros((10, 8, 2))
         transformer = augmentations.ElasticTransformation(
             alpha=20,

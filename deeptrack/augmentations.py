@@ -63,7 +63,7 @@ Module Structure
 
 - `CropTight`: Crops to remove empty space at start and end of a 3D array.
 
-- `Pad`: Pads image.
+- `Pad`: Pads image with values.
 
 - `PadMultiplesOf`: Pad images until height/width is a multiple of a value.
 
@@ -104,10 +104,10 @@ import scipy.ndimage as ndimage
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
 
-from . import utils
-from .features import Feature
-from .image import Image
-from .types import ArrayLike, PropertyLike
+from deeptrack import utils
+from deeptrack.features import Feature
+from deeptrack.image import Image
+from deeptrack.types import ArrayLike, PropertyLike
 
 
 class Augmentation(Feature):
@@ -126,10 +126,10 @@ class Augmentation(Feature):
 
     Methods
     -------
-    `_image_wrapped_process_and_get(image_list: list[Image], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
+    `_image_wrapped_process_and_get(image_list: list[Image] | list[np.ndarray], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
         Augments a list of images and returns a wrapped output.
         
-    `_no_wrap_process_and_get(image_list: list[Image], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
+    `_no_wrap_process_and_get(image_list: list[Image] | list[np.ndarray], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
         Augments a list of images and returns the raw output.
         
     `update_properties(*args, **kwargs)`
@@ -146,7 +146,7 @@ class Augmentation(Feature):
 
     def _image_wrapped_process_and_get (
         self: Augmentation,
-        image_list: list[Image],
+        image_list: list[Image] | list[np.ndarray],
         time_consistent: PropertyLike[bool],
         **kwargs
     ) -> list[list]:
@@ -192,7 +192,7 @@ class Augmentation(Feature):
     
     def _no_wrap_process_and_get(
         self: Augmentation,
-        image_list: list[Image],
+        image_list: list[Image] | list[np.ndarray],
         time_consistent: PropertyLike[bool],
         **kwargs
     ) -> list[list]:
@@ -266,7 +266,7 @@ class Reuse(Feature):
 
     Methods
     -------
-    `get(image: Image, uses: PropertyLike[int], storage: PropertyLike[int], **kwargs) -> list[Image]`
+    `get(image: Image | np.ndarray, uses: PropertyLike[int], storage: PropertyLike[int], **kwargs) -> list[Image]`
         Abstract method which performs the `Reuse` augmentation.
 
     """
@@ -287,7 +287,7 @@ class Reuse(Feature):
 
     def get(
         self: Reuse,
-        image: Image,
+        image: Image | np.ndarray,
         uses: PropertyLike[int],
         storage: PropertyLike[int],
         **kwargs
@@ -340,10 +340,10 @@ class FlipLR(Augmentation):
 
     Methods
     -------
-    `get(image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
+    `get(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> Image`
         Abstract method which performs the `FlipLR` augmentation.
 
-    `update_properties(image: Image, augment: PropertyLike[bool], **kwargs) -> None`
+    `update_properties(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> None`
         Abstract method to update the properties of the image.
        
     """
@@ -364,7 +364,7 @@ class FlipLR(Augmentation):
 
     def get(
         self: FlipLR,
-        image: Image,
+        image: Image | np.ndarray,
         augment: PropertyLike[bool],
         **kwargs
     ) -> Image:
@@ -378,7 +378,7 @@ class FlipLR(Augmentation):
 
     def update_properties(
         self: FlipLR,
-        image: Image,
+        image: Image | np.ndarray,
         augment: PropertyLike[bool],
         **kwargs
     ) -> None:
@@ -410,9 +410,9 @@ class FlipUD(Augmentation):
 
     Methods
     -------
-    `get(image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
+    `get(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> Image`
         Abstract method which performs the `FlipUD` augmentation.
-    `update_properties(image: Image, augment: PropertyLike[bool], **kwargs) -> None`
+    `update_properties(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> None`
         Abstract method to update the properties of the image.
        
     """
@@ -433,7 +433,7 @@ class FlipUD(Augmentation):
 
     def get(
         self: FlipUD,
-        image: Image,
+        image: Image | np.ndarray,
         augment: PropertyLike[bool],
         **kwargs
     ) -> Image:
@@ -447,7 +447,7 @@ class FlipUD(Augmentation):
 
     def update_properties(
         self: FlipUD,
-        image: Image,
+        image: Image | np.ndarray,
         augment: PropertyLike[bool],
         **kwargs
     ) -> None:
@@ -479,9 +479,9 @@ class FlipDiagonal(Augmentation):
        
     Methods
     -------
-    `get(image: Image, augment: PropertyLike[bool], **kwargs) -> Image`
+    `get(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> Image`
         Abstract method which performs the `FlipDiagonal` augmentation.
-    `update_properties(image: Image, augment: PropertyLike[bool], **kwargs) -> None`
+    `update_properties(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> None`
         Abstract method to update the properties of the image.
 
     """
@@ -502,7 +502,7 @@ class FlipDiagonal(Augmentation):
 
     def get(
         self: FlipDiagonal,
-        image: Image,
+        image: Image | np.ndarray,
         augment: PropertyLike[bool],
         **kwargs
     ) -> Image:
@@ -515,7 +515,7 @@ class FlipDiagonal(Augmentation):
 
     def update_properties(
         self: FlipDiagonal,
-        image: Image,
+        image: Image | np.ndarray,
         augment: PropertyLike[bool],
         **kwargs
     ) -> None:
@@ -590,7 +590,7 @@ class Affine(Augmentation):
     -------
     `_process_properties(properties: dict) -> dict`
         Processes the properties of the image.
-    `get(image: Image, scale: PropertyLike[float], translate: PropertyLike[float], rotate: PropertyLike[float], shear: PropertyLike[float], **kwargs) -> Image`
+    `get(image: Image | np.ndarray, scale: PropertyLike[float], translate: PropertyLike[float], rotate: PropertyLike[float], shear: PropertyLike[float], **kwargs) -> Image`
         Abstract method which performs the `Affine` augmentation.
 
     """
@@ -648,7 +648,7 @@ class Affine(Augmentation):
 
     def get(
         self: Affine,
-        image: Image,
+        image: Image | np.ndarray,
         scale: PropertyLike[float],
         translate: PropertyLike[float],
         rotate: PropertyLike[float],
@@ -802,7 +802,7 @@ class ElasticTransformation(Augmentation):
 
     Methods
     -------
-    `get(image: Image, sigma: PropertyLike[float], alpha: PropertyLike[float], ignore_last_dim: PropertyLike[bool], **kwargs) -> Image`
+    `get(image: Image | np.ndarray, sigma: PropertyLike[float], alpha: PropertyLike[float], ignore_last_dim: PropertyLike[bool], **kwargs) -> Image`
         Abstract method which performs the `ElasticTransformation` augmentation.
 
     """
@@ -829,7 +829,7 @@ class ElasticTransformation(Augmentation):
 
     def get(
         self: ElasticTransformation,
-        image: Image,
+        image: Image | np.ndarray,
         sigma: PropertyLike[float],
         alpha: PropertyLike[float],
         ignore_last_dim: PropertyLike[bool],
@@ -914,7 +914,7 @@ class Crop(Augmentation):
 
     Methods
     -------
-    `get(image: Image, corner: PropertyLike[str], crop: PropertyLike[int], crop_mode: PropertyLike[str], **kwargs) -> Image`
+    `get(image: Image | np.ndarray, corner: PropertyLike[str], crop: PropertyLike[int], crop_mode: PropertyLike[str], **kwargs) -> Image`
         Abstract method which performs the `Crop` augmentation.
 
     """
@@ -939,7 +939,7 @@ class Crop(Augmentation):
 
     def get(
         self: Crop,
-        image: Image,
+        image: Image | np.ndarray,
         corner: PropertyLike[str],
         crop: int | list[int] | tuple[int],
         crop_mode: PropertyLike[str],
@@ -1042,7 +1042,7 @@ class CropToMultiplesOf(Crop):
         kwargs.pop("crop_mode", False)
 
         def image_to_crop(
-            image: Image
+            image: Image | np.ndarray
         ) -> Image:
             
             shape = image.shape
@@ -1083,7 +1083,7 @@ class CropTight(Feature):
 
     Methods
     -------
-    `get(image: Image, eps: PropertyLike[float], **kwargs) -> Image`
+    `get(image: Image | np.ndarray, eps: PropertyLike[float], **kwargs) -> Image`
         Abstract method which performs the `CropTight` augmentation.
 
     """
@@ -1097,7 +1097,7 @@ class CropTight(Feature):
 
     def get(
         self: CropTight,
-        image: Image,
+        image: Image | np.ndarray,
         eps: PropertyLike[float],
         **kwargs
     ) -> Image:
@@ -1136,9 +1136,9 @@ class Pad(Augmentation):
 
     Methods
     -------
-    `get(image: Image, px: PropertyLike[int], **kwargs) -> Image`
+    `get(image: Image | np.ndarray, px: PropertyLike[int], **kwargs) -> Image`
         Abstract method which performs the `Pad` augmentation.
-    `_image_wrap_process_and_get(images: list[Image], **kwargs) -> list[Image]`
+    `_image_wrap_process_and_get(images: list[Image] | list[np.ndarray], **kwargs) -> list[Image]`
         Simple method which wraps an `Image` in a `list`.
 
     Returns
@@ -1159,7 +1159,7 @@ class Pad(Augmentation):
 
     def get(
         self: Pad,
-        image: Image,
+        image: Image | np.ndarray,
         px: PropertyLike[int],
         **kwargs
     ) -> Image:
@@ -1187,7 +1187,7 @@ class Pad(Augmentation):
 
     def _image_wrap_process_and_get(
         self: Pad,
-        images: list[Image],
+        images: list[Image] | list[np.ndarray],
         **kwargs
     ) -> list[Image]:
         """Simple method which wraps an `Image` in a `list`.
@@ -1223,7 +1223,7 @@ class PadToMultiplesOf(Pad):
     ) -> None:
         
         def amount_to_pad(
-            image: Image
+            image: Image | np.ndarray
         ) -> list[int]:
             """Method to calculate number of pixels.
         
