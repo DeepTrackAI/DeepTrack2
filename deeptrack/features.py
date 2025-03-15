@@ -4,7 +4,7 @@ This module defines the core classes and utilities used to create and
 manipulate features in DeepTrack2, enabling users to build sophisticated data 
 processing pipelines with modular, reusable, and composable components.
 
-Main Concepts
+Key Features
 -------------
 - **Features**
 
@@ -20,32 +20,6 @@ Main Concepts
     They enable the construction of pipelines with advanced data flow 
     requirements.
 
-Key Classes
------------
-- `Feature`: 
-    Base class for all features in DeepTrack2. Represents a modular data 
-    transformation with properties and methods for customization.
-
-- `StructuralFeature`: 
-    A specialized feature for organizing and managing hierarchical or logical 
-    structures in the pipeline.
-
-- `Value`: 
-    Stores a constant value as a feature. Useful for passing parameters through
-    the pipeline.
-
-- `Chain`: 
-    Sequentially applies multiple features to the input data (>>).
-
-- `DummyFeature`: 
-    A no-op feature that passes the input data unchanged.
-
-- `ArithmeticOperationFeature`:
-    A parent class for features performing arithmetic operations like addition,
-    subtraction, multiplication, and division.
-
-Module Highlights
------------------
 - **Feature Properties**
 
     Features in DeepTrack2 can have dynamically sampled properties, enabling 
@@ -63,8 +37,62 @@ Module Highlights
     DeepTrack2 supports lazy evaluation of features, ensuring that data is 
     processed only when needed, which improves performance and scalability.
 
-Example
--------
+Module Structure
+----------------
+Key Classes: 
+
+- `Feature`:
+
+    Base class for all features in DeepTrack2. Represents a modular data 
+    transformation with properties and methods for customization.
+
+- `StructuralFeature`:
+
+    A specialized feature for organizing and managing hierarchical or logical 
+    structures in the pipeline.
+
+- `Value`:
+
+    Stores a constant value as a feature. Useful for passing parameters through
+    the pipeline.
+
+- `Chain`:
+
+    Sequentially applies multiple features to the input data (>>).
+
+- `DummyFeature`:
+
+    A no-op feature that passes the input data unchanged.
+
+- `ArithmeticOperationFeature`:
+
+    A parent class for features performing arithmetic operations like addition,
+    subtraction, multiplication, and division.
+
+Functions:
+
+- `propagate_data_to_dependencies`:
+
+    def propagate_data_to_dependencies(
+        feature: Feature,
+        **kwargs: Any
+    ) -> None
+
+    Propagates data to all dependencies of a feature, updating their properties
+    with the provided values.
+
+- `merge_features`:
+
+    def merge_features(
+        features: list[Feature],
+        merge_strategy: int = MERGE_STRATEGY_OVERRIDE,
+    ) -> Feature
+
+    Merges multiple features into a single feature using the specified merge
+    strategy.
+
+Examples
+--------
 Define a simple pipeline with features:
 >>> import deeptrack as dt
 >>> import numpy as np
@@ -114,9 +142,6 @@ from deeptrack.image import Image
 from deeptrack.properties import PropertyDict
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
-
-
-#TODO: for all features check whether image should be Image, np.ndarray, or both.
 
 MERGE_STRATEGY_OVERRIDE: int = 0
 MERGE_STRATEGY_APPEND: int = 1
@@ -4630,7 +4655,7 @@ class SampleToMasks(Feature):
     ValueError
         If `merge_method` is invalid.
 
-    Example
+    Examples
     -------
     >>> import deeptrack as dt
     >>> import matplotlib.pyplot as plt
