@@ -5,32 +5,51 @@ operations and transformations on images, including clipping, normalization,
 blurring, and pooling. These are implemented as subclasses of `Feature` for 
 seamless integration with the feature-based design of the library.
 
+Key Features
+------------
+- **
 
 Module Structure
 -----------------
 Classes:
 
 - `Clip`: Clip the input values within a specified minimum and maximum range.
+
 - `NormalizeMinMax`: Perform min-max normalization on images.
-- `NormalizeStandard`: Normalize images to have mean 0 and
-                       standard deviation 1.
+
+- `NormalizeStandard`: Normalize images to have mean 0 and standard 
+    deviation 1.
+
 - `NormalizeQuantile`: Normalize images based on specified quantiles.
+
 - `Blur`: Apply a blurring filter to the image.
+
 - `AverageBlur`: Apply average blurring to the image.
+
 - `GaussianBlur`: Apply Gaussian blurring to the image.
+
 - `MedianBlur`: Apply median blurring to the image.
+
 - `Pool`: Apply a pooling function to downsample the image.
+
 - `AveragePooling`: Apply average pooling to the image.
+
 - `MaxPooling`: Apply max pooling to the image.
+
 - `MinPooling`: Apply min pooling to the image.
+
 - `MedianPooling`: Apply median pooling to the image.
+
 - `Resize`: Resize the image to a specified size.
+
 - `BlurCV2`: Apply a blurring filter using OpenCV2.
+
 - `BilateralBlur`: Apply bilateral blurring to preserve edges while smoothing.
 
+Fun    
 
-Example
--------
+Examples
+--------
 Define a simple pipeline with mathematical operations:
 
 >>> import numpy as np
@@ -62,10 +81,10 @@ import scipy.ndimage as ndimage
 import skimage
 import skimage.measure
 
-from . import utils
-from .features import Feature
-from .image import Image, strip
-from .types import PropertyLike
+from deeptrack import utils
+from deeptrack.features import Feature
+from deeptrack.image import Image, strip
+from deeptrack.types import PropertyLike
 
 
 class Average(Feature):
