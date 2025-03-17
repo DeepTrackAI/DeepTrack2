@@ -7,8 +7,8 @@ seamless integration with the feature-based design of the library.
 
 Key Features
 ------------
-- **Clipping** 
-    
+- **Clipping**
+
     Restrict image values to a specified range.
 
 - **Normalization**
@@ -64,29 +64,21 @@ Classes:
 
 - `BilateralBlur`: Apply bilateral blurring to preserve edges while smoothing.
 
-Functions:
-----------
-
-
 
 Examples
 --------
 Define a simple pipeline with mathematical operations:
-
+>>> import deeptrack as dt
 >>> import numpy as np
->>> from deeptrack import math
 
 Create features for clipping and normalization:
-
->>> clip = math.Clip(min=0, max=200)
->>> normalize = math.NormalizeMinMax()
+>>> clip = Clip(min=0, max=200)
+>>> normalize = NormalizeMinMax()
 
 Chain features together:
-
 >>> pipeline = clip >> normalize
 
 Process an input image:
-
 >>> input_image = np.array([0, 100, 200, 400])
 >>> output_image = pipeline(input_image)
 >>> print(output_image)
@@ -109,7 +101,7 @@ from deeptrack.types import PropertyLike
 
 
 class Average(Feature):
-    """Average of input images
+    """Average of input images.
 
     If `features` is not None, it instead resolves all features
     in the list and averages the result.
