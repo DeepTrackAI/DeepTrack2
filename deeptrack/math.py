@@ -7,7 +7,25 @@ seamless integration with the feature-based design of the library.
 
 Key Features
 ------------
-- **
+- **Clipping** 
+    
+    Restrict image values to a specified range.
+
+- **Normalization**
+
+    Adjust image values to a common scale.
+
+- **Blurring**
+    
+    Smooth images using various filters.
+
+- **Pooling**
+    
+    Downsample images by applying a function to local regions.
+
+- **Resizing**
+
+    Change the dimensions of images.
 
 Module Structure
 -----------------
@@ -46,7 +64,10 @@ Classes:
 
 - `BilateralBlur`: Apply bilateral blurring to preserve edges while smoothing.
 
-Fun    
+Functions:
+----------
+
+
 
 Examples
 --------
