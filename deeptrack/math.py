@@ -64,7 +64,6 @@ Classes:
 
 - `BilateralBlur`: Apply bilateral blurring to preserve edges while smoothing.
 
-
 Examples
 --------
 Define a simple pipeline with mathematical operations:
@@ -72,8 +71,8 @@ Define a simple pipeline with mathematical operations:
 >>> import numpy as np
 
 Create features for clipping and normalization:
->>> clip = Clip(min=0, max=200)
->>> normalize = NormalizeMinMax()
+>>> clip = dt.Clip(min=0, max=200)
+>>> normalize = dt.NormalizeMinMax()
 
 Chain features together:
 >>> pipeline = clip >> normalize
@@ -103,30 +102,85 @@ from deeptrack.types import PropertyLike
 class Average(Feature):
     """Average of input images.
 
-    If `features` is not None, it instead resolves all features
-    in the list and averages the result.
+    If `features` is not None, it instead resolves all features in the list and 
+    averages the result.
 
     Parameters
     ----------
     axis: int or tuple of ints
         Axis along which to average
     features: list of features, optional
+
+    Attributes
+    ----------
+    __distributed__: bool
+        Determines whether `.get(image, **kwargs)` is applied to each element 
+        of the input list independently (`__distributed__ = True`) or to the 
+        list as a whole (`__distributed__ = False`).
+     
+    Methods
+    -------
+    
+    `get(images: np.ndarray, axis: int, **kwargs: dict[str, Any]) --> Image`
+        Computes the average of the input images along the specified axis.
+
     """
 
     __distributed__ = False
 
     def __init__(
-        self,
-        features=PropertyLike[List[Feature] or None],
+        self: Average,
+        features: PropertyLike[list[Feature] | None] = None,
         axis: PropertyLike[int] = 0,
-        **kwargs
+        **kwargs: dict[str, Any]
     ):
+        """Initializes the Average feature.
+
+        This constructor initializes the parameters for averaging input 
+        features.
+
+        Parameters
+        ----------
+        features: list of Feature or None, optional
+            List of features to be resolved and averaged. Defaults to None.
+        axis: int or tuple[int]
+            Axis along which to compute the average. Defaults to 0.
+        **kwargs: dict[str, Any]
+            Additional keyword arguments.
+
+        """
 
         super().__init__(axis=axis, **kwargs)
-        if features is not None:
-            self.features = [self.add_feature(feature) for feature in features]
+        if features is None:
+            self.features = None
+        else:
+            self.features = [self.add_feature(f) for f in features]
 
-    def get(self, images, axis, **kwargs):
+    def get(
+        self: Average, 
+        images: np.ndarray | Image | list[Image],
+        axis: int,
+        **kwargs: dict[str, Any],
+    ) -> Image:
+        """Computes the average of input images along the specified axis.
+
+
+        This method computes the average of the input images along the 
+        specified axis.
+
+        Parameters
+        ----------
+        images: np.ndarray
+            The input images to average.
+        axis: int
+            The axis along which to average.
+
+        Returns
+        -------
+        Image
+            The averaged image.
+
+        """
         if self.features is not None:
             images = [feature.resolve() for feature in self.features]
         result = Image(np.mean(images, axis=axis))
@@ -146,6 +200,7 @@ class Clip(Feature):
         Clip the input to be larger than this value.
     max: float
         Clip the input to be smaller than this value.
+
     """
 
     def __init__(
@@ -173,7 +228,8 @@ class NormalizeMinMax(Feature):
     max: float
         The maximum of the transformation.
     featurewise: bool
-        Whether to normalize each feature independently
+        Whether to normalize each feature independently.
+    
     """
 
     def __init__(
