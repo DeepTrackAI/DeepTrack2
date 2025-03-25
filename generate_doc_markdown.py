@@ -148,7 +148,7 @@ def get_components(directory, base="", exclude_list=None):
     for package in packages:
         components += get_components(
             os.path.join(directory, package),
-            base=base + package + '.',
+            base=package + '.',
             exclude_list=exclude_list,
         )
 
