@@ -1,0 +1,7 @@
+Add
+===
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Add
+   :show-inheritance:

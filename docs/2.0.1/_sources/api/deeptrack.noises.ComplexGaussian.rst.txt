@@ -1,0 +1,17 @@
+ComplexGaussian
+===============
+
+.. currentmodule:: deeptrack.noises
+
+.. autoclass:: ComplexGaussian
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~ComplexGaussian.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

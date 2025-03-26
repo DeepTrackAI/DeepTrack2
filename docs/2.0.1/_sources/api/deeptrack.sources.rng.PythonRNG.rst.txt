@@ -1,0 +1,19 @@
+PythonRNG
+=========
+
+.. currentmodule:: deeptrack.sources.rng
+
+.. autoclass:: PythonRNG
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~PythonRNG.reset
+      ~PythonRNG.set_index
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: reset
+   .. automethod:: set_index

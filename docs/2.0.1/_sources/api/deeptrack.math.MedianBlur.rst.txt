@@ -1,0 +1,7 @@
+MedianBlur
+==========
+
+.. currentmodule:: deeptrack.math
+
+.. autoclass:: MedianBlur
+   :show-inheritance:

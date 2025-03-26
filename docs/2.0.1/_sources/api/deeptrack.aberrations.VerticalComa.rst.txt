@@ -1,0 +1,7 @@
+VerticalComa
+============
+
+.. currentmodule:: deeptrack.aberrations
+
+.. autoclass:: VerticalComa
+   :show-inheritance:

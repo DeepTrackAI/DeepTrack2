@@ -1,0 +1,17 @@
+OneOfDict
+=========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: OneOfDict
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~OneOfDict.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

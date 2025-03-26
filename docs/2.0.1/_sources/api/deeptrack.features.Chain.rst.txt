@@ -1,0 +1,17 @@
+Chain
+=====
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Chain
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Chain.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

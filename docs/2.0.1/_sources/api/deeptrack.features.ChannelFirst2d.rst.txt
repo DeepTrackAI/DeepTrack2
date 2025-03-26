@@ -1,0 +1,17 @@
+ChannelFirst2d
+==============
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: ChannelFirst2d
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~ChannelFirst2d.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

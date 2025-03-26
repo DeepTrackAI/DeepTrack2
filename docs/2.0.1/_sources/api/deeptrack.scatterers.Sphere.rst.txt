@@ -1,0 +1,17 @@
+Sphere
+======
+
+.. currentmodule:: deeptrack.scatterers
+
+.. autoclass:: Sphere
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Sphere.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

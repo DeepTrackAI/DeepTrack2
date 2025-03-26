@@ -1,0 +1,17 @@
+FourierTransformTransformation
+==============================
+
+.. currentmodule:: deeptrack.holography
+
+.. autoclass:: FourierTransformTransformation
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~FourierTransformTransformation.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

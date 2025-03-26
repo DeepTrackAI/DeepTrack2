@@ -1,0 +1,17 @@
+Gaussian
+========
+
+.. currentmodule:: deeptrack.noises
+
+.. autoclass:: Gaussian
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Gaussian.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

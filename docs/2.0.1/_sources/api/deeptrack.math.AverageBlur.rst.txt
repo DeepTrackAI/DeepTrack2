@@ -1,0 +1,17 @@
+AverageBlur
+===========
+
+.. currentmodule:: deeptrack.math
+
+.. autoclass:: AverageBlur
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~AverageBlur.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

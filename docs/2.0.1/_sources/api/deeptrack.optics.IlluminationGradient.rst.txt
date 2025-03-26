@@ -1,0 +1,17 @@
+IlluminationGradient
+====================
+
+.. currentmodule:: deeptrack.optics
+
+.. autoclass:: IlluminationGradient
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~IlluminationGradient.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

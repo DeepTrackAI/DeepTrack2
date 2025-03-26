@@ -1,0 +1,17 @@
+Repeat
+======
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Repeat
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Repeat.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

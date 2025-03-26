@@ -1,0 +1,17 @@
+Blur
+====
+
+.. currentmodule:: deeptrack.math
+
+.. autoclass:: Blur
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Blur.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

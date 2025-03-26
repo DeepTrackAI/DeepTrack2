@@ -1,0 +1,17 @@
+Background
+==========
+
+.. currentmodule:: deeptrack.noises
+
+.. autoclass:: Background
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Background.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

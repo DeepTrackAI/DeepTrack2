@@ -1,0 +1,17 @@
+Zernike
+=======
+
+.. currentmodule:: deeptrack.aberrations
+
+.. autoclass:: Zernike
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Zernike.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

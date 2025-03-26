@@ -1,0 +1,17 @@
+InverseFourierTransform
+=======================
+
+.. currentmodule:: deeptrack.holography
+
+.. autoclass:: InverseFourierTransform
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~InverseFourierTransform.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

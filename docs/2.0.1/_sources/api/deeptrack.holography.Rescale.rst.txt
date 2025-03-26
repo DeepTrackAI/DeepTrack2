@@ -1,0 +1,17 @@
+Rescale
+=======
+
+.. currentmodule:: deeptrack.holography
+
+.. autoclass:: Rescale
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Rescale.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

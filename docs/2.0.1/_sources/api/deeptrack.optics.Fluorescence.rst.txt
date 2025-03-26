@@ -1,0 +1,17 @@
+Fluorescence
+============
+
+.. currentmodule:: deeptrack.optics
+
+.. autoclass:: Fluorescence
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Fluorescence.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,17 @@
+Upscale
+=======
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Upscale
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Upscale.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

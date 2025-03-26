@@ -1,0 +1,17 @@
+Microscope
+==========
+
+.. currentmodule:: deeptrack.optics
+
+.. autoclass:: Microscope
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Microscope.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,17 @@
+ElasticTransformation
+=====================
+
+.. currentmodule:: deeptrack.augmentations
+
+.. autoclass:: ElasticTransformation
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~ElasticTransformation.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,21 @@
+SequentialProperty
+==================
+
+.. currentmodule:: deeptrack.properties
+
+.. autoclass:: SequentialProperty
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~SequentialProperty.__call__
+      ~SequentialProperty.current_value
+      ~SequentialProperty.store
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: __call__
+   .. automethod:: current_value
+   .. automethod:: store

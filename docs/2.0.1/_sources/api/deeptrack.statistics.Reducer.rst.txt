@@ -1,0 +1,17 @@
+Reducer
+=======
+
+.. currentmodule:: deeptrack.statistics
+
+.. autoclass:: Reducer
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Reducer.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

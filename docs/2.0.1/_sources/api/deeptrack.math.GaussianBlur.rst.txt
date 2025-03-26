@@ -1,0 +1,7 @@
+GaussianBlur
+============
+
+.. currentmodule:: deeptrack.math
+
+.. autoclass:: GaussianBlur
+   :show-inheritance:

@@ -1,0 +1,7 @@
+Arccosh
+=======
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: Arccosh
+   :show-inheritance:

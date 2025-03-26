@@ -1,0 +1,17 @@
+Augmentation
+============
+
+.. currentmodule:: deeptrack.augmentations
+
+.. autoclass:: Augmentation
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Augmentation.update_properties
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: update_properties

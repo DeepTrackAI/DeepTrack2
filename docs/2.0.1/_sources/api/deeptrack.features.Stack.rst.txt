@@ -1,0 +1,17 @@
+Stack
+=====
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Stack
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Stack.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

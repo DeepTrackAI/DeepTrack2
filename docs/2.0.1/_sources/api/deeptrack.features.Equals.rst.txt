@@ -1,0 +1,7 @@
+Equals
+======
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Equals
+   :show-inheritance:

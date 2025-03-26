@@ -1,0 +1,7 @@
+Aberration
+==========
+
+.. currentmodule:: deeptrack.aberrations
+
+.. autoclass:: Aberration
+   :show-inheritance:

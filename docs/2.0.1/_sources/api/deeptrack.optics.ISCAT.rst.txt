@@ -1,0 +1,7 @@
+ISCAT
+=====
+
+.. currentmodule:: deeptrack.optics
+
+.. autoclass:: ISCAT
+   :show-inheritance:

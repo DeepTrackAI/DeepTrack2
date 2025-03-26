@@ -1,0 +1,17 @@
+Brightfield
+===========
+
+.. currentmodule:: deeptrack.optics
+
+.. autoclass:: Brightfield
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Brightfield.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

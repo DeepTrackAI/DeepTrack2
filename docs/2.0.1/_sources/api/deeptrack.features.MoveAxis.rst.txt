@@ -1,0 +1,17 @@
+MoveAxis
+========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: MoveAxis
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~MoveAxis.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

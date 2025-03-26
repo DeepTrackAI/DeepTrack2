@@ -1,0 +1,7 @@
+Cumsum
+======
+
+.. currentmodule:: deeptrack.statistics
+
+.. autoclass:: Cumsum
+   :show-inheritance:

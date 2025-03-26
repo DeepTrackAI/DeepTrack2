@@ -1,0 +1,6 @@
+get_propagation_matrix
+======================
+
+.. currentmodule:: deeptrack.holography
+
+.. autofunction:: get_propagation_matrix

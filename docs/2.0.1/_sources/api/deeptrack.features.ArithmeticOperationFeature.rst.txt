@@ -1,0 +1,17 @@
+ArithmeticOperationFeature
+==========================
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: ArithmeticOperationFeature
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~ArithmeticOperationFeature.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,17 @@
+Affine
+======
+
+.. currentmodule:: deeptrack.augmentations
+
+.. autoclass:: Affine
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Affine.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

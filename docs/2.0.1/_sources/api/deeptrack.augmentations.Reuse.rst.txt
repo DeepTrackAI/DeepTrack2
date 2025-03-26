@@ -1,0 +1,17 @@
+Reuse
+=====
+
+.. currentmodule:: deeptrack.augmentations
+
+.. autoclass:: Reuse
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Reuse.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

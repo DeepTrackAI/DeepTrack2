@@ -1,0 +1,7 @@
+Tanh
+====
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: Tanh
+   :show-inheritance:

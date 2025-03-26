@@ -1,0 +1,17 @@
+Clip
+====
+
+.. currentmodule:: deeptrack.math
+
+.. autoclass:: Clip
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Clip.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,6 @@
+maybe_cupy
+==========
+
+.. currentmodule:: deeptrack.image
+
+.. autofunction:: maybe_cupy

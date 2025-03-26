@@ -1,0 +1,17 @@
+DummyFeature
+============
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: DummyFeature
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~DummyFeature.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get
