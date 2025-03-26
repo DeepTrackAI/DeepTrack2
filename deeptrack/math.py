@@ -121,18 +121,19 @@ class Average(Feature):
      
     Methods
     -------
-    `get(images: np.ndarray, axis: int, **kwargs: dict[str, Any]) --> Image`
+    `get(images: np.ndarray | Image | list[Image], axis: int, **kwargs: dict[str, Any]) --> np.ndarray`
         Computes the average of the input images along the specified axis.
 
     Examples
     --------
-    Define a simple pipeline with mathematical operations:
     >>> import deeptrack as dt
     >>> import numpy as np
     
+    Create two input images:
     >>> input_image1 = np.random.rand(10, 30, 20)
     >>> input_image2 = np.random.rand(10, 30, 20)
 
+    Define a simple pipeline with the average feature:
     >>> average = dt.Average(axis=1)
     >>> output_image = average([input_image1, input_image2])
     >>> print(output_image)
@@ -175,7 +176,7 @@ class Average(Feature):
         images: np.ndarray | Image | list[Image],
         axis: int,
         **kwargs: dict[str, Any],
-    ) -> Image:
+    ) -> np.ndarray:
         """Computes the average of input images along the specified axis.
 
 
@@ -191,8 +192,8 @@ class Average(Feature):
 
         Returns
         -------
-        Image
-            The averaged image.
+        np.ndarray
+            The average of the input images along the specified axis.
 
         """
         if self.features is not None:
@@ -208,6 +209,9 @@ class Average(Feature):
 class Clip(Feature):
     """Clip the input within a minimum and a maximum value.
 
+    This class clips the input values within a specified minimum and maximum
+    range.
+
     Parameters
     ----------
     min: float
@@ -215,17 +219,43 @@ class Clip(Feature):
     max: float
         Clip the input to be smaller than this value.
 
+    Methods
+    -------
+    `get(image: np.ndarray | Image, min: float, max: float, **kwargs: dict[str, Any]) --> np.ndarray`
+        Clips the input image within the specified minimum and maximum values.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> import numpy as np
+
+    Create an input image:
+    >>> input_image = np.array([[10, 4], [4, -10]])
+    
+    Define a clipper feature:
+    >>> clipper = dt.Clip(min=0, max=5)
+    >>> output_image = clipper.get(input_image)
+    >>> print(output_image)
+    [[5 4]
+     [4 0]]
+
     """
 
     def __init__(
-        self,
+        self: Clip,
         min: PropertyLike[float] = -np.inf,
         max: PropertyLike[float] = +np.inf,
-        **kwargs
+        **kwargs: dict[str, Any],
     ):
         super().__init__(min=min, max=max, **kwargs)
 
-    def get(self, image, min=None, max=None, **kwargs):
+    def get(
+        self: Clip, 
+        image: np.ndarray | Image, 
+        min: float = None, 
+        max: float = None, 
+        **kwargs: dict[str, Any],
+    ) -> np.ndarray:
         return np.clip(image, min, max)
 
 
@@ -243,19 +273,46 @@ class NormalizeMinMax(Feature):
         The maximum of the transformation.
     featurewise: bool
         Whether to normalize each feature independently.
-    
+
+    Methods
+    -------
+    `get(image: np.ndarray | Image, min: float, max: float, **kwargs: dict[str, Any]) --> np.ndarray`
+        Normalizes the input image to be between the specified minimum and 
+        maximum values.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> import numpy as np
+
+    Create an input image:
+    >>> input_image = np.array([[10, 4], [4, -10]])
+
+    Define a min-max normalizer:
+    >>> normalizer = dt.NormalizeMinMax(min=-5, max=5)
+    >>> output_image = normalizer.get(input_image)
+    >>> print(output_image)
+    [[ 5.  2.]
+     [ 2. -5.]]
+
     """
 
     def __init__(
-        self,
+        self: NormalizeMinMax,
         min: PropertyLike[float] = 0,
         max: PropertyLike[float] = 1,
-        featurewise=True,
-        **kwargs
+        featurewise: bool = True,
+        **kwargs: dict[str, Any],
     ):
         super().__init__(min=min, max=max, featurewise=featurewise, **kwargs)
 
-    def get(self, image, min, max, **kwargs):
+    def get(
+        self: NormalizeMinMax, 
+        image: np.ndarray | Image, 
+        min: float = None, 
+        max: float = None, 
+        **kwargs: dict[str, Any],
+    ) -> np.ndarray:
         image = image / np.ptp(image) * (max - min)
         image = image - np.min(image) + min
         try:
@@ -274,13 +331,40 @@ class NormalizeStandard(Feature):
     ----------
     featurewise: bool
         Whether to normalize each feature independently
+
+    Methods
+    -------
+    `get(image: np.ndarray | Image, **kwargs: dict[str, Any]) --> np.ndarray`
+        Normalizes (standardizes) the input image to have mean 0 and standard 
+        deviation 1.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> import numpy as np
+
+    Create an input image:
+    >>> input_image = np.array([[1, 2], [3, 4]], dtype=float)
+    
+    >>> standardizer = dt.NormalizeStandard()
+    >>> output_image = standardizer.get(input_image)
+    >>> print(output_image)
+    [[-1.34164079 -0.4472136   0.4472136   1.34164079]]
+
     """
 
-    def __init__(self, featurewise=True, **kwargs):
+    def __init__(
+        self:NormalizeStandard,
+        featurewise: bool = True,
+        **kwargs: dict[str, Any],
+    ):
         super().__init__(featurewise=featurewise, **kwargs)
 
-    def get(self, image, **kwargs):
-
+    def get(
+        self: NormalizeStandard,
+        image: np.ndarray | Image, 
+        **kwargs: dict[str, Any],
+    ) -> np.ndarray:
         return (image - np.mean(image)) / np.std(image)
 
 
