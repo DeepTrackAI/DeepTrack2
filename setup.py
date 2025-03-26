@@ -12,7 +12,7 @@ required = [x for x in required if not x.startswith("pydata-sphinx-theme")]
 
 setup(
     name="deeptrack",
-    version="2.0.0",
+    version="2.0.1",
     license="MIT",
     packages=find_packages(),
     author=(
