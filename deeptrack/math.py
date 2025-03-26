@@ -86,7 +86,7 @@ Process an input image:
 """
 
 from __future__ import annotations
-from typing import Callable, List
+from typing import Callable, Any
 
 import numpy as np
 import scipy.ndimage as ndimage
