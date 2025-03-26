@@ -1,7 +1,0 @@
-Conjugate
-=========
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Conjugate
-   :show-inheritance:

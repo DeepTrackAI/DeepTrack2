@@ -1,7 +1,0 @@
-Abs
-===
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Abs
-   :show-inheritance:

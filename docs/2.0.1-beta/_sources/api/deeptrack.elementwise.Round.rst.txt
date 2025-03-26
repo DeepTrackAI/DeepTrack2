@@ -1,7 +1,0 @@
-Round
-=====
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Round
-   :show-inheritance:

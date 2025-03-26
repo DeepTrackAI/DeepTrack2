@@ -1,7 +1,0 @@
-Trefoil
-=======
-
-.. currentmodule:: deeptrack.aberrations
-
-.. autoclass:: Trefoil
-   :show-inheritance:

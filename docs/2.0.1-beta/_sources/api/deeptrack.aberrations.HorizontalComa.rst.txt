@@ -1,7 +1,0 @@
-HorizontalComa
-==============
-
-.. currentmodule:: deeptrack.aberrations
-
-.. autoclass:: HorizontalComa
-   :show-inheritance:

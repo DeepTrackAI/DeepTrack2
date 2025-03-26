@@ -1,6 +1,0 @@
-Sequential
-==========
-
-.. currentmodule:: deeptrack.sequences
-
-.. autofunction:: Sequential

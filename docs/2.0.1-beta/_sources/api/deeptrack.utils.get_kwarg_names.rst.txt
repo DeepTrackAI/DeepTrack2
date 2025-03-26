@@ -1,6 +1,0 @@
-get_kwarg_names
-===============
-
-.. currentmodule:: deeptrack.utils
-
-.. autofunction:: get_kwarg_names

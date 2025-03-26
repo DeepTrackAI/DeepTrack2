@@ -1,7 +1,0 @@
-Log
-===
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Log
-   :show-inheritance:

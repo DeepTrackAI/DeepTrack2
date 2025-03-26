@@ -1,7 +1,0 @@
-Arccos
-======
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Arccos
-   :show-inheritance:

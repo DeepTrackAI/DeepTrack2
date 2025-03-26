@@ -1,7 +1,0 @@
-Join
-====
-
-.. currentmodule:: deeptrack.sources.base
-
-.. autoclass:: Join
-   :show-inheritance:

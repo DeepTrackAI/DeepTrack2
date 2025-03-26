@@ -1,7 +1,0 @@
-Quantile
-========
-
-.. currentmodule:: deeptrack.statistics
-
-.. autoclass:: Quantile
-   :show-inheritance:

@@ -1,7 +1,0 @@
-MaxPooling
-==========
-
-.. currentmodule:: deeptrack.math
-
-.. autoclass:: MaxPooling
-   :show-inheritance:

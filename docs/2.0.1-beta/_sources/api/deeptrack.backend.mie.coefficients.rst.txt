@@ -1,6 +1,0 @@
-coefficients
-============
-
-.. currentmodule:: deeptrack.backend.mie
-
-.. autofunction:: coefficients

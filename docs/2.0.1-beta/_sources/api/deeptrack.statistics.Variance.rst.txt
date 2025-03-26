@@ -1,7 +1,0 @@
-Variance
-========
-
-.. currentmodule:: deeptrack.statistics
-
-.. autoclass:: Variance
-   :show-inheritance:

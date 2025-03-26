@@ -1,6 +1,0 @@
-random_split
-============
-
-.. currentmodule:: deeptrack.sources.base
-
-.. autofunction:: random_split

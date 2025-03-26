@@ -1,7 +1,0 @@
-Mean
-====
-
-.. currentmodule:: deeptrack.statistics
-
-.. autoclass:: Mean
-   :show-inheritance:

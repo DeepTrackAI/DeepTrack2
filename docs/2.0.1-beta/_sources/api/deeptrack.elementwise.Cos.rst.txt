@@ -1,7 +1,0 @@
-Cos
-===
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Cos
-   :show-inheritance:

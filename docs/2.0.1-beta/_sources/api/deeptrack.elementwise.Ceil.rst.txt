@@ -1,7 +1,0 @@
-Ceil
-====
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Ceil
-   :show-inheritance:

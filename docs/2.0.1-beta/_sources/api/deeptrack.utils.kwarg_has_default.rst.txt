@@ -1,6 +1,0 @@
-kwarg_has_default
-=================
-
-.. currentmodule:: deeptrack.utils
-
-.. autofunction:: kwarg_has_default

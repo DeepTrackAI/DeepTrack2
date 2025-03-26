@@ -1,7 +1,0 @@
-Floor
-=====
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Floor
-   :show-inheritance:

@@ -1,7 +1,0 @@
-Arctanh
-=======
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Arctanh
-   :show-inheritance:

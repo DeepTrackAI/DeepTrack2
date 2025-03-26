@@ -1,6 +1,0 @@
-dricbesy
-========
-
-.. currentmodule:: deeptrack.backend.polynomials
-
-.. autofunction:: dricbesy

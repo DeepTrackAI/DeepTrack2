@@ -1,6 +1,0 @@
-create_context
-==============
-
-.. currentmodule:: deeptrack.backend.units
-
-.. autofunction:: create_context

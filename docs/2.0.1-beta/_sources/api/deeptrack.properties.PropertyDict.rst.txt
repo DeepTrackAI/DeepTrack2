@@ -1,7 +1,0 @@
-PropertyDict
-============
-
-.. currentmodule:: deeptrack.properties
-
-.. autoclass:: PropertyDict
-   :show-inheritance:

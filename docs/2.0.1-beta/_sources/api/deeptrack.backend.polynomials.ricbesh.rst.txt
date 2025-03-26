@@ -1,6 +1,0 @@
-ricbesh
-=======
-
-.. currentmodule:: deeptrack.backend.polynomials
-
-.. autofunction:: ricbesh

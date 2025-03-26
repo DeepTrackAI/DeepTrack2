@@ -1,7 +1,0 @@
-Sum
-===
-
-.. currentmodule:: deeptrack.statistics
-
-.. autoclass:: Sum
-   :show-inheritance:

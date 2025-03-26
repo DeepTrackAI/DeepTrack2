@@ -1,6 +1,0 @@
-as_list
-=======
-
-.. currentmodule:: deeptrack.utils
-
-.. autofunction:: as_list

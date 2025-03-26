@@ -1,7 +1,0 @@
-ObliqueTrefoil
-==============
-
-.. currentmodule:: deeptrack.aberrations
-
-.. autoclass:: ObliqueTrefoil
-   :show-inheritance:

@@ -1,7 +1,0 @@
-Multiply
-========
-
-.. currentmodule:: deeptrack.features
-
-.. autoclass:: Multiply
-   :show-inheritance:

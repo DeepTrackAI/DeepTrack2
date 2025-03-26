@@ -1,7 +1,0 @@
-MedianPooling
-=============
-
-.. currentmodule:: deeptrack.math
-
-.. autoclass:: MedianPooling
-   :show-inheritance:

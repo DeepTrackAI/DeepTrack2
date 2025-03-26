@@ -1,7 +1,0 @@
-Max
-===
-
-.. currentmodule:: deeptrack.statistics
-
-.. autoclass:: Max
-   :show-inheritance:

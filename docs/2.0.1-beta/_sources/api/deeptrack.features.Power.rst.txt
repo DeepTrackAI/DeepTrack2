@@ -1,7 +1,0 @@
-Power
-=====
-
-.. currentmodule:: deeptrack.features
-
-.. autoclass:: Power
-   :show-inheritance:

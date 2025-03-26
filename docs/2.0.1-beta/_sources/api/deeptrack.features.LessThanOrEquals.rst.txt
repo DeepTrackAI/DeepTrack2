@@ -1,7 +1,0 @@
-LessThanOrEquals
-================
-
-.. currentmodule:: deeptrack.features
-
-.. autoclass:: LessThanOrEquals
-   :show-inheritance:

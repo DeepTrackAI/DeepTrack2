@@ -1,7 +1,0 @@
-Sign
-====
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Sign
-   :show-inheritance:

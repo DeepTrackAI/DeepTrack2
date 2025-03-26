@@ -1,7 +1,0 @@
-SourceDeepTrackNode
-===================
-
-.. currentmodule:: deeptrack.sources.base
-
-.. autoclass:: SourceDeepTrackNode
-   :show-inheritance:

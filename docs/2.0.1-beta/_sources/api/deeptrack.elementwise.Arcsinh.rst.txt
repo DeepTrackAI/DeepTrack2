@@ -1,7 +1,0 @@
-Arcsinh
-=======
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Arcsinh
-   :show-inheritance:

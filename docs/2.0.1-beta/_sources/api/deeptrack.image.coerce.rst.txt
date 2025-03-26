@@ -1,6 +1,0 @@
-coerce
-======
-
-.. currentmodule:: deeptrack.image
-
-.. autofunction:: coerce

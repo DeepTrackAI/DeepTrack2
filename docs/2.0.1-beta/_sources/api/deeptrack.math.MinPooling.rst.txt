@@ -1,7 +1,0 @@
-MinPooling
-==========
-
-.. currentmodule:: deeptrack.math
-
-.. autoclass:: MinPooling
-   :show-inheritance:

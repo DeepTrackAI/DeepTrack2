@@ -1,7 +1,0 @@
-Astigmatism
-===========
-
-.. currentmodule:: deeptrack.aberrations
-
-.. autoclass:: Astigmatism
-   :show-inheritance:

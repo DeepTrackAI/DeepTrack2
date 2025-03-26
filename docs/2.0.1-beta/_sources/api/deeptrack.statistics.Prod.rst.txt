@@ -1,7 +1,0 @@
-Prod
-====
-
-.. currentmodule:: deeptrack.statistics
-
-.. autoclass:: Prod
-   :show-inheritance:

@@ -1,6 +1,0 @@
-bessely
-=======
-
-.. currentmodule:: deeptrack.backend.polynomials
-
-.. autofunction:: bessely

@@ -1,7 +1,0 @@
-PadToMultiplesOf
-================
-
-.. currentmodule:: deeptrack.augmentations
-
-.. autoclass:: PadToMultiplesOf
-   :show-inheritance:

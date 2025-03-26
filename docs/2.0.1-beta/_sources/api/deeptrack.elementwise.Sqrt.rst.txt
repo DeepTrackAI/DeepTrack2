@@ -1,7 +1,0 @@
-Sqrt
-====
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Sqrt
-   :show-inheritance:

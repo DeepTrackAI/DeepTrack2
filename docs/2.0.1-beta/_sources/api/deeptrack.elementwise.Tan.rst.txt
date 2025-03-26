@@ -1,7 +1,0 @@
-Tan
-===
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Tan
-   :show-inheritance:

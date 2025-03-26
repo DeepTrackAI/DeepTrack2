@@ -1,6 +1,0 @@
-get_active_scale
-================
-
-.. currentmodule:: deeptrack.backend.units
-
-.. autofunction:: get_active_scale

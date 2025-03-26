@@ -1,7 +1,0 @@
-Std
-===
-
-.. currentmodule:: deeptrack.statistics
-
-.. autoclass:: Std
-   :show-inheritance:

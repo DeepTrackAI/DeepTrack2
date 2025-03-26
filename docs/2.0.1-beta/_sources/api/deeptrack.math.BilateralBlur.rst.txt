@@ -1,7 +1,0 @@
-BilateralBlur
-=============
-
-.. currentmodule:: deeptrack.math
-
-.. autoclass:: BilateralBlur
-   :show-inheritance:

@@ -1,6 +1,0 @@
-propagate_data_to_dependencies
-==============================
-
-.. currentmodule:: deeptrack.features
-
-.. autofunction:: propagate_data_to_dependencies

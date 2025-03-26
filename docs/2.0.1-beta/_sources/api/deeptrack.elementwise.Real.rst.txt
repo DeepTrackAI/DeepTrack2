@@ -1,7 +1,0 @@
-Real
-====
-
-.. currentmodule:: deeptrack.elementwise
-
-.. autoclass:: Real
-   :show-inheritance:
