@@ -11,6 +11,15 @@ from deeptrack import math
 
 
 class TestMath(unittest.TestCase):
+    def test_Average(self):
+        expected_shape = (10, 30, 20)
+        input_image0 = np.ones((10, 30, 20)) * 2
+        input_image1 = np.ones((10, 30, 20)) * 4
+        feature = math.Average(axis=0)
+        average = feature.resolve([input_image0, input_image1])
+        self.assertTrue(np.all(average == 3), True)
+        self.assertEqual(average.shape, expected_shape)
+
     def test_Clip(self):
         input_image = np.array([[10, 4], [4, -10]])
         feature = math.Clip(min=-5, max=5)

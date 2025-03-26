@@ -102,6 +102,7 @@ from deeptrack.types import PropertyLike
 class Average(Feature):
     """Average of input images.
 
+    This class computes the average of input images along the specified axis. 
     If `features` is not None, it instead resolves all features in the list and 
     averages the result.
 
@@ -120,9 +121,22 @@ class Average(Feature):
      
     Methods
     -------
-    
     `get(images: np.ndarray, axis: int, **kwargs: dict[str, Any]) --> Image`
         Computes the average of the input images along the specified axis.
+
+    Examples
+    --------
+    Define a simple pipeline with mathematical operations:
+    >>> import deeptrack as dt
+    >>> import numpy as np
+    
+    >>> input_image1 = np.random.rand(10, 30, 20)
+    >>> input_image2 = np.random.rand(10, 30, 20)
+
+    >>> average = dt.Average(axis=1)
+    >>> output_image = average([input_image1, input_image2])
+    >>> print(output_image)
+    (2, 30, 20)
 
     """
 
@@ -134,8 +148,8 @@ class Average(Feature):
         axis: PropertyLike[int] = 0,
         **kwargs: dict[str, Any]
     ):
-        """Initializes the Average feature.
-
+        """ Initialize the parameters for averaging input features. 
+        
         This constructor initializes the parameters for averaging input 
         features.
 
