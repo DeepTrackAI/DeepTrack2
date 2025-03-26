@@ -233,7 +233,7 @@ class Clip(Feature):
     >>> input_image = np.array([[10, 4], [4, -10]])
     
     Define a clipper feature:
-    >>> clipper = dt.Clip(min=0, max=5)
+    >>> clipper = dt.Clip(=0, max=5)
     >>> output_image = clipper.get(input_image)
     >>> print(output_image)
     [[5 4]
@@ -347,9 +347,10 @@ class NormalizeStandard(Feature):
     >>> input_image = np.array([[1, 2], [3, 4]], dtype=float)
     
     >>> standardizer = dt.NormalizeStandard()
-    >>> output_image = standardizer.get(input_image)
+    >>> output_image = standardizer(input_image)
     >>> print(output_image)
-    [[-1.34164079 -0.4472136   0.4472136   1.34164079]]
+    [[-1.34164079 -0.4472136]
+     [ 0.4472136   1.34164079]]
 
     """
 
@@ -380,6 +381,26 @@ class NormalizeQuantile(Feature):
        Quantile range to calculate scaling factor
     featurewise: bool
         Whether to normalize each feature independently
+
+    Methods
+    -------
+    `get(image: np.ndarray | Image, quantiles: tuple[float, float], **kwargs: dict[str, Any]) --> np.ndarray`
+        Normalizes the input image based on the specified quantiles.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> import numpy as np
+
+    Create an input image:
+    >>> input_image = np.array([[10, 4], [4, -10]])
+
+    Define a quantile normalizer:
+    >>> normalizer = dt.NormalizeQuantile(quantiles=(0.25, 0.75))
+    >>> output_image = normalizer.get(input_image)
+    >>> print(output_image)
+    [[ 1.2  0. ]
+     [ 0.  -2.8]]
     """
 
     def __init__(self, quantiles=(0.25, 0.75), featurewise=True, **kwargs):
