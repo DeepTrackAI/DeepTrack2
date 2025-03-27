@@ -9,6 +9,11 @@ from scipy.ndimage import uniform_filter
 
 from deeptrack import math
 
+try:
+    import cv2
+    OPENCV_AVAILABLE = True
+except ImportError:
+    OPENCV_AVAILABLE = False
 
 class TestMath(unittest.TestCase):
     def test_Average(self):
@@ -81,8 +86,8 @@ class TestMath(unittest.TestCase):
         pooled_image = feature.resolve(input_image)
         self.assertTrue(np.all(pooled_image == [[1, 3]]))
 
+    @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_BlurCV2_GaussianBlur(self):
-        import cv2
         input_image = np.random.rand(32, 32).astype(np.float32)
         expected_output = cv2.GaussianBlur(input_image, ksize=(5, 5), sigmaX=1, borderType=cv2.BORDER_REFLECT)
         feature = math.BlurCV2(filter_function=cv2.GaussianBlur, ksize=(5, 5), sigmaX=1, mode='reflect')
@@ -95,7 +100,6 @@ class TestMath(unittest.TestCase):
         )
 
     def test_BlurCV2_bilateralFilter(self):
-        import cv2
         input_image = np.random.rand(32, 32).astype(np.float32)
         expected_output = cv2.bilateralFilter(input_image, d=9, sigmaColor=75, sigmaSpace=75, borderType=cv2.BORDER_REFLECT)
         feature = math.BlurCV2(filter_function=cv2.bilateralFilter, d=9, sigmaColor=75, sigmaSpace=75, mode='reflect')
@@ -108,7 +112,6 @@ class TestMath(unittest.TestCase):
         )
 
     def test_BilateralBlur(self):
-        import cv2
         input_image = np.random.rand(32, 32).astype(np.float32)
         expected_output = cv2.bilateralFilter(input_image, d=9, sigmaColor=75, sigmaSpace=75, borderType=cv2.BORDER_REFLECT)
         feature = math.BilateralBlur(d=9, sigma_color=75, sigma_space=75, mode='reflect')
