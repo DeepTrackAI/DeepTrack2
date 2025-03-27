@@ -98,7 +98,7 @@ class TestMath(unittest.TestCase):
                 output_image, expected_output, rtol=1e-5, atol=1e-6,
             )
         )
-
+    @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_BlurCV2_bilateralFilter(self):
         input_image = np.random.rand(32, 32).astype(np.float32)
         expected_output = cv2.bilateralFilter(input_image, d=9, sigmaColor=75, sigmaSpace=75, borderType=cv2.BORDER_REFLECT)
@@ -110,7 +110,8 @@ class TestMath(unittest.TestCase):
                 output_image, expected_output, rtol=1e-5, atol=1e-6,
             )
         )
-
+        
+    @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_BilateralBlur(self):
         input_image = np.random.rand(32, 32).astype(np.float32)
         expected_output = cv2.bilateralFilter(input_image, d=9, sigmaColor=75, sigmaSpace=75, borderType=cv2.BORDER_REFLECT)
