@@ -1025,7 +1025,7 @@ class MaxPooling(Pool):
     def __init__(
         self: MaxPooling, 
         ksize: PropertyLike[int] = 3,
-        , **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the parameters for max pooling.
 
