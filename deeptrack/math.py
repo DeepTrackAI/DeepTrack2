@@ -636,7 +636,7 @@ class Blur(Feature):
     Create an input image:
     >>> input_image = np.random.rand(32, 32)
 
-    Define a Gaussian kernel for blurring
+    Define a Gaussian kernel for blurring:
     >>> gaussian_kernel = np.array([
     ...     [1,  4,  6,  4, 1],
     ...     [4, 16, 24, 16, 4],
@@ -846,14 +846,14 @@ class MedianBlur(Blur):
     ----------
     ksize: int
         Kernel size.
+    kwargs: dict
+        Additional parameters sent to the blurring function.
 
     """
 
     def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
         super().__init__(ndimage.median_filter, k=ksize, **kwargs)
 
-
-# POOLING
 
 class Pool(Feature):
     """Downsamples the image by applying a function to local regions of the
@@ -872,22 +872,61 @@ class Pool(Feature):
         Examples include np.mean, np.max, np.min, etc.
     ksize: int
         Size of the pooling kernel.
-    cval: number
-        Value to pad edges with if necessary.
-    func_kwargs: dict
+    kwargs: Any
         Additional parameters sent to the pooling function.
     """
 
     def __init__(
-        self,
+        self: Pool,
         pooling_function: Callable,
         ksize: PropertyLike[int] = 3,
-        **kwargs
+        **kwargs: Any,
     ):
+        """Initialize the parameters for pooling input features.
+
+        This constructor initializes the parameters for pooling input
+        features.
+
+        Parameters
+        ----------
+        pooling_function: Callable
+            The pooling function to apply.
+        ksize: int
+            Size of the pooling kernel.
+        **kwargs: Any
+            Additional keyword arguments.
+
+        """
+
         self.pooling = pooling_function
         super().__init__(ksize=ksize, **kwargs)
 
-    def get(self, image, ksize, **kwargs):
+    def get(
+        self: Pool,
+        image: np.ndarray | Image,
+        ksize: int,
+        **kwargs: Any,
+    )-> np.ndarray:
+        """Applies the pooling function to the input image.
+        
+        This method applies the pooling function to the input image.
+        
+        Parameters
+        ----------
+        image: np.ndarray
+            The input image to pool.
+        ksize: int
+            Size of the pooling kernel.
+        kwargs: dict[str, Any]
+            Additional keyword arguments.
+        
+        Returns
+        -------
+        np.ndarray
+            The pooled image.
+        
+        """
+        
         kwargs.pop("func", False)
         kwargs.pop("image", False)
         kwargs.pop("block_size", False)
@@ -907,19 +946,51 @@ class AveragePooling(Pool):
     ----------
     ksize: int
         Size of the pooling kernel.
-    cval: number
-        Value to pad edges with if necessary. Default 0.
-    func_kwargs: dict
+    kwargs: dict
         Additional parameters sent to the pooling function.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> import numpy as np
+
+    Create an input image:
+    >>> input_image = np.random.rand(32, 32)
+    
+    Define an average pooling feature:
+    >>> average_pooling = dt.AveragePooling(ksize=4)
+    >>> output_image = average_pooling(input_image)
+    >>> print(output_image.shape)
+    (8, 8)
+
+    Notes
+    -----
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
+    internally and does not affect the return type of the `get()` method.
+
     """
 
-    def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
+    def __init__(
+        self: Pool, 
+        ksize: PropertyLike[int] = 3, 
+        **kwargs: Any,
+    ):
         super().__init__(np.mean, ksize=ksize, **kwargs)
 
 
 class MaxPooling(Pool):
     """Apply max pooling to images.
 
+    This class reduces the resolution of an image by dividing it into
+    non-overlapping blocks of size `ksize` and applying the max function to
+    each block. The result is a downsampled image where each pixel value
+    represents the maximum value within the corresponding block of the
+    original image.
+    This is useful for reducing the size of an image while retaining the
+    most significant features.
+
     Parameters
     ----------
     ksize: int
@@ -928,23 +999,88 @@ class MaxPooling(Pool):
         Value to pad edges with if necessary. Default 0.
     func_kwargs: dict
         Additional parameters sent to the pooling function.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> import numpy as np
+    Create an input image:
+    >>> input_image = np.random.rand(32, 32)
+
+    Define a max pooling feature:
+    >>> max_pooling = dt.MaxPooling(ksize=8)
+    >>> output_image = max_pooling(input_image)
+    >>> print(output_image.shape)
+    (8, 8)
+    
+    Notes
+    -----
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
+    internally and does not affect the return type of the `get()` method.
+
     """
 
-    def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
+    def __init__(
+        self: MaxPooling, 
+        ksize: PropertyLike[int] = 3,
+        , **kwargs,
+    ):
+        """Initialize the parameters for max pooling.
+
+        This constructor initializes the parameters for max pooling.
+        
+        Parameters
+        ----------
+        ksize: int
+            Size of the pooling kernel.
+        **kwargs: Any
+            Additional keyword arguments.
+        
+        """
+
         super().__init__(np.max, ksize=ksize, **kwargs)
 
 
 class MinPooling(Pool):
     """Apply min pooling to images.
 
+    This class reduces the resolution of an image by dividing it into
+    non-overlapping blocks of size `ksize` and applying the min function to
+    each block. The result is a downsampled image where each pixel value
+    represents the minimum value within the corresponding block of the
+    original image.
+
     Parameters
     ----------
     ksize: int
         Size of the pooling kernel.
-    cval: number
-        Value to pad edges with if necessary. Default 0.
-    func_kwargs: dict
+    kwargs: dict
         Additional parameters sent to the pooling function.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> import numpy as np
+
+    Create an input image:
+    >>> input_image = np.random.rand(32, 32)
+
+    Define a min pooling feature:
+    >>> min_pooling = dt.MinPooling(ksize=3)
+    >>> output_image = min_pooling(input_image)
+    >>> print(output_image.shape)
+    (32, 32)
+
+    Notes
+    -----
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
+    internally and does not affect the return type of the `get()` method.
+
+
     """
 
     def __init__(self, ksize: PropertyLike[int] = 3, **kwargs):
@@ -997,8 +1133,6 @@ class Resize(Feature):
         )
 
 
-# OPENCV2 blur
-
 try:
     import cv2
 
@@ -1018,9 +1152,9 @@ except ImportError:
 class BlurCV2(Feature):
     """Apply a blurring filter using OpenCV2.
 
-    This class applies a blurring filter to an image using OpenCV2. The filter
-    function must be a function that takes an input image and returns a blurred
-    image.
+    This class applies a blurring filter to an image using OpenCV2. The 
+    filter_function must be an OpenCV-compatible function that accepts a src 
+    keyword argument (e.g., cv2.GaussianBlur, cv2.bilateralFilter, etc.).
 
     Parameters
     ----------
@@ -1071,10 +1205,9 @@ class BlurCV2(Feature):
         """Ensures that OpenCV (cv2) is available before instantiating the 
         class.
 
-        This method overrides the default object creation process to perform a
-        runtime check for the `cv2` module, which is required for this feature.
-        If OpenCV is not installed, it raises an ImportError with instructions
-        for installation.
+        Overrides the default object creation process to check that the `cv2` 
+        module is available before creating the class. If OpenCV is not 
+        installed, it raises an ImportError with instructions for installation.
 
         Parameters
         ----------
@@ -1093,11 +1226,6 @@ class BlurCV2(Feature):
         ImportError
             If the OpenCV (`cv2`) module is not available in the current 
             environment.
-
-        Notes
-        -----
-        This check ensures that users get a clear error message when using the 
-        class without having the required optional dependency installed.
     
         """
 
@@ -1147,7 +1275,8 @@ class BlurCV2(Feature):
         Parameters
         ----------
         image: np.ndarray | Image
-            The input image to be blurred.
+            The input image to blur. Can be a NumPy array or DeepTrack Image.
+
         **kwargs: Any
             Additional parameters for the blurring function.
 
@@ -1161,7 +1290,6 @@ class BlurCV2(Feature):
         kwargs.pop("name", None)        
         result = self.filter(src=image, **kwargs)
         return result
-      
 
 
 class BilateralBlur(BlurCV2):
@@ -1208,7 +1336,14 @@ class BilateralBlur(BlurCV2):
     ... )
     >>> output_image = bilateral_blur(input_image)
     >>> print(output_image.shape)
-    (32, 32)
+    (32, 32)]
+
+    Notes
+    -----
+    Calling this feature returns a `np.ndarray` by default. If 
+    `store_properties` is set to `True`, the returned array will be 
+    automatically wrapped in an `Image` object. This behavior is handled 
+    internally and does not affect the return type of the `get()` method.
     
     """
 
