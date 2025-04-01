@@ -1,4 +1,4 @@
-"""Image class and relative functions.
+"""Containers for array-like structures.
 
 This module defines the `Image` class and related utility functions for 
 managing array-like structures and their associated properties. The `Image` 
@@ -30,18 +30,20 @@ Key Features
     Includes helper functions (`coerce`, `strip`, etc.) for managing and 
     manipulating `Image` objects efficiently within pipelines.
 
-Module Structure
-----------------
-Classes:
-
+Key Classes
+-----------
 - `Image`: Core class for managing array-like data and their properties.
 
-Utility Functions:
+    Encapsulates array-like data structures (e.g., NumPy arrays, lists, 
+    Torch tensors) while providing a unified interface for array operations and
+    property management.
 
+Methods
+-------
 - `strip(element)`
 
     strip(
-        element: Union[Image, List, Tuple, Any],
+        element: Image | np.ndarray | list | tuple | Any,
     ) -> Any
     
     Recursively extract the underlying value from an Image object.
@@ -49,25 +51,25 @@ Utility Functions:
 - `coerce(images)`
 
     coerce(
-        images: List[Union[Image, np.ndarray]],
-    ) -> List[Image]
+        images: list[Image | np.ndarray],
+    ) -> list[Image]
     
     Coerce a list of images to a consistent type.
 
 - `pad_image_to_fft(image, axes)`
 
     pad_image_to_fft(
-        image: Union[Image, np.ndarray],
+        image: Image | np.ndarray,
         axes: Iterable[int] = (0, 1),
-    ) -> Union[Image, np.ndarray]
+    ) -> Image | np.ndarray
     
     Pads an image to optimize Fast Fourier Transform (FFT) performance.
 
 - `maybe_cupy(array)`
 
     maybe_cupy(
-        array: Union[np.ndarray, List, Tuple],
-    ) -> Union['cupy.ndarray', np.ndarray]
+        array: np.ndarray | list | tuple,
+    ) -> cupy.ndarray | np.ndarray
 
     Convert an array to a CuPy array if GPU is available and enabled.
 
@@ -81,7 +83,7 @@ Basic usage of the `Image` class:
 >>> img = Image(np.array([[1, 2], [3, 4]]))
 >>> print(img + 1)
 Image([[2, 3],
-       [4, 5]])
+[4, 5]])
 
 Property tracking:
 
@@ -93,21 +95,20 @@ Property tracking:
 
 """
 
+from __future__ import annotations
 import operator as ops
-from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
+from typing import Any, Callable, Iterable
 
 import numpy as np
 
-from .backend._config import cupy
-from .properties import Property
-from .types import NumberLike # NumberLike = Union[np.ndarray, int, float,
-                              #                    bool, complex, cupy.ndarray,
-                              #                    torch.Tensor]
+from deeptrack.backend._config import cupy
+from deeptrack.properties import Property
+from deeptrack.types import NumberLike
 
 
 def _binary_method(
-    op : Callable[[NumberLike, NumberLike], NumberLike],
-) -> Callable[['Image', Union['Image', NumberLike]], 'Image']:
+    op: Callable[[NumberLike, NumberLike], NumberLike],
+) -> Callable[[Image, Image | NumberLike], Image]:
     """Implement a binary operator for the Image class.
 
     This function generates a binary method (e.g., `__add__`, `__sub__`) for
@@ -128,18 +129,18 @@ def _binary_method(
 
     Parameters
     ----------
-    op : Callable[[NumberLike, NumberLike], NumberLike]
+    op: Callable[[NumberLike, NumberLike], NumberLike]
         The operator function (e.g., `operator.add`, `operator.sub`) that 
         defines the binary operation.
 
     Returns
     -------
-    Callable[['Image', Union['Image', NumberLike]], 'Image']
+    Callable[[Image, Image | NumberLike], Image]
         A method that can be assigned to a binary operator (e.g., `__add__`) 
         of the `Image` class.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import operator
     >>> import numpy as np
     >>> from deeptrack.image import _binary_method, Image
@@ -165,9 +166,9 @@ def _binary_method(
     """
 
     def func(
-        self : 'Image',
-        other : Union['Image', NumberLike],
-    ) -> 'Image':
+        self: Image | np.ndarray,
+        other: Image | np.ndarray | NumberLike,
+    ) -> Image:
 
         # Coerce inputs to compatible types.
         self, other = coerce([self, other])
@@ -192,7 +193,7 @@ def _binary_method(
 
 def _reflected_binary_method(
     op: Callable[[NumberLike, NumberLike], NumberLike],
-) -> Callable[[Union['Image', NumberLike], 'Image'], 'Image']:
+) -> Callable[[Image | NumberLike, Image], Image]:
     """Implement a reflected binary operator for the Image class.
 
     This function generates a reflected binary method (e.g., `__radd__`,
@@ -214,18 +215,18 @@ def _reflected_binary_method(
 
     Parameters
     ----------
-    op : Callable[[NumberLike, NumberLike], NumberLike]
+    op: Callable[[NumberLike, NumberLike], NumberLike]
         The operator function (e.g., `operator.add`, `operator.sub`) that 
         defines the reflected binary operation.
 
     Returns
     -------
-    Callable[['Image', Union['Image', NumberLike]], 'Image']
+    Callable[[Image, Image | NumberLike], Image]
         A method that can be assigned to a reflected binary operator (e.g.,
         `__radd__`) of the `Image` class.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import operator
     >>> import numpy as np
     >>> from deeptrack.image import _reflected_binary_method, Image
@@ -251,9 +252,9 @@ def _reflected_binary_method(
     """
 
     def func(
-        self: 'Image',
-        other: Union['Image', NumberLike],
-    ) -> 'Image':
+        self: Image | np.ndarray,
+        other: Image | np.ndarray | NumberLike,
+    ) -> Image:
 
         # Coerce inputs to compatible types.
         self, other = coerce([self, other])
@@ -278,7 +279,7 @@ def _reflected_binary_method(
 
 def _inplace_binary_method(
     op: Callable[[NumberLike, NumberLike], NumberLike]
-) -> Callable[['Image', Union['Image', NumberLike]], 'Image']:
+) -> Callable[[Image, Image | NumberLike], Image]:
     """Implement an in-place binary operator for the Image class.
 
     This function generates an in-place binary method (e.g., `__iadd__`,
@@ -296,18 +297,18 @@ def _inplace_binary_method(
 
     Parameters
     ----------
-    op : Callable[[NumberLike, NumberLike], NumberLike]
+    op: Callable[[NumberLike, NumberLike], NumberLike]
         The operator function (e.g., `operator.iadd`, `operator.imul`) that 
         defines the in-place binary operation.
 
     Returns
     -------
-    Callable[['Image', Union['Image', NumberLike]], None]
+    Callable[[Image, Image | NumberLike], None]
         A method that can be assigned to an in-place binary operator (e.g.,
         `__iadd__`) of the `Image` class.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import operator
     >>> import numpy as np
     >>> from deeptrack.image import _inplace_binary_method, Image
@@ -333,9 +334,9 @@ def _inplace_binary_method(
     """
 
     def func(
-        self: 'Image',
-        other: Union['Image', NumberLike],
-    ) -> 'Image':
+        self: Image | np.ndarray,
+        other: Image | np.ndarray | NumberLike,
+    ) -> Image:
 
         # Coerce inputs to compatible types.
         self, other = coerce([self, other])
@@ -357,10 +358,10 @@ def _inplace_binary_method(
 
 def _numeric_methods(
     op: Callable[[NumberLike, NumberLike], NumberLike],
-) -> Tuple[
-    Callable[['Image', Union['Image', NumberLike]], 'Image'],
-    Callable[[Union['Image', NumberLike], 'Image'], 'Image'],
-    Callable[['Image', Union['Image', NumberLike]], 'Image']
+) -> tuple[
+    Callable[[Image, Image | NumberLike], Image],
+    Callable[[Image | NumberLike, Image], Image],
+    Callable[[Image, Image | NumberLike], Image]
 ]:
     """Generate forward, reflected, and in-place binary methods.
 
@@ -374,24 +375,24 @@ def _numeric_methods(
 
     Parameters
     ----------
-    op : Callable[[NumberLike, NumberLike], NumberLike]
+    op: Callable[[NumberLike, NumberLike], NumberLike]
         A callable representing the numeric operator (e.g., `operator.add`, 
         `operator.mul`) to implement the methods for.
 
     Returns
     -------
-    Tuple[
-        Callable[['Image', Union['Image', NumberLike]], 'Image'],
-        Callable[[Union['Image', NumberLike], 'Image'], 'Image'],
-        Callable[['Image', Union['Image', NumberLike]], 'Image']
+    tuple[
+        Callable[[Image, Image | NumberLike], Image],
+        Callable[[Image | NumberLike, Image], Image],
+        Callable[[Image, Image | NumberLike], Image]
     ]
         A tuple containing three callables:
         (1) The forward binary method (`_binary_method`).
         (2) The reflected binary method (`_reflected_binary_method`).
         (3) The in-place binary method (`_inplace_binary_method`).
 
-    Example
-    -------
+    Examples
+    --------
     >>> import operator
     >>> from deeptrack.image import _numeric_methods, Image
 
@@ -431,7 +432,7 @@ def _numeric_methods(
 
 def _unary_method(
     op: Callable[[NumberLike], NumberLike],
-) -> Callable[['Image'], 'Image']:
+) -> Callable[[Image], Image]:
     """Implement a unary special method for the Image class.
 
     This function generates a unary method (e.g., `__neg__`, `__abs__`) for
@@ -441,18 +442,18 @@ def _unary_method(
 
     Parameters
     ----------
-    op : Callable[[NumberLike], NumberLike]
+    op: Callable[[NumberLike], NumberLike]
         A callable representing the unary operation (e.g., `operator.neg`, 
         `operator.abs`).
 
     Returns
     -------
-    Callable[['Image'], 'Image']
+    Callable[[Image], Image]
         A method that can be assigned to a unary operator (e.g., `__neg__`) 
         of the `Image` class.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import operator
     >>> import numpy as np
     >>> from deeptrack.image import _unary_method, Image
@@ -471,8 +472,8 @@ def _unary_method(
     """
 
     def func(
-        self: 'Image',
-    ) -> 'Image':
+        self: Image | np.ndarray,
+    ) -> Image:
 
         # Apply the unary operator to the Image instance.
         return Image(
@@ -507,19 +508,19 @@ class Image:
 
     Attributes
     ----------
-    _value : np.ndarray
+    _value: np.ndarray
         The underlying data stored in the Image object as NumPy.
-    properties : List[Dict[str, Property]]
+    properties: list[dict[str, Property]]
         A list of property dictionaries associated with the Image.
 
     Parameters
     ----------
-    value : np.ndarray or list or int or float or bool or Image
+    value: np.ndarray | list | int | float | bool | Image
         The array-like object to be converted to a NumPy array and stored in 
         the Image object. If it is an Image, the value and properties of the 
         image are copied or referenced depening on the value of the `copy` 
         parameter.
-    copy : bool, optional
+    copy: bool, optional
         If `True`, the `value` is copied to ensure independence (default).
         If `False`, a reference to the original value is maintained.
 
@@ -527,49 +528,69 @@ class Image:
     -------
     **Property Management**
     
-    `append(property_dict: dict) -> 'Image'`
+    `append(
+        property_dict: dict
+    ) -> Image`
         Add a dictionary of properties to the `Image`.
-    `get_property(key: str, get_one: bool = True, default: Any = None) -> Union[Any, List[Any]]`
+
+    `get_property(
+        key: str,
+        get_one: bool = True,
+        default: Any = None
+    ) -> Any | list[Any]`
         Retrieve a property by key. If `get_one` is `True`, returns the first
         match; otherwise, returns a list of matches.
-    `merge_properties_from(other: Union['Image', List['Image'], np.ndarray]) -> 'Image'`  
+
+    `merge_properties_from(
+        other: Image | list[Image] | np.ndarray | list[np.ndarray]
+    ) -> Image`  
         Merge properties from another `Image`, list of `Image`s, or a NumPy
         array.
 
     **Conversion Utilities**
 
-    `to_cupy() -> 'Image'`
+    `to_cupy() -> Image`
       Convert the `Image` to a CuPy array if the underlying value is a NumPy
       array.
-    `to_numpy() -> 'Image'`
+    `to_numpy() -> Image`
       Convert the `Image` to a numpy array if the underlying value is a CuPy
       array.
-    `__array__(*args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> np.ndarray`  
+    `__array__(*args: tuple[Any, ...], **kwargs: dict[str, Any]) -> np.ndarray`  
       Convert the `Image` to a numpy array. Used implicitly by numpy functions.
 
     **NumPy Compatibility
     
-    `__array_ufunc__(ufunc: Callable, method: str, *inputs: Tuple[Any], **kwargs: Dict[str, Any]) -> Union['Image', Tuple['Image', ...], None]`
+    `__array_ufunc__(
+        ufunc: Callable,
+        method: str,
+        *inputs: tuple[Any],
+        **kwargs: dict[str, Any]
+    ) -> Image | tuple[Image, ...] | None`
         Enable compatibility with numpy's universal functions (ufuncs).
         Examples include `np.add`, `np.multiply`, and `np.sin`.
         
-        The following NumPy universal functions (ufuncs) are supported:
+    The following NumPy universal functions (ufuncs) are supported:
 
-        - Arithmetic: 
-            `np.add`, `np.subtract`, `np.multiply`, `np.divide`, `np.power`,
-            `np.mod`, etc.
-        - Trigonometric:
-            `np.sin`, `np.cos`, `np.tan`, `np.arcsin`, `np.arccos`,
-            `np.arctan`, etc.
-        - Exponential and logarithmic:
-            `np.exp`, `np.log`, `np.log10`, etc.
-        - Comparison:
-            `np.equal`, `np.not_equal`, `np.less`, `np.less_equal`,
-            `np.greater`, `np.greater_equal`, etc.
-        - Bitwise:
-            `np.bitwise_and`, `np.bitwise_or`, `np.bitwise_xor`, etc.
+    - Arithmetic: 
+        `np.add`, `np.subtract`, `np.multiply`, `np.divide`, `np.power`,
+        `np.mod`, etc.
+    - Trigonometric:
+        `np.sin`, `np.cos`, `np.tan`, `np.arcsin`, `np.arccos`,
+        `np.arctan`, etc.
+    - Exponential and logarithmic:
+        `np.exp`, `np.log`, `np.log10`, etc.
+    - Comparison:
+        `np.equal`, `np.not_equal`, `np.less`, `np.less_equal`,
+        `np.greater`, `np.greater_equal`, etc.
+    - Bitwise:
+        `np.bitwise_and`, `np.bitwise_or`, `np.bitwise_xor`, etc.
 
-    `__array_function__(func: Callable[..., Any], types: Tuple[type, ...], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> Union['Image', Tuple['Image', ...], Any]`
+    `__array_function__(
+        func: Callable[..., Any],
+        types: tuple[type, ...],
+        args: tuple[Any, ...],
+        kwargs: dict[str, Any]
+    ) -> Image | tuple[Image, ...] | Any`
         Enable compatibility with numpy's general functions, such as `np.mean`,
         `np.dot`, and `np.concatenate`.
         
@@ -584,10 +605,15 @@ class Image:
 
     **Indexing and Assignment**
     
-    `__getitem__(idx: Any) -> Union['Image', Any]`
+    `__getitem__(
+        idx: Any
+    ) -> Image | Any`
         Access array elements using standard indexing or slicing. If the result
         is scalar, returns it; otherwise, returns an `Image`.
-    `__setitem__(key: Any, value: Any) -> None` 
+    `__setitem__(
+        key: Any,
+        value: Any
+    ) -> None` 
         Assign values to specific array elements. Updates the properties of the
         `Image` accordingly.
 
@@ -633,7 +659,7 @@ class Image:
 
     >>> gpu_img = img.to_cupy()
     >>> print(type(gpu_img._value))
-    <class 'cupy.ndarray'>
+    <class cupy.ndarray>
 
     >>> converted_back = gpu_img.to_numpy()
     >>> print(type(converted_back._value))
@@ -642,12 +668,12 @@ class Image:
     """
 
     # Attributes.
-    _value : np.ndarray
-    properties : List[Dict[str, Property]]
+    _value: np.ndarray
+    properties: list[dict[str, Property]]
 
     def __init__(
-        self : 'Image',
-        value: Union[np.ndarray, list, int, float, bool, 'Image'],
+        self: Image | np.ndarray,
+        value: Image | np.ndarray | list | int | float |  bool,
         copy: bool = True,
     ):
         """Initialize an Image object.
@@ -658,20 +684,20 @@ class Image:
 
         Parameters
         ----------
-        value : np.ndarray or list or int or float or bool or Image
+        value: np.ndarray | list | int | float | bool | Image
             The array-like object to be converted to a NumPy array and stored 
             in the Image object. If it is an Image, the value and properties of
             the image are copied or referenced depening on the value of the 
             `copy` parameter.
-        copy : bool, optional
+        copy: bool, optional
             If `True`, the `value` is copied to ensure independence (default).
             If `False`, a reference to the original value is maintained.
 
         Attributes
         ----------
-        _value : np.ndarray
+        _value: np.ndarray
             The underlying data stored in the Image object as NumPy.
-        properties : List[Dict[str, Property]]
+        properties: list[dict[str, Property]]
             A list of property dictionaries associated with the Image.
 
         """
@@ -695,9 +721,9 @@ class Image:
             self.properties = []
 
     def append(
-        self : 'Image',
-        property_dict: Dict[str, Property],
-    ) -> 'Image':
+        self: Image | np.ndarray,
+        property_dict: dict[str, Property],
+    ) -> Image:
         """Append a dictionary to the properties list.
 
         This method adds a dictionary of property values to the `properties`
@@ -709,7 +735,7 @@ class Image:
 
         Parameters
         ----------
-        property_dict : Dict[str, Property]
+        property_dict: dict[str, Property]
             A dictionary to append to the property list.
 
         Returns
@@ -717,8 +743,8 @@ class Image:
         Image
             Returns itself.
 
-        Example
-        -------
+        Examples
+        --------
         >>> import numpy as np
         >>> from deeptrack import Feature, Image
 
@@ -754,11 +780,11 @@ class Image:
         return self
 
     def get_property(
-        self : 'Image',
+        self: Image | np.ndarray,
         key: str,
         get_one: bool = True,
         default: Any = None,
-    ) -> Union[Any, List[Any]]:
+    ) -> Any | list[Any]:
         """Retrieve the value of a property of the Image.
 
         If the feature has the property defined by `key`, the method returns
@@ -769,23 +795,23 @@ class Image:
 
         Parameters
         ----------
-        key : str
+        key: str
             The name of the property.
         get_one: bool, optional
             Whether to return only the first instance of the property (default
             behavior for `True`) or all instances of the property (`False`).           
-        default : Any, optional
+        default: Any, optional
             The value to be returned as default, which is by default `None`.
 
         Returns
         -------
-        Any or List[Any]
+        Any | list[Any]
             The value of the property (if `get_one` is `True`) or all instances
             as a list (if `get_one` is `True`). If the property is not found,
             it returns `default`.
 
-        Example
-        -------
+        Examples
+        --------
         >>> import numpy as np
         >>> from deeptrack import Feature, Image
 
@@ -830,9 +856,9 @@ class Image:
         ] or default
 
     def merge_properties_from(
-        self : 'Image',
-        other: Union[np.ndarray, 'Image', Iterable],
-    ) -> 'Image':
+        self: Image | np.ndarray,
+        other: np.ndarray | Image | Iterable,
+    ) -> Image:
         """Merge properties with those from another Image.
 
         Appends properties from another images without duplicating properties.
@@ -846,7 +872,7 @@ class Image:
 
         Parameters
         ----------
-        other : Image or np.ndarray or Iterable
+        other: Image | np.ndarray | Iterable
             The data to retrieve properties from. It can be an Image, a NumPy
             array (which has no properties), or an iterable object.
 
@@ -855,8 +881,8 @@ class Image:
         Image
             Returns itself.
 
-        Example
-        -------
+        Examples
+        --------
         >>> import numpy as np
         >>> from deeptrack import Feature, Image
 
@@ -943,8 +969,8 @@ class Image:
         return self
 
     def _view(
-        self : 'Image',
-        value: Union[np.ndarray, list, int, float, bool, 'Image'],
+        self: Image | np.ndarray,
+        value: Image | np.ndarray | list | int | float | bool,
     ) -> np.ndarray:
         """Convert the value to NumPy array for storage in the Image object.
 
@@ -962,7 +988,7 @@ class Image:
         
         Parameters
         ----------
-        value : np.ndarray or list or int or float or bool or Image
+        value: np.ndarray | list | int | float | bool | Image
             The input value to be transformed to a NumPy array.
 
         Returns
@@ -986,12 +1012,12 @@ class Image:
         return value
 
     def __array_ufunc__(
-        self: 'Image',
+        self: Image | np.ndarray,
         ufunc: np.ufunc,
         method: str,
-        *inputs: Tuple[Any, ...],
-        **kwargs: Dict[str, Any],
-    ) -> Union['Image', Tuple['Image', ...], None]:
+        *inputs: tuple[Any, ...],
+        **kwargs: dict[str, Any],
+    ) -> Image | tuple[Image, ...] | None:
         """Enable Image objects to use NumPy ufuncs.
 
         This method integrates the Image class with NumPy's universal functions 
@@ -1000,18 +1026,18 @@ class Image:
 
         Parameters
         ----------
-        ufunc : np.ufunc
+        ufunc: np.ufunc
             The NumPy ufunc being called.
-        method : str
+        method: str
             The method of the ufunc being called (e.g., "__call__", "reduce").
-        *inputs : Tuple[Any, ...]
+        *inputs: tuple[Any, ...]
             Positional arguments passed to the ufunc.
-        **kwargs : Dict[str, Any]
+        **kwargs: dict[str, Any]
             Keyword arguments passed to the ufunc.
 
         Returns
         -------
-        Image or Tuple[Image, ...] or None]
+        Image | tuple[Image, ...] | None]
             The result of the ufunc applied to the Image object(s). If the
             ufunc returns a tuple, each element is wrapped in an Image. For the
             `at` method, returns `None`.
@@ -1068,6 +1094,7 @@ class Image:
         results = getattr(ufunc, method)(*args, **kwargs)
 
         if type(results) is tuple:
+
             # If the ufunc returns a tuple, return a tuple of Image objects.
             outputs = []
             for result in results:
@@ -1077,21 +1104,23 @@ class Image:
 
             return tuple(outputs)
         elif method == "at":  #TODO: check whether not implemented on purpose?
+
             # Does not have an output.
             return None
         else:
+
             # If the ufunc returns a single value, return an Image object.
             result = Image(results, copy=False)
             result.merge_properties_from(inputs)
             return result
 
     def __array_function__(
-        self: 'Image',
+        self: Image | np.ndarray,
         func: Callable[..., Any],
-        types: Tuple[type, ...],
-        args: Tuple[Any, ...],
-        kwargs: Dict[str, Any],
-    ) -> Union['Image', Tuple['Image', ...], Any]:
+        types: tuple[type, ...],
+        args: tuple[Any, ...],
+        kwargs: dict[str, Any],
+    ) -> Image | tuple[Image, ...] | Any:
         """Handle NumPy functions for Image objects.
 
         This method integrates Image objects with NumPy functions, allowing
@@ -1100,18 +1129,18 @@ class Image:
 
         Parameters
         ----------
-        func : Callable
+        func: Callable
             The NumPy function being called (e.g., `np.mean`, `np.dot`).
-        types : Tuple[type, ...]
+        types: tuple[type, ...]
             The types of the arguments involved in the function.
-        args : Tuple[Any, ...]
+        args: tuple[Any, ...]
             The positional arguments for the function.
-        kwargs : Dict[str, Any]
+        kwargs: dict[str, Any]
             The keyword arguments for the function.
 
         Returns
         -------
-        Union[Image, Tuple[Image, ...], Any]
+        Image | tuple[Image, ...] | Any
             The result of the NumPy function. If the function returns a single
             value, it may be wrapped as an Image object. If it returns a tuple,
             each element is wrapped as an Image. Constants remain unwrapped.
@@ -1185,9 +1214,9 @@ class Image:
             return result
 
     def __array__(
-        self: 'Image',
-        *args: Tuple[Any, ...],
-        **kwargs: Dict[str, Any],
+        self: Image | np.ndarray,
+        *args: tuple[Any, ...],
+        **kwargs: dict[str, Any],
     ) -> np.ndarray:
         """Convert the Image object to a NumPy array.
 
@@ -1201,9 +1230,9 @@ class Image:
 
         Parameters
         ----------
-        *args : Tuple[Any, ...]
+        *args: tuple[Any, ...]
             Positional arguments passed to `numpy.array`.
-        **kwargs : Dict[str, Any]
+        **kwargs: dict[str, Any]
             Keyword arguments passed to `numpy.array`.
 
         Returns
@@ -1232,8 +1261,8 @@ class Image:
         return np.array(self.to_numpy()._value, *args)
 
     def to_cupy(
-        self: 'Image',
-    ) -> 'Image':
+        self: Image | np.ndarray,
+    ) -> Image:
         """Convert the image's underlying value to a CuPy array.
 
         This method converts the `_value` of the `Image` object to a CuPy array 
@@ -1281,8 +1310,8 @@ class Image:
         return self
 
     def to_numpy(
-        self: 'Image',
-    ) -> 'Image':
+        self: Image | np.ndarray,
+    ) -> Image:
         """Convert the image's underlying value to a NumPy array.
 
         This method converts the `_value` of the `Image` object to a NumPy
@@ -1333,7 +1362,7 @@ class Image:
         return self
 
     def __getattr__(
-        self: 'Image',
+        self: Image | np.ndarray,
         key: str,
     ) -> Any:
         """Access attributes of the underlying value.
@@ -1344,7 +1373,7 @@ class Image:
 
         Parameters
         ----------
-        key : str
+        key: str
             The name of the attribute to access.
 
         Returns
@@ -1362,9 +1391,9 @@ class Image:
         return getattr(self._value, key)
 
     def __getitem__(
-        self: 'Image',
-        idx: Union[int, slice, Tuple[Union[int, slice], ...], Any],
-    ) -> Union['Image', int, float, bool, complex, np.ndarray]:
+        self: Image | np.ndarray,
+        idx: int | slice | tuple[int | slice, ...] | Any,
+    ) -> Image | int | float | bool | complex | np.ndarray:
         """Access and return an item or a slice from the Image.
 
         This method allows indexing into the wrapped `_value` of the Image, 
@@ -1374,17 +1403,17 @@ class Image:
 
         Parameters
         ----------
-        idx : int or slice or Tuple[int or slice, ...] or Any
+        idx: int | slice | tuple[int | slice, ...] | Any
             The index or indices used to access elements of the Image.
 
         Returns
         -------
-        Image or int or float or bool or complex or np.ndarray
+        Image | int | float | bool | complex | np.ndarray
             The accessed value, either as an Image (for array-like results) or 
             as a scalar for single-element results.
 
-        Example
-        -------
+        Examples
+        --------
         >>> from deeptrack.image import Image
         
         >>> img = Image(np.array([[1, 2], [3, 4]]))
@@ -1412,9 +1441,9 @@ class Image:
         return out
 
     def __setitem__(
-        self: 'Image',
-        key: Union[int, slice, Tuple[Union[int, slice], ...], List[int]],
-        value: Union[int, slice, Tuple[Union[int, slice], ...], List[int]],
+        self: Image | np.ndarray,
+        key: int | slice | tuple[int | slice, ...] | list[int],
+        value: int | slice | tuple[int | slice, ...] | list[int],
     ) -> None:
         """Assign a value to a specific index or slice of the image.
 
@@ -1424,12 +1453,12 @@ class Image:
 
         Parameters
         ----------
-        key : int or slice or Tuple[int or slice, ...] or List[int]
+        key: int | slice | tuple[int | slice, ...] | list[int]
             The index or slice to update. It can be a single integer to update
             a specific position, a slice to update a range of positions, a
             tuple of integers or slices for multi-dimensional indexing, or a
             list of integers for advanced indexing.
-        value : Image or numpy.ndarray or int or float or bool or complex
+        value: Image | numpy.ndarray | int | float | bool | complex
             The value to assign to the specified index or slice. If `value` is
             an `Image`, its `_value` attribute is extracted before assignment.
             Other types are assigned directly after being stripped if
@@ -1439,8 +1468,8 @@ class Image:
         -------
         None
 
-        Example
-        -------
+        Examples
+        --------
         Assign a scalar to a specific index:
         
         >>> import numpy as np
@@ -1480,7 +1509,7 @@ class Image:
         self.merge_properties_from([key, value])
 
     def __int__(
-        self: 'Image',
+        self: Image,
     )-> int:
         """Convert the Image's value to an integer.
 
@@ -1494,7 +1523,7 @@ class Image:
         return int(self._value)
 
     def __float__(
-        self: 'Image',
+        self: Image | np.ndarray,
     ) -> float:
         """Convert the Image's value to a float.
 
@@ -1508,7 +1537,7 @@ class Image:
         return float(self._value)
 
     def __bool__(
-        self: 'Image',
+        self: Image | np.ndarray,
     ) -> bool:
         """Check if the Image's value is truthy.
 
@@ -1522,14 +1551,14 @@ class Image:
         return bool(self._value)
 
     def __round__(
-        self: 'Image',
+        self: Image | np.ndarray,
         ndigits: int = 0,
     ) -> float:
         """Round the Image's value to a specified number of digits.
 
         Parameters
         ----------
-        ndigits : int, optional
+        ndigits: int, optional
             The number of decimal places to round to (default is 0).
 
         Returns
@@ -1542,7 +1571,7 @@ class Image:
         return round(self._value, ndigits)
 
     def __len__(
-        self: 'Image',
+        self: Image | np.ndarray,
     ) -> int:
         """Return the length of the Image's value.
 
@@ -1556,7 +1585,7 @@ class Image:
         return len(self._value)
 
     def __repr__(
-        self: 'Image',
+        self: Image | np.ndarray,
     ) -> str:
         """Return the string representation of the Image.
 
@@ -1582,12 +1611,14 @@ class Image:
     __sub__, __rsub__, __isub__ = _numeric_methods(ops.sub)
     __mul__, __rmul__, __imul__ = _numeric_methods(ops.mul)
     __matmul__, __rmatmul__, __imatmul__ = _numeric_methods(ops.matmul)
+
     # Python 3 does not use __div__, __rdiv__, or __idiv__
     __truediv__, __rtruediv__, __itruediv__ = _numeric_methods(ops.truediv)
     __floordiv__, __rfloordiv__, __ifloordiv__ = _numeric_methods(ops.floordiv)
     __mod__, __rmod__, __imod__ = _numeric_methods(ops.mod)
     __divmod__ = _binary_method(divmod)
     __rdivmod__ = _reflected_binary_method(divmod)
+
     # __idivmod__ does not exist
     #TODO: handle the optional third argument for __pow__?
     __pow__, __rpow__, __ipow__ = _numeric_methods(ops.pow)
@@ -1605,7 +1636,7 @@ class Image:
 
 
 def strip(
-    element: Union[Image, List, Tuple, Any],
+    element: Image | np.ndarray | list | tuple | Any,
 ) -> Any:
     """Recursively extract the underlying value from an Image object.
 
@@ -1616,7 +1647,7 @@ def strip(
 
     Parameters
     ----------
-    element : Image or List or Tuple or Any
+    element: Image | np.ndarray | list | tuple | Any
         The input to process.
 
     Returns
@@ -1659,8 +1690,8 @@ def strip(
 
 
 def coerce(
-    images: List[Union[Image, np.ndarray]],
-) -> List[Image]:
+    images: list[Image | np.ndarray],
+) -> list[Image]:
     """Coerce a list of images to a consistent type.
 
     This function ensures that all images in the input list are instances of
@@ -1669,18 +1700,18 @@ def coerce(
 
     Parameters
     ----------
-    images : List[Union[Image, np.ndarray]]
+    images: list[Image | np.ndarray]
         A list of images to be coerced. Each image can be an `Image` instance 
         or a NumPy array.
 
     Returns
     -------
-    List[Image]
+    list[Image]
         A list of `Image` instances where all elements are coerced to the same
         type (CuPy if CuPy arrays are present in any image).
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from deeptrack.image import coerce, Image
 
@@ -1701,7 +1732,7 @@ def coerce(
     >>> img3 = Image(cupy.array([7, 8, 9]))
     >>> result = coerce([img1, img3])
     >>> print([type(img._value) for img in result])
-    [<class 'cupy.ndarray'>, <class 'cupy.ndarray'>]
+    [<class cupy.ndarray>, <class cupy.ndarray>]
 
     """
 
@@ -1726,9 +1757,9 @@ _FASTEST_SIZES = np.sort(_FASTEST_SIZES)
 
 
 def pad_image_to_fft(
-    image: Union[Image, np.ndarray],
+    image: Image | np.ndarray | np.ndarray,
     axes: Iterable[int] = (0, 1),
-) -> Union[Image, np.ndarray]:
+) -> Image | np.ndarray:
     """Pads an image to optimize Fast Fourier Transform (FFT) performance.
 
     This function pads an image by adding zeros to the end of specified axes 
@@ -1737,15 +1768,15 @@ def pad_image_to_fft(
 
     Parameters
     ----------
-    image : Image or np.ndarray
+    image: Image | np.ndarray
         The input image to pad. It should be an instance of the `Image` class 
         or any array-like structure compatible with FFT operations.
-    axes : Iterable[int], optional
+    axes: Iterable[int], optional
         The axes along which to apply padding. Defaults to `(0, 1)`.
 
     Returns
     -------
-    Image or np.ndarray
+    Image | np.ndarray
         The padded image with dimensions optimized for FFT performance.
 
     Raises
@@ -1753,8 +1784,8 @@ def pad_image_to_fft(
     ValueError
         If no suitable size is found in `_FASTEST_SIZES` for any axis length.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from deeptrack.image import Image, pad_image_to_fft
     
@@ -1777,6 +1808,7 @@ def pad_image_to_fft(
     def _closest(
         dim: int,
     ) -> int:
+
         # Returns the smallest value frin _FASTEST_SIZES larger than dim.
         for size in _FASTEST_SIZES:
             if size >= dim:
@@ -1801,8 +1833,8 @@ def pad_image_to_fft(
 
 
 def maybe_cupy(
-    array: Union[np.ndarray, List, Tuple],
-) -> Union['cupy.ndarray', np.ndarray]:
+    array: np.ndarray | list | tuple,
+) -> cupy.ndarray | np.ndarray:
     """Convert an array to a CuPy array if GPU is available and enabled.
 
     This function checks if GPU computation is enabled in the configuration. 
@@ -1814,12 +1846,12 @@ def maybe_cupy(
 
     Parameters
     ----------
-    array : np.ndarray or List or Tuple
+    array: np.ndarray | list | tuple
         The input array to be potentially converted to a CuPy array.
 
     Returns
     -------
-    cupy.ndarray or np.ndarray
+    cupy.ndarray | np.ndarray
         A CuPy array if GPU is enabled, otherwise the original array.
 
     Raises
@@ -1827,8 +1859,8 @@ def maybe_cupy(
     ImportError
         If GPU is enabled but the `cupy` library is not installed.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from deeptrack.image import maybe_cupy
 
@@ -1837,7 +1869,7 @@ def maybe_cupy(
     >>> array = np.array([1, 2, 3])
     >>> gpu_array = maybe_cupy(array)
     >>> type(gpu_array)
-    <class 'cupy.ndarray'>
+    <class cupy.ndarray>
 
     If GPU is not enabled:
     
@@ -1847,9 +1879,7 @@ def maybe_cupy(
     <class 'numpy.ndarray'>
 
     """
-
-    from . import config
-
+    from deeptrack.backend import config
     if config.gpu_enabled:
         return cupy.array(array)
 
