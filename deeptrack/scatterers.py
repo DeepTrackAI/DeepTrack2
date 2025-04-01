@@ -902,6 +902,22 @@ class MieScatterer(Scatterer):
         output_region: ArrayLike[int],
         padding: ArrayLike[int]
     ) -> ArrayLike[int]:
+        """Computes the x and y dimensions of the output region with padding.
+
+        Parameters
+        ----------
+        output_region: ArrayLike[int]
+            The coordinates defining the output region.
+
+        padding: ArrayLike[int]
+            The padding applied in each direction.
+
+        Returns
+        -------
+        ArrayLike[int]
+            The total size in x and y directions.
+
+        """
         return (
             output_region[2] - output_region[0] + padding[0] + padding[2],
             output_region[3] - output_region[1] + padding[1] + padding[3],
@@ -912,6 +928,22 @@ class MieScatterer(Scatterer):
         shape: ArrayLike[float],
         voxel_size: ArrayLike[float]
     ) -> ArrayLike[int] :
+        """Generates meshgrid for X and Y given the shape and voxel size.
+
+        Parameters
+        ----------
+        shape: ArrayLike[float]
+            The dimensions of the output region.
+
+        voxel_size: ArrayLike[float]
+            The size of each voxel in meters.
+
+        Returns
+        -------
+        ArrayLike[int]
+            The meshgrid of X and Y coordinates.
+
+        """
         x = np.arange(shape[0]) - shape[0] / 2
         y = np.arange(shape[1]) - shape[1] / 2
         return np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
@@ -922,6 +954,26 @@ class MieScatterer(Scatterer):
         Y: float,
         radius: float
     ) -> ArrayLike[bool]:
+        """Creates a mask based on a circular aperture.
+
+        Parameters
+        ----------
+        X: float
+            X-coordinates of the field.
+
+        Y: float
+            Y-coordinates of the field.
+
+        radius: float
+            The radius of the detector aperture.
+
+        Returns
+        -------
+        ArrayLike[bool]
+            A boolean mask.
+
+        """
+
         return np.sqrt(X ** 2 + Y ** 2) < radius
 
     def get_plane_in_polar_coords(
@@ -931,6 +983,7 @@ class MieScatterer(Scatterer):
         plane_position: float,
         illumination_angle: float
     ) -> tuple[float, float, float, float]:
+        """Computes the coordinates of the plane in polar form."""
 
         X, Y = self.get_XY(shape, voxel_size)
         X = maybe_cupy(X)
@@ -979,6 +1032,7 @@ class MieScatterer(Scatterer):
         **kwargs,
     ) -> ArrayLike[float]:
         """Abstract method to initialize the Mie scatterer"""
+        
         # Get size of the output.
         xSize, ySize = self.get_xy_size(output_region, padding)
         voxel_size = get_active_voxel_size()
