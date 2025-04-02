@@ -110,7 +110,7 @@ class TestMath(unittest.TestCase):
                 output_image, expected_output, rtol=1e-5, atol=1e-6,
             )
         )
-        
+    
     @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_BilateralBlur(self):
         input_image = np.random.rand(32, 32).astype(np.float32)

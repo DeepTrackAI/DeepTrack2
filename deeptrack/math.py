@@ -186,7 +186,6 @@ class Average(Feature):
     ) -> np.ndarray:
         """Computes the average of input images along the specified axis.
 
-
         This method computes the average of the input images along the 
         specified axis.
 
