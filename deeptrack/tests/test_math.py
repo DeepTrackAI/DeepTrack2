@@ -104,12 +104,12 @@ class TestMath(unittest.TestCase):
         pooled = feature.resolve(input_image)
         self.assertEqual(pooled.shape, (1, 2))
 
+    @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_Resize(self):
         input_image = np.random.rand(16, 16)
         feature = math.Resize(dsize=(8, 8))
         resized = feature.resolve(input_image)
         self.assertEqual(resized.shape, (8, 8))
-
 
     @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_BlurCV2_GaussianBlur(self):
