@@ -86,6 +86,31 @@ class TestMath(unittest.TestCase):
         pooled_image = feature.resolve(input_image)
         self.assertTrue(np.all(pooled_image == [[1, 3]]))
 
+    def test_NormalizeQuantile(self):
+        input_image = np.array([[1, 2], [3, 100]], dtype=float)
+        feature = math.NormalizeQuantile(quantiles=(0.25, 0.75))
+        output = feature.resolve(input_image)
+        self.assertAlmostEqual(np.median(output), 0, places=5)
+
+    def test_MedianBlur(self):
+        input_image = np.random.rand(32, 32)
+        feature = math.MedianBlur(ksize=3)
+        output = feature.resolve(input_image)
+        self.assertEqual(output.shape, input_image.shape)
+
+    def test_MedianPooling(self):
+        input_image = np.array([[1, 3, 2, 4], [5, 7, 6, 8]], dtype=float)
+        feature = math.MedianPooling(ksize=2)
+        pooled = feature.resolve(input_image)
+        self.assertEqual(pooled.shape, (1, 2))
+
+    def test_Resize(self):
+        input_image = np.random.rand(16, 16)
+        feature = math.Resize(dsize=(8, 8))
+        resized = feature.resolve(input_image)
+        self.assertEqual(resized.shape, (8, 8))
+
+
     @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_BlurCV2_GaussianBlur(self):
         input_image = np.random.rand(32, 32).astype(np.float32)
