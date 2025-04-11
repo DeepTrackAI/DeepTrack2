@@ -150,7 +150,7 @@ from deeptrack.backend._config import cupy
 from scipy.ndimage import convolve
 import warnings
 
-from deeptrack.backend import units as u
+from . import units as u
 from deeptrack.backend import config
 from deeptrack import image
 
