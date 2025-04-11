@@ -131,9 +131,9 @@ Simulating an image with the `Fluorescence` class:
 >>> image.plot(cmap="gray")
 
 """
-
+from __future__ import annotations
 from pint import Quantity
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple
 from deeptrack.backend.units import (
     ConversionTable,
     create_context,
@@ -143,15 +143,15 @@ from deeptrack.backend.units import (
 from deeptrack.math import AveragePooling
 from deeptrack.features import propagate_data_to_dependencies
 import numpy as np
-from .features import DummyFeature, Feature, StructuralFeature
-from .image import Image, pad_image_to_fft, maybe_cupy
-from .types import ArrayLike, PropertyLike
-from .backend._config import cupy
+from deeptrack.features import DummyFeature, Feature, StructuralFeature
+from deeptrack.image import Image, pad_image_to_fft, maybe_cupy
+from deeptrack.types import ArrayLike, PropertyLike
+from deeptrack.backend._config import cupy
 from scipy.ndimage import convolve
 import warnings
 
-from . import units as u
-from .backend import config
+from deeptrack.backend import units as u
+from deeptrack.backend import config
 from deeptrack import image
 
 
@@ -203,7 +203,7 @@ class Microscope(StructuralFeature):
     __distributed__ = False
 
     def __init__(
-        self:  'Microscope',
+        self:  Microscope,
         sample: Feature,
         objective: Feature,
         **kwargs: Dict[str, Any],
@@ -235,8 +235,8 @@ class Microscope(StructuralFeature):
         self._sample.store_properties()
 
     def get(
-        self: 'Microscope',
-        image: Union[Image, None],
+        self: Microscope,
+        image: Image | None,
         **kwargs:  Dict[str, Any],
     ) -> Image:
         """Generate an image of the sample using the defined optical system.
@@ -246,7 +246,7 @@ class Microscope(StructuralFeature):
 
         Parameters
         ----------
-        image: Union[Image, None]
+        image: Image | None
             The input image to be processed. If None, a new image is created.
         **kwargs: Dict[str, Any]
             Additional parameters for the imaging process.
@@ -480,11 +480,11 @@ class Optics(Feature):
     )
 
     def __init__(
-        self:  'Optics',
+        self: Optics,
         NA: PropertyLike[float] = 0.7,
         wavelength: PropertyLike[float] = 0.66e-6,
         magnification: PropertyLike[float] = 10,
-        resolution: PropertyLike[Union[float, ArrayLike[float]]] = 1e-6,
+        resolution: PropertyLike[float | ArrayLike[float]] = 1e-6,
         refractive_index_medium: PropertyLike[float] = 1.33,
         padding: PropertyLike[ArrayLike[int]] = (10, 10, 10, 10),
         output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
@@ -563,7 +563,7 @@ class Optics(Feature):
         """
 
         def get_voxel_size(
-            resolution: Union[float, ArrayLike[float]], 
+            resolution: float | ArrayLike[float], 
             magnification: float,
         ) -> ArrayLike[float]:
             """ Calculate the voxel size.
@@ -587,7 +587,7 @@ class Optics(Feature):
             return np.ones((3,)) * props["resolution"] / props["magnification"]
 
         def get_pixel_size(
-            resolution: Union[float, ArrayLike[float]],
+            resolution: float | ArrayLike[float],
             magnification: float,
         ) -> float:
             """ Calculate the pixel size.
@@ -641,8 +641,8 @@ class Optics(Feature):
         )
 
     def _process_properties(
-        self:   'Optics',
-        propertydict:   Dict[str, Any],
+        self: Optics,
+        propertydict: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Processes and validates the input properties.
 
@@ -681,13 +681,13 @@ class Optics(Feature):
         return propertydict
 
     def _pupil(
-        self:  'Optics',
+        self: Optics,
         shape: ArrayLike[int],
         NA: float,
         wavelength: float,
         refractive_index_medium: float,
         include_aberration: bool = True,   
-        defocus: Union[float, ArrayLike[float]] = 0,
+        defocus: float | ArrayLike[float] = 0,
         **kwargs: Dict[str, Any],
     ):
         """Calculates the pupil function at different focal points.
@@ -787,7 +787,7 @@ class Optics(Feature):
         return pupil_functions
 
     def _pad_volume(
-        self:   'Optics',
+        self: Optics,
         volume: ArrayLike[complex],
         limits: ArrayLike[int] = None,
         padding: ArrayLike[int] = None,
@@ -884,7 +884,7 @@ class Optics(Feature):
         return new_volume, new_limits
 
     def __call__(
-        self:  'Optics',
+        self: Optics,
         sample: Feature,
         **kwargs: Dict[str, Any],
     ) -> Microscope:
@@ -1013,7 +1013,7 @@ class Fluorescence(Optics):
     __gpu_compatible__ = True
 
     def get(
-        self:  'Fluorescence', 
+        self:  Fluorescence, 
         illuminated_volume: ArrayLike[complex], 
         limits: ArrayLike[int], 
         **kwargs: Dict[str, Any]
@@ -1246,7 +1246,7 @@ class Brightfield(Optics):
     )
 
     def get(
-        self:  'Brightfield',
+        self: Brightfield,
         illuminated_volume: ArrayLike[complex],
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
@@ -1504,7 +1504,7 @@ class ISCAT(Brightfield):
     """
 
     def __init__(
-        self:  'ISCAT',
+        self:  ISCAT,
         illumination_angle: float = np.pi,
         amp_factor: float = 1, 
         **kwargs: Dict[str, Any],
@@ -1592,7 +1592,7 @@ class Darkfield(Brightfield):
     """
 
     def __init__(
-        self: 'Darkfield', 
+        self: Darkfield, 
         illumination_angle: float = np.pi/2, 
         **kwargs: Dict[str, Any]
     ) -> None:
@@ -1613,7 +1613,7 @@ class Darkfield(Brightfield):
 
     #Retrieve get as super
     def get(
-        self: 'Darkfield',
+        self: Darkfield,
         illuminated_volume: ArrayLike[complex],
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
@@ -1693,7 +1693,7 @@ class IlluminationGradient(Feature):
     """
 
     def __init__(
-        self: 'IlluminationGradient',
+        self: IlluminationGradient,
         gradient: PropertyLike[ArrayLike[float]] = (0, 0),
         constant: PropertyLike[float] = 0,
         vmin: PropertyLike[float] = 0,
@@ -1725,7 +1725,7 @@ class IlluminationGradient(Feature):
         )
 
     def get(
-        self: 'IlluminationGradient',
+        self: IlluminationGradient,
         image: ArrayLike[complex],
         gradient: ArrayLike[float],
         constant: float,
@@ -1787,7 +1787,7 @@ class IlluminationGradient(Feature):
 
 
 def _get_position(
-    image:  Image,
+    image: Image,
     mode: str = "corner",
     return_z: bool = False,
 ) -> np.ndarray:
