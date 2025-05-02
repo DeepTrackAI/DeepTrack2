@@ -915,7 +915,15 @@ class Optics(Feature):
         True
 
         """
-        
+        from deeptrack.scatterers import MieScatterer
+        if isinstance(self, (Darkfield, ISCAT, Holography)) and not isinstance(sample, MieScatterer):
+            warnings.warn(
+                f"{type(self).__name__} optics must be used with Mie scatterers "
+                f"to produce a {type(self).__name__} image. "
+                f"Got sample of type {type(sample).__name__}.",
+                UserWarning
+            )
+
         return Microscope(sample, self, **kwargs)
 
     # def _no_wrap_format_input(self, *args, **kwargs) -> list:
