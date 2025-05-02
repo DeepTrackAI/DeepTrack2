@@ -915,7 +915,8 @@ class Optics(Feature):
         True
 
         """
-        from deeptrack.scatterers import MieScatterer
+        from deeptrack.scatterers import MieScatterer # Temporary place for this import.
+
         if isinstance(self, (Darkfield, ISCAT, Holography)) and not isinstance(sample, MieScatterer):
             warnings.warn(
                 f"{type(self).__name__} optics must be used with Mie scatterers "
