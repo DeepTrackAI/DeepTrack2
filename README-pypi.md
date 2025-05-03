@@ -63,7 +63,15 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 - DTGS121 **[Tracking a Point Particle with a CNN](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS121_tracking_particle_cnn.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS121_tracking_particle_cnn.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-  Tracking a point particle with a convolutional neural network (CNN) using simulated images in the training process.
+  Tracking a point particle with a convolutional neural network (CNN) using simulated particles resolved through a microscope with aberrations.
+  
+- DTGS126 **[Characterizing aberrations with a CNN](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS126_characterizing_aberrations_cnn.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS126_characterizing_aberrations_cnn.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Characterizing spherical aberrations of an optical device with a convolutional neural network (CNN) using simulated images in the training process.
+
+- DTGS127 **[Characterizing aberrations with Optuna](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS127_characterizing_aberrations_optuna.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS127_characterizing_aberrations_optuna.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Characterizing aberrations of an optical device with the optimization framework [`Optuna`](https://optuna.org/).
 
 - DTGS131 **[Tracking Multiple Particles with a U-Net](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS131_tracking_multiple_particles_unet.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS131_tracking_multiple_particles_unet.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
