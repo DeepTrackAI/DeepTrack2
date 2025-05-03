@@ -61,6 +61,10 @@ Here you find a series of notebooks that give you an overview of the core featur
 
   Overview of how to use DeepTrack 2. Creating images combining DeepTrack2 features, extracting properties, and using them to train a neural network.
 
+- DTGS106 **[Simulating Different Image Modalities](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS106_particle_image_modalities.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS106_particle_image_modalities.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Simulating a spherical particle with different image modalities and generating a movie where this particle diffuses with passive Brownian motion.
+
 - DTGS111 **[Loading Image Files Using Sources](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS111_datafiles.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS111_datafiles.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Using sources to load image files and to train a neural network.
@@ -69,11 +73,11 @@ Here you find a series of notebooks that give you an overview of the core featur
 
   Tracking a point particle with a convolutional neural network (CNN) using simulated particles resolved through a microscope with aberrations.
   
-- DTGS126 **[Characterizing aberrations with a CNN](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS126_characterizing_aberrations_cnn.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS126_characterizing_aberrations_cnn.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS126 **[Characterizing Aberrations with a CNN](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS126_characterizing_aberrations_cnn.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS126_characterizing_aberrations_cnn.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Characterizing spherical aberrations of an optical device with a convolutional neural network (CNN) using simulated images in the training process.
 
-- DTGS127 **[Characterizing aberrations with Optuna](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS127_characterizing_aberrations_optuna.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS127_characterizing_aberrations_optuna.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS127 **[Characterizing Aberrations with Optuna](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS127_characterizing_aberrations_optuna.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS127_characterizing_aberrations_optuna.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Characterizing aberrations of an optical device with the optimization framework [`Optuna`](https://optuna.org/).
 
