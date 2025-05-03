@@ -1,8 +1,18 @@
 __all__ = ["config", "cupy", "CUPY_AVAILABLE"]
 
+import importlib
 import warnings
-import numpy as cupy
+import numpy as np
+import array_api_compat as apc
+from array_api_compat import numpy as apcnumpy
+import array
+
+import types, sys, numpy as _np, torch as _torch
 from typing import *
+import array_api_strict
+
+# TODO: remove the need for this (errors when removed)
+cupy = np
 
 CUPY_AVAILABLE = True
 try:
@@ -11,13 +21,51 @@ except ImportError:
     CUPY_AVAILABLE = False
 
 
+class _Proxy(types.ModuleType):
+    """"""
+
+    def __init__(self, name: str):
+        self._backend = apcnumpy
+        self.__name__ = name
+
+    def __getattr__(self, name):
+        return getattr(self._backend, name)
+
+    def __dir__(self):
+        return dir(self._backend)
+
+
+# TODO: once intersection types are available, use them here
+xp: array_api_strict = _Proxy(__name__ + ".xp")  # module instance
+sys.modules[xp.__name__] = xp  # register
+
+
+class NullContext:
+    """A context manager that does nothing.
+
+    Used when no context is needed, but the output expects
+    a context manager."""
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, *args):
+        pass
+
+
+class ImageWrapperContext:
+    def __enter__(_):
+        self.enable_image_wrapper()
+
+    def __exit__(_, *args):
+        self.disable_image_wrapper()
+
 
 class Config:
 
     @property
     def gpu_enabled(self):
         return self.device == "gpu"
-    
 
     def __init__(self):
         self.set_device("cpu")
@@ -25,14 +73,22 @@ class Config:
         self.disable_image_wrapper()
 
     def enable_gpu(self):
-        warnings.warn("(enable/disable)_gpu is deprecated. Use set_device instead", DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "(enable/disable)_gpu is deprecated. Use set_device instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if CUPY_AVAILABLE:
             self.device = "gpu"
         else:
             warnings.warn("cupy not installed, CPU acceleration not enabled")
 
     def disable_gpu(self):
-        warnings.warn("(enable/disable)_gpu is deprecated. Use set_device instead", DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "(enable/disable)_gpu is deprecated. Use set_device instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.device = "cpu"
 
     def set_device(self, device):
@@ -40,22 +96,26 @@ class Config:
 
     def get_device(self):
         return self.device
-    
+
     def set_backend_numpy(self):
         self.set_backend("numpy")
-    
+        xp._backend = importlib.import_module("array_api_compat.numpy")
+
     def set_backend_cupy(self):
         self.set_backend("cupy")
+        xp._backend = importlib.import_module("array_api_compat.cupy")
 
     def set_backend_torch(self):
         self.set_backend("torch")
+        xp._backend = importlib.import_module("array_api_compat.torch")
 
     def set_backend(self, backend: Literal["numpy", "cupy", "torch"]):
         self.backend = backend
+        xp._backend = importlib.import_module(f"array_api_compat.{backend}")
 
     def get_backend(self):
         return self.backend
-    
+
     def disable_image_wrapper(self):
         self.image_wrapper = False
 
@@ -63,19 +123,20 @@ class Config:
         self.image_wrapper = True
 
     def wrapper_enabled_context(self):
-        class NullContext:
-            def __enter__(self):
-                pass
-            def __exit__(self, *args):
-                pass
 
-        class ImageWrapperContext:
-            def __enter__(_):
-                self.enable_image_wrapper()
-            def __exit__(_, *args):
-                self.disable_image_wrapper()
-        
         return ImageWrapperContext() if not self.image_wrapper else NullContext()
-        
+
+    def with_backend(self, backend: Literal["numpy", "cupy", "torch"]):
+        current_backend = self.backend
+        if current_backend == backend:
+            return NullContext()
+
+        class BackendContext:
+            def __enter__(_):
+                self.set_backend(backend)
+
+            def __exit__(_, *args):
+                self.set_backend_numpy()
+
 
 config = Config()
