@@ -353,7 +353,8 @@ class Feature(DeepTrackNode):
             If not provided, defaults to an empty list.
         
         """
-
+        # store backend on initialization
+        self._backend = config.get_backend()
         super().__init__()
 
         # Ensure the feature has a 'name' property; default = class name.
