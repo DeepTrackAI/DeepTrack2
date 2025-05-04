@@ -521,46 +521,57 @@ class Feature(DeepTrackNode):
                     dependency.store_properties(toggle, recursive=False)
 
     def torch(
-        self: Feature, 
-        dtype: torch.dtype = None, 
+        self: Feature,
         device: torch.device = None,
-        permute_mode: str = "never",
-    ) -> 'Feature':
-        """Convert the feature to a PyTorch feature.
+        recursive: bool = True,
+    ) -> "Feature":
+        """Set the backend to torch.
 
         Parameters
         ----------
-        dtype: torch.dtype, optional
-            The data type of the output.
         device: torch.device, optional
-            The target device of the output (e.g., CPU or GPU).
-        permute_mode: str
-            Controls whether to permute image axes for PyTorch. 
-            Defaults to "never".
+            The target device of the output (e.g., cpu or cuda).
+        recursive: bool, optional
+            If `True`, also convert all dependent features.
 
         Returns
         -------
         Feature
-            The transformed, PyTorch-compatible feature.
+            self
 
         """
+        self._backend = "torch"
+        if recursive:
+            for dependency in self.recurse_dependencies():
+                if isinstance(dependency, Feature):
+                    dependency.torch(device, recursive=False)
 
-        from deeptrack.pytorch.features import ToTensor
+        self.invalidate()
+        return self
 
-        tensor_feature = ToTensor(
-            dtype=dtype, 
-            device=device, 
-            permute_mode=permute_mode,
-        )
-        
-        tensor_feature.store_properties(False, recursive=False)
-        
-        return self >> tensor_feature
+    def numpy(self: Feature, recursive: bool = True) -> "Feature":
+        """Set the backend to numpy.
 
-    def batch(
-        self: Feature,
-        batch_size: int = 32
-    ) -> tuple | list[Image]:
+        Parameters
+        ----------
+        recursive: bool, optional
+            If `True`, also convert all dependent features.
+
+        Returns
+        -------
+        Feature
+            self
+
+        """
+        self._backend = "numpy"
+        if recursive:
+            for dependency in self.recurse_dependencies():
+                if isinstance(dependency, Feature):
+                    dependency.numpy(recursive=False)
+        self.invalidate()
+        return self
+
+    def batch(self: Feature, batch_size: int = 32) -> tuple | list[Image]:
         """Batch the feature.
 
         This method produces a batch of outputs by repeatedly calling 
