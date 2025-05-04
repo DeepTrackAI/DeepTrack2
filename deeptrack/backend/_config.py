@@ -138,5 +138,7 @@ class Config:
             def __exit__(_, *args):
                 self.set_backend_numpy()
 
+        return BackendContext()
+
 
 config = Config()
