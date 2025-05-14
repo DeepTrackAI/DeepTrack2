@@ -497,24 +497,28 @@ class Feature(DeepTrackNode):
             feature: Feature,
             **kwargs
     ) -> Feature:
-        
         """Converts a feature to be resolved as a sequence.
 
         Should be called on individual features, not combinations of features. All
-        keyword arguments will be trated as sequential properties and will be
+        keyword arguments will be treated as sequential properties and will be
         passed to the parent feature.
 
         If a property from the keyword argument already exists on the feature, the
-        existing property will be used to initilize the passed property (that is,
+        existing property will be used to initialize the passed property (that is,
         it will be used for the first timestep).
 
         Parameters
         ----------
-        feature : Feature
+        feature: Feature
             Feature to make sequential.
         kwargs
             Keyword arguments to pass on as sequential properties of `feature`.
-
+            
+        Returns
+        -------
+        Feature
+            The input feature evolved as a sequence
+            
         """
 
         for property_name in kwargs.keys():
