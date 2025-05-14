@@ -530,7 +530,7 @@ class SequentialProperty(Property):
     def __init__(
         self,
         initialization: Optional[Any] = None,
-        current_value: optional[Any] = None,
+        current_value: Optional[Any] = None,
         **kwargs: Dict[str, 'Property'],
     ):
         """Create a SequentialProperty with optional initialization.
