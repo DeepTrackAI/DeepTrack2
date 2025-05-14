@@ -530,6 +530,7 @@ class SequentialProperty(Property):
     def __init__(
         self,
         initialization: Optional[Any] = None,
+        current_value: optional[Any] = None,
         **kwargs: Dict[str, 'Property'],
     ):
         """Create a SequentialProperty with optional initialization.
@@ -586,7 +587,10 @@ class SequentialProperty(Property):
             self.initialization = None
 
         # 6) Define a default current function for steps >= 1.
-        self.current = lambda _ID=(): None
+        if current_value is not None:
+            self.current = self.create_action(current_value,**kwargs)
+        else:
+            self.current = lambda _ID=(): None
 
         # 7) Override the default action with our custom logic.
         self.action = self._action_override
@@ -682,3 +686,25 @@ class SequentialProperty(Property):
         """
 
         return super().__call__(_ID=_ID)
+        
+    def set_sequence_length(
+        self,
+        value: Any,
+        _ID: Tuple[int, ...] = ()
+    ) -> None:
+        """Sets the length of sequence to be resolved.
+        ...
+        
+        """
+        self.sequence_length = Property(value, _ID=_ID)
+
+
+    def set_current_step(
+            self,
+            value:Any,
+            _ID: Tuple[int, ...] = ()
+    ) -> None:
+        """Sets the current index of the sequence.
+    
+        """
+        self.sequence_step = Property(value, _ID=_ID)

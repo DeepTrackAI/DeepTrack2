@@ -69,7 +69,7 @@ class Sequence(Feature):
         return outputs
 
 
-def Sequential(feature: Feature, **kwargs):
+def Sequential(feature: Feature, **kwargs): #TBE, Replaced by Feature.to_sequential()
     """Converts a feature to be resolved as a sequence.
 
     Should be called on individual features, not combinations of features. All
