@@ -81,7 +81,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import numpy as np
 
 from .utils import get_kwarg_names
-from .backend.core import DeepTrackNode
+from deeptrack.backend.core import DeepTrackNode
 
 
 class Property(DeepTrackNode):
@@ -588,7 +588,7 @@ class SequentialProperty(Property):
 
         # 6) Define a default current function for steps >= 1.
         if current_value is not None:
-            self.current = self.create_action(current_value,**kwargs)
+            self.current = self.create_action(current_value, **kwargs)
         else:
             self.current = lambda _ID=(): None
 
@@ -692,19 +692,48 @@ class SequentialProperty(Property):
         value: Any,
         _ID: Tuple[int, ...] = ()
     ) -> None:
-        """Sets the length of sequence to be resolved.
-        ...
-        
-        """
-        self.sequence_length = Property(value, _ID=_ID)
+        """Sets the `sequence_length` attribute of a sequence to be resolved.
 
+        Supports dependencies if `value` is a `Property`.
+
+        Parameters
+        ----------
+        value : Any
+            The value to store in `sequence_length`.
+        _ID : Tuple[int, ...], optional
+            A unique identifier that allows the property to keep separate 
+            histories for different parallel evaluations.
+
+        """
+
+        if isinstance(value, Property):
+            self.sequence_length = Property(lambda _ID: value(_ID))
+            self.sequence_length.add_dependency(value)
+        else: 
+            self.sequence_length = Property(value, _ID=_ID)
 
     def set_current_step(
-            self,
-            value:Any,
-            _ID: Tuple[int, ...] = ()
+        self,
+        value: Any,
+        _ID: Tuple[int, ...] = ()
     ) -> None:
-        """Sets the current index of the sequence.
+        """Sets the `current_index` attribute of a sequence to be resolved.
+
+        Supports dependencies if `value` is a `Property`.
+
+        Parameters
+        ----------
+        value : Any
+            The value to store in `current_step`.
+
+        _ID : Tuple[int, ...], optional
+            A unique identifier that allows the property to keep separate 
+            histories for different parallel evaluations.
     
         """
-        self.sequence_step = Property(value, _ID=_ID)
+
+        if isinstance(value, Property): # For dependencies.
+            self.sequence_step = Property(lambda _ID: value(_ID))
+            self.sequence_step.add_dependency(value)
+        else:
+            self.sequence_step = Property(value, _ID=_ID)
