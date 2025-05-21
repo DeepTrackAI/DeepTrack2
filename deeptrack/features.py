@@ -353,7 +353,8 @@ class Feature(DeepTrackNode):
             If not provided, defaults to an empty list.
         
         """
-
+        # store backend on initialization
+        self._backend = config.get_backend()
         super().__init__()
 
         # Ensure the feature has a 'name' property; default = class name.
@@ -448,45 +449,45 @@ class Feature(DeepTrackNode):
             The output of the feature or pipeline after execution.
         
         """
+        with config.with_backend(self._backend):
+            # If image_list is as Source, activate it.
+            self._activate_sources(image_list)
 
-        # If image_list is as Source, activate it.
-        self._activate_sources(image_list)
+            # Potentially fragile. Maybe a special variable dt._last_input instead?
+            # If the input is not empty, set the value of the input.
+            if (
+                image_list is not None
+                and not (isinstance(image_list, list) and len(image_list) == 0)
+                and not (isinstance(image_list, tuple)
+                        and any(isinstance(x, SourceItem) for x in image_list))
+            ):
+                self._input.set_value(image_list, _ID=_ID)
 
-        # Potentially fragile. Maybe a special variable dt._last_input instead?
-        # If the input is not empty, set the value of the input.
-        if (
-            image_list is not None
-            and not (isinstance(image_list, list) and len(image_list) == 0)
-            and not (isinstance(image_list, tuple)
-                     and any(isinstance(x, SourceItem) for x in image_list))
-        ):
-            self._input.set_value(image_list, _ID=_ID)
+            # A dict to store the values of self.arguments before updating them.
+            original_values = {}
 
-        # A dict to store the values of self.arguments before updating them.
-        original_values = {}
+            # If there are no self.arguments, instead propagate the values of the
+            # kwargs to all properties in the computation graph.
+            if kwargs and self.arguments is None:
+                propagate_data_to_dependencies(self, **kwargs)
 
-        # If there are no self.arguments, instead propagate the values of the
-        # kwargs to all properties in the computation graph.
-        if kwargs and self.arguments is None:
-            propagate_data_to_dependencies(self, **kwargs)
+            # If there are self.arguments, update the values of self.arguments to 
+            # match kwargs.
+            if isinstance(self.arguments, Feature):
+                for key, value in kwargs.items():
+                    if key in self.arguments.properties:
+                        original_values[key] = \
+                            self.arguments.properties[key](_ID=_ID)
+                        self.arguments.properties[key].set_value(value, _ID=_ID)
 
-        # If there are self.arguments, update the values of self.arguments to 
-        # match kwargs.
-        if isinstance(self.arguments, Feature):
-            for key, value in kwargs.items():
-                if key in self.arguments.properties:
-                    original_values[key] = \
-                        self.arguments.properties[key](_ID=_ID)
-                    self.arguments.properties[key].set_value(value, _ID=_ID)
+            # This executes the feature. DeepTrackNode will determine if it needs
+            # to be recalculated. If it does, it will call the `action` method.
+            output = super().__call__(_ID=_ID)
 
-        # This executes the feature. DeepTrackNode will determine if it needs
-        # to be recalculated. If it does, it will call the `action` method.
-        output = super().__call__(_ID=_ID)
-
-        # If there are self.arguments, reset the values of self.arguments to
-        # their original values.
-        for key, value in original_values.items():
-            self.arguments.properties[key].set_value(value, _ID=_ID)
+            # If there are self.arguments, reset the values of self.arguments to
+            # their original values.
+            for key, value in original_values.items():
+                self.arguments.properties[key].set_value(value, _ID=_ID)
 
         return output
 
@@ -521,46 +522,57 @@ class Feature(DeepTrackNode):
                     dependency.store_properties(toggle, recursive=False)
 
     def torch(
-        self: Feature, 
-        dtype: torch.dtype = None, 
+        self: Feature,
         device: torch.device = None,
-        permute_mode: str = "never",
-    ) -> 'Feature':
-        """Convert the feature to a PyTorch feature.
+        recursive: bool = True,
+    ) -> "Feature":
+        """Set the backend to torch.
 
         Parameters
         ----------
-        dtype: torch.dtype, optional
-            The data type of the output.
         device: torch.device, optional
-            The target device of the output (e.g., CPU or GPU).
-        permute_mode: str
-            Controls whether to permute image axes for PyTorch. 
-            Defaults to "never".
+            The target device of the output (e.g., cpu or cuda).
+        recursive: bool, optional
+            If `True`, also convert all dependent features.
 
         Returns
         -------
         Feature
-            The transformed, PyTorch-compatible feature.
+            self
 
         """
+        self._backend = "torch"
+        if recursive:
+            for dependency in self.recurse_dependencies():
+                if isinstance(dependency, Feature):
+                    dependency.torch(device, recursive=False)
 
-        from deeptrack.pytorch.features import ToTensor
+        self.invalidate()
+        return self
 
-        tensor_feature = ToTensor(
-            dtype=dtype, 
-            device=device, 
-            permute_mode=permute_mode,
-        )
-        
-        tensor_feature.store_properties(False, recursive=False)
-        
-        return self >> tensor_feature
+    def numpy(self: Feature, recursive: bool = True) -> "Feature":
+        """Set the backend to numpy.
 
-    def batch(
-        self: Feature,
-        batch_size: int = 32
-    ) -> tuple | list[Image]:
+        Parameters
+        ----------
+        recursive: bool, optional
+            If `True`, also convert all dependent features.
+
+        Returns
+        -------
+        Feature
+            self
+
+        """
+        self._backend = "numpy"
+        if recursive:
+            for dependency in self.recurse_dependencies():
+                if isinstance(dependency, Feature):
+                    dependency.numpy(recursive=False)
+        self.invalidate()
+        return self
+
+    def batch(self: Feature, batch_size: int = 32) -> tuple | list[Image]:
         """Batch the feature.
 
         This method produces a batch of outputs by repeatedly calling 
