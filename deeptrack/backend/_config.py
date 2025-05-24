@@ -3,13 +3,17 @@ from __future__ import annotations
 import importlib
 import sys
 import types
-from typing import Any, Literal
+from typing import Any, Literal, TYPE_CHECKING
 
 from array_api_compat import numpy as apcnumpy
 import array_api_strict
 
 
 __all__ = ["config"]
+
+
+if TYPE_CHECKING:
+    import torch
 
 
 class _Proxy(types.ModuleType):
@@ -24,14 +28,14 @@ class _Proxy(types.ModuleType):
 
     Parameters
     ----------
-    name : str
+    name: str
         Name of the proxy object. This is used when printing the object.
 
     Attributes
     ----------
-    _backend : backend module
+    _backend: backend module
         The actual backend module.
-    __name__ : str
+    __name__: str
         The name of the proxy object.
 
     """
@@ -44,7 +48,7 @@ class _Proxy(types.ModuleType):
 
         Parameters
         ----------
-        name : str
+        name: str
             Name of the proxy object. This is used when printing the object.
 
         """
@@ -57,7 +61,7 @@ class _Proxy(types.ModuleType):
 
         Parameters
         ----------
-        attribute : str
+        attribute: str
             The attribute name to retrieve from the backend.
 
         Returns
@@ -136,29 +140,33 @@ class Config:
         self.set_backend_numpy()
         self.disable_image_wrapper()
 
-    def set_device(self: Config, device) -> None:
+    def set_device(
+        self: Config,
+        device: str | torch.device,
+    ) -> None:
         """Set the device to use.
 
-        Can be "cpu", "gpu", "cuda", "mps", torch.device, but needs to be
-        used with a compatible backend.
+        Can be a string, most typically "cpu", "gpu", "cuda", "mps", or
+        torch.device. In any case, it needs to be used with a compatible
+        backend.
         
-        It can only be "cpu" if using NumPy backend.
+        It can only be "cpu" when using NumPy backend.
 
         Parameters
         ----------
-        device : str
+        device: str | torch.device
             The device to use.
 
         """
 
         self.device = device
 
-    def get_device(self: Config) -> str:
+    def get_device(self: Config) -> str | torch.device:
         """Get the device to use.
 
         Returns
         -------
-        str
+        str | torch.device
             The device to use.
 
         """
@@ -180,7 +188,7 @@ class Config:
 
         Parameters
         ----------
-        backend : str
+        backend: str
             The backend to use.
         """
 
