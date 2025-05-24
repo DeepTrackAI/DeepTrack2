@@ -1,3 +1,52 @@
+"""Configuration and backend management for DeepTrack.
+
+This module provides the core configuration class and context managers used to
+control the computational backend (NumPy, PyTorch, or others), device selection
+(CPU, GPU, etc.), and image wrapper behavior for DeepTrack pipelines.
+
+The main entry point is the `Config` class, which allows you to:
+- Select the array backend for computation (e.g., NumPy or PyTorch)
+- Specify the device to run on (CPU, GPU, or torch.device)
+- Control whether outputs are wrapped as Image objects
+
+Additional context managers such as `NullContext` and `ImageWrapperContext`
+are provided to facilitate temporary changes to configuration and to enable or
+disable image wrapping within a code block.
+
+Classes
+-------
+Config
+    Main configuration class for DeepTrack backend, device, and image wrapper.
+_Proxy
+    Internal class used to proxy backend calls and ensure correct array types.
+
+Attributes
+----------
+config : Config
+    The default configuration object used by DeepTrack.
+xp : module
+    The currently active backend module (NumPy, PyTorch, etc.).
+
+Examples
+--------
+Set the backend to PyTorch and use the GPU:
+
+>>> config.set_backend_torch()
+>>> config.set_device("cuda")
+
+Temporarily enable the image wrapper within a context:
+
+>>> with ImageWrapperContext(config):
+...     result = some_pipeline()
+>>> # Image wrapper state is automatically restored on exit
+
+Switch backend temporarily within a context:
+
+>>> with config.with_backend("numpy"):
+...     result = some_numpy_operation()
+
+"""
+
 from __future__ import annotations
 
 import importlib
@@ -103,39 +152,50 @@ xp: array_api_strict = _Proxy(__name__ + ".xp")
 sys.modules[xp.__name__] = xp
 
 
-class NullContext:
-    """A context manager that does nothing.
+class Config:
+    """Configuration object for managing backend and device settings.
 
-    Used when no context is needed, but the output expects a context manager.
+    This class manages the backend (such as NumPy or PyTorch), the computing
+    device (such as CPU, GPU, or torch.device), and whether the image wrapper
+    is enabled. It provides methods for switching between backends and devices,
+    and for enabling or disabling the image wrapper.
 
-    Examples
-    --------
-    >>> with NullContext():
-    ...     print("No special context is active.")
+    Attributes
+    ----------
+    device: str | torch.device
+        The currently set device for computation.
+    backend: "numpy" | "torch"
+        The currently active backend.
+    image_wrapper: bool
+        Whether the image wrapper is enabled.
 
     """
 
-    def __enter__(self: NullContext) -> None:
-        """Enter the runtime context related to this object."""
-        pass
-
-    def __exit__(
-        self: NullContext,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: types.TracebackType | None,
-    ) -> None:
-        """Exit the runtime context related to this object."""
-        pass
-
-
-class Config:
+    device: str | torch.device
+    backend: Literal["numpy", "torch"]
+    image_wrapper: bool
 
     @property
-    def gpu_enabled(self):
+    def gpu_enabled(self: Config) -> bool:
+        """Check if the current device is GPU.
+
+        Returns
+        -------
+        bool
+            True if the current device is "gpu", otherwise False.
+
+        """
+
         return self.device == "gpu"
 
-    def __init__(self):
+    def __init__(self: Config) -> None:
+        """Initializes the configuration with default values.
+
+        It sets the device to "cpu", the backend to "numpy", and disables the
+        image wrapper.
+
+        """
+
         self.set_device("cpu")
         self.set_backend_numpy()
         self.disable_image_wrapper()
@@ -175,23 +235,28 @@ class Config:
 
     def set_backend_numpy(self):
         """Set the backend to numpy."""
+
         self.set_backend("numpy")
 
     def set_backend_torch(self):
         """Set the backend to torch."""
+
         self.set_backend("torch")
 
-    def set_backend(self, backend: Literal["numpy", "cupy", "torch"]):
-        """Set the backend to use.
-
-        One of ["numpy", "torch"].
+    def set_backend(
+        self: Config,
+        backend: Literal["numpy", "torch"],
+    ) -> None:
+        """Set the backend to use for array operations.
 
         Parameters
         ----------
-        backend: str
-            The backend to use.
+        backend : "numpy" | "torch"
+            The backend to use for array operations.
+
         """
 
+        # This import is only necessary when using the torch backend.
         if backend == "torch":
             # pylint: disable=import-outside-toplevel,unused-import
             # flake8: noqa: E402
@@ -200,35 +265,68 @@ class Config:
         self.backend = backend
         xp._backend = importlib.import_module(f"array_api_compat.{backend}")
 
-    def get_backend(self):
-        """Get the current backend."""
+    def get_backend(self: Config) -> Literal["numpy", "torch"]:
+        """Get the current backend.
+
+        Returns
+        -------
+        str
+            The backend currently in use, "numpy" or "torch".
+
+        """
+
         return self.backend
 
-    def disable_image_wrapper(self):
+    def disable_image_wrapper(self: Config) -> None:
         """Disable the image wrapper.
 
-        This will ensure that `Image` objects are not used."""
+        When disabled, `Image` objects are not used for wrapping outputs.
+
+        """
+
         self.image_wrapper = False
 
-    def enable_image_wrapper(self):
+    def enable_image_wrapper(self: Config) -> None:
         """Enable the image wrapper.
 
-        This will ensure that `Image` objects are used."""
+        When enabled, outputs are wrapped as `Image` objects.
+
+        """
+
         self.image_wrapper = True
 
-    def with_backend(self, backend: Literal["numpy", "torch"]):
-        """Return a context manager that changes the backend."""
+    def with_backend(
+        self: Config,
+        context_backend: Literal["numpy", "torch"],
+    ) -> object:
+        """Return a context manager that temporarily changes the backend.
 
-        current_backend = self.backend
-        if current_backend == backend:
-            return NullContext()
+        The backend is switched to the specified backend upon entering the
+        context, and restored to the previous backend upon exiting.
+
+        Parameters
+        ----------
+        context_backend : "numpy" | "torch"
+            The backend to temporarily use within the context.
+
+        Returns
+        -------
+        object
+            A context manager that switches the backend.
+
+        """
+
+        self_backend = self.backend
 
         class BackendContext:
+
             def __enter__(_):
-                self.set_backend(backend)
+                if self_backend != context_backend:
+                    self.set_backend(context_backend)
 
             def __exit__(_, *args):
-                self.set_backend_numpy()
+                if self_backend != context_backend:
+                    self.set_backend(self_backend)
 
         return BackendContext()
 
