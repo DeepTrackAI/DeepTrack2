@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["config", "cupy", "CUPY_AVAILABLE"]
+__all__ = ["config"]
 
 import importlib
 import warnings
@@ -86,7 +86,7 @@ class Config:
     def set_backend_torch(self):
         self.set_backend("torch")
 
-    def set_backend(self, backend: Literal["numpy", "cupy", "torch"]):
+    def set_backend(self, backend: Literal["numpy", "torch"]):
         self.backend = backend
         xp._backend = importlib.import_module(f"array_api_compat.{backend}")
 
@@ -103,7 +103,7 @@ class Config:
 
         return ImageWrapperContext() if not self.image_wrapper else NullContext()
 
-    def with_backend(self, backend: Literal["numpy", "cupy", "torch"]):
+    def with_backend(self, backend: Literal["numpy", "torch"]):
         current_backend = self.backend
         if current_backend == backend:
             return NullContext()
