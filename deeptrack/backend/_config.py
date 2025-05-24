@@ -22,9 +22,9 @@ _Proxy
 
 Attributes
 ----------
-config : Config
+config: Config
     The default configuration object used by DeepTrack.
-xp : module
+xp: module
     The currently active backend module (NumPy, PyTorch, etc.).
 
 Examples
