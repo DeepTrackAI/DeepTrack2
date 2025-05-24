@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = ["config", "cupy", "CUPY_AVAILABLE"]
 
 import importlib
@@ -22,22 +24,25 @@ except ImportError:
 
 
 class _Proxy(types.ModuleType):
-    """"""
+    """Object to keep track of the current backend."""
+
+    _backend : array_api_strict
+    __name__ : str
 
     def __init__(self, name: str):
         self._backend = apcnumpy
         self.__name__ = name
 
-    def __getattr__(self, name):
-        return getattr(self._backend, name)
+    def __getattr__(self, attribute):
+        return getattr(self._backend, attribute)
 
     def __dir__(self):
         return dir(self._backend)
 
 
 # TODO: once intersection types are available, use them here
-xp: array_api_strict = _Proxy(__name__ + ".xp")  # module instance
-sys.modules[xp.__name__] = xp  # register
+xp: array_api_strict = _Proxy(__name__ + ".xp")  # Module instance  # the type is to make IDEs see this as if an array
+sys.modules[xp.__name__] = xp  # Register module name  # make the systems use this as a module
 
 
 class NullContext:
@@ -54,6 +59,7 @@ class NullContext:
 
 
 class ImageWrapperContext:
+    
     def __enter__(_):
         self.enable_image_wrapper()
 
@@ -99,15 +105,12 @@ class Config:
 
     def set_backend_numpy(self):
         self.set_backend("numpy")
-        xp._backend = importlib.import_module("array_api_compat.numpy")
 
     def set_backend_cupy(self):
         self.set_backend("cupy")
-        xp._backend = importlib.import_module("array_api_compat.cupy")
 
     def set_backend_torch(self):
         self.set_backend("torch")
-        xp._backend = importlib.import_module("array_api_compat.torch")
 
     def set_backend(self, backend: Literal["numpy", "cupy", "torch"]):
         self.backend = backend

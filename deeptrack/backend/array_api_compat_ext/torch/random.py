@@ -1,7 +1,6 @@
 from __future__ import annotations
-import numpy as np
+
 import torch
-from typing import Optional
 
 __all__ = [
     "rand",
@@ -25,11 +24,11 @@ def rand(*args: int) -> torch.Tensor:
 
 
 def random(size: tuple[int, ...] | None = None) -> torch.Tensor:
-    return torch.rand(*size)
+    return torch.rand(*size) if size else torch.rand()
 
 
 def random_sample(size: tuple[int, ...] | None = None) -> torch.Tensor:
-    return torch.rand(*size)
+    return torch.rand(*size) if size else torch.rand()
 
 
 def randn(*args: int) -> torch.Tensor:
@@ -38,9 +37,6 @@ def randn(*args: int) -> torch.Tensor:
 
 def beta(a: float, b: float, size: tuple[int, ...] | None = None) -> torch.Tensor:
     raise NotImplementedError("the beta distribution is not implemented in torch")
-
-
-# np.random.
 
 
 def binomial(n: int, p: float, size: tuple[int, ...] | None = None) -> torch.Tensor:
@@ -71,13 +67,17 @@ def shuffle(x: torch.Tensor) -> torch.Tensor:
 
 
 def uniform(
-    low: float, high: float, size: tuple[int, ...] | None = None
+    low: float,
+    high: float,
+    size: tuple[int, ...] | None = None,
 ) -> torch.Tensor:
     return torch.rand(*size) * (high - low) + low
 
 
 def normal(
-    loc: float, scale: float, size: tuple[int, ...] | None = None
+    loc: float,
+    scale: float,
+    size: tuple[int, ...] | None = None,
 ) -> torch.Tensor:
     return torch.randn(*size) * scale + loc
 
