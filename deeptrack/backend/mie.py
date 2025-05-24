@@ -36,7 +36,6 @@ from typing import List, Tuple, Union
 
 import numpy as np
 
-from ._config import cupy
 from .polynomials import (
     ricbesh, ricbesy, ricbesj, dricbesh, dricbesj, dricbesy
 )
@@ -220,12 +219,8 @@ def harmonics(
 
     """
 
-    if isinstance(x, cupy.ndarray):
-        PI = cupy.zeros((L, *x.shape))
-        TAU = cupy.zeros((L, *x.shape))
-    else:
-        PI = np.zeros((L, *x.shape))
-        TAU = np.zeros((L, *x.shape))
+    PI = np.zeros((L, *x.shape))
+    TAU = np.zeros((L, *x.shape))
 
     PI[0, :] = 1
     PI[1, :] = 3 * x
