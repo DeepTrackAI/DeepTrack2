@@ -26,8 +26,8 @@ except ImportError:
 class _Proxy(types.ModuleType):
     """Object to keep track of the current backend."""
 
-    _backend : array_api_strict
-    __name__ : str
+    _backend: array_api_strict
+    __name__: str
 
     def __init__(self, name: str):
         self._backend = apcnumpy
@@ -41,8 +41,12 @@ class _Proxy(types.ModuleType):
 
 
 # TODO: once intersection types are available, use them here
-xp: array_api_strict = _Proxy(__name__ + ".xp")  # Module instance  # the type is to make IDEs see this as if an array
-sys.modules[xp.__name__] = xp  # Register module name  # make the systems use this as a module
+xp: array_api_strict = _Proxy(
+    __name__ + ".xp"
+)  # Module instance  # the type is to make IDEs see this as if an array
+sys.modules[xp.__name__] = (
+    xp  # Register module name  # make the systems use this as a module
+)
 
 
 class NullContext:
@@ -59,7 +63,7 @@ class NullContext:
 
 
 class ImageWrapperContext:
-    
+
     def __enter__(_):
         self.enable_image_wrapper()
 
@@ -113,6 +117,10 @@ class Config:
         self.set_backend("torch")
 
     def set_backend(self, backend: Literal["numpy", "cupy", "torch"]):
+        if backend == "torch":
+            # pylint: disable=import-outside-toplevel,unused-import
+            # flake8: noqa: E402
+            from deeptrack.backend import array_api_compat_ext
         self.backend = backend
         xp._backend = importlib.import_module(f"array_api_compat.{backend}")
 
