@@ -121,6 +121,7 @@ class Config:
             # pylint: disable=import-outside-toplevel,unused-import
             # flake8: noqa: E402
             from deeptrack.backend import array_api_compat_ext
+
         self.backend = backend
         xp._backend = importlib.import_module(f"array_api_compat.{backend}")
 
