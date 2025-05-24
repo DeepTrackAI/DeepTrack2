@@ -222,8 +222,6 @@ class Feature(DeepTrackNode):
         Batches the feature for repeated execution.
     `action(_ID: tuple[int, ...] = ()) -> Image | list[Image]`
         Core logic to create or transform the image.
-    `__use_gpu__(inp: np.ndarrary | Image, **_: Any) -> bool`
-        Determines if the feature should use the GPU.
     `update(**global_arguments: Any) -> Feature`
         Refreshes the feature to create a new image.
     `add_feature(feature: Feature) -> Feature`
@@ -316,8 +314,6 @@ class Feature(DeepTrackNode):
         Processes the output of the feature.
     `_no_wrap_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
         Processes the output of the feature.
-    `_coerce_inputs(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Coerces the input to a list of Image.
 
     """
 
@@ -371,12 +367,7 @@ class Feature(DeepTrackNode):
         # self.add_dependency(self._input)  # Executed by add_child.
 
         # 3) Random seed node (for deterministic behavior if desired).
-        self._random_seed = DeepTrackNode(lambda: random.randint(
-            0, 2147483648)
-            )
-        self._random_seed = DeepTrackNode(lambda: random.randint(
-            0, 2147483648)
-            )
+        self._random_seed = DeepTrackNode(lambda: random.randint(0, 2147483648))
         self._random_seed.add_child(self)
         # self.add_dependency(self._random_seed)  # Executed by add_child.
 
@@ -664,30 +655,6 @@ class Feature(DeepTrackNode):
             return image_list[0]
         else:
             return image_list
-
-    def __use_gpu__(
-        self: Feature,
-        inp: np.ndarray | Image,
-        **_: Any,
-    ) -> bool:
-        """Determine if the feature should use the GPU.
-        
-        Parameters
-        ----------
-        inp: np.ndarray or Image
-            The input image to check.
-        **_: Any
-            Additional arguments (unused).
-
-        Returns
-        -------
-        bool
-            True if GPU acceleration is enabled and beneficial, otherwise 
-            False.
-
-        """
-
-        return self.__gpu_compatible__ and np.prod(np.shape(inp)) > (90000)
 
     def update(
         self: Feature,
@@ -1401,8 +1368,7 @@ class Feature(DeepTrackNode):
         if not isinstance(image_list, list):
             image_list = [image_list]
 
-        inputs = [(Image(image)) for image in image_list]
-        return self._coerce_inputs(inputs, **kwargs)
+        return [(Image(image)) for image in image_list]
 
     def _no_wrap_format_input(
         self: Feature, 
@@ -1512,32 +1478,8 @@ class Feature(DeepTrackNode):
             if isinstance(image, Image):
                 image_list[index] = image._value
 
-    def _coerce_inputs(
-        self: Feature,
-        inputs: list[np.ndarray] | list[Image],
-        **kwargs: dict[str, Any],
-    ) -> list[Image]:
-        """Converts inputs to the appropriate data type based on 
-        GPU availability.
-        
-        """
 
-        if config.gpu_enabled:
-
-            return [
-                i.to_cupy()
-                if (not self.__distributed__) and self.__use_gpu__(i, **kwargs)
-                else i.to_numpy()
-                for i in inputs
-            ]
-
-        else:
-            return [i.to_numpy() for i in inputs]
-
-def propagate_data_to_dependencies(
-    feature: Feature,
-    **kwargs: dict[str, Any]
-) -> None:
+def propagate_data_to_dependencies(feature: Feature, **kwargs: dict[str, Any]) -> None:
     """Updates the properties of dependencies in a feature's dependency tree.
 
     This function traverses the dependency tree of the given feature and 

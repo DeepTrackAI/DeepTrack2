@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["config", "cupy", "CUPY_AVAILABLE"]
+__all__ = ["config"]
 
 import importlib
 import warnings
@@ -12,15 +12,6 @@ import array
 import types, sys, numpy as _np, torch as _torch
 from typing import *
 import array_api_strict
-
-# TODO: remove the need for this (errors when removed)
-cupy = np
-
-CUPY_AVAILABLE = True
-try:
-    import cupy
-except ImportError:
-    CUPY_AVAILABLE = False
 
 
 class _Proxy(types.ModuleType):
@@ -117,24 +108,6 @@ class Config:
         self.set_backend_numpy()
         self.disable_image_wrapper()
 
-    def enable_gpu(self):
-        warnings.warn(
-            "(enable/disable)_gpu is deprecated. Use set_device instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if CUPY_AVAILABLE:
-            self.device = "gpu"
-        else:
-            warnings.warn("cupy not installed, CPU acceleration not enabled")
-
-    def disable_gpu(self):
-        warnings.warn(
-            "(enable/disable)_gpu is deprecated. Use set_device instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.device = "cpu"
 
     def set_device(self, device):
         """Set the device to use.
@@ -163,9 +136,6 @@ class Config:
     def set_backend_numpy(self):
         """Set the backend to numpy."""
         self.set_backend("numpy")
-
-    def set_backend_cupy(self):
-        self.set_backend("cupy")
 
     def set_backend_torch(self):
         """Set the backend to torch."""
@@ -216,6 +186,7 @@ class Config:
 
     def with_backend(self, backend: Literal["numpy", "torch"]):
         """Return a context manager that changes the backend."""
+
         current_backend = self.backend
         if current_backend == backend:
             return NullContext()

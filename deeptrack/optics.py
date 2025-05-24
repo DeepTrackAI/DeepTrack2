@@ -146,7 +146,6 @@ import numpy as np
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
 from deeptrack.image import Image, pad_image_to_fft, maybe_cupy
 from deeptrack.types import ArrayLike, PropertyLike
-from deeptrack.backend._config import cupy
 from scipy.ndimage import convolve
 import warnings
 
