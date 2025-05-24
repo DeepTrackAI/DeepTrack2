@@ -37,7 +37,7 @@ class _Proxy(types.ModuleType):
         The name of the proxy object.
     """
 
-    _backend: types.ModuleType
+    _backend: array_api_strict  # types.ModuleType
     __name__: str
 
     def __init__(self, name: str):
