@@ -13,21 +13,12 @@ import types, sys, numpy as _np, torch as _torch
 from typing import *
 import array_api_strict
 
-# TODO: remove the need for this (errors when removed)
-cupy = np
-
-CUPY_AVAILABLE = True
-try:
-    import cupy
-except ImportError:
-    CUPY_AVAILABLE = False
-
 
 class _Proxy(types.ModuleType):
     """Object to keep track of the current backend."""
 
-    _backend : array_api_strict
-    __name__ : str
+    _backend: array_api_strict
+    __name__: str
 
     def __init__(self, name: str):
         self._backend = apcnumpy
@@ -41,8 +32,12 @@ class _Proxy(types.ModuleType):
 
 
 # TODO: once intersection types are available, use them here
-xp: array_api_strict = _Proxy(__name__ + ".xp")  # Module instance  # the type is to make IDEs see this as if an array
-sys.modules[xp.__name__] = xp  # Register module name  # make the systems use this as a module
+xp: array_api_strict = _Proxy(
+    __name__ + ".xp"
+)  # Module instance  # the type is to make IDEs see this as if an array
+sys.modules[xp.__name__] = (
+    xp  # Register module name  # make the systems use this as a module
+)
 
 
 class NullContext:
@@ -59,7 +54,7 @@ class NullContext:
 
 
 class ImageWrapperContext:
-    
+
     def __enter__(_):
         self.enable_image_wrapper()
 
