@@ -73,24 +73,6 @@ class Config:
         self.set_backend_numpy()
         self.disable_image_wrapper()
 
-    def enable_gpu(self):
-        warnings.warn(
-            "(enable/disable)_gpu is deprecated. Use set_device instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if CUPY_AVAILABLE:
-            self.device = "gpu"
-        else:
-            warnings.warn("cupy not installed, CPU acceleration not enabled")
-
-    def disable_gpu(self):
-        warnings.warn(
-            "(enable/disable)_gpu is deprecated. Use set_device instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.device = "cpu"
 
     def set_device(self, device):
         self.device = device
@@ -100,9 +82,6 @@ class Config:
 
     def set_backend_numpy(self):
         self.set_backend("numpy")
-
-    def set_backend_cupy(self):
-        self.set_backend("cupy")
 
     def set_backend_torch(self):
         self.set_backend("torch")
