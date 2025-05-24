@@ -1,28 +1,26 @@
 from __future__ import annotations
 
-__all__ = ["config"]
-
 import importlib
-import warnings
-import numpy as np
-import array_api_compat as apc
-from array_api_compat import numpy as apcnumpy
-import array
+import sys
+import types
+from typing import Any, Literal
 
-import types, sys
-from typing import *
+from array_api_compat import numpy as apcnumpy
 import array_api_strict
 
 
+__all__ = ["config"]
+
+
 class _Proxy(types.ModuleType):
-    """Object to keep track of the current backend, and forward calls to the correct backend.
+    """Keep track of current backend and forward calls to the correct backend.
 
-    An instance of this object will be treated as the module `xp`. It acts like a
-    shallow wrapper around the actual backend (for example `numpy` or `torch`),
-    and forwards calls to the correct backend.
+    An instance of this object will be treated as the module `xp`. It acts like
+    a shallow wrapper around the actual backend (for example `numpy` or 
+    `torch`), and forwards calls to the correct backend.
 
-    This is especially useful for array creation functions, to ensure that the correct
-    array type is created.
+    This is especially useful for array creation functions, to ensure that the
+    correct array type is created.
 
     Parameters
     ----------
@@ -31,31 +29,69 @@ class _Proxy(types.ModuleType):
 
     Attributes
     ----------
-    _backend : backend modukle
+    _backend : backend module
         The actual backend module.
     __name__ : str
         The name of the proxy object.
+
     """
 
-    _backend: array_api_strict  # types.ModuleType
+    _backend: types.ModuleType  # array_api_strict
     __name__: str
 
-    def __init__(self, name: str):
+    def __init__(self: _Proxy, name: str) -> None:
+        """Initialize the _Proxy object.
+
+        Parameters
+        ----------
+        name : str
+            Name of the proxy object. This is used when printing the object.
+
+        """
+
         self._backend = apcnumpy
         self.__name__ = name
 
-    def __getattr__(self, attribute):
+    def __getattr__(self: _Proxy, attribute: str) -> Any:
+        """Forward attribute access to the current backend.
+
+        Parameters
+        ----------
+        attribute : str
+            The attribute name to retrieve from the backend.
+
+        Returns
+        -------
+        Any
+            The attribute from the current backend module.
+
+        """
+
         return getattr(self._backend, attribute)
 
-    def __dir__(self):
+    def __dir__(self: _Proxy) -> list[str]:
+        """List attributes of the current backend.
+
+        Returns
+        -------
+        list
+            List of attribute names in the current backend module.
+
+        """
+
         return dir(self._backend)
 
 
-# TODO: once intersection types are available, use them here
+# TODO: Once intersection types are available, use them here.
+# Intersection types are in the pipeline for python 3.13 or 3.14. They let you
+# define types that are the combination of many subtypes. So Intersection[A, B]
+# would have all the properties of A and B. Here, it would let us define
+# exactly the type of xp as Intersection[_Proxy, apcnumpy, apctorch].
+
 
 # This creates the xp object, which we will use a module.
-# We assign the type to be `array_api_strict` to make IDEs see this as if it were
-# an array api module, instead of the wrapper _Proxy object.
+# We assign the type to be `array_api_strict` to make IDEs see this as if it
+# were an array API module, instead of the wrapper _Proxy object.
 xp: array_api_strict = _Proxy(__name__ + ".xp")
 
 # This registers the xp object as a module. This should make import statements
@@ -66,35 +102,27 @@ sys.modules[xp.__name__] = xp
 class NullContext:
     """A context manager that does nothing.
 
-    Used when no context is needed, but the output expects
-    a context manager."""
+    Used when no context is needed, but the output expects a context manager.
 
-    def __enter__(self):
-        pass
+    Examples
+    --------
+    >>> with NullContext():
+    ...     print("No special context is active.")
 
-    def __exit__(self, *args):
-        pass
-
-
-class ImageWrapperContext:
-    """A context manager that enables the image wrapper.
-
-    Example
-    -------
-    >>> pipeline = dt.Value(1)
-    >>> normal_result = pipeline()
-    >>> with ImageWrapperContext():
-    ...     wrapped_result = pipeline()
-    ...
-    >>> print(normal_result) # 1
-    >>> print(wrapped_result) # Image(1)
     """
 
-    def __enter__(self, config: Config):
-        config.enable_image_wrapper()
+    def __enter__(self: NullContext) -> None:
+        """Enter the runtime context related to this object."""
+        pass
 
-    def __exit__(self, *args):
-        config.disable_image_wrapper()
+    def __exit__(
+        self: NullContext,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: types.TracebackType | None,
+    ) -> None:
+        """Exit the runtime context related to this object."""
+        pass
 
 
 class Config:
@@ -108,29 +136,33 @@ class Config:
         self.set_backend_numpy()
         self.disable_image_wrapper()
 
-
-    def set_device(self, device):
+    def set_device(self: Config, device) -> None:
         """Set the device to use.
 
-        Can be ["cpu", "gpu", "cuda", "mps", torch.device],
-        but needs to be used with a compatible backend. Can only be "cpu"
-        if using numpy backend.
+        Can be "cpu", "gpu", "cuda", "mps", torch.device, but needs to be
+        used with a compatible backend.
+        
+        It can only be "cpu" if using NumPy backend.
 
         Parameters
         ----------
         device : str
             The device to use.
+
         """
+
         self.device = device
 
-    def get_device(self):
+    def get_device(self: Config) -> str:
         """Get the device to use.
 
         Returns
         -------
         str
             The device to use.
+
         """
+
         return self.device
 
     def set_backend_numpy(self):
@@ -175,20 +207,6 @@ class Config:
 
         This will ensure that `Image` objects are used."""
         self.image_wrapper = True
-
-    def wrapper_enabled_context(self):
-        """Return a context manager that enables the image wrapper.
-
-        This will ensure that `Image` objects are used.
-
-        Examples
-        --------
-        >>> pipeline = dt.Value(1)
-        >>> with config.wrapper_enabled_context():
-        ...     result = pipeline()
-        >>> print(result) # Image(1)
-        """
-        return ImageWrapperContext(self) if not self.image_wrapper else NullContext()
 
     def with_backend(self, backend: Literal["numpy", "torch"]):
         """Return a context manager that changes the backend."""
