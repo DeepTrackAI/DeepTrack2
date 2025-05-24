@@ -1199,6 +1199,15 @@ class Image:
             result.merge_properties_from(args)
             return result
 
+    def __torch_function__(self, func, types, args=(), kwargs=None):
+        # required boilerplate check
+        if not any(issubclass(t, Image) for t in types):
+            return NotImplemented
+        kwargs = {} if kwargs is None else kwargs
+        kwargs = {k: strip(v) for k, v in kwargs.items()}
+        result = func(*strip(args), **kwargs)
+        return Image(result, copy=False).merge_properties_from(args)
+
     def __array__(
         self: Image | np.ndarray,
         *args: tuple[Any, ...],
