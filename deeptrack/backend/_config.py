@@ -9,7 +9,7 @@ import array_api_compat as apc
 from array_api_compat import numpy as apcnumpy
 import array
 
-import types, sys, numpy as _np, torch as _torch
+import types, sys
 from typing import *
 import array_api_strict
 
@@ -151,6 +151,12 @@ class Config:
         backend : str
             The backend to use.
         """
+
+        if backend == "torch":
+            # pylint: disable=import-outside-toplevel,unused-import
+            # flake8: noqa: E402
+            from deeptrack.backend import array_api_compat_ext
+
         self.backend = backend
         xp._backend = importlib.import_module(f"array_api_compat.{backend}")
 
