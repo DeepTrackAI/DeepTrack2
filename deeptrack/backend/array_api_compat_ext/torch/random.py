@@ -35,11 +35,19 @@ def randn(*args: int) -> torch.Tensor:
     return torch.randn(*args)
 
 
-def beta(a: float, b: float, size: tuple[int, ...] | None = None) -> torch.Tensor:
+def beta(
+    a: float,
+    b: float,
+    size: tuple[int, ...] | None = None,
+) -> torch.Tensor:
     raise NotImplementedError("the beta distribution is not implemented in torch")
 
 
-def binomial(n: int, p: float, size: tuple[int, ...] | None = None) -> torch.Tensor:
+def binomial(
+    n: int,
+    p: float,
+    size: tuple[int, ...] | None = None,
+) -> torch.Tensor:
     return torch.bernoulli(torch.full(size, p))
 
 
@@ -49,16 +57,24 @@ def choice(
     replace: bool = True,
     p: torch.Tensor | None = None,
 ) -> torch.Tensor:
-    raise NotImplementedError("the choice function is not implemented in torch")
+    raise NotImplementedError(
+        "the choice function is not implemented in torch"
+    )
 
 
 def multinomial(
-    n: int, pvals: torch.Tensor, size: tuple[int, ...] | None = None
+    n: int,
+    pvals: torch.Tensor,
+    size: tuple[int, ...] | None = None,
 ) -> torch.Tensor:
     return torch.multinomial(pvals, n, size)
 
 
-def randint(low: int, high: int, size: tuple[int, ...] | None = None) -> torch.Tensor:
+def randint(
+    low: int,
+    high: int,
+    size: tuple[int, ...] | None = None,
+) -> torch.Tensor:
     return torch.randint(low, high, size)
 
 
@@ -82,8 +98,11 @@ def normal(
     return torch.randn(*size) * scale + loc
 
 
-def poisson(lam: float, size: tuple[int, ...] | None = None) -> torch.Tensor:
+def poisson(
+    lam: float,
+    size: tuple[int, ...] | None = None,
+) -> torch.Tensor:
     return torch.poisson(torch.full(size, lam))
 
 
-# TODO: implement the rest of the functions
+# TODO: implement the rest of the functions as they are needed

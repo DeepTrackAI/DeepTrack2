@@ -1684,7 +1684,7 @@ def coerce(
 # small primes (powers of 2 and 3).
 _FASTEST_SIZES = [0]
 for n in range(1, 10):
-    _FASTEST_SIZES += [2**a * 3 ** (n - a - 1) for a in range(n)]
+    _FASTEST_SIZES += [2**a * 3**(n - a - 1) for a in range(n)]
 _FASTEST_SIZES = np.sort(_FASTEST_SIZES)
 
 
