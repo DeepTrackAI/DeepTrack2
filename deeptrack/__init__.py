@@ -1,5 +1,6 @@
 # flake8: noqa
 import lazy_import
+from typing import TYPE_CHECKING
 
 from pint import UnitRegistry
 from .backend.pint_definition import pint_definitions
@@ -20,13 +21,13 @@ if tensorflow_installed:
             "    pip install deeptrack==1.7\n\n"
             "For more details, refer to the DeepTrack documentation."
         ),
-        UserWarning
+        UserWarning,
     )
 
 # Create a unit registry with custom pixel-related units.
 units = UnitRegistry(pint_definitions.split("\n"))
 
-'''# Check if tensorflow is installed without importing it #TBE
+"""# Check if tensorflow is installed without importing it #TBE
 import pkg_resources
 
 installed = [pkg.key for pkg in pkg_resources.working_set]
@@ -42,7 +43,7 @@ else:
     HAS_TORCH = False
 
 if HAS_TENSORFLOW and HAS_TORCH:
-    import torch # torch must be imported before tensorflow'''#TBE
+    import torch # torch must be imported before tensorflow"""  # TBE
 
 from deeptrack.features import *
 from deeptrack.aberrations import *
@@ -60,21 +61,20 @@ from deeptrack.holography import *
 from deeptrack.image import strip
 
 # if not HAS_TENSORFLOW:
-    # Lazy imports to avoid overhead of importing tensorflow
+# Lazy imports to avoid overhead of importing tensorflow
 
-generators = lazy_import.lazy_module("deeptrack.generators")
-models = lazy_import.lazy_module("deeptrack.models")
-datasets = lazy_import.lazy_module("deeptrack.datasets")
-losses = lazy_import.lazy_module("deeptrack.losses")
-layers = lazy_import.lazy_module("deeptrack.layers")
-visualization = lazy_import.lazy_module("deeptrack.visualization")
+# generators = lazy_import.lazy_module("deeptrack.generators")
+# models = lazy_import.lazy_module("deeptrack.models")
+# datasets = lazy_import.lazy_module("deeptrack.datasets")
+# losses = lazy_import.lazy_module("deeptrack.losses")
+# layers = lazy_import.lazy_module("deeptrack.layers")
 
 # if not HAS_TORCH:
 pytorch = lazy_import.lazy_module("deeptrack.pytorch")
 deeplay = lazy_import.lazy_module("deeptrack.deeplay")
 
-should_import = False
-if should_import:
+
+if TYPE_CHECKING:
     from . import generators
     from . import models
     from . import datasets
@@ -83,6 +83,8 @@ if should_import:
     from . import visualization
     from . import pytorch
     from . import deeplay
+
+from deeptrack import tests
 
 from deeptrack import (
     image,
