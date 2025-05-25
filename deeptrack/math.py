@@ -211,7 +211,7 @@ class Average(Feature):
         """
         if self.features is not None:
             images = [feature.resolve() for feature in self.features]
-        result = xp.mean(images, axis=axis)
+        result = xp.mean(xp.stack(images), axis=axis)
 
         return result
 
