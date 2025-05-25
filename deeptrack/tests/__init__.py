@@ -11,11 +11,3 @@ class BackendTestBase(unittest.TestCase):
         if cls.BACKEND is None:
             raise ValueError("BACKEND not set")
         config.set_backend(cls.BACKEND)
-
-
-class TorchBackendMixin(BackendTestBase):
-    BACKEND = "torch"
-
-
-class NumpyBackendMixin(BackendTestBase):
-    BACKEND = "numpy"
