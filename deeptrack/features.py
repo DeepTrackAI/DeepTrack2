@@ -185,6 +185,16 @@ class Feature(DeepTrackNode):
         dynamically sample values during pipeline execution. A sampled copy of
         this dictionary is passed to the `get` function and appended to the 
         properties of the output image.
+    float_dtype: np.dtype
+        The data type of the float numbers.
+    int_dtype: np.dtype
+        The data type of the integer numbers.
+    complex_dtype: np.dtype
+        The data type of the complex numbers.
+    bool_dtype: np.dtype
+        The data type of the boolean numbers.
+    device: str | torch.device
+        The device on which the feature is executed.
     __list_merge_strategy__: int
         Specifies how the output of `.get(image, **kwargs)` is merged with the 
         input list. Options include:
@@ -329,6 +339,35 @@ class Feature(DeepTrackNode):
     __gpu_compatible__ = False
 
     _wrap_array_with_image: bool = False
+    _float_dtype: str
+    _int_dtype: str
+    _complex_dtype: str
+    _device: str | torch.device
+
+    @property
+    def float_dtype(self) -> np.dtype | torch.dtype:
+        """The dtype of the float numbers."""
+        return xp.get_float_dtype(self._float_dtype)
+
+    @property
+    def int_dtype(self) -> np.dtype | torch.dtype:
+        """The dtype of the integer numbers."""
+        return xp.get_int_dtype(self._int_dtype)
+
+    @property
+    def complex_dtype(self) -> np.dtype | torch.dtype:
+        """The dtype of the complex numbers."""
+        return xp.get_complex_dtype(self._complex_dtype)
+    
+    @property
+    def bool_dtype(self) -> np.dtype | torch.dtype:
+        """The dtype of the boolean numbers."""
+        return xp.get_bool_dtype(self._bool_dtype)
+
+    @property
+    def device(self) -> str | torch.device:
+        """The device to be used during evaluation."""
+        return self._device
 
     def __init__(
         self: Feature,
@@ -351,6 +390,14 @@ class Feature(DeepTrackNode):
         """
         # store backend on initialization
         self._backend = config.get_backend()
+
+        # Store the dtype and device on initialization.
+        self._float_dtype = "default"
+        self._int_dtype = "default"
+        self._complex_dtype = "default"
+        self._bool_dtype = "default"
+        self._device = config.get_device()
+
         super().__init__()
 
         # Ensure the feature has a 'name' property; default = class name.
@@ -562,6 +609,50 @@ class Feature(DeepTrackNode):
                     dependency.numpy(recursive=False)
         self.invalidate()
         return self
+
+    def dtype(
+        self: Feature,
+        float: Literal["float32", "float64", "default"] | None = None,
+        int: Literal["int16", "int32", "int64", "default"] | None = None,
+        complex: Literal["complex64", "complex128", "default"] | None = None,
+        bool: Literal["bool", "default"] | None = None,
+    ) -> None:
+        """Set the dtype to be used during evaluation.
+
+        This alters the dtype used for array creation, but does not
+        automatically cast the type.
+
+        Parameters
+        ----------
+        float: str, optional
+            The float dtype to set.
+        int: str, optional
+            The int dtype to set.
+        complex: str, optional
+            The complex dtype to set.
+        bool: str, optional
+            The bool dtype to set.
+        """
+        if float is not None:
+            self._float_dtype = float
+        if int is not None:
+            self._int_dtype = int
+        if complex is not None:
+            self._complex_dtype = complex
+        if bool is not None:
+            self._bool_dtype = bool
+
+    def to(self: Feature, device: str | torch.device):
+        """Set the device to be used during evaluation.
+
+        If the backend is numpy, this can only be "cpu".
+
+        Parameters
+        ----------
+        device: str or torch.device
+            The device to use.
+        """
+        self._device = device
 
     def batch(self: Feature, batch_size: int = 32) -> tuple | list[Image]:
         """Batch the feature.
