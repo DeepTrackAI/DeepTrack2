@@ -69,7 +69,7 @@ class _Proxy(types.ModuleType):
     """Keep track of current backend and forward calls to the correct backend.
 
     An instance of this object will be treated as the module `xp`. It acts like
-    a shallow wrapper around the actual backend (for example `numpy` or 
+    a shallow wrapper around the actual backend (for example `numpy` or
     `torch`), and forwards calls to the correct backend.
 
     This is especially useful for array creation functions, to ensure that the
@@ -103,7 +103,69 @@ class _Proxy(types.ModuleType):
         """
 
         self._backend = apcnumpy
+        self._backend_info = apcnumpy.__array_namespace_info__.dtypes()
         self.__name__ = name
+
+    def set_backend(self: _Proxy, backend: types.ModuleType) -> None:
+        """Set the backend to use.
+
+        Parameters
+        ----------
+        backend: types.ModuleType
+            The backend to use.
+
+        """
+
+        self._backend = backend
+        self._backend_info = backend.__array_namespace_info__.dtypes()
+
+    def get_float_dtype(self: _Proxy, dtype: str) -> str:
+        """Get the float dtype.
+
+        Returns
+        -------
+        str
+        """
+        if dtype == "default":
+            return self._backend_info.default_dtypes["real floating"]
+        else:
+            return self._backend_info.dtypes("real floating")[dtype]
+
+    def get_int_dtype(self: _Proxy, dtype: str) -> str:
+        """Get the int dtype.
+
+        Returns
+        -------
+        str
+        """
+        if dtype == "default":
+            return self._backend_info.default_dtypes["integer"]
+        else:
+            return self._backend_info.dtypes("integer")[dtype]
+
+    def get_complex_dtype(self: _Proxy, dtype: str) -> str:
+        """Get the complex dtype.
+
+        Returns
+        -------
+        str
+        """
+        if dtype == "default":
+            return self._backend_info.default_dtypes["complex floating"]
+        else:
+            return self._backend_info.dtypes("complex floating")[dtype]
+
+    def get_bool_dtype(self: _Proxy, dtype: str) -> str:
+        """Get the bool dtype.
+
+        Returns
+        -------
+        str
+        """
+        if dtype == "default":
+            return self._backend_info.default_dtypes["bool"]
+        else:
+            return self._backend_info.dtypes("bool")[dtype]
 
     def __getattr__(self: _Proxy, attribute: str) -> Any:
         """Forward attribute access to the current backend.
@@ -209,7 +271,7 @@ class Config:
         Can be a string, most typically "cpu", "gpu", "cuda", "mps", or
         torch.device. In any case, it needs to be used with a compatible
         backend.
-        
+
         It can only be "cpu" when using NumPy backend.
 
         Parameters
@@ -263,7 +325,7 @@ class Config:
             from deeptrack.backend import array_api_compat_ext
 
         self.backend = backend
-        xp._backend = importlib.import_module(f"array_api_compat.{backend}")
+        xp.set_backend(importlib.import_module(f"array_api_compat.{backend}"))
 
     def get_backend(self: Config) -> Literal["numpy", "torch"]:
         """Get the current backend.
