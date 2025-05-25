@@ -89,7 +89,7 @@ Process an input image:
 """
 
 from __future__ import annotations
-from typing import Callable, Any, List
+from typing import TYPE_CHECKING, Callable, Any, List
 
 import numpy as np
 import scipy.ndimage as ndimage
@@ -101,6 +101,9 @@ from deeptrack.features import Feature
 from deeptrack.image import Image, strip
 from deeptrack.types import ArrayLike, PropertyLike
 from deeptrack.backend import xp
+
+if TYPE_CHECKING:
+    import torch
 
 
 class Average(Feature):
@@ -770,9 +773,89 @@ class AverageBlur(Blur):
 
         super().__init__(None, ksize=ksize, **kwargs)
 
+    def _kernel_shape(self, shape: tuple[int, ...], ksize: int) -> tuple[int, ...]:
+        if shape[-1] < ksize:
+            return (ksize,) * (len(shape) - 1) + (1,)
+        return (ksize,) * len(shape)
+
+    def _get_numpy(
+        self, input: np.ndarray, ksize: tuple[int, ...], **kwargs: Any
+    ) -> np.ndarray:
+        return ndimage.uniform_filter(
+            input,
+            size=ksize,
+            mode=kwargs.get("mode", "reflect"),
+            cval=kwargs.get("cval", 0),
+            origin=kwargs.get("origin", 0),
+            axes=tuple(range(0, len(ksize))),
+        )
+
+    def _get_torch(
+        self, input: torch.Tensor, ksize: tuple[int, ...], **kwargs: Any
+    ) -> np.ndarray:
+        F = xp.nn.functional
+
+        last_dim_is_channel = len(ksize) < input.ndim
+        if last_dim_is_channel:
+            # permute to first dim
+            input = input.movedim(-1, 0)
+        else:
+            input = input.unsqueeze(0)
+
+        # add batch dimension
+        input = input.unsqueeze(0)
+
+        # pad input
+        input = F.pad(
+            input,
+            (ksize[0] // 2, ksize[0] // 2, ksize[1] // 2, ksize[1] // 2),
+            mode=kwargs.get("mode", "reflect"),
+            value=kwargs.get("cval", 0),
+        )
+        if input.ndim == 3:
+            x = F.avg_pool1d(
+                input,
+                kernel_size=ksize,
+                stride=1,
+                padding=0,
+                ceil_mode=False,
+                count_include_pad=False,
+            )
+        elif input.ndim == 4:
+            x = F.avg_pool2d(
+                input,
+                kernel_size=ksize,
+                stride=1,
+                padding=0,
+                ceil_mode=False,
+                count_include_pad=False,
+            )
+        elif input.ndim == 5:
+            x = F.avg_pool3d(
+                input,
+                kernel_size=ksize,
+                stride=1,
+                padding=0,
+                ceil_mode=False,
+                count_include_pad=False,
+            )
+        else:
+            raise NotImplementedError(
+                f"Input dimension {input.ndim - 2} not supported for torch backend"
+            )
+
+        # restore layout
+        x = x.squeeze(0)
+        if last_dim_is_channel:
+            x = x.movedim(0, -1)
+        else:
+            x = x.squeeze(0)
+
+        return x
+
     def get(
         self: AverageBlur,
-        input: np.ndarray | Image,
+        input: ArrayLike,
         ksize: int,
         **kwargs: Any,
     ) -> np.ndarray:
@@ -796,19 +879,14 @@ class AverageBlur(Blur):
 
         """
 
-        if input.shape[-1] < ksize:
-            ksize = (ksize,) * (input.ndim - 1) + (1,)
+        k = self._kernel_shape(input.shape, ksize)
+
+        if self.backend == "numpy":
+            return self._get_numpy(input, k, **kwargs)
+        elif self.backend == "torch":
+            return self._get_torch(input, k, **kwargs)
         else:
-            ksize = ((ksize,) * input.ndim,)
-
-        weights = np.ones(ksize) / np.prod(ksize)
-
-        return utils.safe_call(
-            ndimage.convolve,
-            input=input,
-            weights=weights,
-            **kwargs,
-        )
+            raise NotImplementedError(f"Backend {self.backend} not supported")
 
 
 class GaussianBlur(Blur):
