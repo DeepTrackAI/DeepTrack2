@@ -101,9 +101,7 @@ class _Proxy(types.ModuleType):
             Name of the proxy object. This is used when printing the object.
 
         """
-
-        self._backend = apcnumpy
-        self._backend_info = apcnumpy.__array_namespace_info__.dtypes()
+        self.set_backend(apcnumpy)
         self.__name__ = name
 
     def set_backend(self: _Proxy, backend: types.ModuleType) -> None:
@@ -117,7 +115,7 @@ class _Proxy(types.ModuleType):
         """
 
         self._backend = backend
-        self._backend_info = backend.__array_namespace_info__.dtypes()
+        self._backend_info = backend.__array_namespace_info__()
 
     def get_float_dtype(self: _Proxy, dtype: str) -> str:
         """Get the float dtype.
