@@ -1,16 +1,21 @@
-#from .backend import *
-#from .extras import *
+from pathlib import Path
+import unittest
+from deeptrack.backend import config  # adjust to real import path
 
-#from .test_aberrations import *
-#from .test_augmentations import *
-#from .test_elementwise import *
-#from .test_features import *
-#from .test_image import *
-#from .test_math import *
-#from .test_noises import *
-#from .test_optics import *
-#from .test_properties import *
-#from .test_scatterers import *
-#from .test_sequences import *
-#from .test_statistics import *
-#from .test_utils import *
+
+class BackendTestBase(unittest.TestCase):
+    BACKEND = None
+
+    @classmethod
+    def setUpClass(cls):
+        if cls.BACKEND is None:
+            raise ValueError("BACKEND not set")
+        config.set_backend(cls.BACKEND)
+
+
+class TorchBackendMixin(BackendTestBase):
+    BACKEND = "torch"
+
+
+class NumpyBackendMixin(BackendTestBase):
+    BACKEND = "numpy"
