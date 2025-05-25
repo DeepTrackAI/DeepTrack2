@@ -125,7 +125,7 @@ from __future__ import annotations
 import itertools
 import operator
 import random
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Literal
 
 import numpy as np
 import matplotlib.animation as animation
