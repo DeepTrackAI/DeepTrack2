@@ -5,11 +5,11 @@ import sys
 import unittest
 import numpy as np
 
-from .. import aberrations
+from deeptrack import aberrations
 
-from ..scatterers import PointParticle
-from ..optics import Fluorescence
-from ..image import Image
+from deeptrack.scatterers import PointParticle
+from deeptrack.optics import Fluorescence
+from deeptrack.image import Image
 
 
 
