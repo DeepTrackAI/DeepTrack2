@@ -1,11 +1,11 @@
 """Mathematical operations and structures.
 
-This module provides classes and utilities to perform common mathematical 
-operations and transformations on images, including clipping, normalization, 
-blurring, and pooling. These are implemented as subclasses of `Feature` for 
-seamless integration with the feature-based design of the library. Each 
-`Feature` supports lazy evaluation and can be composed using operators (e.g., 
-`>>` for chaining), enabling efficient and readable construction of image 
+This module provides classes and utilities to perform common mathematical
+operations and transformations on images, including clipping, normalization,
+blurring, and pooling. These are implemented as subclasses of `Feature` for
+seamless integration with the feature-based design of the library. Each
+`Feature` supports lazy evaluation and can be composed using operators (e.g.,
+`>>` for chaining), enabling efficient and readable construction of image
 processing pipelines.
 
 Key Features
@@ -19,11 +19,11 @@ Key Features
     Adjust image values to a common scale.
 
 - **Blurring**
-    
+
     Smooth images using various filters.
 
 - **Pooling**
-    
+
     Downsample images by applying a function to local regions.
 
 - **Resizing**
@@ -38,7 +38,7 @@ Classes:
 
 - `NormalizeMinMax`: Perform min-max normalization on images.
 
-- `NormalizeStandard`: Normalize images to have mean 0 and standard 
+- `NormalizeStandard`: Normalize images to have mean 0 and standard
     deviation 1.
 
 - `NormalizeQuantile`: Normalize images based on specified quantiles.
@@ -89,7 +89,7 @@ Process an input image:
 """
 
 from __future__ import annotations
-from typing import Callable, Any
+from typing import Callable, Any, List
 
 import numpy as np
 import scipy.ndimage as ndimage
@@ -99,14 +99,15 @@ import skimage.measure
 from deeptrack import utils
 from deeptrack.features import Feature
 from deeptrack.image import Image, strip
-from deeptrack.types import PropertyLike
+from deeptrack.types import ArrayLike, PropertyLike
+from deeptrack.backend import xp
 
 
 class Average(Feature):
     """Average of input images.
 
-    This class computes the average of input images along the specified axis. 
-    If `features` is not None, it instead resolves all features in the list and 
+    This class computes the average of input images along the specified axis.
+    If `features` is not None, it instead resolves all features in the list and
     averages the result.
 
     Parameters
@@ -118,10 +119,10 @@ class Average(Feature):
     Attributes
     ----------
     __distributed__: bool
-        Determines whether `.get(image, **kwargs)` is applied to each element 
-        of the input list independently (`__distributed__ = True`) or to the 
+        Determines whether `.get(image, **kwargs)` is applied to each element
+        of the input list independently (`__distributed__ = True`) or to the
         list as a whole (`__distributed__ = False`).
-     
+
     Methods
     -------
     `get(images: np.ndarray | Image | list[Image], axis: int, **kwargs: Any) --> np.ndarray`
@@ -131,7 +132,7 @@ class Average(Feature):
     --------
     >>> import deeptrack as dt
     >>> import numpy as np
-    
+
     Create two input images:
     >>> input_image1 = np.random.rand(10, 30, 20)
     >>> input_image2 = np.random.rand(10, 30, 20)
@@ -144,9 +145,9 @@ class Average(Feature):
 
     Notes
     -----
-    Calling this feature returns a `np.ndarray` by default. If 
-    `store_properties` is set to `True`, the returned array will be 
-    automatically wrapped in an `Image` object. This behavior is handled 
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
 
     """
@@ -157,11 +158,11 @@ class Average(Feature):
         self: Average,
         features: PropertyLike[list[Feature] | None] = None,
         axis: PropertyLike[int] = 0,
-        **kwargs: Any
+        **kwargs: Any,
     ):
-        """Initialize the parameters for averaging input features. 
-        
-        This constructor initializes the parameters for averaging input 
+        """Initialize the parameters for averaging input features.
+
+        This constructor initializes the parameters for averaging input
         features.
 
         Parameters
@@ -182,14 +183,14 @@ class Average(Feature):
             self.features = [self.add_feature(f) for f in features]
 
     def get(
-        self: Average, 
-        images: np.ndarray | Image | list[Image],
+        self: Average,
+        images: ArrayLike | List[ArrayLike],
         axis: int,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> ArrayLike:
         """Computes the average of input images along the specified axis.
 
-        This method computes the average of the input images along the 
+        This method computes the average of the input images along the
         specified axis.
 
         Parameters
@@ -207,10 +208,7 @@ class Average(Feature):
         """
         if self.features is not None:
             images = [feature.resolve() for feature in self.features]
-        result = Image(np.mean(images, axis=axis))
-
-        for image in images:
-            result.merge_properties_from(image)
+        result = xp.mean(images, axis=axis)
 
         return result
 
@@ -240,7 +238,7 @@ class Clip(Feature):
 
     Create an input image:
     >>> input_image = np.array([[10, 4], [4, -10]])
-    
+
     Define a clipper feature:
     >>> clipper = dt.Clip(min=0, max=5)
     >>> output_image = clipper(input_image)
@@ -250,9 +248,9 @@ class Clip(Feature):
 
     Notes
     -----
-    Calling this feature returns a `np.ndarray` by default. If 
-    `store_properties` is set to `True`, the returned array will be 
-    automatically wrapped in an `Image` object. This behavior is handled 
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
 
     """
@@ -281,10 +279,10 @@ class Clip(Feature):
         super().__init__(min=min, max=max, **kwargs)
 
     def get(
-        self: Clip, 
-        image: np.ndarray | Image, 
-        min: float = None, 
-        max: float = None, 
+        self: Clip,
+        image: ArrayLike,
+        min: float = None,
+        max: float = None,
         **kwargs: Any,
     ) -> np.ndarray:
         """Clips the input image within the specified values.
@@ -308,7 +306,7 @@ class Clip(Feature):
 
         """
 
-        return np.clip(image, min, max)
+        return xp.clip(image, min, max)
 
 
 class NormalizeMinMax(Feature):
@@ -329,7 +327,7 @@ class NormalizeMinMax(Feature):
     Methods
     -------
     `get(image: np.ndarray | Image, min: float, max: float, **kwargs: Any) --> np.ndarray`
-        Normalizes the input image to be between the specified minimum and 
+        Normalizes the input image to be between the specified minimum and
         maximum values.
 
     Examples
@@ -349,9 +347,9 @@ class NormalizeMinMax(Feature):
 
     Notes
     -----
-    Calling this feature returns a `np.ndarray` by default. If 
-    `store_properties` is set to `True`, the returned array will be 
-    automatically wrapped in an `Image` object. This behavior is handled 
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
 
     """
@@ -383,13 +381,13 @@ class NormalizeMinMax(Feature):
         super().__init__(min=min, max=max, featurewise=featurewise, **kwargs)
 
     def get(
-        self: NormalizeMinMax, 
-        image: np.ndarray | Image, 
-        min: float = None, 
-        max: float = None, 
+        self: NormalizeMinMax,
+        image: ArrayLike,
+        min: float = None,
+        max: float = None,
         **kwargs: Any,
-    ) -> np.ndarray:
-        """Normalizes the input image to be between the specified minimum and 
+    ) -> ArrayLike:
+        """Normalizes the input image to be between the specified minimum and
         maximum values.
 
         This method normalizes the input image to be between the specified
@@ -410,11 +408,11 @@ class NormalizeMinMax(Feature):
             The normalized image.
 
         """
-
-        image = image / np.ptp(image) * (max - min)
-        image = image - np.min(image) + min
+        ptp = xp.max(image) - xp.min(image)
+        image = image / ptp * (max - min)
+        image = image - xp.min(image) + min
         try:
-            image[np.isnan(image)] = 0
+            image[xp.isnan(image)] = 0
         except TypeError:
             pass
         return image
@@ -433,7 +431,7 @@ class NormalizeStandard(Feature):
     Methods
     -------
     `get(image: np.ndarray | Image, **kwargs: Any) --> np.ndarray`
-        Normalizes (standardizes) the input image to have mean 0 and standard 
+        Normalizes (standardizes) the input image to have mean 0 and standard
         deviation 1.
 
     Examples
@@ -443,7 +441,7 @@ class NormalizeStandard(Feature):
 
     Create an input image:
     >>> input_image = np.array([[1, 2], [3, 4]], dtype=float)
-    
+
     >>> standardizer = dt.NormalizeStandard()
     >>> output_image = standardizer(input_image)
     >>> print(output_image)
@@ -452,15 +450,15 @@ class NormalizeStandard(Feature):
 
     Notes
     -----
-    Calling this feature returns a `np.ndarray` by default. If 
-    `store_properties` is set to `True`, the returned array will be 
-    automatically wrapped in an `Image` object. This behavior is handled 
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
 
     """
 
     def __init__(
-        self:NormalizeStandard,
+        self: NormalizeStandard,
         featurewise: bool = True,
         **kwargs: Any,
     ):
@@ -480,9 +478,9 @@ class NormalizeStandard(Feature):
 
     def get(
         self: NormalizeStandard,
-        image: np.ndarray | Image, 
+        image: ArrayLike,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> ArrayLike:
         """Normalizes the input image to have mean 0 and standard deviation 1.
 
         This method normalizes the input image to have mean 0 and standard
@@ -500,7 +498,7 @@ class NormalizeStandard(Feature):
 
         """
 
-        return (image - np.mean(image)) / np.std(image)
+        return (image - xp.mean(image)) / xp.std(image)
 
 
 class NormalizeQuantile(Feature):
@@ -538,15 +536,15 @@ class NormalizeQuantile(Feature):
 
     Notes
     -----
-    Calling this feature returns a `np.ndarray` by default. If 
-    `store_properties` is set to `True`, the returned array will be 
-    automatically wrapped in an `Image` object. This behavior is handled 
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
 
     """
 
     def __init__(
-        self: NormalizeQuantile, 
+        self: NormalizeQuantile,
         quantiles: tuple[float, float] = (0.25, 0.75),
         featurewise: bool = True,
         **kwargs: Any,
@@ -566,20 +564,17 @@ class NormalizeQuantile(Feature):
 
         """
 
-        super().__init__(
-            quantiles=quantiles, 
-            featurewise=featurewise, 
-            **kwargs)
+        super().__init__(quantiles=quantiles, featurewise=featurewise, **kwargs)
 
     def get(
         self: NormalizeQuantile,
-        image: np.ndarray | Image,
+        image: ArrayLike,
         quantiles: tuple[float, float] = None,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> ArrayLike:
         """Normalizes the input image based on the specified quantiles.
 
-        This method normalizes the input image based on the specified 
+        This method normalizes the input image based on the specified
         quantiles.
 
         Parameters
@@ -597,8 +592,9 @@ class NormalizeQuantile(Feature):
         """
 
         if quantiles is None:
+            # Why is this here?
             quantiles = self.quantiles
-        q_low, q_high, median = np.quantile(image, (*quantiles, 0.5))
+        q_low, q_high, median = xp.quantile(image, (*quantiles, 0.5))
         return (image - median) / (q_high - q_low)
 
 
@@ -612,8 +608,8 @@ class Blur(Feature):
     Parameters
     ----------
     filter_function: Callable
-        The blurring function to apply. This function must accept the input 
-        image as a keyword argument named `input`. If using OpenCV functions 
+        The blurring function to apply. This function must accept the input
+        image as a keyword argument named `input`. If using OpenCV functions
         (e.g., `cv2.GaussianBlur`), use `BlurCV2` instead.
     mode: str
         Border mode for handling boundaries (e.g., 'reflect').
@@ -628,7 +624,7 @@ class Blur(Feature):
     >>> import deeptrack as dt
     >>> import numpy as np
     >>> from scipy.ndimage import convolve
-    
+
     Create an input image:
     >>> input_image = np.random.rand(32, 32)
 
@@ -641,27 +637,27 @@ class Blur(Feature):
     ...     [1,  4,  6,  4, 1]
     ... ], dtype=float)
     >>> gaussian_kernel /= np.sum(gaussian_kernel)
-    
+
 
     Define a blur function using the Gaussian kernel:
     >>> def gaussian_blur(input, **kwargs):
     ...     return convolve(input, gaussian_kernel, mode='reflect')
 
     Define a blur feature using the Gaussian blur function:
-    >>> blur = dt.Blur(filter_function=gaussian_blur)   
+    >>> blur = dt.Blur(filter_function=gaussian_blur)
     >>> output_image = blur(input_image)
     >>> print(output_image.shape)
     (32, 32)
 
     Notes
     -----
-    Calling this feature returns a `np.ndarray` by default. If 
-    `store_properties` is set to `True`, the returned array will be 
-    automatically wrapped in an `Image` object. This behavior is handled 
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
-    The filter_function must accept the input image as a keyword argument named 
-    input. This is required because it is called via utils.safe_call. If you 
-    are using functions that do not support input=... (such as OpenCV filters 
+    The filter_function must accept the input image as a keyword argument named
+    input. This is required because it is called via utils.safe_call. If you
+    are using functions that do not support input=... (such as OpenCV filters
     like cv2.GaussianBlur), consider using BlurCV2 instead.
 
     """
@@ -674,7 +670,7 @@ class Blur(Feature):
     ):
         """Initialize the parameters for blurring input features.
 
-        This constructor initializes the parameters for blurring input 
+        This constructor initializes the parameters for blurring input
         features.
 
         Parameters
@@ -691,11 +687,7 @@ class Blur(Feature):
         self.filter = filter_function
         super().__init__(borderType=mode, **kwargs)
 
-    def get(
-        self: Blur, 
-        image: np.ndarray | Image, 
-        **kwargs: Any
-    ) -> np.ndarray:
+    def get(self: Blur, image: np.ndarray | Image, **kwargs: Any) -> np.ndarray:
         """Applies the blurring filter to the input image.
 
         This method applies the blurring filter to the input image.
@@ -750,15 +742,15 @@ class AverageBlur(Blur):
 
     Notes
     -----
-    Calling this feature returns a `np.ndarray` by default. If 
-    `store_properties` is set to `True`, the returned array will be 
-    automatically wrapped in an `Image` object. This behavior is handled 
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
 
     """
 
     def __init__(
-        self: AverageBlur, 
+        self: AverageBlur,
         ksize: PropertyLike[int] = 3,
         **kwargs: Any,
     ):
@@ -801,7 +793,7 @@ class AverageBlur(Blur):
         -------
         np.ndarray
             The blurred image.
-             
+
         """
 
         if input.shape[-1] < ksize:
@@ -816,7 +808,7 @@ class AverageBlur(Blur):
             input=input,
             weights=weights,
             **kwargs,
-            )
+        )
 
 
 class GaussianBlur(Blur):
@@ -845,7 +837,7 @@ class GaussianBlur(Blur):
     >>> output_image = gaussian_blur(input_image)
     >>> print(output_image.shape)
     (32, 32)
-    
+
     Visualize the input and output images:
     >>> plt.figure(figsize=(8, 4))
     >>> plt.subplot(1, 2, 1)
@@ -863,11 +855,7 @@ class GaussianBlur(Blur):
 
     """
 
-    def __init__(
-        self: GaussianBlur, 
-        sigma: PropertyLike[float] = 2, 
-        **kwargs: Any
-    ):
+    def __init__(self: GaussianBlur, sigma: PropertyLike[float] = 2, **kwargs: Any):
         """Initialize the parameters for Gaussian blurring.
 
         This constructor initializes the parameters for Gaussian blurring.
@@ -878,19 +866,19 @@ class GaussianBlur(Blur):
             Standard deviation of the Gaussian kernel.
         **kwargs: Any
             Additional keyword arguments.
-        
+
         """
 
         super().__init__(ndimage.gaussian_filter, sigma=sigma, **kwargs)
 
 
 class MedianBlur(Blur):
-    """Applies a median blur. 
-    
+    """Applies a median blur.
+
     This class replaces each pixel of the input image with the median value of
-    its neighborhood. The `ksize` parameter determines the size of the 
-    neighborhood used to calculate the median filter. The median filter is 
-    useful for reducing noise while preserving edges. It is particularly 
+    its neighborhood. The `ksize` parameter determines the size of the
+    neighborhood used to calculate the median filter. The median filter is
+    useful for reducing noise while preserving edges. It is particularly
     effective for removing salt-and-pepper noise from images.
 
     Parameters
@@ -908,7 +896,7 @@ class MedianBlur(Blur):
 
     Create an input image:
     >>> input_image = np.random.rand(32, 32)
-    
+
     Define a median blur feature:
     >>> median_blur = dt.MedianBlur(ksize=3)
     >>> output_image = median_blur(input_image)
@@ -940,16 +928,16 @@ class MedianBlur(Blur):
         """Initialize the parameters for median blurring.
 
         This constructor initializes the parameters for median blurring.
-        
+
         Parameters
         ----------
         ksize: int
             Kernel size.
         **kwargs: Any
             Additional keyword arguments.
-        
+
         """
-        
+
         super().__init__(ndimage.median_filter, size=ksize, **kwargs)
 
 
@@ -959,8 +947,8 @@ class Pool(Feature):
 
     This class reduces the resolution of an image by dividing it into
     non-overlapping blocks of size `ksize` and applying the specified pooling
-    function to each block. The result is a downsampled image where each pixel 
-    value represents the result of the pooling function applied to the 
+    function to each block. The result is a downsampled image where each pixel
+    value represents the result of the pooling function applied to the
     corresponding block.
 
     Parameters
@@ -968,7 +956,7 @@ class Pool(Feature):
     pooling_function: function
         A function that is applied to each local region of the image.
         DOES NOT NEED TO BE WRAPPED IN ANOTHER FUNCTION.
-        The `pooling_function` must accept the input image as a keyword argument 
+        The `pooling_function` must accept the input image as a keyword argument
         named `input`, as it is called via `utils.safe_call`.
         Examples include `np.mean`, `np.max`, `np.min`, etc.
     ksize: int
@@ -994,16 +982,16 @@ class Pool(Feature):
     >>> output_image = pooling_feature.get(input_image, ksize=4)
     >>> print(output_image.shape)
     (8, 8)
-    
+
     Notes
     -----
     Calling this feature returns a `np.ndarray` by default. If
     `store_properties` is set to `True`, the returned array will be
     automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
-    The filter_function must accept the input image as a keyword argument named 
-    input. This is required because it is called via utils.safe_call. If you 
-    are using functions that do not support input=... (such as OpenCV filters 
+    The filter_function must accept the input image as a keyword argument named
+    input. This is required because it is called via utils.safe_call. If you
+    are using functions that do not support input=... (such as OpenCV filters
     like cv2.GaussianBlur), consider using BlurCV2 instead.
 
     """
@@ -1040,9 +1028,9 @@ class Pool(Feature):
         **kwargs: Any,
     ) -> np.ndarray:
         """Applies the pooling function to the input image.
-        
+
         This method applies the pooling function to the input image.
-        
+
         Parameters
         ----------
         image: np.ndarray
@@ -1051,14 +1039,14 @@ class Pool(Feature):
             Size of the pooling kernel.
         **kwargs: dict[str, Any]
             Additional keyword arguments.
-        
+
         Returns
         -------
         np.ndarray
             The pooled image.
-        
+
         """
-        
+
         kwargs.pop("func", False)
         kwargs.pop("image", False)
         kwargs.pop("block_size", False)
@@ -1074,11 +1062,11 @@ class Pool(Feature):
 class AveragePooling(Pool):
     """Apply average pooling to an image.
 
-    This class reduces the resolution of an image by dividing it into 
+    This class reduces the resolution of an image by dividing it into
     non-overlapping blocks of size `ksize` and applying the average function to
-    each block. The result is a downsampled image where each pixel value 
+    each block. The result is a downsampled image where each pixel value
     represents the average value within the corresponding block of the
-    original image. 
+    original image.
 
     Parameters
     ----------
@@ -1094,7 +1082,7 @@ class AveragePooling(Pool):
 
     Create an input image:
     >>> input_image = np.random.rand(32, 32)
-    
+
     Define an average pooling feature:
     >>> average_pooling = dt.AveragePooling(ksize=4)
     >>> output_image = average_pooling(input_image)
@@ -1111,14 +1099,14 @@ class AveragePooling(Pool):
     """
 
     def __init__(
-        self: Pool, 
-        ksize: PropertyLike[int] = 3, 
+        self: Pool,
+        ksize: PropertyLike[int] = 3,
         **kwargs: Any,
     ):
         """Initialize the parameters for average pooling.
 
         This constructor initializes the parameters for average pooling.
-        
+
         Parameters
         ----------
         ksize: int
@@ -1163,7 +1151,7 @@ class MaxPooling(Pool):
     >>> output_image = max_pooling(input_image)
     >>> print(output_image.shape)
     (8, 8)
-    
+
     Notes
     -----
     Calling this feature returns a `np.ndarray` by default. If
@@ -1174,21 +1162,21 @@ class MaxPooling(Pool):
     """
 
     def __init__(
-        self: MaxPooling, 
+        self: MaxPooling,
         ksize: PropertyLike[int] = 3,
         **kwargs: Any,
     ):
         """Initialize the parameters for max pooling.
 
         This constructor initializes the parameters for max pooling.
-        
+
         Parameters
         ----------
         ksize: int
             Size of the pooling kernel.
         **kwargs: Any
             Additional keyword arguments.
-        
+
         """
 
         super().__init__(np.max, ksize=ksize, **kwargs)
@@ -1234,14 +1222,14 @@ class MinPooling(Pool):
     """
 
     def __init__(
-        self: MinPooling, 
-        ksize: PropertyLike[int] = 3, 
+        self: MinPooling,
+        ksize: PropertyLike[int] = 3,
         **kwargs: Any,
     ):
         """Initialize the parameters for min pooling.
 
         This constructor initializes the parameters for min pooling.
-        
+
         Parameters
         ----------
         ksize: int
@@ -1275,7 +1263,7 @@ class MedianPooling(Pool):
     --------
     >>> import deeptrack as dt
     >>> import numpy as np
-    
+
     Create an input image:
     >>> input_image = np.random.rand(32, 32)
 
@@ -1295,22 +1283,22 @@ class MedianPooling(Pool):
 
     Notes
     -----
-    Calling this feature returns a `np.ndarray` by default. If 
-    `store_properties` is set to `True`, the returned array will be 
-    automatically wrapped in an `Image` object. This behavior is handled 
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
 
     """
 
     def __init__(
-        self: MedianPooling, 
-        ksize: PropertyLike[int] = 3, 
+        self: MedianPooling,
+        ksize: PropertyLike[int] = 3,
         **kwargs: Any,
     ):
         """Initialize the parameters for median pooling.
 
         This constructor initializes the parameters for median pooling.
-        
+
         Parameters
         ----------
         ksize: int
@@ -1325,9 +1313,9 @@ class MedianPooling(Pool):
 
 class Resize(Feature):
     """Resize an image to a specified size.
-    
-    This class is a wrapper around cv2.resize and resizes an image to a 
-    specified size. The `dsize` parameter specifies the desired output size of 
+
+    This class is a wrapper around cv2.resize and resizes an image to a
+    specified size. The `dsize` parameter specifies the desired output size of
     the image.
     Note that the order of the axes is different in cv2 and numpy. In cv2, the
     first axis is the vertical axis, while in numpy it is the horizontal axis.
@@ -1343,7 +1331,7 @@ class Resize(Feature):
     """
 
     def __init__(
-        self: Resize, 
+        self: Resize,
         dsize: PropertyLike[tuple] = (256, 256),
         **kwargs: Any,
     ):
@@ -1360,17 +1348,12 @@ class Resize(Feature):
             Additional keyword arguments.
 
         """
-        
+
         super().__init__(dsize=dsize, **kwargs)
 
-    def get(
-        self: Resize,
-        image: np.ndarray,  
-        dsize: tuple,
-        **kwargs: Any
-    ) -> np.ndarray:
+    def get(self: Resize, image: np.ndarray, dsize: tuple, **kwargs: Any) -> np.ndarray:
         """Resize the input image to the specified size.
-        
+
         This method resizes the input image to the specified size.
 
         Parameters
@@ -1381,7 +1364,7 @@ class Resize(Feature):
             Desired output size of the image.
         **kwargs: Any
             Additional keyword arguments.
-        
+
         Returns
         -------
         np.ndarray
@@ -1395,9 +1378,7 @@ class Resize(Feature):
         if self._wrap_array_with_image:
             image = strip(image)
 
-        return utils.safe_call(
-            cv2.resize, positional_args=[image, dsize], **kwargs
-        )
+        return utils.safe_call(cv2.resize, positional_args=[image, dsize], **kwargs)
 
 
 try:
@@ -1419,8 +1400,8 @@ except ImportError:
 class BlurCV2(Feature):
     """Apply a blurring filter using OpenCV2.
 
-    This class applies a blurring filter to an image using OpenCV2. The 
-    filter_function must be an OpenCV-compatible function that accepts a src 
+    This class applies a blurring filter to an image using OpenCV2. The
+    filter_function must be an OpenCV-compatible function that accepts a src
     keyword argument (e.g., cv2.GaussianBlur, cv2.bilateralFilter, etc.).
 
     Parameters
@@ -1429,7 +1410,7 @@ class BlurCV2(Feature):
         The blurring function to apply.
     mode: str
         Border mode for handling boundaries (e.g., 'reflect').
-    
+
     Methods
     -------
     `get(image: np.ndarray | Image, **kwargs: Any) --> np.ndarray`
@@ -1446,34 +1427,34 @@ class BlurCV2(Feature):
 
     Define a blur feature using the Gaussian blur function:
     >>> blur = dt.BlurCV2(
-    ...     filter_function=cv2.GaussianBlur, 
-    ...     ksize=(5, 5), 
-    ...     sigmaX=1, 
+    ...     filter_function=cv2.GaussianBlur,
+    ...     ksize=(5, 5),
+    ...     sigmaX=1,
     ...     mode='reflect',
     ... )
     >>> output_image = blur(input_image)
     >>> print(output_image.shape)
     (32, 32)
-    
+
     Notes
     -----
-    Calling this feature returns a `np.ndarray` by default. If 
-    `store_properties` is set to `True`, the returned array will be 
-    automatically wrapped in an `Image` object. This behavior is handled 
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
 
     """
-    
+
     def __new__(
-        cls: type, 
+        cls: type,
         *args: tuple,
         **kwargs: Any,
     ):
-        """Ensures that OpenCV (cv2) is available before instantiating the 
+        """Ensures that OpenCV (cv2) is available before instantiating the
         class.
 
-        Overrides the default object creation process to check that the `cv2` 
-        module is available before creating the class. If OpenCV is not 
+        Overrides the default object creation process to check that the `cv2`
+        module is available before creating the class. If OpenCV is not
         installed, it raises an ImportError with instructions for installation.
 
         Parameters
@@ -1491,9 +1472,9 @@ class BlurCV2(Feature):
         Raises
         ------
         ImportError
-            If the OpenCV (`cv2`) module is not available in the current 
+            If the OpenCV (`cv2`) module is not available in the current
             environment.
-    
+
         """
 
         if not IMPORTED_CV2:
@@ -1531,14 +1512,14 @@ class BlurCV2(Feature):
         super().__init__(borderType=borderType, **kwargs)
 
     def get(
-        self: BlurCV2, 
+        self: BlurCV2,
         image: np.ndarray | Image,
         **kwargs: Any,
-    )  -> np.ndarray:
+    ) -> np.ndarray:
         """Applies the blurring filter to the input image.
 
         This method applies the blurring filter to the input image.
-        
+
         Parameters
         ----------
         image: np.ndarray | Image
@@ -1552,8 +1533,8 @@ class BlurCV2(Feature):
             The blurred image.
 
         """
-        
-        kwargs.pop("name", None)        
+
+        kwargs.pop("name", None)
         result = self.filter(src=image, **kwargs)
         return result
 
@@ -1580,7 +1561,7 @@ class BilateralBlur(BlurCV2):
         `sigma_color`).
     **kwargs: dict
         Additional parameters sent to the blurring function.
-      
+
     Examples
     --------
     >>> import deeptrack as dt
@@ -1603,11 +1584,11 @@ class BilateralBlur(BlurCV2):
 
     Notes
     -----
-    Calling this feature returns a `np.ndarray` by default. If 
-    `store_properties` is set to `True`, the returned array will be 
-    automatically wrapped in an `Image` object. This behavior is handled 
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
-    
+
     """
 
     def __init__(
@@ -1620,7 +1601,7 @@ class BilateralBlur(BlurCV2):
         """Initialize the parameters for bilateral blurring.
 
         This constructor initializes the parameters for bilateral blurring.
-        
+
         Parameters
         ----------
         d: int
@@ -1646,4 +1627,3 @@ class BilateralBlur(BlurCV2):
             sigmaSpace=sigma_space,
             **kwargs,
         )
-
