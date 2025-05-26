@@ -616,8 +616,6 @@ class Config:
         The currently set device for computation.
     backend: "numpy" or "torch"
         The currently active backend.
-    gpu_enabled : bool
-        True if the current device is "gpu", otherwise False.
 
     Methods
     -------
@@ -694,19 +692,6 @@ class Config:
 
     device: str | torch.device
     backend: Literal["numpy", "torch"]
-
-    @property
-    def gpu_enabled(self: Config) -> bool:
-        """Check if the current device is GPU.
-
-        Returns
-        -------
-        bool
-            True if the current device is "gpu", otherwise False.
-
-        """
-
-        return self.device == "gpu"
 
     def __init__(self: Config) -> None:
         """Initialize the configuration with default values.
