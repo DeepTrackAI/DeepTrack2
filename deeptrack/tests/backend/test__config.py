@@ -55,7 +55,7 @@ class TestConfig(unittest.TestCase):
             array = xp.arange(5)
             self.assertIsInstance(array, torch.Tensor)
 
-            # Switch bact to NumPy.
+            # Switch back to NumPy.
             xp.set_backend(apc_np)
             array = xp.arange(5)
             self.assertIsInstance(array, np.ndarray)
@@ -101,7 +101,7 @@ class TestConfig(unittest.TestCase):
                 ("float32", "torch.float32"),
             )
 
-            # Switch bact to NumPy.
+            # Switch back to NumPy.
             xp.set_backend(apc_np)
 
             dtype_default = xp.get_float_dtype()
@@ -364,22 +364,20 @@ class TestConfig(unittest.TestCase):
 
     def test_Config_with_backend(self):
 
-        # Save current backend
-        orig_backend = _config.config.get_backend()
+        if _config.TORCH_AVAILABLE:
+            target_backend = "torch"
+            other_backend = "numpy"
+            
+            # Switch to target backend
+            _config.config.set_backend(target_backend)
+            self.assertEqual(_config.config.get_backend(), target_backend)
 
-        # Switch to torch if available, otherwise use numpy
-        target_backend = "torch" if _config.TORCH_AVAILABLE else "numpy"
-        other_backend = "numpy" if target_backend == "torch" else "torch"
+            # The context manager should switch to the other backend inside
+            with _config.config.with_backend(other_backend):
+                self.assertEqual(_config.config.get_backend(), other_backend)
 
-        _config.config.set_backend(target_backend)
-        self.assertEqual(_config.config.get_backend(), target_backend)
-
-        # The context manager should switch to the other backend inside
-        with _config.config.with_backend(other_backend):
-            self.assertEqual(_config.config.get_backend(), other_backend)
-
-        # Should be restored after context
-        self.assertEqual(_config.config.get_backend(), target_backend)
+            # Should be restored after context
+            self.assertEqual(_config.config.get_backend(), target_backend)
 
 
 if __name__ == "__main__":
