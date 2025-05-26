@@ -1,9 +1,9 @@
 """Type declarations for internal use.
 
-This module defines type aliases and utility types to standardize the type 
-annotations used throughout the codebase. It enhances code readability, 
-maintainability, and reduces redundancy in type annotations. These types are 
-particularly useful for properties and array-like structures used within the 
+This module defines type aliases and utility types to standardize the type
+annotations used throughout the codebase. It enhances code readability,
+maintainability, and reduces redundancy in type annotations. These types are
+particularly useful for properties and array-like structures used within the
 library.
 
 Defined Types
@@ -13,7 +13,7 @@ Defined Types
 - `ArrayLike`
     A type alias for array-like structures (e.g., tuples, lists, numpy arrays).
 - `NumberLike`
-    A type alias for numeric types, including scalars and arrays (e.g., numpy 
+    A type alias for numeric types, including scalars and arrays (e.g., numpy
     arrays, GPU tensors).
 
 Examples
@@ -45,40 +45,26 @@ Using `NumberLike`:
 
 """
 
-from typing import Callable, List, Tuple, TypeVar, Union
+from __future__ import annotations
+from typing import Callable, List, Tuple, TypeVar, Union, TYPE_CHECKING
 
 import numpy as np
 
-# Try importing optional libraries for GPU arrays and tensors.
-try:
-    import cupy
-    _CUPY_AVAILABLE = True
-except ImportError:
-    _CUPY_AVAILABLE = False
 
-try:
+if TYPE_CHECKING:
     import torch
-    _TORCH_AVAILABLE = True
-except ImportError:
-    _TORCH_AVAILABLE = False
-
+    from deeptrack.image import Image
 
 # T is a generic type variable defining generic types for reusability.
 _T = TypeVar("T")
 
-# PropertyLike is a type alias representing a value of type T 
+# PropertyLike is a type alias representing a value of type T
 # or a callable returning type T.
 PropertyLike = Union[_T, Callable[..., _T]]
 
 # ArrayLike is a type alias representing any array-like structure.
 # It supports tuples, lists, and numpy arrays containing elements of type T.
-ArrayLike = Union[Tuple[_T, ...], List[_T], np.ndarray]
+ArrayLike = Union[np.ndarray, "torch.Tensor", "Image", List[_T], Tuple[_T, ...]]
 
 # NumberLike is a type alias representing any numeric type including arrays.
-NumberLike = Union[np.ndarray, int, float, bool, complex]
-
-if _CUPY_AVAILABLE:
-    NumberLike = Union[NumberLike, cupy.ndarray]
-
-if _TORCH_AVAILABLE:
-    NumberLike = Union[NumberLike, torch.Tensor]
+NumberLike = Union[np.ndarray, "torch.Tensor", int, float, bool, complex]

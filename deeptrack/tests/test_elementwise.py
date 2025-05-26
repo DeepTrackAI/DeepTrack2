@@ -9,7 +9,7 @@ from numpy.core.numeric import array_equal
 
 from numpy.testing._private.utils import assert_almost_equal
 
-from .. import elementwise, features, Image
+from deeptrack import elementwise, features, Image
 
 import numpy as np
 
