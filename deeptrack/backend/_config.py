@@ -87,12 +87,14 @@ except ImportError:
 class _Proxy(types.ModuleType):
     """Keep track of current backend and forward calls to the correct backend.
 
-    An instance of this object will be treated as the module `xp`. It acts like
-    a shallow wrapper around the actual backend (for example `numpy` or
-    `torch`), and forwards calls to the correct backend.
+    An instance of this object is treated as the module `xp`. It acts like a
+    shallow wrapper around the actual backend (for example `numpy` or `torch`),
+    forwarding calls to the correct backend.
 
-    This is especially useful for array creation functions, to ensure that the
-    correct array type is created.
+    This is especially useful for array creation functions in order to ensure
+    that the correct array type is created.
+
+    This class is used internally within _config.py.
 
     Parameters
     ----------
@@ -106,12 +108,39 @@ class _Proxy(types.ModuleType):
     __name__: str
         The name of the proxy object.
 
+    Methods
+    -------
+
+    `set_backend(backend: types.ModuleType) -> None`
+        Set the backend to use.
+
+    `get_float_dtype(dtype: str) -> str`
+        Get the float data type.
+
+    `def get_int_dtype(dtype: str) -> str`
+        Get the int data type.
+
+    `get_complex_dtype(dtype: str) -> str`
+        Get the complex data type.
+
+    `get_bool_dtype(dtype: str) -> str`
+        Get the bool data type.
+
+    `__getattr__(attribute: str) -> Any`
+        Forward attribute access to the current backend.
+
+    `__dir__() -> list[str]`
+        List attributes of the current backend.
+
     """
 
     _backend: types.ModuleType  # array_api_strict
     __name__: str
 
-    def __init__(self: _Proxy, name: str) -> None:
+    def __init__(
+        self: _Proxy,
+        name: str,
+    ) -> None:
         """Initialize the _Proxy object.
 
         Parameters
@@ -120,10 +149,14 @@ class _Proxy(types.ModuleType):
             Name of the proxy object. This is used when printing the object.
 
         """
+
         self.set_backend(apcnumpy)
         self.__name__ = name
 
-    def set_backend(self: _Proxy, backend: types.ModuleType) -> None:
+    def set_backend(
+        self: _Proxy,
+        backend: types.ModuleType,
+    ) -> None:
         """Set the backend to use.
 
         Parameters
@@ -136,49 +169,67 @@ class _Proxy(types.ModuleType):
         self._backend = backend
         self._backend_info = backend.__array_namespace_info__()
 
-    def get_float_dtype(self: _Proxy, dtype: str) -> str:
-        """Get the float dtype.
+    def get_float_dtype(
+        self: _Proxy,
+        dtype: str,
+    ) -> str:
+        """Get the float data type.
 
         Returns
         -------
         str
+            The name of the floating data type for the current backend.
+    
         """
+
         if dtype == "default":
             return self._backend_info.default_dtypes["real floating"]
         else:
             return self._backend_info.dtypes("real floating")[dtype]
 
-    def get_int_dtype(self: _Proxy, dtype: str) -> str:
-        """Get the int dtype.
+    def get_int_dtype(
+        self: _Proxy,
+        dtype: str,
+    ) -> str:
+        """Get the int data type.
 
         Returns
         -------
         str
+            The name of the integer data type for the current backend.
+
         """
+
         if dtype == "default":
             return self._backend_info.default_dtypes["integer"]
         else:
             return self._backend_info.dtypes("integer")[dtype]
 
     def get_complex_dtype(self: _Proxy, dtype: str) -> str:
-        """Get the complex dtype.
+        """Get the complex data type.
 
         Returns
         -------
         str
+            The name of the complex data type for the current backend.
+
         """
+
         if dtype == "default":
             return self._backend_info.default_dtypes["complex floating"]
         else:
             return self._backend_info.dtypes("complex floating")[dtype]
 
     def get_bool_dtype(self: _Proxy, dtype: str) -> str:
-        """Get the bool dtype.
+        """Get the bool data type.
 
         Returns
         -------
         str
+            The name of the boolean data type for the current backend.
+
         """
+
         if dtype == "default":
             return self._backend_info.default_dtypes["bool"]
         else:
