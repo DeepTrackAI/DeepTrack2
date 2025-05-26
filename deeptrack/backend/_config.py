@@ -246,22 +246,9 @@ class _Proxy(types.ModuleType):
         """
 
         if dtype == "default":
-            # Robust to "real floating" and "real" as key in default_dtypes()
-            default_dtypes = self._backend_info.default_dtypes()
-            if "real floating" in default_dtypes:
-                return default_dtypes["real floating"]
-            if "real" in default_dtypes:
-                return default_dtypes["real"]
-            raise KeyError(
-                "No default real floating dtype found in backend. "
-                "Looked for 'real floating' and 'real' in default_dtypes()."
-            )
+            return self._backend_info.default_dtypes()["real floating"]
 
-        # Support both flat and nested dictionaries in dtypes()
-        dtypes = self._backend_info.dtypes()
-        if "real floating" in dtypes:
-            return dtypes["real floating"][dtype]
-        return dtypes[dtype]
+        return self._backend_info.dtypes(kind="real floating")[dtype]
 
     def get_int_dtype(
         self: _Proxy,
@@ -311,24 +298,9 @@ class _Proxy(types.ModuleType):
         """
 
         if dtype == "default":
-            # Robust to "integer" and "integral" as key in default_dtypes()
-            default_dtypes = self._backend_info.default_dtypes()
-            if "integer" in default_dtypes:
-                return default_dtypes["integer"]
-            if "integral" in default_dtypes:
-                return default_dtypes["integral"]
-            raise KeyError(
-                "No default integer dtype found in backend. "
-                "Looked for 'integer' and 'integral' in default_dtypes()."
-            )
+            return self._backend_info.default_dtypes()["integral"]
 
-        # Support both flat and nested dictionaries in dtypes()
-        dtypes = self._backend_info.dtypes()
-        if "integer" in dtypes:
-            return dtypes["integer"][dtype]
-        if "integral" in dtypes:
-            return dtypes["integral"][dtype]
-        return dtypes[dtype]
+        return self._backend_info.dtypes(kind="integral")[dtype]
 
     def get_complex_dtype(
         self: _Proxy,
@@ -378,26 +350,9 @@ class _Proxy(types.ModuleType):
         """
 
         if dtype == "default":
-            # Robust to "complex floating" and "complex" as key in 
-            # default_dtypes()
-            default_dtypes = self._backend_info.default_dtypes()
-            if "complex floating" in default_dtypes:
-                return default_dtypes["complex floating"]
-            if "complex" in default_dtypes:
-                return default_dtypes["complex"]
-            raise KeyError(
-                "No default complex dtype found in backend. "
-                "Looked for 'complex floating' and 'complex' in"
-                " default_dtypes()."
-            )
+            return self._backend_info.default_dtypes()["complex floating"]
 
-        # Support both flat and nested dictionaries in dtypes()
-        dtypes = self._backend_info.dtypes()
-        if "complex floating" in dtypes:
-            return dtypes["complex floating"][dtype]
-        if "complex" in dtypes:
-            return dtypes["complex"][dtype]
-        return dtypes[dtype]
+        return self._backend_info.dtypes(kind="complex floating")[dtype]
 
     def get_bool_dtype(
         self: _Proxy,
@@ -447,24 +402,9 @@ class _Proxy(types.ModuleType):
         """
 
         if dtype == "default":
-            # Robust to "bool" and "boolean" as key in default_dtypes()
-            default_dtypes = self._backend_info.default_dtypes()
-            if "bool" in default_dtypes:
-                return default_dtypes["bool"]
-            if "boolean" in default_dtypes:
-                return default_dtypes["boolean"]
-            raise KeyError(
-                "No default bool dtype found in backend. "
-                "Looked for 'bool' and 'boolean' in default_dtypes()."
-            )
+            dtype = "bool"
 
-        # Support both flat and nested dictionaries in dtypes()
-        dtypes = self._backend_info.dtypes()
-        if "bool" in dtypes and isinstance(dtypes["bool"], dict):
-            return dtypes["bool"][dtype]
-        if "boolean" in dtypes and isinstance(dtypes["boolean"], dict):
-            return dtypes["boolean"][dtype]
-        return dtypes[dtype]
+        return self._backend_info.dtypes(kind="bool")[dtype]
 
     def __getattr__(
         self: _Proxy,
