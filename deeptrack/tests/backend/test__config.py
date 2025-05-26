@@ -296,6 +296,51 @@ class TestConfig(unittest.TestCase):
             self.assertIn("arange", attrs_torch)
             self.assertIn("ones", attrs_torch)
 
+    def test_Config_set_device(self):
+
+        _config.config.set_device("cpu")
+        self.assertEqual(_config.config.get_device(), "cpu")
+
+        if _config.TORCH_AVAILABLE:
+            _config.config.set_backend_torch()
+            _config.config.set_device("cuda")
+            self.assertEqual(_config.config.get_device(), "cuda")
+        else:
+            _config.config.set_backend_numpy()
+            _config.config.set_device("cpu")  # Should only allow cpu for NumPy
+            self.assertEqual(_config.config.get_device(), "cpu")
+
+        if _config.TORCH_AVAILABLE:
+            import torch
+            _config.config.set_backend_torch()
+            dev = torch.device("cuda:0")
+            _config.config.set_device(dev)
+            self.assertEqual(str(_config.config.get_device()), str(dev))
+
+    def test_Config_get_device(self):
+
+        _config.config.set_device("cpu")
+        self.assertEqual(_config.config.get_device(), "cpu")
+
+        if _config.TORCH_AVAILABLE:
+            _config.config.set_backend_torch()
+            _config.config.set_device("cuda")
+            self.assertEqual(_config.config.get_device(), "cuda")
+
+    def test_Config_set_backend_numpy(self):
+
+        _config.config.set_backend_numpy()
+        self.assertEqual(_config.config.get_backend(), "numpy")
+
+    def test_Config_set_backend_torch(self):
+
+        if _config.TORCH_AVAILABLE:
+            _config.config.set_backend_torch()
+            self.assertEqual(_config.config.get_backend(), "torch")
+        else:
+            with self.assertRaises(ModuleNotFoundError):
+                _config.config.set_backend_torch()
+
     def test_Config_set_backend(self):
 
         _config.config.set_backend_numpy()
@@ -317,63 +362,24 @@ class TestConfig(unittest.TestCase):
             _config.config.set_backend_torch()
             self.assertEqual(_config.config.get_backend(), "torch")
 
-    """
-    def test_set_device_cpu(self):
-        _config.config.set_device("cpu")
-        self.assertEqual(_config.config.get_device(), "cpu")
+    def test_Config_with_backend(self):
 
-    def test_set_device_cuda(self):
-        if _config.TORCH_AVAILABLE:
-            _config.config.set_backend_torch()
-            _config.config.set_device("cuda")
-            self.assertEqual(_config.config.get_device(), "cuda")
-        else:
-            _config.config.set_backend_numpy()
-            _config.config.set_device("cpu")  # Should only allow cpu for NumPy
-            self.assertEqual(_config.config.get_device(), "cpu")
-
-    def test_set_device_torch_device(self):
-        if _config.TORCH_AVAILABLE:
-            import torch
-            _config.config.set_backend_torch()
-            dev = torch.device("cuda:0")
-            _config.config.set_device(dev)
-            self.assertEqual(str(_config.config.get_device()), str(dev))
-
-    def test_get_device(self):
-        _config.config.set_device("cpu")
-        self.assertEqual(_config.config.get_device(), "cpu")
-        if _config.TORCH_AVAILABLE:
-            _config.config.set_backend_torch()
-            _config.config.set_device("cuda")
-            self.assertEqual(_config.config.get_device(), "cuda")
-
-    def test_with_backend_context_manager(self):
         # Save current backend
         orig_backend = _config.config.get_backend()
+
         # Switch to torch if available, otherwise use numpy
         target_backend = "torch" if _config.TORCH_AVAILABLE else "numpy"
         other_backend = "numpy" if target_backend == "torch" else "torch"
+
         _config.config.set_backend(target_backend)
         self.assertEqual(_config.config.get_backend(), target_backend)
+
         # The context manager should switch to the other backend inside
         with _config.config.with_backend(other_backend):
             self.assertEqual(_config.config.get_backend(), other_backend)
+
         # Should be restored after context
         self.assertEqual(_config.config.get_backend(), target_backend)
-
-    def test_gpu_enabled_property(self):
-        _config.config.set_device("cpu")
-        self.assertFalse(_config.config.gpu_enabled)
-        if _config.TORCH_AVAILABLE:
-            _config.config.set_backend_torch()
-            _config.config.set_device("gpu")
-            self.assertTrue(_config.config.gpu_enabled)
-            _config.config.set_device("cuda")
-            # Depending on implementation, gpu_enabled may be False for "cuda"
-            # If your logic is only for "gpu", this should be False:
-            self.assertFalse(_config.config.gpu_enabled)
-    """
 
 
 if __name__ == "__main__":
