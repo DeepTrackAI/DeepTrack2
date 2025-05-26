@@ -177,7 +177,7 @@ class TestCore(unittest.TestCase):
 
         # Test default bool dtype (NumPy)
         dtype_default = xp.get_bool_dtype()
-        self.assertIn(dtype_default, ("bool", "numpy.bool_"))
+        self.assertIn(dtype_default, ("bool", "numpy.bool", "numpy.bool_"))
 
         if _config.TORCH_AVAILABLE:
             from array_api_compat import torch as apc_torch
@@ -194,7 +194,7 @@ class TestCore(unittest.TestCase):
             # Switch back to NumPy
             xp.set_backend(apc_np)
             dtype_default = xp.get_bool_dtype()
-            self.assertIn(dtype_default, ("bool", "numpy.bool_"))
+            self.assertIn(dtype_default, ("bool", "numpy.bool", "numpy.bool_"))
 
 
 if __name__ == "__main__":
