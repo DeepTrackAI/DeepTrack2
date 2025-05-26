@@ -13,6 +13,20 @@ from deeptrack.backend import _config
 
 class TestCore(unittest.TestCase):
 
+    def test_TORCH_AVAILABLE(self):
+        try:
+            import torch
+            self.assertTrue(_config.TORCH_AVAILABLE)
+        except ImportError:
+            self.assertFalse(_config.TORCH_AVAILABLE)
+            
+    def test_OPENCV_AVAILABLE(self):
+        try:
+            import cv2
+            self.assertTrue(_config.OPENCV_AVAILABLE)
+        except ImportError:
+            self.assertFalse(_config.OPENCV_AVAILABLE)
+
     def test__Proxy_set_backend(self):
 
         from array_api_compat import numpy as apc_np
