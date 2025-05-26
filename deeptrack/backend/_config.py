@@ -54,7 +54,7 @@ import sys
 import types
 from typing import Any, Literal, TYPE_CHECKING
 
-from array_api_compat import numpy as apcnumpy
+from array_api_compat import numpy as apc_np
 import array_api_strict
 
 
@@ -158,7 +158,7 @@ class _Proxy(types.ModuleType):
 
         """
 
-        self.set_backend(apcnumpy)
+        self.set_backend(apc_np)
         self.__name__ = name
 
     def set_backend(
@@ -174,7 +174,23 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
-        TODO
+        Create a proxy instance and set the backend to NumPy:
+
+        >>> from array_api_compat import numpy as apc_np
+        >>>
+        >>> xp = _Proxy("numpy")
+        >>> xp.set_backend(apc_np)
+        >>> array = xp.arange(5)
+        >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+
+        Now switch to a PyTorch backend:
+
+        >>> from array_api_compat import torch as apc_torch
+        >>>
+        >>> xp = _Proxy("torch")
+        >>> xp.set_backend(apc_torch)
+        >>> array = xp.arange(5)
+        >>> print(type(array))  # Output: <class 'torch.Tensor'>
 
         """
 
@@ -203,14 +219,49 @@ class _Proxy(types.ModuleType):
     
         Examples
         --------
-        TODO
+        Create a proxy instance and set the backend to NumPy:
+
+        >>> from array_api_compat import numpy as apc_np
+        >>> xp = _Proxy("numpy")
+        >>> xp.set_backend(apc_np)
+
+        >>> dtype = xp.get_float_dtype()
+        >>> print(dtype)  # Output: float64
+
+        >>> dtype = xp.get_float_dtype("float32")
+        >>> print(dtype)  # Output: float32
+
+        # Now switch to a PyTorch backend:
+
+        >>> from array_api_compat import torch as apc_torch
+        >>> xp = _Proxy("torch")
+        >>> xp.set_backend(apc_torch)
+
+        >>> dtype = xp.get_float_dtype()
+        >>> print(dtype)  # Output: torch.float32
+
+        >>> dtype = xp.get_float_dtype("float32")
+        >>> print(dtype)  # Output: torch.float32
 
         """
 
         if dtype == "default":
-            return self._backend_info.default_dtypes["real floating"]
+            # Robust to "real floating" and "real" as key in default_dtypes()
+            default_dtypes = self._backend_info.default_dtypes()
+            if "real floating" in default_dtypes:
+                return default_dtypes["real floating"]
+            if "real" in default_dtypes:
+                return default_dtypes["real"]
+            raise KeyError(
+                "No default real floating dtype found in backend. "
+                "Looked for 'real floating' and 'real' in default_dtypes()."
+            )
 
-        return self._backend_info.dtypes("real floating")[dtype]
+        # Support both flat and nested dictionaries in dtypes()
+        dtypes = self._backend_info.dtypes()
+        if "real floating" in dtypes:
+            return dtypes["real floating"][dtype]
+        return dtypes[dtype]
 
     def get_int_dtype(
         self: _Proxy,
@@ -233,14 +284,51 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
-        TODO
+        Create a proxy instance and set the backend to NumPy:
+
+        >>> from array_api_compat import numpy as apc_np
+        >>> xp = _Proxy("numpy")
+        >>> xp.set_backend(apc_np)
+
+        >>> dtype = xp.get_int_dtype()
+        >>> print(dtype)  # Output: int64
+
+        >>> dtype = xp.get_int_dtype("int32")
+        >>> print(dtype)  # Output: int32
+
+        # Now switch to a PyTorch backend:
+
+        >>> from array_api_compat import torch as apc_torch
+        >>> xp = _Proxy("torch")
+        >>> xp.set_backend(apc_torch)
+
+        >>> dtype = xp.get_int_dtype()
+        >>> print(dtype)  # Output: torch.int64
+
+        >>> dtype = xp.get_int_dtype("int32")
+        >>> print(dtype)  # Output: torch.int32
 
         """
 
         if dtype == "default":
-            return self._backend_info.default_dtypes["integer"]
+            # Robust to "integer" and "integral" as key in default_dtypes()
+            default_dtypes = self._backend_info.default_dtypes()
+            if "integer" in default_dtypes:
+                return default_dtypes["integer"]
+            if "integral" in default_dtypes:
+                return default_dtypes["integral"]
+            raise KeyError(
+                "No default integer dtype found in backend. "
+                "Looked for 'integer' and 'integral' in default_dtypes()."
+            )
 
-        return self._backend_info.dtypes("integer")[dtype]
+        # Support both flat and nested dictionaries in dtypes()
+        dtypes = self._backend_info.dtypes()
+        if "integer" in dtypes:
+            return dtypes["integer"][dtype]
+        if "integral" in dtypes:
+            return dtypes["integral"][dtype]
+        return dtypes[dtype]
 
     def get_complex_dtype(
         self: _Proxy,
@@ -263,14 +351,53 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
-        TODO
+        Create a proxy instance and set the backend to NumPy:
+
+        >>> from array_api_compat import numpy as apc_np
+        >>> xp = _Proxy("numpy")
+        >>> xp.set_backend(apc_np)
+
+        >>> dtype = xp.get_complex_dtype()
+        >>> print(dtype)  # Output: complex128
+
+        >>> dtype = xp.get_complex_dtype("complex64")
+        >>> print(dtype)  # Output: complex64
+
+        # Now switch to a PyTorch backend:
+
+        >>> from array_api_compat import torch as apc_torch
+        >>> xp = _Proxy("torch")
+        >>> xp.set_backend(apc_torch)
+
+        >>> dtype = xp.get_complex_dtype()
+        >>> print(dtype)  # Output: torch.complex64
+
+        >>> dtype = xp.get_complex_dtype("complex64")
+        >>> print(dtype)  # Output: torch.complex64
 
         """
 
         if dtype == "default":
-            return self._backend_info.default_dtypes["complex floating"]
+            # Robust to "complex floating" and "complex" as key in 
+            # default_dtypes()
+            default_dtypes = self._backend_info.default_dtypes()
+            if "complex floating" in default_dtypes:
+                return default_dtypes["complex floating"]
+            if "complex" in default_dtypes:
+                return default_dtypes["complex"]
+            raise KeyError(
+                "No default complex dtype found in backend. "
+                "Looked for 'complex floating' and 'complex' in"
+                " default_dtypes()."
+            )
 
-        return self._backend_info.dtypes("complex floating")[dtype]
+        # Support both flat and nested dictionaries in dtypes()
+        dtypes = self._backend_info.dtypes()
+        if "complex floating" in dtypes:
+            return dtypes["complex floating"][dtype]
+        if "complex" in dtypes:
+            return dtypes["complex"][dtype]
+        return dtypes[dtype]
 
     def get_bool_dtype(
         self: _Proxy,
@@ -293,14 +420,51 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
-        TODO
+        Create a proxy instance and set the backend to NumPy:
+
+        >>> from array_api_compat import numpy as apc_np
+        >>> xp = _Proxy("numpy")
+        >>> xp.set_backend(apc_np)
+
+        >>> dtype = xp.get_bool_dtype()
+        >>> print(dtype)  # Output: bool
+
+        >>> dtype = xp.get_bool_dtype(dtype="bool")
+        >>> print(dtype)  # Output: bool
+
+        # Now switch to a PyTorch backend:
+
+        >>> from array_api_compat import torch as apc_torch
+        >>> xp = _Proxy("torch")
+        >>> xp.set_backend(apc_torch)
+
+        >>> dtype = xp.get_bool_dtype()
+        >>> print(dtype)  # Output: torch.bool
+
+        >>> dtype = xp.get_bool_dtype(dtype="bool")
+        >>> print(dtype)  # Output: torch.bool
 
         """
 
         if dtype == "default":
-            return self._backend_info.default_dtypes["bool"]
+            # Robust to "bool" and "boolean" as key in default_dtypes()
+            default_dtypes = self._backend_info.default_dtypes()
+            if "bool" in default_dtypes:
+                return default_dtypes["bool"]
+            if "boolean" in default_dtypes:
+                return default_dtypes["boolean"]
+            raise KeyError(
+                "No default bool dtype found in backend. "
+                "Looked for 'bool' and 'boolean' in default_dtypes()."
+            )
 
-        return self._backend_info.dtypes("bool")[dtype]
+        # Support both flat and nested dictionaries in dtypes()
+        dtypes = self._backend_info.dtypes()
+        if "bool" in dtypes and isinstance(dtypes["bool"], dict):
+            return dtypes["bool"][dtype]
+        if "boolean" in dtypes and isinstance(dtypes["boolean"], dict):
+            return dtypes["boolean"][dtype]
+        return dtypes[dtype]
 
     def __getattr__(
         self: _Proxy,
@@ -347,7 +511,7 @@ class _Proxy(types.ModuleType):
 # Intersection types are in the pipeline for python 3.13 or 3.14. They let you
 # define types that are the combination of many subtypes. So Intersection[A, B]
 # would have all the properties of A and B. Here, it would let us define
-# exactly the type of xp as Intersection[_Proxy, apcnumpy, apctorch].
+# exactly the type of xp as Intersection[_Proxy, apc_np, apc_torch].
 
 
 # This creates the xp object, which we will use a module.
