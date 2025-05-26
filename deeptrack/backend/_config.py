@@ -424,7 +424,23 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
-        TODO
+        Access NumPy's arange function transparently through the proxy:
+
+        >>> from array_api_compat import numpy as apc_np
+        >>> xp = _Proxy("numpy")
+        >>> xp.set_backend(apc_np)
+        >>> array = xp.arange(4)
+        >>> print(array)  # Output: [0 1 2 3]
+
+        Now switch to a PyTorch backend:
+        >>> from array_api_compat import torch as apc_torch
+        >>> xp = ._Proxy("torch")
+        >>> xp.set_backend(apc_torch)
+        >>> array = xp.arange(4)
+        >>> print(array)  # Output: tensor([0, 1, 2, 3])
+
+        Analogously, you can access any attribute or function available in the
+        current backend.
 
         """
 
@@ -440,7 +456,19 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
-        TODO
+        List the attributes (functions, constants, etc.) in the NumPy backend:
+        >>> from array_api_compat import numpy as apc_np
+        >>> xp = _Proxy("numpy")
+        >>> xp.set_backend(apc_np)
+        >>> attrs_numpy = dir(xp)
+        >>> print(attrs_numpy)
+
+        List the attributes in the PyTorch backend:
+        >>> from array_api_compat import torch as apc_torch
+        >>> xp = _Proxy("torch")
+        >>> xp.set_backend(apc_torch)
+        >>> attrs_torch = dir(xp)
+        >>> print(attrs_torch)
 
         """
 
