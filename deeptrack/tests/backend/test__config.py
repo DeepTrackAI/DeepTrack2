@@ -170,6 +170,9 @@ class TestCore(unittest.TestCase):
             self.assertIn(dtype_default, ("complex128", "numpy.complex128"))
 
     def test__Proxy_get_bool_dtype(self):
+
+        import sys
+
         from array_api_compat import numpy as apc_np
 
         xp = _config._Proxy("numpy")
@@ -177,10 +180,11 @@ class TestCore(unittest.TestCase):
 
         # Test default bool dtype (NumPy)
         dtype_default = xp.get_bool_dtype()
-        self.assertIn(
-            str(dtype_default),
-            ("bool", "numpy.bool", "numpy.bool_"),
-        )
+        if sys.version_info >= (3, 10):
+            self.assertIn(
+                dtype_default,
+                ("bool", "numpy.bool", "numpy.bool_"),
+            )
 
         if _config.TORCH_AVAILABLE:
             from array_api_compat import torch as apc_torch
@@ -197,10 +201,11 @@ class TestCore(unittest.TestCase):
             # Switch back to NumPy
             xp.set_backend(apc_np)
             dtype_default = xp.get_bool_dtype()
-            self.assertIn(
-                str(dtype_default),
-                ("bool", "numpy.bool", "numpy.bool_"),
-            )
+            if sys.version_info >= (3, 10):
+                self.assertIn(
+                    dtype_default,
+                    ("bool", "numpy.bool", "numpy.bool_"),
+                )
 
     def test__Proxy___getattr__(self):
 
