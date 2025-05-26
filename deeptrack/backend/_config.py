@@ -1,49 +1,121 @@
-"""Configuration and backend management for DeepTrack.
+"""Configuration and backend management for DeepTrack2.
 
-This module provides the core configuration class and context managers used to
-control the computational backend (NumPy, PyTorch, or others), device selection
-(CPU, GPU, etc.), and image wrapper behavior for DeepTrack pipelines.
+This module provides the core configuration class `Config` used to control the
+computational backend (NumPy or PyTorch) and the device selection (CPU, GPU,
+etc.).
 
-The main entry point is the `Config` class, which allows you to:
-- Select the array backend for computation (e.g., NumPy or PyTorch)
-- Specify the device to run on (CPU, GPU, or torch.device)
-- Control whether outputs are wrapped as Image objects
+Key Features
+------------
+- **Backend Selection and Management**
 
-Additional context managers such as `NullContext` and `ImageWrapperContext`
-are provided to facilitate temporary changes to configuration and to enable or
-disable image wrapping within a code block.
+    It enables users to select and seamlessly switch between supported
+    computational backends, including NumPy and PyTorch. This allows for
+    backend-agnostic code and flexible pipeline design.
 
-Classes
--------
-Config
-    Main configuration class for DeepTrack backend, device, and image wrapper.
-_Proxy
-    Internal class used to proxy backend calls and ensure correct array types.
+- **Device Control**
 
-Attributes
-----------
-config: Config
-    The default configuration object used by DeepTrack.
-xp: module
-    The currently active backend module (NumPy, PyTorch, etc.).
+    It provides mechanisms to specify the computation device (e.g., CPU, GPU,
+    or `torch.device`). This gives users fine-grained control over
+    computational resources.
+
+- **Context Managers for Temporary Configuration**
+
+    Offers context managers that allow temporary changes to backend. This
+    supports safe and readable experimental or context-specific configuration.
+
+Module Structure
+----------------
+Classes:
+
+- `Config`: Main configuration class for backend and device.
+
+    It encapsulates methods to get/set backend and device, and provides a
+    context manager for temporary configuration changes.
+
+- `_Proxy`: Internal class to call proxy backend and correct array types.
+
+    It forwards function calls to the current backend module (NumPy or PyTorch)
+    and ensures arrays are created with the correct type and context.
+
+Attributes:
+
+- config: Config
+
+    The default configuration object used by DeepTrack2. This singleton
+    instance maintains global state for backend and device.
+
+- xp: array_api_strict
+
+    The currently active backend module. Provides the array API (NumPy,
+    PyTorch) as selected by the user, via the `_Proxy` interface.
+
+- TORCH_AVAILABLE: bool
+
+    True if PyTorch (torch) is available, otherwise False. Used to control
+    backend switching and PyTorch-specific features.
+
+- OPENCV_AVAILABLE: bool
+
+    True if OpenCV (cv2) is available, otherwise False. Used for conditional
+    logic when image processing requires OpenCV.
 
 Examples
 --------
-Set the backend to PyTorch and use the GPU:
+IMPORTANT: Users should ensure backend and device compatibility.
+
+Import the global config object and the xp proxy for backend-agnostic code:
+
+>>> from deeptrack.backend._config import config, xp
+
+Check the default backend and device:
+
+>>> print(config.get_backend())  # Output: 'numpy'
+>>> print(config.get_device())  # Output: 'cpu'
+
+Use the xp proxy to create a NumPy array:
+
+>>> array = xp.arange(5)
+>>> print(type(array))  # Output: <class 'numpy.ndarray'>
+
+Switch to the PyTorch backend and use GPU:
 
 >>> config.set_backend_torch()
 >>> config.set_device("cuda")
+>>> print(config.get_backend())  # Output: 'torch'
+>>> print(config.get_device())  # Output: 'cuda'
 
-Temporarily enable the image wrapper within a context:
+Create a tensor using the xp proxy
 
->>> with ImageWrapperContext(config):
-...     result = some_pipeline()
->>> # Image wrapper state is automatically restored on exit
+>>> tensor = xp.arange(3)
+>>> print(type(tensor))  # Output: <class 'torch.Tensor'>
 
-Switch backend temporarily within a context:
+Temporarily switch backends within a context manager.
+
+>>> print(config.get_backend())  # Output: 'torch'
 
 >>> with config.with_backend("numpy"):
-...     result = some_numpy_operation()
+...     print(config.get_backend())  # Output: 'numpy'
+
+>>> print(config.get_backend())  # Output: 'torch'
+
+# Use PyTorch-specific device objects if desired:
+
+>>> import torch
+
+>>> config.set_device(torch.device("cuda:0"))
+>>> print(config.get_device())  # Output: device(type='cuda', index=0)
+
+# Check PyTorch availability:
+
+>>> from deeptrack.backend._config import TORCH_AVAILABLE
+
+>>> print(TORCH_AVAILABLE)
+
+# Check OpenCV availability:
+
+>>> from deeptrack.backend._config import OPENCV_AVAILABLE
+
+>>> print(OPENCV_AVAILABLE)
 
 """
 
@@ -110,14 +182,13 @@ class _Proxy(types.ModuleType):
 
     Methods
     -------
-
     `set_backend(backend: types.ModuleType) -> None`
         Set the backend to use.
 
     `get_float_dtype(dtype: str) -> str`
         Get the float data type.
 
-    `def get_int_dtype(dtype: str) -> str`
+    `get_int_dtype(dtype: str) -> str`
         Get the int data type.
 
     `get_complex_dtype(dtype: str) -> str`
@@ -134,7 +205,51 @@ class _Proxy(types.ModuleType):
 
     Examples
     --------
-    TODO
+    Create a proxy instance and set the backend to NumPy:
+
+    >>> from array_api_compat import numpy as apc_np
+    >>> xp = _Proxy("numpy")
+    >>> xp.set_backend(apc_np)
+
+    Use the proxy to create an array (calls NumPy under the hood):
+
+    >>> array = xp.arange(5)
+    >>> print(array)  # Output: [0 1 2 3 4]
+    >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+
+    You can use any function or attribute provided by the backend:
+
+    >>> ones_array = xp.ones((2, 2))
+
+    Query dtypes in a backend-agnostic way:
+
+    >>> print(xp.get_float_dtype())  # Output: float64
+    >>> print(xp.get_int_dtype())  # Output: int64
+    >>> print(xp.get_complex_dtype())  # Output: complex128
+    >>> print(xp.get_bool_dtype())  # Output: bool
+
+    Switch to the PyTorch backend:
+
+    >>> from array_api_compat import torch as apc_torch
+    >>> xp = _Proxy("torch")
+    >>> xp.set_backend(apc_torch)
+
+    Now the proxy uses PyTorch:
+    >>> array = xp.arange(5)
+    >>> print(array)  # Output: tensor([0, 1, 2, 3, 4])
+    >>> print(type(array))  # Output: <class 'torch.Tensor'>
+
+    The dtype helpers return PyTorch-specific types:
+
+    >>> print(xp.get_float_dtype())  # Output: torch.float32
+    >>> print(xp.get_int_dtype())  # Output: torch.int64
+    >>> print(xp.get_complex_dtype())  # Output: torch.complex64
+    >>> print(xp.get_bool_dtype())  # Output: torch.bool
+
+    You can switch backends as often as needed.:
+    >>> xp.set_backend(apc_np)
+    >>> array = xp.arange(3)
+    >>> print(type(array))  # Output: <class 'numpy.ndarray'>
 
     """
 
@@ -151,10 +266,6 @@ class _Proxy(types.ModuleType):
         ----------
         name: str
             Name of the proxy object. This is used when printing the object.
-
-        Examples
-        --------
-        TODO
 
         """
 
@@ -495,25 +606,94 @@ sys.modules[xp.__name__] = xp
 class Config:
     """Configuration object for managing backend and device settings.
 
-    This class manages the backend (such as NumPy or PyTorch), the computing
-    device (such as CPU, GPU, or torch.device), and whether the image wrapper
-    is enabled. It provides methods for switching between backends and devices,
-    and for enabling or disabling the image wrapper.
+    This class manages the backend (such as NumPy or PyTorch) and the computing
+    device (such as CPU, GPU, or torch.device). It provides methods for
+    switching between backends and devices.
 
     Attributes
     ----------
     device: str | torch.device
         The currently set device for computation.
-    backend: "numpy" | "torch"
+    backend: "numpy" or "torch"
         The currently active backend.
-    image_wrapper: bool
-        Whether the image wrapper is enabled.
+    gpu_enabled : bool
+        True if the current device is "gpu", otherwise False.
+
+    Methods
+    -------
+    `set_device(device: str | torch.device) -> None`
+        Set the device to use.
+
+    `get_device() -> str | torch.device`
+        Get the device to use.
+
+    `set_backend_numpy() -> None`
+        Set the backend to NumPy.
+
+    `set_backend_torch() -> None`
+        Set the backend to PyTorch.
+
+    `def set_backend(backend: Literal["numpy", "torch"]) -> None`
+        Set the backend to use for array operations.
+
+    `get_backend() -> Literal["numpy", "torch"]`
+        Get the current backend.
+
+    `with_backend(context_backend: Literal["numpy", "torch"]) -> object`
+        Return a context manager that temporarily changes the backend.
+
+    Examples
+    --------
+    IMPORTANT: Users should ensure backend and device compatibility.
+
+    Create the singleton configuration object and check its defaults:
+
+    >>> from deeptrack.backend._config import config
+
+    >>> print(config.get_backend())  # Output: 'numpy'
+    >>> print(config.get_device())  # Output: 'cpu'
+
+    Set the backend to PyTorch and device to GPU:
+
+    >>> config.set_backend_torch()
+    >>> config.set_device("cuda")
+    >>> print(config.get_backend())  # Output: 'torch'
+    >>> print(config.get_device())  # Output: 'cuda'
+
+    Use the xp proxy to create arrays/tensors:
+
+    >>> from deeptrack.backend._config import xp
+
+    >>> config.set_backend_numpy()
+    >>> array = xp.arange(5)
+    >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+
+    >>> config.set_backend_torch()
+    >>> tensor = xp.arange(5)
+    >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+
+    Temporarily switch backend using a context manager:
+
+    >>> config.set_backend("torch")
+    >>> print(config.get_backend())  # Output: 'torch'
+
+    >>> with config.with_backend("numpy"):
+    ...     print(config.get_backend())  # Output: 'numpy'
+
+    >>> print(config.get_backend())  # Output: 'torch'
+
+    Use a torch.device object directly:
+
+    >>> import torch
+
+    >>> config.set_backend_torch()
+    >>> config.set_device(torch.device("cuda:0"))
+    >>> print(config.get_device())  # Output: device(type='cuda', index=0)
 
     """
 
     device: str | torch.device
     backend: Literal["numpy", "torch"]
-    image_wrapper: bool
 
     @property
     def gpu_enabled(self: Config) -> bool:
@@ -529,16 +709,14 @@ class Config:
         return self.device == "gpu"
 
     def __init__(self: Config) -> None:
-        """Initializes the configuration with default values.
+        """Initialize the configuration with default values.
 
-        It sets the device to "cpu", the backend to "numpy", and disables the
-        image wrapper.
+        By default, it sets the device to "cpu" and the backend to "numpy".
 
         """
 
         self.set_device("cpu")
         self.set_backend_numpy()
-        self.disable_image_wrapper()
 
     def set_device(
         self: Config,
@@ -546,7 +724,7 @@ class Config:
     ) -> None:
         """Set the device to use.
 
-        Can be a string, most typically "cpu", "gpu", "cuda", "mps", or
+        It can be a string, most typically "cpu", "gpu", "cuda", "mps", or
         torch.device. In any case, it needs to be used with a compatible
         backend.
 
@@ -554,8 +732,48 @@ class Config:
 
         Parameters
         ----------
-        device: str | torch.device
+        device: str or torch.device
             The device to use.
+
+        Examples
+        --------
+        IMPORTANT: Users should ensure backend and device compatibility.
+
+        Import the singleton configuration object:
+
+        >>> from deeptrack.backend._config import config
+
+        Set device to CPU (works with both NumPy and PyTorch backends):
+
+        >>> config.set_device("cpu")
+        >>> print(config.get_device())  # Output: cpu
+
+        Set device to GPU (requires PyTorch backend):
+
+        >>> config.set_backend_torch()
+        >>> config.set_device("cuda")
+        >>> print(config.get_device())  # Output: cuda
+
+        Use a specific CUDA device (PyTorch backend):
+
+        >>> import torch
+        >>> config.set_backend_torch()
+        >>> config.set_device(torch.device("cuda:0"))
+        >>> print(config.get_device()) # Output: device(type='cuda', index=0)
+
+        Set device to Apple Silicon GPU (PyTorch backend on Macs):
+
+        >>> config.set_backend_torch()
+        >>> config.set_device("mps")
+        >>> print(config.get_device())  # Output: mps
+
+        Attempting to set a GPU device with NumPy backend (should be avoided):
+
+        >>> config.set_backend_numpy()
+        >>> config.set_device("cuda")
+        >>> print(config.get_device())  # Output: cuda
+
+        Computation will still run on CPU, since NumPy does not support GPU.
 
         """
 
@@ -566,20 +784,71 @@ class Config:
 
         Returns
         -------
-        str | torch.device
-            The device to use.
+        str or torch.device
+            The device to use. It can be a string, most typically "cpu", "gpu",
+            "cuda", "mps", or torch.device. In any case, it needs to be used
+            with a compatible backend.
+
+        Examples
+        --------
+        Import the singleton configuration object:
+
+        >>> from deeptrack.backend._config import config
+
+        Get the current device:
+
+        >>> device = config.get_device()
 
         """
 
         return self.device
 
-    def set_backend_numpy(self):
-        """Set the backend to numpy."""
+    def set_backend_numpy(self: Config) -> None:
+        """Set the backend to NumPy.
+
+        Examples
+        --------
+        Import the singleton configuration object:
+
+        >>> from deeptrack.backend._config import config
+
+        Set the backend to NumPy:
+
+        >>> config.set_backend_numpy()
+        >>> print(config.get_backend())  # Output: 'numpy'
+
+        NumPy backend enables use of standard NumPy arrays via the xp proxy:
+
+        >>> from deeptrack.backend._config import xp
+        >>> array = xp.arange(5)
+        >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+    
+        """
 
         self.set_backend("numpy")
 
-    def set_backend_torch(self):
-        """Set the backend to torch."""
+    def set_backend_torch(self: Config) -> None:
+        """Set the backend to PyTorch.
+
+        Examples
+        --------
+        Import the singleton configuration object:
+
+        >>> from deeptrack.backend._config import config
+
+        Set the backend to PyTorch:
+
+        >>> config.set_backend_torch()
+        >>> print(config.get_backend())  # Output: 'torch'
+
+        PyTorch backend enables use of PyTorch tensors via the xp proxy:
+
+        >>> from deeptrack.backend._config import xp
+
+        >>> tensor = xp.arange(5)
+        >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+
+        """
 
         self.set_backend("torch")
 
@@ -591,9 +860,37 @@ class Config:
 
         Parameters
         ----------
-        backend : "numpy" | "torch"
+        backend : "numpy" or "torch"
             The backend to use for array operations.
 
+        Examples
+        --------
+        Import the singleton configuration object:
+
+        >>> from deeptrack.backend._config import config
+
+        Set the backend to NumPy:
+
+        >>> config.set_backend("numpy")
+        >>> print(config.get_backend())  # Output: 'numpy'
+
+        Set the backend to PyTorch:
+
+        >>> config.set_backend("torch")
+        >>> print(config.get_backend())  # Output: 'torch'
+
+        Switch between backends as needed in your workflow using the xp proxy:
+
+        >>> from deeptrack.backend._config import xp
+
+        >>> config.set_backend("numpy")
+        >>> array = xp.arange(4)
+        >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+
+        >>> config.set_backend("torch")
+        >>> tensor = xp.arange(4)
+        >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+    
         """
 
         # This import is only necessary when using the torch backend.
@@ -610,30 +907,22 @@ class Config:
 
         Returns
         -------
-        str
+        "numpy" or "torch"
             The backend currently in use, "numpy" or "torch".
+
+        Examples
+        --------
+        Import the singleton configuration object:
+
+        >>> from deeptrack.backend._config import config
+
+        Get the current backend:
+
+        >>> backend = config.get_backend()
 
         """
 
         return self.backend
-
-    def disable_image_wrapper(self: Config) -> None:
-        """Disable the image wrapper.
-
-        When disabled, `Image` objects are not used for wrapping outputs.
-
-        """
-
-        self.image_wrapper = False
-
-    def enable_image_wrapper(self: Config) -> None:
-        """Enable the image wrapper.
-
-        When enabled, outputs are wrapped as `Image` objects.
-
-        """
-
-        self.image_wrapper = True
 
     def with_backend(
         self: Config,
@@ -646,7 +935,7 @@ class Config:
 
         Parameters
         ----------
-        context_backend : "numpy" | "torch"
+        context_backend: "numpy" | "torch"
             The backend to temporarily use within the context.
 
         Returns
@@ -654,6 +943,37 @@ class Config:
         object
             A context manager that switches the backend.
 
+        Examples
+        --------
+        Import the singleton configuration object:
+
+        >>> from deeptrack.backend._config import config
+
+        Temporarily switch to the NumPy backend for a block of code:
+
+        >>> config.set_backend("torch")
+        >>> print(config.get_backend())  # Output: 'torch'
+
+        >>> with config.with_backend("numpy"):
+        ...     print(config.get_backend())  # Output: 'numpy'
+
+        >>> print(config.get_backend())  # Output: 'torch'
+
+        Temporarily switch to the PyTorch backend inside a function:
+
+        >>> from deeptrack.backend._config import xp
+
+        >>> config.set_backend("numpy")
+
+        >>> def do_torch_operation():
+        ...     with config.with_backend("torch"):
+        ...         return xp.arange(3)
+
+        >>> tensor = do_torch_operation()
+        >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+
+        >>> print(config.get_backend())  # Output: 'numpy'
+    
         """
 
         self_backend = self.backend
