@@ -14,10 +14,16 @@ from deeptrack.tests import BackendTestBase
 
 try:
     import cv2
-
     OPENCV_AVAILABLE = True
 except ImportError:
     OPENCV_AVAILABLE = False
+
+
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
 
 
 class TestMathNumpy(BackendTestBase):
@@ -71,10 +77,10 @@ class TestMathNumpy(BackendTestBase):
 
 
 # Extending the test and setting the backend to torch
-# TODO: uncomment and complete the PyTorch tests
-# class TestMathTorch(TestMathNumpy):
-#     BACKEND = "torch"
-#     pass
+@unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
+class TestMathTorch(TestMathNumpy):
+    BACKEND = "torch"
+    pass
 
 
 class TestMath(unittest.TestCase):
