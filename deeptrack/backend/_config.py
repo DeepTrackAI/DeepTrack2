@@ -132,6 +132,10 @@ class _Proxy(types.ModuleType):
     `__dir__() -> list[str]`
         List attributes of the current backend.
 
+    Examples
+    --------
+    TODO
+
     """
 
     _backend: types.ModuleType  # array_api_strict
@@ -147,6 +151,10 @@ class _Proxy(types.ModuleType):
         ----------
         name: str
             Name of the proxy object. This is used when printing the object.
+
+        Examples
+        --------
+        TODO
 
         """
 
@@ -164,6 +172,10 @@ class _Proxy(types.ModuleType):
         backend: types.ModuleType
             The backend to use.
 
+        Examples
+        --------
+        TODO
+
         """
 
         self._backend = backend
@@ -171,71 +183,129 @@ class _Proxy(types.ModuleType):
 
     def get_float_dtype(
         self: _Proxy,
-        dtype: str,
+        dtype: str = "default",
     ) -> str:
         """Get the float data type.
+
+        Parameters
+        ----------
+        dtype: str, optional
+            The floating-point data type to retrieve. If "default" (the
+            default), returns the backend's default floating-point data type
+            name. Otherwise, specify a valid floating-point data type key
+            (e.g., "float32", "float64") to retrieve the corresponding type
+            for the backend.
 
         Returns
         -------
         str
             The name of the floating data type for the current backend.
     
+        Examples
+        --------
+        TODO
+
         """
 
         if dtype == "default":
             return self._backend_info.default_dtypes["real floating"]
-        else:
-            return self._backend_info.dtypes("real floating")[dtype]
+
+        return self._backend_info.dtypes("real floating")[dtype]
 
     def get_int_dtype(
         self: _Proxy,
-        dtype: str,
+        dtype: str = "default",
     ) -> str:
         """Get the int data type.
+
+        Parameters
+        ----------
+        dtype: str, optional
+            The integer data type to retrieve. If "default" (the default),
+            returns the backend's default integer data type name. Otherwise,
+            specify a valid integer data type key (e.g., "int32", "int64") to
+            retrieve the corresponding type for the backend.
 
         Returns
         -------
         str
             The name of the integer data type for the current backend.
 
+        Examples
+        --------
+        TODO
+
         """
 
         if dtype == "default":
             return self._backend_info.default_dtypes["integer"]
-        else:
-            return self._backend_info.dtypes("integer")[dtype]
 
-    def get_complex_dtype(self: _Proxy, dtype: str) -> str:
+        return self._backend_info.dtypes("integer")[dtype]
+
+    def get_complex_dtype(
+        self: _Proxy,
+        dtype: str = "default",
+    ) -> str:
         """Get the complex data type.
+
+        Parameters
+        ----------
+        dtype: str, optional
+            The complex data type to retrieve. If "default" (the default),
+            returns the backend's default complex data type name. Otherwise,
+            specify a valid complex data type key (e.g., "complex64",
+            "complex128") to retrieve the corresponding type for the backend.
 
         Returns
         -------
         str
             The name of the complex data type for the current backend.
 
+        Examples
+        --------
+        TODO
+
         """
 
         if dtype == "default":
             return self._backend_info.default_dtypes["complex floating"]
-        else:
-            return self._backend_info.dtypes("complex floating")[dtype]
 
-    def get_bool_dtype(self: _Proxy, dtype: str) -> str:
+        return self._backend_info.dtypes("complex floating")[dtype]
+
+    def get_bool_dtype(
+        self: _Proxy,
+        dtype: str = "default",
+    ) -> str:
         """Get the bool data type.
+
+        Parameters
+        ----------
+        dtype: str, optional
+            The boolean data type to retrieve. If "default" (the default),
+            returns the backend's default boolean data type name. Otherwise,
+            specify a valid boolean data type key (usually "bool") to retrieve
+            the corresponding type for the backend.
 
         Returns
         -------
         str
             The name of the boolean data type for the current backend.
 
+        Examples
+        --------
+        TODO
+
         """
 
         if dtype == "default":
             return self._backend_info.default_dtypes["bool"]
-        else:
-            return self._backend_info.dtypes("bool")[dtype]
 
-    def __getattr__(self: _Proxy, attribute: str) -> Any:
+        return self._backend_info.dtypes("bool")[dtype]
+
+    def __getattr__(
+        self: _Proxy,
+        attribute: str,
+    ) -> Any:
         """Forward attribute access to the current backend.
 
         Parameters
@@ -248,6 +318,10 @@ class _Proxy(types.ModuleType):
         Any
             The attribute from the current backend module.
 
+        Examples
+        --------
+        TODO
+
         """
 
         return getattr(self._backend, attribute)
@@ -259,6 +333,10 @@ class _Proxy(types.ModuleType):
         -------
         list
             List of attribute names in the current backend module.
+
+        Examples
+        --------
+        TODO
 
         """
 
