@@ -84,12 +84,12 @@ Switch to the PyTorch backend and use GPU:
 >>> print(config.get_backend())  # Output: 'torch'
 >>> print(config.get_device())  # Output: 'cuda'
 
-Create a tensor using the xp proxy
+Create a tensor using the xp proxy:
 
 >>> tensor = xp.arange(3)
 >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
 
-Temporarily switch backends within a context manager.
+Temporarily switch backends within a context manager:
 
 >>> print(config.get_backend())  # Output: 'torch'
 
