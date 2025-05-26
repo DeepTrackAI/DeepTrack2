@@ -98,20 +98,20 @@ Temporarily switch backends within a context manager:
 
 >>> print(config.get_backend())  # Output: 'torch'
 
-# Use PyTorch-specific device objects if desired:
+Use PyTorch-specific device objects if desired:
 
 >>> import torch
 
 >>> config.set_device(torch.device("cuda:0"))
 >>> print(config.get_device())  # Output: device(type='cuda', index=0)
 
-# Check PyTorch availability:
+Check PyTorch availability:
 
 >>> from deeptrack.backend._config import TORCH_AVAILABLE
 
 >>> print(TORCH_AVAILABLE)
 
-# Check OpenCV availability:
+Check OpenCV availability:
 
 >>> from deeptrack.backend._config import OPENCV_AVAILABLE
 
@@ -342,7 +342,7 @@ class _Proxy(types.ModuleType):
         >>> dtype = xp.get_float_dtype("float32")
         >>> print(dtype)  # Output: float32
 
-        # Now switch to a PyTorch backend:
+        Now switch to a PyTorch backend:
 
         >>> from array_api_compat import torch as apc_torch
         >>> xp = _Proxy("torch")
@@ -394,7 +394,7 @@ class _Proxy(types.ModuleType):
         >>> dtype = xp.get_int_dtype("int32")
         >>> print(dtype)  # Output: int32
 
-        # Now switch to a PyTorch backend:
+        Now switch to a PyTorch backend:
 
         >>> from array_api_compat import torch as apc_torch
         >>> xp = _Proxy("torch")
@@ -446,7 +446,7 @@ class _Proxy(types.ModuleType):
         >>> dtype = xp.get_complex_dtype("complex64")
         >>> print(dtype)  # Output: complex64
 
-        # Now switch to a PyTorch backend:
+        Now switch to a PyTorch backend:
 
         >>> from array_api_compat import torch as apc_torch
         >>> xp = _Proxy("torch")
@@ -498,7 +498,7 @@ class _Proxy(types.ModuleType):
         >>> dtype = xp.get_bool_dtype(dtype="bool")
         >>> print(dtype)  # Output: bool
 
-        # Now switch to a PyTorch backend:
+        Now switch to a PyTorch backend:
 
         >>> from array_api_compat import torch as apc_torch
         >>> xp = _Proxy("torch")
