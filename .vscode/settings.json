@@ -1,5 +1,0 @@
-{
-  "python.testing.unittestArgs": ["-v", "-s", "./deeptrack/tests"],
-  "python.testing.pytestEnabled": false,
-  "python.testing.unittestEnabled": true
-}
