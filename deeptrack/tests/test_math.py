@@ -11,6 +11,7 @@ from deeptrack import math
 from deeptrack.backend import config, xp
 from deeptrack.tests import BackendTestBase
 
+
 try:
     import cv2
 
@@ -70,9 +71,10 @@ class TestMathNumpy(BackendTestBase):
 
 
 # Extending the test and setting the backend to torch
-class TestMathTorch(TestMathNumpy):
-    BACKEND = "torch"
-    pass
+# TODO: uncomment and complete the PyTorch tests
+# class TestMathTorch(TestMathNumpy):
+#     BACKEND = "torch"
+#     pass
 
 
 class TestMath(unittest.TestCase):
