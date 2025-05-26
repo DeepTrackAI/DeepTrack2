@@ -273,6 +273,8 @@ Here you find a series of notebooks tailored for DeepTrack2's developers:
 
 - DTDV411 **[Style Guide](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/4-developers/DTDV411_style.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/4-developers/DTDV411_style.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
+- DTDV421 **[Using Different Computational Backends](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/4-developers/DTDV421_backends.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/4-developers/DTDV421_backends.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
 # Documentation
 
 The detailed documentation of DeepTrack2 is available at the following link: [https://deeptrackai.github.io/DeepTrack2](https://deeptrackai.github.io/DeepTrack2)
