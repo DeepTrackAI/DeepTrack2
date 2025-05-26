@@ -58,11 +58,30 @@ from array_api_compat import numpy as apcnumpy
 import array_api_strict
 
 
-__all__ = ["config"]
+__all__ = [
+    "config",
+    "OPENCV_AVAILABLE",
+    "TORCH_AVAILABLE",
+    "xp",
+]
 
 
 if TYPE_CHECKING:
     import torch
+
+
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+
+
+try:
+    import cv2
+    OPENCV_AVAILABLE = True
+except ImportError:
+    OPENCV_AVAILABLE = False
 
 
 class _Proxy(types.ModuleType):

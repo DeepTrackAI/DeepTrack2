@@ -1,7 +1,10 @@
 from pathlib import Path
 import unittest
 
-from deeptrack.backend import config  # adjust to real import path
+from deeptrack.backend import config
+
+
+__all__ = ["BackendTestBase"]
 
 
 class BackendTestBase(unittest.TestCase):
