@@ -177,7 +177,10 @@ class TestCore(unittest.TestCase):
 
         # Test default bool dtype (NumPy)
         dtype_default = xp.get_bool_dtype()
-        self.assertIn(dtype_default, ("bool", "numpy.bool", "numpy.bool_"))
+        self.assertIn(
+            str(dtype_default),
+            ("bool", "numpy.bool", "numpy.bool_"),
+        )
 
         if _config.TORCH_AVAILABLE:
             from array_api_compat import torch as apc_torch
@@ -194,7 +197,75 @@ class TestCore(unittest.TestCase):
             # Switch back to NumPy
             xp.set_backend(apc_np)
             dtype_default = xp.get_bool_dtype()
-            self.assertIn(dtype_default, ("bool", "numpy.bool", "numpy.bool_"))
+            self.assertIn(
+                str(dtype_default),
+                ("bool", "numpy.bool", "numpy.bool_"),
+            )
+
+    def test__Proxy___getattr__(self):
+
+        from array_api_compat import numpy as apc_np
+        import numpy as np
+
+        xp = _config._Proxy("numpy")
+        xp.set_backend(apc_np)
+
+        # The proxy should forward .arange to NumPy's arange
+        arange = xp.arange(3)
+        self.assertIsInstance(arange, np.ndarray)
+        self.assertEqual(arange.shape, (3,))
+
+        # The proxy should forward .ones to NumPy's ones
+        ones = xp.ones((2, 2))
+        self.assertIsInstance(ones, np.ndarray)
+        self.assertEqual(ones.shape, (2, 2))
+
+        if _config.TORCH_AVAILABLE:
+            from array_api_compat import torch as apc_torch
+            import torch
+
+            xp.set_backend(apc_torch)
+            arr = xp.arange(3)
+
+            # The proxy should forward .arange to PyTorch's arange
+            arange = xp.arange(3)
+            self.assertIsInstance(arange, torch.Tensor)
+            self.assertEqual(arange.shape, (3,))
+
+            # The proxy should forward .ones to PyTorch's ones
+            ones = xp.ones((2, 2))
+            self.assertIsInstance(ones, torch.Tensor)
+            self.assertEqual(ones.shape, (2, 2))
+
+            # Switch back to NumPy and test again
+            xp.set_backend(apc_np)
+            arange = xp.arange(3)
+            self.assertIsInstance(arange, np.ndarray)
+            self.assertEqual(arange.shape, (3,))
+
+    def test__Proxy___dir__(self):
+
+        from array_api_compat import numpy as apc_np
+
+        xp = _config._Proxy("numpy")
+        xp.set_backend(apc_np)
+
+        attrs_numpy = dir(xp)
+        self.assertIsInstance(attrs_numpy, list)
+        # These attributes should be present for NumPy backend
+        self.assertIn("arange", attrs_numpy)
+        self.assertIn("ones", attrs_numpy)
+
+        if _config.TORCH_AVAILABLE:
+            from array_api_compat import torch as apc_torch
+
+            xp.set_backend(apc_torch)
+
+            attrs_torch = dir(xp)
+            self.assertIsInstance(attrs_torch, list)
+            # These attributes should be present for NumPy backend
+            self.assertIn("arange", attrs_torch)
+            self.assertIn("ones", attrs_torch)
 
 
 if __name__ == "__main__":
