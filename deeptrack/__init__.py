@@ -8,8 +8,7 @@ from .backend.pint_definition import pint_definitions
 import warnings
 import importlib.util
 
-# Checks if TensorFlow is installed and issues a compatibility warning.
-# Check if TensorFlow is installed
+# Check if TensorFlow is installed and issues a compatibility warning.
 tensorflow_installed = importlib.util.find_spec("tensorflow") is not None
 if tensorflow_installed:
     warnings.warn(
@@ -27,24 +26,6 @@ if tensorflow_installed:
 # Create a unit registry with custom pixel-related units.
 units = UnitRegistry(pint_definitions.split("\n"))
 
-"""# Check if tensorflow is installed without importing it #TBE
-import pkg_resources
-
-installed = [pkg.key for pkg in pkg_resources.working_set]
-
-if "tensorflow" in installed:
-    HAS_TENSORFLOW = True
-else:
-    HAS_TENSORFLOW = False
-
-if "torch" in installed:
-    HAS_TORCH = True
-else:
-    HAS_TORCH = False
-
-if HAS_TENSORFLOW and HAS_TORCH:
-    import torch # torch must be imported before tensorflow"""  # TBE
-
 from deeptrack.features import *
 from deeptrack.aberrations import *
 from deeptrack.augmentations import *
@@ -60,14 +41,6 @@ from deeptrack.holography import *
 
 from deeptrack.image import strip
 
-# if not HAS_TENSORFLOW:
-# Lazy imports to avoid overhead of importing tensorflow
-
-# generators = lazy_import.lazy_module("deeptrack.generators")
-# models = lazy_import.lazy_module("deeptrack.models")
-# datasets = lazy_import.lazy_module("deeptrack.datasets")
-# losses = lazy_import.lazy_module("deeptrack.losses")
-# layers = lazy_import.lazy_module("deeptrack.layers")
 
 # if not HAS_TORCH:
 pytorch = lazy_import.lazy_module("deeptrack.pytorch")
