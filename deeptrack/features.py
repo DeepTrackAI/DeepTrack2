@@ -494,7 +494,7 @@ class Feature(DeepTrackNode):
     resolve = __call__
 
     def to_sequential(
-            feature: Feature,
+            self: Feature,
             **kwargs
     ) -> Feature:
         """Converts a feature to be resolved as a sequence.
