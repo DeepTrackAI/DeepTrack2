@@ -509,7 +509,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        feature: Feature
+        self: Feature
             Feature to make sequential.
         kwargs
             Keyword arguments to pass on as sequential properties of `feature`.
@@ -523,21 +523,21 @@ class Feature(DeepTrackNode):
 
         for property_name in kwargs.keys():
 
-            if property_name in feature.properties:
+            if property_name in self.properties:
                 # Insert property with initialized value
-                feature.properties[property_name] = SequentialProperty(
-                    feature.properties[property_name], **feature.properties
+                self.properties[property_name] = SequentialProperty(
+                    self.properties[property_name], **self.properties
                 )
             else:
                 # insert empty property
-                feature.properties[property_name] = SequentialProperty()
+                self.properties[property_name] = SequentialProperty()
 
-            feature.properties.add_dependency(feature.properties[property_name])
-            feature.properties[property_name].add_child(feature.properties)
+            self.properties.add_dependency(self.properties[property_name])
+            self.properties[property_name].add_child(self.properties)
 
         for property_name, sampling_rule in kwargs.items():
 
-            prop = feature.properties[property_name]
+            prop = self.properties[property_name]
 
             all_kwargs = dict(
                 previous_value=prop.previous_value,
@@ -546,7 +546,7 @@ class Feature(DeepTrackNode):
                 sequence_step=prop.sequence_step,
             )
 
-            for key, val in feature.properties.items():
+            for key, val in self.properties.items():
                 if key == property_name:
                     continue
 
@@ -560,7 +560,7 @@ class Feature(DeepTrackNode):
 
             prop.current = prop.create_action(sampling_rule, **all_kwargs)
 
-        return feature
+        return self
 
     def store_properties(
         self: Feature,
