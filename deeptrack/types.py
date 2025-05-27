@@ -46,6 +46,7 @@ Using `NumberLike`:
 """
 
 from __future__ import annotations
+
 from typing import Callable, List, Tuple, TypeVar, Union, TYPE_CHECKING
 
 import numpy as np
@@ -54,6 +55,7 @@ import numpy as np
 if TYPE_CHECKING:
     import torch
     from deeptrack.image import Image
+
 
 # T is a generic type variable defining generic types for reusability.
 _T = TypeVar("T")
@@ -64,7 +66,13 @@ PropertyLike = Union[_T, Callable[..., _T]]
 
 # ArrayLike is a type alias representing any array-like structure.
 # It supports tuples, lists, and numpy arrays containing elements of type T.
-ArrayLike = Union[np.ndarray, "torch.Tensor", "Image", List[_T], Tuple[_T, ...]]
+ArrayLike = Union[
+    np.ndarray,
+    "torch.Tensor",
+    "Image",
+    List[_T],
+    Tuple[_T, ...],
+]
 
 # NumberLike is a type alias representing any numeric type including arrays.
 NumberLike = Union[np.ndarray, "torch.Tensor", int, float, bool, complex]
