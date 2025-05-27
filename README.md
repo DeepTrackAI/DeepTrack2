@@ -91,7 +91,7 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 - DTGS151 **[Unsupervised Object Detection](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS151_unsupervised_object_detection_with_lodestar.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS151_unsupervised_object_detection_with_lodestar.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-  Single-shot unsupervised object detection a using LodeSTAR.
+  Single-shot unsupervised object detection using LodeSTAR.
 
 # Examples
 
