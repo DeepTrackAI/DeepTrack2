@@ -93,6 +93,10 @@ Here you find a series of notebooks that give you an overview of the core featur
 
   Single-shot unsupervised object detection using LodeSTAR.
 
+- DTGS161 **[Fitting Using PyTorch Gradients](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS161_torch_fitting.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS161_torch_fitting.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Single-shot unsupervised object detection using LodeSTAR.
+
 # Examples
 
 These are examples of how DeepTrack2 can be used on real datasets:
