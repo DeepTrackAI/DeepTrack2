@@ -33,7 +33,6 @@ class TestProperties(unittest.TestCase):
         P.update()
         np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
 
-
     def test_Property_function(self):
 
         # Lambda function.
@@ -71,7 +70,6 @@ class TestProperties(unittest.TestCase):
             self.assertEqual(P(), P())
             self.assertTrue(P() >= 0 and P() <= 2)
 
-
     def test_Property_slice(self):
         P = properties.Property(slice(1, lambda: 10, properties.Property(2)))
         result = P()
@@ -83,7 +81,6 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(result.stop, 10)
         self.assertEqual(result.step, 2)
 
-
     def test_Property_iterable(self):
         P = properties.Property(iter([1, 2, 3]))
 
@@ -94,7 +91,6 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(P(), 3)
         P.update()
         self.assertEqual(P(), 3)  # Last value repeats indefinitely
-
 
     def test_Property_list(self):
         P = properties.Property([1, lambda: 2, properties.Property(3)])
@@ -115,7 +111,6 @@ class TestProperties(unittest.TestCase):
             self.assertTrue(P()[0] >= 0 and P()[0] <= 1)
             self.assertTrue(P()[1] >= 0 and P()[1] <= 2)
             self.assertTrue(P()[2] >= 0 and P()[2] <= 3)
-
 
     def test_Property_dict(self):
         P = properties.Property(
@@ -143,7 +138,6 @@ class TestProperties(unittest.TestCase):
             self.assertTrue(P()["b"] >= 0 and P()["b"] <= 2)
             self.assertTrue(P()["c"] >= 0 and P()["c"] <= 3)
 
-
     def test_Property_DeepTrackNode(self):
         node = DeepTrackNode(100)
         P = properties.Property(node)
@@ -158,7 +152,6 @@ class TestProperties(unittest.TestCase):
             self.assertEqual(P(), P())
             self.assertTrue(P() >= 0 and P() <= 1)
 
-
     def test_Property_ID(self):
         P = properties.Property(lambda _ID: _ID)
         self.assertEqual(P(), ())
@@ -168,7 +161,6 @@ class TestProperties(unittest.TestCase):
 
         P = properties.Property(lambda _ID: _ID)
         self.assertEqual(P((1, 2, 3)), (1, 2, 3))
-
 
     def test_Property_combined(self):
         P = properties.Property(
@@ -191,7 +183,6 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(result["slice"].start, 1)
         self.assertEqual(result["slice"].stop, 10)
         self.assertEqual(result["slice"].step, 2)
-
 
     def test_PropertyDict(self):
 
@@ -219,7 +210,6 @@ class TestProperties(unittest.TestCase):
         self.assertIsInstance(PD["dependent"], properties.Property)
         self.assertEqual(PD["dependent"](), 43)
         self.assertEqual(PD()["dependent"], 43)
-
 
     def test_SequentialProperty(self):
         SP = properties.SequentialProperty()
