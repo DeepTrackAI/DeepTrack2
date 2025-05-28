@@ -125,7 +125,7 @@ from __future__ import annotations
 import itertools
 import operator
 import random
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Literal
 
 import numpy as np
 import matplotlib.animation as animation
@@ -135,7 +135,7 @@ from scipy.spatial.distance import cdist
 
 
 from deeptrack import units
-from deeptrack.backend import config
+from deeptrack.backend import config, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
 from deeptrack.image import Image
@@ -185,6 +185,18 @@ class Feature(DeepTrackNode):
         dynamically sample values during pipeline execution. A sampled copy of
         this dictionary is passed to the `get` function and appended to the 
         properties of the output image.
+    float_dtype: np.dtype
+        The data type of the float numbers.
+    int_dtype: np.dtype
+        The data type of the integer numbers.
+    complex_dtype: np.dtype
+        The data type of the complex numbers.
+    bool_dtype: np.dtype
+        The data type of the boolean numbers.
+    device: str or torch.device
+        The device on which the feature is executed.
+    _backend: Config
+        The computational backend.
     __list_merge_strategy__: int
         Specifies how the output of `.get(image, **kwargs)` is merged with the 
         input list. Options include:
@@ -222,8 +234,6 @@ class Feature(DeepTrackNode):
         Batches the feature for repeated execution.
     `action(_ID: tuple[int, ...] = ()) -> Image | list[Image]`
         Core logic to create or transform the image.
-    `__use_gpu__(inp: np.ndarrary | Image, **_: Any) -> bool`
-        Determines if the feature should use the GPU.
     `update(**global_arguments: Any) -> Feature`
         Refreshes the feature to create a new image.
     `add_feature(feature: Feature) -> Feature`
@@ -316,8 +326,6 @@ class Feature(DeepTrackNode):
         Processes the output of the feature.
     `_no_wrap_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
         Processes the output of the feature.
-    `_coerce_inputs(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Coerces the input to a list of Image.
 
     """
 
@@ -333,6 +341,35 @@ class Feature(DeepTrackNode):
     __gpu_compatible__ = False
 
     _wrap_array_with_image: bool = False
+    _float_dtype: str
+    _int_dtype: str
+    _complex_dtype: str
+    _device: str | torch.device
+
+    @property
+    def float_dtype(self) -> np.dtype | torch.dtype:
+        """The dtype of the float numbers."""
+        return xp.get_float_dtype(self._float_dtype)
+
+    @property
+    def int_dtype(self) -> np.dtype | torch.dtype:
+        """The dtype of the integer numbers."""
+        return xp.get_int_dtype(self._int_dtype)
+
+    @property
+    def complex_dtype(self) -> np.dtype | torch.dtype:
+        """The dtype of the complex numbers."""
+        return xp.get_complex_dtype(self._complex_dtype)
+    
+    @property
+    def bool_dtype(self) -> np.dtype | torch.dtype:
+        """The dtype of the boolean numbers."""
+        return xp.get_bool_dtype(self._bool_dtype)
+
+    @property
+    def device(self) -> str | torch.device:
+        """The device to be used during evaluation."""
+        return self._device
 
     def __init__(
         self: Feature,
@@ -354,6 +391,16 @@ class Feature(DeepTrackNode):
         
         """
 
+        # store backend on initialization
+        self._backend = config.get_backend()
+
+        # Store the dtype and device on initialization.
+        self._float_dtype = "default"
+        self._int_dtype = "default"
+        self._complex_dtype = "default"
+        self._bool_dtype = "default"
+        self._device = config.get_device()
+
         super().__init__()
 
         # Ensure the feature has a 'name' property; default = class name.
@@ -370,12 +417,9 @@ class Feature(DeepTrackNode):
         # self.add_dependency(self._input)  # Executed by add_child.
 
         # 3) Random seed node (for deterministic behavior if desired).
-        self._random_seed = DeepTrackNode(lambda: random.randint(
-            0, 2147483648)
-            )
-        self._random_seed = DeepTrackNode(lambda: random.randint(
-            0, 2147483648)
-            )
+        self._random_seed = DeepTrackNode(
+            lambda: random.randint(0, 2147483648)
+        )
         self._random_seed.add_child(self)
         # self.add_dependency(self._random_seed)  # Executed by add_child.
 
@@ -448,45 +492,45 @@ class Feature(DeepTrackNode):
             The output of the feature or pipeline after execution.
         
         """
+        with config.with_backend(self._backend):
+            # If image_list is as Source, activate it.
+            self._activate_sources(image_list)
 
-        # If image_list is as Source, activate it.
-        self._activate_sources(image_list)
+            # Potentially fragile. Maybe a special variable dt._last_input instead?
+            # If the input is not empty, set the value of the input.
+            if (
+                image_list is not None
+                and not (isinstance(image_list, list) and len(image_list) == 0)
+                and not (isinstance(image_list, tuple)
+                        and any(isinstance(x, SourceItem) for x in image_list))
+            ):
+                self._input.set_value(image_list, _ID=_ID)
 
-        # Potentially fragile. Maybe a special variable dt._last_input instead?
-        # If the input is not empty, set the value of the input.
-        if (
-            image_list is not None
-            and not (isinstance(image_list, list) and len(image_list) == 0)
-            and not (isinstance(image_list, tuple)
-                     and any(isinstance(x, SourceItem) for x in image_list))
-        ):
-            self._input.set_value(image_list, _ID=_ID)
+            # A dict to store the values of self.arguments before updating them.
+            original_values = {}
 
-        # A dict to store the values of self.arguments before updating them.
-        original_values = {}
+            # If there are no self.arguments, instead propagate the values of the
+            # kwargs to all properties in the computation graph.
+            if kwargs and self.arguments is None:
+                propagate_data_to_dependencies(self, **kwargs)
 
-        # If there are no self.arguments, instead propagate the values of the
-        # kwargs to all properties in the computation graph.
-        if kwargs and self.arguments is None:
-            propagate_data_to_dependencies(self, **kwargs)
+            # If there are self.arguments, update the values of self.arguments to 
+            # match kwargs.
+            if isinstance(self.arguments, Feature):
+                for key, value in kwargs.items():
+                    if key in self.arguments.properties:
+                        original_values[key] = \
+                            self.arguments.properties[key](_ID=_ID)
+                        self.arguments.properties[key].set_value(value, _ID=_ID)
 
-        # If there are self.arguments, update the values of self.arguments to 
-        # match kwargs.
-        if isinstance(self.arguments, Feature):
-            for key, value in kwargs.items():
-                if key in self.arguments.properties:
-                    original_values[key] = \
-                        self.arguments.properties[key](_ID=_ID)
-                    self.arguments.properties[key].set_value(value, _ID=_ID)
+            # This executes the feature. DeepTrackNode will determine if it needs
+            # to be recalculated. If it does, it will call the `action` method.
+            output = super().__call__(_ID=_ID)
 
-        # This executes the feature. DeepTrackNode will determine if it needs
-        # to be recalculated. If it does, it will call the `action` method.
-        output = super().__call__(_ID=_ID)
-
-        # If there are self.arguments, reset the values of self.arguments to
-        # their original values.
-        for key, value in original_values.items():
-            self.arguments.properties[key].set_value(value, _ID=_ID)
+            # If there are self.arguments, reset the values of self.arguments to
+            # their original values.
+            for key, value in original_values.items():
+                self.arguments.properties[key].set_value(value, _ID=_ID)
 
         return output
 
@@ -589,46 +633,107 @@ class Feature(DeepTrackNode):
                     dependency.store_properties(toggle, recursive=False)
 
     def torch(
-        self: Feature, 
-        dtype: torch.dtype = None, 
+        self: Feature,
         device: torch.device = None,
-        permute_mode: str = "never",
-    ) -> 'Feature':
-        """Convert the feature to a PyTorch feature.
+        recursive: bool = True,
+    ) -> Feature:
+        """Set the backend to torch.
 
         Parameters
         ----------
-        dtype: torch.dtype, optional
-            The data type of the output.
         device: torch.device, optional
-            The target device of the output (e.g., CPU or GPU).
-        permute_mode: str
-            Controls whether to permute image axes for PyTorch. 
-            Defaults to "never".
+            The target device of the output (e.g., cpu or cuda).
+        recursive: bool, optional
+            If `True`, also convert all dependent features.
 
         Returns
         -------
         Feature
-            The transformed, PyTorch-compatible feature.
+            self
 
         """
 
-        from deeptrack.pytorch.features import ToTensor
+        self._backend = "torch"
+        if recursive:
+            for dependency in self.recurse_dependencies():
+                if isinstance(dependency, Feature):
+                    dependency.torch(device, recursive=False)
 
-        tensor_feature = ToTensor(
-            dtype=dtype, 
-            device=device, 
-            permute_mode=permute_mode,
-        )
-        
-        tensor_feature.store_properties(False, recursive=False)
-        
-        return self >> tensor_feature
+        self.invalidate()
+        return self
 
-    def batch(
+    def numpy(self: Feature, recursive: bool = True) -> Feature:
+        """Set the backend to numpy.
+
+        Parameters
+        ----------
+        recursive: bool, optional
+            If `True`, also convert all dependent features.
+
+        Returns
+        -------
+        Feature
+            self
+
+        """
+
+        self._backend = "numpy"
+        if recursive:
+            for dependency in self.recurse_dependencies():
+                if isinstance(dependency, Feature):
+                    dependency.numpy(recursive=False)
+        self.invalidate()
+        return self
+
+    def dtype(
         self: Feature,
-        batch_size: int = 32
-    ) -> tuple | list[Image]:
+        float: Literal["float32", "float64", "default"] | None = None,
+        int: Literal["int16", "int32", "int64", "default"] | None = None,
+        complex: Literal["complex64", "complex128", "default"] | None = None,
+        bool: Literal["bool", "default"] | None = None,
+    ) -> None:
+        """Set the dtype to be used during evaluation.
+
+        This alters the dtype used for array creation, but does not
+        automatically cast the type.
+
+        Parameters
+        ----------
+        float: str, optional
+            The float dtype to set.
+        int: str, optional
+            The int dtype to set.
+        complex: str, optional
+            The complex dtype to set.
+        bool: str, optional
+            The bool dtype to set.
+
+        """
+
+        if float is not None:
+            self._float_dtype = float
+        if int is not None:
+            self._int_dtype = int
+        if complex is not None:
+            self._complex_dtype = complex
+        if bool is not None:
+            self._bool_dtype = bool
+
+    def to(self: Feature, device: str | torch.device):
+        """Set the device to be used during evaluation.
+
+        If the backend is numpy, this can only be "cpu".
+
+        Parameters
+        ----------
+        device: str or torch.device
+            The device to use.
+
+        """
+
+        self._device = device
+
+    def batch(self: Feature, batch_size: int = 32) -> tuple | list[Image]:
         """Batch the feature.
 
         This method produces a batch of outputs by repeatedly calling 
@@ -720,30 +825,6 @@ class Feature(DeepTrackNode):
             return image_list[0]
         else:
             return image_list
-
-    def __use_gpu__(
-        self: Feature,
-        inp: np.ndarray | Image,
-        **_: Any,
-    ) -> bool:
-        """Determine if the feature should use the GPU.
-        
-        Parameters
-        ----------
-        inp: np.ndarray or Image
-            The input image to check.
-        **_: Any
-            Additional arguments (unused).
-
-        Returns
-        -------
-        bool
-            True if GPU acceleration is enabled and beneficial, otherwise 
-            False.
-
-        """
-
-        return self.__gpu_compatible__ and np.prod(np.shape(inp)) > (90000)
 
     def update(
         self: Feature,
@@ -1457,8 +1538,7 @@ class Feature(DeepTrackNode):
         if not isinstance(image_list, list):
             image_list = [image_list]
 
-        inputs = [(Image(image)) for image in image_list]
-        return self._coerce_inputs(inputs, **kwargs)
+        return [(Image(image)) for image in image_list]
 
     def _no_wrap_format_input(
         self: Feature, 
@@ -1568,32 +1648,8 @@ class Feature(DeepTrackNode):
             if isinstance(image, Image):
                 image_list[index] = image._value
 
-    def _coerce_inputs(
-        self: Feature,
-        inputs: list[np.ndarray] | list[Image],
-        **kwargs: dict[str, Any],
-    ) -> list[Image]:
-        """Converts inputs to the appropriate data type based on 
-        GPU availability.
-        
-        """
 
-        if config.gpu_enabled:
-
-            return [
-                i.to_cupy()
-                if (not self.__distributed__) and self.__use_gpu__(i, **kwargs)
-                else i.to_numpy()
-                for i in inputs
-            ]
-
-        else:
-            return [i.to_numpy() for i in inputs]
-
-def propagate_data_to_dependencies(
-    feature: Feature,
-    **kwargs: dict[str, Any]
-) -> None:
+def propagate_data_to_dependencies(feature: Feature, **kwargs: dict[str, Any]) -> None:
     """Updates the properties of dependencies in a feature's dependency tree.
 
     This function traverses the dependency tree of the given feature and 

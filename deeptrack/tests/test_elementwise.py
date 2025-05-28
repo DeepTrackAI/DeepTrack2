@@ -9,10 +9,9 @@ from numpy.core.numeric import array_equal
 
 from numpy.testing._private.utils import assert_almost_equal
 
-from .. import elementwise, features, Image
+from deeptrack import elementwise, features, Image
 
 import numpy as np
-from deeptrack.backend._config import cupy as cp
 
 import numpy.testing
 import inspect
@@ -80,7 +79,6 @@ def create_test(cl):
                 0,
                 1,
                 (np.random.rand(50, 500) - 0.5) * 100,
-                (cp.random.rand(50, 500) - 0.5) * 100,
             ],
             np.__dict__[cl.__name__.lower()],
         )
