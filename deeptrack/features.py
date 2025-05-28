@@ -139,7 +139,7 @@ from deeptrack.backend import config
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
 from deeptrack.image import Image
-from deeptrack.properties import PropertyDict
+from deeptrack.properties import PropertyDict, SequentialProperty
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
 
@@ -493,6 +493,74 @@ class Feature(DeepTrackNode):
 
     resolve = __call__
 
+    def to_sequential(
+            self: Feature,
+            **kwargs
+    ) -> Feature:
+        """Converts a feature to be resolved as a sequence.
+
+        Should be called on individual features, not combinations of features. All
+        keyword arguments will be treated as sequential properties and will be
+        passed to the parent feature.
+
+        If a property from the keyword argument already exists on the feature, the
+        existing property will be used to initialize the passed property (that is,
+        it will be used for the first timestep).
+
+        Parameters
+        ----------
+        self: Feature
+            Feature to make sequential.
+        kwargs
+            Keyword arguments to pass on as sequential properties of `feature`.
+            
+        Returns
+        -------
+        Feature
+            The input feature evolved as a sequence
+            
+        """
+
+        for property_name in kwargs.keys():
+
+            if property_name in self.properties:
+                # Insert property with initialized value
+                self.properties[property_name] = SequentialProperty(
+                    self.properties[property_name], **self.properties
+                )
+            else:
+                # insert empty property
+                self.properties[property_name] = SequentialProperty()
+
+            self.properties.add_dependency(self.properties[property_name])
+            self.properties[property_name].add_child(self.properties)
+
+        for property_name, sampling_rule in kwargs.items():
+
+            prop = self.properties[property_name]
+
+            all_kwargs = dict(
+                previous_value=prop.previous_value,
+                previous_values=prop.previous_values,
+                sequence_length=prop.sequence_length,
+                sequence_step=prop.sequence_step,
+            )
+
+            for key, val in self.properties.items():
+                if key == property_name:
+                    continue
+
+                if isinstance(val, SequentialProperty):
+                    all_kwargs[key] = val
+                    all_kwargs["previous_" + key] = val.previous_values
+                else:
+                    all_kwargs[key] = val
+            if not prop.initialization:
+                prop.initialization = prop.create_action(sampling_rule, **{k:all_kwargs[k] for k in all_kwargs if k != "previous_value"})
+
+            prop.current = prop.create_action(sampling_rule, **all_kwargs)
+
+        return self
 
     def store_properties(
         self: Feature,
