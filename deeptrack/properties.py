@@ -76,12 +76,14 @@ Handle sequential properties:
 
 """
 
+from __future__ import annotations
+
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
-from .utils import get_kwarg_names
 from deeptrack.backend.core import DeepTrackNode
+from deeptrack.utils import get_kwarg_names
 
 
 class Property(DeepTrackNode):
@@ -155,7 +157,7 @@ class Property(DeepTrackNode):
     """
 
     def __init__(
-        self,
+        self: Property,
         sampling_rule: Union[
             Callable[..., Any],
             List[Any],
@@ -185,7 +187,7 @@ class Property(DeepTrackNode):
         self.action = self.create_action(sampling_rule, **kwargs)
 
     def create_action(
-        self,
+        self: Property,
         sampling_rule: Union[
             Callable[..., Any],
             List[Any],
@@ -348,7 +350,10 @@ class PropertyDict(DeepTrackNode, dict):
     
     """
 
-    def __init__(self, **kwargs: Dict[str, Any]):
+    def __init__(
+        self: PropertyDict,
+        **kwargs: Dict[str, Any],
+    ):
         """Initialize a PropertyDict with properties and dependencies.
 
         Iteratively converts the input dictionary's values into `Property` 
@@ -408,7 +413,10 @@ class PropertyDict(DeepTrackNode, dict):
             value.add_child(self)
             # self.add_dependency(value)  # Already executed by add_child.
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(
+        self: PropertyDict,
+        key: str,
+    ) -> Any:
         """Retrieve a value from the dictionary.
 
         Overrides the default `__getitem__` to ensure dictionary functionality.
@@ -517,7 +525,6 @@ class SequentialProperty(Property):
     
     """
 
-
     # Attributes.
     sequence_length: Property
     sequence_step: Property
@@ -528,10 +535,10 @@ class SequentialProperty(Property):
     action: Callable[..., Any]
 
     def __init__(
-        self,
+        self: SequentialProperty,
         initialization: Optional[Any] = None,
         current_value: Optional[Any] = None,
-        **kwargs: Dict[str, 'Property'],
+        **kwargs: Dict[str, Property],
     ):
         """Create a SequentialProperty with optional initialization.
         
@@ -595,7 +602,10 @@ class SequentialProperty(Property):
         # 7) Override the default action with our custom logic.
         self.action = self._action_override
 
-    def _action_override(self, _ID: Tuple[int, ...] = ()) -> Any:
+    def _action_override(
+        self: SequentialProperty,
+        _ID: Tuple[int, ...] = (),
+    ) -> Any:
         """Decide which function to call based on the current step.
 
         For step=0, call `initialization`. Otherwise, call `self.current`.
@@ -619,7 +629,11 @@ class SequentialProperty(Property):
         else:
             return self.current(_ID=_ID)
 
-    def store(self, value: Any, _ID: Tuple[int, ...] = ()) -> None:
+    def store(
+        self: SequentialProperty,
+        value: Any,
+        _ID: Tuple[int, ...] = (),
+    ) -> None:
         """Append value to the internal list of previously generated values.
 
         It retrieves the existing list of values for this _ID. If this _ID has 
@@ -647,7 +661,10 @@ class SequentialProperty(Property):
 
         super().store(current_data + [value], _ID=_ID)
 
-    def current_value(self, _ID: Tuple[int, ...] = ()) -> Any:
+    def current_value(
+        self: SequentialProperty,
+        _ID: Tuple[int, ...] = (),
+    ) -> Any:
         """Retrieve the value corresponding to the current step.
 
         It expects that each step's value has been stored. If no value has been 
@@ -667,7 +684,10 @@ class SequentialProperty(Property):
 
         return super().current_value(_ID=_ID)[self.sequence_step(_ID=_ID)]
 
-    def __call__(self, _ID: Tuple[int, ...] = ()) -> Any:
+    def __call__(
+        self: SequentialProperty,
+        _ID: Tuple[int, ...] = (),
+    ) -> Any:
         """Evaluate the property at the current step.
         
         It returns either the initialization (if step=0) or the result of 
@@ -686,15 +706,15 @@ class SequentialProperty(Property):
         """
 
         return super().__call__(_ID=_ID)
-        
+
     def set_sequence_length(
-        self,
+        self: SequentialProperty,
         value: Any,
-        _ID: Tuple[int, ...] = ()
+        _ID: Tuple[int, ...] = (),
     ) -> None:
         """Sets the `sequence_length` attribute of a sequence to be resolved.
 
-        Supports dependencies if `value` is a `Property`.
+        It supports dependencies if `value` is a `Property`.
 
         Parameters
         ----------
@@ -713,26 +733,25 @@ class SequentialProperty(Property):
             self.sequence_length = Property(value, _ID=_ID)
 
     def set_current_step(
-        self,
+        self: SequentialProperty,
         value: Any,
-        _ID: Tuple[int, ...] = ()
+        _ID: Tuple[int, ...] = (),
     ) -> None:
         """Sets the `current_index` attribute of a sequence to be resolved.
 
-        Supports dependencies if `value` is a `Property`.
+        It supports dependencies if `value` is a `Property`.
 
         Parameters
         ----------
-        value : Any
+        value: Any
             The value to store in `current_step`.
-
-        _ID : Tuple[int, ...], optional
+        _ID: Tuple[int, ...], optional
             A unique identifier that allows the property to keep separate 
             histories for different parallel evaluations.
     
         """
 
-        if isinstance(value, Property): # For dependencies.
+        if isinstance(value, Property):  # For dependencies
             self.sequence_step = Property(lambda _ID: value(_ID))
             self.sequence_step.add_dependency(value)
         else:

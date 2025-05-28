@@ -11,11 +11,15 @@ Sequential
     Converts a feature to be resolved as a sequence.
 """
 
-from .features import Feature
-from .properties import SequentialProperty
-from .types import PropertyLike
+import warnings
+
 import random
 import numpy as np
+
+from deeptrack.features import Feature
+from deeptrack.properties import SequentialProperty
+from deeptrack.types import PropertyLike
+
 
 class Sequence(Feature):
     """Resolves a feature as a sequence.
@@ -42,7 +46,7 @@ class Sequence(Feature):
     def __init__(
         self, feature: Feature, sequence_length: PropertyLike[int] = 1, **kwargs
     ):
-        
+
         super().__init__(sequence_length=sequence_length, **kwargs)
         self.feature = self.add_feature(feature)
         # Require update
@@ -69,11 +73,23 @@ class Sequence(Feature):
         return outputs
 
 
-def Sequential(feature: Feature, **kwargs): #TBE, Replaced by Feature.to_sequential()
+def propagate_sequential_data(X, **kwargs):
+    for dep in X.recurse_dependencies():
+        if isinstance(dep, SequentialProperty):
+            for key, value in kwargs.items():
+                if hasattr(dep, key):
+                    getattr(dep, key).set_value(value)
+
+
+def Sequential(feature: Feature, **kwargs):
     """Converts a feature to be resolved as a sequence.
 
+    .. deprecated:: 2.0
+        This function has been substituted by the `Feature.to_sequence()` 
+        method and will be removed in a future release.
+
     Should be called on individual features, not combinations of features. All
-    keyword arguments will be trated as sequential properties and will be
+    keyword arguments will be treated as sequential properties and will be
     passed to the parent feature.
 
     If a property from the keyword argument already exists on the feature, the
@@ -88,6 +104,13 @@ def Sequential(feature: Feature, **kwargs): #TBE, Replaced by Feature.to_sequent
         Keyword arguments to pass on as sequential properties of `feature`.
 
     """
+
+    warnings.warn(
+        "The `Sequential()` function is deprecated and will be removed in a "
+        "future release. Please use `Feature.to_sequence()` instead.",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
 
     for property_name in kwargs.keys():
 
@@ -124,16 +147,16 @@ def Sequential(feature: Feature, **kwargs): #TBE, Replaced by Feature.to_sequent
             else:
                 all_kwargs[key] = val
         if not prop.initialization:
-            prop.initialization = prop.create_action(sampling_rule, **{k:all_kwargs[k] for k in all_kwargs if k != "previous_value"})
+            prop.initialization = prop.create_action(
+                sampling_rule,
+                **{
+                    k:all_kwargs[k]
+                    for k
+                    in all_kwargs
+                    if k != "previous_value"
+                }
+            )
 
         prop.current = prop.create_action(sampling_rule, **all_kwargs)
 
     return feature
-
-
-def propagate_sequential_data(X, **kwargs):
-    for dep in X.recurse_dependencies():
-        if isinstance(dep, SequentialProperty):
-            for key, value in kwargs.items():
-                if hasattr(dep, key):
-                    getattr(dep, key).set_value(value)
