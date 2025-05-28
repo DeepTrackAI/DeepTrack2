@@ -6079,7 +6079,7 @@ class Store(Feature):
 
         """
 
-        super().__init__(feature=feature, key=key, replace=replace, **kwargs)
+        super().__init__(key=key, replace=replace, **kwargs)
         self.feature = self.add_feature(feature, **kwargs)
         self._store: dict[Any, Image] = {}
 
