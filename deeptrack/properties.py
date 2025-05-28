@@ -78,7 +78,7 @@ Handle sequential properties:
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable
 
 import numpy as np
 
@@ -112,17 +112,17 @@ class Property(DeepTrackNode):
 
     Parameters
     ----------
-    sampling_rule : Any
+    sampling_rule: Any
         The rule for sampling values. Can be a constant, function, list, 
         dictionary, iterator, tuple, NumPy array, slice, or DeepTrackNode.
-    **kwargs : Dict['Property']
+    **kwargs: dict[Property]
         Additional dependencies passed as named arguments. These dependencies 
         can be used as inputs to functions or other dynamic components of the 
         sampling rule.
 
     Methods
     -------
-    create_action(sampling_rule: Any, **dependencies: Dict[str, Property]) -> Callable[..., Any]
+    create_action(sampling_rule: Any, **dependencies: dict[str, Property]) -> Callable[..., Any]
         Creates an action that defines how the property is evaluated. The 
         behavior of the action depends on the type of `sampling_rule`.
 
@@ -158,57 +158,57 @@ class Property(DeepTrackNode):
 
     def __init__(
         self: Property,
-        sampling_rule: Union[
-            Callable[..., Any],
-            List[Any],
-            Dict[str, Any],
-            tuple,
-            np.ndarray,
-            slice,
-            DeepTrackNode,
+        sampling_rule: (
+            Callable[..., Any] |
+            list[Any] |
+            dict[str, Any] |
+            tuple |
+            np.ndarray |
+            slice |
+            DeepTrackNode |
             Any
-        ],
-        **kwargs: 'Property',
+        ),
+        **dependencies: Property,
     ):
         """Initializes a Property object with a given sampling rule.
 
         Parameters
         ----------
-        sampling_rule : Callable[..., Any] or List[Any] or Dict[str, Any] or 
-                        tuple or np.ndarray or slice or DeepTrackNode or Any
+        sampling_rule: Callable[..., Any] or list[Any] or dict[str, Any]
+                       or tuple or np.ndarray or slice or DeepTrackNode or Any
             The rule to sample values for the property.
-        **kwargs : Property
+        **dependencies: dict[str, Property]
             Additional named dependencies used in the sampling rule.
         
         """
 
         super().__init__()
 
-        self.action = self.create_action(sampling_rule, **kwargs)
+        self.action = self.create_action(sampling_rule, **dependencies)
 
     def create_action(
         self: Property,
-        sampling_rule: Union[
+        sampling_rule: (
             Callable[..., Any],
-            List[Any],
-            Dict[str, Any],
+            list[Any],
+            dict[str, Any],
             tuple,
             np.ndarray,
             slice,
             DeepTrackNode,
             Any
-        ],
-        **dependencies: Dict[str, 'Property'],
+        ),
+        **dependencies: Property,
     ) -> Callable[..., Any]:
         """Creates an action defining how the property is evaluated.
 
         Parameters
         ----------
-        sampling_rule : Union[Callable[..., Any], List[Any], Dict[str, Any], 
-                              tuple, np.ndarray, slice, Generator, 
-                              DeepTrackNode, Any]
+        sampling_rule: Callable[..., Any] or list[Any] or dict[str, Any]
+                       or tuple or np.ndarray or slice or Generator
+                       or DeepTrackNode or Any
             The rule to sample values for the property.
-        **dependencies : Dict[str, Property]
+        **dependencies: dict[str, Property]
             Dependencies to be used in the sampling rule.
 
         Returns
@@ -318,14 +318,14 @@ class PropertyDict(DeepTrackNode, dict):
 
     Parameters
     ----------
-    **kwargs : Dict[str, Any]
+    **kwargs: dict[str, Any]
         Key-value pairs used to initialize the dictionary, where values are 
         either directly used to create `Property` instances or are dependent 
         on other `Property` values.
 
     Methods
     -------
-    __init__(**kwargs: Dict[str, Any])
+    __init__(**kwargs: dict[str, Any])
         Initializes the `PropertyDict`, resolving `Property` dependencies.
     __getitem__(key: str) -> Any
         Retrieves a value from the dictionary using a key.
@@ -352,7 +352,7 @@ class PropertyDict(DeepTrackNode, dict):
 
     def __init__(
         self: PropertyDict,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ):
         """Initialize a PropertyDict with properties and dependencies.
 
@@ -366,7 +366,7 @@ class PropertyDict(DeepTrackNode, dict):
 
         Parameters
         ----------
-        **kwargs : Dict[str, Any]
+        **kwargs: dict[str, Any]
             Key-value pairs used to initialize the dictionary. Values can be 
             constants, functions, or other `Property`-compatible types.
 
@@ -389,17 +389,17 @@ class PropertyDict(DeepTrackNode, dict):
                     # Catch unresolved dependencies and continue iterating.
                     pass
 
-        def action(_ID: Tuple[int, ...] = ()) -> Dict[str, Any]:
+        def action(_ID: tuple[int, ...] = ()) -> dict[str, Any]:
             """Evaluate and return the dictionary with sampled Property values.
 
             Parameters
             ----------
-            _ID : Tuple[int, ...], optional
+            _ID: tuple[int, ...], optional
                 A unique identifier for sampling properties.
 
             Returns
             -------
-            Dict[str, Any]
+            dict[str, Any]
                 A dictionary where each value is sampled from its respective 
                 `Property`.
             
@@ -423,7 +423,7 @@ class PropertyDict(DeepTrackNode, dict):
 
         Parameters
         ----------
-        key : str
+        key: str
             The key to retrieve the value for.
 
         Returns
@@ -458,49 +458,49 @@ class SequentialProperty(Property):
 
     Parameters
     ----------
-    initialization : Any, optional
+    initialization: Any, optional
         A sampling rule for the first step of the sequence (step=0). 
         Can be any value or callable that is acceptable to `Property`. 
         If not provided, the initial value is `None`.
-    **kwargs : Dict[str, Property]
+    **kwargs: dict[str, Property]
         Additional dependencies that might be required if `initialization` 
         is a callable. These dependencies are injected when evaluating
         `initialization`.
 
     Attributes
     ----------
-    sequence_length : Property
+    sequence_length: Property
         A `Property` holding the total number of steps in the sequence. 
         Initialized to 0 by default.
-    sequence_step : Property
+    sequence_step: Property
         A `Property` holding the index of the current step (starting at 0).
-    previous_values : Property
+    previous_values: Property
         A `Property` returning all previously stored values up to, but not
         including, the current value and the previous value.
-    previous_value : Property
+    previous_value: Property
         A `Property` returning the most recently stored value, or `None` 
         if there is no history yet.
-    initialization : Callable[..., Any], optional
+    initialization: Callable[..., Any], optional
         A function to compute the value at step=0. If `None`, the property 
         returns `None` at the first step.
-    current : Callable[..., Any]
+    current: Callable[..., Any]
         A function to compute the value at steps >= 1. By default,  it returns 
         `None`.
-    action : Callable[..., Any]
+    action: Callable[..., Any]
         Overrides the default `Property.action` to select between 
         `initialization` (if `sequence_step` is 0) or `current` (otherwise).
 
     Methods
     -------
-    _action_override(_ID: Tuple[int, ...]) -> Any
+    _action_override(_ID: tuple[int, ...]) -> Any
         Internal logic to pick which function (`initialization` or `current`) 
         to call based on the `sequence_step`.
-    store(value: Any, _ID: Tuple[int, ...] = ()) -> None
+    store(value: Any, _ID: tuple[int, ...] = ()) -> None
         Store a newly computed `value` in the property’s internal list of 
         previously generated values.
-    current_value(_ID: Tuple[int, ...] = ()) -> Any
+    current_value(_ID: tuple[int, ...] = ()) -> Any
         Retrieve the value associated with the current step index.
-    __call__(_ID: Tuple[int, ...] = ()) -> Any
+    __call__(_ID: tuple[int, ...] = ()) -> Any
         Evaluate the property at the current step, returning either the 
         initialization (if step=0) or current value (if step>0).
 
@@ -530,23 +530,23 @@ class SequentialProperty(Property):
     sequence_step: Property
     previous_values: Property
     previous_value: Property
-    initialization: Optional[Callable[..., Any]]
+    initialization: Callable[..., Any]
     current: Callable[..., Any]
     action: Callable[..., Any]
 
     def __init__(
         self: SequentialProperty,
-        initialization: Optional[Any] = None,
-        current_value: Optional[Any] = None,
-        **kwargs: Dict[str, Property],
+        initialization: Any = None,
+        current_value: Any = None,
+        **kwargs: Property,
     ):
         """Create a SequentialProperty with optional initialization.
         
         Parameters
         ----------
-        initialization : Any, optional
+        initialization: Any, optional
             The sampling rule (value or callable) for step=0. Defaults to None.
-        **kwargs : Dict[str, Property]
+        **kwargs: dict[str, Property]
             Additional named dependencies for `initialization`.
         
         """
@@ -604,7 +604,7 @@ class SequentialProperty(Property):
 
     def _action_override(
         self: SequentialProperty,
-        _ID: Tuple[int, ...] = (),
+        _ID: tuple[int, ...] = (),
     ) -> Any:
         """Decide which function to call based on the current step.
 
@@ -612,7 +612,7 @@ class SequentialProperty(Property):
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
+        _ID: tuple[int, ...], optional
             A unique identifier that differentiates parallel evaluations.
 
         Returns
@@ -632,7 +632,7 @@ class SequentialProperty(Property):
     def store(
         self: SequentialProperty,
         value: Any,
-        _ID: Tuple[int, ...] = (),
+        _ID: tuple[int, ...] = (),
     ) -> None:
         """Append value to the internal list of previously generated values.
 
@@ -641,9 +641,9 @@ class SequentialProperty(Property):
 
         Parameters
         ----------
-        value : Any
+        value: Any
             The value to store, e.g., the output from calling `self()`.
-        _ID : Tuple[int, ...], optional
+        _ID: tuple[int, ...], optional
             A unique identifier that allows the property to keep separate 
             histories for different parallel evaluations.
 
@@ -663,7 +663,7 @@ class SequentialProperty(Property):
 
     def current_value(
         self: SequentialProperty,
-        _ID: Tuple[int, ...] = (),
+        _ID: tuple[int, ...] = (),
     ) -> Any:
         """Retrieve the value corresponding to the current step.
 
@@ -672,7 +672,7 @@ class SequentialProperty(Property):
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
+        _ID: tuple[int, ...], optional
             A unique identifier for separate parallel evaluations.
 
         Returns
@@ -686,7 +686,7 @@ class SequentialProperty(Property):
 
     def __call__(
         self: SequentialProperty,
-        _ID: Tuple[int, ...] = (),
+        _ID: tuple[int, ...] = (),
     ) -> Any:
         """Evaluate the property at the current step.
         
@@ -695,7 +695,7 @@ class SequentialProperty(Property):
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
+        _ID: tuple[int, ...], optional
             A unique identifier for parallel evaluations.
 
         Returns
@@ -710,7 +710,7 @@ class SequentialProperty(Property):
     def set_sequence_length(
         self: SequentialProperty,
         value: Any,
-        _ID: Tuple[int, ...] = (),
+        _ID: tuple[int, ...] = (),
     ) -> None:
         """Sets the `sequence_length` attribute of a sequence to be resolved.
 
@@ -718,9 +718,9 @@ class SequentialProperty(Property):
 
         Parameters
         ----------
-        value : Any
+        value: Any
             The value to store in `sequence_length`.
-        _ID : Tuple[int, ...], optional
+        _ID: tuple[int, ...], optional
             A unique identifier that allows the property to keep separate 
             histories for different parallel evaluations.
 
@@ -735,7 +735,7 @@ class SequentialProperty(Property):
     def set_current_step(
         self: SequentialProperty,
         value: Any,
-        _ID: Tuple[int, ...] = (),
+        _ID: tuple[int, ...] = (),
     ) -> None:
         """Sets the `current_index` attribute of a sequence to be resolved.
 
@@ -745,7 +745,7 @@ class SequentialProperty(Property):
         ----------
         value: Any
             The value to store in `current_step`.
-        _ID: Tuple[int, ...], optional
+        _ID: tuple[int, ...], optional
             A unique identifier that allows the property to keep separate 
             histories for different parallel evaluations.
     
