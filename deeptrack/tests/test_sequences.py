@@ -6,10 +6,10 @@ import unittest
 
 from matplotlib import pyplot
 
-from .. import sequences
+from deeptrack import sequences
 
-from ..optics import Fluorescence
-from ..scatterers import Ellipse
+from deeptrack.optics import Fluorescence
+from deeptrack.scatterers import Ellipse
 import numpy as np
 
 

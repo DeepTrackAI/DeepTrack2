@@ -6,10 +6,10 @@ import unittest
 
 from deeptrack import features
 from deeptrack import units as u
-from .. import optics
+from deeptrack import optics
 
-from ..scatterers import PointParticle, Sphere
-from ..image import Image
+from deeptrack.scatterers import PointParticle, Sphere
+from deeptrack.image import Image
 
 
 import numpy as np

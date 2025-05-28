@@ -8,7 +8,7 @@
 
 import unittest
 
-from .. import utils
+from deeptrack import utils
 
 
 class TestUtils(unittest.TestCase):
@@ -19,14 +19,12 @@ class TestUtils(unittest.TestCase):
             utils.hasmethod(utils, "this_is_definetely_not_a_method_of_utils")
         )
 
-
     def test_as_list(self):
         obj = 1
         self.assertEqual(utils.as_list(obj), [obj])
 
         list_obj = [1, 2, 3]
         self.assertEqual(utils.as_list(list_obj), list_obj)
-
 
     def test_get_kwarg_names(self):
         def func1():
@@ -63,7 +61,6 @@ class TestUtils(unittest.TestCase):
             pass
 
         self.assertEqual(utils.get_kwarg_names(func7), ["key1", "key2", "key3"])
-
 
     def test_safe_call(self):
 
