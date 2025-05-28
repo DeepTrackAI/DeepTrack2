@@ -193,8 +193,10 @@ class Feature(DeepTrackNode):
         The data type of the complex numbers.
     bool_dtype: np.dtype
         The data type of the boolean numbers.
-    device: str | torch.device
+    device: str or torch.device
         The device on which the feature is executed.
+    _backend: Config
+        The computational backend.
     __list_merge_strategy__: int
         Specifies how the output of `.get(image, **kwargs)` is merged with the 
         input list. Options include:
@@ -388,6 +390,7 @@ class Feature(DeepTrackNode):
             If not provided, defaults to an empty list.
         
         """
+
         # store backend on initialization
         self._backend = config.get_backend()
 
@@ -414,7 +417,9 @@ class Feature(DeepTrackNode):
         # self.add_dependency(self._input)  # Executed by add_child.
 
         # 3) Random seed node (for deterministic behavior if desired).
-        self._random_seed = DeepTrackNode(lambda: random.randint(0, 2147483648))
+        self._random_seed = DeepTrackNode(
+            lambda: random.randint(0, 2147483648)
+        )
         self._random_seed.add_child(self)
         # self.add_dependency(self._random_seed)  # Executed by add_child.
 
@@ -563,7 +568,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         device: torch.device = None,
         recursive: bool = True,
-    ) -> "Feature":
+    ) -> Feature:
         """Set the backend to torch.
 
         Parameters
@@ -579,6 +584,7 @@ class Feature(DeepTrackNode):
             self
 
         """
+
         self._backend = "torch"
         if recursive:
             for dependency in self.recurse_dependencies():
@@ -588,7 +594,7 @@ class Feature(DeepTrackNode):
         self.invalidate()
         return self
 
-    def numpy(self: Feature, recursive: bool = True) -> "Feature":
+    def numpy(self: Feature, recursive: bool = True) -> Feature:
         """Set the backend to numpy.
 
         Parameters
@@ -602,6 +608,7 @@ class Feature(DeepTrackNode):
             self
 
         """
+
         self._backend = "numpy"
         if recursive:
             for dependency in self.recurse_dependencies():
@@ -632,7 +639,9 @@ class Feature(DeepTrackNode):
             The complex dtype to set.
         bool: str, optional
             The bool dtype to set.
+
         """
+
         if float is not None:
             self._float_dtype = float
         if int is not None:
@@ -651,7 +660,9 @@ class Feature(DeepTrackNode):
         ----------
         device: str or torch.device
             The device to use.
+
         """
+
         self._device = device
 
     def batch(self: Feature, batch_size: int = 32) -> tuple | list[Image]:
