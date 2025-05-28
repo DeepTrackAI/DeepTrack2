@@ -97,13 +97,13 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 These are examples of how DeepTrack2 can be used on real datasets:
 
-- DTEx211 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx211 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx211_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx211_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Training a fully connected neural network to identify handwritten digits using MNIST dataset.
 
-- DTEx212 **Single Particle Tracking**
+- DTEx212 **[Single Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-  Tracks experimental videos of a single particle. (Requires opencv-python compiled with ffmpeg)
+  Tracks experimental videos of a single particle.
 
   
 
