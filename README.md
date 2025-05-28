@@ -113,20 +113,6 @@ These are examples of how DeepTrack2 can be used on real datasets:
   <p align="left">
     <img width="300" src=/assets/SPT-ideal.gif?raw=true>
     <img width="300" src=/assets/SPT-noisy.gif?raw=true>
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx202_single_particle_tracking.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1364/OPTICA.6.000506" alt="DeepTrack article">
-      <img src="https://img.shields.io/badge/article-10.1364/OPTICA.6.000506-blue">
-    </a> 
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231B_LodeSTAR_tracking_particles_of_various_shapes.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="LodeSTAR article">
-      <img src="https://img.shields.io/badge/article-10.1038%2Fs41467--022--35004--y-blue">
-    </a> 
   </p>
   <!-- GH_ONLY_END -->
 
