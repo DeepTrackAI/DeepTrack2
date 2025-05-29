@@ -78,12 +78,23 @@ Handle sequential properties:
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING
 
 import numpy as np
 
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.utils import get_kwarg_names
+
+
+__all__ = [
+    "DeepTrackNode",
+    "PropertyDict",
+    "SequentialProperty"
+]
+
+
+if TYPE_CHECKING:
+    import torch
 
 
 class Property(DeepTrackNode):
@@ -164,6 +175,7 @@ class Property(DeepTrackNode):
             dict[str, Any] |
             tuple |
             np.ndarray |
+            torch.Tensor |
             slice |
             DeepTrackNode |
             Any
@@ -189,13 +201,14 @@ class Property(DeepTrackNode):
     def create_action(
         self: Property,
         sampling_rule: (
-            Callable[..., Any],
-            list[Any],
-            dict[str, Any],
-            tuple,
-            np.ndarray,
-            slice,
-            DeepTrackNode,
+            Callable[..., Any] |
+            list[Any] |
+            dict[str, Any] |
+            tuple |
+            np.ndarray |
+            torch.Tensor |
+            slice |
+            DeepTrackNode |
             Any
         ),
         **dependencies: Property,
@@ -218,14 +231,14 @@ class Property(DeepTrackNode):
 
         """
 
-        # DeepTrackNode (e.g., another property or feature).
+        # DeepTrackNode (e.g., another property or feature)
         # Return the value sampled by the DeepTrackNode.
         if isinstance(sampling_rule, DeepTrackNode):
             sampling_rule.add_child(self)
             # self.add_dependency(sampling_rule)  # Already done by add_child.
             return sampling_rule
 
-        # Dictionary.
+        # Dictionary
         # Return a dictionary with each each member sampled individually.
         if isinstance(sampling_rule, dict):
             dict_of_actions = dict(
@@ -236,7 +249,7 @@ class Property(DeepTrackNode):
                 (key, value(_ID=_ID)) for key, value in dict_of_actions.items()
             )
 
-        # List.
+        # List
         # Return a list with each each member sampled individually.
         if isinstance(sampling_rule, list):
             list_of_actions = [
@@ -245,7 +258,7 @@ class Property(DeepTrackNode):
             ]
             return lambda _ID=(): [value(_ID=_ID) for value in list_of_actions]
 
-        # Iterable.
+        # Iterable
         # Return the next value. The last value is returned indefinetely.
         if hasattr(sampling_rule, "__next__"):
 
@@ -264,7 +277,7 @@ class Property(DeepTrackNode):
 
             return action
 
-        # Slice.
+        # Slice
         # Sample individually the start, stop and step.
         if isinstance(sampling_rule, slice):
 
@@ -278,7 +291,7 @@ class Property(DeepTrackNode):
                 step(_ID=_ID),
             )
 
-        # Function.
+        # Function
         # Return the result of the function. It accepts the names of other
         # properties of the same feature as arguments.
         if callable(sampling_rule):
@@ -303,7 +316,7 @@ class Property(DeepTrackNode):
                 **({"_ID": _ID} if "_ID" in knames else {}),
             )
 
-        # Constant, tuple or numpy array.
+        # Constant, tuple, numpy array, or torch Tensor
         # Return always the same constant value.
         return lambda _ID=(): sampling_rule
 

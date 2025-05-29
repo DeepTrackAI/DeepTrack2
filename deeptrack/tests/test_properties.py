@@ -8,6 +8,7 @@
 
 import unittest
 
+from deeptrack.backend._config import TORCH_AVAILABLE
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.utils import get_kwarg_names
 import numpy as np
@@ -17,7 +18,7 @@ from deeptrack import properties
 
 class TestProperties(unittest.TestCase):
 
-    def test_Property_constant_list_nparray(self):
+    def test_Property_constant_list_nparray_tensor(self):
         P = properties.Property(42)
         self.assertEqual(P(), 42)
         P.update()
@@ -32,6 +33,12 @@ class TestProperties(unittest.TestCase):
         np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
         P.update()
         np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
+
+        if TORCH_AVAILABLE:
+            P = properties.Property(torch.Tensor([1, 2, 3]))
+            self.assertTrue(torch.equal(P(), torch.tensor([1, 2, 3])))
+            P.update()
+            self.assertTrue(torch.equal(P(), torch.tensor([1, 2, 3])))
 
     def test_Property_function(self):
 
