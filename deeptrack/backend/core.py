@@ -1718,6 +1718,10 @@ def _equivalent(
     - If both `a` and `b` are empty lists, they are considered equivalent.
     Additional cases can be implemented as needed to refine this behavior.
 
+    For immutable built-in types like empty tuples, integers, and `None`, Python 
+    may reuse the same object in memory. Thus, `a is b` may return True even if 
+    the objects are created separately.
+
     Parameters
     ----------
     a: Any
@@ -1729,6 +1733,26 @@ def _equivalent(
     -------
     bool
         `True` if the objects are equivalent, `False` otherwise.
+
+    Examples
+    --------
+    >>> from deeptrack.backend.core import _equivalent
+
+    >>> _equivalent([], [])
+    True
+
+    >>> a = [1, 2]
+    >>> _equivalent(a, a)
+    True
+
+    >>> _equivalent([1], [1])
+    False
+
+    >>> _equivalent([], ())
+    False
+
+    >>> _equivalent(None, None)
+    True
 
     """
 
