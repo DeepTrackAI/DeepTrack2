@@ -1,17 +1,75 @@
-"""Utility functions.
+"""Utility functions for argument handling and signature inspection.
 
-This module defines utility functions that enhance code readability, 
-streamline common operations, and ensure type and argument consistency.
+This module provides utility functions to enhance code readability,
+streamline common operations, and ensure type and argument consistency
+when working with functions, methods, and callables in Python.
+
+Key Features
+------------
+- **Method Detection**
+  
+    Check if an object has a callable method with a given name.
+
+- **List Conversion**
+
+    Ensure that any input is represented as a list.
+
+- **Signature Inspection**
+
+    Retrieve the names of arguments a function accepts, and check for
+    default values.
+
+- **Safe Function Calling**
+
+    Call a function by passing only arguments accepted by its signature.
 
 Module Structure
 ----------------
 Functions:
 
-- `hasmethod`: Checks if an object has a callable method named `method_name`.    
-- `as_list`: Ensures that the input is a list.
-- `get_kwarg_names`: Retrieves keyword argument names accepted by a function.
-- `kwarg_has_default`: Checks if a function argument has a default value.
-- `safe_call`: Calls a function, passing only valid arguments.
+- `hasmethod(obj, method_name)`
+
+    def hasmethod(
+        obj: Any,
+        method_name: str,
+    ) -> bool
+
+    Check if an object has a callable method named `method_name`.
+
+- `as_list(obj)`
+
+    def as_list(obj: Any) -> list[Any]
+
+    Ensure that the input is a list, wrapping if necessary.
+
+- `get_kwarg_names(function)`
+
+    def get_kwarg_names(function: Callable[..., Any]) -> list[str]
+
+    Retrieve the names of the keyword arguments accepted by a function.
+
+- `kwarg_has_default(function, argument)`
+
+    def kwarg_has_default(
+          function: Callable[..., Any],
+          argument: str,
+    ) -> bool
+
+    Check if a specific argument of a function has a default value.
+
+- `safe_call(function, positional_args=None, **kwargs)`
+
+    def safe_call(
+        function: Callable[..., Any],
+        positional_args: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> Any
+
+    Call a function, passing only valid arguments from a dictionary.
+
+Examples
+--------
+TODO
 
 """
 
@@ -58,11 +116,11 @@ def hasmethod(
             and callable(getattr(obj, method_name, None)))
 
 
-def as_list(obj: any) -> list:
+def as_list(obj: Any) -> list[Any]:
     """Ensure that the input is a list.
 
-    Converts the input to a list if it is iterable; otherwise, it wraps it in a 
-    list.
+    Converts the input to a list if it is iterable and not a string or bytes;
+    otherwise, it wraps it in a list.
 
     Parameters
     ----------
@@ -71,10 +129,13 @@ def as_list(obj: any) -> list:
 
     Returns
     -------
-    list
+    list[Any]
         The input object as a list.
 
     """
+
+    if isinstance(obj, (str, bytes)):
+        return [obj]
 
     try:
         return list(obj)
@@ -82,7 +143,7 @@ def as_list(obj: any) -> list:
         return [obj]
 
 
-def get_kwarg_names(function: Callable) -> list[str]:
+def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
     """Retrieve the names of the keyword arguments accepted by a function.
     
     It retrieves the names of the keyword arguments accepted by `function` as a
@@ -90,7 +151,7 @@ def get_kwarg_names(function: Callable) -> list[str]:
 
     Parameters
     ----------
-    function: Callable
+    function: Callable[..., Any]
         The function whose keyword argument names are to be retrieved.
 
     Returns
@@ -112,14 +173,14 @@ def get_kwarg_names(function: Callable) -> list[str]:
 
 
 def kwarg_has_default(
-    function: Callable,
+    function: Callable[..., Any],
     argument: str,
 ) -> bool:
     """Check if a specific argument of a function has a default value.
 
     Parameters
     ----------
-    function: Callable
+    function: Callable[..., Any]
         The function to inspect.
     argument: str
         Name of the argument to check.
@@ -130,7 +191,7 @@ def kwarg_has_default(
         True if the specified argument has a default value.
 
     """
-    
+
     args = get_kwarg_names(function)
 
     if argument not in args:
