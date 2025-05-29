@@ -645,7 +645,7 @@ class DeepTrackNode:
     __hash__() -> int
         Returns a unique hash for this node.
     __getitem__(idx: Any) -> DeepTrackNode
-        Creates a new node that indexes into this node’s computed data.
+        Creates a new node that indexes into this node's computed data.
 
     Example
     -------
@@ -700,12 +700,12 @@ class DeepTrackNode:
 
     @property
     def action(self: DeepTrackNode) -> Callable[..., Any]:
-        """Callable: The function that computes this node’s value.
+        """Callable: The function that computes this node's value.
 
-        When accessed, returns the current action. This is often a function or 
-        lambda-function  that takes `_ID` as an optional parameter if 
+        When accessed, it returns the current action. This is often a function
+        or lambda-function that takes `_ID` as an optional parameter if 
         `_accepts_ID` is `True`.
-        
+
         """
 
         return self._action
@@ -713,21 +713,21 @@ class DeepTrackNode:
     @action.setter
     def action(
         self: DeepTrackNode,
-        value: Callable[..., Any],
+        _action: Callable[..., Any],
     ) -> None:
-        """Set the action used to compute this node’s value.
+        """Set the action used to compute this node's value.
 
         Parameters
         ----------
-        value: Callable[..., Any]
-            A function or lambda to be used for computing the node’s value. If 
-            the function’s signature includes `_ID`, this node will pass `_ID` 
-            when calling `action`.
+        _action: Callable[..., Any]
+            A function or lambda-function used for computing the node's value.
+            If the function's signature includes `_ID`, this node will pass
+            `_ID` when calling `action`.
         
         """
 
-        self._action = value
-        self._accepts_ID = "_ID" in get_kwarg_names(value)
+        self._action = _action
+        self._accepts_ID = "_ID" in get_kwarg_names(_action)
 
     def __init__(
         self: DeepTrackNode,
@@ -739,10 +739,10 @@ class DeepTrackNode:
         Parameters
         ----------
         action: Callable or Any, optional
-            Action to compute this node’s value. If not provided, uses a no-op 
+            Action to compute this node's value. If not provided, uses a no-op 
             action (lambda: None).
         
-        **kwargs: dict
+        **kwargs: dict[str, Any]
             Additional arguments for subclasses or extended functionality.
             
         """
@@ -750,7 +750,7 @@ class DeepTrackNode:
         self.data = DeepTrackDataDict()
         self.children = WeakSet()
         self.dependencies = WeakSet()
-        self._action = lambda: None  # Default no-op action.
+        self._action = lambda: None  # Default no-op action
 
         # If action is provided, set it.
         # If it's callable, use it directly;
@@ -789,7 +789,7 @@ class DeepTrackNode:
         Returns
         -------
         self: DeepTrackNode
-            Returns the current node for chaining.
+            Return the current node for chaining.
 
         """
 
@@ -801,7 +801,7 @@ class DeepTrackNode:
         children = child._all_children.copy()
         children.add(child)
 
-        # Merge all these children into this node’s subtree.
+        # Merge all these children into this node's subtree.
         self._all_children = self._all_children.union(children)
         for parent in self.recurse_dependencies():
             parent._all_children = parent._all_children.union(children)
@@ -818,12 +818,12 @@ class DeepTrackNode:
         ----------
         parent: DeepTrackNode
             The parent node that this node depends on. If `parent` changes, 
-            this node’s data may become invalid.
+            this node's data may become invalid.
 
         Returns
         -------
         self: DeepTrackNode
-            Returns the current node for chaining.
+            Return the current node for chaining.
         
         """
 
@@ -845,13 +845,13 @@ class DeepTrackNode:
         data: Any
             The data to be stored.
         _ID: tuple[int, ...], optional
-            The index for this data. Default is the empty tuple (), indicating 
-            a root-level entry.
+            The index for this data. If the _ID does not exist, it creates it.
+            Default is the empty tuple (), indicating a root-level entry.
 
         Returns
         -------
         self: DeepTrackNode
-            Returns the current node for chaining.
+            Return the current node for chaining.
         
         """
 
@@ -889,7 +889,7 @@ class DeepTrackNode:
         self: DeepTrackNode,
         _ID: tuple[int, ...],
     ) -> bool:
-        """Check if _ID is a valid index for this node’s data.
+        """Check if _ID is a valid index for this node's data.
 
         Parameters
         ----------
@@ -909,7 +909,7 @@ class DeepTrackNode:
         self: DeepTrackNode,
         _ID: tuple[int, ...] = (),
     ) -> DeepTrackNode:
-        """Mark this node’s data and all its children’s data as invalid.
+        """Mark this node's data and all its children's data as invalid.
 
         Parameters
         ----------
@@ -920,7 +920,7 @@ class DeepTrackNode:
         Returns
         -------
         self: DeepTrackNode
-            Returns the current node for chaining.
+            Return the current node for chaining.
         
         Note
         ----
@@ -940,7 +940,7 @@ class DeepTrackNode:
         self: DeepTrackNode,
         _ID: tuple[int, ...] = (),
     ) -> DeepTrackNode:
-        """Mark this node’s data as valid.
+        """Mark this node's data as valid.
 
         Parameters
         ----------
@@ -967,12 +967,12 @@ class DeepTrackNode:
         Returns
         -------
         self: DeepTrackNode
-            Returns the current node for chaining.
+            Return the current node for chaining.
         
         """
 
-        # Pre-instantiate memory for optimization used to avoid repeated
-        # processing of the same nodes.
+        # Pre-instantiate memory for optimization,
+        # used to avoid repeated processing of the same nodes.
         child_memory = []
 
         # For each dependency, reset data in all of its children.
@@ -987,7 +987,7 @@ class DeepTrackNode:
         value: Any,
         _ID: tuple[int, ...] = (),
     ) -> DeepTrackNode:
-        """Set a value for this node’s data at _ID.
+        """Set a value for this node's data at _ID.
 
         If the value is different from the currently stored one (or if it is 
         invalid), it will invalidate the old data before storing the new one.
@@ -1002,14 +1002,14 @@ class DeepTrackNode:
         Returns
         -------
         self: DeepTrackNode
-            Returns the current node for chaining.
+            Return the current node for chaining.
         
         """
 
         # Check if current value is equivalent. If not, invalidate and store
         # the new value. If set to same value, no need to invalidate.
         if not (
-            self.is_valid(_ID=_ID) 
+            self.is_valid(_ID=_ID)
             and _equivalent(value, self.data[_ID].current_value())
         ):
             self.invalidate(_ID=_ID)
@@ -1038,8 +1038,8 @@ class DeepTrackNode:
 
         if self.data.valid_index(_ID):
             return self.data[_ID].current_value()
-        else:
-            return []
+
+        return []  # If `_ID` is not a valid index
 
     def recurse_children(
         self: DeepTrackNode,
@@ -1050,12 +1050,14 @@ class DeepTrackNode:
         Parameters
         ----------
         memory: set, optional
-            Memory set to track visited nodes (not used directly here).
+            Set of nodes that have already been visited (not used directly
+            here).
 
         Returns
         -------
         set
             All nodes in the subtree rooted at this node, including itself.
+
         """
 
         # Simply return `_all_children` since it's maintained incrementally.
@@ -1081,7 +1083,7 @@ class DeepTrackNode:
         Notes
         -----
         This method is kept for backward compatibility or debugging purposes.
-        
+
         """
 
         # On first call, instantiate memory.
@@ -1105,7 +1107,7 @@ class DeepTrackNode:
     def recurse_dependencies(
         self: DeepTrackNode,
         memory: list[DeepTrackNode] | None = None,
-    ) -> Iterator['DeepTrackNode']:
+    ) -> Iterator[DeepTrackNode]:
         """Yield all dependencies of this node, ensuring each is visited once.
 
         Parameters
@@ -1146,7 +1148,7 @@ class DeepTrackNode:
 
         Returns
         -------
-        Set[str]
+        set[str]
             Set of all citations relevant to this node and its dependency tree.
         
         """
@@ -1178,13 +1180,13 @@ class DeepTrackNode:
         Parameters
         ----------
         _ID: tuple[int, ...], optional
-            The _ID at which to evaluate the node’s action.
+            The _ID at which to evaluate the node's action.
 
         Returns
         -------
         Any
             The computed or retrieved data for the given `_ID`.
-        
+
         """
 
         if self.is_valid(_ID):
@@ -1227,7 +1229,7 @@ class DeepTrackNode:
     def __hash__(self: DeepTrackNode) -> int:
         """Return a unique hash for this node.
 
-        Uses the node’s `id` to ensure uniqueness.
+        Uses the node's `id` to ensure uniqueness.
         
         """
 
@@ -1237,7 +1239,7 @@ class DeepTrackNode:
         self: DeepTrackNode,
         idx: Any,
     ) -> DeepTrackNode:
-        """Allow indexing into the node’s computed data.
+        """Allow indexing into the node's computed data.
 
         Parameters
         ----------
@@ -1254,9 +1256,10 @@ class DeepTrackNode:
         -----
         This effectively creates a node that corresponds to `self(...)[idx]`, 
         allowing you to select parts of the computed data dynamically.
+
         """
 
-        # Create a new node whose action indexes into this node’s result.
+        # Create a new node whose action indexes into this node's result.
         node = DeepTrackNode(lambda _ID=None: self(_ID=_ID)[idx])
 
         self.add_child(node)
@@ -1773,7 +1776,7 @@ def _create_node_with_operator(
     a: Any,
     b: Any,
 ) -> DeepTrackNode:
-    """Create a new computation node using a given operator and operands.
+    """Create a new computation node using the given operator and operands.
 
     This internal helper function constructs a `DeepTrackNode` obtained from 
     the  application of the specified operator to two operands. If the operands 
