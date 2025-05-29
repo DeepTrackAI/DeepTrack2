@@ -38,8 +38,8 @@ Property Classes:
     A dictionary of properties with utilities for dependency management and 
     sampling.
 
-Example
--------
+Examples
+--------
 Create and use a constant property:
 
 >>> import deeptrack as dt
@@ -102,20 +102,20 @@ class Property(DeepTrackNode):
 
     A `Property` defines a rule for sampling values used to evaluate features. 
     It supports various data types and structures, such as constants, 
-    functions, lists, iterators, dictionaries, tuples, NumPy arrays, slices, 
-    and DeepTrackNodes.
+    functions, lists, iterators, dictionaries, tuples, NumPy arrays, PyTorch
+    tensors, slices, and `DeepTrackNode`s.
 
     The behavior of a `Property` depends on the type of the sampling rule:
     
-    - **Constant values** (including tuples and NumPy arrays): Always returns the 
-      same value.
-    - **Functions**: Evaluates dynamically, potentially using other properties as 
-      arguments.
-    - **Lists or dictionaries**: Evaluates and samples each member individually.
-    - **Iterators**: Returns the next value in the sequence, repeating the final 
-      value indefinitely.
-    - **Slices**: Samples the `start`, `stop`, and `step` values individually.
-    - **DeepTrackNodes** (e.g., other properties or features): Uses the value 
+    - **Constant values** (including tuples, NumPy arrays, and PyTorch
+        tensors) always return the same value.
+    - **Functions** are evaluated dynamically, potentially using other
+        properties as arguments.
+    - **Lists or dictionaries** evaluate and sample each member individually.
+    - **Iterators** return the next value in the sequence, repeating the final
+        value indefinitely.
+    - **Slices** sample the `start`, `stop`, and `step` values individually.
+    - **DeepTrackNode's** (e.g., other properties or features) use the value 
       computed by the node.
 
     Dependencies between properties are tracked automatically, enabling 
@@ -125,8 +125,9 @@ class Property(DeepTrackNode):
     ----------
     sampling_rule: Any
         The rule for sampling values. Can be a constant, function, list, 
-        dictionary, iterator, tuple, NumPy array, slice, or DeepTrackNode.
-    **kwargs: dict[Property]
+        dictionary, iterator, tuple, NumPy array, torch Tensor, slice,
+        or DeepTrackNode.
+    **kwargs: dict[str, Property]
         Additional dependencies passed as named arguments. These dependencies 
         can be used as inputs to functions or other dynamic components of the 
         sampling rule.
@@ -139,32 +140,128 @@ class Property(DeepTrackNode):
 
     Examples
     --------
-    Constant property:
+    Constant properties are returned forever:
     
-    >>> import deeptrack as dt
-    
-    >>> const_prop = dt.Property(42)
+    >>> const_prop = Property(42)  # Number
     >>> const_prop()  # Returns 42
 
-    Dynamic property using a function:
-    
-    >>> const_prop = dt.Property(5)
-    >>> dynamic_prop = dt.Property(lambda x: x * 2, x=const_prop)
-    >>> dynamic_prop()  # Returns 10
+    >>> const_prop = Property([1, 2, 3])  # List
+    >>> const_prop()  # Returns [1, 2, 3]
 
-    Property with a dictionary rule:
-    
-    >>> dict_prop = dt.Property({"a": Property(1), "b": lambda: 2})
-    >>> dict_prop()  # Returns {"a": 1, "b": 2}
+    >>> const_prop = Property((1, 2, 3))  # Tuple
+    >>> const_prop()  # Returns (1, 2, 3)
 
-    Property with an iterable:
+    >>> import numpy as np
+    >>> 
+    >>> const_prop = Property(np.array([1, 2, 3]))  # NumPy array
+    >>> const_prop()  # Returns array([1, 2, 3])
+
+    >>> import torch
+    >>> 
+    >>> const_prop = Property(torch.Tensor([1, 2, 3]))  # PyTorch tensor
+    >>> const_prop()  # Returns tensor([1., 2., 3.])
+
+    Dynamic property using functions, which can also depend on other
+    properties:
     
-    >>> gen = (i for i in range(3))
-    >>> gen_prop = dt.Property(gen)
-    >>> gen_prop()  # Returns the next value from the generator
-    >>> gen_prop.update()
-    >>> gen_prop()  # Returns the next value
-    
+    >>> dynamic_prop = Property(lambda: np.random.rand())
+    >>> print(dynamic_prop())  # Returns random value
+    >>> dynamic_prop.update()  # Updates the value
+    >>> print(dynamic_prop())  # Returns random value
+
+    >>> const_prop = Property(5)
+    >>> dynamic_prop = Property(lambda x: 2 * x, x=const_prop)
+    >>> print(dynamic_prop())  # Returns 10
+
+    >>> def func(x):
+    ...     return 2 * x
+    >>> 
+    >>> const_prop = Property(5)
+    >>> dynamic_prop = Property(func, x=const_prop)
+    >>> print(dynamic_prop())  # Returns 10
+
+    Slices can be constructed from dynamic or static components:
+
+    >>> slice_prop = Property(slice(1, lambda: 10, Property(2)))
+    >>> s = slice_prop()
+    >>> s.start, s.stop, s.step  # Returns (1, 10, 2)
+
+    Iterators return their next value each time, repeating the last
+    indefinitely:
+
+    >>> iter_prop = Property(iter([1, 2, 3]))
+    >>> iter_prop()  # Returns 1
+    >>> iter_prop.update()
+    >>> iter_prop()  # Returns 2
+    >>> iter_prop.update()
+    >>> iter_prop()  # Returns 3
+    >>> iter_prop.update()
+    >>> prop_iter()  # Returns 3 (last value repeats)
+
+    Lists and dictionaries can contain properties, functions, or constants:
+
+    >>> list_prop = Property([
+    ...     1,
+    ...     lambda: 2,
+    ...     Property(3),
+    ... ])
+    >>> list_prop()  # Returns [1, 2, 3]
+
+    >>> dict_prop = Property({
+    ...     "a": 1,
+    ...     "b": lambda: 2,
+    ...     "c": Property(3),
+    ... })
+    >>> dict_prop()  # Returns {'a': 1, 'b': 2, 'c': 3}
+
+    Property can wrap a DeepTrackNode, such as another feature node:
+
+    >>> from deeptrack.backend.core import DeepTrackNode
+    >>> 
+    >>> node = DeepTrackNode(100)
+    >>> node_prop = Property(node)
+    >>> node_prop()  # Returns 100
+
+    >>> node = DeepTrackNode(lambda _ID=(): np.random.rand())
+    >>> node_prop = Property(node)
+    >>> node_prop()  # Returns a random float in [0, 1]
+
+    The ID mechanism allows parameterizing evaluation:
+
+    >>> id_prop0 = Property(lambda _ID: _ID)
+    >>> print(id_prop0())           # Returns ()
+    >>> print(id_prop0((1,)))       # Returns ()
+    >>> print(id_prop0((1, 2, 3)))  # Returns ()
+
+    >>> id_prop1 = Property(lambda _ID: _ID)
+    >>> print(id_prop1((1,)))       # Returns (1,)
+    >>> print(id_prop1((1, 2, 3)))  # Returns (1,)
+
+    >>> id_prop2 = Property(lambda _ID: _ID)
+    >>> print(id_prop2((1, 2, 3)))  # Returns (1, 2, 3)
+
+    Properties can be combined in complex nested structures:
+
+    >>> P = Property(
+    ...     {
+    ...         "constant": 42,
+    ...         "list": [1, lambda: 2, Property(3)],
+    ...         "dict": {"a": Property(1), "b": lambda: 2},
+    ...         "function": lambda x, y: x * y,
+    ...         "slice": slice(1, lambda: 10, Property(2)),
+    ...     },
+    ...     x=Property(5),
+    ...     y=Property(3),
+    ... )
+    >>> result = P()
+    >>> result["constant"]         # Returns 42
+    >>> result["list"]             # Returns [1, 2, 3]
+    >>> result["dict"]             # Returns {'a': 1, 'b': 2}
+    >>> result["function"]         # Returns 15
+    >>> result["slice"].start      # Returns 1
+    >>> result["slice"].stop       # Returns 10
+    >>> result["slice"].step       # Returns 2
+
     """
 
     def __init__(
@@ -182,12 +279,13 @@ class Property(DeepTrackNode):
         ),
         **dependencies: Property,
     ):
-        """Initializes a Property object with a given sampling rule.
+        """Initialize a `Property` object with a given sampling rule.
 
         Parameters
         ----------
         sampling_rule: Callable[..., Any] or list[Any] or dict[str, Any]
-                       or tuple or np.ndarray or slice or DeepTrackNode or Any
+                       or tuple or np.ndarray or torch.Tensor or slice
+                       or DeepTrackNode or Any
             The rule to sample values for the property.
         **dependencies: dict[str, Property]
             Additional named dependencies used in the sampling rule.
@@ -213,12 +311,12 @@ class Property(DeepTrackNode):
         ),
         **dependencies: Property,
     ) -> Callable[..., Any]:
-        """Creates an action defining how the property is evaluated.
+        """Create an action defining how the property is evaluated.
 
         Parameters
         ----------
         sampling_rule: Callable[..., Any] or list[Any] or dict[str, Any]
-                       or tuple or np.ndarray or slice or Generator
+                       or tuple or np.ndarray or torch.Tensor or slice
                        or DeepTrackNode or Any
             The rule to sample values for the property.
         **dependencies: dict[str, Property]
