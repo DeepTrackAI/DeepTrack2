@@ -136,24 +136,24 @@ class DeepTrackDataObject:
     Store a value in this container:
 
     >>> data_obj.store(42)
-    >>> print(data_obj.current_value())
+    >>> data_obj.current_value()
     42
 
     Check if the stored data is valid:
 
-    >>> print(data_obj.is_valid())
+    >>> data_obj.is_valid()
     True
 
     Invalidate the stored data:
 
     >>> data_obj.invalidate()
-    >>> print(data_obj.is_valid())
+    >>> data_obj.is_valid()
     False
 
     Validate the data again to restore its valid status:
 
     >>> data_obj.validate()
-    >>> print(data_obj.is_valid())
+    >>> data_obj.is_valid()
     True
 
     """
@@ -287,20 +287,68 @@ class DeepTrackDataDict:
 
     Retrieve values based on their _IDs:
 
-    >>> print(data_dict[(0, 0)].current_value())
+    >>> data_dict[(0, 0)].current_value()
     Data at (0, 0)
 
-    >>> print(data_dict[(1, 1)].current_value())
+    >>> data_dict[(1, 1)].current_value()
     Data at (1, 1)
 
     If requesting a shorter _ID, it returns all matching nested entries:
     
-    >>> print(data_dict[(0,)])
+    >>> data_dict[(0,)]
     {
         (0, 0): <DeepTrackDataObject at ...>, 
         (0, 1): <DeepTrackDataObject at ...>,
     }
-    
+
+    Validate and invalidate all entries at once:
+
+    >>> data_dict.invalidate()
+    >>> data_dict[(0, 0)].is_valid()
+    False
+    >>> data_dict[(1, 1)].is_valid()
+    False
+
+    >>> data_dict.validate()
+    >>> data_dict[(0, 0)].is_valid()
+    True
+    >>> data_dict[(1, 1)].is_valid()
+    True
+
+    Invalidate and validate a single entry:
+
+    >>> data_dict[(0, 1)].invalidate()
+    >>> data_dict[(0, 1)].is_valid()
+    False
+    >>> data_dict[(0, 1)].validate()
+    >>> data_dict[(0, 1)].is_valid()
+    True
+
+    Check if a given _ID exists:
+
+    >>> (1, 0) in data_dict
+    True
+    >>> (2, 2) in data_dict
+    False
+
+    Iterate over all entries:
+
+    >>> for key, value in data_dict.dict.items():
+    ...     print(key, value.current_value())
+    (0, 0) Data at (0, 0)
+    (0, 1) Data at (0, 1)
+    (1, 0) Data at (1, 0)
+    (1, 1) Data at (1, 1)
+
+    Check if an _ID is valid according to current keylength:
+
+    >>> data_dict.valid_index((0, 1))
+    True
+    >>> data_dict.valid_index((0,))  # Shorter than keylength after creation
+    False
+    >>> data_dict.valid_index((2, 2))  # Valid length, even if not created yet
+    True
+
     """
 
     keylength: int
