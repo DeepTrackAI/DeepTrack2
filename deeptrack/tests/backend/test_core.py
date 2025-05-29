@@ -48,7 +48,7 @@ class TestCore(unittest.TestCase):
 
         # Test initial state.
         self.assertEqual(dataset.keylength, None)
-        self.assertFalse(dataset.dict)
+        self.assertFalse(dataset.dict)  # Empty dict, {}
 
         # Create indices and store data.
         dataset.create_index((0,))
