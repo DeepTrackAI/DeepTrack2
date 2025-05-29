@@ -1,71 +1,121 @@
 """Core data structures for DeepTrack2.
 
-This module provides the core DeepTrack2 classes to manage and process data. 
-In particular, it enables users to:
+This module defines the foundational data structures used throughout
+DeepTrack2 for constructing, managing, and evaluating computational graphs
+with flexible data storage and dependency management.
 
-- Construct flexible and efficient computational pipelines.
-- Manage data and dependencies in a hierarchical structure.
-- Perform lazy evaluations for performance optimization.
+Key Features
+------------
+- **Hierarchical Data Management**
 
-Main Features
--------------
-- **Data Management**
-    
-    `DeepTrackDataObject` and `DeepTrackDataDict` provide tools to store, 
-    validate, and manage data with dependency tracking. They enable nested 
-    data structures and flexible indexing for complex data hierarchies.
+    Provides validated, hierarchical data containers (`DeepTrackDataObject`
+    and `DeepTrackDataDict`) for storing data and managing complex, nested
+    data structures. Supports dependency tracking and flexible indexing.
 
-- **Computational Graphs**
-    
-    `DeepTrackNode` forms the backbone of DeepTrack2 computation pipelines, 
-    representing computation nodes in a computation graph. Nodes support lazy 
-    evaluation, dependency tracking, and caching for improved computational 
-    performance. They implement mathematical operators for easy composition 
-    of computational graphs.
+- **Computation Graphs with Lazy Evaluation**
 
-- **Citations**
+    Implements the `DeepTrackNode` class, the core abstraction for nodes in
+    a computational graph. Supports lazy evaluation, caching, dependency
+    tracking, and operator overloading for intuitive composition of complex
+    computational pipelines.
 
-    Supports citing the relevant publication to ensure proper attribution 
-    (e.g., `Midtvedt et al., 2021`).
+- **Citation Support**
+
+    Provides citation metadata to ensure proper academic attribution for work
+    built on DeepTrack2.
 
 Module Structure
------------------
-Data Containers:
+----------------
+Classes:
 
-- `DeepTrackDataObject`: Basic data container with validation status.
+- `DeepTrackDataObject`: Basic container for data with validation status.
 
-    A basic container for data with validation status.
-    
-- `DeepTrackDataDict`: Dictionary to store multiple data with validation.
+    Simple data container that stores data and tracks its validity
+    (valid/invalid).
 
-    A data container to store multiple data objects (`DeepTrackDataObject`) 
-    indexed by unique access _IDs (consisting of tuples of integers), enabling 
-    nested data storage.
+- `DeepTrackDataDict`: Hierarchical dictionary for multiple data objects.
 
-Computation Nodes:
+    Stores multiple `DeepTrackDataObject` instances indexed by tuples of
+    integers, enabling the creation of flexible, nested data hierarchies.
 
-- `DeepTrackNode`: Node in a computation graph.
-    
-    Represents a node in a computation graph, capable of lazy evaluation, 
-    caching, and dependency management.
+- `DeepTrackNode`: Node in a computation graph with operator overloading.
 
-Example
--------
-Create two `DeepTrackNode` objects:
+    Represents a node in a computation graph, capable of storing and
+    computing values based on dependencies, with full support for lazy
+    evaluation, dependency tracking, and operator overloading.
 
->>> parent = DeepTrackNode()
->>> child = DeepTrackNode(lambda: 2 * parent())
+Functions:
+
+- `_equivalent(a, b)`
+
+      def _equivalent(a: Any, b: Any) -> bool
+
+    Determines whether two objects should be considered equivalent,
+    according to DeepTrack2's internal rules (identity, empty lists, etc).
+
+- `_create_node_with_operator(op, a, b)`
+
+      def _create_node_with_operator(
+          op: Callable,
+          a: Any,
+          b: Any,
+      ) -> DeepTrackNode
+
+    Internal helper to create a new computation node by applying a
+    specified operator to two operands, establishing correct graph
+    relationships and supporting operator overloading.
+
+Attributes:
+
+- `CITATION_MIDTVEDT2021QUANTITATIVE`: str
+
+    BibTeX citation for the original DeepTrack2 publication.
+
+Examples
+--------
+>>> import deeptrack as dt
+
+Create a simple computational pipeline using DeepTrack2 nodes:
+
+>>> parent = dt.DeepTrackNode()
+>>> child = dt.DeepTrackNode(lambda: 2 * parent())
 >>> parent.add_child(child)
-
-Set the value of the parent:
-
 >>> parent.store(5)
+>>> child()  # Compute child
+10
 
-And print the value of the child:
+Operator overloading for computation nodes:
 
->>> print(child())  # Output: 10
+>>> a = dt.DeepTrackNode(lambda: 3)
+>>> b = dt.DeepTrackNode(lambda: 4)
+>>> sum_node = a + b
+>>> sum_node()
+7
+
+Create and use a hierarchical data dictionary:
+
+>>> data_dict = dt.DeepTrackDataDict()
+>>> data_dict.create_index((0, 1))
+>>> data_dict[(0, 1)].store("Example data")
+>>> data_dict[(0, 1)].current_value()
+'Example data'
+
+Validate and invalidate a data object:
+
+>>> data_obj = dt.DeepTrackDataObject()
+>>> data_obj.is_valid()
+False
+
+>>> data_obj.store(42)
+>>> data_obj.is_valid()
+True
+
+>>> data_obj.invalidate()
+>>> data_obj.is_valid()
+False
 
 """
+
 
 from __future__ import annotations
 
