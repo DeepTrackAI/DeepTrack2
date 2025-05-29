@@ -685,41 +685,117 @@ class DeepTrackNode:
 
     Example
     -------
-    Create two `DeepTrackNode` objects:
+    >>> from deeptrack.backend.core import DeepTrackNode
+
+    Create two `DeepTrackNode` objects, one as a parent and one as a child:
 
     >>> parent = DeepTrackNode(action=lambda: 10)
     >>> child = DeepTrackNode(action=lambda _ID=None: parent(_ID) * 2)
-
-    First, establish the dependency between `parent` and `child`:
-
     >>> parent.add_child(child)
 
-    Store values in the parent node for specific _IDs:
+    Store and retrieve data for specific _IDs:
 
     >>> parent.store(15, _ID=(0,))
     >>> parent.store(20, _ID=(1,))
+    >>> parent.current_value((0,))
+    15
+    >>> parent.current_value((1,))
+    20
 
-    Compute the values for the child node based on these parent values:
+    Compute and retrieve the value for the child node:
 
-    >>> child_value_0 = child(_ID=(0,))
-    >>> child_value_1 = child(_ID=(1,))
-    >>> print(child_value_0, child_value_1)
-    30 40
+    >>> child(_ID=(0,))
+    30
+    >>> child(_ID=(1,))
+    40
 
-    Invalidate the parent data for a specific _ID:
+    Validation and invalidation:
+
+    >>> parent.is_valid((0,))
+    True
+    >>> child.is_valid((0,))
+    True
 
     >>> parent.invalidate((0,))
-    >>> print(parent.is_valid((0,)))
+    >>> parent.is_valid((0,))
     False
-    >>> print(child.is_valid((0,)))
+    >>> child.is_valid((0,))
     False
 
-    Update the parent value and recompute the child value:
+    >>> parent.validate((0,))
+    >>> parent.is_valid((0,))
+    True
+    >>> child.is_valid((0,))
+    False
 
-    >>> parent.store(25, _ID=(0,))
-    >>> child_value_recomputed = child(_ID=(0,))
-    >>> print(child_value_recomputed)
-    50    
+    Setting a value and automatic invalidation:
+
+    >>> parent.previous((0,))
+    15
+    >>> child((1,))  # Computes and stores the value in child
+    >>> child.previous((0,))
+    30
+
+    >>> parent.set_value(42, _ID=(0,))
+    >>> parent.current_value((0,))
+    42
+    >>> child((0,))  # Recomputes and stores the value in child
+    >>> child.current_value((0,))
+    84
+
+    Resetting all data in the dependency tree (recomputation required):
+
+    >>> parent.update()
+
+    Dependency graph traversal (children and dependencies):
+
+    >>> all_children = parent.recurse_children()
+    >>> all_dependencies = list(child.recurse_dependencies())
+
+    Operator overloading—arithmetic and comparison:
+
+    >>> node_a = DeepTrackNode(lambda: 5)
+    >>> node_b = DeepTrackNode(lambda: 3)
+
+    >>> sum_node = node_a + node_b
+    >>> sum_node()
+    8
+
+    >>> diff_node = node_a - node_b
+    >>> diff_node()
+    2
+
+    >>> prod_node = node_a * 2
+    >>> prod_node()
+    10
+
+    >>> div_node = node_a / node_b
+    >>> div_node()
+    1.666...
+
+    >>> floordiv_node = node_a // node_b
+    >>> floordiv_node()
+    1
+
+    >>> lt_node = node_a < node_b
+    >>> lt_node()
+    False
+
+    >>> ge_node = node_a >= node_b
+    >>> ge_node()
+    True
+
+    Indexing into computed data:
+
+    >>> vector_node = DeepTrackNode(lambda: [10, 20, 30])
+    >>> first_element = vector_node[0]
+    >>> first_element()
+    10
+
+    Citations for a node and its dependencies:
+
+    >>> parent.get_citations()  # Set of citation strings
+    {...} 
 
     """
 
