@@ -576,11 +576,17 @@ class DeepTrackDataDict:
 
 
 class DeepTrackNode:
-    """Object corresponding to a node in a computation graph.
+    """Node in a DeepTrack2 computation graph, supporting operator overloading.
 
     `DeepTrackNode` represents a node within a DeepTrack2 computation graph. 
     Each node can store data and compute new values based on its dependencies.
     The value of a node is computed by calling its `action` method.
+
+    `DeepTrackNode` supports operator overloading, enabling intuitive
+    construction of computation graphs using standard Python operators.
+    For example, nodes can be added, multiplied, subtracted, or compared
+    directly (e.g., `node1 + node2`, `node1 * 3`, `node1 > node2`), and the
+    resulting node will represent the composed operation.
 
     Parameters
     ----------
@@ -656,6 +662,26 @@ class DeepTrackNode:
         Return a unique hash for this node.
     `__getitem__(idx: Any) -> DeepTrackNode`
         Creates a new node that indexes into this node's computed data.
+
+    Supported Operators
+    -------------------
+    DeepTrackNode supports the following Python operators:
+
+    Arithmetic:
+        +   Addition (__add__, __radd__)
+        -   Subtraction (__sub__, __rsub__)
+        *   Multiplication (__mul__, __rmul__)
+        /   True division (__truediv__, __rtruediv__)
+        //  Floor division (__floordiv__, __rfloordiv__)
+
+    Comparison:
+        <   Less than (__lt__, __rlt__)
+        <=  Less than or equal (__le__, __rle__)
+        >   Greater than (__gt__, __rgt__)
+        >=  Greater than or equal (__ge__, __rge__)
+
+    Each operation returns a new DeepTrackNode representing the
+    result of the corresponding operation in the computation graph.
 
     Example
     -------
