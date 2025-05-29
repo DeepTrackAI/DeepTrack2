@@ -35,6 +35,8 @@ class TestProperties(unittest.TestCase):
         np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
 
         if TORCH_AVAILABLE:
+            import torch
+
             P = properties.Property(torch.Tensor([1, 2, 3]))
             self.assertTrue(torch.equal(P(), torch.tensor([1, 2, 3])))
             P.update()
