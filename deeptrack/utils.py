@@ -126,6 +126,11 @@ def as_list(obj: Any) -> list[Any]:
     It converts the input to a list if it is iterable and not a string or
     bytes; otherwise, it wraps it in a list.
 
+    Note: If `obj` is a PyTorch Tensor, this function will return a list of its
+    elements along the first dimension (e.g., for a 2D tensor, the result
+    will be a list of 1D tensors). If you want to wrap the entire tensor in a
+    list, use `[obj]` explicitly.
+
     Parameters
     ----------
     obj: Any
