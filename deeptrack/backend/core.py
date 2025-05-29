@@ -693,9 +693,6 @@ class DeepTrackNode:
         Set a value for the given `_ID`. If the new value differs from the 
         current value, the node is invalidated to ensure dependencies are 
         recomputed.
-    `previous(_ID: tuple[int, ...] = ()) -> Any`
-        Return the previously stored value for the given `_ID` without 
-        recomputing it.
     `recurse_children(memory: set[DeepTrackNode] | None = None) -> set[DeepTrackNode]`
         Return all child nodes in the dependency tree rooted at this node.
     `recurse_dependencies(memory: list[DeepTrackNode] | None = None) -> Iterator[DeepTrackNode]`
@@ -780,10 +777,10 @@ class DeepTrackNode:
 
     Setting a value and automatic invalidation:
 
-    >>> parent.previous((0,))
+    >>> parent.current_value((0,))
     15
     >>> child((1,))  # Computes and stores the value in child
-    >>> child.previous((0,))
+    >>> child.current_value((0,))
     30
 
     >>> parent.set_value(42, _ID=(0,))
@@ -1178,6 +1175,7 @@ class DeepTrackNode:
 
         return self
 
+    # TODO: The previous() method should be moved into SequentialProperty
     def previous(
         self: DeepTrackNode,
         _ID: tuple[int, ...] = (),

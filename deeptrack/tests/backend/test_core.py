@@ -208,7 +208,7 @@ class TestCore(unittest.TestCase):
         # Retrieves the values stored in children and parents.
         for id, value in enumerate(range(10)):
             self.assertEqual(child(_ID=(id,)), value * 2)
-            self.assertEqual(parent.previous((id,)), value)
+            self.assertEqual(parent.current_value((id,)), value)
 
     def test_DeepTrackNode_nested_ids(self):
         # Test nested IDs for parent-child relationships.
