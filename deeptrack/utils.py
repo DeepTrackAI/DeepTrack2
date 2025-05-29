@@ -15,11 +15,25 @@ Functions:
 
 """
 
+from __future__ import annotations
+
 import inspect
-from typing import Any, Callable, List
+from typing import Any, Callable
 
 
-def hasmethod(obj: Any, method_name: str) -> bool:
+__all__ = [
+    "hasmethod",
+    "as_list",
+    "get_kwarg_names",
+    "kwarg_has_default",
+    "safe_call",
+]
+
+
+def hasmethod(
+    obj: Any,
+    method_name: str,
+) -> bool:
     """Check if an object has a callable method named `method_name`.
 
     Returns `True` if the object has a field named `method_name` that is 
@@ -27,9 +41,9 @@ def hasmethod(obj: Any, method_name: str) -> bool:
 
     Parameters
     ----------
-    obj : Any
+    obj: Any
         The object to inspect.
-    method_name : str
+    method_name: str
         The name of the method to look for.
 
     Returns
@@ -52,7 +66,7 @@ def as_list(obj: any) -> list:
 
     Parameters
     ----------
-    obj : Any
+    obj: Any
         The object to be converted or wrapped in a list.
 
     Returns
@@ -68,7 +82,7 @@ def as_list(obj: any) -> list:
         return [obj]
 
 
-def get_kwarg_names(function: Callable) -> List[str]:
+def get_kwarg_names(function: Callable) -> list[str]:
     """Retrieve the names of the keyword arguments accepted by a function.
     
     It retrieves the names of the keyword arguments accepted by `function` as a
@@ -76,7 +90,7 @@ def get_kwarg_names(function: Callable) -> List[str]:
 
     Parameters
     ----------
-    function : Callable
+    function: Callable
         The function whose keyword argument names are to be retrieved.
 
     Returns
@@ -97,14 +111,17 @@ def get_kwarg_names(function: Callable) -> List[str]:
         return argspec.args or []
 
 
-def kwarg_has_default(function: Callable, argument: str) -> bool:
+def kwarg_has_default(
+    function: Callable,
+    argument: str,
+) -> bool:
     """Check if a specific argument of a function has a default value.
 
     Parameters
     ----------
-    function : Callable
+    function: Callable
         The function to inspect.
-    argument : str
+    argument: str
         Name of the argument to check.
 
     Returns
@@ -124,7 +141,11 @@ def kwarg_has_default(function: Callable, argument: str) -> bool:
     return len(args) - args.index(argument) <= len(defaults)
 
 
-def safe_call(function, positional_args=[], **kwargs) -> Any:
+def safe_call(
+    function: Callable[..., Any],
+    positional_args: list[Any] | None = None,
+    **kwargs: Any,
+) -> Any:
     """Calls a function with valid arguments from a dictionary of arguments.
     
     It filters `kwargs` to include only arguments accepted by the function,
@@ -133,26 +154,26 @@ def safe_call(function, positional_args=[], **kwargs) -> Any:
 
     Parameters
     ----------
-    function : Callable
+    function: Callable[..., Any]
         The function to call.
-    positional_args : list, optional
-        List of positional arguments to pass to the function.
-    kwargs : dict
+    positional_args: list[Any] | None, optional
+        List of positional arguments to pass to the function. Defaults to None.
+    **kwargs: dict[str, Any]
         Dictionary of keyword arguments to filter and pass.
-    
+
     Returns
     -------
     Any
         The result of calling the function with the filtered arguments.   
-     
+
     """
 
-    keys = get_kwarg_names(function)
+    if positional_args is None:
+        positional_args = []
 
     # Filter kwargs to include only keys present in the function's signature.
-    input_arguments = {}
-    for key in keys:
-        if key in kwargs:
-            input_arguments[key] = kwargs[key]
+    input_arguments = {
+        key: kwargs[key] for key in get_kwarg_names(function) if key in kwargs
+    }
 
     return function(*positional_args, **input_arguments)
