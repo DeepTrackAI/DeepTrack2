@@ -356,6 +356,41 @@ class TestCore(unittest.TestCase):
         # One empty list, one non-list empty container
         self.assertFalse(core._equivalent([], ()))
 
+    def test__create_node_with_operator(self):
+        import operator
+
+        # Test with integers (should be wrapped automatically)
+        node = core._create_node_with_operator(operator.add, 2, 3)
+        self.assertIsInstance(node, core.DeepTrackNode)
+        self.assertEqual(node(), 5)
+
+        # Test with DeepTrackNode operands (addition)
+        a = core.DeepTrackNode(lambda: 10)
+        b = core.DeepTrackNode(lambda: 7)
+        node2 = core._create_node_with_operator(operator.sub, a, b)
+        self.assertIsInstance(node2, core.DeepTrackNode)
+        self.assertEqual(node2(), 3)
+
+        # node2 should be a child of both a and b
+        self.assertIn(node2, a.children)
+        self.assertIn(node2, b.children)
+
+        # a and b should both be dependencies of node2
+        self.assertIn(a, node2.dependencies)
+        self.assertIn(b, node2.dependencies)
+
+        # Test with one DeepTrackNode, one plain value (multiplication)
+        node3 = core._create_node_with_operator(operator.mul, a, 2)
+        self.assertEqual(node3(), 20)
+        self.assertIsInstance(node3, core.DeepTrackNode)
+        self.assertIn(node3, a.children)
+
+        # Ensure wrapping of right operand
+        node4 = core._create_node_with_operator(operator.mul, 3, b)
+        self.assertEqual(node4(), 21)
+        self.assertIsInstance(node4, core.DeepTrackNode)
+        self.assertIn(node4, b.children)
+
 
 if __name__ == "__main__":
     unittest.main()
