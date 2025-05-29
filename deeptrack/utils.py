@@ -94,7 +94,7 @@ def hasmethod(
 ) -> bool:
     """Check if an object has a callable method named `method_name`.
 
-    Returns `True` if the object has a field named `method_name` that is 
+    It returns `True` if the object has a field named `method_name` that is 
     callable. Otherwise, returns `False`.
 
     Parameters
@@ -110,6 +110,10 @@ def hasmethod(
         True if the object has an attribute named `method_name` that is 
         callable.
 
+    Examples
+    --------
+    TODO
+
     """
 
     return (hasattr(obj, method_name)
@@ -119,8 +123,8 @@ def hasmethod(
 def as_list(obj: Any) -> list[Any]:
     """Ensure that the input is a list.
 
-    Converts the input to a list if it is iterable and not a string or bytes;
-    otherwise, it wraps it in a list.
+    It converts the input to a list if it is iterable and not a string or
+    bytes; otherwise, it wraps it in a list.
 
     Parameters
     ----------
@@ -131,6 +135,10 @@ def as_list(obj: Any) -> list[Any]:
     -------
     list[Any]
         The input object as a list.
+
+    Examples
+    --------
+    TODO
 
     """
 
@@ -156,8 +164,12 @@ def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
 
     Returns
     -------
-    List[str]
+    list[str]
         A list of names of keyword arguments the function accepts.
+
+    Examples
+    --------
+    TODO
 
     """
 
@@ -189,6 +201,10 @@ def kwarg_has_default(
     -------
     bool
         True if the specified argument has a default value.
+
+    Examples
+    --------
+    TODO
 
     """
 
@@ -226,6 +242,10 @@ def safe_call(
     -------
     Any
         The result of calling the function with the filtered arguments.   
+
+    Examples
+    --------
+    TODO
 
     """
 
