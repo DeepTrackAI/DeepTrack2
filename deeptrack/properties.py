@@ -87,9 +87,9 @@ from deeptrack.utils import get_kwarg_names
 
 
 __all__ = [
-    "DeepTrackNode",
+    "Property",
     "PropertyDict",
-    "SequentialProperty"
+    "SequentialProperty",
 ]
 
 
@@ -140,118 +140,119 @@ class Property(DeepTrackNode):
 
     Examples
     --------
+    >>> import deeptrack as dt
+
     Constant properties are returned forever:
-    
-    >>> const_prop = Property(42)  # Number
+
+    >>> const_prop = dt.Property(42)  # Number
     >>> const_prop()  # Returns 42
 
-    >>> const_prop = Property([1, 2, 3])  # List
+    >>> const_prop = dt.Property([1, 2, 3])  # List
     >>> const_prop()  # Returns [1, 2, 3]
 
-    >>> const_prop = Property((1, 2, 3))  # Tuple
+    >>> const_prop = dt.Property((1, 2, 3))  # Tuple
     >>> const_prop()  # Returns (1, 2, 3)
 
     >>> import numpy as np
     >>> 
-    >>> const_prop = Property(np.array([1, 2, 3]))  # NumPy array
+    >>> const_prop = dt.Property(np.array([1, 2, 3]))  # NumPy array
     >>> const_prop()  # Returns array([1, 2, 3])
 
     >>> import torch
     >>> 
-    >>> const_prop = Property(torch.Tensor([1, 2, 3]))  # PyTorch tensor
+    >>> const_prop = dt.Property(torch.Tensor([1, 2, 3]))  # PyTorch tensor
     >>> const_prop()  # Returns tensor([1., 2., 3.])
 
     Dynamic property using functions, which can also depend on other
     properties:
     
-    >>> dynamic_prop = Property(lambda: np.random.rand())
-    >>> print(dynamic_prop())  # Returns random value
+    >>> dynamic_prop = dt.Property(lambda: np.random.rand())
+    >>> dynamic_prop()  # Returns random value
+    >>> dynamic_prop()  # Returns same random value
     >>> dynamic_prop.update()  # Updates the value
-    >>> print(dynamic_prop())  # Returns random value
+    >>> dynamic_prop()  # Returns different random value
 
-    >>> const_prop = Property(5)
-    >>> dynamic_prop = Property(lambda x: 2 * x, x=const_prop)
-    >>> print(dynamic_prop())  # Returns 10
+    >>> const_prop = dt.Property(5)
+    >>> dynamic_prop = dt.Property(lambda x: 2 * x, x=const_prop)
+    >>> dynamic_prop()  # Returns 10
 
     >>> def func(x):
     ...     return 2 * x
     >>> 
-    >>> const_prop = Property(5)
-    >>> dynamic_prop = Property(func, x=const_prop)
-    >>> print(dynamic_prop())  # Returns 10
+    >>> const_prop = dt.Property(5)
+    >>> dynamic_prop = dt.Property(func, x=const_prop)
+    >>> dynamic_prop()  # Returns 10
 
     Slices can be constructed from dynamic or static components:
 
-    >>> slice_prop = Property(slice(1, lambda: 10, Property(2)))
+    >>> slice_prop = dt.Property(slice(1, lambda: 10, dt.Property(2)))
     >>> s = slice_prop()
     >>> s.start, s.stop, s.step  # Returns (1, 10, 2)
 
     Iterators return their next value each time, repeating the last
     indefinitely:
 
-    >>> iter_prop = Property(iter([1, 2, 3]))
+    >>> iter_prop = dt.Property(iter([1, 2, 3]))
     >>> iter_prop()  # Returns 1
     >>> iter_prop.update()
     >>> iter_prop()  # Returns 2
     >>> iter_prop.update()
     >>> iter_prop()  # Returns 3
     >>> iter_prop.update()
-    >>> prop_iter()  # Returns 3 (last value repeats)
+    >>> iter_prop()  # Returns 3 (last value repeats)
 
     Lists and dictionaries can contain properties, functions, or constants:
 
-    >>> list_prop = Property([
+    >>> list_prop = dt.Property([
     ...     1,
     ...     lambda: 2,
-    ...     Property(3),
+    ...     dt.Property(3),
     ... ])
     >>> list_prop()  # Returns [1, 2, 3]
 
-    >>> dict_prop = Property({
+    >>> dict_prop = dt.Property({
     ...     "a": 1,
     ...     "b": lambda: 2,
-    ...     "c": Property(3),
+    ...     "c": dt.Property(3),
     ... })
     >>> dict_prop()  # Returns {'a': 1, 'b': 2, 'c': 3}
 
     Property can wrap a DeepTrackNode, such as another feature node:
 
-    >>> from deeptrack.backend.core import DeepTrackNode
-    >>> 
-    >>> node = DeepTrackNode(100)
-    >>> node_prop = Property(node)
+    >>> node = dt.DeepTrackNode(100)
+    >>> node_prop = dt.Property(node)
     >>> node_prop()  # Returns 100
 
-    >>> node = DeepTrackNode(lambda _ID=(): np.random.rand())
+    >>> node = dt.DeepTrackNode(lambda _ID=(): np.random.rand())
     >>> node_prop = Property(node)
     >>> node_prop()  # Returns a random float in [0, 1]
 
     The ID mechanism allows parameterizing evaluation:
 
-    >>> id_prop0 = Property(lambda _ID: _ID)
-    >>> print(id_prop0())           # Returns ()
-    >>> print(id_prop0((1,)))       # Returns ()
-    >>> print(id_prop0((1, 2, 3)))  # Returns ()
+    >>> id_prop0 = dt.Property(lambda _ID: _ID)
+    >>> id_prop0()           # Returns ()
+    >>> id_prop0((1,))       # Returns ()
+    >>> id_prop0((1, 2, 3))  # Returns ()
 
-    >>> id_prop1 = Property(lambda _ID: _ID)
-    >>> print(id_prop1((1,)))       # Returns (1,)
-    >>> print(id_prop1((1, 2, 3)))  # Returns (1,)
+    >>> id_prop1 = dt.Property(lambda _ID: _ID)
+    >>> id_prop1((1,))       # Returns (1,)
+    >>> id_prop1((1, 2, 3))  # Returns (1,)
 
-    >>> id_prop2 = Property(lambda _ID: _ID)
-    >>> print(id_prop2((1, 2, 3)))  # Returns (1, 2, 3)
+    >>> id_prop2 = dt.Property(lambda _ID: _ID)
+    >>> id_prop2((1, 2, 3))  # Returns (1, 2, 3)
 
     Properties can be combined in complex nested structures:
 
-    >>> P = Property(
+    >>> P = dt.Property(
     ...     {
     ...         "constant": 42,
-    ...         "list": [1, lambda: 2, Property(3)],
-    ...         "dict": {"a": Property(1), "b": lambda: 2},
+    ...         "list": [1, lambda: 2, dt.Property(3)],
+    ...         "dict": {"a": dt.Property(1), "b": lambda: 2},
     ...         "function": lambda x, y: x * y,
-    ...         "slice": slice(1, lambda: 10, Property(2)),
+    ...         "slice": slice(1, lambda: 10, dt.Property(2)),
     ...     },
-    ...     x=Property(5),
-    ...     y=Property(3),
+    ...     x=dt.Property(5),
+    ...     y=dt.Property(3),
     ... )
     >>> result = P()
     >>> result["constant"]         # Returns 42
@@ -445,7 +446,10 @@ class PropertyDict(DeepTrackNode, dict):
     --------
     Initialize a `PropertyDict` with different types of properties:
 
-    >>> prop_dict = PropertyDict(
+    >>> import deeptrack as dt
+    >>> import numpy as np
+
+    >>> prop_dict = dt.PropertyDict(
     ...     constant=42,
     ...     dependent=lambda constant: constant + 10,
     ...     random=lambda: np.random.rand(),
@@ -453,9 +457,9 @@ class PropertyDict(DeepTrackNode, dict):
 
     Access the properties:
 
-    >>> print(prop_dict["constant"]())  # Returns 42
-    >>> print(prop_dict["dependent"]())  # Returns 52
-    >>> print(prop_dict["random"]())  # Returns random number
+    >>> prop_dict["constant"]()  # Returns 42
+    >>> prop_dict["dependent"]()  # Returns 52
+    >>> prop_dict["random"]()  # Returns random number
     
     """
 
@@ -663,8 +667,8 @@ class SequentialProperty(Property):
         
         """
 
-        # Set sampling_rule=None to the base constructor, because it overrides
-        # action below with _action_override.
+        # Set sampling_rule=None to the base constructor.
+        # It overrides action below with _action_override().
         super().__init__(sampling_rule=None)
 
         # 1) Initialize sequence length to 0.
