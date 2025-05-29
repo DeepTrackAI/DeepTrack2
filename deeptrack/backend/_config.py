@@ -71,7 +71,6 @@ Check the default backend and device:
 
 >>> print(config.get_backend())
 'numpy'
-
 >>> print(config.get_device())
 'cpu'
 
@@ -229,7 +228,6 @@ class _Proxy(types.ModuleType):
     >>> array = xp.arange(5)
     >>> print(array)
     Output: [0 1 2 3 4]
-
     >>> print(type(array))
     <class 'numpy.ndarray'>
 
@@ -241,13 +239,10 @@ class _Proxy(types.ModuleType):
 
     >>> print(xp.get_float_dtype())
     float64
-
     >>> print(xp.get_int_dtype())
     int64
-
     >>> print(xp.get_complex_dtype())
     complex128
-
     >>> print(xp.get_bool_dtype())
     bool
 
@@ -263,7 +258,6 @@ class _Proxy(types.ModuleType):
     >>> array = xp.arange(5)
     >>> print(array)
     tensor([0, 1, 2, 3, 4])
-
     >>> print(type(array))
     <class 'torch.Tensor'>
 
@@ -271,13 +265,10 @@ class _Proxy(types.ModuleType):
 
     >>> print(xp.get_float_dtype())
     torch.float32
-
     >>> print(xp.get_int_dtype())
     torch.int64
-
     >>> print(xp.get_complex_dtype())
     torch.complex64
-
     >>> print(xp.get_bool_dtype())
     torch.bool
 
@@ -721,7 +712,6 @@ class Config:
 
     >>> print(config.get_backend())
     'numpy'
-
     >>> print(config.get_device())
     'cpu'
 
