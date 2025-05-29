@@ -69,41 +69,53 @@ Import the global config object and the xp proxy for backend-agnostic code:
 
 Check the default backend and device:
 
->>> print(config.get_backend())  # Output: 'numpy'
->>> print(config.get_device())  # Output: 'cpu'
+>>> print(config.get_backend())
+'numpy'
+
+>>> print(config.get_device())
+'cpu'
 
 Use the xp proxy to create a NumPy array:
 
 >>> array = xp.arange(5)
->>> print(type(array))  # Output: <class 'numpy.ndarray'>
+>>> print(type(array))
+<class 'numpy.ndarray'>
 
 Switch to the PyTorch backend and use GPU:
 
 >>> config.set_backend_torch()
+>>> print(config.get_backend())
+'torch'
+
 >>> config.set_device("cuda")
->>> print(config.get_backend())  # Output: 'torch'
->>> print(config.get_device())  # Output: 'cuda'
+>>> print(config.get_device())
+'cuda'
 
 Create a tensor using the xp proxy:
 
 >>> tensor = xp.arange(3)
->>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+>>> print(type(tensor))
+<class 'torch.Tensor'>
 
 Temporarily switch backends within a context manager:
 
->>> print(config.get_backend())  # Output: 'torch'
+>>> print(config.get_backend())
+'torch'
 
 >>> with config.with_backend("numpy"):
-...     print(config.get_backend())  # Output: 'numpy'
+...     print(config.get_backend())
+'numpy'
 
->>> print(config.get_backend())  # Output: 'torch'
+>>> print(config.get_backend())
+'torch'
 
 Use PyTorch-specific device objects if desired:
 
 >>> import torch
 
 >>> config.set_device(torch.device("cuda:0"))
->>> print(config.get_device())  # Output: device(type='cuda', index=0)
+>>> print(config.get_device())
+device(type='cuda', index=0)
 
 Check PyTorch availability:
 
@@ -208,14 +220,18 @@ class _Proxy(types.ModuleType):
     Create a proxy instance and set the backend to NumPy:
 
     >>> from array_api_compat import numpy as apc_np
+    >>>
     >>> xp = _Proxy("numpy")
     >>> xp.set_backend(apc_np)
 
     Use the proxy to create an array (calls NumPy under the hood):
 
     >>> array = xp.arange(5)
-    >>> print(array)  # Output: [0 1 2 3 4]
-    >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+    >>> print(array)
+    Output: [0 1 2 3 4]
+
+    >>> print(type(array))
+    <class 'numpy.ndarray'>
 
     You can use any function or attribute provided by the backend:
 
@@ -223,33 +239,54 @@ class _Proxy(types.ModuleType):
 
     Query dtypes in a backend-agnostic way:
 
-    >>> print(xp.get_float_dtype())  # Output: float64
-    >>> print(xp.get_int_dtype())  # Output: int64
-    >>> print(xp.get_complex_dtype())  # Output: complex128
-    >>> print(xp.get_bool_dtype())  # Output: bool
+    >>> print(xp.get_float_dtype())
+    float64
+
+    >>> print(xp.get_int_dtype())
+    int64
+
+    >>> print(xp.get_complex_dtype())
+    complex128
+
+    >>> print(xp.get_bool_dtype())
+    bool
 
     Switch to the PyTorch backend:
 
     >>> from array_api_compat import torch as apc_torch
+    >>>
     >>> xp = _Proxy("torch")
     >>> xp.set_backend(apc_torch)
 
     Now the proxy uses PyTorch:
+
     >>> array = xp.arange(5)
-    >>> print(array)  # Output: tensor([0, 1, 2, 3, 4])
-    >>> print(type(array))  # Output: <class 'torch.Tensor'>
+    >>> print(array)
+    tensor([0, 1, 2, 3, 4])
+
+    >>> print(type(array))
+    <class 'torch.Tensor'>
 
     The dtype helpers return PyTorch-specific types:
 
-    >>> print(xp.get_float_dtype())  # Output: torch.float32
-    >>> print(xp.get_int_dtype())  # Output: torch.int64
-    >>> print(xp.get_complex_dtype())  # Output: torch.complex64
-    >>> print(xp.get_bool_dtype())  # Output: torch.bool
+    >>> print(xp.get_float_dtype())
+    torch.float32
+
+    >>> print(xp.get_int_dtype())
+    torch.int64
+
+    >>> print(xp.get_complex_dtype())
+    torch.complex64
+
+    >>> print(xp.get_bool_dtype())
+    torch.bool
 
     You can switch backends as often as needed.:
+
     >>> xp.set_backend(apc_np)
     >>> array = xp.arange(3)
-    >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+    >>> print(type(array))
+    <class 'numpy.ndarray'>
 
     """
 
@@ -292,7 +329,8 @@ class _Proxy(types.ModuleType):
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
         >>> array = xp.arange(5)
-        >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+        >>> print(type(array))
+        <class 'numpy.ndarray'>
 
         Now switch to a PyTorch backend:
 
@@ -301,7 +339,8 @@ class _Proxy(types.ModuleType):
         >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
         >>> array = xp.arange(5)
-        >>> print(type(array))  # Output: <class 'torch.Tensor'>
+        >>> print(type(array))
+        <class 'torch.Tensor'>
 
         """
 
@@ -333,26 +372,32 @@ class _Proxy(types.ModuleType):
         Create a proxy instance and set the backend to NumPy:
 
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
 
         >>> dtype = xp.get_float_dtype()
-        >>> print(dtype)  # Output: float64
+        >>> print(dtype)
+        float64
 
         >>> dtype = xp.get_float_dtype("float32")
-        >>> print(dtype)  # Output: float32
+        >>> print(dtype)
+        float32
 
         Now switch to a PyTorch backend:
 
         >>> from array_api_compat import torch as apc_torch
+        >>>
         >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
 
         >>> dtype = xp.get_float_dtype()
-        >>> print(dtype)  # Output: torch.float32
+        >>> print(dtype)
+        torch.float32
 
         >>> dtype = xp.get_float_dtype("float32")
-        >>> print(dtype)  # Output: torch.float32
+        >>> print(dtype)
+        torch.float32
 
         """
 
@@ -385,14 +430,17 @@ class _Proxy(types.ModuleType):
         Create a proxy instance and set the backend to NumPy:
 
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
 
         >>> dtype = xp.get_int_dtype()
-        >>> print(dtype)  # Output: int64
+        >>> print(dtype)
+        int64
 
         >>> dtype = xp.get_int_dtype("int32")
-        >>> print(dtype)  # Output: int32
+        >>> print(dtype)
+        int32
 
         Now switch to a PyTorch backend:
 
@@ -401,10 +449,12 @@ class _Proxy(types.ModuleType):
         >>> xp.set_backend(apc_torch)
 
         >>> dtype = xp.get_int_dtype()
-        >>> print(dtype)  # Output: torch.int64
+        >>> print(dtype)
+        torch.int64
 
         >>> dtype = xp.get_int_dtype("int32")
-        >>> print(dtype)  # Output: torch.int32
+        >>> print(dtype)
+        torch.int32
 
         """
 
@@ -437,26 +487,32 @@ class _Proxy(types.ModuleType):
         Create a proxy instance and set the backend to NumPy:
 
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
 
         >>> dtype = xp.get_complex_dtype()
-        >>> print(dtype)  # Output: complex128
+        >>> print(dtype)
+        complex128
 
         >>> dtype = xp.get_complex_dtype("complex64")
-        >>> print(dtype)  # Output: complex64
+        >>> print(dtype)
+        complex64
 
         Now switch to a PyTorch backend:
 
         >>> from array_api_compat import torch as apc_torch
+        >>>
         >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
 
         >>> dtype = xp.get_complex_dtype()
-        >>> print(dtype)  # Output: torch.complex64
+        >>> print(dtype)
+        torch.complex64
 
         >>> dtype = xp.get_complex_dtype("complex64")
-        >>> print(dtype)  # Output: torch.complex64
+        >>> print(dtype)
+        torch.complex64
 
         """
 
@@ -489,26 +545,32 @@ class _Proxy(types.ModuleType):
         Create a proxy instance and set the backend to NumPy:
 
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
 
         >>> dtype = xp.get_bool_dtype()
-        >>> print(dtype)  # Output: bool
+        >>> print(dtype)
+        bool
 
         >>> dtype = xp.get_bool_dtype(dtype="bool")
-        >>> print(dtype)  # Output: bool
+        >>> print(dtype)
+        bool
 
         Now switch to a PyTorch backend:
 
         >>> from array_api_compat import torch as apc_torch
+        >>>
         >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
 
         >>> dtype = xp.get_bool_dtype()
-        >>> print(dtype)  # Output: torch.bool
+        >>> print(dtype)
+        torch.bool
 
         >>> dtype = xp.get_bool_dtype(dtype="bool")
-        >>> print(dtype)  # Output: torch.bool
+        >>> print(dtype)
+        torch.bool
 
         """
 
@@ -538,17 +600,22 @@ class _Proxy(types.ModuleType):
         Access NumPy's arange function transparently through the proxy:
 
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
         >>> array = xp.arange(4)
-        >>> print(array)  # Output: [0 1 2 3]
+        >>> print(array)
+        [0 1 2 3]
 
         Now switch to a PyTorch backend:
+    
         >>> from array_api_compat import torch as apc_torch
+        >>>
         >>> xp = ._Proxy("torch")
         >>> xp.set_backend(apc_torch)
         >>> array = xp.arange(4)
-        >>> print(array)  # Output: tensor([0, 1, 2, 3])
+        >>> print(array)
+        tensor([0, 1, 2, 3])
 
         Analogously, you can access any attribute or function available in the
         current backend.
@@ -568,14 +635,18 @@ class _Proxy(types.ModuleType):
         Examples
         --------
         List the attributes (functions, constants, etc.) in the NumPy backend:
+    
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
         >>> attrs_numpy = dir(xp)
         >>> print(attrs_numpy)
 
         List the attributes in the PyTorch backend:
+    
         >>> from array_api_compat import torch as apc_torch
+        >>>
         >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
         >>> attrs_torch = dir(xp)
@@ -648,15 +719,21 @@ class Config:
 
     >>> from deeptrack.backend import config
 
-    >>> print(config.get_backend())  # Output: 'numpy'
-    >>> print(config.get_device())  # Output: 'cpu'
+    >>> print(config.get_backend())
+    'numpy'
+
+    >>> print(config.get_device())
+    'cpu'
 
     Set the backend to PyTorch and device to GPU:
 
     >>> config.set_backend_torch()
+    >>> print(config.get_backend())
+    'torch'
+
     >>> config.set_device("cuda")
-    >>> print(config.get_backend())  # Output: 'torch'
-    >>> print(config.get_device())  # Output: 'cuda'
+    >>> print(config.get_device())
+    'cuda'
 
     Use the xp proxy to create arrays/tensors:
 
@@ -664,29 +741,35 @@ class Config:
 
     >>> config.set_backend_numpy()
     >>> array = xp.arange(5)
-    >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+    >>> print(type(array))
+    <class 'numpy.ndarray'>
 
     >>> config.set_backend_torch()
     >>> tensor = xp.arange(5)
-    >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+    >>> print(type(tensor))
+    <class 'torch.Tensor'>
 
     Temporarily switch backend using a context manager:
 
     >>> config.set_backend("torch")
-    >>> print(config.get_backend())  # Output: 'torch'
+    >>> print(config.get_backend())
+    'torch'
 
     >>> with config.with_backend("numpy"):
-    ...     print(config.get_backend())  # Output: 'numpy'
+    ...     print(config.get_backend())
+    'numpy'
 
-    >>> print(config.get_backend())  # Output: 'torch'
+    >>> print(config.get_backend())
+    'torch'
 
     Use a torch.device object directly:
 
     >>> import torch
-
+    >>>
     >>> config.set_backend_torch()
     >>> config.set_device(torch.device("cuda:0"))
-    >>> print(config.get_device())  # Output: device(type='cuda', index=0)
+    >>> print(config.get_device())
+    device(type='cuda', index=0)
 
     """
 
@@ -731,32 +814,37 @@ class Config:
         Set device to CPU (works with both NumPy and PyTorch backends):
 
         >>> config.set_device("cpu")
-        >>> print(config.get_device())  # Output: cpu
+        >>> print(config.get_device())
+        cpu
 
         Set device to GPU (requires PyTorch backend):
 
         >>> config.set_backend_torch()
         >>> config.set_device("cuda")
-        >>> print(config.get_device())  # Output: cuda
+        >>> print(config.get_device())
+        cuda
 
         Use a specific CUDA device (PyTorch backend):
 
         >>> import torch
         >>> config.set_backend_torch()
         >>> config.set_device(torch.device("cuda:0"))
-        >>> print(config.get_device()) # Output: device(type='cuda', index=0)
+        >>> print(config.get_device())
+        device(type='cuda', index=0)
 
         Set device to Apple Silicon GPU (PyTorch backend on Macs):
 
         >>> config.set_backend_torch()
         >>> config.set_device("mps")
-        >>> print(config.get_device())  # Output: mps
+        >>> print(config.get_device())
+        mps
 
         Attempting to set a GPU device with NumPy backend (should be avoided):
 
         >>> config.set_backend_numpy()
         >>> config.set_device("cuda")
-        >>> print(config.get_device())  # Output: cuda
+        >>> print(config.get_device())
+        cuda
 
         Computation will still run on CPU, since NumPy does not support GPU.
 
@@ -800,13 +888,15 @@ class Config:
         Set the backend to NumPy:
 
         >>> config.set_backend_numpy()
-        >>> print(config.get_backend())  # Output: 'numpy'
+        >>> print(config.get_backend())
+        'numpy'
 
         NumPy backend enables use of standard NumPy arrays via the xp proxy:
 
         >>> from deeptrack.backend import xp
         >>> array = xp.arange(5)
-        >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+        >>> print(type(array))
+        <class 'numpy.ndarray'>
     
         """
 
@@ -824,14 +914,16 @@ class Config:
         Set the backend to PyTorch:
 
         >>> config.set_backend_torch()
-        >>> print(config.get_backend())  # Output: 'torch'
+        >>> print(config.get_backend())
+        'torch'
 
         PyTorch backend enables use of PyTorch tensors via the xp proxy:
 
         >>> from deeptrack.backend import xp
 
         >>> tensor = xp.arange(5)
-        >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+        >>> print(type(tensor))
+        <class 'torch.Tensor'>
 
         """
 
@@ -857,12 +949,14 @@ class Config:
         Set the backend to NumPy:
 
         >>> config.set_backend("numpy")
-        >>> print(config.get_backend())  # Output: 'numpy'
+        >>> print(config.get_backend())
+        'numpy'
 
         Set the backend to PyTorch:
 
         >>> config.set_backend("torch")
-        >>> print(config.get_backend())  # Output: 'torch'
+        >>> print(config.get_backend())
+        'torch'
 
         Switch between backends as needed in your workflow using the xp proxy:
 
@@ -870,11 +964,13 @@ class Config:
 
         >>> config.set_backend("numpy")
         >>> array = xp.arange(4)
-        >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+        >>> print(type(array))
+        <class 'numpy.ndarray'>
 
         >>> config.set_backend("torch")
         >>> tensor = xp.arange(4)
-        >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+        >>> print(type(tensor))
+        <class 'torch.Tensor'>
     
         """
 
@@ -937,12 +1033,15 @@ class Config:
         Temporarily switch to the NumPy backend for a block of code:
 
         >>> config.set_backend("torch")
-        >>> print(config.get_backend())  # Output: 'torch'
+        >>> print(config.get_backend())
+        'torch'
 
         >>> with config.with_backend("numpy"):
-        ...     print(config.get_backend())  # Output: 'numpy'
+        ...     print(config.get_backend())
+        'numpy'
 
-        >>> print(config.get_backend())  # Output: 'torch'
+        >>> print(config.get_backend())
+        'torch'
 
         Temporarily switch to the PyTorch backend inside a function:
 
@@ -955,9 +1054,11 @@ class Config:
         ...         return xp.arange(3)
 
         >>> tensor = do_torch_operation()
-        >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+        >>> print(type(tensor))
+        <class 'torch.Tensor'>
 
-        >>> print(config.get_backend())  # Output: 'numpy'
+        >>> print(config.get_backend())
+        'numpy'
     
         """
 
