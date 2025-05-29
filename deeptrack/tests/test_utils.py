@@ -8,98 +8,132 @@
 
 import unittest
 
+import deeptrack as dt
+import numpy as np
+
 from deeptrack import utils
+
+
+class DummyClass:
+    def method(self): pass
+    def __len__(self): return 42
 
 
 class TestUtils(unittest.TestCase):
 
     def test_hasmethod(self):
         self.assertTrue(utils.hasmethod(utils, "hasmethod"))
-        self.assertFalse(
-            utils.hasmethod(utils, "this_is_definetely_not_a_method_of_utils")
-        )
+        self.assertFalse(utils.hasmethod(utils, "not_a_method"))
+        self.assertTrue(utils.hasmethod(DummyClass, "method"))
+        self.assertFalse(utils.hasmethod(DummyClass, "not_real"))
+        self.assertTrue(utils.hasmethod(DummyClass(), "method"))
+        self.assertTrue(utils.hasmethod(DummyClass(), "__len__"))
+        self.assertFalse(utils.hasmethod(123, "foo"))  # int has no foo
+
+        # Built-in edge cases
+        self.assertTrue(utils.hasmethod([], "append"))
+        self.assertFalse(utils.hasmethod([], "not_a_real_method"))
 
     def test_as_list(self):
-        obj = 1
-        self.assertEqual(utils.as_list(obj), [obj])
+        # Scalars
+        self.assertEqual(utils.as_list(1), [1])
+        self.assertEqual(utils.as_list(None), [None])
+        self.assertEqual(utils.as_list(3.14), [3.14])        
+        
+        # Containers
+        self.assertEqual(utils.as_list([1, 2]), [1, 2])
+        self.assertEqual(utils.as_list((1, 2)), [1, 2])
+        self.assertEqual(sorted(utils.as_list({1, 2})), [1, 2])
 
-        list_obj = [1, 2, 3]
-        self.assertEqual(utils.as_list(list_obj), list_obj)
+        # Generator
+        gen = (i for i in range(2))
+        self.assertEqual(utils.as_list(gen), [0, 1])
+
+        # Strings and bytes
+        self.assertEqual(utils.as_list("abc"), ["abc"])
+        self.assertEqual(utils.as_list(b"123"), [b"123"])
+
+        # Numpy array
+        arr = np.array([1, 2, 3])
+        result = utils.as_list(arr)
+        self.assertTrue(isinstance(result, list))
+        self.assertTrue(all(isinstance(x, (int, np.generic)) for x in result))
+
+        if dt.TORCH_AVAILABLE:
+            import torch
+
+            tensor = torch.tensor([[1, 2], [3, 4]])
+            result = utils.as_list(tensor)
+
+            # By default, this will be [tensor([1, 2]), tensor([3, 4])]
+            self.assertEqual(len(result), 2)
+            self.assertTrue(all(isinstance(x, torch.Tensor) for x in result))
 
     def test_get_kwarg_names(self):
-        def func1():
-            pass
+        def f1(): pass
+        self.assertEqual(utils.get_kwarg_names(f1), [])
 
-        self.assertEqual(utils.get_kwarg_names(func1), [])
+        def f2(a): pass
+        self.assertEqual(utils.get_kwarg_names(f2), ["a"])
 
-        def func2(key1):
-            pass
+        def f3(a, b=1): pass
+        self.assertEqual(utils.get_kwarg_names(f3), ["a", "b"])
 
-        self.assertEqual(utils.get_kwarg_names(func2), ["key1"])
+        def f4(a, *args, b=2): pass
+        self.assertEqual(utils.get_kwarg_names(f4), ["b"])
 
-        def func3(key1, key2=2):
-            pass
+        def f5(*args, b, c=2): pass
+        self.assertEqual(utils.get_kwarg_names(f5), ["b", "c"])
 
-        self.assertEqual(utils.get_kwarg_names(func3), ["key1", "key2"])
+        def f6(a, b, *args): pass
+        self.assertEqual(utils.get_kwarg_names(f6), [])
 
-        def func4(key1, *argv, key2=2):
-            pass
+        def f7(a, b=1, c=3, **kwargs): pass
+        self.assertEqual(utils.get_kwarg_names(f7), ["a", "b", "c"])
 
-        self.assertEqual(utils.get_kwarg_names(func4), ["key2"])
+        # Built-in function (should not raise)
+        self.assertIsInstance(utils.get_kwarg_names(len), list)
 
-        def func5(*argv, key1, key2=2):
-            pass
+        # Lambda
+        l = lambda a, b=2: a + b
+        self.assertEqual(utils.get_kwarg_names(l), ["a", "b"])
 
-        self.assertEqual(utils.get_kwarg_names(func5), ["key1", "key2"])
+        # Method
+        self.assertIn("self", utils.get_kwarg_names(DummyClass.method))
 
-        def func6(key1, key2, key3, *argv):
-            pass
+    def test_kwarg_has_default(self):
+        def f1(a, b=2): pass
+        self.assertFalse(utils.kwarg_has_default(f1, "a"))
+        self.assertTrue(utils.kwarg_has_default(f1, "b"))
 
-        self.assertEqual(utils.get_kwarg_names(func6), [])
-
-        def func7(key1, key2=1, key3=3, **kwargs):
-            pass
-
-        self.assertEqual(utils.get_kwarg_names(func7), ["key1", "key2", "key3"])
+        # Not in function
+        self.assertFalse(utils.kwarg_has_default(f1, "c"))
 
     def test_safe_call(self):
+        def f(a, b=2, c=3): return a + b + c
+        # All args present
+        self.assertEqual(utils.safe_call(f, positional_args=[1], b=2, c=3), 6)
+        # Only some kwargs present
+        self.assertEqual(utils.safe_call(f, positional_args=[1], b=4), 8)
+        # No kwargs
+        self.assertEqual(utils.safe_call(f, positional_args=[1]), 6)
+        # Extra kwargs are ignored
+        self.assertEqual(utils.safe_call(f, positional_args=[1], b=5, x=10), 9)
+        # Only kwargs
+        self.assertEqual(utils.safe_call(f, a=1, b=2, c=3), 6)
 
-        arguments = {
-            "key1": None,
-            "key2": False,
-            "key_not_in_function": True,
-            "key_not_in_function_2": True,
-        }
+        # Should ignore kwargs not in function signature
+        def g(a): return a
+        self.assertEqual(utils.safe_call(g, a=42, extrakw=1), 42)
 
-        def func1():
-            pass
+        # Missing required arg should raise error
+        def f(a): return a
+        with self.assertRaises(TypeError):
+            utils.safe_call(f)
 
-        utils.safe_call(func1, **arguments)
-
-        def func2(key1):
-            pass
-
-        utils.safe_call(func2, **arguments)
-
-        def func3(key1, key2=2):
-            pass
-
-        utils.safe_call(func3, **arguments)
-
-        def func4(key1, *argv, key2=2):
-            pass
-
-        self.assertRaises(TypeError, lambda: utils.safe_call(func4, **arguments))
-
-        def func5(*argv, key1, key2=2):
-            pass
-
-        utils.safe_call(func5, **arguments)
-
-        def func6(key1, key2=1, key3=3, **kwargs):
-            pass
-
-        utils.safe_call(func6, **arguments)
+        def g(a, *, b): return a + b
+        with self.assertRaises(TypeError):
+            utils.safe_call(g, a=1)  # Missing b
 
 
 if __name__ == "__main__":
