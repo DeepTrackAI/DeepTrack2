@@ -65,7 +65,7 @@ IMPORTANT: Users should ensure backend and device compatibility.
 
 Import the global config object and the xp proxy for backend-agnostic code:
 
->>> from deeptrack.backend._config import config, xp
+>>> from deeptrack.backend import config, xp
 
 Check the default backend and device:
 
@@ -107,13 +107,13 @@ Use PyTorch-specific device objects if desired:
 
 Check PyTorch availability:
 
->>> from deeptrack.backend._config import TORCH_AVAILABLE
+>>> from deeptrack.backend import TORCH_AVAILABLE
 
 >>> print(TORCH_AVAILABLE)
 
 Check OpenCV availability:
 
->>> from deeptrack.backend._config import OPENCV_AVAILABLE
+>>> from deeptrack.backend import OPENCV_AVAILABLE
 
 >>> print(OPENCV_AVAILABLE)
 
@@ -646,7 +646,7 @@ class Config:
 
     Create the singleton configuration object and check its defaults:
 
-    >>> from deeptrack.backend._config import config
+    >>> from deeptrack.backend import config
 
     >>> print(config.get_backend())  # Output: 'numpy'
     >>> print(config.get_device())  # Output: 'cpu'
@@ -660,7 +660,7 @@ class Config:
 
     Use the xp proxy to create arrays/tensors:
 
-    >>> from deeptrack.backend._config import xp
+    >>> from deeptrack.backend import xp
 
     >>> config.set_backend_numpy()
     >>> array = xp.arange(5)
@@ -726,7 +726,7 @@ class Config:
 
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Set device to CPU (works with both NumPy and PyTorch backends):
 
@@ -778,7 +778,7 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Get the current device:
 
@@ -795,7 +795,7 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Set the backend to NumPy:
 
@@ -804,7 +804,7 @@ class Config:
 
         NumPy backend enables use of standard NumPy arrays via the xp proxy:
 
-        >>> from deeptrack.backend._config import xp
+        >>> from deeptrack.backend import xp
         >>> array = xp.arange(5)
         >>> print(type(array))  # Output: <class 'numpy.ndarray'>
     
@@ -819,7 +819,7 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Set the backend to PyTorch:
 
@@ -828,7 +828,7 @@ class Config:
 
         PyTorch backend enables use of PyTorch tensors via the xp proxy:
 
-        >>> from deeptrack.backend._config import xp
+        >>> from deeptrack.backend import xp
 
         >>> tensor = xp.arange(5)
         >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
@@ -852,7 +852,7 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Set the backend to NumPy:
 
@@ -866,7 +866,7 @@ class Config:
 
         Switch between backends as needed in your workflow using the xp proxy:
 
-        >>> from deeptrack.backend._config import xp
+        >>> from deeptrack.backend import xp
 
         >>> config.set_backend("numpy")
         >>> array = xp.arange(4)
@@ -899,7 +899,7 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Get the current backend:
 
@@ -932,7 +932,7 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Temporarily switch to the NumPy backend for a block of code:
 
@@ -946,7 +946,7 @@ class Config:
 
         Temporarily switch to the PyTorch backend inside a function:
 
-        >>> from deeptrack.backend._config import xp
+        >>> from deeptrack.backend import xp
 
         >>> config.set_backend("numpy")
 

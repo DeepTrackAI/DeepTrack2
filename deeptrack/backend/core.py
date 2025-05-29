@@ -67,18 +67,24 @@ And print the value of the child:
 
 """
 
+from __future__ import annotations
+
 import operator  # Operator overloading for computation nodes.
 from weakref import WeakSet  # Manages relationships between nodes without
                              # creating circular dependencies.
+from typing import Any, Callable, Iterator
 
-from typing import (
-    Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
-)
-
-from .. import utils
+from deeptrack.utils import get_kwarg_names
 
 
-citation_midtvet2021quantitative = """
+__all__ = [
+    "DeepTrackDataDict",
+    "DeepTrackDataObject",
+    "DeepTrackNode",
+]
+
+
+CITATION_MIDTVEDT2021QUANTITATIVE = """
 @article{Midtvet2021Quantitative,
     author  = {Midtvedt, Benjamin and Helgadottir, Saga and Argun, Aykut and 
                Pineda, Jesús and Midtvedt, Daniel and Volpe, Giovanni},
@@ -101,29 +107,31 @@ class DeepTrackDataObject:
 
     Attributes
     ----------
-    data : Any
+    data: Any
         The stored data. Default is `None`.
-    valid : bool
+    valid: bool
         A flag indicating whether the stored data is valid. Default is `False`.
 
     Methods
     -------
-    store(data : Any) -> None
-        Stores data in the container and marks it as valid.
-    current_value() -> Any
-        Returns the currently stored data.
-    is_valid() -> bool
-        Returns whether the stored data is valid.
-    invalidate() -> None
-        Marks the data as invalid.
-    validate() -> None
-        Marks the data as valid.
+    `store(data: Any) -> None`
+        Store data in the container and mark it as valid.
+    `current_value() -> Any`
+        Return the currently stored data.
+    `is_valid() -> bool`
+        Return whether the stored data is valid.
+    `invalidate() -> None`
+        Mark the data as invalid.
+    `validate() -> None`
+        Mark the data as valid.
 
     Example
     -------
+    >>> import deeptrack as dt
+
     Create a `DeepTrackDataObject`:
 
-    >>> data_obj = core.DeepTrackDataObject()
+    >>> data_obj = dt.DeepTrackDataObject()
 
     Store a value in this container:
 
@@ -142,7 +150,7 @@ class DeepTrackDataObject:
     >>> print(data_obj.is_valid())
     False
 
-    Validate the data again to restore its status:
+    Validate the data again to restore its valid status:
 
     >>> data_obj.validate()
     >>> print(data_obj.is_valid())
@@ -150,47 +158,49 @@ class DeepTrackDataObject:
 
     """
 
-    # Attributes.
     data: Any
     valid: bool
 
-    def __init__(self):
+    def __init__(self: DeepTrackDataObject):
         """Initialize the container without data.
 
-        The `data` and `valid` attributes are set to their default values 
-        `None` and `False`.
-        
+        It sets the `data` and `valid` attributes are set to their default
+        values `None` and `False`.
+
         """
 
         self.data = None
         self.valid = False
 
-    def store(self, data: Any) -> None:
+    def store(
+        self: DeepTrackDataObject,
+        data: Any,
+    ) -> None:
         """Store data and mark it as valid.
 
         Parameters
         ----------
-        data : Any
+        data: Any
             The data to be stored in the container.
-        
+
         """
 
         self.data = data
         self.valid = True
 
-    def current_value(self) -> Any:
+    def current_value(self: DeepTrackDataObject) -> Any:
         """Retrieve the stored data.
 
         Returns
         -------
         Any
             The data stored in the container.
-        
+
         """
 
         return self.data
 
-    def is_valid(self) -> bool:
+    def is_valid(self: DeepTrackDataObject) -> bool:
         """Return whether the stored data is valid.
 
         Returns
@@ -202,12 +212,12 @@ class DeepTrackDataObject:
 
         return self.valid
 
-    def invalidate(self) -> None:
+    def invalidate(self: DeepTrackDataObject) -> None:
         """Mark the stored data as invalid."""
 
         self.valid = False
 
-    def validate(self) -> None:
+    def validate(self: DeepTrackDataObject) -> None:
         """Mark the stored data as valid."""
 
         self.valid = True
@@ -625,7 +635,7 @@ class DeepTrackNode:
     _all_children: Set['DeepTrackNode']
 
     # Citations associated with DeepTrack2.
-    _citations: List[str] = [citation_midtvet2021quantitative]
+    _citations: List[str] = [CITATION_MIDTVEDT2021QUANTITATIVE]
 
     @property
     def action(self) -> Callable[..., Any]:
@@ -653,7 +663,7 @@ class DeepTrackNode:
         """
 
         self._action = value
-        self._accepts_ID = "_ID" in utils.get_kwarg_names(value)
+        self._accepts_ID = "_ID" in get_kwarg_names(value)
 
     def __init__(
         self,
@@ -688,7 +698,7 @@ class DeepTrackNode:
                 self.action = lambda: action
 
         # Check if action accepts `_ID`.
-        self._accepts_ID = "_ID" in utils.get_kwarg_names(self.action)
+        self._accepts_ID = "_ID" in get_kwarg_names(self.action)
 
         # Call super init in case of multiple inheritance.
         super().__init__(**kwargs)

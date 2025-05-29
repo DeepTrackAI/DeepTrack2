@@ -3,7 +3,7 @@ import lazy_import
 from typing import TYPE_CHECKING
 
 from pint import UnitRegistry
-from .backend.pint_definition import pint_definitions
+from deeptrack.backend.pint_definition import pint_definitions
 
 import warnings
 import importlib.util
@@ -25,6 +25,8 @@ if tensorflow_installed:
 
 # Create a unit registry with custom pixel-related units.
 units = UnitRegistry(pint_definitions.split("\n"))
+
+from deeptrack.backend import *
 
 from deeptrack.features import *
 from deeptrack.aberrations import *
