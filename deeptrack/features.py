@@ -573,11 +573,11 @@ class Feature(DeepTrackNode):
                     self.properties[property_name], **self.properties
                 )
             else:
-                # insert empty property
+                # Insert empty property
                 self.properties[property_name] = SequentialProperty()
 
             self.properties.add_dependency(self.properties[property_name])
-            self.properties[property_name].add_child(self.properties)
+            # self.properties[property_name].add_child(self.properties)
 
         for property_name, sampling_rule in kwargs.items():
 
@@ -600,7 +600,11 @@ class Feature(DeepTrackNode):
                 else:
                     all_kwargs[key] = val
             if not prop.initialization:
-                prop.initialization = prop.create_action(sampling_rule, **{k:all_kwargs[k] for k in all_kwargs if k != "previous_value"})
+                prop.initialization = prop.create_action(
+                    sampling_rule,
+                    **{k:all_kwargs[k] for k in all_kwargs
+                       if k != "previous_value"},
+                )
 
             prop.current = prop.create_action(sampling_rule, **all_kwargs)
 
