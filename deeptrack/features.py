@@ -568,12 +568,13 @@ class Feature(DeepTrackNode):
         for property_name in kwargs.keys():
 
             if property_name in self.properties:
-                # Insert property with initialized value
+                # Insert sequential property with initialized value taken from
+                # the already available property
                 self.properties[property_name] = SequentialProperty(
                     self.properties[property_name], **self.properties
                 )
             else:
-                # Insert empty property
+                # Insert empty sequential property
                 self.properties[property_name] = SequentialProperty()
 
             self.properties.add_dependency(self.properties[property_name])
@@ -590,15 +591,16 @@ class Feature(DeepTrackNode):
                 sequence_step=prop.sequence_step,
             )
 
-            for key, val in self.properties.items():
+            for key, value in self.properties.items():
                 if key == property_name:
                     continue
 
-                if isinstance(val, SequentialProperty):
-                    all_kwargs[key] = val
-                    all_kwargs["previous_" + key] = val.previous_values
+                if isinstance(value, SequentialProperty):
+                    all_kwargs[key] = value
+                    all_kwargs["previous_" + key] = value.previous_values
                 else:
-                    all_kwargs[key] = val
+                    all_kwargs[key] = value
+
             if not prop.initialization:
                 prop.initialization = prop.create_action(
                     sampling_rule,
