@@ -81,7 +81,7 @@ def propagate_sequential_data(X, **kwargs):
                     getattr(dep, key).set_value(value)
 
 
-def Sequential(feature: Feature, **kwargs):
+def Sequential(feature: Feature, **kwargs):  # DEPRECATED
     """Converts a feature to be resolved as a sequence.
 
     .. deprecated:: 2.0
