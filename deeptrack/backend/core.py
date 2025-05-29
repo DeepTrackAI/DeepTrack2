@@ -164,8 +164,8 @@ class DeepTrackDataObject:
     def __init__(self: DeepTrackDataObject):
         """Initialize the container without data.
 
-        It sets the `data` and `valid` attributes are set to their default
-        values `None` and `False`.
+        It sets the `data` and `valid` attributes to their default values
+        `None` and `False`.
 
         """
 
@@ -242,7 +242,7 @@ class DeepTrackDataDict:
         The length of the _IDs currently stored. Set when the first entry is 
         created. If `None`, no entries have been created yet, and any _ID
         length is valid.
-    dict: dict[tuple[int, ...], DeepTrackDataObject]
+    dict: dict[tuple[int, ...], DeepTrackDataObject] or {}
         A dictionary mapping tuples of integers (_IDs) to
         `DeepTrackDataObject` instances.
 
@@ -351,7 +351,7 @@ class DeepTrackDataDict:
 
     """
 
-    keylength: int
+    keylength: int | None
     dict: dict[tuple[int, ...], DeepTrackDataObject]
 
     def __init__(self: DeepTrackDataDict):
