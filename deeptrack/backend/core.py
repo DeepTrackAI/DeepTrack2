@@ -39,7 +39,7 @@ Data Containers:
 - `DeepTrackDataDict`: Dictionary to store multiple data with validation.
 
     A data container to store multiple data objects (`DeepTrackDataObject`) 
-    indexed by unique access IDs (consisting of tuples of integers), enabling 
+    indexed by unique access _IDs (consisting of tuples of integers), enabling 
     nested data storage.
 
 Computation Nodes:
@@ -224,51 +224,52 @@ class DeepTrackDataObject:
 
 
 class DeepTrackDataDict:
-    """Stores multiple data objects indexed by a tuple of integers (ID).
+    """Stores multiple data objects indexed by tuples of integers (_ID).
 
     `DeepTrackDataDict` can store multiple `DeepTrackDataObject` instances, 
-    each associated with a unique tuple of integers (its ID). This is 
+    each associated with a unique tuple of integers (its _ID). This is 
     particularly useful to handle sequences of data or nested structures.
 
-    The default ID is an empty tuple, `()`. Once the first entry is created, 
-    all IDs must match the established key length:
-    
-    - If an ID longer than the set length is requested, it is trimmed. 
-    - If an ID shorter than the set length is requested, a dictionary slice 
+    The default _ID is an empty tuple, `()`. Once the first entry is created, 
+    all _IDs must match the established key length:
+    - If an _ID longer than the set length is requested, it is trimmed. 
+    - If an _ID shorter than the set length is requested, a dictionary slice 
       containing all matching entries is returned.
 
     Attributes
     ----------
-    keylength : int or None
-        The length of the IDs currently stored. Set when the first entry is 
-        created. If `None`, no entries have been created yet, and any ID length 
-        is valid.
-    dict : Dict[Tuple[int, ...], DeepTrackDataObject]
-        A dictionary mapping tuples of integers (IDs) to `DeepTrackDataObject` 
-        instances.
+    keylength: int or None
+        The length of the _IDs currently stored. Set when the first entry is 
+        created. If `None`, no entries have been created yet, and any _ID
+        length is valid.
+    dict: dict[tuple[int, ...], DeepTrackDataObject]
+        A dictionary mapping tuples of integers (_IDs) to
+        `DeepTrackDataObject` instances.
 
     Methods
     -------
-    invalidate() -> None
-        Marks all stored data objects as invalid.
-    validate() -> None
-        Marks all stored data objects as valid.
-    valid_index(_ID : Tuple[int, ...]) -> bool
-        Checks if the given ID is valid for the current configuration.
-    create_index(_ID : Tuple[int, ...] = ()) -> None
-        Creates an entry for the given ID if it does not exist.
-    __getitem__(_ID : Tuple[int, ...]) -> DeepTrackDataObject or Dict[Tuple[int, ...], DeepTrackDataObject]
-        Retrieves data associated with the ID. Can return a 
+    `invalidate() -> None`
+        Mark all stored data objects as invalid.
+    `validate() -> None`
+        Mark all stored data objects as valid.
+    `valid_index(_ID : tuple[int, ...]) -> bool`
+        Check if the given _ID is valid for the current configuration.
+    `create_index(_ID : tuple[int, ...] = ()) -> None`
+        Create an entry for the given _ID if it does not exist.
+    `__getitem__(_ID : tuple[int, ...]) -> DeepTrackDataObject or dict[tuple[int, ...], DeepTrackDataObject]`
+        Retrieve data associated with the _ID. Can return a
         `DeepTrackDataObject` or a dict of matching entries if `_ID` is shorter 
         than `keylength`.
-    __contains__(_ID : Tuple[int, ...]) -> bool
-        Checks if the given ID exists in the dictionary.
+    `__contains__(_ID : tuple[int, ...]) -> bool`
+        Check whether the given _ID exists in the dictionary.
 
     Example
     -------
+    >>> import deeptrack as dt
+
     Create a structure to store multiple, indexed instances of data:
 
-    >>> data_dict = DeepTrackDataDict()
+    >>> data_dict = dt.DeepTrackDataDict()
 
     Create the entries:
     
@@ -277,14 +278,14 @@ class DeepTrackDataDict:
     >>> data_dict.create_index((1, 0))
     >>> data_dict.create_index((1, 1))
 
-    Store the values associated with each ID:
+    Store the values associated with each _ID:
 
     >>> data_dict[(0, 0)].store("Data at (0, 0)")
     >>> data_dict[(0, 1)].store("Data at (0, 1)")
     >>> data_dict[(1, 0)].store("Data at (1, 0)")
     >>> data_dict[(1, 1)].store("Data at (1, 1)")
 
-    Retrieve values based on their IDs:
+    Retrieve values based on their _IDs:
 
     >>> print(data_dict[(0, 0)].current_value())
     Data at (0, 0)
@@ -292,24 +293,23 @@ class DeepTrackDataDict:
     >>> print(data_dict[(1, 1)].current_value())
     Data at (1, 1)
 
-    If requesting a shorter ID, it returns all matching nested entries:
+    If requesting a shorter _ID, it returns all matching nested entries:
     
     >>> print(data_dict[(0,)])
     {
-        (0, 0): <DeepTrackDataObject>, 
-        (0, 1): <DeepTrackDataObject>,
+        (0, 0): <DeepTrackDataObject at ...>, 
+        (0, 1): <DeepTrackDataObject at ...>,
     }
     
     """
 
-    # Attributes.
-    keylength: Optional[int]
-    dict: Dict[Tuple[int, ...], DeepTrackDataObject]
+    keylength: int
+    dict: dict[tuple[int, ...], DeepTrackDataObject]
 
-    def __init__(self):
+    def __init__(self: DeepTrackDataDict):
         """Initialize the data dictionary.
 
-        Initializes `keylength` to `None` and `dict` to an empty dictionary,
+        It initializes `keylength` to `None` and `dict` to an empty dictionary,
         indicating no data objects are currently stored.
         
         """
@@ -317,44 +317,50 @@ class DeepTrackDataDict:
         self.keylength = None
         self.dict = {}
 
-    def invalidate(self) -> None:
+    def invalidate(self: DeepTrackDataDict) -> None:
         """Mark all stored data objects as invalid.
 
-        Calls `invalidate()` on every `DeepTrackDataObject` in the dictionary.
-        
+        It calls `invalidate()` on every `DeepTrackDataObject` in the
+        dictionary.
+
         """
 
         for dataobject in self.dict.values():
             dataobject.invalidate()
 
-    def validate(self) -> None:
+    def validate(self: DeepTrackDataDict) -> None:
         """Mark all stored data objects as valid.
 
-        This method calls `validate()` on every `DeepTrackDataObject` in the 
-        dictionary.
-        
+        It calls `validate()` on every `DeepTrackDataObject` in the dictionary.
+
         """
 
         for dataobject in self.dict.values():
             dataobject.validate()
 
-    def valid_index(self, _ID: Tuple[int, ...]) -> bool:
-        """Check if a given ID is valid for this data dictionary.
+    def valid_index(
+        self: DeepTrackDataDict,
+        _ID: tuple[int, ...],
+    ) -> bool:
+        """Check if a given _ID is valid for this data dictionary.
 
         If `keylength` is `None`, any tuple `_ID` is considered valid since no 
-        entries have been created yet. If `_ID` already exists in `dict`, it is 
-        automatically valid. Otherwise, `_ID` must have the same length as 
-        `keylength` to be considered valid.
+        entries have been created yet.
+
+        If `_ID` already exists in `dict`, it is automatically valid.
+        
+        Otherwise, `_ID` must have the same length as `keylength` to be
+        considered valid.
         
         Parameters
         ----------
-        _ID : Tuple[int, ...]
+        _ID: tuple[int, ...]
             The index to check, consisting of a tuple of integers.
 
         Returns
         -------
         bool
-            `True` if the ID is valid given the current configuration, `False` 
+            `True` if the _ID is valid given the current configuration, `False` 
             otherwise.
 
         Raises
@@ -364,7 +370,7 @@ class DeepTrackDataDict:
         
         """
 
-        # Ensure `_ID` is a tuple of integers.
+        # Ensure _ID is a tuple of integers.
         assert isinstance(_ID, tuple), (
             f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
         )
@@ -381,23 +387,28 @@ class DeepTrackDataDict:
         if _ID in self.dict:
             return True
 
-        # Otherwise, the ID length must match the established keylength.
+        # Otherwise, the _ID length must match the established keylength
+        # for _ID to be valid.
         return len(_ID) == self.keylength
 
-    def create_index(self, _ID: Tuple[int, ...] = ()) -> None:
-        """Create a new data entry for the given ID if not already existing.
+    def create_index(
+        self: DeepTrackDataDict,
+        _ID: tuple[int, ...] = (),
+    ) -> None:
+        """Create a new data entry for the given _ID if not already existing.
 
-        Each newly created index is associated with a new 
-        `DeepTrackDataObject`. If `_ID` is already in `dict`, no new entry is 
-        created.
+        Each newly created index is associated with a new
+        `DeepTrackDataObject`.
+
+        If `_ID` is already in `dict`, no new entry is created.
         
         If `keylength` is `None`, it is set to the length of `_ID`. Once 
-        established, all subsequently created IDs must have this same length.
+        established, all subsequently created _IDs must have this same length.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
-            A tuple of integers representing the ID for the data entry. 
+        _ID: tuple[int, ...], optional
+            A tuple of integers representing the _ID for the data entry. 
             Default is `()`, which represents a root-level data entry with no 
             nesting.
         
@@ -409,8 +420,8 @@ class DeepTrackDataDict:
             
         """
 
-        # Check if the given `_ID` is valid.
-        # (Also: Ensure `_ID` is a tuple of integers.)
+        # Check if the given _ID is valid.
+        # (Also: Ensure _ID is a tuple of integers.)
         assert self.valid_index(_ID), (
             f"{_ID} is not a valid index for current dictionary configuration."
         )
@@ -419,36 +430,34 @@ class DeepTrackDataDict:
         if _ID in self.dict:
             return
 
-        # Create a new DeepTrackDataObject for this ID.
+        # Create a new DeepTrackDataObject for this _ID.
         self.dict[_ID] = DeepTrackDataObject()
 
-        # If `keylength` is not set, initialize it with current ID's length.
+        # If `keylength` is not set, initialize it with current _IDs length.
         if self.keylength is None:
             self.keylength = len(_ID)
 
     def __getitem__(
-        self,
-        _ID: Tuple[int, ...],
-    ) -> Union[
-        DeepTrackDataObject,
-        Dict[Tuple[int, ...], DeepTrackDataObject]
-    ]:
-        """Retrieve data associated with a given ID.
+        self: DeepTrackDataDict,
+        _ID: tuple[int, ...],
+    ) -> DeepTrackDataObject | dict[tuple[int, ...], DeepTrackDataObject]:
+        """Retrieve data associated with a given _ID.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...]
-            The ID for the requested data.
+        _ID: Tuple[int, ...]
+            The _ID for the requested data.
 
         Returns
         -------
-        DeepTrackDataObject or Dict[Tuple[int, ...], DeepTrackDataObject]
-            If `_ID` matches `keylength`, returns the corresponding 
+        DeepTrackDataObject or Dict[tuple[int, ...], DeepTrackDataObject]
+            If `_ID` matches `keylength`, it returns the corresponding 
             `DeepTrackDataObject`.
             If `_ID` is longer than `keylength`, the request is trimmed to 
-            match `keylength`.
-            If `_ID` is shorter than `keylength`, returns a dict of all entries 
-            whose IDs match the given `_ID` prefix.
+            match `keylength` and it returns the corresponding
+            `DeepTrackDataObject`.
+            If `_ID` is shorter than `keylength`, it returns a dict of all
+            entries whose _IDs match the given `_ID` prefix.
 
         Raises
         ------
@@ -456,7 +465,7 @@ class DeepTrackDataDict:
             If `_ID` is not a tuple of integers.
         KeyError
             If the dictionary is empty (`keylength` is `None`).
-        
+
         """
 
         # Ensure `_ID` is a tuple of integers.
@@ -471,29 +480,33 @@ class DeepTrackDataDict:
         if self.keylength is None:
             raise KeyError("Attempting to index an empty dict.")
 
-        # If ID matches keylength, returns corresponding DeepTrackDataObject.
+        # If _ID matches keylength, return corresponding DeepTrackDataObject.
         if len(_ID) == self.keylength:
             return self.dict[_ID]
 
-        # If ID longer than keylength, trim the requested ID.
+        # If _ID longer than keylength, trim the requested _ID
+        # and return corresponding DeepTrackDataObject.
         if len(_ID) > self.keylength:
             return self[_ID[: self.keylength]]
 
-        # If ID longer than keylength, return a slice of all matching items.
+        # If _ID shorter than keylength, return a slice of all matching items.
         return {k: v for k, v in self.dict.items() if k[: len(_ID)] == _ID}
 
-    def __contains__(self, _ID: Tuple[int, ...]) -> bool:
-        """Check if a given ID exists in the dictionary.
+    def __contains__(
+        self: DeepTrackDataDict,
+        _ID: tuple[int, ...],
+    ) -> bool:
+        """Check if a given _ID exists in the dictionary.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...]
-            The ID to check.
+        _ID : tuple[int, ...]
+            The _ID to check.
 
         Returns
         -------
         bool
-            `True` if the ID exists, `False` otherwise.
+            `True` if the _ID exists, `False` otherwise.
 
         Raises
         ------
@@ -502,7 +515,7 @@ class DeepTrackDataDict:
 
         """
 
-        # Ensure `_ID` is a tuple of integers.
+        # Ensure _ID is a tuple of integers.
         assert isinstance(_ID, tuple), (
             f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
         )
@@ -533,7 +546,7 @@ class DeepTrackNode:
     _action : Callable
         The function or lambda-function to compute the node value.
     _accepts_ID : bool
-        Whether `action` accepts an input ID.
+        Whether `action` accepts an input _ID.
     _all_children : Set[DeepTrackNode]
         All nodes in the subtree rooted at the node, including the node itself.
     _citations : List[str]
@@ -597,7 +610,7 @@ class DeepTrackNode:
 
     >>> parent.add_child(child)
 
-    Store values in the parent node for specific IDs:
+    Store values in the parent node for specific _IDs:
 
     >>> parent.store(15, _ID=(0,))
     >>> parent.store(20, _ID=(1,))
@@ -609,7 +622,7 @@ class DeepTrackNode:
     >>> print(child_value_0, child_value_1)
     30 40
 
-    Invalidate the parent data for a specific ID:
+    Invalidate the parent data for a specific _ID:
 
     >>> parent.invalidate((0,))
     >>> print(parent.is_valid((0,)))
@@ -789,12 +802,12 @@ class DeepTrackNode:
         return self
 
     def is_valid(self, _ID: Tuple[int, ...] = ()) -> bool:
-        """Check if data for the given ID is valid.
+        """Check if data for the given _ID is valid.
 
         Parameters
         ----------
         _ID : Tuple[int, ...], optional
-            The ID to check validity for.
+            The _ID to check validity for.
 
         Returns
         -------
@@ -809,12 +822,12 @@ class DeepTrackNode:
             return False
 
     def valid_index(self, _ID: Tuple[int, ...]) -> bool:
-        """Check if ID is a valid index for this node’s data.
+        """Check if _ID is a valid index for this node’s data.
 
         Parameters
         ----------
         _ID : Tuple[int, ...]
-            The ID to validate.
+            The _ID to validate.
 
         Returns
         -------
@@ -831,7 +844,7 @@ class DeepTrackNode:
         Parameters
         ----------
         _ID : Tuple[int, ...], optional
-            The ID to invalidate. Default is empty tuple, indicating 
+            The _ID to invalidate. Default is empty tuple, indicating 
             potentially the full dataset.
 
         Returns
@@ -841,7 +854,7 @@ class DeepTrackNode:
         
         Note
         ----
-        At the moment, the code to invalidate specific IDs is not implemented, 
+        At the moment, the code to invalidate specific _IDs is not implemented, 
         so the _ID parameter is not effectively used.
 
         """
@@ -859,7 +872,7 @@ class DeepTrackNode:
         Parameters
         ----------
         _ID : Tuple[int, ...], optional
-            The ID to validate. Default is empty tuple.
+            The _ID to validate. Default is empty tuple.
 
         Returns
         -------
@@ -897,7 +910,7 @@ class DeepTrackNode:
         return self
 
     def set_value(self, value, _ID: Tuple[int, ...] = ()) -> 'DeepTrackNode':
-        """Set a value for this node’s data at ID.
+        """Set a value for this node’s data at _ID.
 
         If the value is different from the currently stored one (or if it is 
         invalid), it will invalidate the old data before storing the new one.
@@ -907,7 +920,7 @@ class DeepTrackNode:
         value : Any
             The value to store.
         _ID : Tuple[int, ...], optional
-            The ID at which to store the value.
+            The _ID at which to store the value.
 
         Returns
         -------
@@ -928,12 +941,12 @@ class DeepTrackNode:
         return self
 
     def previous(self, _ID: Tuple[int, ...] = ()) -> Any:
-        """Retrieve the previously stored value at ID without recomputing.
+        """Retrieve the previously stored value at _ID without recomputing.
 
         Parameters
         ----------
         _ID : Tuple[int, ...], optional
-            The ID for which to retrieve the previous value.
+            The _ID for which to retrieve the previous value.
 
         Returns
         -------
@@ -1074,7 +1087,7 @@ class DeepTrackNode:
         return citations
 
     def __call__(self, _ID: Tuple[int, ...] = ()) -> Any:
-        """Evaluate this node at ID.
+        """Evaluate this node at _ID.
 
         If the data at `_ID` is valid, it returns the stored value. Otherwise, 
         it calls `action` to compute a new value, stores it, and returns it.
@@ -1082,7 +1095,7 @@ class DeepTrackNode:
         Parameters
         ----------
         _ID : Tuple[int, ...], optional
-            The ID at which to evaluate the node’s action.
+            The _ID at which to evaluate the node’s action.
 
         Returns
         -------
@@ -1109,12 +1122,12 @@ class DeepTrackNode:
         return self.current_value(_ID)
 
     def current_value(self, _ID: Tuple[int, ...] = ()) -> Any:
-        """Retrieve the currently stored value at ID.
+        """Retrieve the currently stored value at _ID.
 
         Parameters
         ----------
         _ID : Tuple[int, ...], optional
-            The ID at which to retrieve the current value.
+            The _ID at which to retrieve the current value.
 
         Returns
         -------
