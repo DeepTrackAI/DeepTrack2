@@ -329,6 +329,33 @@ class TestCore(unittest.TestCase):
                                     # 24
         self.assertEqual(C_0_1_2, 24)
 
+    def test__equivalent(self):
+        # Identity check (same object)
+        a = [1, 2, 3]
+        self.assertTrue(core._equivalent(a, a))
+
+        # Both are empty lists (but not the same object)
+        self.assertTrue(core._equivalent([], []))
+        a, b = [], []
+        self.assertTrue(core._equivalent(a, b))
+
+        # Non-empty lists (not same object, not empty)
+        self.assertFalse(core._equivalent([1], [1]))
+
+        # Empty list and None
+        self.assertFalse(core._equivalent([], None))
+
+        # Different types
+        self.assertFalse(core._equivalent(1, "1"))
+
+        # Non-empty lists (same content, not same object)
+        a = [1]
+        b = [1]
+        self.assertFalse(core._equivalent(a, b))
+
+        # One empty list, one non-list empty container
+        self.assertFalse(core._equivalent([], ()))
+
 
 if __name__ == "__main__":
     unittest.main()
