@@ -2,6 +2,7 @@ numpy
 matplotlib
 scipy
 scikit-image
+torch
 more_itertools
 pint
 pandas
