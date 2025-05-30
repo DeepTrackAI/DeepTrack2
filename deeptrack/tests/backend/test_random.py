@@ -1,10 +1,11 @@
 import unittest
 
 import numpy as np
+import torch
 from deeptrack.backend.array_api_compat_ext.torch import random
 
 
-class TestRandomNumpy(unittest.TestCase):
+class TestRandom(unittest.TestCase):
     def test_rand(self):
         shapes = [(2, ), (3, 4)]
         dtypes = [torch.float32, torch.float64]
