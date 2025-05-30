@@ -19,7 +19,7 @@ class TestRandom(unittest.TestCase):
         expected = torch.rand(*shape, dtype=dtype, device=device)
 
         torch.manual_seed(1)
-        generated = rand(*shape, dtype=dtype, device=device)
+        generated = random.rand(*shape, dtype=dtype, device=device)
         
         self.assertEqual(generated.shape, expected.shape)
         self.assertEqual(generated.dtype, expected.dtype)
