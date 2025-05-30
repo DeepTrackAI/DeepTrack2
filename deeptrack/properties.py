@@ -651,7 +651,7 @@ class SequentialProperty(Property):
     """
 
     initialization: Optional[Callable[..., Any]]
-    current_value: Optional[Callable[..., Any]]
+    current: Optional[Callable[..., Any]]
     sequence_length: Property
     sequence_step: Property
     previous_values: Property
@@ -674,7 +674,7 @@ class SequentialProperty(Property):
             The sampling rule (value or callable) for the current step.
             Defaults to None.
         **kwargs: dict[str, Property]
-            Additional named dependencies for `initialization` and `current_value`.
+            Additional named dependencies for `initialization` and `current`.
         
         """
 
@@ -723,8 +723,8 @@ class SequentialProperty(Property):
             self.initialization = None
 
         # 6) Define a default current function for steps >= 1.
-        if current is not None:
-            self.current = self.create_action(current, **kwargs)
+        if current_value is not None:
+            self.current = self.create_action(current_value, **kwargs)
         else:
             self.current = lambda _ID=(): None
 
