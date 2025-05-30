@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import torch
+import numpy as np
 
 __all__ = [
     "rand",
@@ -42,9 +43,11 @@ def randn(*args: int) -> torch.Tensor:
 def beta(
     a: float,
     b: float,
-    size: tuple[int, ...] | None = None,
+    size: int | tuple[int, ...] = None,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device | str = torch.device("cpu"),
 ) -> torch.Tensor:
-    raise NotImplementedError("the beta distribution is not implemented in torch")
+    return torch.tensor(np.random.beta(a, b, size), dtype=dtype, device=device)
 
 
 def binomial(
