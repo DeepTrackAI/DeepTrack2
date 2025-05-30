@@ -1,17 +1,50 @@
-"""Features and tools for resolving sequences of images.
+"""Features and tools for resolving sequences of features.
 
-Classes
--------
-Sequence
-    Resolves a feature as a sequence.
+This module provides a class for evaluating features in sequence with sampling rules.
 
-Functions
----------
-Sequential
-    Converts a feature to be resolved as a sequence.
+Module Structure
+----------------
+
+Classes:
+- `Sequence`: Resolves a feature as a sequence, given a sequence length. 
+
+Functions:
+- `propagate_sequential_data`: Propagates `SequentialProperty` attributes
+
+- `Sequential`: Converts a feature to be resolved as a sequence.
+    Will be removed in a future release. Use `Feature.to_sequence()`
+    instead.
+
+Examples
+--------
+Spinning Ellipsoid
+
+>>> import numpy as np
+>>> from deeptrack.optics import Fluorescence
+>>> from deeptrack.scatterers import Ellipse
+>>> from deeptrack.sequences import Sequence
+
+>>> optics = Fluorescence(output_region=(0, 0, 32, 32))
+>>> ellipse = Ellipse(
+...    radius=(1e-6,0.5e-6),
+...    position=(16, 16)
+>>> )
+
+>>> def rotate(sequence_length, previous_value):
+>>>    return previous_value + 0.1
+>>> rotating_ellipse = ellipse.to_sequential(rotation=rotate)    
+>>> imaged_rotating_ellipse = optics(rotating_ellipse)
+
+>>> imaged_rotating_ellipse_sequence = Sequence(
+...     imaged_rotating_ellipse,
+...     sequence_length=20
+>>> )
+>>> imaged_rotating_ellipse_sequence.update().plot()
+
 """
 
 import warnings
+from __future__ import annotations
 
 import random
 import numpy as np
@@ -44,16 +77,24 @@ class Sequence(Feature):
     __distributed__ = False
 
     def __init__(
-        self, feature: Feature, sequence_length: PropertyLike[int] = 1, **kwargs
-    ):
+        self,
+        feature: Feature,
+        sequence_length: PropertyLike[int] = 1,
+        **kwargs,
+    ) -> None:
 
         super().__init__(sequence_length=sequence_length, **kwargs)
         self.feature = self.add_feature(feature)
         # Require update
         # self.update()
 
-    def get(self, input_list, sequence_length=None, **kwargs):
-
+    def get(
+        self,
+        input_list,
+        sequence_length=None,
+        **kwargs
+    ) -> :
+        
         outputs = input_list or []
         for sequence_step in range(sequence_length):
             np.random.seed(random.randint(0, 1000000))
@@ -73,8 +114,18 @@ class Sequence(Feature):
         return outputs
 
 
-def propagate_sequential_data(X, **kwargs):
-    for dep in X.recurse_dependencies():
+def propagate_sequential_data(
+    feature: Feature,
+    **kwargs
+) -> None:
+    """Propagates sequential data through the computational graph.
+    
+    Functions as a update function for the attributes of `SequentialProperty`
+    of a given feature, works by checking `DeepTrackNode` dependencies to update
+    the correct attributes.
+    
+    """
+    for dep in feature.recurse_dependencies():
         if isinstance(dep, SequentialProperty):
             for key, value in kwargs.items():
                 if hasattr(dep, key):
