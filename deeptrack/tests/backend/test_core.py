@@ -13,6 +13,18 @@ from deeptrack.backend import core
 
 class TestCore(unittest.TestCase):
 
+    def test___all__(self):
+        from deeptrack import (
+            DeepTrackDataDict,
+            DeepTrackDataObject,
+            DeepTrackNode,
+        )
+        from deeptrack.backend import (
+            DeepTrackDataDict,
+            DeepTrackDataObject,
+            DeepTrackNode,
+        )
+
     def test_DeepTrackDataObject(self):
         dataobj = core.DeepTrackDataObject()
 
@@ -31,13 +43,12 @@ class TestCore(unittest.TestCase):
         self.assertEqual(dataobj.current_value(), 1)
         self.assertEqual(dataobj.is_valid(), True)
 
-
     def test_DeepTrackDataDict(self):
         dataset = core.DeepTrackDataDict()
 
         # Test initial state.
         self.assertEqual(dataset.keylength, None)
-        self.assertFalse(dataset.dict)
+        self.assertFalse(dataset.dict)  # Empty dict, {}
 
         # Create indices and store data.
         dataset.create_index((0,))
@@ -93,7 +104,6 @@ class TestCore(unittest.TestCase):
             self.assertIn(key, {(0,), (1,)})
             self.assertIsInstance(value, core.DeepTrackDataObject)
 
-
     def test_DeepTrackNode_basics(self):
         node = core.DeepTrackNode(action=lambda: 42)
 
@@ -115,7 +125,6 @@ class TestCore(unittest.TestCase):
 
         self.assertEqual(node(), 42)  # Value is calculated and stored.
         self.assertTrue(node.is_valid())
-
 
     def test_DeepTrackNode_dependencies(self):
         parent = core.DeepTrackNode(action=lambda: 10)
@@ -147,7 +156,6 @@ class TestCore(unittest.TestCase):
         self.assertTrue(parent.is_valid())
         self.assertTrue(child.is_valid())
 
-
     def test_DeepTrackNode_nested_dependencies(self):
         parent = core.DeepTrackNode(action=lambda: 5)
         middle = core.DeepTrackNode(action=lambda: parent() + 5)
@@ -165,7 +173,6 @@ class TestCore(unittest.TestCase):
         self.assertFalse(middle.is_valid())
         self.assertFalse(child.is_valid())
 
-
     def test_DeepTrackNode_op_overloading(self):
         node1 = core.DeepTrackNode(action=lambda: 5)
         node2 = core.DeepTrackNode(action=lambda: 10)
@@ -182,12 +189,10 @@ class TestCore(unittest.TestCase):
         div_node = node2 / node1
         self.assertEqual(div_node(), 2)
 
-
     def test_DeepTrackNode_citations(self):
         node = core.DeepTrackNode(action=lambda: 42)
         citations = node.get_citations()
-        self.assertIn(core.citation_midtvet2021quantitative, citations)
-
+        self.assertIn(core.CITATION_MIDTVEDT2021QUANTITATIVE, citations)
 
     def test_DeepTrackNode_single_id(self):
         # Test a single _ID on a simple parent-child relationship.
@@ -203,8 +208,7 @@ class TestCore(unittest.TestCase):
         # Retrieves the values stored in children and parents.
         for id, value in enumerate(range(10)):
             self.assertEqual(child(_ID=(id,)), value * 2)
-            self.assertEqual(parent.previous((id,)), value)
-
+            self.assertEqual(parent.current_value((id,)), value)
 
     def test_DeepTrackNode_nested_ids(self):
         # Test nested IDs for parent-child relationships.
@@ -232,7 +236,6 @@ class TestCore(unittest.TestCase):
         child_value_1_1 = child(_ID=(1, 1))  # Uses parent(_ID=(1,)).
         self.assertEqual(child_value_1_1, 10)
 
-
     def test_DeepTrackNode_replicated_behavior(self):
         # Test replicated behavior where IDs expand.
 
@@ -245,7 +248,6 @@ class TestCore(unittest.TestCase):
 
         cluster_value = cluster()
         self.assertEqual(cluster_value, 3)
-
 
     def test_DeepTrackNode_parent_id_inheritance(self):
 
@@ -280,7 +282,6 @@ class TestCore(unittest.TestCase):
         self.assertEqual(child_deeper(_ID=(1, 1)), 10)
         self.assertEqual(child_deeper(_ID=(1, 2)), 10)
 
-
     def test_DeepTrackNode_invalidation_and_ids(self):
         # Test that invalidating a parent affects specific IDs of children.
 
@@ -306,7 +307,6 @@ class TestCore(unittest.TestCase):
         self.assertFalse(child.is_valid((1, 0)))
         self.assertFalse(child.is_valid((1, 1)))
 
-
     def test_DeepTrackNode_dependency_graph_with_ids(self):
         # Test a multi-level dependency graph with nested IDs.
 
@@ -328,6 +328,68 @@ class TestCore(unittest.TestCase):
                                     # (3 + 5) * (2 + 1)
                                     # 24
         self.assertEqual(C_0_1_2, 24)
+
+    def test__equivalent(self):
+        # Identity check (same object)
+        a = [1, 2, 3]
+        self.assertTrue(core._equivalent(a, a))
+
+        # Both are empty lists (but not the same object)
+        self.assertTrue(core._equivalent([], []))
+        a, b = [], []
+        self.assertTrue(core._equivalent(a, b))
+
+        # Non-empty lists (not same object, not empty)
+        self.assertFalse(core._equivalent([1], [1]))
+
+        # Empty list and None
+        self.assertFalse(core._equivalent([], None))
+
+        # Different types
+        self.assertFalse(core._equivalent(1, "1"))
+
+        # Non-empty lists (same content, not same object)
+        a = [1]
+        b = [1]
+        self.assertFalse(core._equivalent(a, b))
+
+        # One empty list, one non-list empty container
+        self.assertFalse(core._equivalent([], ()))
+
+    def test__create_node_with_operator(self):
+        import operator
+
+        # Test with integers (should be wrapped automatically)
+        node = core._create_node_with_operator(operator.add, 2, 3)
+        self.assertIsInstance(node, core.DeepTrackNode)
+        self.assertEqual(node(), 5)
+
+        # Test with DeepTrackNode operands (addition)
+        a = core.DeepTrackNode(lambda: 10)
+        b = core.DeepTrackNode(lambda: 7)
+        node2 = core._create_node_with_operator(operator.sub, a, b)
+        self.assertIsInstance(node2, core.DeepTrackNode)
+        self.assertEqual(node2(), 3)
+
+        # node2 should be a child of both a and b
+        self.assertIn(node2, a.children)
+        self.assertIn(node2, b.children)
+
+        # a and b should both be dependencies of node2
+        self.assertIn(a, node2.dependencies)
+        self.assertIn(b, node2.dependencies)
+
+        # Test with one DeepTrackNode, one plain value (multiplication)
+        node3 = core._create_node_with_operator(operator.mul, a, 2)
+        self.assertEqual(node3(), 20)
+        self.assertIsInstance(node3, core.DeepTrackNode)
+        self.assertIn(node3, a.children)
+
+        # Ensure wrapping of right operand
+        node4 = core._create_node_with_operator(operator.mul, 3, b)
+        self.assertEqual(node4(), 21)
+        self.assertIsInstance(node4, core.DeepTrackNode)
+        self.assertIn(node4, b.children)
 
 
 if __name__ == "__main__":

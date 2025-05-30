@@ -1,84 +1,140 @@
 """Core data structures for DeepTrack2.
 
-This module provides the core DeepTrack2 classes to manage and process data. 
-In particular, it enables users to:
+This module defines the foundational data structures used throughout
+DeepTrack2 for constructing, managing, and evaluating computational graphs
+with flexible data storage and dependency management.
 
-- Construct flexible and efficient computational pipelines.
-- Manage data and dependencies in a hierarchical structure.
-- Perform lazy evaluations for performance optimization.
+Key Features
+------------
+- **Hierarchical Data Management**
 
-Main Features
--------------
-- **Data Management**
-    
-    `DeepTrackDataObject` and `DeepTrackDataDict` provide tools to store, 
-    validate, and manage data with dependency tracking. They enable nested 
-    data structures and flexible indexing for complex data hierarchies.
+    Provides validated, hierarchical data containers (`DeepTrackDataObject`
+    and `DeepTrackDataDict`) for storing data and managing complex, nested
+    data structures. Supports dependency tracking and flexible indexing.
 
-- **Computational Graphs**
-    
-    `DeepTrackNode` forms the backbone of DeepTrack2 computation pipelines, 
-    representing computation nodes in a computation graph. Nodes support lazy 
-    evaluation, dependency tracking, and caching for improved computational 
-    performance. They implement mathematical operators for easy composition 
-    of computational graphs.
+- **Computation Graphs with Lazy Evaluation**
 
-- **Citations**
+    Implements the `DeepTrackNode` class, the core abstraction for nodes in
+    a computational graph. Supports lazy evaluation, caching, dependency
+    tracking, and operator overloading for intuitive composition of complex
+    computational pipelines.
 
-    Supports citing the relevant publication to ensure proper attribution 
-    (e.g., `Midtvedt et al., 2021`).
+- **Citation Support**
+
+    Provides citation metadata to ensure proper academic attribution for work
+    built on DeepTrack2.
 
 Module Structure
------------------
-Data Containers:
+----------------
+Classes:
 
-- `DeepTrackDataObject`: Basic data container with validation status.
+- `DeepTrackDataObject`: Basic container for data with validation status.
 
-    A basic container for data with validation status.
-    
-- `DeepTrackDataDict`: Dictionary to store multiple data with validation.
+    Simple data container that stores data and tracks its validity
+    (valid/invalid).
 
-    A data container to store multiple data objects (`DeepTrackDataObject`) 
-    indexed by unique access IDs (consisting of tuples of integers), enabling 
-    nested data storage.
+- `DeepTrackDataDict`: Hierarchical dictionary for multiple data objects.
 
-Computation Nodes:
+    Stores multiple `DeepTrackDataObject` instances indexed by tuples of
+    integers, enabling the creation of flexible, nested data hierarchies.
 
-- `DeepTrackNode`: Node in a computation graph.
-    
-    Represents a node in a computation graph, capable of lazy evaluation, 
-    caching, and dependency management.
+- `DeepTrackNode`: Node in a computation graph with operator overloading.
 
-Example
--------
-Create two `DeepTrackNode` objects:
+    Represents a node in a computation graph, capable of storing and
+    computing values based on dependencies, with full support for lazy
+    evaluation, dependency tracking, and operator overloading.
 
->>> parent = DeepTrackNode()
->>> child = DeepTrackNode(lambda: 2 * parent())
+Functions:
+
+- `_equivalent(a, b)`
+
+      def _equivalent(a: Any, b: Any) -> bool
+
+    Determines whether two objects should be considered equivalent,
+    according to DeepTrack2's internal rules (identity, empty lists, etc).
+
+- `_create_node_with_operator(op, a, b)`
+
+      def _create_node_with_operator(
+          op: Callable,
+          a: Any,
+          b: Any,
+      ) -> DeepTrackNode
+
+    Internal helper to create a new computation node by applying a
+    specified operator to two operands, establishing correct graph
+    relationships and supporting operator overloading.
+
+Attributes:
+
+- `CITATION_MIDTVEDT2021QUANTITATIVE`: str
+
+    BibTeX citation for the original DeepTrack2 publication.
+
+Examples
+--------
+>>> import deeptrack as dt
+
+Create a simple computational pipeline using DeepTrack2 nodes:
+
+>>> parent = dt.DeepTrackNode()
+>>> child = dt.DeepTrackNode(lambda: 2 * parent())
 >>> parent.add_child(child)
-
-Set the value of the parent:
-
 >>> parent.store(5)
+>>> child()  # Compute child
+10
 
-And print the value of the child:
+Operator overloading for computation nodes:
 
->>> print(child())  # Output: 10
+>>> a = dt.DeepTrackNode(lambda: 3)
+>>> b = dt.DeepTrackNode(lambda: 4)
+>>> sum_node = a + b
+>>> sum_node()
+7
+
+Create and use a hierarchical data dictionary:
+
+>>> data_dict = dt.DeepTrackDataDict()
+>>> data_dict.create_index((0, 1))
+>>> data_dict[(0, 1)].store("Example data")
+>>> data_dict[(0, 1)].current_value()
+'Example data'
+
+Validate and invalidate a data object:
+
+>>> data_obj = dt.DeepTrackDataObject()
+>>> data_obj.is_valid()
+False
+
+>>> data_obj.store(42)
+>>> data_obj.is_valid()
+True
+
+>>> data_obj.invalidate()
+>>> data_obj.is_valid()
+False
 
 """
+
+
+from __future__ import annotations
 
 import operator  # Operator overloading for computation nodes.
 from weakref import WeakSet  # Manages relationships between nodes without
                              # creating circular dependencies.
+from typing import Any, Callable, Iterator
 
-from typing import (
-    Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
-)
-
-from .. import utils
+from deeptrack.utils import get_kwarg_names
 
 
-citation_midtvet2021quantitative = """
+__all__ = [
+    "DeepTrackDataDict",
+    "DeepTrackDataObject",
+    "DeepTrackNode",
+]
+
+
+CITATION_MIDTVEDT2021QUANTITATIVE = """
 @article{Midtvet2021Quantitative,
     author  = {Midtvedt, Benjamin and Helgadottir, Saga and Argun, Aykut and 
                Pineda, Jesús and Midtvedt, Daniel and Volpe, Giovanni},
@@ -101,96 +157,100 @@ class DeepTrackDataObject:
 
     Attributes
     ----------
-    data : Any
+    data: Any
         The stored data. Default is `None`.
-    valid : bool
+    valid: bool
         A flag indicating whether the stored data is valid. Default is `False`.
 
     Methods
     -------
-    store(data : Any) -> None
-        Stores data in the container and marks it as valid.
-    current_value() -> Any
-        Returns the currently stored data.
-    is_valid() -> bool
-        Returns whether the stored data is valid.
-    invalidate() -> None
-        Marks the data as invalid.
-    validate() -> None
-        Marks the data as valid.
+    `store(data: Any) -> None`
+        Store data in the container and mark it as valid.
+    `current_value() -> Any`
+        Return the currently stored data.
+    `is_valid() -> bool`
+        Return whether the stored data is valid.
+    `invalidate() -> None`
+        Mark the data as invalid.
+    `validate() -> None`
+        Mark the data as valid.
 
     Example
     -------
+    >>> import deeptrack as dt
+
     Create a `DeepTrackDataObject`:
 
-    >>> data_obj = core.DeepTrackDataObject()
+    >>> data_obj = dt.DeepTrackDataObject()
 
     Store a value in this container:
 
     >>> data_obj.store(42)
-    >>> print(data_obj.current_value())
+    >>> data_obj.current_value()
     42
 
     Check if the stored data is valid:
 
-    >>> print(data_obj.is_valid())
+    >>> data_obj.is_valid()
     True
 
     Invalidate the stored data:
 
     >>> data_obj.invalidate()
-    >>> print(data_obj.is_valid())
+    >>> data_obj.is_valid()
     False
 
-    Validate the data again to restore its status:
+    Validate the data again to restore its valid status:
 
     >>> data_obj.validate()
-    >>> print(data_obj.is_valid())
+    >>> data_obj.is_valid()
     True
 
     """
 
-    # Attributes.
     data: Any
     valid: bool
 
-    def __init__(self):
+    def __init__(self: DeepTrackDataObject):
         """Initialize the container without data.
 
-        The `data` and `valid` attributes are set to their default values 
+        It sets the `data` and `valid` attributes to their default values
         `None` and `False`.
-        
+
         """
 
         self.data = None
         self.valid = False
 
-    def store(self, data: Any) -> None:
+    def store(
+        self: DeepTrackDataObject,
+        data: Any,
+    ) -> None:
         """Store data and mark it as valid.
 
         Parameters
         ----------
-        data : Any
+        data: Any
             The data to be stored in the container.
-        
+
         """
 
         self.data = data
         self.valid = True
 
-    def current_value(self) -> Any:
+    def current_value(self: DeepTrackDataObject) -> Any:
         """Retrieve the stored data.
 
         Returns
         -------
         Any
             The data stored in the container.
-        
+
         """
 
         return self.data
 
-    def is_valid(self) -> bool:
+    def is_valid(self: DeepTrackDataObject) -> bool:
         """Return whether the stored data is valid.
 
         Returns
@@ -202,63 +262,64 @@ class DeepTrackDataObject:
 
         return self.valid
 
-    def invalidate(self) -> None:
+    def invalidate(self: DeepTrackDataObject) -> None:
         """Mark the stored data as invalid."""
 
         self.valid = False
 
-    def validate(self) -> None:
+    def validate(self: DeepTrackDataObject) -> None:
         """Mark the stored data as valid."""
 
         self.valid = True
 
 
 class DeepTrackDataDict:
-    """Stores multiple data objects indexed by a tuple of integers (ID).
+    """Stores multiple data objects indexed by tuples of integers (_ID).
 
     `DeepTrackDataDict` can store multiple `DeepTrackDataObject` instances, 
-    each associated with a unique tuple of integers (its ID). This is 
+    each associated with a unique tuple of integers (its _ID). This is 
     particularly useful to handle sequences of data or nested structures.
 
-    The default ID is an empty tuple, `()`. Once the first entry is created, 
-    all IDs must match the established key length:
-    
-    - If an ID longer than the set length is requested, it is trimmed. 
-    - If an ID shorter than the set length is requested, a dictionary slice 
+    The default _ID is an empty tuple, `()`. Once the first entry is created, 
+    all _IDs must match the established key length:
+    - If an _ID longer than the set length is requested, it is trimmed. 
+    - If an _ID shorter than the set length is requested, a dictionary slice 
       containing all matching entries is returned.
 
     Attributes
     ----------
-    keylength : int or None
-        The length of the IDs currently stored. Set when the first entry is 
-        created. If `None`, no entries have been created yet, and any ID length 
-        is valid.
-    dict : Dict[Tuple[int, ...], DeepTrackDataObject]
-        A dictionary mapping tuples of integers (IDs) to `DeepTrackDataObject` 
-        instances.
+    keylength: int or None
+        The length of the _IDs currently stored. Set when the first entry is 
+        created. If `None`, no entries have been created yet, and any _ID
+        length is valid.
+    dict: dict[tuple[int, ...], DeepTrackDataObject] or {}
+        A dictionary mapping tuples of integers (_IDs) to
+        `DeepTrackDataObject` instances.
 
     Methods
     -------
-    invalidate() -> None
-        Marks all stored data objects as invalid.
-    validate() -> None
-        Marks all stored data objects as valid.
-    valid_index(_ID : Tuple[int, ...]) -> bool
-        Checks if the given ID is valid for the current configuration.
-    create_index(_ID : Tuple[int, ...] = ()) -> None
-        Creates an entry for the given ID if it does not exist.
-    __getitem__(_ID : Tuple[int, ...]) -> DeepTrackDataObject or Dict[Tuple[int, ...], DeepTrackDataObject]
-        Retrieves data associated with the ID. Can return a 
+    `invalidate() -> None`
+        Mark all stored data objects as invalid.
+    `validate() -> None`
+        Mark all stored data objects as valid.
+    `valid_index(_ID: tuple[int, ...]) -> bool`
+        Check if the given _ID is valid for the current configuration.
+    `create_index(_ID: tuple[int, ...] = ()) -> None`
+        Create an entry for the given _ID if it does not exist.
+    `__getitem__(_ID: tuple[int, ...]) -> DeepTrackDataObject or dict[tuple[int, ...], DeepTrackDataObject]`
+        Retrieve data associated with the _ID. Can return a
         `DeepTrackDataObject` or a dict of matching entries if `_ID` is shorter 
         than `keylength`.
-    __contains__(_ID : Tuple[int, ...]) -> bool
-        Checks if the given ID exists in the dictionary.
+    `__contains__(_ID: tuple[int, ...]) -> bool`
+        Check whether the given _ID exists in the dictionary.
 
     Example
     -------
+    >>> import deeptrack as dt
+
     Create a structure to store multiple, indexed instances of data:
 
-    >>> data_dict = DeepTrackDataDict()
+    >>> data_dict = dt.DeepTrackDataDict()
 
     Create the entries:
     
@@ -267,39 +328,86 @@ class DeepTrackDataDict:
     >>> data_dict.create_index((1, 0))
     >>> data_dict.create_index((1, 1))
 
-    Store the values associated with each ID:
+    Store the values associated with each _ID:
 
     >>> data_dict[(0, 0)].store("Data at (0, 0)")
     >>> data_dict[(0, 1)].store("Data at (0, 1)")
     >>> data_dict[(1, 0)].store("Data at (1, 0)")
     >>> data_dict[(1, 1)].store("Data at (1, 1)")
 
-    Retrieve values based on their IDs:
+    Retrieve values based on their _IDs:
 
-    >>> print(data_dict[(0, 0)].current_value())
+    >>> data_dict[(0, 0)].current_value()
     Data at (0, 0)
 
-    >>> print(data_dict[(1, 1)].current_value())
+    >>> data_dict[(1, 1)].current_value()
     Data at (1, 1)
 
-    If requesting a shorter ID, it returns all matching nested entries:
+    If requesting a shorter _ID, it returns all matching nested entries:
     
-    >>> print(data_dict[(0,)])
+    >>> data_dict[(0,)]
     {
-        (0, 0): <DeepTrackDataObject>, 
-        (0, 1): <DeepTrackDataObject>,
+        (0, 0): <DeepTrackDataObject at ...>, 
+        (0, 1): <DeepTrackDataObject at ...>,
     }
-    
+
+    Validate and invalidate all entries at once:
+
+    >>> data_dict.invalidate()
+    >>> data_dict[(0, 0)].is_valid()
+    False
+    >>> data_dict[(1, 1)].is_valid()
+    False
+
+    >>> data_dict.validate()
+    >>> data_dict[(0, 0)].is_valid()
+    True
+    >>> data_dict[(1, 1)].is_valid()
+    True
+
+    Invalidate and validate a single entry:
+
+    >>> data_dict[(0, 1)].invalidate()
+    >>> data_dict[(0, 1)].is_valid()
+    False
+    >>> data_dict[(0, 1)].validate()
+    >>> data_dict[(0, 1)].is_valid()
+    True
+
+    Check if a given _ID exists:
+
+    >>> (1, 0) in data_dict
+    True
+    >>> (2, 2) in data_dict
+    False
+
+    Iterate over all entries:
+
+    >>> for key, value in data_dict.dict.items():
+    ...     print(key, value.current_value())
+    (0, 0) Data at (0, 0)
+    (0, 1) Data at (0, 1)
+    (1, 0) Data at (1, 0)
+    (1, 1) Data at (1, 1)
+
+    Check if an _ID is valid according to current keylength:
+
+    >>> data_dict.valid_index((0, 1))
+    True
+    >>> data_dict.valid_index((0,))  # Shorter than keylength after creation
+    False
+    >>> data_dict.valid_index((2, 2))  # Valid length, even if not created yet
+    True
+
     """
 
-    # Attributes.
-    keylength: Optional[int]
-    dict: Dict[Tuple[int, ...], DeepTrackDataObject]
+    keylength: int | None
+    dict: dict[tuple[int, ...], DeepTrackDataObject]
 
-    def __init__(self):
+    def __init__(self: DeepTrackDataDict):
         """Initialize the data dictionary.
 
-        Initializes `keylength` to `None` and `dict` to an empty dictionary,
+        It initializes `keylength` to `None` and `dict` to an empty dictionary,
         indicating no data objects are currently stored.
         
         """
@@ -307,44 +415,50 @@ class DeepTrackDataDict:
         self.keylength = None
         self.dict = {}
 
-    def invalidate(self) -> None:
+    def invalidate(self: DeepTrackDataDict) -> None:
         """Mark all stored data objects as invalid.
 
-        Calls `invalidate()` on every `DeepTrackDataObject` in the dictionary.
-        
+        It calls `invalidate()` on every `DeepTrackDataObject` in the
+        dictionary.
+
         """
 
         for dataobject in self.dict.values():
             dataobject.invalidate()
 
-    def validate(self) -> None:
+    def validate(self: DeepTrackDataDict) -> None:
         """Mark all stored data objects as valid.
 
-        This method calls `validate()` on every `DeepTrackDataObject` in the 
-        dictionary.
-        
+        It calls `validate()` on every `DeepTrackDataObject` in the dictionary.
+
         """
 
         for dataobject in self.dict.values():
             dataobject.validate()
 
-    def valid_index(self, _ID: Tuple[int, ...]) -> bool:
-        """Check if a given ID is valid for this data dictionary.
+    def valid_index(
+        self: DeepTrackDataDict,
+        _ID: tuple[int, ...],
+    ) -> bool:
+        """Check if a given _ID is valid for this data dictionary.
 
         If `keylength` is `None`, any tuple `_ID` is considered valid since no 
-        entries have been created yet. If `_ID` already exists in `dict`, it is 
-        automatically valid. Otherwise, `_ID` must have the same length as 
-        `keylength` to be considered valid.
+        entries have been created yet.
+
+        If `_ID` already exists in `dict`, it is automatically valid.
+        
+        Otherwise, `_ID` must have the same length as `keylength` to be
+        considered valid.
         
         Parameters
         ----------
-        _ID : Tuple[int, ...]
+        _ID: tuple[int, ...]
             The index to check, consisting of a tuple of integers.
 
         Returns
         -------
         bool
-            `True` if the ID is valid given the current configuration, `False` 
+            `True` if the _ID is valid given the current configuration, `False` 
             otherwise.
 
         Raises
@@ -354,7 +468,7 @@ class DeepTrackDataDict:
         
         """
 
-        # Ensure `_ID` is a tuple of integers.
+        # Ensure _ID is a tuple of integers.
         assert isinstance(_ID, tuple), (
             f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
         )
@@ -371,23 +485,28 @@ class DeepTrackDataDict:
         if _ID in self.dict:
             return True
 
-        # Otherwise, the ID length must match the established keylength.
+        # Otherwise, the _ID length must match the established keylength
+        # for _ID to be valid.
         return len(_ID) == self.keylength
 
-    def create_index(self, _ID: Tuple[int, ...] = ()) -> None:
-        """Create a new data entry for the given ID if not already existing.
+    def create_index(
+        self: DeepTrackDataDict,
+        _ID: tuple[int, ...] = (),
+    ) -> None:
+        """Create a new data entry for the given _ID if not already existing.
 
-        Each newly created index is associated with a new 
-        `DeepTrackDataObject`. If `_ID` is already in `dict`, no new entry is 
-        created.
+        Each newly created index is associated with a new
+        `DeepTrackDataObject`.
+
+        If `_ID` is already in `dict`, no new entry is created.
         
         If `keylength` is `None`, it is set to the length of `_ID`. Once 
-        established, all subsequently created IDs must have this same length.
+        established, all subsequently created _IDs must have this same length.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
-            A tuple of integers representing the ID for the data entry. 
+        _ID: tuple[int, ...], optional
+            A tuple of integers representing the _ID for the data entry. 
             Default is `()`, which represents a root-level data entry with no 
             nesting.
         
@@ -399,8 +518,8 @@ class DeepTrackDataDict:
             
         """
 
-        # Check if the given `_ID` is valid.
-        # (Also: Ensure `_ID` is a tuple of integers.)
+        # Check if the given _ID is valid.
+        # (Also: Ensure _ID is a tuple of integers.)
         assert self.valid_index(_ID), (
             f"{_ID} is not a valid index for current dictionary configuration."
         )
@@ -409,36 +528,34 @@ class DeepTrackDataDict:
         if _ID in self.dict:
             return
 
-        # Create a new DeepTrackDataObject for this ID.
+        # Create a new DeepTrackDataObject for this _ID.
         self.dict[_ID] = DeepTrackDataObject()
 
-        # If `keylength` is not set, initialize it with current ID's length.
+        # If `keylength` is not set, initialize it with current _IDs length.
         if self.keylength is None:
             self.keylength = len(_ID)
 
     def __getitem__(
-        self,
-        _ID: Tuple[int, ...],
-    ) -> Union[
-        DeepTrackDataObject,
-        Dict[Tuple[int, ...], DeepTrackDataObject]
-    ]:
-        """Retrieve data associated with a given ID.
+        self: DeepTrackDataDict,
+        _ID: tuple[int, ...],
+    ) -> DeepTrackDataObject | dict[tuple[int, ...], DeepTrackDataObject]:
+        """Retrieve data associated with a given _ID.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...]
-            The ID for the requested data.
+        _ID: tuple[int, ...]
+            The _ID for the requested data.
 
         Returns
         -------
-        DeepTrackDataObject or Dict[Tuple[int, ...], DeepTrackDataObject]
-            If `_ID` matches `keylength`, returns the corresponding 
+        DeepTrackDataObject or Dict[tuple[int, ...], DeepTrackDataObject]
+            If `_ID` matches `keylength`, it returns the corresponding 
             `DeepTrackDataObject`.
             If `_ID` is longer than `keylength`, the request is trimmed to 
-            match `keylength`.
-            If `_ID` is shorter than `keylength`, returns a dict of all entries 
-            whose IDs match the given `_ID` prefix.
+            match `keylength` and it returns the corresponding
+            `DeepTrackDataObject`.
+            If `_ID` is shorter than `keylength`, it returns a dict of all
+            entries whose _IDs match the given `_ID` prefix.
 
         Raises
         ------
@@ -446,7 +563,7 @@ class DeepTrackDataDict:
             If `_ID` is not a tuple of integers.
         KeyError
             If the dictionary is empty (`keylength` is `None`).
-        
+
         """
 
         # Ensure `_ID` is a tuple of integers.
@@ -461,29 +578,33 @@ class DeepTrackDataDict:
         if self.keylength is None:
             raise KeyError("Attempting to index an empty dict.")
 
-        # If ID matches keylength, returns corresponding DeepTrackDataObject.
+        # If _ID matches keylength, return corresponding DeepTrackDataObject.
         if len(_ID) == self.keylength:
             return self.dict[_ID]
 
-        # If ID longer than keylength, trim the requested ID.
+        # If _ID longer than keylength, trim the requested _ID
+        # and return corresponding DeepTrackDataObject.
         if len(_ID) > self.keylength:
             return self[_ID[: self.keylength]]
 
-        # If ID longer than keylength, return a slice of all matching items.
+        # If _ID shorter than keylength, return a slice of all matching items.
         return {k: v for k, v in self.dict.items() if k[: len(_ID)] == _ID}
 
-    def __contains__(self, _ID: Tuple[int, ...]) -> bool:
-        """Check if a given ID exists in the dictionary.
+    def __contains__(
+        self: DeepTrackDataDict,
+        _ID: tuple[int, ...],
+    ) -> bool:
+        """Check if a given _ID exists in the dictionary.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...]
-            The ID to check.
+        _ID: tuple[int, ...]
+            The _ID to check.
 
         Returns
         -------
         bool
-            `True` if the ID exists, `False` otherwise.
+            `True` if the _ID exists, `False` otherwise.
 
         Raises
         ------
@@ -492,7 +613,7 @@ class DeepTrackDataDict:
 
         """
 
-        # Ensure `_ID` is a tuple of integers.
+        # Ensure _ID is a tuple of integers.
         assert isinstance(_ID, tuple), (
             f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
         )
@@ -505,170 +626,281 @@ class DeepTrackDataDict:
 
 
 class DeepTrackNode:
-    """Object corresponding to a node in a computation graph.
+    """Node in a DeepTrack2 computation graph, supporting operator overloading.
 
     `DeepTrackNode` represents a node within a DeepTrack2 computation graph. 
-    In the DeepTrack2 computation graph, each node can store data and compute 
-    new values based on its dependencies. The value of a node is computed by 
-    calling its `action` method.
+    Each node can store data and compute new values based on its dependencies.
+    The value of a node is computed by calling its `action` method.
+
+    `DeepTrackNode` supports operator overloading, enabling intuitive
+    construction of computation graphs using standard Python operators.
+    For example, nodes can be added, multiplied, subtracted, or compared
+    directly (e.g., `node1 + node2`, `node1 * 3`, `node1 > node2`), and the
+    resulting node will represent the composed operation.
+
+    Parameters
+    ----------
+    action: Callable or Any, optional
+        Action to compute this node's value. If not provided, uses a no-op 
+        action (lambda: None).
+    **kwargs: dict[str, Any]
+        Additional arguments for subclasses or extended functionality.
 
     Attributes
     ----------
-    data : DeepTrackDataDict
+    data: DeepTrackDataDict
         Dictionary-like object for storing data, indexed by tuples of integers.
-    children : WeakSet[DeepTrackNode]
+    children: WeakSet[DeepTrackNode]
         Nodes that depend on this node (its children, grandchildren, etc.).
-    dependencies : WeakSet[DeepTrackNode]
+        This is a weakref.WeakSet, so references are weak and do not prevent
+        garbage collection of nodes that are no longer used.
+    dependencies: WeakSet[DeepTrackNode]
         Nodes on which this node depends (its parents, grandparents, etc.).
-    _action : Callable
+        This is a weakref.WeakSet, for efficient memory management.
+    _action: Callable
         The function or lambda-function to compute the node value.
-    _accepts_ID : bool
-        Whether `action` accepts an input ID.
-    _all_children : Set[DeepTrackNode]
+    _accepts_ID: bool
+        Whether `action` accepts an input _ID.
+    _all_children: set[DeepTrackNode]
         All nodes in the subtree rooted at the node, including the node itself.
-    _citations : List[str]
+    _citations: list[str]
         Citations associated with this node.
     
     Methods
     -------
-    action : property
-        Gets or sets the computation function for the node.
-    add_child(child: DeepTrackNode) -> DeepTrackNode
-        Adds a child node that depends on this node.
-        Also adds the dependency in the child node on this node.
-    add_dependency(parent: DeepTrackNode) -> DeepTrackNode
-        Adds a dependency, making this node depend on the parent node.
-        It also sets this node as a child of the parent node.
-    store(data: Any, _ID: Tuple[int, ...] = ()) -> DeepTrackNode
-        Stores computed data for the given `_ID`.
-    is_valid(_ID: Tuple[int, ...] = ()) -> bool
-        Checks if the data for the given `_ID` is valid.
-    valid_index(_ID: Tuple[int, ...]) -> bool
-        Checks if the given `_ID` is valid for this node.
-    invalidate(_ID: Tuple[int, ...] = ()) -> DeepTrackNode
-        Invalidates the data for the given `_ID` and all child nodes.
-    validate(_ID: Tuple[int, ...] = ()) -> DeepTrackNode
-        Validates the data for the given `_ID`, marking it as up-to-date, but 
+    `action: property`
+        Get or set the computation function for the node (stored as `_action`).
+    `add_child(child: DeepTrackNode) -> DeepTrackNode`
+        Add a child node that depends on this node.
+        Also add the dependency on this node in the child node.
+    `add_dependency(parent: DeepTrackNode) -> DeepTrackNode`
+        Add a dependency, making this node depend on the parent node.
+        Also set this node as a child of the parent node.
+    `store(data: Any, _ID: tuple[int, ...] = ()) -> DeepTrackNode`
+        Store computed data for the given `_ID`.
+    `is_valid(_ID: tuple[int, ...] = ()) -> bool`
+        Check whether the data for the given `_ID` is valid.
+    `valid_index(_ID: tuple[int, ...]) -> bool`
+        Check whether the given `_ID` is valid for this node.
+    `invalidate(_ID: tuple[int, ...] = ()) -> DeepTrackNode`
+        Invalidate the data for the given `_ID` and all child nodes.
+    `validate(_ID: tuple[int, ...] = ()) -> DeepTrackNode`
+        Validate the data for the given `_ID`, marking it as up-to-date, but 
         not its children.
-    update() -> DeepTrackNode
-        Resets the data.
-    set_value(value: Any, _ID: Tuple[int, ...] = ()) -> DeepTrackNode
-        Sets a value for the given `_ID`. If the new value differs from the 
+    `update() -> DeepTrackNode`
+        Reset the data.
+    `set_value(value: Any, _ID: tuple[int, ...] = ()) -> DeepTrackNode`
+        Set a value for the given `_ID`. If the new value differs from the 
         current value, the node is invalidated to ensure dependencies are 
         recomputed.
-    previous(_ID: Tuple[int, ...] = ()) -> Any
-        Returns the previously stored value for the given `_ID` without 
-        recomputing it.
-    recurse_children(memory: Optional[Set[DeepTrackNode]] = None) -> Set[DeepTrackNode]
-        Returns all child nodes in the dependency tree rooted at this node.
-    recurse_dependencies(memory: Optional[List[DeepTrackNode]] = None) -> Iterator[DeepTrackNode]
-        Yields all nodes that this node depends on, traversing dependencies.
-    get_citations() -> Set[str]
-        Returns a set of citations for this node and its dependencies.
-    __call__(_ID: Tuple[int, ...] = ()) -> Any
-        Evaluates the node's computation for the given `_ID`, recomputing if 
+    `recurse_children(memory: set[DeepTrackNode] | None = None) -> set[DeepTrackNode]`
+        Return all child nodes in the dependency tree rooted at this node.
+    `recurse_dependencies(memory: list[DeepTrackNode] | None = None) -> Iterator[DeepTrackNode]`
+        Yield all nodes that this node depends on, traversing dependencies.
+    `get_citations() -> set[str]`
+        Return a set of citations for this node and its dependencies.
+    `__call__(_ID: tuple[int, ...] = ()) -> Any`
+        Evaluate the node's computation for the given `_ID`, recomputing if 
         necessary.
-    current_value(_ID: Tuple[int, ...] = ()) -> Any
-        Returns the currently stored value for the given `_ID` without 
+    `current_value(_ID: tuple[int, ...] = ()) -> Any`
+        Return the currently stored value for the given `_ID` without 
         recomputation.
-    __hash__() -> int
-        Returns a unique hash for this node.
-    __getitem__(idx: Any) -> DeepTrackNode
-        Creates a new node that indexes into this node’s computed data.
+    `__hash__() -> int`
+        Return a unique hash for this node.
+    `__getitem__(idx: Any) -> DeepTrackNode`
+        Creates a new node that indexes into this node's computed data.
+
+    Supported Operators
+    -------------------
+    DeepTrackNode supports the following Python operators:
+
+    Arithmetic:
+        +   Addition (__add__, __radd__)
+        -   Subtraction (__sub__, __rsub__)
+        *   Multiplication (__mul__, __rmul__)
+        /   True division (__truediv__, __rtruediv__)
+        //  Floor division (__floordiv__, __rfloordiv__)
+
+    Comparison:
+        <   Less than (__lt__, __rlt__)
+        <=  Less than or equal (__le__, __rle__)
+        >   Greater than (__gt__, __rgt__)
+        >=  Greater than or equal (__ge__, __rge__)
+
+    Each operation returns a new DeepTrackNode representing the
+    result of the corresponding operation in the computation graph.
 
     Example
     -------
-    Create two `DeepTrackNode` objects:
+    >>> from deeptrack.backend.core import DeepTrackNode
+
+    Create two `DeepTrackNode` objects, one as a parent and one as a child:
 
     >>> parent = DeepTrackNode(action=lambda: 10)
     >>> child = DeepTrackNode(action=lambda _ID=None: parent(_ID) * 2)
-
-    First, establish the dependency between `parent` and `child`:
-
     >>> parent.add_child(child)
 
-    Store values in the parent node for specific IDs:
+    Store and retrieve data for specific _IDs:
 
     >>> parent.store(15, _ID=(0,))
     >>> parent.store(20, _ID=(1,))
+    >>> parent.current_value((0,))
+    15
+    >>> parent.current_value((1,))
+    20
 
-    Compute the values for the child node based on these parent values:
+    Compute and retrieve the value for the child node:
 
-    >>> child_value_0 = child(_ID=(0,))
-    >>> child_value_1 = child(_ID=(1,))
-    >>> print(child_value_0, child_value_1)
-    30 40
+    >>> child(_ID=(0,))
+    30
+    >>> child(_ID=(1,))
+    40
 
-    Invalidate the parent data for a specific ID:
+    Validation and invalidation:
+
+    >>> parent.is_valid((0,))
+    True
+    >>> child.is_valid((0,))
+    True
 
     >>> parent.invalidate((0,))
-    >>> print(parent.is_valid((0,)))
+    >>> parent.is_valid((0,))
     False
-    >>> print(child.is_valid((0,)))
+    >>> child.is_valid((0,))
     False
 
-    Update the parent value and recompute the child value:
+    >>> parent.validate((0,))
+    >>> parent.is_valid((0,))
+    True
+    >>> child.is_valid((0,))
+    False
 
-    >>> parent.store(25, _ID=(0,))
-    >>> child_value_recomputed = child(_ID=(0,))
-    >>> print(child_value_recomputed)
-    50    
+    Setting a value and automatic invalidation:
+
+    >>> parent.current_value((0,))
+    15
+    >>> child((1,))  # Computes and stores the value in child
+    >>> child.current_value((0,))
+    30
+
+    >>> parent.set_value(42, _ID=(0,))
+    >>> parent.current_value((0,))
+    42
+    >>> child((0,))  # Recomputes and stores the value in child
+    >>> child.current_value((0,))
+    84
+
+    Resetting all data in the dependency tree (recomputation required):
+
+    >>> parent.update()
+
+    Dependency graph traversal (children and dependencies):
+
+    >>> all_children = parent.recurse_children()
+    >>> all_dependencies = list(child.recurse_dependencies())
+
+    Operator overloading—arithmetic and comparison:
+
+    >>> node_a = DeepTrackNode(lambda: 5)
+    >>> node_b = DeepTrackNode(lambda: 3)
+
+    >>> sum_node = node_a + node_b
+    >>> sum_node()
+    8
+
+    >>> diff_node = node_a - node_b
+    >>> diff_node()
+    2
+
+    >>> prod_node = node_a * 2
+    >>> prod_node()
+    10
+
+    >>> div_node = node_a / node_b
+    >>> div_node()
+    1.666...
+
+    >>> floordiv_node = node_a // node_b
+    >>> floordiv_node()
+    1
+
+    >>> lt_node = node_a < node_b
+    >>> lt_node()
+    False
+
+    >>> ge_node = node_a >= node_b
+    >>> ge_node()
+    True
+
+    Indexing into computed data:
+
+    >>> vector_node = DeepTrackNode(lambda: [10, 20, 30])
+    >>> first_element = vector_node[0]
+    >>> first_element()
+    10
+
+    Citations for a node and its dependencies:
+
+    >>> parent.get_citations()  # Set of citation strings
+    {...} 
 
     """
 
     # Attributes.
     data: DeepTrackDataDict
-    children: WeakSet['DeepTrackNode']
-    dependencies: WeakSet['DeepTrackNode']
+    children: WeakSet[DeepTrackNode]
+    dependencies: WeakSet[DeepTrackNode]
     _action: Callable[..., Any]
     _accepts_ID: bool
-    _all_children: Set['DeepTrackNode']
+    _all_children: set[DeepTrackNode]
 
     # Citations associated with DeepTrack2.
-    _citations: List[str] = [citation_midtvet2021quantitative]
+    _citations: list[str] = [CITATION_MIDTVEDT2021QUANTITATIVE]
 
     @property
-    def action(self) -> Callable[..., Any]:
-        """Callable: The function that computes this node’s value.
+    def action(self: DeepTrackNode) -> Callable[..., Any]:
+        """Callable: The function that computes this node's value.
 
-        When accessed, returns the current action. This is often a function or 
-        lambda-function  that takes `_ID` as an optional parameter if 
+        When accessed, it returns the current action. This is often a function
+        or lambda-function that takes `_ID` as an optional parameter if 
         `_accepts_ID` is `True`.
-        
+
         """
 
         return self._action
 
     @action.setter
-    def action(self, value: Callable[..., Any]) -> None:
-        """Set the action used to compute this node’s value.
+    def action(
+        self: DeepTrackNode,
+        _action: Callable[..., Any],
+    ) -> None:
+        """Set the action used to compute this node's value.
 
         Parameters
         ----------
-        value : Callable[..., Any]
-            A function or lambda to be used for computing the node’s value. If 
-            the function’s signature includes `_ID`, this node will pass `_ID` 
-            when calling `action`.
+        _action: Callable[..., Any]
+            A function or lambda-function used for computing the node's value.
+            If the function's signature includes `_ID`, this node will pass
+            `_ID` when calling `action`.
         
         """
 
-        self._action = value
-        self._accepts_ID = "_ID" in utils.get_kwarg_names(value)
+        self._action = _action
+        self._accepts_ID = "_ID" in get_kwarg_names(_action)
 
     def __init__(
-        self,
-        action: Optional[Callable[..., Any]] = None,
+        self: DeepTrackNode,
+        action: Callable[..., Any] | None = None,
         **kwargs: Any,
     ):
         """Initialize a new DeepTrackNode.
 
         Parameters
         ----------
-        action : Callable or Any, optional
-            Action to compute this node’s value. If not provided, uses a no-op 
+        action: Callable or Any, optional
+            Action to compute this node's value. If not provided, uses a no-op 
             action (lambda: None).
-        
-        **kwargs : dict
+        **kwargs: dict[str, Any]
             Additional arguments for subclasses or extended functionality.
             
         """
@@ -676,7 +908,7 @@ class DeepTrackNode:
         self.data = DeepTrackDataDict()
         self.children = WeakSet()
         self.dependencies = WeakSet()
-        self._action = lambda: None  # Default no-op action.
+        self._action = lambda: None  # Default no-op action
 
         # If action is provided, set it.
         # If it's callable, use it directly;
@@ -688,7 +920,7 @@ class DeepTrackNode:
                 self.action = lambda: action
 
         # Check if action accepts `_ID`.
-        self._accepts_ID = "_ID" in utils.get_kwarg_names(self.action)
+        self._accepts_ID = "_ID" in get_kwarg_names(self.action)
 
         # Call super init in case of multiple inheritance.
         super().__init__(**kwargs)
@@ -697,7 +929,10 @@ class DeepTrackNode:
         self._all_children = set()
         self._all_children.add(self)
 
-    def add_child(self, child: 'DeepTrackNode') -> 'DeepTrackNode':
+    def add_child(
+        self: DeepTrackNode,
+        child: DeepTrackNode,
+    ) -> DeepTrackNode:
         """Add a child node to the current node.
 
         Adding a child also updates `_all_children` for this node and all 
@@ -706,13 +941,13 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        child : DeepTrackNode
+        child: DeepTrackNode
             The child node that depends on this node.
         
         Returns
         -------
-        self : DeepTrackNode
-            Returns the current node for chaining.
+        self: DeepTrackNode
+            Return the current node for chaining.
 
         """
 
@@ -724,26 +959,29 @@ class DeepTrackNode:
         children = child._all_children.copy()
         children.add(child)
 
-        # Merge all these children into this node’s subtree.
+        # Merge all these children into this node's subtree.
         self._all_children = self._all_children.union(children)
         for parent in self.recurse_dependencies():
             parent._all_children = parent._all_children.union(children)
 
         return self
 
-    def add_dependency(self, parent: 'DeepTrackNode') -> 'DeepTrackNode':
+    def add_dependency(
+        self: DeepTrackNode,
+        parent: DeepTrackNode,
+    ) -> DeepTrackNode:
         """Adds a dependency, making this node depend on a parent node.
 
         Parameters
         ----------
-        parent : DeepTrackNode
+        parent: DeepTrackNode
             The parent node that this node depends on. If `parent` changes, 
-            this node’s data may become invalid.
+            this node's data may become invalid.
 
         Returns
         -------
-        self : DeepTrackNode
-            Returns the current node for chaining.
+        self: DeepTrackNode
+            Return the current node for chaining.
         
         """
 
@@ -753,38 +991,45 @@ class DeepTrackNode:
 
         return self
 
-    def store(self, data: Any, _ID: Tuple[int, ...] = ()) -> 'DeepTrackNode':
+    def store(
+        self: DeepTrackNode,
+        data: Any,
+        _ID: tuple[int, ...] = (),
+    ) -> DeepTrackNode:
         """Store computed data in this node.
 
         Parameters
         ----------
-        data : Any
+        data: Any
             The data to be stored.
-        _ID : Tuple[int, ...], optional
-            The index for this data. Default is the empty tuple (), indicating 
-            a root-level entry.
+        _ID: tuple[int, ...], optional
+            The index for this data. If the _ID does not exist, it creates it.
+            Default is the empty tuple (), indicating a root-level entry.
 
         Returns
         -------
-        self : DeepTrackNode
-            Returns the current node for chaining.
+        self: DeepTrackNode
+            Return the current node for chaining.
         
         """
 
         # Create the index if necessary, then store data in it.
         self.data.create_index(_ID)
-        
+
         self.data[_ID].store(data)
 
         return self
 
-    def is_valid(self, _ID: Tuple[int, ...] = ()) -> bool:
-        """Check if data for the given ID is valid.
+    def is_valid(
+        self: DeepTrackNode,
+        _ID: tuple[int, ...] = (),
+    ) -> bool:
+        """Check if data for the given _ID is valid.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
-            The ID to check validity for.
+        _ID: tuple[int, ...], optional
+            The _ID to check validity for.
 
         Returns
         -------
@@ -798,13 +1043,16 @@ class DeepTrackNode:
         except (KeyError, AttributeError):
             return False
 
-    def valid_index(self, _ID: Tuple[int, ...]) -> bool:
-        """Check if ID is a valid index for this node’s data.
+    def valid_index(
+        self: DeepTrackNode,
+        _ID: tuple[int, ...],
+    ) -> bool:
+        """Check if _ID is a valid index for this node's data.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...]
-            The ID to validate.
+        _ID: tuple[int, ...]
+            The _ID to validate.
 
         Returns
         -------
@@ -815,23 +1063,26 @@ class DeepTrackNode:
 
         return self.data.valid_index(_ID)
 
-    def invalidate(self, _ID: Tuple[int, ...] = ()) -> 'DeepTrackNode':
-        """Mark this node’s data and all its children’s data as invalid.
+    def invalidate(
+        self: DeepTrackNode,
+        _ID: tuple[int, ...] = (),
+    ) -> DeepTrackNode:
+        """Mark this node's data and all its children's data as invalid.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
-            The ID to invalidate. Default is empty tuple, indicating 
+        _ID: tuple[int, ...], optional
+            The _ID to invalidate. Default is empty tuple, indicating 
             potentially the full dataset.
 
         Returns
         -------
-        self : DeepTrackNode
-            Returns the current node for chaining.
+        self: DeepTrackNode
+            Return the current node for chaining.
         
         Note
         ----
-        At the moment, the code to invalidate specific IDs is not implemented, 
+        At the moment, the code to invalidate specific _IDs is not implemented, 
         so the _ID parameter is not effectively used.
 
         """
@@ -843,17 +1094,20 @@ class DeepTrackNode:
 
         return self
 
-    def validate(self, _ID: Tuple[int, ...] = ()) -> 'DeepTrackNode':
-        """Mark this node’s data as valid.
+    def validate(
+        self: DeepTrackNode,
+        _ID: tuple[int, ...] = (),
+    ) -> DeepTrackNode:
+        """Mark this node's data as valid.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
-            The ID to validate. Default is empty tuple.
+        _ID: tuple[int, ...], optional
+            The _ID to validate. Default is empty tuple.
 
         Returns
         -------
-        self : DeepTrackNode
+        self: DeepTrackNode
 
         """
 
@@ -861,7 +1115,7 @@ class DeepTrackNode:
 
         return self
 
-    def update(self) -> 'DeepTrackNode':
+    def update(self: DeepTrackNode) -> DeepTrackNode:
         """Reset data in all children.
 
         This method resets `data` for all children of each dependency, 
@@ -870,13 +1124,13 @@ class DeepTrackNode:
         
         Returns
         -------
-        self : DeepTrackNode
-            Returns the current node for chaining.
+        self: DeepTrackNode
+            Return the current node for chaining.
         
         """
 
-        # Pre-instantiate memory for optimization used to avoid repeated
-        # processing of the same nodes.
+        # Pre-instantiate memory for optimization,
+        # used to avoid repeated processing of the same nodes.
         child_memory = []
 
         # For each dependency, reset data in all of its children.
@@ -886,30 +1140,34 @@ class DeepTrackNode:
 
         return self
 
-    def set_value(self, value, _ID: Tuple[int, ...] = ()) -> 'DeepTrackNode':
-        """Set a value for this node’s data at ID.
+    def set_value(
+        self: DeepTrackNode,
+        value: Any,
+        _ID: tuple[int, ...] = (),
+    ) -> DeepTrackNode:
+        """Set a value for this node's data at _ID.
 
         If the value is different from the currently stored one (or if it is 
         invalid), it will invalidate the old data before storing the new one.
 
         Parameters
         ----------
-        value : Any
+        value: Any
             The value to store.
-        _ID : Tuple[int, ...], optional
-            The ID at which to store the value.
+        _ID: tuple[int, ...], optional
+            The _ID at which to store the value.
 
         Returns
         -------
-        self : DeepTrackNode
-            Returns the current node for chaining.
+        self: DeepTrackNode
+            Return the current node for chaining.
         
         """
 
         # Check if current value is equivalent. If not, invalidate and store
         # the new value. If set to same value, no need to invalidate.
         if not (
-            self.is_valid(_ID=_ID) 
+            self.is_valid(_ID=_ID)
             and _equivalent(value, self.data[_ID].current_value())
         ):
             self.invalidate(_ID=_ID)
@@ -917,13 +1175,17 @@ class DeepTrackNode:
 
         return self
 
-    def previous(self, _ID: Tuple[int, ...] = ()) -> Any:
-        """Retrieve the previously stored value at ID without recomputing.
+    # TODO: The previous() method should be moved into SequentialProperty
+    def previous(
+        self: DeepTrackNode,
+        _ID: tuple[int, ...] = (),
+    ) -> Any:
+        """Retrieve the previously stored value at _ID without recomputing.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
-            The ID for which to retrieve the previous value.
+        _ID: tuple[int, ...], optional
+            The _ID for which to retrieve the previous value.
 
         Returns
         -------
@@ -935,38 +1197,40 @@ class DeepTrackNode:
 
         if self.data.valid_index(_ID):
             return self.data[_ID].current_value()
-        else:
-            return []
+
+        return []  # If `_ID` is not a valid index
 
     def recurse_children(
-        self,
-        memory: Optional[Set['DeepTrackNode']] = None,
-    ) -> Set['DeepTrackNode']:
+        self: DeepTrackNode,
+        memory: set[DeepTrackNode] | None = None,
+    ) -> set[DeepTrackNode]:
         """Return all children of this node.
 
         Parameters
         ----------
-        memory : set, optional
-            Memory set to track visited nodes (not used directly here).
+        memory: set, optional
+            Set of nodes that have already been visited (not used directly
+            here).
 
         Returns
         -------
         set
             All nodes in the subtree rooted at this node, including itself.
+
         """
 
         # Simply return `_all_children` since it's maintained incrementally.
         return self._all_children
 
     def old_recurse_children(
-        self,
-        memory: Optional[List['DeepTrackNode']] = None,
-    ) -> Iterator['DeepTrackNode']:
+        self: DeepTrackNode,
+        memory: list[DeepTrackNode] | None = None,
+    ) -> Iterator[DeepTrackNode]:
         """Legacy recursive method for traversing children.
 
         Parameters
         ----------
-        memory : list, optional
+        memory: list, optional
             A list to remember visited nodes, ensuring that each node is 
             yielded only once.
 
@@ -978,7 +1242,7 @@ class DeepTrackNode:
         Notes
         -----
         This method is kept for backward compatibility or debugging purposes.
-        
+
         """
 
         # On first call, instantiate memory.
@@ -1000,14 +1264,14 @@ class DeepTrackNode:
             yield from child.recurse_children(memory=memory)
 
     def recurse_dependencies(
-        self,
-        memory: Optional[List['DeepTrackNode']] = None,
-    ) -> Iterator['DeepTrackNode']:
+        self: DeepTrackNode,
+        memory: list[DeepTrackNode] | None = None,
+    ) -> Iterator[DeepTrackNode]:
         """Yield all dependencies of this node, ensuring each is visited once.
 
         Parameters
         ----------
-        memory : list, optional
+        memory: list, optional
             A list of visited nodes to avoid repeated visits or infinite loops.
 
         Yields
@@ -1035,7 +1299,7 @@ class DeepTrackNode:
         for dependency in self.dependencies:
             yield from dependency.recurse_dependencies(memory=memory)
 
-    def get_citations(self) -> Set[str]:
+    def get_citations(self: DeepTrackNode) -> set[str]:
         """Get citations from this node and all its dependencies.
 
         It gathers citations from this node and all nodes that it depends on. 
@@ -1043,7 +1307,7 @@ class DeepTrackNode:
 
         Returns
         -------
-        Set[str]
+        set[str]
             Set of all citations relevant to this node and its dependency tree.
         
         """
@@ -1063,22 +1327,25 @@ class DeepTrackNode:
 
         return citations
 
-    def __call__(self, _ID: Tuple[int, ...] = ()) -> Any:
-        """Evaluate this node at ID.
+    def __call__(
+        self: DeepTrackNode,
+        _ID: tuple[int, ...] = (),
+    ) -> Any:
+        """Evaluate this node at _ID.
 
         If the data at `_ID` is valid, it returns the stored value. Otherwise, 
         it calls `action` to compute a new value, stores it, and returns it.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
-            The ID at which to evaluate the node’s action.
+        _ID: tuple[int, ...], optional
+            The _ID at which to evaluate the node's action.
 
         Returns
         -------
         Any
             The computed or retrieved data for the given `_ID`.
-        
+
         """
 
         if self.is_valid(_ID):
@@ -1098,13 +1365,16 @@ class DeepTrackNode:
 
         return self.current_value(_ID)
 
-    def current_value(self, _ID: Tuple[int, ...] = ()) -> Any:
-        """Retrieve the currently stored value at ID.
+    def current_value(
+        self: DeepTrackNode,
+        _ID: tuple[int, ...] = (),
+    ) -> Any:
+        """Retrieve the currently stored value at _ID.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
-            The ID at which to retrieve the current value.
+        _ID: tuple[int, ...], optional
+            The _ID at which to retrieve the current value.
 
         Returns
         -------
@@ -1115,21 +1385,24 @@ class DeepTrackNode:
 
         return self.data[_ID].current_value()
 
-    def __hash__(self) -> int:
+    def __hash__(self: DeepTrackNode) -> int:
         """Return a unique hash for this node.
 
-        Uses the node’s `id` to ensure uniqueness.
+        Uses the node's `id` to ensure uniqueness.
         
         """
 
         return id(self)
 
-    def __getitem__(self, idx: Any) -> 'DeepTrackNode':
-        """Allow indexing into the node’s computed data.
+    def __getitem__(
+        self: DeepTrackNode,
+        idx: Any,
+    ) -> DeepTrackNode:
+        """Allow indexing into the node's computed data.
 
         Parameters
         ----------
-        idx : Any
+        idx: Any
             The index applied to the result of evaluating this node.
 
         Returns
@@ -1142,9 +1415,10 @@ class DeepTrackNode:
         -----
         This effectively creates a node that corresponds to `self(...)[idx]`, 
         allowing you to select parts of the computed data dynamically.
+
         """
 
-        # Create a new node whose action indexes into this node’s result.
+        # Create a new node whose action indexes into this node's result.
         node = DeepTrackNode(lambda _ID=None: self(_ID=_ID)[idx])
 
         self.add_child(node)
@@ -1159,7 +1433,10 @@ class DeepTrackNode:
     # and `other`. The operators are applied lazily and will be computed only
     # when the resulting node is evaluated.
 
-    def __add__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __add__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Add node to another node or value.
 
         Creates a new `DeepTrackNode` representing the addition of the values
@@ -1167,7 +1444,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The node or value to add.
 
         Returns
@@ -1179,7 +1456,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__add__, self, other)
 
-    def __radd__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __radd__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Add other value to node (right-hand).
 
         Creates a new `DeepTrackNode` representing the addition of another
@@ -1187,7 +1467,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The value or node to add.
 
         Returns
@@ -1199,7 +1479,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__add__, other, self)
 
-    def __sub__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __sub__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Subtract another node or value from node.
 
         Creates a new `DeepTrackNode` representing the subtraction of the 
@@ -1208,7 +1491,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The node or value to subtract.
 
         Returns
@@ -1221,7 +1504,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__sub__, self, other)
 
-    def __rsub__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __rsub__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Subtract node from other value (right-hand).
 
         Creates a new `DeepTrackNode` representing the subtraction of the value
@@ -1229,7 +1515,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The value or node to subtract from.
 
         Returns
@@ -1242,7 +1528,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__sub__, other, self)
 
-    def __mul__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __mul__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Multiply node by another node or value.
 
         Creates a new `DeepTrackNode` representing the multiplication of the 
@@ -1251,7 +1540,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The node or value to multiply by.
 
         Returns
@@ -1264,7 +1553,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__mul__, self, other)
 
-    def __rmul__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __rmul__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Multiply other value by node (right-hand).
 
         Creates a new `DeepTrackNode` representing the multiplication of 
@@ -1273,7 +1565,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The value or node to multiply.
 
         Returns
@@ -1285,9 +1577,9 @@ class DeepTrackNode:
         return _create_node_with_operator(operator.__mul__, other, self)
 
     def __truediv__(
-        self,
-        other: Union['DeepTrackNode', Any],
-    ) -> 'DeepTrackNode':
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Divide node by another node or value.
 
         Creates a new `DeepTrackNode` representing the division of the value
@@ -1295,7 +1587,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The node or value to divide by.
 
         Returns
@@ -1308,9 +1600,9 @@ class DeepTrackNode:
         return _create_node_with_operator(operator.__truediv__, self, other)
 
     def __rtruediv__(
-        self,
-        other: Union['DeepTrackNode', Any],
-    ) -> 'DeepTrackNode':
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Divide other value by node (right-hand).
 
         Creates a new `DeepTrackNode` representing the division of another
@@ -1318,7 +1610,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The value or node to divide.
 
         Returns
@@ -1331,9 +1623,9 @@ class DeepTrackNode:
         return _create_node_with_operator(operator.__truediv__, other, self)
 
     def __floordiv__(
-        self,
-        other: Union['DeepTrackNode', Any],
-    ) -> 'DeepTrackNode':
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Perform floor division of node by another node or value.
 
         Creates a new `DeepTrackNode` representing the floor division of the
@@ -1342,7 +1634,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The node or value to divide by.
 
         Returns
@@ -1356,9 +1648,9 @@ class DeepTrackNode:
         return _create_node_with_operator(operator.__floordiv__, self, other)
 
     def __rfloordiv__(
-        self,
-        other: Union['DeepTrackNode', Any],
-    ) -> 'DeepTrackNode':
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Perform floor division of other value by node (right-hand).
 
         Creates a new `DeepTrackNode` representing the floor division of 
@@ -1367,7 +1659,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The value or node to divide.
 
         Returns
@@ -1380,7 +1672,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__floordiv__, other, self)
 
-    def __lt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __lt__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Check if node is less than another node or value.
 
         Creates a new `DeepTrackNode` representing the comparison of this node
@@ -1388,7 +1683,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The node or value to compare with.
 
         Returns
@@ -1401,7 +1696,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__lt__, self, other)
 
-    def __rlt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __rlt__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Check if other value is less than node (right-hand).
 
         Creates a new `DeepTrackNode` representing the comparison of another
@@ -1409,7 +1707,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The value or node to compare.
 
         Returns
@@ -1422,7 +1720,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__lt__, other, self)
 
-    def __gt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __gt__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Check if node is greater than another node or value.
 
         Creates a new `DeepTrackNode` representing the comparison of this node
@@ -1430,7 +1731,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The node or value to compare with.
 
         Returns
@@ -1443,7 +1744,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__gt__, self, other)
 
-    def __rgt__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __rgt__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Check if other value is greater than node (right-hand).
 
         Creates a new `DeepTrackNode` representing the comparison of another
@@ -1451,7 +1755,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The value or node to compare.
 
         Returns
@@ -1464,7 +1768,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__gt__, other, self)
 
-    def __le__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __le__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Check if node is less than or equal to another node or value.
 
         Creates a new `DeepTrackNode` representing the comparison of this node
@@ -1472,7 +1779,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The node or value to compare with.
 
         Returns
@@ -1485,7 +1792,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__le__, self, other)
 
-    def __rle__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __rle__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Check if other value is less than or equal to node (right-hand).
 
         Creates a new `DeepTrackNode` representing the comparison of another
@@ -1493,7 +1803,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The value or node to compare.
 
         Returns
@@ -1506,7 +1816,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__le__, other, self)
 
-    def __ge__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __ge__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Check if node is greater than or equal to another node or value.
 
         Creates a new `DeepTrackNode` representing the comparison of this node
@@ -1515,7 +1828,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The node or value to compare with.
 
         Returns
@@ -1528,7 +1841,10 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__ge__, self, other)
 
-    def __rge__(self, other: Union['DeepTrackNode', Any]) -> 'DeepTrackNode':
+    def __rge__(
+        self: DeepTrackNode,
+        other: DeepTrackNode | Any,
+    ) -> DeepTrackNode:
         """Check if other value is greater than or equal to node (right-hand).
 
         Creates a new `DeepTrackNode` representing the comparison of another
@@ -1537,7 +1853,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other : DeepTrackNode or Any
+        other: DeepTrackNode or Any
             The value or node to compare.
 
         Returns
@@ -1551,7 +1867,10 @@ class DeepTrackNode:
         return _create_node_with_operator(operator.__ge__, other, self)
 
 
-def _equivalent(a: Any, b: Any) -> bool:
+def _equivalent(
+    a: Any,
+    b: Any,
+) -> bool:
     """Check if two objects are equivalent.
 
     This internal helper function provides a basic implementation to determine 
@@ -1561,17 +1880,41 @@ def _equivalent(a: Any, b: Any) -> bool:
     - If both `a` and `b` are empty lists, they are considered equivalent.
     Additional cases can be implemented as needed to refine this behavior.
 
+    For immutable built-in types like empty tuples, integers, and `None`, Python 
+    may reuse the same object in memory. Thus, `a is b` may return True even if 
+    the objects are created separately.
+
     Parameters
     ----------
-    a : Any
+    a: Any
         The first object to compare.
-    b : Any
+    b: Any
         The second object to compare.
 
     Returns
     -------
     bool
         `True` if the objects are equivalent, `False` otherwise.
+
+    Examples
+    --------
+    >>> from deeptrack.backend.core import _equivalent
+
+    >>> _equivalent([], [])
+    True
+
+    >>> a = [1, 2]
+    >>> _equivalent(a, a)
+    True
+
+    >>> _equivalent([1], [1])
+    False
+
+    >>> _equivalent([], ())
+    False
+
+    >>> _equivalent(None, None)
+    True
 
     """
 
@@ -1591,8 +1934,8 @@ def _create_node_with_operator(
     op: Callable,
     a: Any,
     b: Any,
-) -> 'DeepTrackNode':
-    """Create a new computation node using a given operator and operands.
+) -> DeepTrackNode:
+    """Create a new computation node using the given operator and operands.
 
     This internal helper function constructs a `DeepTrackNode` obtained from 
     the  application of the specified operator to two operands. If the operands 
@@ -1608,11 +1951,11 @@ def _create_node_with_operator(
 
     Parameters
     ----------
-    op : Callable
+    op: Callable
         The operator function.
-    a : Any
+    a: Any
         First operand. If not a `DeepTrackNode`, it will be wrapped in one.
-    b : Any
+    b: Any
         Second operand. If not a `DeepTrackNode`, it will be wrapped in one.
 
     Returns

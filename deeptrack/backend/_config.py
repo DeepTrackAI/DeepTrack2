@@ -65,56 +65,68 @@ IMPORTANT: Users should ensure backend and device compatibility.
 
 Import the global config object and the xp proxy for backend-agnostic code:
 
->>> from deeptrack.backend._config import config, xp
+>>> from deeptrack.backend import config, xp
 
 Check the default backend and device:
 
->>> print(config.get_backend())  # Output: 'numpy'
->>> print(config.get_device())  # Output: 'cpu'
+>>> config.get_backend()
+'numpy'
+
+>>> config.get_device()
+'cpu'
 
 Use the xp proxy to create a NumPy array:
 
 >>> array = xp.arange(5)
->>> print(type(array))  # Output: <class 'numpy.ndarray'>
+>>> type(array)
+numpy.ndarray
 
 Switch to the PyTorch backend and use GPU:
 
 >>> config.set_backend_torch()
+>>> config.get_backend()
+'torch'
+
 >>> config.set_device("cuda")
->>> print(config.get_backend())  # Output: 'torch'
->>> print(config.get_device())  # Output: 'cuda'
+>>> config.get_device()
+'cuda'
 
 Create a tensor using the xp proxy:
 
 >>> tensor = xp.arange(3)
->>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+>>> type(tensor)
+torch.Tensor
 
 Temporarily switch backends within a context manager:
 
->>> print(config.get_backend())  # Output: 'torch'
+>>> config.get_backend()
+'torch'
 
 >>> with config.with_backend("numpy"):
-...     print(config.get_backend())  # Output: 'numpy'
+...     print(config.get_backend())
+numpy
 
->>> print(config.get_backend())  # Output: 'torch'
+>>> config.get_backend()
+'torch'
 
 Use PyTorch-specific device objects if desired:
 
 >>> import torch
-
+>>>
 >>> config.set_device(torch.device("cuda:0"))
->>> print(config.get_device())  # Output: device(type='cuda', index=0)
+>>> config.get_device()
+device(type='cuda', index=0)
 
 Check PyTorch availability:
 
->>> from deeptrack.backend._config import TORCH_AVAILABLE
-
+>>> from deeptrack.backend import TORCH_AVAILABLE
+>>>
 >>> print(TORCH_AVAILABLE)
 
 Check OpenCV availability:
 
->>> from deeptrack.backend._config import OPENCV_AVAILABLE
-
+>>> from deeptrack.backend import OPENCV_AVAILABLE
+>>>
 >>> print(OPENCV_AVAILABLE)
 
 """
@@ -205,17 +217,23 @@ class _Proxy(types.ModuleType):
 
     Examples
     --------
+    >>> from deeptrack.backend._config import _Proxy
+
     Create a proxy instance and set the backend to NumPy:
 
     >>> from array_api_compat import numpy as apc_np
+    >>>
     >>> xp = _Proxy("numpy")
     >>> xp.set_backend(apc_np)
 
     Use the proxy to create an array (calls NumPy under the hood):
 
     >>> array = xp.arange(5)
-    >>> print(array)  # Output: [0 1 2 3 4]
-    >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+    >>> array, type(array)
+    array([0, 1, 2, 3, 4])
+ 
+    >>> type(array)
+    numpy.ndarray
 
     You can use any function or attribute provided by the backend:
 
@@ -223,33 +241,55 @@ class _Proxy(types.ModuleType):
 
     Query dtypes in a backend-agnostic way:
 
-    >>> print(xp.get_float_dtype())  # Output: float64
-    >>> print(xp.get_int_dtype())  # Output: int64
-    >>> print(xp.get_complex_dtype())  # Output: complex128
-    >>> print(xp.get_bool_dtype())  # Output: bool
+    >>> xp.get_float_dtype()
+    dtype('float64')
+    
+    >>> xp.get_int_dtype()
+    dtype('int64')
+    
+    >>> xp.get_complex_dtype()
+    dtype('complex128')
+
+    
+    >>> xp.get_bool_dtype()
+    dtype('bool')
 
     Switch to the PyTorch backend:
 
     >>> from array_api_compat import torch as apc_torch
+    >>>
     >>> xp = _Proxy("torch")
     >>> xp.set_backend(apc_torch)
 
     Now the proxy uses PyTorch:
-    >>> array = xp.arange(5)
-    >>> print(array)  # Output: tensor([0, 1, 2, 3, 4])
-    >>> print(type(array))  # Output: <class 'torch.Tensor'>
+
+    >>> tensor = xp.arange(5)
+    >>> tensor
+    tensor([0, 1, 2, 3, 4])
+
+    >>> type(tensor)
+    torch.Tensor
 
     The dtype helpers return PyTorch-specific types:
 
-    >>> print(xp.get_float_dtype())  # Output: torch.float32
-    >>> print(xp.get_int_dtype())  # Output: torch.int64
-    >>> print(xp.get_complex_dtype())  # Output: torch.complex64
-    >>> print(xp.get_bool_dtype())  # Output: torch.bool
+    >>> xp.get_float_dtype()
+    torch.float32
+
+    >>> xp.get_int_dtype()
+    torch.int64
+
+    >>> xp.get_complex_dtype()
+    torch.complex64
+
+    >>> xp.get_bool_dtype()
+    torch.bool
 
     You can switch backends as often as needed.:
+
     >>> xp.set_backend(apc_np)
     >>> array = xp.arange(3)
-    >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+    >>> type(array)
+    numpy.ndarray
 
     """
 
@@ -285,6 +325,8 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
+        >>> from deeptrack.backend._config import _Proxy
+    
         Create a proxy instance and set the backend to NumPy:
 
         >>> from array_api_compat import numpy as apc_np
@@ -292,7 +334,8 @@ class _Proxy(types.ModuleType):
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
         >>> array = xp.arange(5)
-        >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+        >>> type(array)
+        numpy.ndarray
 
         Now switch to a PyTorch backend:
 
@@ -300,8 +343,9 @@ class _Proxy(types.ModuleType):
         >>>
         >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
-        >>> array = xp.arange(5)
-        >>> print(type(array))  # Output: <class 'torch.Tensor'>
+        >>> tensor = xp.arange(5)
+        >>> type(tensor)
+        torch.Tensor
 
         """
 
@@ -330,29 +374,33 @@ class _Proxy(types.ModuleType):
     
         Examples
         --------
+        >>> from deeptrack.backend._config import _Proxy
+
         Create a proxy instance and set the backend to NumPy:
 
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
 
-        >>> dtype = xp.get_float_dtype()
-        >>> print(dtype)  # Output: float64
+        >>> xp.get_float_dtype()
+        dtype('float64')
 
-        >>> dtype = xp.get_float_dtype("float32")
-        >>> print(dtype)  # Output: float32
+        >>> xp.get_float_dtype("float32")
+        dtype('float32')
 
         Now switch to a PyTorch backend:
 
         >>> from array_api_compat import torch as apc_torch
+        >>>
         >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
 
-        >>> dtype = xp.get_float_dtype()
-        >>> print(dtype)  # Output: torch.float32
+        >>> xp.get_float_dtype()
+        torch.float32
 
-        >>> dtype = xp.get_float_dtype("float32")
-        >>> print(dtype)  # Output: torch.float32
+        >>> xp.get_float_dtype("float32")
+        torch.float32
 
         """
 
@@ -382,29 +430,33 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
+        >>> from deeptrack.backend._config import _Proxy
+
         Create a proxy instance and set the backend to NumPy:
 
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
 
-        >>> dtype = xp.get_int_dtype()
-        >>> print(dtype)  # Output: int64
+        >>> xp.get_int_dtype()
+        dtype('int64')
 
-        >>> dtype = xp.get_int_dtype("int32")
-        >>> print(dtype)  # Output: int32
+        >>> xp.get_int_dtype("int32")
+        dtype('int32')
 
         Now switch to a PyTorch backend:
 
         >>> from array_api_compat import torch as apc_torch
+        >>>
         >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
 
-        >>> dtype = xp.get_int_dtype()
-        >>> print(dtype)  # Output: torch.int64
+        >>> xp.get_int_dtype()
+        torch.int64
 
-        >>> dtype = xp.get_int_dtype("int32")
-        >>> print(dtype)  # Output: torch.int32
+        >>> xp.get_int_dtype("int32")
+        torch.int32
 
         """
 
@@ -434,29 +486,33 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
+        >>> from deeptrack.backend._config import _Proxy
+
         Create a proxy instance and set the backend to NumPy:
 
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
 
-        >>> dtype = xp.get_complex_dtype()
-        >>> print(dtype)  # Output: complex128
+        >>> xp.get_complex_dtype()
+        dtype('complex128')
 
-        >>> dtype = xp.get_complex_dtype("complex64")
-        >>> print(dtype)  # Output: complex64
+        >>> xp.get_complex_dtype("complex64")
+        dtype('complex64')
 
         Now switch to a PyTorch backend:
 
         >>> from array_api_compat import torch as apc_torch
+        >>>
         >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
 
-        >>> dtype = xp.get_complex_dtype()
-        >>> print(dtype)  # Output: torch.complex64
+        >>> xp.get_complex_dtype()
+        torch.complex64
 
-        >>> dtype = xp.get_complex_dtype("complex64")
-        >>> print(dtype)  # Output: torch.complex64
+        >>> xp.get_complex_dtype("complex64")
+        torch.complex64
 
         """
 
@@ -486,29 +542,33 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
+        >>> from deeptrack.backend._config import _Proxy
+
         Create a proxy instance and set the backend to NumPy:
 
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
 
-        >>> dtype = xp.get_bool_dtype()
-        >>> print(dtype)  # Output: bool
+        >>> xp.get_bool_dtype()
+        dtype('bool')
 
-        >>> dtype = xp.get_bool_dtype(dtype="bool")
-        >>> print(dtype)  # Output: bool
+        >>> xp.get_bool_dtype(dtype="bool")
+        dtype('bool')
 
         Now switch to a PyTorch backend:
 
         >>> from array_api_compat import torch as apc_torch
+        >>>
         >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
 
-        >>> dtype = xp.get_bool_dtype()
-        >>> print(dtype)  # Output: torch.bool
+        >>> xp.get_bool_dtype()
+        torch.bool
 
-        >>> dtype = xp.get_bool_dtype(dtype="bool")
-        >>> print(dtype)  # Output: torch.bool
+        >>> xp.get_bool_dtype(dtype="bool")
+        torch.bool
 
         """
 
@@ -535,20 +595,25 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
+        >>> from deeptrack.backend._config import _Proxy
+
         Access NumPy's arange function transparently through the proxy:
 
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
-        >>> array = xp.arange(4)
-        >>> print(array)  # Output: [0 1 2 3]
+        >>> xp.arange(4)
+        array([0, 1, 2, 3])
 
         Now switch to a PyTorch backend:
+    
         >>> from array_api_compat import torch as apc_torch
-        >>> xp = ._Proxy("torch")
+        >>>
+        >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
-        >>> array = xp.arange(4)
-        >>> print(array)  # Output: tensor([0, 1, 2, 3])
+        >>> xp.arange(4)
+        tensor([0, 1, 2, 3])
 
         Analogously, you can access any attribute or function available in the
         current backend.
@@ -567,19 +632,27 @@ class _Proxy(types.ModuleType):
 
         Examples
         --------
+        >>> from deeptrack.backend._config import _Proxy
+
         List the attributes (functions, constants, etc.) in the NumPy backend:
+    
         >>> from array_api_compat import numpy as apc_np
+        >>>
         >>> xp = _Proxy("numpy")
         >>> xp.set_backend(apc_np)
-        >>> attrs_numpy = dir(xp)
-        >>> print(attrs_numpy)
+        >>> dir(xp)
+        ['ALLOW_THREADS',
+        ...]
 
         List the attributes in the PyTorch backend:
+    
         >>> from array_api_compat import torch as apc_torch
+        >>>
         >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
-        >>> attrs_torch = dir(xp)
-        >>> print(attrs_torch)
+        >>> dir(xp)
+        ['AVG',
+        ...]
 
         """
 
@@ -646,47 +719,59 @@ class Config:
 
     Create the singleton configuration object and check its defaults:
 
-    >>> from deeptrack.backend._config import config
+    >>> from deeptrack.backend import config
 
-    >>> print(config.get_backend())  # Output: 'numpy'
-    >>> print(config.get_device())  # Output: 'cpu'
+    >>> config.get_backend()
+    'numpy'
+
+    >>> config.get_device()
+    'cpu'
 
     Set the backend to PyTorch and device to GPU:
 
     >>> config.set_backend_torch()
+    >>> config.get_backend()
+    'torch'
+
     >>> config.set_device("cuda")
-    >>> print(config.get_backend())  # Output: 'torch'
-    >>> print(config.get_device())  # Output: 'cuda'
+    >>> config.get_device()
+    'cuda'
 
     Use the xp proxy to create arrays/tensors:
 
-    >>> from deeptrack.backend._config import xp
+    >>> from deeptrack.backend import xp
 
     >>> config.set_backend_numpy()
     >>> array = xp.arange(5)
-    >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+    >>> type(array)
+    numpy.ndarray
 
     >>> config.set_backend_torch()
     >>> tensor = xp.arange(5)
-    >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+    >>> type(tensor)
+    torch.Tensor
 
     Temporarily switch backend using a context manager:
 
     >>> config.set_backend("torch")
-    >>> print(config.get_backend())  # Output: 'torch'
+    >>> config.get_backend()
+    'torch'
 
     >>> with config.with_backend("numpy"):
-    ...     print(config.get_backend())  # Output: 'numpy'
+    ...     print(config.get_backend())
+    numpy
 
-    >>> print(config.get_backend())  # Output: 'torch'
+    >>> config.get_backend()
+    'torch'
 
     Use a torch.device object directly:
 
     >>> import torch
-
+    >>>
     >>> config.set_backend_torch()
     >>> config.set_device(torch.device("cuda:0"))
-    >>> print(config.get_device())  # Output: device(type='cuda', index=0)
+    >>> config.get_device()
+    device(type='cuda', index=0)
 
     """
 
@@ -726,37 +811,43 @@ class Config:
 
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Set device to CPU (works with both NumPy and PyTorch backends):
 
         >>> config.set_device("cpu")
-        >>> print(config.get_device())  # Output: cpu
+        >>> config.get_device()
+        'cpu'
 
         Set device to GPU (requires PyTorch backend):
 
         >>> config.set_backend_torch()
         >>> config.set_device("cuda")
-        >>> print(config.get_device())  # Output: cuda
+        >>> config.get_device()
+        'cuda'
 
         Use a specific CUDA device (PyTorch backend):
 
         >>> import torch
+        >>>
         >>> config.set_backend_torch()
         >>> config.set_device(torch.device("cuda:0"))
-        >>> print(config.get_device()) # Output: device(type='cuda', index=0)
+        >>> config.get_device()
+        device(type='cuda', index=0)
 
         Set device to Apple Silicon GPU (PyTorch backend on Macs):
 
         >>> config.set_backend_torch()
         >>> config.set_device("mps")
-        >>> print(config.get_device())  # Output: mps
+        >>> config.get_device()
+        'mps'
 
         Attempting to set a GPU device with NumPy backend (should be avoided):
 
         >>> config.set_backend_numpy()
         >>> config.set_device("cuda")
-        >>> print(config.get_device())  # Output: cuda
+        >>> config.get_device()
+        'cuda'
 
         Computation will still run on CPU, since NumPy does not support GPU.
 
@@ -778,7 +869,7 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Get the current device:
 
@@ -795,18 +886,21 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Set the backend to NumPy:
 
         >>> config.set_backend_numpy()
-        >>> print(config.get_backend())  # Output: 'numpy'
+        >>> config.get_backend()
+        'numpy'
 
         NumPy backend enables use of standard NumPy arrays via the xp proxy:
 
-        >>> from deeptrack.backend._config import xp
+        >>> from deeptrack.backend import xp
+        >>>
         >>> array = xp.arange(5)
-        >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+        >>> type(array)
+        numpy.ndarray
     
         """
 
@@ -819,19 +913,21 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Set the backend to PyTorch:
 
         >>> config.set_backend_torch()
-        >>> print(config.get_backend())  # Output: 'torch'
+        >>> config.get_backend()
+        'torch'
 
         PyTorch backend enables use of PyTorch tensors via the xp proxy:
 
-        >>> from deeptrack.backend._config import xp
-
+        >>> from deeptrack.backend import xp
+        >>>
         >>> tensor = xp.arange(5)
-        >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+        >>> type(tensor)
+        torch.Tensor
 
         """
 
@@ -852,29 +948,33 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Set the backend to NumPy:
 
         >>> config.set_backend("numpy")
-        >>> print(config.get_backend())  # Output: 'numpy'
+        >>> config.get_backend()
+        'numpy'
 
         Set the backend to PyTorch:
 
         >>> config.set_backend("torch")
-        >>> print(config.get_backend())  # Output: 'torch'
+        >>> config.get_backend()
+        'torch'
 
         Switch between backends as needed in your workflow using the xp proxy:
 
-        >>> from deeptrack.backend._config import xp
+        >>> from deeptrack.backend import xp
 
         >>> config.set_backend("numpy")
         >>> array = xp.arange(4)
-        >>> print(type(array))  # Output: <class 'numpy.ndarray'>
+        >>> type(array)
+        numpy.ndarray
 
         >>> config.set_backend("torch")
         >>> tensor = xp.arange(4)
-        >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+        >>> type(tensor)
+        torch.Tensor
     
         """
 
@@ -899,7 +999,7 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Get the current backend:
 
@@ -932,32 +1032,37 @@ class Config:
         --------
         Import the singleton configuration object:
 
-        >>> from deeptrack.backend._config import config
+        >>> from deeptrack.backend import config
 
         Temporarily switch to the NumPy backend for a block of code:
 
         >>> config.set_backend("torch")
-        >>> print(config.get_backend())  # Output: 'torch'
+        >>> config.get_backend()
+        'torch'
 
         >>> with config.with_backend("numpy"):
-        ...     print(config.get_backend())  # Output: 'numpy'
+        ...     print(config.get_backend())
+        numpy
 
-        >>> print(config.get_backend())  # Output: 'torch'
+        >>> config.get_backend()
+        'torch'
 
         Temporarily switch to the PyTorch backend inside a function:
 
-        >>> from deeptrack.backend._config import xp
+        >>> from deeptrack.backend import xp
 
-        >>> config.set_backend("numpy")
+        >>> config.set_backend("numpy")config.set_backend("numpy")
 
         >>> def do_torch_operation():
         ...     with config.with_backend("torch"):
         ...         return xp.arange(3)
 
         >>> tensor = do_torch_operation()
-        >>> print(type(tensor))  # Output: <class 'torch.Tensor'>
+        >>> type(tensor)
+        torch.Tensor
 
-        >>> print(config.get_backend())  # Output: 'numpy'
+        >>> config.get_backend()
+        'numpy'
     
         """
 
