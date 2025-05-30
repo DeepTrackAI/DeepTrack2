@@ -19,8 +19,12 @@ __all__ = [
 ]
 
 
-def rand(*args: int) -> torch.Tensor:
-    return torch.rand(*args)
+def rand(
+    *args: int,
+    dtype: torch.dtype=torch.float32,
+    device: torch.device | str = torch.device("cpu"),    
+) -> torch.Tensor:
+    return torch.rand(*args, dtype=dtype, device=device)
 
 
 def random(size: tuple[int, ...] | None = None) -> torch.Tensor:
