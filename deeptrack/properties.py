@@ -575,6 +575,10 @@ class SequentialProperty(Property):
         A sampling rule for the first step of the sequence (step=0). 
         Can be any value or callable that is acceptable to `Property`. 
         If not provided, the initial value is `None`.
+        
+    current_value: Any, optional
+        The sampling rule (value or callable) for steps > 0. Defaults to None.
+        
     **kwargs: dict[str, Property]
         Additional dependencies that might be required if `initialization` 
         is a callable. These dependencies are injected when evaluating
@@ -616,6 +620,14 @@ class SequentialProperty(Property):
     __call__(_ID: tuple[int, ...] = ()) -> Any
         Evaluate the property at the current step, returning either the 
         initialization (if step=0) or current value (if step>0).
+    set_sequence_length(self, value, ID) -> None:
+        Stores the value for the length of the sequence,
+        analagous to SequentialProperty.sequence_length.store()        
+    set_current_step(self, valuey, ID) -> None:
+        Stores the value for the current step of the sequence,
+        analagous to SequentialProperty.current_step.store()
+        
+    
 
     Examples
     --------
@@ -638,19 +650,19 @@ class SequentialProperty(Property):
     
     """
 
+    initialization: Optional[Callable[..., Any]]
+    current_value: Optional[Callable[..., Any]]
     sequence_length: Property
-    initialization: Callable[..., Any]
-    current: Callable[..., Any]
-    action: Callable[..., Any]
     sequence_step: Property
     previous_values: Property
     previous_value: Property
+    action: Callable[..., Any]
 
     def __init__(
         self: SequentialProperty,
-        initialization: Any = None,
-        current: Any = None,
-        **kwargs: Property,
+        initialization: Optional[Any] = None,
+        current_value: Optional[Any] = None,
+        **kwargs: Dict[str, Property],
     ):
         """Create a SequentialProperty with optional initialization.
         
@@ -658,11 +670,11 @@ class SequentialProperty(Property):
         ----------
         initialization: Any, optional
             The sampling rule (value or callable) for step=0. Defaults to None.
-        current: Any, optional
+        current_value: Any, optional
             The sampling rule (value or callable) for the current step.
             Defaults to None.
         **kwargs: dict[str, Property]
-            Additional named dependencies for `initialization`.
+            Additional named dependencies for `initialization` and `current_value`.
         
         """
 
@@ -687,10 +699,12 @@ class SequentialProperty(Property):
                            else []
         )
         self.previous_values.add_child(self)
+        
         # self.add_dependency(self.previous_values)  # Done by add_child
         self.sequence_step.add_child(self.previous_values)
+        
         # self.previous_values.add_dependency(self.sequence_step)  # Done
-
+        
         # 4) Store the previous value.
         self.previous_value = Property(
             lambda _ID=(): self.previous(_ID=_ID)[self.sequence_step() - 1]
@@ -840,7 +854,7 @@ class SequentialProperty(Property):
         Parameters
         ----------
         value: Any
-            The value to store in `sequence_length`.
+            The value to store in `self.sequence_length`.
         _ID: tuple[int, ...], optional
             A unique identifier that allows the property to keep separate 
             histories for different parallel evaluations.
