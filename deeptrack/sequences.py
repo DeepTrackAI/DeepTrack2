@@ -93,7 +93,7 @@ class Sequence(Feature):
         input_list,
         sequence_length=None,
         **kwargs
-    ) -> :
+    )
         
         outputs = input_list or []
         for sequence_step in range(sequence_length):
