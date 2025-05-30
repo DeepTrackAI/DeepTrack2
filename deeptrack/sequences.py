@@ -43,8 +43,8 @@ Spinning Ellipsoid
 
 """
 
-import warnings
 from __future__ import annotations
+import warnings
 
 import random
 import numpy as np
