@@ -23,6 +23,20 @@ class TestConfig(unittest.TestCase):
         _config.config.set_backend(self.original_backend)
         _config.config.set_device(self.original_device)
 
+    def test___all__(self):
+        from deeptrack import (
+            config,
+            OPENCV_AVAILABLE,
+            TORCH_AVAILABLE,
+            xp,
+        )
+        from deeptrack.backend import (
+            config,
+            OPENCV_AVAILABLE,
+            TORCH_AVAILABLE,
+            xp,
+        )
+
     def test_TORCH_AVAILABLE(self):
         try:
             import torch

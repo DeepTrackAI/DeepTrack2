@@ -1,16 +1,12 @@
-from deeptrack.backend._config import (
-    config,
-    OPENCV_AVAILABLE,
-    TORCH_AVAILABLE,
-    xp,
-)
-from deeptrack.backend import core
-
+from deeptrack.backend._config import *
+from deeptrack.backend.core import *
 
 __all__ = [
-    "config",
-    "core",
-    "OPENCV_AVAILABLE",
-    "TORCH_AVAILABLE",
-    "xp",
+    "config",            # deeptrack.backend._config
+    "OPENCV_AVAILABLE",  # deeptrack.backend._config
+    "TORCH_AVAILABLE",   # deeptrack.backend._config
+    "xp",                # deeptrack.backend._config
+    "DeepTrackDataDict",    # deeptrack.backend.core
+    "DeepTrackDataObject",  # deeptrack.backend.core
+    "DeepTrackNode",        # deeptrack.backend.core
 ]
