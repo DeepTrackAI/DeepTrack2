@@ -20,7 +20,7 @@ Main Features
     evolve over a sequence, useful for applications like creating dynamic 
     features in videos or time-series data.
 
-Model Structure
+Module Structure
 -----------------
 Property Classes:
 
