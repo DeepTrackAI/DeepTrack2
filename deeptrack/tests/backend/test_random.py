@@ -14,10 +14,10 @@ class TestRandom(unittest.TestCase):
         for shape, dtype, device in zip(shapes, dtypes, devices):
 
             expected = np.random.rand(*shape)
-            generated = rand(*shape, dtype=dtype, device=device)
+            generated = random.rand(*shape, dtype=dtype, device=device)
             self.assertEqual(generated.shape, expected.shape)
             self.assertEqual(generated.dtype, dtype)
 
-        a = rand(100, dtype=torch.float32, device="cpu")
+        a = random.rand(100, dtype=torch.float32, device="cpu")
         b = np.random.rand(100)
         self.assertAlmostEqual(a.mean(), np.mean(b), delta = 1)
