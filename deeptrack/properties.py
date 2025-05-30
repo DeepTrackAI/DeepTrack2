@@ -561,13 +561,16 @@ class PropertyDict(DeepTrackNode, dict):
 
 class SequentialProperty(Property):
     """Property that yields different values for sequential steps.
-
-    The `SequentialProperty` extends the standard `Property` to handle 
+    SequantialProperty lets the user encapsulate feature sampling rules and
+    iterator logic in a single object to evaluate these sequentially.
+    
+    The `SequentialProperty` class extends the standard `Property` to handle 
     scenarios where the property’s value evolves over discrete steps, such as 
     frames in a video, time-series data, or any sequential process. At each 
     step, it selects whether to use the `initialization` function (step = 0) or 
     the `current` function (steps >= 1). It also keeps track of all previously 
     generated values, allowing to refer back to them if needed.
+
 
     Parameters
     ----------
