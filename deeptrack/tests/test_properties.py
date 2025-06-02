@@ -223,10 +223,10 @@ class TestProperties(unittest.TestCase):
     def test_SequentialProperty(self):
         SP = properties.SequentialProperty()
         SP.sequence_length.store(5)
-        SP.current = lambda _ID=(): SP.sequence_step() + 1
+        SP.current = lambda _ID=(): SP.sequence_index() + 1
 
         for step in range(SP.sequence_length()):
-            SP.sequence_step.store(step)
+            SP.sequence_index.store(step)
             current_value = SP.current()
             SP.store(current_value)
 
