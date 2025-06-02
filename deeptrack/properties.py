@@ -68,9 +68,9 @@ Handle sequential properties:
 
 >>> seq_prop = dt.SequentialProperty()
 >>> seq_prop.sequence_length.store(5)
->>> seq_prop.current = lambda _ID=(): seq_prop.sequence_step() + 1
+>>> seq_prop.current = lambda _ID=(): seq_prop.sequence_index() + 1
 >>> for step in range(seq_prop.sequence_length()):
-...     seq_prop.sequence_step.store(step)
+...     seq_prop.sequence_index.store(step)
 ...     seq_prop.store(seq_prop.current())
 ...     print(seq_prop.data[()].current_value())
 
@@ -561,8 +561,8 @@ class PropertyDict(DeepTrackNode, dict):
 
 class SequentialProperty(Property):
     """Property that yields different values for sequential steps.
-    SequantialProperty lets the user encapsulate feature sampling rules and
-    iterator logic in a single object to evaluate these sequentially.
+    SequentialProperty lets the user encapsulate feature sampling rules and
+    iterator logic in a single object to evaluate them sequentially.
     
     The `SequentialProperty` class extends the standard `Property` to handle 
     scenarios where the property’s value evolves over discrete steps, such as 
@@ -592,7 +592,7 @@ class SequentialProperty(Property):
     sequence_length: Property
         A `Property` holding the total number of steps in the sequence. 
         Initialized to 0 by default.
-    sequence_step: Property
+    sequence_index: Property
         A `Property` holding the index of the current step (starting at 0).
     previous_values: Property
         A `Property` returning all previously stored values up to, but not
@@ -608,13 +608,13 @@ class SequentialProperty(Property):
         `None`.
     action: Callable[..., Any]
         Overrides the default `Property.action` to select between 
-        `initialization` (if `sequence_step` is 0) or `current` (otherwise).
+        `initialization` (if `sequence_index` is 0) or `current` (otherwise).
 
     Methods
     -------
     _action_override(_ID: tuple[int, ...]) -> Any
         Internal logic to pick which function (`initialization` or `current`) 
-        to call based on the `sequence_step`.
+        to call based on the `sequence_index`.
     store(value: Any, _ID: tuple[int, ...] = ()) -> None
         Store a newly computed `value` in the property’s internal list of 
         previously generated values.
@@ -639,9 +639,9 @@ class SequentialProperty(Property):
 
     >>> seq_prop = dt.SequentialProperty()
     >>> seq_prop.sequence_length.store(5)
-    >>> seq_prop.current = lambda _ID=(): seq_prop.sequence_step() + 1
+    >>> seq_prop.current = lambda _ID=(): seq_prop.sequence_index() + 1
     >>> for step in range(seq_prop.sequence_length()):
-    ...     seq_prop.sequence_step.store(step)
+    ...     seq_prop.sequence_index.store(step)
     ...     current_value = seq_prop.current()
     ...     seq_prop.store(current_value)
     ...     print(seq_prop.data[()].current_value())
@@ -656,7 +656,7 @@ class SequentialProperty(Property):
     initialization: Optional[Callable[..., Any]]
     current: Optional[Callable[..., Any]]
     sequence_length: Property
-    sequence_step: Property
+    sequence_index: Property
     previous_values: Property
     previous_value: Property
     action: Callable[..., Any]
@@ -665,6 +665,8 @@ class SequentialProperty(Property):
         self: SequentialProperty,
         initialization: Optional[Any] = None,
         current_value: Optional[Any] = None,
+        sequence_length: Optional[int] = None,
+        sequence_index: Optional[int] = None,
         **kwargs: Dict[str, Property],
     ):
         """Create a SequentialProperty with optional initialization.
@@ -676,6 +678,10 @@ class SequentialProperty(Property):
         current_value: Any, optional
             The sampling rule (value or callable) for the current step.
             Defaults to None.
+        sequence_length: int, optional
+            The length of the sequence. 
+        sequence_index: int, optional
+            The current index of the sequence. 
         **kwargs: dict[str, Property]
             Additional named dependencies for `initialization` and `current`.
         
@@ -685,39 +691,46 @@ class SequentialProperty(Property):
         # It overrides action below with _action_override().
         super().__init__(sampling_rule=None)
 
-        # 1) Initialize sequence length to 0.
-        self.sequence_length = Property(0)
-        self.sequence_length.add_child(self)
-        # self.add_dependency(self.sequence_length)  # Done by add_child
 
-        # 2) Initialize current sequence step to 0.
-        self.sequence_step = Property(0)
-        self.sequence_step.add_child(self)
-        # self.add_dependency(self.sequence_step)  # Done by add_child
+        # 1) Initialize sequence length.
+        if isinstance(sequence_length, int):
+            self.sequence_length = Property(sequence_length)
+        else:   
+            self.sequence_length = Property(0)
+        self.sequence_length.add_child(self)
+        # self.add_dependency(self.sequence_length)  # Done by add_child.
+
+        # 2) Initialize sequence index.
+        if isinstance(sequence_index, int):
+            self.sequence_index = Property(sequence_index)
+        else:
+            self.sequence_index = Property(0)
+        self.sequence_index.add_child(self)
+        # self.add_dependency(self.sequence_index)  # Done by add_child.
 
         # 3) Store all previous values if sequence step > 0.
         self.previous_values = Property(
-            lambda _ID=(): self.previous(_ID=_ID)[: self.sequence_step() - 1]
-                           if self.sequence_step(_ID=_ID)
+            lambda _ID=(): self.previous(_ID=_ID)[: self.sequence_index() - 1]
+                           if self.sequence_index(_ID=_ID)
                            else []
         )
         self.previous_values.add_child(self)
         
         # self.add_dependency(self.previous_values)  # Done by add_child
-        self.sequence_step.add_child(self.previous_values)
+        self.sequence_index.add_child(self.previous_values)
         
-        # self.previous_values.add_dependency(self.sequence_step)  # Done
+        # self.previous_values.add_dependency(self.sequence_index)  # Done
         
         # 4) Store the previous value.
         self.previous_value = Property(
-            lambda _ID=(): self.previous(_ID=_ID)[self.sequence_step() - 1]
+            lambda _ID=(): self.previous(_ID=_ID)[self.sequence_index() - 1]
                            if self.previous(_ID=_ID)
                            else None
         )
         self.previous_value.add_child(self)
         # self.add_dependency(self.previous_value)  # Done by add_child
-        self.sequence_step.add_child(self.previous_value)
-        # self.previous_value.add_dependency(self.sequence_step)  # Done
+        self.sequence_index.add_child(self.previous_value)
+        # self.previous_value.add_dependency(self.sequence_index)  # Done
 
         # 5) Create an action for initializing the sequence.
         if initialization is not None:
@@ -755,7 +768,7 @@ class SequentialProperty(Property):
         
         """
 
-        if self.sequence_step(_ID=_ID) == 0:
+        if self.sequence_index(_ID=_ID) == 0:
             if self.initialization:
                 return self.initialization(_ID=_ID)
             return None
@@ -811,7 +824,7 @@ class SequentialProperty(Property):
         Returns
         -------
         Any
-            The value stored at the index = `self.sequence_step(_ID=_ID)`.
+            The value stored at the index = `self.sequence_index(_ID=_ID)`.
 
         Raises
         ------
@@ -820,7 +833,7 @@ class SequentialProperty(Property):
 
         """
 
-        return super().current_value(_ID=_ID)[self.sequence_step(_ID=_ID)]
+        return super().current_value(_ID=_ID)[self.sequence_index(_ID=_ID)]
 
     def __call__(
         self: SequentialProperty,
@@ -875,14 +888,14 @@ class SequentialProperty(Property):
         value: Any,
         _ID: tuple[int, ...] = (),
     ) -> None:
-        """Sets the `sequence_step` attribute of a sequence to be resolved.
+        """Sets the `sequence_index` attribute of a sequence to be resolved.
 
         It supports dependencies if `value` is a `Property`.
 
         Parameters
         ----------
         value: Any
-            The value to store in `sequence_step`.
+            The value to store in `sequence_index`.
         _ID: tuple[int, ...], optional
             A unique identifier that allows the property to keep separate 
             histories for different parallel evaluations.
@@ -890,7 +903,7 @@ class SequentialProperty(Property):
         """
 
         if isinstance(value, Property):  # For dependencies
-            self.sequence_step = Property(lambda _ID: value(_ID))
-            self.sequence_step.add_dependency(value)
+            self.sequence_index = Property(lambda _ID: value(_ID))
+            self.sequence_index.add_dependency(value)
         else:
-            self.sequence_step = Property(value, _ID=_ID)
+            self.sequence_index = Property(value, _ID=_ID)
