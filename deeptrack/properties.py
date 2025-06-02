@@ -581,6 +581,10 @@ class SequentialProperty(Property):
         
     current_value: Any, optional
         The sampling rule (value or callable) for steps > 0. Defaults to None.
+    sequence_length: int, optional
+        The length of the sequence.
+    sequence_index: int, optional
+        The current index of the sequence. 
         
     **kwargs: dict[str, Property]
         Additional dependencies that might be required if `initialization` 
@@ -626,7 +630,7 @@ class SequentialProperty(Property):
     set_sequence_length(self, value, ID) -> None:
         Stores the value for the length of the sequence,
         analagous to SequentialProperty.sequence_length.store()        
-    set_current_step(self, valuey, ID) -> None:
+    set_current_step(self, value, ID) -> None:
         Stores the value for the current step of the sequence,
         analagous to SequentialProperty.current_step.store()
         
@@ -668,7 +672,7 @@ class SequentialProperty(Property):
         sequence_length: Optional[int] = None,
         sequence_index: Optional[int] = None,
         **kwargs: Dict[str, Property],
-    ):
+    ) -> None:
         """Create a SequentialProperty with optional initialization.
         
         Parameters
