@@ -588,7 +588,7 @@ class Feature(DeepTrackNode):
                 previous_value=prop.previous_value,
                 previous_values=prop.previous_values,
                 sequence_length=prop.sequence_length,
-                sequence_step=prop.sequence_step,
+                sequence_index=prop.sequence_index,
             )
 
             for key, value in self.properties.items():
