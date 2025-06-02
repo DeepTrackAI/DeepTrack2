@@ -58,7 +58,7 @@ class Sequence(Feature):
     """Resolves a feature as a sequence.
 
     The input feature is resolved `sequence_length` times, with the kwarg
-    arguments `sequene_length` and `sequence_step` passed to all properties
+    arguments `sequene_length` and `sequence_index` passed to all properties
     of the feature set.
 
     Parameters
@@ -96,12 +96,12 @@ class Sequence(Feature):
     ):
         
         outputs = input_list or []
-        for sequence_step in range(sequence_length):
+        for sequence_index in range(sequence_length):
             np.random.seed(random.randint(0, 1000000))
 
             propagate_sequential_data(
                 self.feature,
-                sequence_step=sequence_step,
+                sequence_index=sequence_index,
                 sequence_length=sequence_length,
             )
             out = self.feature()
@@ -185,7 +185,7 @@ def Sequential(feature: Feature, **kwargs):  # DEPRECATED
             previous_value=prop.previous_value,
             previous_values=prop.previous_values,
             sequence_length=prop.sequence_length,
-            sequence_step=prop.sequence_step,
+            sequence_index=prop.sequence_index,
         )
 
         for key, val in feature.properties.items():
