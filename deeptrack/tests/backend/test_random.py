@@ -20,4 +20,4 @@ class TestRandom(unittest.TestCase):
 
         a = random.rand(100, dtype=torch.float32, device="cpu")
         b = np.random.rand(100)
-        self.assertAlmostEqual(a.mean(), np.mean(b), delta = 1)
+        self.assertAlmostEqual(a.mean(), np.mean(b), delta=1)  # Use a different rand
