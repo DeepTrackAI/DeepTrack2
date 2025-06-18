@@ -138,7 +138,7 @@ from scipy.spatial.distance import cdist
 from deeptrack import units
 from deeptrack.backend import config, xp
 from deeptrack.backend.core import DeepTrackNode
-from deeptrack.backend.units import ConversionTable
+from deeptrack.backend.units import ConversionTable, create_context
 from deeptrack.image import Image
 from deeptrack.properties import PropertyDict
 from deeptrack.sources import SourceItem
