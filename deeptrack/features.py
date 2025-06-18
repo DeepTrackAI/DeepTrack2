@@ -126,9 +126,10 @@ from __future__ import annotations
 import itertools
 import operator
 import random
-from typing import Any, Callable, Iterable, Literal
+from typing import Any, Callable, Iterable, Literal, TYPE_CHECKING
 
 import numpy as np
+from numpy.typing import NDArray
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 from pint import Quantity
@@ -137,11 +138,16 @@ from scipy.spatial.distance import cdist
 from deeptrack import units
 from deeptrack.backend import config, xp
 from deeptrack.backend.core import DeepTrackNode
-from deeptrack.backend.units import ConversionTable, create_context
+from deeptrack.backend.units import ConversionTable
 from deeptrack.image import Image
 from deeptrack.properties import PropertyDict
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
+
+
+if TYPE_CHECKING:
+    import torch
+
 
 MERGE_STRATEGY_OVERRIDE: int = 0
 MERGE_STRATEGY_APPEND: int = 1
@@ -373,14 +379,21 @@ class Feature(DeepTrackNode):
 
     def __init__(
         self: Feature,
-        _input: Any = [],
+        _input: (
+            NDArray
+            | list[NDArray]
+            | torch.Tensor
+            | list[torch.Tensor]
+            | Image
+            | list[Image]
+        ),
         **kwargs: dict[str, Any],
     ) -> None:
         """Initialize a new Feature instance.
 
         Parameters
         ----------
-        _input: np.ndarray or list[np.ndarray] or Image or list of Images, optional
+        _input: np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images], optional
             The initial input(s) for the feature, often images or other data. 
             If not provided, defaults to an empty list.
         **kwargs: dict of str to Any
@@ -388,10 +401,10 @@ class Feature(DeepTrackNode):
             stored in `self.properties`, allowing for dynamic or parameterized
             behavior.
             If not provided, defaults to an empty list.
-        
+
         """
 
-        # store backend on initialization
+        # Store backend on initialization.
         self._backend = config.get_backend()
 
         # Store the dtype and device on initialization.
@@ -492,6 +505,7 @@ class Feature(DeepTrackNode):
             The output of the feature or pipeline after execution.
         
         """
+
         with config.with_backend(self._backend):
             # If image_list is as Source, activate it.
             self._activate_sources(image_list)
