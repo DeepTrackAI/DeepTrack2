@@ -386,7 +386,7 @@ class Feature(DeepTrackNode):
             | list[torch.Tensor]
             | Image
             | list[Image]
-        ),
+        ) = [],
         **kwargs: dict[str, Any],
     ) -> None:
         """Initialize a new Feature instance.
