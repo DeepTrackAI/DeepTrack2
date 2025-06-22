@@ -12,7 +12,14 @@ import unittest
 
 import numpy as np
 
-from deeptrack import features, properties, scatterers, units, optics
+from deeptrack import (
+    features,
+    optics,
+    properties,
+    scatterers,
+    TORCH_AVAILABLE,
+    units,
+)
 from deeptrack.image import Image
 from deeptrack.noises import Gaussian
 
@@ -598,11 +605,10 @@ class TestFeatures(unittest.TestCase):
             + A.properties["addend"]()),
             )
         )
-    
+
 
     def test_DummyFeature(self):
-        """Test that the DummyFeature correctly returns the value of its properties."""
-
+        # Test that DummyFeature properties are callable and can be updated.
         feature = features.DummyFeature(a=1, b=2, c=3)
 
         self.assertEqual(feature.a(), 1)
@@ -617,6 +623,69 @@ class TestFeatures(unittest.TestCase):
 
         feature.c.set_value(6)
         self.assertEqual(feature.c(), 6)
+
+        # Test that DummyFeature returns input unchanged and supports call
+        # syntax.
+        feature = features.DummyFeature()
+        input_array = np.random.rand(10, 10)
+        output_array = feature.get(input_array)
+        self.assertIs(output_array, input_array)
+        # For callability via __call__ (as per DeepTrack2)
+        output_array_call = feature(input_array)
+        self.assertIs(output_array_call, input_array)
+
+        # Test with NumPy array
+        arr = np.zeros((3, 3))
+        self.assertIs(feature.get(arr), arr)
+        self.assertIs(feature(arr), arr)
+
+        # Test with list of NumPy arrays
+        arr_list = [np.ones((2, 2)), np.zeros((2, 2))]
+        self.assertEqual(feature.get(arr_list), arr_list)
+        self.assertEqual(feature(arr_list), arr_list)
+
+        # Test with PyTorch
+        if TORCH_AVAILABLE:
+            import torch
+
+            # Test with PyTorch tensor
+            tensor = torch.ones(4, 4)
+            self.assertIs(feature.get(tensor), tensor)
+            self.assertIs(feature(tensor), tensor)
+
+            # Test with list of PyTorch tensors
+            tensor_list = [torch.zeros(2, 2), torch.ones(2, 2)]
+            self.assertEqual(feature.get(tensor_list), tensor_list)
+            self.assertEqual(feature(tensor_list), tensor_list)
+
+        # Test with Image
+        img = Image(np.zeros((5, 5)))
+        self.assertIs(feature.get(img), img)
+        # feature(img) returns an array, not an Image.
+        self.assertTrue(np.array_equal(feature(img), img.data))
+        # Note: Using feature.get(img) returns the Image object itself,
+        # while using feature(img) (i.e., calling the feature directly)
+        # returns the underlying NumPy array (img.data). This behavior
+        # is by design in DeepTrack2, where the __call__ method extracts
+        # the raw array from the Image to facilitate downstream processing
+        # with NumPy and similar libraries. Therefore, when testing or
+        # using features, always be mindful of whether you want the
+        # object (Image) or just its data (array).
+
+        # Test with list of Image
+        img_list = [Image(np.ones((3, 3))), Image(np.zeros((3, 3)))]
+        self.assertEqual(feature.get(img_list), img_list)
+        # feature(img_list) returns a list of arrays, not a list of Images.
+        output = feature(img_list)
+        self.assertEqual(len(output), len(img_list))
+        for arr, img in zip(output, img_list):
+            self.assertTrue(np.array_equal(arr, img.data))
+        # Note: Calling feature(img_list) returns a list of NumPy arrays
+        # extracted from each Image in img_list, whereas feature.get(img_list)
+        # returns the original list of Image objects. This difference is
+        # intentional in DeepTrack2, where the __call__ method is designed to
+        # yield the underlying array data for easier interoperability with
+        # NumPy and downstream processing.
 
 
     def test_Value(self):
@@ -666,6 +735,7 @@ class TestFeatures(unittest.TestCase):
 
     def test_Power(self):
         test_operator(self, operator.pow)
+
 
     def test_LessThan(self):
         test_operator(self, operator.lt)
