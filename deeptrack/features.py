@@ -1804,16 +1804,16 @@ class DummyFeature(Feature):
     """A no-op feature that simply returns the input unchanged.
 
     This class can serve as a container for properties that don't directly 
-    transform the data but need to be logically grouped. Since it inherits 
-    transform the data but need to be logically grouped. Since it inherits 
-    from `Feature`, any keyword arguments passed to the constructor are 
-    stored as `Property` instances in `self.properties`, enabling dynamic 
-    behavior or parameterization without performing any transformations 
-    on the input data.
+    transform the data but need to be logically grouped. 
+    
+    Since it inherits from `Feature`, any keyword arguments passed to the
+    constructor are stored as `Property` instances in `self.properties`,
+    enabling dynamic behavior or parameterization without performing any
+    transformations on the input data.
 
     Parameters
     ----------
-    _input: np.ndarray or list np.ndarray or Image or list of Images, optional
+    _input: np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images], optional
         An optional input (image or list of images) that can be set for 
         the feature. By default, an empty list.
     **kwargs: dict of str to Any
@@ -1822,9 +1822,8 @@ class DummyFeature(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray | list np.ndarray | Image | list[Image], **kwargs: dict[str, Any]) -> Image | list[Image]`
-        Simply returns the input image(s) unchanged.
-
+    `get(image: np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images], **kwargs: Any) -> np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images]`
+        It simply returns the input image(s) unchanged.
 
     Examples
     --------
@@ -1842,29 +1841,43 @@ class DummyFeature(Feature):
     >>> output_image = dummy_feature(dummy_image)
 
     Verify the output is identical to the input:
-    >>> print(np.array_equal(dummy_image, output_image))
+    >>> np.array_equal(dummy_image, output_image)
     True
 
     Access the properties stored in DummyFeature:
-    >>> print(dummy_feature.properties["value"]())
+    >>> dummy_feature.properties["value"]()
     42
 
     """
 
     def get(
         self: Feature,
-        image: np.ndarray | list[np.ndarray] | Image | list[Image], 
+        image: (
+            NDArray
+            | list[NDArray]
+            | torch.Tensor
+            | list[torch.Tensor]
+            | Image
+            | list[Image]
+        ),
         **kwargs: Any,
-    )-> Image | list[Image]:
+    ) -> (
+        NDArray
+        | list[NDArray]
+        | torch.Tensor
+        | list[torch.Tensor]
+        | Image
+        | list[Image]
+    ):
         """Return the input image or list of images unchanged.
 
-        This method simply returns the input without applying any transformation. 
+        This method simply returns the input without any transformation. 
         It adheres to the `Feature` interface by accepting additional keyword 
-        arguments for consistency, although they are not used in this method.
+        arguments for consistency, although they are not used.
 
         Parameters
         ----------
-        image: np.ndarray or list np.ndarray or Image or list of Image
+        image: np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images]
             The image or list of images to pass through without modification.
         **kwargs: Any
             Additional properties sampled from `self.properties` or passed 
@@ -1873,8 +1886,8 @@ class DummyFeature(Feature):
 
         Returns
         -------
-        Image or list of Images
-            The same `image` object that was passed in.
+        np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images]
+            The same image that was passed in.
 
         """
 
@@ -1930,7 +1943,7 @@ class Value(Feature):
     __distributed__: bool = False  # Process as a single batch.
 
     def __init__(
-        self: Feature, 
+        self: Feature,
         value: PropertyLike[float] = 0, 
         **kwargs: dict[str, Any]
     ):
