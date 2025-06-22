@@ -130,8 +130,8 @@ from typing import Any, Callable, Iterable, Literal, TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
-import matplotlib.animation as animation
 import matplotlib.pyplot as plt
+from matplotlib import animation
 from pint import Quantity
 from scipy.spatial.distance import cdist
 
@@ -143,6 +143,61 @@ from deeptrack.image import Image
 from deeptrack.properties import PropertyDict
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
+
+
+__all__ = [
+    "Feature",
+    "StructuralFeature",
+    "Chain",
+    "Branch",
+    "DummyFeature",
+    "Value",
+    "ArithmeticOperationFeature",
+    "Add",
+    "Subtract",
+    "Multiply",
+    "Divide",
+    "FloorDivide",
+    "Power",
+    "LessThan",
+    "LessThanOrEquals",
+    "LessThanOrEqual",
+    "GreaterThan",
+    "GreaterThanOrEquals",
+    "GreaterThanOrEqual",
+    "Equals",
+    "Equal",
+    "Stack",
+    "Arguments",
+    "Probability",
+    "Repeat",
+    "Combine",
+    "Slice",
+    "Bind",
+    "BindResolve",
+    "BindUpdate",
+    "ConditionalSetProperty",
+    "ConditionalSetFeature",
+    "Lambda",
+    "Merge",
+    "OneOf",
+    "OneOfDict",
+    "LoadImage",
+    "SampleToMasks",
+    "AsType",
+    "ChannelFirst2d",
+    "Upscale",
+    "NonOverlapping",
+    "Store",
+    "Squeeze",
+    "Unsqueeze",
+    "ExpandDims",
+    "MoveAxis",
+    "Transpose",
+    "Permute",
+    "OneHot",
+    "TakeProperties",
+]
 
 
 if TYPE_CHECKING:
