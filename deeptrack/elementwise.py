@@ -145,8 +145,6 @@ class ElementwiseFeature(Feature):
         Returns the result of applying the function to the input array.
 
     """
-    
-    __gpu_compatible__: bool = True
 
     def __init__(
         self: ElementwiseFeature,

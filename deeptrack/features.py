@@ -276,9 +276,6 @@ class Feature(DeepTrackNode):
     __conversion_table__: ConversionTable
         Defines the unit conversions used by the feature to convert its 
         properties into the desired units.
-    __gpu_compatible__: bool
-        Indicates whether the feature can use GPU acceleration. When enabled, 
-        GPU execution is triggered based on input size or backend settings.
 
     Methods
     -------
@@ -399,7 +396,6 @@ class Feature(DeepTrackNode):
     __distributed__ = True
     __property_memorability__ = 1
     __conversion_table__ = ConversionTable()
-    __gpu_compatible__ = False
 
     _wrap_array_with_image: bool = False
     _float_dtype: str
@@ -2111,8 +2107,6 @@ class ArithmeticOperationFeature(Feature):
     __distributed__: bool
         Indicates that this feature’s `get(...)` method processes the input as 
         a whole (`False`) rather than distributing calls for individual items.
-    __gpu_compatible__: bool
-        Specifies that the feature is compatible with GPU processing (`True`).
 
     Methods
     -------
@@ -2138,7 +2132,6 @@ class ArithmeticOperationFeature(Feature):
     """
 
     __distributed__: bool = False
-    __gpu_compatible__: bool = True
 
 
     def __init__(

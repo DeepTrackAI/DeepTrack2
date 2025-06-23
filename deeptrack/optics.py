@@ -972,8 +972,6 @@ class Fluorescence(Optics):
 
     Attributes
     ----------
-    __gpu_compatible__: bool
-        Indicates whether the class supports GPU acceleration.
     NA: float
         Numerical aperture of the optical system.
     wavelength: float
@@ -1017,8 +1015,6 @@ class Fluorescence(Optics):
     1.4
 
     """
-
-    __gpu_compatible__ = True
 
     def get(
         self:  Fluorescence, 
@@ -1198,8 +1194,6 @@ class Brightfield(Optics):
 
     Attributes
     ----------
-    __gpu_compatible__: bool
-        Indicates whether the class supports GPU acceleration.
     __conversion_table__: ConversionTable
         Table used to convert properties of the feature to desired units.
     NA: float
@@ -1246,8 +1240,6 @@ class Brightfield(Optics):
     1.4
     
     """
-
-    __gpu_compatible__ = True
 
     __conversion_table__ = ConversionTable(
         working_distance=(u.meter, u.meter),
