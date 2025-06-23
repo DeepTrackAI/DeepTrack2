@@ -2239,8 +2239,8 @@ class Add(ArithmeticOperationFeature):
 
     def __init__(
         self: Feature,
-        value: PropertyLike[float] = 0,
-        **kwargs: dict[str, Any],
+        value: PropertyLike[float | int | list[float | int]] = 0,
+        **kwargs: Any,
     ):
         """Initialize the Add feature.
 
