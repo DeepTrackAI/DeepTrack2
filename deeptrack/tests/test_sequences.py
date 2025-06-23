@@ -30,7 +30,7 @@ class TestSequences(unittest.TestCase):
         def get_rotation(sequence_length, previous_value):
             return previous_value + 2 * np.pi / sequence_length
 
-        rotating_ellipse = sequences.Sequential(ellipse, rotation=get_rotation)
+        rotating_ellipse = ellipse.to_sequential(rotation=get_rotation)
         imaged_rotating_ellipse = optics(rotating_ellipse)
         imaged_rotating_ellipse_sequence = sequences.Sequence(
             imaged_rotating_ellipse, sequence_length=5
@@ -64,9 +64,8 @@ class TestSequences(unittest.TestCase):
         def get_intensity(rotation):
             return rotation * 2
 
-        rotating_ellipse = sequences.Sequential(
-            ellipse, rotation=get_rotation, intensity=get_intensity
-        )
+        rotating_ellipse = ellipse.to_sequential(rotation=get_rotation, intensity=get_intensity)
+        
         imaged_rotating_ellipse = optics(rotating_ellipse)
         imaged_rotating_ellipse_sequence = sequences.Sequence(
             imaged_rotating_ellipse, sequence_length=5
@@ -100,9 +99,8 @@ class TestSequences(unittest.TestCase):
         def get_intensity(rotation):
             return rotation * 2
 
-        rotating_ellipse = sequences.Sequential(
-            ellipse, rotation=get_rotation, intensity=get_intensity
-        )
+        rotating_ellipse = ellipse.to_sequential(rotation=get_rotation, intensity=get_intensity)
+        
         imaged_rotating_ellipse = optics(rotating_ellipse ^ 2)
         imaged_rotating_ellipse_sequence = sequences.Sequence(
             imaged_rotating_ellipse, sequence_length=5
@@ -148,9 +146,8 @@ class TestSequences(unittest.TestCase):
         def get_intensity(rotation):
             return rotation * 2
 
-        rotating_ellipse = sequences.Sequential(
-            ellipse, rotation=get_rotation, intensity=get_intensity
-        )
+        rotating_ellipse = ellipse.to_sequential(rotation=get_rotation, intensity=get_intensity)
+        
         imaged_rotating_ellipse = optics(rotating_ellipse ^ 2)
         imaged_rotating_ellipse_sequence = sequences.Sequence(
             imaged_rotating_ellipse, sequence_length=5
