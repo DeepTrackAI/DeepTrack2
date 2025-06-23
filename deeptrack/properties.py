@@ -68,7 +68,7 @@ Handle sequential properties:
 
 >>> seq_prop = dt.SequentialProperty()
 >>> seq_prop.sequence_length.store(5)
->>> seq_prop.current = lambda _ID=(): seq_prop.sequence_index() + 1
+>>> seq_prop.sampling_rule = lambda _ID=(): seq_prop.sequence_index() + 1
 >>> for step in range(seq_prop.sequence_length()):
 ...     seq_prop.sequence_index.store(step)
 ...     seq_prop.store(seq_prop.current())
@@ -560,6 +560,12 @@ class PropertyDict(DeepTrackNode, dict):
 
 
 class SequentialProperty(Property):
+    """
+    attribute name changes:
+    initialization <- initial_sampling_rule
+    current_value <- sampling_rule
+    """
+    
     """Property that yields different values for sequential steps.
     SequentialProperty lets the user encapsulate feature sampling rules and
     iterator logic in a single object to evaluate them sequentially.
@@ -667,7 +673,7 @@ class SequentialProperty(Property):
 
     def __init__(
         self: SequentialProperty,
-        initialization: Optional[Any] = None,
+        initial_sampling_rule: Optional[Any] = None,
         current_value: Optional[Any] = None,
         sequence_length: Optional[int] = None,
         sequence_index: Optional[int] = None,
@@ -737,16 +743,16 @@ class SequentialProperty(Property):
         # self.previous_value.add_dependency(self.sequence_index)  # Done
 
         # 5) Create an action for initializing the sequence.
-        if initialization is not None:
-            self.initialization = self.create_action(initialization, **kwargs)
+        if initial_sampling_rule is not None:
+            self.initial_sampling_rule = self.create_action(initial_sampling_rule, **kwargs)
         else:
-            self.initialization = None
+            self.initial_sampling_rule = None
 
         # 6) Define a default current function for steps >= 1.
         if current_value is not None:
-            self.current = self.create_action(current_value, **kwargs)
+            self.sampling_rule = self.create_action(current_value, **kwargs)
         else:
-            self.current = lambda _ID=(): None
+            self.sampling_rule = lambda _ID=(): None
 
         # 7) Override the default action with our custom logic.
         self.action = self._action_override
@@ -773,11 +779,11 @@ class SequentialProperty(Property):
         """
 
         if self.sequence_index(_ID=_ID) == 0:
-            if self.initialization:
-                return self.initialization(_ID=_ID)
+            if self.initial_sampling_rule:
+                return self.initial_sampling_rule(_ID=_ID)
             return None
 
-        return self.current(_ID=_ID)
+        return self.sampling_rule(_ID=_ID)
 
     def store(
         self: SequentialProperty,
