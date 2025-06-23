@@ -733,13 +733,88 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_ArithmeticOperationFeature(self):
-
+        # Basic addition with lists
         addition_feature = \
             features.ArithmeticOperationFeature(operator.add, value=10)
         input_values = [1, 2, 3, 4]
         expected_output = [11, 12, 13, 14]
         output = addition_feature(input_values)
         self.assertEqual(output, expected_output)
+
+        # Scalar input and scalar value
+        output = addition_feature(5)
+        self.assertEqual(output, 15)
+
+        # List input, scalar value (broadcast)
+        input_values = [10, 20, 30]
+        output = addition_feature(input_values)
+        self.assertEqual(output, [20, 30, 40])
+
+        # List input, list value (same length)
+        addition_feature = features.ArithmeticOperationFeature(
+            operator.add, value=[1, 2, 3],
+        )
+        input_values = [10, 20, 30]
+        self.assertEqual(addition_feature(input_values), [11, 22, 33])
+
+        # List input, list value (different lengths, value list cycles)
+        addition_feature = features.ArithmeticOperationFeature(
+            operator.add, value=[1, 2],
+        )
+        input_values = [10, 20, 30, 40, 50]
+        # value cycles as 1,2,1,2,1
+        self.assertEqual(addition_feature(input_values), [11, 22, 31, 42, 51])
+
+        # NumPy array input, scalar value
+        addition_feature = features.ArithmeticOperationFeature(
+            operator.add, value=5,
+        )
+        arr = np.array([1, 2, 3])
+        self.assertEqual(addition_feature(arr.tolist()), [6, 7, 8])
+
+        # NumPy array input, NumPy array value
+        addition_feature = features.ArithmeticOperationFeature(
+            operator.add, value=[4, 5, 6],
+        )
+        arr_input = [
+            np.array([1, 2]), np.array([3, 4]), np.array([5, 6]),
+        ]
+        arr_value = [
+            np.array([10, 20]), np.array([30, 40]), np.array([50, 60]),
+        ]
+        feature = features.ArithmeticOperationFeature(
+            lambda a, b: np.add(a, b), value=arr_value,
+        )
+        for output, expected in zip(
+            feature(arr_input),
+            [np.array([11, 22]), np.array([33, 44]), np.array([55, 66])],
+        ):
+            self.assertTrue(np.array_equal(output, expected))
+
+        # PyTorch tensor input (if available)
+        if TORCH_AVAILABLE:
+            import torch
+
+            addition_feature = features.ArithmeticOperationFeature(
+                lambda a, b: a + b, value=5,
+            )
+            tensors = [torch.tensor(1), torch.tensor(2), torch.tensor(3)]
+            expected = [torch.tensor(6), torch.tensor(7), torch.tensor(8)]
+            output = addition_feature(tensors)
+            for out, exp in zip(output, expected):
+                self.assertTrue(torch.equal(out, exp))
+
+            # Tensor input, tensor value (elementwise)
+            t1 = [torch.tensor([1.0, 2.0]), torch.tensor([3.0, 4.0])]
+            t2 = [torch.tensor([10.0, 20.0]), torch.tensor([30.0, 40.0])]
+            feature = features.ArithmeticOperationFeature(
+                lambda a, b: a + b, value=t2,
+            )
+            for output, expected in zip(
+                feature(t1),
+                [torch.tensor([11.0, 22.0]), torch.tensor([33.0, 44.0])],
+            ):
+                self.assertTrue(torch.equal(output, expected))
 
 
     def test_Add(self):
