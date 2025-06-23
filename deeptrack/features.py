@@ -152,7 +152,7 @@ __all__ = [
     "Branch",  # TODO
     "DummyFeature",
     "Value",
-    "ArithmeticOperationFeature",  # TODO
+    "ArithmeticOperationFeature",
     "Add",  # TODO
     "Subtract",  # TODO
     "Multiply",  # TODO
@@ -524,7 +524,15 @@ class Feature(DeepTrackNode):
 
     def __call__(
         self: Feature,
-        image_list: np.ndarray | list[np.ndarray] | Image | list[Image] = None,
+        image_list: (
+            NDArray[Any]
+            | list[NDArray[Any]]
+            | torch.Tensor
+            | list[torch.Tensor]
+            | Image
+            | list[Image]
+            | None
+        ) = None,
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
     ) -> Any:
@@ -1864,16 +1872,16 @@ class DummyFeature(Feature):
 
     Parameters
     ----------
-    _input: np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images], optional
-        An optional input (image or list of images) that can be set for 
-        the feature. By default, an empty list.
+    _input: Any, optional
+        An optional input (typically an image or list of images) that can be
+        set for the feature. It defaults to an empty list [].
     **kwargs: dict of str to Any
         Additional keyword arguments are wrapped as `Property` instances and 
         stored in `self.properties`.
 
     Methods
     -------
-    `get(image: np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images], **kwargs: Any) -> np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images]`
+    `get(image: Any, **kwargs: Any) -> Any`
         It simply returns the input image(s) unchanged.
 
     Examples
@@ -1903,23 +1911,9 @@ class DummyFeature(Feature):
 
     def get(
         self: DummyFeature,
-        image: (
-            NDArray
-            | list[NDArray]
-            | torch.Tensor
-            | list[torch.Tensor]
-            | Image
-            | list[Image]
-        ),
+        image: Any,
         **kwargs: Any,
-    ) -> (
-        NDArray
-        | list[NDArray]
-        | torch.Tensor
-        | list[torch.Tensor]
-        | Image
-        | list[Image]
-    ):
+    ) -> Any:
         """Return the input image or list of images unchanged.
 
         This method simply returns the input without any transformation. 
@@ -1928,8 +1922,9 @@ class DummyFeature(Feature):
 
         Parameters
         ----------
-        image: np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images]
-            The image or list of images to pass through without modification.
+        image: Any
+            The input (typically an image or list of images) to pass through
+            without modification.
         **kwargs: Any
             Additional properties sampled from `self.properties` or passed 
             externally. These are unused here but provided for consistency 
@@ -1937,8 +1932,9 @@ class DummyFeature(Feature):
 
         Returns
         -------
-        np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images]
-            The same image that was passed in.
+        Any
+            The same input that was passed in (typically an image or list of
+            images).
 
         """
 
@@ -2051,7 +2047,7 @@ class Value(Feature):
         super().__init__(value=value, **kwargs)
 
     def get(
-        self: Feature,
+        self: Value,
         image: Any,
         value: float | ArrayLike,
         **kwargs: Any,
@@ -2088,7 +2084,10 @@ class ArithmeticOperationFeature(Feature):
 
     This feature performs an arithmetic operation (e.g., addition, subtraction,
     multiplication) on the input data. The inputs can be single values or lists
-    of values. If a list is passed, the operation is applied to each element. 
+    of values.
+
+    If a list is passed, the operation is applied to each element. 
+
     If both inputs are lists of different lengths, the shorter list is cycled.
 
     Parameters
@@ -2097,7 +2096,7 @@ class ArithmeticOperationFeature(Feature):
         The arithmetic operation to apply, such as a built-in operator 
         (`operator.add`, `operator.mul`) or a custom callable.
     value: float or int or list of float or int, optional
-        The second operand for the operation. Defaults to 0. If a list is 
+        The second operand for the operation. It defaults to 0. If a list is 
         provided, the operation will apply element-wise.
     **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature`.
@@ -2110,7 +2109,7 @@ class ArithmeticOperationFeature(Feature):
 
     Methods
     -------
-    `get(image: Any | list of Any, value: float | int | list[float] | int, **kwargs: dict[str, Any]) -> list[Any]`
+    `get(image: Any | list of Any, value: float | int | list[float] | int, **kwargs: Any) -> list[Any]`
         Apply the arithmetic operation element-wise to the input data.
 
     Examples
@@ -2133,33 +2132,35 @@ class ArithmeticOperationFeature(Feature):
 
     __distributed__: bool = False
 
-
     def __init__(
-        self: Feature,
+        self: ArithmeticOperationFeature,
         op: Callable[[Any, Any], Any],
-        value: float | int | list[float | int] = 0,
-        **kwargs: dict[str, Any],
+        value: PropertyLike[float | int | list[float | int]] = 0,
+        **kwargs: Any,
     ):
         """Initialize the ArithmeticOperationFeature.
 
         Parameters
         ----------
         op: Callable[[Any, Any], Any]
-            The arithmetic operation to apply, such as `operator.add`, `operator.mul`, 
-            or any custom callable that takes two arguments.
-        value: float or int or list of float or int, optional
+            The arithmetic operation to apply, such as `operator.add`,
+            `operator.mul`, or any custom callable that takes two arguments and
+            returns a single output value.
+        value: PropertyLike[float or int or list of float or int], optional
             The second operand(s) for the operation. If a list is provided, the 
-            operation is applied element-wise. Defaults to 0.
+            operation is applied element-wise. It defaults to 0.
         **kwargs: dict of str to Any
-            Additional keyword arguments passed to the parent `Feature` constructor.
+            Additional keyword arguments passed to the parent `Feature`
+            constructor.
 
         """
 
         super().__init__(value=value, **kwargs)
+
         self.op = op
 
     def get(
-        self: Feature,
+        self: ArithmeticOperationFeature,
         image: Any | list[Any],
         value: float | int | list[float | int],
         **kwargs: Any,
@@ -2171,7 +2172,7 @@ class ArithmeticOperationFeature(Feature):
         image: Any or list of Any
             The input data, either a single value or a list of values, to be 
             transformed by the arithmetic operation.
-        value: float, int, or list of float or int
+        value: float or int or list of float or int
             The second operand(s) for the operation. If a single value is 
             provided, it is broadcast to match the input size. If a list is 
             provided, it will be cycled to match the length of the input list.
