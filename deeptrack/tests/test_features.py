@@ -805,13 +805,13 @@ class TestFeatures(unittest.TestCase):
                 self.assertTrue(torch.equal(out, exp))
 
             # Tensor input, tensor value (elementwise)
-            t1 = [torch.tensor([1.0, 2.0]), torch.tensor([3.0, 4.0])]
-            t2 = [torch.tensor([10.0, 20.0]), torch.tensor([30.0, 40.0])]
+            t_input = [torch.tensor([1.0, 2.0]), torch.tensor([3.0, 4.0])]
+            t_value = [torch.tensor([10.0, 20.0]), torch.tensor([30.0, 40.0])]
             feature = features.ArithmeticOperationFeature(
-                lambda a, b: a + b, value=t2,
+                lambda a, b: a + b, value=t_value,
             )
             for output, expected in zip(
-                feature(t1),
+                feature(t_input),
                 [torch.tensor([11.0, 22.0]), torch.tensor([33.0, 44.0])],
             ):
                 self.assertTrue(torch.equal(output, expected))
