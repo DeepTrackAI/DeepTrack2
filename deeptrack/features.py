@@ -146,57 +146,57 @@ from deeptrack.types import ArrayLike, PropertyLike
 
 
 __all__ = [
-    "Feature",
-    "StructuralFeature",
-    "Chain",
-    "Branch",
+    "Feature",  # TODO
+    "StructuralFeature",  # TODO
+    "Chain",  # TODO
+    "Branch",  # TODO
     "DummyFeature",
     "Value",
-    "ArithmeticOperationFeature",
-    "Add",
-    "Subtract",
-    "Multiply",
-    "Divide",
-    "FloorDivide",
-    "Power",
-    "LessThan",
-    "LessThanOrEquals",
-    "LessThanOrEqual",
-    "GreaterThan",
-    "GreaterThanOrEquals",
-    "GreaterThanOrEqual",
-    "Equals",
-    "Equal",
-    "Stack",
-    "Arguments",
-    "Probability",
-    "Repeat",
-    "Combine",
-    "Slice",
-    "Bind",
-    "BindResolve",
-    "BindUpdate",
-    "ConditionalSetProperty",
-    "ConditionalSetFeature",
-    "Lambda",
-    "Merge",
-    "OneOf",
-    "OneOfDict",
-    "LoadImage",
-    "SampleToMasks",
-    "AsType",
-    "ChannelFirst2d",
-    "Upscale",
-    "NonOverlapping",
-    "Store",
-    "Squeeze",
-    "Unsqueeze",
-    "ExpandDims",
-    "MoveAxis",
-    "Transpose",
-    "Permute",
-    "OneHot",
-    "TakeProperties",
+    "ArithmeticOperationFeature",  # TODO
+    "Add",  # TODO
+    "Subtract",  # TODO
+    "Multiply",  # TODO
+    "Divide",  # TODO
+    "FloorDivide",  # TODO
+    "Power",  # TODO
+    "LessThan",  # TODO
+    "LessThanOrEquals",  # TODO
+    "LessThanOrEqual",  # TODO
+    "GreaterThan",  # TODO
+    "GreaterThanOrEquals",  # TODO
+    "GreaterThanOrEqual",  # TODO
+    "Equals",  # TODO
+    "Equal",  # TODO
+    "Stack",  # TODO
+    "Arguments",  # TODO
+    "Probability",  # TODO
+    "Repeat",  # TODO
+    "Combine",  # TODO
+    "Slice",  # TODO
+    "Bind",  # TODO
+    "BindResolve",  # TODO
+    "BindUpdate",  # TODO
+    "ConditionalSetProperty",  # TODO
+    "ConditionalSetFeature",  # TODO
+    "Lambda",  # TODO
+    "Merge",  # TODO
+    "OneOf",  # TODO
+    "OneOfDict",  # TODO
+    "LoadImage",  # TODO
+    "SampleToMasks",  # TODO
+    "AsType",  # TODO
+    "ChannelFirst2d",  # TODO
+    "Upscale",  # TODO
+    "NonOverlapping",  # TODO
+    "Store",  # TODO
+    "Squeeze",  # TODO
+    "Unsqueeze",  # TODO
+    "ExpandDims",  # TODO
+    "MoveAxis",  # TODO
+    "Transpose",  # TODO
+    "Permute",  # TODO
+    "OneHot",  # TODO
+    "TakeProperties",  # TODO
 ]
 
 
@@ -530,7 +530,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         image_list: np.ndarray | list[np.ndarray] | Image | list[Image] = None,
         _ID: tuple[int, ...] = (),
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> Any:
         """Execute the feature or pipeline.
 
@@ -1906,7 +1906,7 @@ class DummyFeature(Feature):
     """
 
     def get(
-        self: Feature,
+        self: DummyFeature,
         image: (
             NDArray
             | list[NDArray]
@@ -1953,17 +1953,17 @@ class Value(Feature):
     """Represents a constant (per evaluation) value in a DeepTrack pipeline.
 
     This feature holds a constant value (e.g., a scalar or array) and supplies 
-    it on demand to other parts of the pipeline. It does not transform the 
-    input image but instead returns the stored value.
+    it on demand to other parts of the pipeline.
+    
+    Wen called with an image, it does not transform the input image but instead
+    returns the stored value.
 
     Parameters
     ----------
-    value: PropertyLike[float], optional
-        The numerical value to store. Defaults to 0. If an `Image` is provided,
-        a warning is issued recommending conversion to a NumPy array for 
-        The numerical value to store. Defaults to 0. If an `Image` is provided,
-        a warning is issued recommending conversion to a NumPy array for 
-        performance reasons.
+    value: PropertyLike[float or array], optional
+        The numerical value to store. It defaults to 0.
+        If an `Image` is provided, a warning is issued recommending conversion
+        to a NumPy array or a PyTorch tensor for performance reasons.
     **kwargs: dict of str to Any
         Additional named properties passed to the `Feature` constructor.
 
@@ -1979,42 +1979,65 @@ class Value(Feature):
     `get(image: Any, value: float, **kwargs: dict[str, Any]) -> float`
         Returns the stored value, ignoring the input image.
 
-
     Examples
     --------
     >>> import deeptrack as dt
 
     Initialize a constant value and retrieve it:
     >>> value = dt.Value(42)
-    >>> print(value())
+    >>> value()
     42
 
     Override the value at call time:
-    >>> print(value(value=100))
+    >>> value(value=100)
     100
+
+    Initialize a constant array value and retrieve it:
+    >>> import numpy as np
+    >>>
+    >>> arr_value = dt.Value(np.arange(4))
+    >>> arr_value()
+    array([0, 1, 2, 3])
+
+    Override the array value at call time:
+    >>> arr_value(value=np.array([10, 20, 30, 40]))
+    array([10, 20, 30, 40])
+
+    Initialize a constant PyTorch tensor value and retrieve it:
+    >>> import torch
+    >>>
+    >>> tensor_value = dt.Value(torch.tensor([1., 2., 3.]))
+    >>> tensor_value()
+    tensor([1., 2., 3.])
+
+    Override the tensor value at call time:
+    >>> tensor_value(value=torch.tensor([10., 20., 30.]))
+    tensor([10., 20., 30.])
 
     """
 
     __distributed__: bool = False  # Process as a single batch.
 
     def __init__(
-        self: Feature,
-        value: PropertyLike[float] = 0, 
-        **kwargs: dict[str, Any]
+        self: Value,
+        value: PropertyLike[float | ArrayLike] = 0,
+        **kwargs: Any,
     ):
         """Initialize the `Value` feature to store a constant value.
 
         This feature holds a constant numerical value and provides it to the 
-        pipeline as needed. If an `Image` object is supplied, a warning is 
-        issued to encourage converting it to a NumPy array for performance 
+        pipeline as needed.
+        
+        If an `Image` object is supplied, a warning is issued to encourage
+        converting it to a NumPy array or a PyTorch tensor for performance
         optimization.
 
         Parameters
         ----------
-        value: PropertyLike[float], optional
+        value: PropertyLike[float or array], optional
             The initial value to store. If an `Image` is provided, a warning is
-            raised. Defaults to 0.
-        **kwargs: dict of str to Any
+            raised. It defaults to 0.
+        **kwargs: Any
             Additional keyword arguments passed to the `Feature` constructor, 
             such as custom properties or the feature name.
 
@@ -2023,19 +2046,20 @@ class Value(Feature):
         if isinstance(value, Image):
             import warnings
             warnings.warn(
-                "Setting dt.Value value as an Image object is likely to lead "
-                "to performance deterioration. Consider converting it to a "
-                "numpy array using np.array."
+                "Passing an Image object as the value to dt.Value may lead to "
+                "performance deterioration. Consider converting the Image to "
+                "a NumPy array with np.array(image), or to a PyTorch tensor "
+                "with torch.tensor(np.array(image))."
             )
 
         super().__init__(value=value, **kwargs)
 
     def get(
         self: Feature,
-        image: Any, 
-        value: float, 
-        **kwargs: dict[str, Any]
-    ) -> float:
+        image: Any,
+        value: float | ArrayLike,
+        **kwargs: Any,
+    ) -> float | ArrayLike:
         """Return the stored value, ignoring the input image.
 
         The `get` method simply returns the stored numerical value, allowing 
@@ -2046,16 +2070,16 @@ class Value(Feature):
         image: Any
             Input data typically processed by features. For `Value`, this is 
             ignored and does not affect the output.
-        value: float
+        value: float or array
             The current value to return. This may be the initial value or an 
             overridden value supplied during the method call.
-        **kwargs: dict of str to Any
+        **kwargs: Any
             Additional keyword arguments, which are ignored but included for 
             consistency with the feature interface.
 
         Returns
         -------
-        float
+        float or array
             The stored or overridden `value`, returned unchanged.
 
         """

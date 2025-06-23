@@ -689,18 +689,47 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_Value(self):
-
+        # Scalar value tests
         value = features.Value(value=1)
         self.assertEqual(value(), 1)
         self.assertEqual(value.value(), 1)
         self.assertEqual(value(value=2), 2)
+        self.assertEqual(value(), 2)
         self.assertEqual(value.value(), 2)
 
         value = features.Value(value=lambda: 1)
         self.assertEqual(value(), 1)
         self.assertEqual(value.value(), 1)
         self.assertNotEqual(value(value=lambda: 2), 2)
+        self.assertNotEqual(value(), 2)
         self.assertNotEqual(value.value(), 2)
+
+        # NumPy array value tests
+        arr = np.arange(4)
+        value_arr = features.Value(value=arr)
+        self.assertTrue(np.array_equal(value_arr(), arr))
+        self.assertTrue(np.array_equal(value_arr.value(), arr))
+        # Override with a new array
+        override_arr = np.array([10, 20, 30, 40])
+        self.assertTrue(
+            np.array_equal(value_arr(value=override_arr), override_arr)
+        )
+        self.assertTrue(np.array_equal(value_arr(), override_arr))
+        self.assertTrue(np.array_equal(value_arr.value(), override_arr))
+
+        # PyTorch tensor value tests
+        if TORCH_AVAILABLE:
+            import torch
+
+            tensor = torch.tensor([1., 2., 3.])
+            value_tensor = features.Value(value=tensor)
+            self.assertTrue(torch.equal(value_tensor(), tensor))
+            self.assertTrue(torch.equal(value_tensor.value(), tensor))
+            # Override with a new tensor
+            override_tensor = torch.tensor([10., 20., 30.])
+            self.assertTrue(torch.equal(value_tensor(value=override_tensor), override_tensor))
+            self.assertTrue(torch.equal(value_tensor(), override_tensor))
+            self.assertTrue(torch.equal(value_tensor.value(), override_tensor))
 
 
     def test_ArithmeticOperationFeature(self):
