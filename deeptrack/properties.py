@@ -560,11 +560,6 @@ class PropertyDict(DeepTrackNode, dict):
 
 
 class SequentialProperty(Property):
-    """
-    attribute name changes:
-    initialization <- initial_sampling_rule
-    current_value <- sampling_rule
-    """
     
     """Property that yields different values for sequential steps.
     SequentialProperty lets the user encapsulate feature sampling rules and
@@ -649,10 +644,10 @@ class SequentialProperty(Property):
 
     >>> seq_prop = dt.SequentialProperty()
     >>> seq_prop.sequence_length.store(5)
-    >>> seq_prop.current = lambda _ID=(): seq_prop.sequence_index() + 1
+    >>> seq_prop.sampling_rule = lambda _ID=(): seq_prop.sequence_index() + 1
     >>> for step in range(seq_prop.sequence_length()):
     ...     seq_prop.sequence_index.store(step)
-    ...     current_value = seq_prop.current()
+    ...     current_value = seq_prop.sampling_rule()
     ...     seq_prop.store(current_value)
     ...     print(seq_prop.data[()].current_value())
     [1]
@@ -662,7 +657,7 @@ class SequentialProperty(Property):
     [1, 2, 3, 4, 5]
     
     """
-
+    
     sequence_length: Property
     sequence_index: Property
     previous_values: Property
@@ -679,11 +674,11 @@ class SequentialProperty(Property):
         sequence_index: Optional[int] = None,
         **kwargs: Dict[str, Property],
     ) -> None:
-        """Create a SequentialProperty with optional initialization.
+        """Create a SequentialProperty with optional initialization sampling rule.
         
         Parameters
         ----------
-        initialization: Any, optional
+        initial_sampling_rule : Any, optional
             The sampling rule (value or callable) for step=0. Defaults to None.
         current_value: Any, optional
             The sampling rule (value or callable) for the current step.
@@ -763,7 +758,7 @@ class SequentialProperty(Property):
     ) -> Any:
         """Decide which function to call based on the current step.
 
-        For step=0, call `self.initialization`. Otherwise, call `self.current`.
+        For step=0, call `self.initial_sampling_rule`. Otherwise, call `self.sampling_rule`.
 
         Parameters
         ----------
@@ -773,8 +768,8 @@ class SequentialProperty(Property):
         Returns
         -------
         Any
-            The result of the `self.initialization` function (if step == 0)
-            or the result of the `self.current` function (if step > 0).
+            The result of the `self.initial_sampling_rule` function (if step == 0)
+            or the result of the `self.sampling_rule` function (if step > 0).
         
         """
 
@@ -851,8 +846,8 @@ class SequentialProperty(Property):
     ) -> Any:
         """Evaluate the property at the current sequence step.
         
-        It returns the result of `self.initialization` (if step == 0) or the
-        result of `self.current` (if step > 0).
+        It returns the result of `self.initial_sampling_rule` (if step == 0) or the
+        result of `self.sampling_rule` (if step > 0).
 
         Parameters
         ----------
