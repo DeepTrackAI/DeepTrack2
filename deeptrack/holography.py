@@ -188,7 +188,7 @@ class Rescale(Feature):
         self: Rescale, 
         image: Image | np.ndarray, 
         rescale: float, 
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> Image | np.ndarray:
         """Rescales the image by subtracting the real part of the field before
         multiplication.
@@ -199,7 +199,7 @@ class Rescale(Feature):
             The image to rescale.
         rescale: float
             The rescaling factor.
-        **kwargs: dict of str to Any
+        **kwargs: Any
             Additional keyword arguments.
 
         Returns
@@ -253,7 +253,7 @@ class FourierTransform(Feature):
         self: FourierTransform,
         image: Image | np.ndarray,
         padding: int = 32,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> np.ndarray: 
         """Computes the Fourier transform of the image.
 
@@ -263,7 +263,7 @@ class FourierTransform(Feature):
             The image to transform.
         padding: int, optional
             Number of pixels to pad symmetrically around the image (default is 32).
-        **kwargs: dict of str to Any
+        **kwargs: Any
 
         Returns
         -------
@@ -329,7 +329,7 @@ class InverseFourierTransform(Feature):
         self: InverseFourierTransform,
         image: Image | np.ndarray,
         padding: int = 32,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> Image | np.ndarray:
         """Computes the inverse Fourier transform and removes padding.
 
@@ -340,7 +340,7 @@ class InverseFourierTransform(Feature):
         padding: int, optional
             Number of pixels removed symmetrically after inverse transformation
             (default is 32).
-        **kwargs: dict of str to Any
+        **kwargs: Any
 
         Returns
         -------
@@ -404,7 +404,7 @@ class FourierTransformTransformation(Feature):
         Tz: np.ndarray,
         Tzinv: np.ndarray,
         i: int,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> Image | np.ndarray:
         """Applies the power of the propagation matrix to the image.
 
@@ -419,7 +419,7 @@ class FourierTransformTransformation(Feature):
         i: int
             Power of the propagation matrix to apply. Negative values apply the
             inverse.
-        **kwargs: dict of str to Any
+        **kwargs: Any
             Additional keyword arguments.
         
         Returns
