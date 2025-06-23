@@ -68,7 +68,7 @@ Handle sequential properties:
 
 >>> seq_prop = dt.SequentialProperty()
 >>> seq_prop.sequence_length.store(5)
->>> seq_prop.current = lambda _ID=(): seq_prop.sequence_index() + 1
+>>> seq_prop.sampling_rule = lambda _ID=(): seq_prop.sequence_index() + 1
 >>> for step in range(seq_prop.sequence_length()):
 ...     seq_prop.sequence_index.store(step)
 ...     seq_prop.store(seq_prop.current())
@@ -560,6 +560,12 @@ class PropertyDict(DeepTrackNode, dict):
 
 
 class SequentialProperty(Property):
+    """
+    attribute name changes:
+    initialization <- initial_sampling_rule
+    current_value <- sampling_rule
+    """
+    
     """Property that yields different values for sequential steps.
     SequentialProperty lets the user encapsulate feature sampling rules and
     iterator logic in a single object to evaluate them sequentially.
@@ -574,7 +580,7 @@ class SequentialProperty(Property):
 
     Parameters
     ----------
-    initialization: Any, optional
+    initial_sampling_rule: Any, optional
         A sampling rule for the first step of the sequence (step=0). 
         Can be any value or callable that is acceptable to `Property`. 
         If not provided, the initial value is `None`.
@@ -604,10 +610,10 @@ class SequentialProperty(Property):
     previous_value: Property
         A `Property` returning the most recently stored value, or `None` 
         if there is no history yet.
-    initialization: Callable[..., Any], optional
+    initial_sampling_rule: Callable[..., Any], optional
         A function to compute the value at step=0. If `None`, the property 
         returns `None` at the first step.
-    current: Callable[..., Any]
+    sampling_rule: Callable[..., Any]
         A function to compute the value at steps >= 1. By default,  it returns 
         `None`.
     action: Callable[..., Any]
@@ -630,7 +636,7 @@ class SequentialProperty(Property):
     set_sequence_length(self, value, ID) -> None:
         Stores the value for the length of the sequence,
         analagous to SequentialProperty.sequence_length.store()        
-    set_current_step(self, value, ID) -> None:
+    set_current_index(self, value, ID) -> None:
         Stores the value for the current step of the sequence,
         analagous to SequentialProperty.current_step.store()
         
@@ -657,17 +663,17 @@ class SequentialProperty(Property):
     
     """
 
-    initialization: Optional[Callable[..., Any]]
-    current: Optional[Callable[..., Any]]
     sequence_length: Property
     sequence_index: Property
     previous_values: Property
     previous_value: Property
+    initial_sampling_rule: Optional[Callable[..., Any]]
+    sampling_rule: Optional[Callable[..., Any]]
     action: Callable[..., Any]
 
     def __init__(
         self: SequentialProperty,
-        initialization: Optional[Any] = None,
+        initial_sampling_rule: Optional[Any] = None,
         current_value: Optional[Any] = None,
         sequence_length: Optional[int] = None,
         sequence_index: Optional[int] = None,
@@ -737,16 +743,16 @@ class SequentialProperty(Property):
         # self.previous_value.add_dependency(self.sequence_index)  # Done
 
         # 5) Create an action for initializing the sequence.
-        if initialization is not None:
-            self.initialization = self.create_action(initialization, **kwargs)
+        if initial_sampling_rule is not None:
+            self.initial_sampling_rule = self.create_action(initial_sampling_rule, **kwargs)
         else:
-            self.initialization = None
+            self.initial_sampling_rule = None
 
         # 6) Define a default current function for steps >= 1.
         if current_value is not None:
-            self.current = self.create_action(current_value, **kwargs)
+            self.sampling_rule = self.create_action(current_value, **kwargs)
         else:
-            self.current = lambda _ID=(): None
+            self.sampling_rule = lambda _ID=(): None
 
         # 7) Override the default action with our custom logic.
         self.action = self._action_override
@@ -773,11 +779,11 @@ class SequentialProperty(Property):
         """
 
         if self.sequence_index(_ID=_ID) == 0:
-            if self.initialization:
-                return self.initialization(_ID=_ID)
+            if self.initial_sampling_rule:
+                return self.initial_sampling_rule(_ID=_ID)
             return None
 
-        return self.current(_ID=_ID)
+        return self.sampling_rule(_ID=_ID)
 
     def store(
         self: SequentialProperty,
@@ -887,7 +893,7 @@ class SequentialProperty(Property):
         else:
             self.sequence_length = Property(value, _ID=_ID)
 
-    def set_current_step(
+    def set_current_index(
         self: SequentialProperty,
         value: Any,
         _ID: tuple[int, ...] = (),

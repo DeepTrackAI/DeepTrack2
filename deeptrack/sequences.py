@@ -197,8 +197,8 @@ def Sequential(feature: Feature, **kwargs):  # DEPRECATED
                 all_kwargs["previous_" + key] = val.previous_values
             else:
                 all_kwargs[key] = val
-        if not prop.initialization:
-            prop.initialization = prop.create_action(
+        if not prop.initial_sampling_rule:
+            prop.initial_sampling_rule = prop.create_action(
                 sampling_rule,
                 **{
                     k:all_kwargs[k]

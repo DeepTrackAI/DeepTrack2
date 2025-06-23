@@ -223,11 +223,11 @@ class TestProperties(unittest.TestCase):
     def test_SequentialProperty(self):
         SP = properties.SequentialProperty()
         SP.sequence_length.store(5)
-        SP.current = lambda _ID=(): SP.sequence_index() + 1
+        SP.sampling_rule = lambda _ID=(): SP.sequence_index() + 1
 
         for step in range(SP.sequence_length()):
             SP.sequence_index.store(step)
-            current_value = SP.current()
+            current_value = SP.sampling_rule()
             SP.store(current_value)
 
             self.assertEqual(SP.data[()].current_value(),
