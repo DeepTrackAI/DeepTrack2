@@ -663,12 +663,12 @@ class SequentialProperty(Property):
     
     """
 
-    initialization: Optional[Callable[..., Any]]
-    current: Optional[Callable[..., Any]]
     sequence_length: Property
     sequence_index: Property
     previous_values: Property
     previous_value: Property
+    initial_sampling_rule: Optional[Callable[..., Any]]
+    sampling_rule: Optional[Callable[..., Any]]
     action: Callable[..., Any]
 
     def __init__(
