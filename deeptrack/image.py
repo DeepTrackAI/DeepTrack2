@@ -1004,7 +1004,7 @@ class Image:
         ufunc: np.ufunc,
         method: str,
         *inputs: tuple[Any, ...],
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> Image | tuple[Image, ...] | None:
         """Enable Image objects to use NumPy ufuncs.
 
@@ -1211,7 +1211,7 @@ class Image:
     def __array__(
         self: Image | np.ndarray,
         *args: tuple[Any, ...],
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> np.ndarray:
         """Convert the Image object to a NumPy array.
 
