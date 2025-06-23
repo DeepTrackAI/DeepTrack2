@@ -602,13 +602,13 @@ class Feature(DeepTrackNode):
                     all_kwargs[key] = value
 
             if not prop.initialization:
-                prop.initialization = prop.create_action(
+                prop.sampling_rule = prop.create_action(
                     sampling_rule,
                     **{k:all_kwargs[k] for k in all_kwargs
                        if k != "previous_value"},
                 )
 
-            prop.current = prop.create_action(sampling_rule, **all_kwargs)
+            prop.sampling_rule = prop.create_action(sampling_rule, **all_kwargs)
 
         return self
 
