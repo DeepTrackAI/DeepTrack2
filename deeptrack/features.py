@@ -2251,7 +2251,7 @@ class Add(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: Add,
         value: PropertyLike[
             float
             | int
@@ -2309,7 +2309,7 @@ class Subtract(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: Subtract,
         value: PropertyLike[
             float
             | int
@@ -2367,7 +2367,7 @@ class Multiply(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: Multiply,
         value: PropertyLike[
             float
             | int
@@ -2425,7 +2425,7 @@ class Divide(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: Divide,
         value: PropertyLike[
             float
             | int
@@ -2487,7 +2487,7 @@ class FloorDivide(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: FloorDivide,
         value: PropertyLike[
             float
             | int
@@ -2545,7 +2545,7 @@ class Power(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: Power,
         value: PropertyLike[
             float
             | int
@@ -2603,7 +2603,7 @@ class LessThan(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: LessThan,
         value: PropertyLike[
             float
             | int
@@ -2661,7 +2661,7 @@ class LessThanOrEquals(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: LessThanOrEquals,
         value: PropertyLike[
             float
             | int
@@ -2722,7 +2722,7 @@ class GreaterThan(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: GreaterThan,
         value: PropertyLike[
             float
             | int
@@ -2780,7 +2780,7 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: GreaterThanOrEquals,
         value: PropertyLike[
             float
             | int
@@ -2856,7 +2856,7 @@ class Equals(ArithmeticOperationFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: Equals,
         value: PropertyLike[
             float
             | int
