@@ -580,7 +580,7 @@ class SequentialProperty(Property):
 
     Parameters
     ----------
-    initialization: Any, optional
+    initial_sampling_rule: Any, optional
         A sampling rule for the first step of the sequence (step=0). 
         Can be any value or callable that is acceptable to `Property`. 
         If not provided, the initial value is `None`.
@@ -610,10 +610,10 @@ class SequentialProperty(Property):
     previous_value: Property
         A `Property` returning the most recently stored value, or `None` 
         if there is no history yet.
-    initialization: Callable[..., Any], optional
+    initial_sampling_rule: Callable[..., Any], optional
         A function to compute the value at step=0. If `None`, the property 
         returns `None` at the first step.
-    current: Callable[..., Any]
+    sampling_rule: Callable[..., Any]
         A function to compute the value at steps >= 1. By default,  it returns 
         `None`.
     action: Callable[..., Any]
@@ -636,7 +636,7 @@ class SequentialProperty(Property):
     set_sequence_length(self, value, ID) -> None:
         Stores the value for the length of the sequence,
         analagous to SequentialProperty.sequence_length.store()        
-    set_current_step(self, value, ID) -> None:
+    set_current_index(self, value, ID) -> None:
         Stores the value for the current step of the sequence,
         analagous to SequentialProperty.current_step.store()
         
@@ -893,7 +893,7 @@ class SequentialProperty(Property):
         else:
             self.sequence_length = Property(value, _ID=_ID)
 
-    def set_current_step(
+    def set_current_index(
         self: SequentialProperty,
         value: Any,
         _ID: tuple[int, ...] = (),
