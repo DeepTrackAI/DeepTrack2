@@ -739,7 +739,7 @@ class TestFeatures(unittest.TestCase):
         input_values = [1, 2, 3, 4]
         expected_output = [11, 12, 13, 14]
         output = addition_feature(input_values)
-        self.assertEqual(output, expected_output)    
+        self.assertEqual(output, expected_output)
 
 
     def test_Add(self):
