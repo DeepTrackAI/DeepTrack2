@@ -2996,6 +2996,23 @@ class Stack(Feature):
     >>> pipeline.resolve()
     [4, 5, 1, 2, 3]
 
+    Note
+    ----
+    If a feature is called directly, its result is cached internally. This can
+    affect how it behaves when reused in chained pipelines. For exmaple:
+    >>> stack_feature = dt.Stack(value=2)
+    >>> _ = stack_feature(1)  # Evaluate the feature and cache the output
+    >>> (1 & stack_feature)()
+    [1, 1, 2]
+
+    To ensure consistent behavior when reusing a feature after calling it,
+    reset its state using instead:
+    >>> stack_feature = dt.Stack(value=2)
+    >>> _ = stack_feature(1)
+    >>> stack_feature.update()  # clear cached state
+    >>> (1 & stack_feature)()
+    [1, 2]
+
     """
 
     __distributed__: bool = False
