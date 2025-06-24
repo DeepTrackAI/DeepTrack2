@@ -416,7 +416,7 @@ class Feature(DeepTrackNode):
     def complex_dtype(self) -> np.dtype | torch.dtype:
         """The dtype of the complex numbers."""
         return xp.get_complex_dtype(self._complex_dtype)
-    
+
     @property
     def bool_dtype(self) -> np.dtype | torch.dtype:
         """The dtype of the boolean numbers."""
@@ -608,9 +608,7 @@ class Feature(DeepTrackNode):
 
         return output
 
-
     resolve = __call__
-
 
     def store_properties(
         self: Feature,
@@ -1252,7 +1250,7 @@ class Feature(DeepTrackNode):
         """Adds another value or feature using '+'.
         
         """
-    
+
         return self >> Add(other)
 
     def __radd__(
@@ -1262,7 +1260,7 @@ class Feature(DeepTrackNode):
         """Adds this feature to another value using right '+'.
         
         """
-    
+
         return Value(other) >> Add(self)
 
     def __sub__(
@@ -1272,7 +1270,7 @@ class Feature(DeepTrackNode):
         """Subtracts another value or feature using '-'.
         
         """
-        
+
         return self >> Subtract(other)
 
     def __rsub__(
@@ -1282,6 +1280,7 @@ class Feature(DeepTrackNode):
         """Subtracts this feature from another value using right '-'.
         
     """
+
         return Value(other) >> Subtract(self)
 
     def __mul__(
@@ -1291,7 +1290,7 @@ class Feature(DeepTrackNode):
         """Multiplies this feature with another value using '*'.
         
         """
-    
+
         return self >> Multiply(other)
 
     def __rmul__(
@@ -1309,9 +1308,9 @@ class Feature(DeepTrackNode):
         other: Any
         ) -> Feature:
         """Divides this feature by another value using '/'.
-        
+
         """
-        
+
         return self >> Divide(other)
 
     def __rtruediv__(
@@ -1319,9 +1318,9 @@ class Feature(DeepTrackNode):
         other: Any
     ) -> Feature:
         """Divides another value by this feature using right '/'.
-        
+
         """
-    
+
         return Value(other) >> Divide(self)
 
     def __floordiv__(
@@ -1329,9 +1328,9 @@ class Feature(DeepTrackNode):
         other: Any
     ) -> Feature:
         """Performs floor division using '//'.
-        
+
         """
-        
+
         return self >> FloorDivide(other)
 
     def __rfloordiv__(
@@ -1339,9 +1338,9 @@ class Feature(DeepTrackNode):
         other: Any
     ) -> Feature:
         """Performs right floor division using '//'.
-        
+
         """
-        
+
         return Value(other) >> FloorDivide(self)
 
     def __pow__(
@@ -1349,9 +1348,9 @@ class Feature(DeepTrackNode):
         other: Any
     ) -> Feature:
         """Raises this feature to a power using '**'.
-        
+
         """
-        
+
         return self >> Power(other)
 
     def __rpow__(
@@ -1359,16 +1358,19 @@ class Feature(DeepTrackNode):
         other: Any
     ) -> Feature:
         """Raises another value to this feature as a power using right '**'.
-        
+
         """
-        
+
         return Value(other) >> Power(self)
 
     def __gt__(
         self: Feature, 
         other: Any
     ) -> Feature:
-        """Checks if this feature is greater than another using '>'."""
+        """Checks if this feature is greater than another using '>'.
+
+        """
+
         return self >> GreaterThan(other)
 
     def __rgt__(
@@ -1377,9 +1379,9 @@ class Feature(DeepTrackNode):
     ) -> Feature:
         """Checks if another value is greater than this feature using 
         right '>'.
-        
+
         """
-        
+
         return Value(other) >> GreaterThan(self)
 
     def __lt__(
@@ -1387,18 +1389,17 @@ class Feature(DeepTrackNode):
         other: Any
     ) -> Feature:
         """Checks if this feature is less than another using '<'.
-        
+
         """
-        
+
         return self >> LessThan(other)
 
     def __rlt__(
         self: Feature, 
         other: Any
     ) -> Feature:
-        """Checks if another value is less than this feature using 
-        right '<'.
-        
+        """Checks if another value is less than this feature using right '<'.
+
         """
         
         return Value(other) >> LessThan(self)
@@ -1408,9 +1409,9 @@ class Feature(DeepTrackNode):
         other: Any
     ) -> Feature:
         """Checks if this feature is less than or equal to another using '<='.
-        
+
         """
-        
+
         return self >> LessThanOrEquals(other)
 
     def __rle__(
@@ -1419,9 +1420,9 @@ class Feature(DeepTrackNode):
     ) -> Feature:
         """Checks if another value is less than or equal to this feature using 
         right '<='.
-        
+
         """
-        
+
         return Value(other) >> LessThanOrEquals(self)
 
     def __ge__(
@@ -1430,9 +1431,9 @@ class Feature(DeepTrackNode):
     ) -> Feature:
         """Checks if this feature is greater than or equal to another 
         using '>='.
-        
+
         """
-        
+
         return self >> GreaterThanOrEquals(other)
 
     def __rge__(
@@ -1441,7 +1442,7 @@ class Feature(DeepTrackNode):
     ) -> Feature:
         """Checks if another value is greater than or equal to this feature 
         using right '>='.
-        
+
         """
 
         return Value(other) >> GreaterThanOrEquals(self)
@@ -1461,7 +1462,7 @@ class Feature(DeepTrackNode):
         other: Any,
     ) -> Feature:
         """Stacks this feature with another using '&'.
-        
+
         """
 
         return self >> Stack(other)
