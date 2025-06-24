@@ -909,26 +909,33 @@ class Feature(DeepTrackNode):
         self: Feature,
         arguments: Feature,
     ) -> Feature:
-        """Binds another feature’s properties as arguments to this feature.
+        """Bind another feature’s properties as arguments to this feature.
 
         This method allows properties of `arguments` to be dynamically linked 
-        to this feature, enabling shared configurations across multiple features.
-        It is commonly used in advanced feature pipelines.
+        to this feature, enabling shared configurations across multiple
+        features. It is commonly used in advanced feature pipelines.
 
-        See Also
-        --------
-        features.Arguments
-            A utility that helps manage and propagate feature arguments efficiently.
+        This method is often used in combination with the `Arguments` Feature,
+        which provides a utility that helps manage and propagate feature
+        arguments efficiently.
 
         Parameters
         ----------
         arguments: Feature
-            The feature whose properties will be bound as arguments to this feature.
+            The feature whose properties will be bound as arguments to this
+            feature.
 
         Returns
         -------
         Feature
             The current feature instance with bound arguments.
+
+        Examples
+        --------
+        TODO method alone
+
+        TODO use with Arguments
+
         """
 
         self.arguments = arguments
