@@ -965,6 +965,101 @@ class TestFeatures(unittest.TestCase):
             self.assertTrue(torch.equal(result[0], t1))
             self.assertTrue(torch.equal(result[1], t2))
 
+
+    def test_Arguments(self):
+        from tempfile import NamedTemporaryFile
+        from PIL import Image as PIL_Image
+        import os 
+
+        # Create a temporary test image.
+        test_image_array = (np.ones((50, 50)) * 128).astype(np.uint8)
+        with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
+            PIL_Image.fromarray(test_image_array).save(temp_png.name)
+
+        try:  # Ensure removal of test image.
+            # Test pipeline behavior when toggling `is_label`.
+            arguments = features.Arguments(is_label=False)
+            image_pipeline = (
+                features.LoadImage(path=temp_png.name)
+                >> Gaussian(sigma=(1 - arguments.is_label) * 5)
+            )
+            image_pipeline.bind_arguments(arguments)
+
+            # Test noisy image
+            image = image_pipeline()
+            self.assertGreater(image.std(), 0)  # Expecting noise around 5
+
+            # Test raw image with `is_label=True`
+            image = image_pipeline(is_label=True)
+            self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise
+
+            # Test pipeline behavior with dynamically computed sigma.
+            arguments = features.Arguments(is_label=False)
+            image_pipeline = (
+                features.LoadImage(path=temp_png.name)
+                >> Gaussian(
+                    is_label=arguments.is_label,
+                    sigma=lambda is_label: 0 if is_label else 5,
+                )
+            )
+            image_pipeline.bind_arguments(arguments)
+
+            # Test noisy image
+            image = image_pipeline()
+            self.assertGreater(image.std(), 0)  # Expecting noise around 5
+
+            # Test raw image with `is_label=True`
+            image = image_pipeline(is_label=True)
+            self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise
+
+            # Test property storage and modification in the pipeline.
+            arguments = features.Arguments(noise_max_sigma=5)
+            image_pipeline = (
+                features.LoadImage(path=temp_png.name)
+                >> Gaussian(
+                    noise_max_sigma=arguments.noise_max_sigma,
+                    sigma=lambda noise_max_sigma: 
+                        np.random.rand() * noise_max_sigma,
+                )
+            )
+            image_pipeline.bind_arguments(arguments)
+            image_pipeline.store_properties()
+
+            # Check if sigma is within expected range
+            image = image_pipeline()
+            sigma_value = image.get_property("sigma")
+            self.assertTrue(0 <= sigma_value <= 5)
+
+            # Override sigma by setting noise_max_sigma=0
+            image = image_pipeline(noise_max_sigma=0)
+            self.assertEqual(image.get_property("sigma"), 0.0)
+
+            # Test passing arguments dynamically using **arguments.properties.
+            arguments = features.Arguments(is_label=False, noise_sigma=5)
+            image_pipeline = (
+                features.LoadImage(path=temp_png.name) >>
+                Gaussian(
+                    sigma=lambda is_label, noise_sigma:
+                        0 if is_label else noise_sigma,
+                    **arguments.properties,
+                )
+            )
+            image_pipeline.bind_arguments(arguments)
+
+            # Test noisy image
+            image = image_pipeline()
+            self.assertGreater(image.std(), 0)  # Expecting noise around 5
+
+            # Test raw image with `is_label=True`
+            image = image_pipeline(is_label=True)
+            self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise
+
+        except Exception:
+            raise
+        finally:
+            if os.path.exists(temp_png.name):
+                os.remove(temp_png.name)
+
     def test_Arguments_feature_passing(self):
         """Tests that arguments are correctly passed and updated in a feature pipeline."""
 
@@ -1004,96 +1099,6 @@ class TestFeatures(unittest.TestCase):
         first_d = arguments.d.update()()
         second_d = arguments.d.update()()
         self.assertNotEqual(first_d, second_d)  # Check that values change
-
-    def test_Arguments(self):
-        from tempfile import NamedTemporaryFile
-        from PIL import Image as PIL_Image
-        import os 
-
-        """Creates a temporary test image."""
-        test_image_array = (np.ones((50, 50)) * 128).astype(np.uint8)
-        with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
-            PIL_Image.fromarray(test_image_array).save(temp_png.name)
-
-        try: 
-            """Tests pipeline behavior when toggling `is_label`."""
-            arguments = features.Arguments(is_label=False)
-            image_pipeline = (
-                features.LoadImage(path=temp_png.name) >>
-                Gaussian(sigma=(1 - arguments.is_label) * 5)
-            )
-            image_pipeline.bind_arguments(arguments)
-
-            # Test noisy image
-            image = image_pipeline()
-            self.assertGreater(image.std(), 0)  # Expecting noise around 5
-
-            # Test raw image with `is_label=True`
-            image = image_pipeline(is_label=True)
-            self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
-
-            """Tests pipeline behavior with dynamically computed sigma."""
-            arguments = features.Arguments(is_label=False)
-            image_pipeline = (
-                features.LoadImage(path=temp_png.name) >>
-                Gaussian(
-                    is_label=arguments.is_label,
-                    sigma=lambda is_label: 0 if is_label else 5
-                )
-            )
-            image_pipeline.bind_arguments(arguments)
-
-            # Test noisy image
-            image = image_pipeline()
-            self.assertGreater(image.std(), 0)  # Expecting noise around 5
-
-            # Test raw image with `is_label=True`
-            image = image_pipeline(is_label=True)
-            self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
-
-            """Tests property storage and modification in the pipeline."""
-            arguments = features.Arguments(noise_max_sigma=5)
-            image_pipeline = (
-                features.LoadImage(path=temp_png.name) >>
-                Gaussian(
-                    noise_max_sigma=arguments.noise_max_sigma,
-                    sigma=lambda noise_max_sigma: np.random.rand() * noise_max_sigma
-                )
-            )
-            image_pipeline.bind_arguments(arguments)
-            image_pipeline.store_properties()
-
-            # Check if sigma is within expected range
-            image = image_pipeline()
-            sigma_value = image.get_property("sigma")
-            self.assertTrue(0 <= sigma_value <= 5)
-
-            # Override sigma by setting noise_max_sigma=0
-            image = image_pipeline(noise_max_sigma=0)
-            self.assertEqual(image.get_property("sigma"), 0.0)
-
-            """Tests passing arguments dynamically using `**arguments.properties`."""
-            arguments = features.Arguments(is_label=False, noise_sigma=5)
-            image_pipeline = (
-                features.LoadImage(path=temp_png.name) >>
-                Gaussian(
-                    sigma=lambda is_label, noise_sigma: 0 if is_label else noise_sigma,
-                    **arguments.properties
-                )
-            )
-            image_pipeline.bind_arguments(arguments)
-
-            # Test noisy image
-            image = image_pipeline()
-            self.assertGreater(image.std(), 0)  # Expecting noise around 5
-
-            # Test raw image with `is_label=True`
-            image = image_pipeline(is_label=True)
-            self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise expected
-        
-        finally:
-            if os.path.exists(temp_png.name):
-                os.remove(temp_png.name)
 
 
     def test_Probability(self):
