@@ -159,7 +159,6 @@ class TestFeatures(unittest.TestCase):
         self.assertIsInstance(F.properties['prop_str'](), str)
         self.assertEqual(F.properties['prop_str'](), 'a')
 
-
     def test_Feature_properties_update(self):
 
         feature = features.DummyFeature(
@@ -180,7 +179,6 @@ class TestFeatures(unittest.TestCase):
         feature.update()
         prop_dict_with_update = feature.properties()
         self.assertNotEqual(prop_dict, prop_dict_with_update)
-
 
     def test_Feature_memorized(self):
 
@@ -217,7 +215,6 @@ class TestFeatures(unittest.TestCase):
 
         feature([1])
         self.assertEqual(len(list_of_inputs), 4)
-
 
     def test_Feature_dependence(self):
 
@@ -262,7 +259,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(D(), C() + B())
         self.assertEqual(E(), D() + C())
 
-
     def test_Feature_validation(self):
 
         class ConcreteFeature(features.Feature):
@@ -282,7 +278,6 @@ class TestFeatures(unittest.TestCase):
 
         feature.prop.set_value(2)  # Changes value.
         self.assertFalse(feature.is_valid())
-
 
     def test_Feature_store_properties_in_image(self):
 
@@ -310,7 +305,6 @@ class TestFeatures(unittest.TestCase):
             output_image.get_property("value_to_add", get_one=False), [1, 1]
         )
 
-
     def test_Feature_with_dummy_property(self):
 
         class FeatureConcreteClass(features.Feature):
@@ -326,7 +320,6 @@ class TestFeatures(unittest.TestCase):
         self.assertListEqual(
             output_image.get_property("dummy_property", get_one=False), ["foo"]
         )
-
 
     def test_Feature_plus_1(self):
 
@@ -349,7 +342,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(
             output_image.get_property("value_to_add", get_one=True), 1
         )
-
 
     def test_Feature_plus_2(self):
 
@@ -377,7 +369,6 @@ class TestFeatures(unittest.TestCase):
         output_image21 = feature21.resolve(input_image)
         self.assertEqual(output_image21, 1)
 
-
     def test_Feature_plus_3(self):
 
         class FeatureAppendImageOfShape(features.Feature):
@@ -398,7 +389,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(output_image[0].shape, (1, 1))
         self.assertEqual(output_image[1].shape, (2, 2))
 
-
     def test_Feature_arithmetic(self):
 
         inp = features.DummyFeature()
@@ -410,7 +400,6 @@ class TestFeatures(unittest.TestCase):
 
         input_2 = [10, 20]
         self.assertListEqual(pipeline(input_2), [-input_2[0], -input_2[1]])
-
 
     def test_Features_chain_lambda(self):
 
@@ -424,7 +413,6 @@ class TestFeatures(unittest.TestCase):
         output_image = feature()
         self.assertEqual(output_image, 2)
 
-
     def test_Feature_repeat(self):
 
         feature = features.Value(value=0) \
@@ -434,7 +422,6 @@ class TestFeatures(unittest.TestCase):
             feature.update()
             output_image = feature()
             self.assertEqual(np.array(output_image), np.array(n))
-
 
     def test_Feature_repeat_random(self):
 
@@ -450,7 +437,6 @@ class TestFeatures(unittest.TestCase):
         self.assertNotEqual(num_dups, len(values))
         self.assertEqual(output_image, sum(values))
 
-
     def test_Feature_repeat_nested(self):
 
         value = features.Value(0)
@@ -460,7 +446,6 @@ class TestFeatures(unittest.TestCase):
         feature = value >> (((add ^ 2) >> (sub ^ 5)) ^ 3)
 
         self.assertEqual(feature(), 15)
-
 
     def test_Feature_repeat_nested_random_times(self):
 
@@ -475,7 +460,6 @@ class TestFeatures(unittest.TestCase):
         for _ in range(5):
             feature.update()
             self.assertEqual(feature(), feature.feature_2.N() * 5)
-
 
     def test_Feature_repeat_nested_random_addition(self):
 
@@ -502,7 +486,6 @@ class TestFeatures(unittest.TestCase):
             np.testing.assert_almost_equal(
                 sum(added_values) - 3 * 4, feature()
             )
-
 
     def test_Feature_nested_Duplicate(self):
 
@@ -543,7 +526,6 @@ class TestFeatures(unittest.TestCase):
                     for ci, c in list(enumerate(cl))[bi * 2 : (bi + 1) * 2]:
                         self.assertIn(c - b, range(0, 100))
                         self.assertIn(dl[ci] - c, range(0, 10))
-
 
     def test_Feature_outside_dependence(self):
 
@@ -912,6 +894,7 @@ class TestFeatures(unittest.TestCase):
             operator.__and__,
         )
 
+
     def test_Arguments_feature_passing(self):
         """Tests that arguments are correctly passed and updated in a feature pipeline."""
 
@@ -951,7 +934,6 @@ class TestFeatures(unittest.TestCase):
         first_d = arguments.d.update()()
         second_d = arguments.d.update()()
         self.assertNotEqual(first_d, second_d)  # Check that values change
-
 
     def test_Arguments(self):
         from tempfile import NamedTemporaryFile
@@ -1131,7 +1113,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(a22, input[2, 2])
         self.assertEqual(a12, input[1, -1])
 
-
     def test_Slice_colon(self):
 
         input = np.arange(16).reshape((4, 4))
@@ -1153,7 +1134,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(a2.tolist(), input[:, 2].tolist())
         self.assertEqual(a3.tolist(), input[0:2, :].tolist())
 
-
     def test_Slice_ellipse(self):
 
         input = np.arange(16).reshape((4, 4))
@@ -1174,7 +1154,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(a1.tolist(), input[..., 0:4:2].tolist())
         self.assertEqual(a2.tolist(), input[:, ...].tolist())
         self.assertEqual(a3.tolist(), input[0:2, ...].tolist())
-
 
     def test_Slice_static_dynamic(self):
         image = np.arange(27).reshape((3, 3, 3))
@@ -1215,7 +1194,6 @@ class TestFeatures(unittest.TestCase):
 
         res = pipeline_with_small_input.update(input_value=10).resolve()
         self.assertEqual(res, 11)
-
 
     def test_Bind_gaussian_noise(self):
         # Define the Gaussian noise feature and bind its properties
@@ -1299,8 +1277,7 @@ class TestFeatures(unittest.TestCase):
 
         res = pipeline_with_small_input.update(input_value=10).resolve()
         self.assertEqual(res, 11)
-    
-    
+
     def test_BindUpdate_gaussian_noise(self):
         # Define the Gaussian noise feature and bind its properties
         gaussian_noise = Gaussian()
@@ -1355,7 +1332,6 @@ class TestFeatures(unittest.TestCase):
         # Test without condition met (should apply sigma=0)
         clean_image = conditional_feature.update()(image, is_noisy=False)
         self.assertEqual(clean_image.std(), 0)
-
 
     def test_ConditionalSetFeature(self):
 
@@ -1416,7 +1392,6 @@ class TestFeatures(unittest.TestCase):
         B.key.set_value("c")
         self.assertEqual(B.prop(), 3)
 
-
     def test_Lambda_dependence_twice(self):
         A = features.DummyFeature(a=1, b=2, c=3)
 
@@ -1435,7 +1410,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(B.prop2(), 4)
         B.key.set_value("c")
         self.assertEqual(B.prop2(), 6)
-
 
     def test_Lambda_dependence_other_feature(self):
 
@@ -1459,7 +1433,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(C.prop(), 8)
         B.key.set_value("c")
         self.assertEqual(C.prop(), 12)
-
 
     def test_Lambda_scaling(self):
         def scale_function_factory(scale=2):
@@ -1570,7 +1543,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(values.update().resolve(key=2), 3)
 
         self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
-
 
     def test_OneOf_tuple(self):
 
@@ -1842,7 +1814,6 @@ class TestFeatures(unittest.TestCase):
 
         self.assertLess(mean_difference, 1E-4,
                         "The upscaled image should be similar to the original within a tolerance")
-
 
 
     def test_NonOverlapping_resample_volume_position(self):
