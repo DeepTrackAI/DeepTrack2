@@ -3085,17 +3085,17 @@ class Stack(Feature):
 class Arguments(Feature):
     """A convenience container for pipeline arguments.
 
-    The `Arguments` feature allows dynamic control of pipeline behavior by 
-    providing a container for arguments that can be modified or overridden at 
-    runtime. This is particularly useful when working with parameterized 
-    pipelines, such as toggling behaviors based on whether an image is a label 
+    The `Arguments` feature allows dynamic control of pipeline behavior by
+    providing a container for arguments that can be modified or overridden at
+    runtime. This is particularly useful when working with parametrized
+    pipelines, such as toggling behaviors based on whether an image is a label
     or a raw input.
 
     Methods
     -------
-    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
-        Passes the input image through unchanged, while allowing for property 
-        overrides.
+    `get(image: Any, **kwargs: Any) -> Any`
+        It passes the input image through unchanged, while allowing for
+        property overrides.
 
     Examples
     --------
@@ -3106,8 +3106,8 @@ class Arguments(Feature):
     >>> import PIL, tempfile
     >>>
     >>> test_image_array = (np.ones((50, 50)) * 128).astype(np.uint8)
-    >>> temp_png = NamedTemporaryFile(suffix=".png", delete=False)
-    >>> PIL_Image.fromarray(test_image_array).save(temp_png.name)
+    >>> temp_png = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    >>> PIL.Image.fromarray(test_image_array).save(temp_png.name)
 
     A typical use-case is:
     >>> arguments = dt.Arguments(is_label=False)
@@ -3137,8 +3137,8 @@ class Arguments(Feature):
     >>> image_pipeline = (
     ...     dt.LoadImage(path=temp_png.name)
     ...     >> dt.Gaussian(
-    ...         is_label=arguments.is_label,
-    ...         sigma=lambda is_label: 1 if is_label else 0,
+    ...         local_is_label=arguments.is_label,
+    ...         sigma=lambda local_is_label: 1 if local_is_label else 0,
     ...     )
     ... )
     >>> image_pipeline.bind_arguments(arguments)
@@ -3154,36 +3154,36 @@ class Arguments(Feature):
     ...     )
     ... )
     >>> image_pipeline.bind_arguments(arguments)
-    >>> image_pipeline.store_properties()
-
+    >>> image_pipeline.store_properties()  # Store image properties
+    >>>
     >>> image = image_pipeline()
-    >>> print(image.get_property("sigma"))
-    1.1838819055669947
+    >>> image.std(), image.get_property("sigma")
+    (0.8464173007136401, 0.8423390304699889)
 
-    >>> image = image_pipeline(noise_max_sigma=0)
-    >>> print(image.get_property("sigma"))
-    0.0
+    >>> image = image_pipeline(noise_max=0)
+    >>> image.std(), image.get_property("sigma")
+    (0.0, 0.0)
 
     As with any feature, all arguments can be passed by deconstructing the 
     properties dict:
     >>> arguments = dt.Arguments(is_label=False, noise_sigma=5)
     >>> image_pipeline = (
-    ...     dt.LoadImage(path=temp_png.name) >>
-    ...     dt.Gaussian(
+    ...     dt.LoadImage(path=temp_png.name)
+    ...     >> dt.Gaussian(
     ...         sigma=lambda is_label, noise_sigma: (
     ...             0 if is_label else noise_sigma
-    ...         )
-    ...         **arguments.properties
+    ...         ),
+    ...         **arguments.properties,
     ...     )
     ... )
     >>> image_pipeline.bind_arguments(arguments)
-
-    >>> image = image_pipeline()  # Image with added noise.
-    >>> print(image.std())
+    >>>
+    >>> image = image_pipeline()  # Image with added noise
+    >>> image.std()
     5.002151761964336
 
-    >>> image = image_pipeline(is_label=True)  # Raw image with no noise.
-    >>> print(image.std())
+    >>> image = image_pipeline(is_label=True)  # Raw image with no noise
+    >>> image.std()
     0.0
 
     """
@@ -3191,10 +3191,10 @@ class Arguments(Feature):
     def get(
         self: Feature,
         image: Any,
-        **kwargs: dict[str, Any]
+        **kwargs: Any,
     ) -> Any:
 
-        """Process the input image and allow property overrides.
+        """Return the input image and allow property overrides.
 
         This method does not modify the input image but provides a mechanism
         for overriding arguments dynamically during pipeline execution.
@@ -3318,7 +3318,7 @@ class Probability(StructuralFeature):
             otherwise, it is the unchanged input image.
 
         """
-                
+      
         if random_number < probability:
             image = self.feature.resolve(image, **kwargs)
 
