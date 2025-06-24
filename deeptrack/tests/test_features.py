@@ -888,8 +888,16 @@ class TestFeatures(unittest.TestCase):
                 {"value": np.random.rand(10, 10)},
             ],
             lambda a, b: [
-                *(a["value"] if isinstance(a["value"], list) else [a["value"]]),
-                *(b["value"] if isinstance(b["value"], list) else [b["value"]]),
+                *(
+                    a["value"]
+                    if isinstance(a["value"], list)
+                    else [a["value"]]
+                ),
+                *(
+                    b["value"]
+                    if isinstance(b["value"], list)
+                    else [b["value"]]
+                ),
             ],
             operator.__and__,
         )
