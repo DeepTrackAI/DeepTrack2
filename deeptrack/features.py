@@ -226,8 +226,7 @@ class Feature(DeepTrackNode):
 
     Parameters
     ----------
-    _input: np.ndarray or list of np.ndarray or Image or list of Image, 
-        optional.
+    _input: np.ndarray or Image or list[np.ndarray or Image], optional.
         A list of np.ndarray or `DeepTrackNode` objects or a single np.ndarray 
         or an `Image` object representing the input data for the feature. This
         parameter specifies what the feature will process. If left empty, no 
@@ -502,7 +501,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        image: np.ndarray or list of np.ndarray or Image or list of Images
+        image: np.ndarray or Image or list[np.ndarray or Image]
             The image or list of images to transform.
         **kwargs: Any
             The current value of all properties in `properties`, as well as any 
@@ -510,7 +509,7 @@ class Feature(DeepTrackNode):
 
         Returns
         -------
-        Image or list of Images
+        Image or list[Image]
             The transformed image or list of images.
 
         Raises
@@ -550,7 +549,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        image_list: np.ndarrray or list[np.ndarrray] or Image or list of Images, optional
+        image_list: np.ndarrray or Image or list[np.ndarrray or Image], optional
             The input to the feature or pipeline. If `None`, the feature uses 
             previously set input values or propagates properties.
         **kwargs: Any
@@ -753,7 +752,7 @@ class Feature(DeepTrackNode):
 
         Returns
         -------
-        tuple or list of Images
+        tuple or list[Image]
             A tuple of stacked arrays (if the outputs are NumPy arrays or 
             torch tensors) or a list of images if the outputs are not 
             stackable.
@@ -791,7 +790,7 @@ class Feature(DeepTrackNode):
 
         Returns
         -------
-        Image or list of Images
+        Image or list[Image]
             The resolved image or list of resolved images.
 
         """
@@ -989,7 +988,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        input_image: np.ndarray or list np.ndarray or Image or list of Image, optional
+        input_image: np.ndarray or Image or list[np.ndarray or Image], optional
             The input image or list of images passed as an argument to the `resolve` 
             call. If `None`, uses previously set input values or propagates properties.
         resolve_kwargs: dict, optional
@@ -1834,7 +1833,7 @@ class Chain(StructuralFeature):
 
         Parameters
         ----------
-        image: np.ndarray or list np.ndarray or Image or list of Image
+        image: np.ndarray or Image or list[np.ndarray or Image]
             The input data, which can be an `Image` or a list of `Image` objects, 
             to transform sequentially.
         _ID: tuple of int, optional
@@ -1847,7 +1846,7 @@ class Chain(StructuralFeature):
 
         Returns
         -------
-        Image or list of Images
+        Image or list[Image]
             The final output after `feature_1` and then `feature_2` have processed 
             the input.
 
@@ -1970,7 +1969,7 @@ class Value(Feature):
 
     Methods
     -------
-    `get(image: Any, value: float, **kwargs: dict[str, Any]) -> float`
+    `get(image: Any, value: float, **kwargs: Any) -> float`
         Returns the stored value, ignoring the input image.
 
     Examples
@@ -2097,7 +2096,7 @@ class ArithmeticOperationFeature(Feature):
     op: Callable[[Any, Any], Any]
         The arithmetic operation to apply, such as a built-in operator 
         (`operator.add`, `operator.mul`) or a custom callable.
-    value: float or int or list of float or int, optional
+    value: float or int or list[float or int], optional
         The second operand for the operation. It defaults to 0. If a list is 
         provided, the operation will apply element-wise.
     **kwargs: Any
@@ -2111,7 +2110,7 @@ class ArithmeticOperationFeature(Feature):
 
     Methods
     -------
-    `get(image: Any | list of Any, value: float | int | list[float] | int, **kwargs: Any) -> list[Any]`
+    `get(image: Any or list[Any], value: float or int or list[float or int], **kwargs: Any) -> list[Any]`
         Apply the arithmetic operation element-wise to the input data.
 
     Examples
@@ -2153,7 +2152,7 @@ class ArithmeticOperationFeature(Feature):
             The arithmetic operation to apply, such as `operator.add`,
             `operator.mul`, or any custom callable that takes two arguments and
             returns a single output value.
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The second operand(s) for the operation. If a list is provided, the 
             operation is applied element-wise. It defaults to 0.
         **kwargs: Any
@@ -2176,10 +2175,10 @@ class ArithmeticOperationFeature(Feature):
 
         Parameters
         ----------
-        image: Any or list of Any
+        image: Any or list[Any]
             The input data, either a single value or a list of values, to be 
             transformed by the arithmetic operation.
-        value: float or int or array, or list of float or int or array
+        value: float or int or array or list[float or int or array]
             The second operand(s) for the operation. If a single value is 
             provided, it is broadcast to match the input size. If a list is 
             provided, it will be cycled to match the length of the input list.
@@ -2190,7 +2189,7 @@ class ArithmeticOperationFeature(Feature):
 
         Returns
         -------
-        list of Any
+        list[Any]
             A list containing the results of applying the operation to the 
             input data element-wise.
             
@@ -2217,7 +2216,7 @@ class Add(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+    value: PropertyLike[int or float or array or list[int or floar or array]], optional
         The value to add to the input. It defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -2264,7 +2263,7 @@ class Add(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The value to add to the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature`.
@@ -2281,7 +2280,7 @@ class Subtract(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+    value: PropertyLike[int or float or array or list[int or floar or array]], optional
         The value to subtract from the input. It defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -2328,7 +2327,7 @@ class Subtract(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The value to subtract from the input. it defaults to 0.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature`.
@@ -2345,7 +2344,7 @@ class Multiply(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+    value: PropertyLike[int or float or array or list[int or floar or array]], optional
         The value to multiply the input. It defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -2392,7 +2391,7 @@ class Multiply(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The value to multiply the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
@@ -2409,7 +2408,7 @@ class Divide(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+    value: PropertyLike[int or float or array or list[int or floar or array]], optional
         The value to divide the input. It defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -2456,7 +2455,7 @@ class Divide(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The value to divide the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
@@ -2477,7 +2476,7 @@ class FloorDivide(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+    value: PropertyLike[int or float or array or list[int or floar or array]], optional
         The value to floor-divide the input. It defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -2524,7 +2523,7 @@ class FloorDivide(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The value to fllor-divide the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
@@ -2541,7 +2540,7 @@ class Power(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+    value: PropertyLike[int or float or array or list[int or floar or array]], optional
         The value to take the power of the input. It defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -2588,7 +2587,7 @@ class Power(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The value to take the power of the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
@@ -2605,7 +2604,7 @@ class LessThan(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+    value: PropertyLike[int or float or array or list[int or floar or array]], optional
         The value to compare (<) with the input. It defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -2652,7 +2651,7 @@ class LessThan(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The value to compare (<) with the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
@@ -2669,7 +2668,7 @@ class LessThanOrEquals(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+    value: PropertyLike[int or float or array or list[int or floar or array]], optional
         The value to compare (<=) with the input. It defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -2716,7 +2715,7 @@ class LessThanOrEquals(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The value to compare (<=) with the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
@@ -2736,7 +2735,7 @@ class GreaterThan(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+    value: PropertyLike[int or float or array or list[int or floar or array]], optional
         The value to compare (>) with the input. It defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -2783,7 +2782,7 @@ class GreaterThan(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The value to compare (>) with the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
@@ -2800,7 +2799,7 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+    value: PropertyLike[int or float or array or list[int or floar or array]], optional
         The value to compare (<=) with the input. It defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -2847,7 +2846,7 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The value to compare (>=) with the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
@@ -2878,7 +2877,7 @@ class Equals(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+    value: PropertyLike[int or float or array or list[int or floar or array]], optional
         The value to compare (==) with the input. It defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -2931,7 +2930,7 @@ class Equals(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array, or list of float or int or array], optional
+        value: PropertyLike[float or int or array or list[float or int or array]], optional
             The value to compare with the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
@@ -2974,7 +2973,7 @@ class Stack(Feature):
 
     Methods
     -------
-    `get(image: Any, value: Any, **kwargs: dict[str, Any]) -> list[Any]`
+    `get(image: Any, value: Any, **kwargs: Any) -> list[Any]`
         Concatenate the input with the value.
 
     Examples
@@ -3445,7 +3444,7 @@ class Combine(StructuralFeature):
 
     Parameters
     ----------
-    features: list of Features
+    features: list[Feature]
         A list of features to combine. Each feature will be resolved in the 
         order they appear in the list.
     **kwargs: Any, optional
@@ -3489,7 +3488,7 @@ class Combine(StructuralFeature):
 
         Parameters
         ----------
-        features: list of Features
+        features: list[Feature]
             A list of features to combine. Each feature is added as a 
             dependency to ensure proper execution in the computation graph.
         **kwargs: Any, optional
@@ -4361,7 +4360,7 @@ class Merge(Feature):
 
         Parameters
         ----------
-        list_of_images: list[np.ndarray] or list[Image]
+        list_of_images: list[np.ndarray or Image]
             A list of images to be processed by the function.
         function: Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]]
             The function that processes the list of images and returns either:
@@ -4808,7 +4807,7 @@ class LoadImage(Feature):
 
         Parameters
         ----------
-        path: str or list of str
+        path: str or list[str]
             The file path(s) to the image(s) to be loaded. A single string 
             loads one image, while a list of paths loads multiple images.
         load_options: dict of str to Any, optional
