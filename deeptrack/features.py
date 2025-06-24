@@ -147,9 +147,9 @@ from deeptrack.types import ArrayLike, PropertyLike
 
 __all__ = [
     "Feature",  # TODO
-    "StructuralFeature",  # TODO
-    "Chain",  # TODO
-    "Branch",  # TODO
+    "StructuralFeature",
+    "Chain",
+    "Branch",
     "DummyFeature",
     "Value",
     "ArithmeticOperationFeature",
@@ -1709,8 +1709,7 @@ def propagate_data_to_dependencies(feature: Feature, **kwargs: dict[str, Any]) -
 
 
 class StructuralFeature(Feature):
-    """
-    Provides the structure of a feature set without input transformations.
+    """Provide the structure of a feature set without input transformations.
 
     A `StructuralFeature` does not modify the input data or introduce new
     properties. Instead, it serves as a logical and organizational tool for
@@ -1743,9 +1742,13 @@ class StructuralFeature(Feature):
 class Chain(StructuralFeature):
     """Resolve two features sequentially.
 
-    This feature applies two features sequentially, passing the output of the 
-    first feature as the input to the second. It enables building feature 
-    chains that execute complex transformations by combining simple operations.
+    Applies two features sequentially: the output of `feature_1` is passed as
+    input to `feature_2`. This allows combining simple operations into complex
+    pipelines.
+
+    This is equivalent to using the `>>` operator:
+
+    >>> dt.Chain(A, B) ≡ A >> B
 
     Parameters
     ----------
@@ -1760,45 +1763,37 @@ class Chain(StructuralFeature):
 
     Methods
     -------
-    `get(image: np.ndarray | list[np.ndarray] | Image | list[Image], _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Image | list[Image]`
+    `get(image: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any | list[Any]`
         Apply the two features in sequence on the given input image.
-
-    Notes
-    -----
-    This feature is used to combine simple operations into a pipeline without the 
-    need for explicit function chaining. It is syntactic sugar for creating 
-    sequential feature pipelines.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create a feature chain where the first feature adds a constant offset, and 
     the second feature multiplies the result by a constant:
-    
     >>> A = dt.Add(value=10)
     >>> M = dt.Multiply(value=0.5)
-
-    Chain the features:
-    >>> chain = A >> M  
+    >>>
+    >>> chain = A >> M
 
     Equivalent to: 
     >>> chain = dt.Chain(A, M)
 
     Create a dummy image:
-    >>> dummy_image = np.ones((2, 4))
+    >>> import numpy as np
+    >>>
+    >>> dummy_image = np.zeros((2, 4))
 
     Apply the chained features:
-    >>> transformed_image = chain(dummy_image)
-    >>> print(transformed_image)
-    [[5.5 5.5 5.5 5.5]
-    [5.5 5.5 5.5 5.5]]
+    >>> chain(dummy_image)
+    array([[5., 5., 5., 5.],
+        [5., 5., 5., 5.]])
 
     """
 
     def __init__(
-        self: Feature,
+        self: Chain,
         feature_1: Feature,
         feature_2: Feature,
         **kwargs: Any,
@@ -1815,10 +1810,10 @@ class Chain(StructuralFeature):
         feature_1: Feature
             The first feature to be applied.
         feature_2: Feature
-            The second feature, applied after `feature_1`.
-        **kwargs: Any, optional
-            Additional keyword arguments passed to the parent constructor (e.g., 
-            name, properties).
+            The second feature, applied to the result of `feature_1`.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent constructor
+            (e.g., name, properties).
 
         """
 
@@ -1829,33 +1824,34 @@ class Chain(StructuralFeature):
 
     def get(
         self: Feature,
-        image: np.ndarray | list[np.ndarray] | Image | list[Image],
+        image: Any | list[Any],
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
-    ) -> Image | list[Image]:
+    ) -> Any | list[Any]:
         """Apply the two features sequentially to the given input image(s).
 
-        This method first applies `feature_1` to the input image(s) and then passes 
-        the output through `feature_2`.
+        This method first applies `feature_1` to the input image(s) and then
+        passes the output through `feature_2`.
 
         Parameters
         ----------
-        image: np.ndarray or Image or list[np.ndarray or Image]
-            The input data, which can be an `Image` or a list of `Image` objects, 
-            to transform sequentially.
-        _ID: tuple of int, optional
+        image: Any or list[Any]
+            The input data to transform sequentially. Most typically, this is
+            a NumPy array, a PyTorch tensor, or an Image, or a list of the
+            same.
+        _ID: tuple[int, ...], optional
             A unique identifier for caching or parallel execution. It defaults
             to an empty tuple.
         **kwargs: Any
-            Additional parameters passed to or sampled by the features. These are 
-            generally unused here, as each sub-feature fetches its required properties 
-            internally.
+            Additional parameters passed to or sampled by the features. These
+            are generally unused here, as each sub-feature fetches its required
+            properties internally.
 
         Returns
         -------
-        Image or list[Image]
-            The final output after `feature_1` and then `feature_2` have processed 
-            the input.
+        Any or list[Any]
+            The final output after `feature_1` and then `feature_2` have
+            processed the input.
 
         """
 
@@ -2961,7 +2957,7 @@ class Stack(Feature):
     it is automatically converted into a list to maintain consistency in the 
     output format.
 
-    If B is a feature, `Stack` can be visualized as::
+    If B is a feature, `Stack` can be visualized as:
 
     >>>   A >> Stack(B) = [*A(), *B()]
 
