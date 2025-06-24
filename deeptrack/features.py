@@ -168,7 +168,7 @@ __all__ = [
     "Equals",
     "Equal",
     "Stack",
-    "Arguments",  # TODO
+    "Arguments",
     "Probability",  # TODO
     "Repeat",  # TODO
     "Combine",  # TODO
@@ -1709,36 +1709,35 @@ def propagate_data_to_dependencies(feature: Feature, **kwargs: dict[str, Any]) -
 
 
 class StructuralFeature(Feature):
-    """Provides the structure of a feature set without input transformations.
+    """
+    Provides the structure of a feature set without input transformations.
 
-    A `StructuralFeature` does not directly transform the input data or add new 
-    properties. Instead, it is commonly used as a logical or organizational 
-    tool to structure and manage feature sets within a pipeline.
+    A `StructuralFeature` does not modify the input data or introduce new
+    properties. Instead, it serves as a logical and organizational tool for
+    grouping, chaining, or structuring pipelines.
 
-    Since `StructuralFeature` does not override the `__init__` or `get` 
-    methods, it inherits the behavior of the base `Feature` class.
+    This feature is typically used to:
+    - group or chain sub-features (e.g., `Chain`)
+    - apply conditional or sequential logic (e.g., `Probability`)
+    - organize pipelines without affecting data flow (e.g., `Combine`)
+
+    `StructuralFeature` inherits all behavior from `Feature`, without
+    overriding `__init__` or `get`.
 
     Attributes
     ----------
-    __property_verbosity__: int
-        Controls whether this feature’s properties are included in the output 
-        image’s property list. A value of `2` means that this feature’s 
-        properties are not included.
-    __distributed__: bool
-        Determines whether the feature’s `get` method is applied to each 
-        element in the input list (`__distributed__ = True`) or to the entire 
-        list as a whole (`__distributed__ = False`).
-
-    Notes
-    -----
-    Structural features are typically used for tasks like grouping or chaining 
-    features, applying sequential or conditional logic, or structuring 
-    pipelines without directly modifying the data.
+    __property_verbosity__ : int
+        Controls whether this feature's properties appear in the output image's
+        property list. A value of `2` hides them from output.
+    __distributed__ : bool
+        If `True`, applies `get` to each element in a list individually.
+        If `False`, processes the entire list as a single unit. Defaults to
+        `False`.
 
     """
 
-    __property_verbosity__: int = 2  # Hide properties from logs or output.
-    __distributed__: bool = False  # Process the entire image list in one call.
+    __property_verbosity__: int = 2  # Hide properties from logs or output
+    __distributed__: bool = False  # Process the entire image list in one call
 
 
 class Chain(StructuralFeature):
