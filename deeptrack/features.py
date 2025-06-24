@@ -2983,21 +2983,25 @@ class Stack(Feature):
 
     Start by creating a pipeline using `Stack`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Stack(value=[4, 5])
-    >>> print(pipeline.resolve())
+    >>> pipeline.resolve()
     [1, 2, 3, 4, 5]
 
     Equivalently, this pipeline can be created using:
     >>> pipeline = dt.Value([1, 2, 3]) & [4, 5]
+    >>> pipeline.resolve()
+    [1, 2, 3, 4, 5]
 
     Or:
-    >>> pipeline = [4, 5] & dt.Value([1, 2, 3])  # Different result.
+    >>> pipeline = [4, 5] & dt.Value([1, 2, 3])  # Different result
+    >>> pipeline.resolve()
+    [4, 5, 1, 2, 3]
 
     """
 
     __distributed__: bool = False
 
     def __init__(
-        self: Feature,
+        self: Stack,
         value: PropertyLike[Any],
         **kwargs: Any,
     ):
@@ -3015,7 +3019,7 @@ class Stack(Feature):
         super().__init__(value=value, **kwargs)
 
     def get(
-        self: Feature,
+        self: Stack,
         image: Any | list[Any],
         value: Any | list[Any],
         **kwargs: Any,
