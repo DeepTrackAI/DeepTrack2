@@ -564,7 +564,8 @@ class TestFeatures(unittest.TestCase):
         class Multiplication(features.Feature):
             """Simple feature that multiplies by a constant."""
             def get(self, image, **kwargs):
-                # 'multiplier' is a property set via self.properties (default: 1).
+                # 'multiplier' is a property set via self.properties
+                # (default: 1).
                 return image * self.properties.get("multiplier", 1)()
 
         A = Addition(addend=10)
