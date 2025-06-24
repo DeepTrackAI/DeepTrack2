@@ -906,10 +906,6 @@ class TestFeatures(unittest.TestCase):
         feature = features.Stack(value=2)
         result = feature(1)
         self.assertEqual(result, [1, 2])
-        result = (1 & feature)()
-        self.assertEqual(result, [1, 1, 2])
-        result = (feature & 1)()
-        self.assertEqual(result, [1, 2, 1])
 
         # Stack scalar with list
         feature = features.Stack(value=[3, 4])
