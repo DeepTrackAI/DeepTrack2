@@ -153,20 +153,20 @@ __all__ = [
     "DummyFeature",
     "Value",
     "ArithmeticOperationFeature",
-    "Add",  # TODO
-    "Subtract",  # TODO
-    "Multiply",  # TODO
-    "Divide",  # TODO
-    "FloorDivide",  # TODO
-    "Power",  # TODO
-    "LessThan",  # TODO
-    "LessThanOrEquals",  # TODO
-    "LessThanOrEqual",  # TODO
-    "GreaterThan",  # TODO
-    "GreaterThanOrEquals",  # TODO
-    "GreaterThanOrEqual",  # TODO
-    "Equals",  # TODO
-    "Equal",  # TODO
+    "Add",
+    "Subtract",
+    "Multiply",
+    "Divide",
+    "FloorDivide",
+    "Power",
+    "LessThan",
+    "LessThanOrEquals",
+    "LessThanOrEqual",
+    "GreaterThan",
+    "GreaterThanOrEquals",
+    "GreaterThanOrEqual",
+    "Equals",
+    "Equal",
     "Stack",  # TODO
     "Arguments",  # TODO
     "Probability",  # TODO
@@ -2297,14 +2297,20 @@ class Subtract(ArithmeticOperationFeature):
     
     Alternatively, the pipeline can be created using operator overloading:
     >>> pipeline = dt.Value([1, 2, 3]) - 2
+    >>> pipeline.resolve()
+    [-1, 0, 1]
     
     Or:
     >>> pipeline = -2 + dt.Value([1, 2, 3])
+    >>> pipeline.resolve()
+    [-1, 0, 1]
     
     Or, more explicitly:
     >>> input_value = dt.Value([1, 2, 3])
     >>> sub_feature = dt.Subtract(value=2)
     >>> pipeline = sub_feature(input_value)
+    >>> pipeline.resolve()
+    [-1, 0, 1]
 
     """
 
@@ -2355,14 +2361,20 @@ class Multiply(ArithmeticOperationFeature):
     
     Alternatively, this pipeline can be created using:
     >>> pipeline = dt.Value([1, 2, 3]) * 5
+    >>> pipeline.resolve()
+    [5, 10, 15]
 
     Or:
     >>> pipeline = 5 * dt.Value([1, 2, 3])
+    >>> pipeline.resolve()
+    [5, 10, 15]
     
     Or, more explicitly:
     >>> input_value = dt.Value([1, 2, 3])
     >>> mul_feature = dt.Multiply(value=5)
     >>> pipeline = mul_feature(input_value)
+    >>> pipeline.resolve()
+    [5, 10, 15]
 
     """
 
@@ -2380,7 +2392,7 @@ class Multiply(ArithmeticOperationFeature):
 
         Parameters
         ----------
-        value: PropertyLike[float], optional
+        value: PropertyLike[float or int or array, or list of float or int or array], optional
             The value to multiply the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
@@ -2407,20 +2419,26 @@ class Divide(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Start by creating a pipeline using `Divide`:
-    >>> pipeline = Value([1, 2, 3]) >> Divide(value=5)
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Divide(value=5)
     >>> pipeline.resolve()
     [0.2 0.4 0.6]
     
     Equivalently, this pipeline can be created using:
-    >>> pipeline = Value([1, 2, 3]) / 5
+    >>> pipeline = dt.Value([1, 2, 3]) / 5
+    >>> pipeline.resolve()
+    [0.2 0.4 0.6]
     
     Which is not equivalent to:
-    >>> pipeline = 5 / Value([1, 2, 3])  # Different result.
+    >>> pipeline = 5 / dt.Value([1, 2, 3])  # Different result
+    >>> pipeline.resolve()
+    [5.0, 2.5, 1.6666666666666667]
     
     Or, more explicitly:
-    >>> input_value = Value([1, 2, 3])
-    >>> truediv_feature = Divide(value=5)
+    >>> input_value = dt.Value([1, 2, 3])
+    >>> truediv_feature = dt.Divide(value=5)
     >>> pipeline = truediv_feature(input_value)
+    >>> pipeline.resolve()
+    [0.2 0.4 0.6]
 
     """
 
@@ -2471,18 +2489,24 @@ class FloorDivide(ArithmeticOperationFeature):
     Start by creating a pipeline using `FloorDivide`:
     >>> pipeline = dt.Value([-3, 3, 6]) >> dt.FloorDivide(value=5)
     >>> pipeline.resolve()
-    [0.2 0.4 0.6]
+    [-1, 0, 1]
     
     Equivalently, this pipeline can be created using:
     >>> pipeline = dt.Value([-3, 3, 6]) // 5
+    >>> pipeline.resolve()
+    [-1, 0, 1]
     
     Which is not equivalent to:
-    >>> pipeline = 5 // dt.Value([-3, 3, 6])  # Different result.
+    >>> pipeline = 5 // dt.Value([-3, 3, 6])  # Different result
+    >>> pipeline.resolve()
+    [-2, 1, 0]
     
     Or, more explicitly:
     >>> input_value = dt.Value([-3, 3, 6])
     >>> floordiv_feature = dt.FloorDivide(value=5)
-    >>> pipeline = feature(floordiv_input_value)
+    >>> pipeline = floordiv_feature(input_value)
+    >>> pipeline.resolve()
+    [-1, 0, 1]
 
     """
 
@@ -2533,14 +2557,20 @@ class Power(ArithmeticOperationFeature):
     
     Equivalently, this pipeline can be created using:
     >>> pipeline = dt.Value([1, 2, 3]) ** 3
+    >>> pipeline.resolve()
+    [1, 8, 27]
     
     Which is not equivalent to:
-    >>> pipeline = 3 ** dt.Value([1, 2, 3])  # Different result.
+    >>> pipeline = 3 ** dt.Value([1, 2, 3])  # Different result
+    >>> pipeline.resolve()
+    [3, 9, 27]
     
     Or, more explicitly:
     >>> input_value = dt.Value([1, 2, 3])
-    >>> pow_feature = Power(value=3)
+    >>> pow_feature = dt.Power(value=3)
     >>> pipeline = pow_feature(input_value)
+    >>> pipeline.resolve()
+    [1, 8, 27]
 
     """
 
@@ -2587,18 +2617,24 @@ class LessThan(ArithmeticOperationFeature):
     Start by creating a pipeline using `LessThan`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThan(value=2)
     >>> pipeline.resolve()
-    [True False False]
+    [True, False, False]
     
     Equivalently, this pipeline can be created using:
     >>> pipeline = dt.Value([1, 2, 3]) < 2
+    >>> pipeline.resolve()
+    [True, False, False]
     
     Which is not equivalent to:
-    >>> pipeline = 2 < dt.Value([1, 2, 3])  # Different result.
+    >>> pipeline = 2 < dt.Value([1, 2, 3])  # Different result
+    >>> pipeline.resolve()
+    [False, False, True]
     
     Or, more explicitly:
     >>> input_value = dt.Value([1, 2, 3])
     >>> lt_feature = dt.LessThan(value=2)
     >>> pipeline = lt_feature(input_value)
+    >>> pipeline.resolve()
+    [True, False, False]
 
     """
 
@@ -2645,18 +2681,24 @@ class LessThanOrEquals(ArithmeticOperationFeature):
     Start by creating a pipeline using `LessThanOrEquals`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThanOrEquals(value=2)
     >>> pipeline.resolve()
-    [True  True False]
+    [True, True, False]
     
     Equivalently, this pipeline can be created using:
     >>> pipeline = dt.Value([1, 2, 3]) <= 2
+    >>> pipeline.resolve()
+    [True, True, False]
     
     Which is not equivalent to:
-    >>> pipeline = 2 <= dt.Value([1, 2, 3])  # Different result.
+    >>> pipeline = 2 <= dt.Value([1, 2, 3])  # Different result
+    >>> pipeline.resolve()
+    [False, True, True]
     
     Or, more explicitly:
     >>> input_value = dt.Value([1, 2, 3])
     >>> le_feature = dt.LessThanOrEquals(value=2)
     >>> pipeline = le_feature(input_value)
+    >>> pipeline.resolve()
+    [True, True, False]
 
     """
 
@@ -2706,18 +2748,24 @@ class GreaterThan(ArithmeticOperationFeature):
     Start by creating a pipeline using `GreaterThan`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThan(value=2)
     >>> pipeline.resolve()
-    [False False  True]
+    [False, False, True]
     
     Equivalently, this pipeline can be created using:
     >>> pipeline = dt.Value([1, 2, 3]) > 2
+    >>> pipeline.resolve()
+    [False, False, True]
 
     Which is not equivalent to:
-    >>> pipeline = 2 > dt.Value([1, 2, 3])  # Different result.
+    >>> pipeline = 2 > dt.Value([1, 2, 3])  # Different result
+    >>> pipeline.resolve()
+    [True, False, False]
     
     Or, most explicitly:
     >>> input_value = dt.Value([1, 2, 3])
     >>> gt_feature = dt.GreaterThan(value=2)
     >>> pipeline = gt_feature(input_value)
+    >>> pipeline.resolve()
+    [False, False, True]
 
     """
 
@@ -2764,18 +2812,24 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
     Start by creating a pipeline using `GreaterThanOrEquals`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThanOrEquals(value=2)
     >>> pipeline.resolve()
-    [False  True  True]
+    [False, True, True]
     
     Equivalently, this pipeline can be created using:
     >>> pipeline = dt.Value([1, 2, 3]) >= 2
+    >>> pipeline.resolve()
+    [False, True, True]
 
     Which is not equivalent to:
-    >>> pipeline = 2 >= dt.Value([1, 2, 3])  # Different result.
+    >>> pipeline = 2 >= dt.Value([1, 2, 3])  # Different result
+    >>> pipeline.resolve()
+    [True, True, False]
     
     Or, more explicitly:
     >>> input_value = dt.Value([1, 2, 3])
     >>> ge_feature = dt.GreaterThanOrEquals(value=2)
     >>> pipeline = ge_feature(input_value)
+    >>> pipeline.resolve()
+    [False, True, True]
 
     """
 
@@ -2809,15 +2863,8 @@ GreaterThanOrEqual = GreaterThanOrEquals
 class Equals(ArithmeticOperationFeature):
     """Determine whether input is equal to a given value.
 
-    This feature performs element-wise comparison (==) between the input and a
+    This feature performs element-wise comparison between the input and a
     specified value.
-
-    Parameters
-    ----------
-    value: PropertyLike[int or float or array, or list of int or floar or array], optional
-        The value to compare (==) with the input. It defaults to 0.
-    **kwargs: Any
-        Additional keyword arguments passed to the parent constructor.
 
     Notes
     -----
@@ -2828,6 +2875,13 @@ class Equals(ArithmeticOperationFeature):
       expressions involving `Feature` instances but not for comparisons 
       involving regular Python objects.
     - Always use `>>` to apply `Equals` correctly in a feature chain.
+
+    Parameters
+    ----------
+    value: PropertyLike[int or float or array, or list of int or floar or array], optional
+        The value to compare (==) with the input. It defaults to 0.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent constructor.
     
     Examples
     --------
@@ -2836,11 +2890,19 @@ class Equals(ArithmeticOperationFeature):
     Start by creating a pipeline using `Equals`:
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Equals(value=2)
     >>> pipeline.resolve()
-    [False  True  False]
+    [False, True, False]
     
-    This is the **only correct way** to apply `Equals` in a feature pipeline.
+    Or:
+    >>> input_values = [1, 2, 3]
+    >>> eq_feature = dt.Equals(value=2)
+    >>> output_values = eq_feature(input_values)
+    >>> print(output_values)
+    [False, True, False]    
     
-    ### Incorrect Approaches
+    These are the **only correct ways** to apply `Equals` in a pipeline.
+    
+    The following approaches are **incorrect**:
+    
     Using `==` directly on a `Feature` instance **does not work** because 
     `Feature` does not override `__eq__`:
     >>> pipeline = dt.Value([1, 2, 3]) == 2  # Incorrect
@@ -2870,7 +2932,7 @@ class Equals(ArithmeticOperationFeature):
         Parameters
         ----------
         value: PropertyLike[float or int or array, or list of float or int or array], optional
-            The value to compare (==) with the input. It defaults to 0.
+            The value to compare with the input. It defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
 
