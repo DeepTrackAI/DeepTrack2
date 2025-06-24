@@ -3093,11 +3093,11 @@ class Arguments(Feature):
     Examples
     --------
     >>> import deeptrack as dt
-    >>> from tempfile import NamedTemporaryFile
-    >>> from PIL import Image as PIL_Image
-    >>> import os
 
     Create a temporary image:
+    >>> import numpy as np
+    >>> import PIL, tempfile
+    >>>
     >>> test_image_array = (np.ones((50, 50)) * 128).astype(np.uint8)
     >>> temp_png = NamedTemporaryFile(suffix=".png", delete=False)
     >>> PIL_Image.fromarray(test_image_array).save(temp_png.name)
@@ -3105,43 +3105,45 @@ class Arguments(Feature):
     A typical use-case is:
     >>> arguments = dt.Arguments(is_label=False)
     >>> image_pipeline = (
-    ...     dt.LoadImage(path=temp_png.name) >>
-    ...     dt.Gaussian(sigma = (1 - arguments.is_label) * 5)
+    ...     dt.LoadImage(path=temp_png.name)
+    ...     >> dt.Gaussian(sigma=arguments.is_label)  # Image with no noise
     ... )
     >>> image_pipeline.bind_arguments(arguments)
-
-    >>> image = image_pipeline()  # Image with added noise.
-    >>> print(image.std())
-    5.041072178933536
-
-    Change the argument:
-    >>> image = image_pipeline(is_label=True) # Image with no noise.
-    >>> print(image.std())
+    >>>
+    >>> image = image_pipeline()
+    >>> image.std()
     0.0
 
+    Change the argument:
+    >>> image = image_pipeline(is_label=True)  # Image with added noise
+    >>> image.std()
+    1.0104364326447652
+
     Remove the temporary image:
+    >>> import os
+    >>>
     >>> os.remove(temp_png.name)
 
     For a non-mathematical dependence, create a local link to the property as 
     follows:
     >>> arguments = dt.Arguments(is_label=False)
     >>> image_pipeline = (
-    ...     dt.LoadImage(path=temp_png.name) >>
-    ...     dt.Gaussian(
+    ...     dt.LoadImage(path=temp_png.name)
+    ...     >> dt.Gaussian(
     ...         is_label=arguments.is_label,
-    ...         sigma=lambda is_label: 0 if is_label else 5
+    ...         sigma=lambda is_label: 1 if is_label else 0,
     ...     )
     ... )
     >>> image_pipeline.bind_arguments(arguments)
 
-    Keep in mind that, if any dependent property is non-deterministic, they may 
+    Keep in mind that, if any dependent property is non-deterministic, it may 
     permanently change:
-    >>> arguments = dt.Arguments(noise_max_sigma=5)
+    >>> arguments = dt.Arguments(noise_max=1)
     >>> image_pipeline = (
-    ...     dt.LoadImage(path=temp_png.name) >>
-    ...     dt.Gaussian(
-    ...         noise_max_sigma=arguments.noise_max_sigma,
-    ...         sigma=lambda noise_max_sigma: np.random.rand()*noise_max_sigma
+    ...     dt.LoadImage(path=temp_png.name)
+    ...     >> dt.Gaussian(
+    ...         noise_max=arguments.noise_max,
+    ...         sigma=lambda noise_max: np.random.rand() * noise_max,
     ...     )
     ... )
     >>> image_pipeline.bind_arguments(arguments)
