@@ -859,8 +859,8 @@ class TestFeatures(unittest.TestCase):
 
     def test_Equals(self):
         """
-        Notes
-        -----
+        Important Notes
+        ---------------
         - Unlike other arithmetic operators, `Equals` does not define `__eq__` 
           (`==`) and `__req__` (`==`) in `DeepTrackNode` and `Feature`, as this 
           would affect Python’s built-in identity comparison.
@@ -868,9 +868,8 @@ class TestFeatures(unittest.TestCase):
           expressions involving `Feature` instances but not for comparisons 
           involving regular Python objects.
         - Always use `>>` to apply `Equals` correctly in a feature chain.
-
         """
-        
+
         equals_feature = features.Equals(value=2)
         input_values = np.array([1, 2, 3])
         output_values = equals_feature(input_values)
