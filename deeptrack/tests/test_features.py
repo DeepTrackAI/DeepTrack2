@@ -902,6 +902,72 @@ class TestFeatures(unittest.TestCase):
             operator.__and__,
         )
 
+        # Stack scalar with scalar
+        feature = features.Stack(value=2)
+        result = feature(1)
+        self.assertEqual(result, [1, 2])
+        result = (1 & feature)()
+        self.assertEqual(result, [1, 1, 2])
+        result = (feature & 1)()
+        self.assertEqual(result, [1, 2, 1])
+
+        # Stack scalar with list
+        feature = features.Stack(value=[3, 4])
+        result = feature(2)
+        self.assertEqual(result, [2, 3, 4])
+
+        # Stack list with scalar
+        feature = features.Stack(value=5)
+        result = feature([1, 2, 3])
+        self.assertEqual(result, [1, 2, 3, 5])
+
+        # Stack list with list
+        feature = features.Stack(value=[4, 5])
+        result = feature([1, 2, 3])
+        self.assertEqual(result, [1, 2, 3, 4, 5])
+
+        # Stack with empty lists
+        feature = features.Stack(value=[])
+        result = feature([1, 2])
+        self.assertEqual(result, [1, 2])
+
+        feature = features.Stack(value=[1, 2])
+        result = feature([])
+        self.assertEqual(result, [1, 2])
+
+        # Stack using Value feature
+        pipeline = features.Value([1, 2]) >> features.Stack(value=features.Value([3, 4]))
+        result = pipeline()
+        self.assertEqual(result, [1, 2, 3, 4])
+
+        # Stack using & operator (Value & list)
+        pipeline = features.Value([1, 2]) & [3, 4]
+        self.assertEqual(pipeline.resolve(), [1, 2, 3, 4])
+
+        # Stack using & operator (list & Value)
+        pipeline = [3, 4] & features.Value([1, 2])
+        self.assertEqual(pipeline.resolve(), [3, 4, 1, 2])
+
+        # Stack NumPy arrays
+        arr1 = np.array([1, 2])
+        arr2 = np.array([3, 4])
+        feature = features.Stack(value=arr2)
+        result = feature(arr1)
+        self.assertEqual(len(result), 2)
+        self.assertTrue(np.array_equal(result[0], arr1))
+        self.assertTrue(np.array_equal(result[1], arr2))
+
+        # Stack PyTorch tensors
+        if TORCH_AVAILABLE:
+            import torch
+
+            t1 = torch.tensor([1, 2])
+            t2 = torch.tensor([3, 4])
+            feature = features.Stack(value=t2)
+            result = feature(t1)
+            self.assertEqual(len(result), 2)
+            self.assertTrue(torch.equal(result[0], t1))
+            self.assertTrue(torch.equal(result[1], t2))
 
     def test_Arguments_feature_passing(self):
         """Tests that arguments are correctly passed and updated in a feature pipeline."""
