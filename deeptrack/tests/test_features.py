@@ -1061,7 +1061,8 @@ class TestFeatures(unittest.TestCase):
                 os.remove(temp_png.name)
 
     def test_Arguments_feature_passing(self):
-        """Tests that arguments are correctly passed and updated in a feature pipeline."""
+        # Tests that arguments are correctly passed and updated.
+        # 
 
         # Define Arguments with static and dynamic values
         arguments = features.Arguments(
@@ -1074,7 +1075,7 @@ class TestFeatures(unittest.TestCase):
         # First feature with dependencies on arguments
         f1 = features.DummyFeature(
             p1=arguments.a,  # "foo"
-            p2=lambda p1: p1 + "baz"  # "foobaz"
+            p2=lambda p1: p1 + "baz",  # "foobaz"
         )
 
         # Second feature dependent on the first
@@ -1084,21 +1085,49 @@ class TestFeatures(unittest.TestCase):
         )
 
         # Assertions
-        self.assertEqual(f1.properties['p1'](), "foo")  # Check that p1 is set correctly
-        self.assertEqual(f1.properties['p2'](), "foobaz")  # Check lambda evaluation
-
-        self.assertEqual(f2.properties['p1'](), "foobaz")  # Check dependency resolution
+        self.assertEqual(f1.properties["p1"](), "foo")  # Check that p1 is set
+                                                        # correctly
+        self.assertEqual(f1.properties["p2"](), "foobaz")  # Check lambda
+                                                           # evaluation
+        self.assertEqual(f2.properties["p1"](), "foobaz")  # Check dependency
+                                                           # resolution
 
         # Ensure p2 in f2 is a valid float between 0 and 1
-        self.assertTrue(0 <= f2.properties['p2']() <= 1)
+        self.assertTrue(0 <= f2.properties["p2"]() <= 1)
 
         # Ensure `c` was computed correctly
-        self.assertEqual(arguments.c(), "foobar")  # Should concatenate "foo" + "bar"
+        self.assertEqual(arguments.c(), "foobar")  # Should concatenate
+                                                   # "foo" + "bar"
 
         # Test that d is dynamic (generates new values)
         first_d = arguments.d.update()()
         second_d = arguments.d.update()()
         self.assertNotEqual(first_d, second_d)  # Check that values change
+
+    def test_Arguments_binding(self):
+        # Create a dynamic argument container
+        arguments = features.Arguments(x=10)
+
+        # Create a simple pipeline: Value(100) + x + 1
+        pipeline = (
+            features.Value(100)
+            >> features.Add(value=arguments.x)
+            >> features.Add(1)
+        )
+
+        # Evaluate pipeline with default x=10
+        result = pipeline()
+        self.assertEqual(result, 111)  # 100 + 10 + 1
+
+        result_no_binding = pipeline(x=20)
+        self.assertEqual(result_no_binding, 111)  # 100 + 10 + 1
+
+        # Bind the arguments to the pipeline
+        pipeline.bind_arguments(arguments)
+
+        # Override x at runtime to 20
+        result_binding = pipeline(x=20)
+        self.assertEqual(result_binding, 121)  # 100 + 20 + 1
 
 
     def test_Probability(self):
