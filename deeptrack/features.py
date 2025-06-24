@@ -167,7 +167,7 @@ __all__ = [
     "GreaterThanOrEqual",
     "Equals",
     "Equal",
-    "Stack",  # TODO
+    "Stack",
     "Arguments",  # TODO
     "Probability",  # TODO
     "Repeat",  # TODO
