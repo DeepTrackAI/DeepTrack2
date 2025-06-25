@@ -169,7 +169,7 @@ __all__ = [
     "Equal",
     "Stack",
     "Arguments",
-    "Probability",  # TODO
+    "Probability",
     "Repeat",  # TODO
     "Combine",  # TODO
     "Slice",  # TODO
@@ -3184,7 +3184,7 @@ class Arguments(Feature):
     """
 
     def get(
-        self: Feature,
+        self: Arguments,
         image: Any,
         **kwargs: Any,
     ) -> Any:
@@ -3214,10 +3214,12 @@ class Arguments(Feature):
 class Probability(StructuralFeature):
     """Resolve a feature with a certain probability.
 
-    This feature conditionally applies a given feature to an input image based 
-    on a specified probability. A random number is sampled, and if it is less 
-    than `probability`, the feature is resolved; otherwise, the input image 
-    remains unchanged.
+    This feature conditionally applies a given feature to an input based on a
+    sampled uniform random number. If the sampled number is less than the
+    specified probability, the feature is resolved; otherwise, the input is
+    returned unchanged.
+
+    To resample the decision, call `.update()` before evaluating the feature.
 
     Parameters
     ----------
@@ -3225,7 +3227,7 @@ class Probability(StructuralFeature):
         The feature to resolve conditionally.
     probability: PropertyLike[float]
         The probability (between 0 and 1) of resolving the feature.
-    *args: list[Any], optional
+    *args: Any, optional
         Positional arguments passed to the parent `StructuralFeature` class.
     **kwargs: Any, optional
         Additional keyword arguments passed to the parent `StructuralFeature` 
@@ -3233,36 +3235,53 @@ class Probability(StructuralFeature):
 
     Methods
     -------
-    `get(image: np.ndarray, probability: float, random_number: float, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image: Any, probability: float, random_number: float, **kwargs: Any) -> Any`
         Resolves the feature if the sampled random number is less than the 
         specified probability.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
     
-    In this example, the `Add` feature is applied to the input image with 
-    a 70% chance. Define a feature and wrap it with `Probability`:
+    In this example, the `Add` feature is applied to the input image with a 70%
+    chance.
+
+    Define a feature and wrap it with `Probability`:
     >>> add_feature = dt.Add(value=2)
     >>> probabilistic_feature = dt.Probability(add_feature, probability=0.7)
 
     Define an input image:
-    >>> input_image = np.ones((5, 5))
+    >>> import numpy as np
+    >>>
+    >>> input_image = np.zeros((2, 3))
 
     Apply the feature:
+    >>> probabilistic_feature.update()  # Update the random number
     >>> output_image = probabilistic_feature(input_image)
+
+    With 70% probability, the output is:
+    >>> output_image
+    array([[2., 2., 2.],
+        [2., 2., 2.]])
+
+    With 30% probability, it remains:
+    >>> output_image
+    array([[0., 0., 0.],
+        [0., 0., 0.]])
 
     """
 
     def __init__(
-        self: Feature,
+        self: Probability,
         feature: Feature,
         probability: PropertyLike[float],
-        *args: list[Any],
+        *args: Any,
         **kwargs: Any,
     ):
         """Initialize the Probability feature.
+
+        The random number is initialized when this feature is initialized.
+        It can be updated using the `update()` method.
 
         Parameters
         ----------
@@ -3270,50 +3289,53 @@ class Probability(StructuralFeature):
             The feature to resolve conditionally.
         probability: PropertyLike[float]
             The probability (between 0 and 1) of resolving the feature.
-        *args: list[Any], optional
-            Positional arguments passed to the parent `StructuralFeature` class.
+        *args: Any, optional
+            Positional arguments passed to the parent `StructuralFeature`
+            class.
         **kwargs: Any, optional
-            Additional keyword arguments passed to the parent `StructuralFeature` class.
+            Additional keyword arguments passed to the parent
+            `StructuralFeature` class.
 
         """
-        
+
         super().__init__(
-            *args, 
-            probability=probability, 
-            random_number=np.random.rand, 
+            *args,
+            probability=probability,
+            random_number=np.random.rand,
             **kwargs,
         )
-        self.feature = self.add_feature(feature) 
+        self.feature = self.add_feature(feature)
 
     def get(
-        self: Feature,
-        image: np.ndarray,
+        self: Probability,
+        image: Any,
         probability: float,
         random_number: float,
         **kwargs: Any,
-    ) -> np.ndarray:
-        """Resolve the feature if a random number is less than the probability.
+    ) -> Any:
+        """Resolve the feature if random number is less than probability.
 
         Parameters
         ----------
-        image: np.ndarray
-            The input image to process.
+        image: Any or list[Any]
+            The input to process.
         probability: float
             The probability (between 0 and 1) of resolving the feature.
         random_number: float
-            A random number sampled to determine whether to resolve the 
-            feature.
+            A random number sampled to determine whether to resolve the
+            feature. It is initialized when this feature is initialized.
+            It can be updated using the `update()` method.
         **kwargs: Any
-            Additional arguments passed to the feature's `resolve` method.
+            Additional arguments passed to the feature's `resolve()` method.
 
         Returns
         -------
-        np.ndarray
-            The processed image. If the feature is resolved, this is the output of the feature; 
-            otherwise, it is the unchanged input image.
+        Any
+            The processed image. If the feature is resolved, this is the output
+            of the feature; otherwise, it is the unchanged input image.
 
         """
-      
+
         if random_number < probability:
             image = self.feature.resolve(image, **kwargs)
 
