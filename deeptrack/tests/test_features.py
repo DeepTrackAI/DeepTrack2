@@ -1139,7 +1139,7 @@ class TestFeatures(unittest.TestCase):
             feature = add_feature, 
             probability=0.7
         )
-        
+
         input_image = np.ones((5, 5))
 
         applied_count = 0
@@ -1153,7 +1153,8 @@ class TestFeatures(unittest.TestCase):
                 self.assertTrue(np.array_equal(output_image, input_image + 2))
 
         observed_probability = applied_count / total_runs
-        self.assertTrue(0.65 <= observed_probability <= 0.75, f"Observed probability: {observed_probability}")
+        self.assertTrue(0.65 <= observed_probability <= 0.75,
+                        f"Observed probability: {observed_probability}")
 
 
     def test_Repeat(self):
