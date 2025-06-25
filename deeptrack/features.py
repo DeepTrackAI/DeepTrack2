@@ -3227,9 +3227,9 @@ class Probability(StructuralFeature):
         The feature to resolve conditionally.
     probability: PropertyLike[float]
         The probability (between 0 and 1) of resolving the feature.
-    *args: Any, optional
+    *args: Any
         Positional arguments passed to the parent `StructuralFeature` class.
-    **kwargs: Any, optional
+    **kwargs: Any
         Additional keyword arguments passed to the parent `StructuralFeature` 
         class.
 
@@ -3289,10 +3289,10 @@ class Probability(StructuralFeature):
             The feature to resolve conditionally.
         probability: PropertyLike[float]
             The probability (between 0 and 1) of resolving the feature.
-        *args: Any, optional
+        *args: Any
             Positional arguments passed to the parent `StructuralFeature`
             class.
-        **kwargs: Any, optional
+        **kwargs: Any
             Additional keyword arguments passed to the parent
             `StructuralFeature` class.
 
@@ -3382,21 +3382,16 @@ class Repeat(Feature):
     Define an `Add` feature that adds `10` to its input:
     >>> add_ten = dt.Add(value=10)
 
-    Apply this feature **3 times** using `Repeat`:
+    Apply this feature 3 times using `Repeat`:
     >>> pipeline = dt.Repeat(add_ten, N=3)
 
     Process an input list:
-    >>> print(pipeline.resolve([1, 2, 3]))
+    >>> pipeline.resolve([1, 2, 3])
     [31, 32, 33]
-
-    Step-by-step breakdown:
-    - Iteration 1: `[1, 2, 3] + 10 → [11, 12, 13]`
-    - Iteration 2: `[11, 12, 13] + 10 → [21, 22, 23]`
-    - Iteration 3: `[21, 22, 23] + 10 → [31, 32, 33]`
 
     Alternative shorthand using `^` operator:
     >>> pipeline = dt.Add(value=10) ^ 3
-    >>> print(pipeline.resolve([1, 2, 3]))
+    >>> pipeline.resolve([1, 2, 3])
     [31, 32, 33]
     
     """
@@ -3404,9 +3399,9 @@ class Repeat(Feature):
     __distributed__: bool = False
 
     def __init__(
-        self: Feature,
-        feature: Feature, 
-        N: int, 
+        self: Repeat,
+        feature: Feature,
+        N: int,
         **kwargs: Any,
     ):
         """Initialize the Repeat feature.
@@ -3433,13 +3428,13 @@ class Repeat(Feature):
         self.feature = self.add_feature(feature)
 
     def get(
-        self: Feature,
+        self: Repeat,
         image: Any,
         N: int,
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
     ) -> Any:
-        """Sequentially apply the feature `N` times.
+        """Sequentially apply the feature N times.
 
         This method applies the feature `N` times, passing the output of each 
         iteration as the input to the next. The `_ID` tuple is updated at 
@@ -3465,15 +3460,15 @@ class Repeat(Feature):
             of the feature.
 
         """
-        
+
         for n in range(N):
 
-            index = _ID + (n,)  # Track iteration index.
+            index = _ID + (n,)  # Track iteration index
 
             image = self.feature(
                 image,
                 _ID=index,
-                replicate_index=index,  # Pass replicate_index for legacy.
+                replicate_index=index,  # Pass replicate_index for legacy
             )
 
         return image
