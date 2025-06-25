@@ -3342,8 +3342,8 @@ class Probability(StructuralFeature):
         return image
 
 
-class Repeat(Feature):
-    """Applies a feature multiple times in sequence.
+class Repeat(StructuralFeature):
+    """Apply a feature multiple times in sequence.
 
     The `Repeat` feature iteratively applies another feature, passing the 
     output of each iteration as the input to the next. This enables chained 
@@ -3351,9 +3351,12 @@ class Repeat(Feature):
     number of repetitions is defined by `N`.
 
     Each iteration operates with its own set of properties, and the index of 
-    the current iteration is accessible via `_ID` or `replicate_index`. 
-    `_ID` is extended to include the current iteration index, ensuring 
-    deterministic behavior when needed.
+    the current iteration is accessible via `_ID`. `_ID` is extended to include
+    the current iteration index, ensuring deterministic behavior when needed.
+
+    This is equivalent to using the `^` operator:
+
+    >>> dt.Repeat(A, 3) ≡ A ^ 3
 
     Parameters
     ----------
@@ -3363,17 +3366,11 @@ class Repeat(Feature):
         The number of times to apply the feature in sequence.
     **kwargs: Any
 
-    Attributes
-    ----------
-    __distributed__: bool
-        Always `False` for `Repeat`, since it processes sequentially rather 
-        than distributing computation across inputs.
-
     Methods
     -------
-    `get(image: Any, N: int, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
-        Applies the feature `N` times in sequence, passing the output of each 
-        iteration as the input to the next.
+    `get(image: Any, N: int, _ID: tuple[int, ...], **kwargs: Any) -> Any`
+        It applies the feature `N` times in sequence, passing the output of
+        each iteration as the input to the next.
 
     Examples
     --------
@@ -3395,8 +3392,6 @@ class Repeat(Feature):
     [31, 32, 33]
     
     """
-
-    __distributed__: bool = False
 
     def __init__(
         self: Repeat,
@@ -3440,6 +3435,10 @@ class Repeat(Feature):
         iteration as the input to the next. The `_ID` tuple is updated at 
         each iteration, ensuring dynamic property updates and reproducibility.
   
+        Each iteration uses the output of the previous one. This makes `Repeat`
+        suitable for building recursive, cumulative, or progressive
+        transformations.
+  
         Parameters
         ----------
         image: Any
@@ -3461,6 +3460,9 @@ class Repeat(Feature):
 
         """
 
+        if not isinstance(N, int) or N < 0:
+            raise ValueError("N must be a non-negative integer.")
+
         for n in range(N):
 
             index = _ID + (n,)  # Track iteration index
@@ -3468,7 +3470,7 @@ class Repeat(Feature):
             image = self.feature(
                 image,
                 _ID=index,
-                replicate_index=index,  # Pass replicate_index for legacy
+                replicate_index=index,  # Legacy property
             )
 
         return image
