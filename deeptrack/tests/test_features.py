@@ -1807,7 +1807,7 @@ class TestFeatures(unittest.TestCase):
         output_image = controlled_feature.resolve(input_image)
         expected_output = input_image * 2  # The "multiply" feature should be applied
         self.assertTrue(np.array_equal(output_image, expected_output))
-    
+
 
     def test_LoadImage(self):
         from tempfile import NamedTemporaryFile
