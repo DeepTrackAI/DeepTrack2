@@ -1224,17 +1224,17 @@ class TestFeatures(unittest.TestCase):
         input_image = np.ones((10, 10))
         output_list = combined_feature.resolve(input_image)
 
-        self.assertTrue(isinstance(output_list, list), "Output should be a list")
-        self.assertTrue(len(output_list) == 2, "Output list should contain results of both features")
+        self.assertTrue(isinstance(output_list, list))
+        self.assertTrue(len(output_list) == 2)
 
         for output in output_list:
-            self.assertTrue(output.shape == input_image.shape, "Output shape mismatch")
+            self.assertTrue(output.shape == input_image.shape)
 
         noisy_image = output_list[0]
         added_image = output_list[1]
 
-        self.assertFalse(np.all(noisy_image == 1), "Gaussian noise was not applied")
-        self.assertTrue(np.allclose(added_image, input_image + 10), "Add operation failed")
+        self.assertFalse(np.all(noisy_image == 1))
+        self.assertTrue(np.allclose(added_image, input_image + 10))
 
 
     def test_Slice_constant(self):
