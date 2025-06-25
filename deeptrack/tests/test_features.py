@@ -1132,29 +1132,65 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_Probability(self):
-        np.random.seed(42)  # Set seed for reproducibility
-
-        add_feature = features.Add(value=2)
-        probabilistic_feature = features.Probability(
-            feature = add_feature, 
-            probability=0.7
-        )
+        # Set seed for reproducibility of random trials
+        np.random.seed(42)
 
         input_image = np.ones((5, 5))
+        add_feature = features.Add(value=2)
+
+        # Helper: Check if feature was applied
+        def is_transformed(output):
+            return np.array_equal(output, input_image + 2)
+
+        # 1. Test probabilistic application over many runs
+        probabilistic_feature = features.Probability(
+            feature=add_feature,
+            probability=0.7
+        )
 
         applied_count = 0
         total_runs = 300
 
         for _ in range(total_runs):
             output_image = probabilistic_feature.update().resolve(input_image)
-
-            if not np.array_equal(output_image, input_image): 
+            if is_transformed(output_image):
                 applied_count += 1
-                self.assertTrue(np.array_equal(output_image, input_image + 2))
+            else:
+                self.assertTrue(np.array_equal(output_image, input_image))
 
         observed_probability = applied_count / total_runs
         self.assertTrue(0.65 <= observed_probability <= 0.75,
                         f"Observed probability: {observed_probability}")
+
+        # 2. Edge case: probability = 0 (feature should never apply)
+        never_applied = features.Probability(feature=add_feature,
+                                             probability=0.0)
+        output = never_applied.update().resolve(input_image)
+        self.assertTrue(np.array_equal(output, input_image))
+
+        # 3. Edge case: probability = 1 (feature should always apply)
+        always_applied = features.Probability(feature=add_feature,
+                                              probability=1.0)
+        output = always_applied.update().resolve(input_image)
+        self.assertTrue(is_transformed(output))
+
+        # 4. Cached behavior: result is the same without update()
+        cached_feature = features.Probability(feature=add_feature,
+                                              probability=1.0)
+        output_1 = cached_feature.update().resolve(input_image)
+        output_2 = cached_feature.resolve(input_image)  # same random number
+        self.assertTrue(np.array_equal(output_1, output_2))
+
+        # 5. Manual override: force behavior using random_number
+        manual = features.Probability(feature=add_feature, probability=0.5)
+
+        # Should NOT apply (0.9 > 0.5)
+        output = manual.resolve(input_image, random_number=0.9)
+        self.assertTrue(np.array_equal(output, input_image))
+
+        # Should apply (0.1 < 0.5)
+        output = manual.resolve(input_image, random_number=0.1)
+        self.assertTrue(is_transformed(output))
 
 
     def test_Repeat(self):
