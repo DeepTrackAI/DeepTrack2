@@ -1194,24 +1194,25 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_Repeat(self):
+        # Define a simple feature and pipeline
         add_ten = features.Add(value=10)
-
         pipeline = features.Repeat(add_ten, N=3)
 
         input_data = [1, 2, 3]
         expected_output = [31, 32, 33]
 
+        # Test standard Repeat behavior
         output_data = pipeline.resolve(input_data)
+        self.assertEqual(output_data, expected_output)
 
-        self.assertTrue(np.array_equal(output_data, expected_output),
-                        f"Expected {expected_output}, got {output_data}")
-
+        # Test shorthand syntax (^) produces same result
         pipeline_shorthand = features.Add(value=10) ^ 3
         output_data_shorthand = pipeline_shorthand.resolve(input_data)
+        self.assertEqual(output_data_shorthand, expected_output)
 
-        self.assertTrue(np.array_equal(output_data_shorthand, expected_output), \
-            f"Shorthand failed. Expected {expected_output}, \
-                got {output_data_shorthand}")
+        # Test dynamic override of N
+        output_override = pipeline(input_data, N=2)
+        self.assertEqual(output_override, [21, 22, 23])
 
 
     def test_Combine(self):
