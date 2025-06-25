@@ -171,7 +171,7 @@ __all__ = [
     "Arguments",
     "Probability",
     "Repeat",
-    "Combine",  # TODO
+    "Combine",
     "Slice",  # TODO
     "Bind",  # TODO
     "BindResolve",  # TODO
@@ -1493,7 +1493,7 @@ class Feature(DeepTrackNode):
         """Allows direct slicing of the feature's output.
         
         """
-        
+
         if not isinstance(slices, tuple):
             slices = (slices,)
 
@@ -3481,22 +3481,22 @@ class Repeat(StructuralFeature):
 class Combine(StructuralFeature):
     """Combine multiple features into a single feature.
 
-    This feature sequentially resolves a list of features and returns their 
-    results as a list.
+    This feature applies a list of features to the same input and returns their
+    outputs as a list. It is useful for computing multiple parallel outputs
+    from the same data (e.g., branches in a feature graph).
 
     Parameters
     ----------
     features: list[Feature]
-        A list of features to combine. Each feature will be resolved in the 
-        order they appear in the list and their outputs aggregated into a
-        single list to be returned.
+        A list of features to combine. Each feature will be applied in order,
+        and their outputs collected into a list.
     **kwargs: Any
         Additional keyword arguments passed to the parent `StructuralFeature` 
         class.
 
     Methods
     -------
-    `get(image_list: Any, **kwargs: Any) -> list[Any]`
+    `get(image: Any, **kwargs: Any) -> list[Any]`
         Resolves each feature in the `features` list on the input image and 
         returns their results as a list.
 
@@ -3530,7 +3530,7 @@ class Combine(StructuralFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: Combine,
         features: list[Feature],
         **kwargs: Any,
     ):
@@ -3552,15 +3552,15 @@ class Combine(StructuralFeature):
         self.features = [self.add_feature(f) for f in features]
 
     def get(
-        self: Feature,
-        image_list: Any,
+        self: Combine,
+        image: Any,
         **kwargs: Any,
     ) -> list[Any]:
         """Resolve each feature in the `features` list on the input image.
 
         Parameters
         ----------
-        image_list: Any
+        image: Any
             The input image or list of images to process.
         **kwargs: Any
             Additional arguments passed to each feature's `resolve` method.
@@ -3572,16 +3572,16 @@ class Combine(StructuralFeature):
 
         """
 
-        return [f(image_list, **kwargs) for f in self.features]
+        return [f(image, **kwargs) for f in self.features]
 
 
 class Slice(Feature):
-    """Dynamically applies array indexing to input Image(s).
+    """Dynamically applies array indexing to inputs.
     
-    This feature allows **dynamic slicing** of an image using integer indices, 
-    slice objects, or ellipses (`...`). While normal array indexing is preferred 
-    for static cases, `Slice` is useful when the slicing parameters **must be 
-    computed dynamically** based on other properties.
+    This feature allows dynamic slicing of an image using integer indices, 
+    slice objects, or ellipses (`...`). While normal array indexing is
+    preferred  for static cases, `Slice` is useful when the slicing parameters
+    *must be computed dynamically based on other properties.
 
     Parameters
     ----------
@@ -3599,22 +3599,31 @@ class Slice(Feature):
     Examples
     --------
     >>> import deeptrack as dt
+
+    Recommended approach: Use normal indexing for static slicing:
     >>> import numpy as np
-
-    **Recommended Approach: Use Normal Indexing for Static Slicing**
+    >>>
     >>> feature = dt.DummyFeature()
-    >>> static_slicing = feature[:, 1:2, ::-2]
+    >>> static_slicing = feature[0:2, ::2, :]
     >>> result = static_slicing.resolve(np.arange(27).reshape((3, 3, 3)))
-    >>> print(result)
+    >>> result
+    array([[[ 0,  1,  2],
+            [ 6,  7,  8]],
+           [[ 9, 10, 11],
+            [15, 16, 17]]])
 
-    **Using `Slice` for Dynamic Slicing (when necessary)**
-    If slices depend on computed properties, use `Slice`:
+    Using `Slice` for dynamic slicing (when necessary when slices depend on
+    computed properties):
     >>> feature = dt.DummyFeature()
     >>> dynamic_slicing = feature >> dt.Slice(
-    ...     slices=(slice(None), slice(1, 2), slice(None, None, -2))
+    ...     slices=(slice(0, 2), slice(None, None, 2), slice(None))
     ... )
     >>> result = dynamic_slicing.resolve(np.arange(27).reshape((3, 3, 3)))
-    >>> print(result)
+    >>> result
+    array([[[ 0,  1,  2],
+            [ 6,  7,  8]],
+           [[ 9, 10, 11],
+            [15, 16, 17]]])
 
     In both cases, slices can be defined dynamically based on feature 
     properties.
@@ -3622,10 +3631,12 @@ class Slice(Feature):
     """
 
     def __init__(
-        self: Feature,
+        self: Slice,
         slices: PropertyLike[
             Iterable[
-                PropertyLike[int] | PropertyLike[slice] | PropertyLike[...]
+                PropertyLike[int]
+                | PropertyLike[slice]
+                | PropertyLike[...]
             ]
         ],
         **kwargs: Any,
@@ -3645,7 +3656,7 @@ class Slice(Feature):
         super().__init__(slices=slices, **kwargs)
 
     def get(
-        self: Feature,
+        self: Slice,
         image: np.ndarray,
         slices: tuple[Any, ...] | Any,
         **kwargs: Any,
@@ -3671,10 +3682,10 @@ class Slice(Feature):
         """
 
         try:
-            # Convert slices to a tuple if possible.
+            # Convert slices to a tuple if possible
             slices = tuple(slices)
         except ValueError:
-            # Leave slices as is if conversion fails.
+            # Leave slices as is if conversion fails
             pass
 
         return image[slices]
