@@ -170,7 +170,7 @@ __all__ = [
     "Stack",
     "Arguments",
     "Probability",
-    "Repeat",  # TODO
+    "Repeat",
     "Combine",  # TODO
     "Slice",  # TODO
     "Bind",  # TODO
