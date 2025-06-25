@@ -3482,50 +3482,57 @@ class Combine(StructuralFeature):
     """Combine multiple features into a single feature.
 
     This feature sequentially resolves a list of features and returns their 
-    results as a list. Each feature in the `features` parameter operates on 
-    the same input, and their outputs are aggregated into a single list.
+    results as a list.
 
     Parameters
     ----------
     features: list[Feature]
         A list of features to combine. Each feature will be resolved in the 
-        order they appear in the list.
-    **kwargs: Any, optional
+        order they appear in the list and their outputs aggregated into a
+        single list to be returned.
+    **kwargs: Any
         Additional keyword arguments passed to the parent `StructuralFeature` 
         class.
 
     Methods
     -------
-    `get(image_list: Any, **kwargs: dict[str, Any]) -> list[Any]`
+    `get(image_list: Any, **kwargs: Any) -> list[Any]`
         Resolves each feature in the `features` list on the input image and 
         returns their results as a list.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
-    Define a list of features to combine `GaussianBlur` and `Add`:
-    >>> blur_feature = dt.GaussianBlur(sigma=2)
-    >>> add_feature = dt.Add(value=10)
+    Define a list of features:
+    >>> add_1 = dt.Add(value=1)
+    >>> add_2 = dt.Add(value=2)
+    >>> add_3 = dt.Add(value=3)
 
     Combine the features:
-    >>> combined_feature = dt.Combine([blur_feature, add_feature])
+    >>> combined_feature = dt.Combine([add_1, add_2, add_3])
 
     Define an input image:
-    >>> input_image = np.ones((10, 10))
+    >>> import numpy as np
+    >>>
+    >>> input_image = np.zeros((2, 3))
 
     Apply the combined feature:
     >>> output_list = combined_feature(input_image)
+    >>> output_list
+    [array([[1., 1., 1.],
+            [1., 1., 1.]]),
+    array([[2., 2., 2.],
+            [2., 2., 2.]]),
+    array([[3., 3., 3.],
+            [3., 3., 3.]])]
 
     """
 
-    __distributed__: bool = False
-
     def __init__(
-        self: Feature, 
-        features: list[Feature], 
-        **kwargs: dict[str, Any]
+        self: Feature,
+        features: list[Feature],
+        **kwargs: Any,
     ):
         """Initialize the Combine feature.
 
@@ -3534,19 +3541,20 @@ class Combine(StructuralFeature):
         features: list[Feature]
             A list of features to combine. Each feature is added as a 
             dependency to ensure proper execution in the computation graph.
-        **kwargs: Any, optional
+        **kwargs: Any
             Additional keyword arguments passed to the parent 
             `StructuralFeature` class.
 
         """
 
         super().__init__(**kwargs)
+
         self.features = [self.add_feature(f) for f in features]
 
     def get(
-        self: Feature, 
+        self: Feature,
         image_list: Any,
-        **kwargs: dict[str, Any]
+        **kwargs: Any,
     ) -> list[Any]:
         """Resolve each feature in the `features` list on the input image.
 
