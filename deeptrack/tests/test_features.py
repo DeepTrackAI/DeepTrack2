@@ -1203,8 +1203,8 @@ class TestFeatures(unittest.TestCase):
 
         output_data = pipeline.resolve(input_data)
 
-        self.assertTrue(np.array_equal(output_data, expected_output), \
-            f"Expected {expected_output}, got {output_data}")
+        self.assertTrue(np.array_equal(output_data, expected_output),
+                        f"Expected {expected_output}, got {output_data}")
 
         pipeline_shorthand = features.Add(value=10) ^ 3
         output_data_shorthand = pipeline_shorthand.resolve(input_data)
