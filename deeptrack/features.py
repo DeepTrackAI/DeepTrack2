@@ -532,6 +532,8 @@ class Feature(DeepTrackNode):
             | list[torch.Tensor]
             | Image
             | list[Image]
+            | Any
+            | list[Any]
             | None
         ) = None,
         _ID: tuple[int, ...] = (),
