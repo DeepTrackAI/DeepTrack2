@@ -744,7 +744,7 @@ class SequentialProperty(Property):
             self.initial_sampling_rule = None
 
         # 6) Define a default current function for steps >= 1.
-        if current_value is not None:
+        if sampling_rule is not None:
             self.sample = self.create_action(sampling_rule, **kwargs)
         else:
             self.sample = lambda _ID=(): None
@@ -812,7 +812,7 @@ class SequentialProperty(Property):
 
         super().store(sampling_rule + [value], _ID=_ID)
 
-    def current_value(
+    def (
         self: SequentialProperty,
         _ID: tuple[int, ...] = (),
     ) -> Any:
