@@ -608,7 +608,7 @@ class Feature(DeepTrackNode):
                        if k != "previous_value"},
                 )
 
-            prop.sampling_rule = prop.create_action(sampling_rule, **all_kwargs)
+            prop.sample = prop.create_action(sampling_rule, **all_kwargs)
 
         return self
 

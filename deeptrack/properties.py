@@ -608,9 +608,9 @@ class SequentialProperty(Property):
     initial_sampling_rule: Callable[..., Any], optional
         A function to compute the value at step=0. If `None`, the property 
         returns `None` at the first step.
-    sampling_rule: Callable[..., Any]
-        A function to compute the value at steps >= 1. By default,  it returns 
-        `None`.
+    sample: Callable[..., Any]
+        Computes the value at steps >= 1 with the given sampling rule.
+        By default, it returns `None`.
     action: Callable[..., Any]
         Overrides the default `Property.action` to select between 
         `initialization` (if `sequence_index` is 0) or `current` (otherwise).
@@ -663,13 +663,13 @@ class SequentialProperty(Property):
     previous_values: Property
     previous_value: Property
     initial_sampling_rule: Optional[Callable[..., Any]]
-    sampling_rule: Optional[Callable[..., Any]]
+    sample: Optional[Callable[..., Any]]
     action: Callable[..., Any]
 
     def __init__(
         self: SequentialProperty,
         initial_sampling_rule: Optional[Any] = None,
-        current_value: Optional[Any] = None,
+        sampling_rule: Optional[Any] = None,
         sequence_length: Optional[int] = None,
         sequence_index: Optional[int] = None,
         **kwargs: Dict[str, Property],
@@ -680,7 +680,7 @@ class SequentialProperty(Property):
         ----------
         initial_sampling_rule : Any, optional
             The sampling rule (value or callable) for step=0. Defaults to None.
-        current_value: Any, optional
+        sampling_rule: Any, optional
             The sampling rule (value or callable) for the current step.
             Defaults to None.
         sequence_length: int, optional
@@ -744,10 +744,10 @@ class SequentialProperty(Property):
             self.initial_sampling_rule = None
 
         # 6) Define a default current function for steps >= 1.
-        if current_value is not None:
-            self.sampling_rule = self.create_action(current_value, **kwargs)
+        if sampling_rule is not None:
+            self.sample = self.create_action(sampling_rule, **kwargs)
         else:
-            self.sampling_rule = lambda _ID=(): None
+            self.sample = lambda _ID=(): None
 
         # 7) Override the default action with our custom logic.
         self.action = self._action_override
@@ -778,7 +778,7 @@ class SequentialProperty(Property):
                 return self.initial_sampling_rule(_ID=_ID)
             return None
 
-        return self.sampling_rule(_ID=_ID)
+        return self.sample(_ID=_ID)
 
     def store(
         self: SequentialProperty,
