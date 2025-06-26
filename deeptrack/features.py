@@ -563,6 +563,47 @@ class Feature(DeepTrackNode):
         Feature
             The input feature evolved as a sequence
             
+        Examples
+        --------
+        Sequentially evaluate a rotating ellipse.
+        
+        >>> from deeptrack.scatterers import ellipse
+        >>> from deeptrack.optics import Fluorescence
+        >>> from deeptrack.sequences import Sequence
+        >>> from numpy import pi
+
+        >>> optics = Fluorescence(
+        ...     NA=0.6,
+        ...     magnification=10,
+        ...     resolution=1e-6,
+        ...     wavelength=633e-9,
+        ...     output_region=(0, 0, 32, 32),
+        ... )
+    
+        >>> ellipse = Ellipse(
+        ...     position_unit="pixel",
+        ...     position=(16, 16),
+        ...     intensity=1,
+        ...     radius=(1.5e-6, 1e-6),
+        ...     rotation=0, # This will be the value at time 0.
+        ... )
+    
+    
+        >>> def get_rotation(sequence_length, previous_value):
+        ...     delta = 2 * pi / sequence_length
+        ...     return previous_value + delta
+
+        Call `to_sequential` to resolve the feature sequentially.
+        
+        >>> rotating_ellipse = ellipse.to_sequential(rotation=get_rotation)    
+        >>> imaged_rotating_ellipse = optics(rotating_ellipse)
+    
+        >>> imaged_rotating_ellipse_sequence = Sequence(
+        ...     imaged_rotating_ellipse,
+        ...     sequence_length=10
+        ... )
+        >>> imaged_rotating_ellipse_sequence.update().plot()
+        
         """
 
         for property_name in kwargs.keys():
