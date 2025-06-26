@@ -840,29 +840,6 @@ class SequentialProperty(Property):
 
         return super().current_value(_ID=_ID)[self.sequence_index(_ID=_ID)]
 
-    def __call__(
-        self: SequentialProperty,
-        _ID: tuple[int, ...] = (),
-    ) -> Any:
-        """Evaluate the property at the current sequence step.
-        
-        It returns the result of `self.initial_sampling_rule` (if step == 0) or the
-        result of `self.sampling_rule` (if step > 0).
-
-        Parameters
-        ----------
-        _ID: tuple[int, ...], optional
-            A unique identifier for parallel evaluations.
-
-        Returns
-        -------
-        Any
-            The computed value for this step.
-
-        """
-
-        return super().__call__(_ID=_ID)
-
     def set_sequence_length(
         self: SequentialProperty,
         value: Any,
