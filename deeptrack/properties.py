@@ -810,7 +810,7 @@ class SequentialProperty(Property):
         except KeyError:
             current_data = []
 
-        super().store(sampling_rule + [value], _ID=_ID)
+        super().store(current_data + [value], _ID=_ID)
 
     def current_value(
         self: SequentialProperty,
