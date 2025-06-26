@@ -609,8 +609,8 @@ class SequentialProperty(Property):
         A function to compute the value at step=0. If `None`, the property 
         returns `None` at the first step.
     sample: Callable[..., Any]
-        A function to compute the value at steps >= 1. By default,  it returns 
-        `None`.
+        Computes the value at steps >= 1 with the given sampling rule.
+        By default, it returns `None`.
     action: Callable[..., Any]
         Overrides the default `Property.action` to select between 
         `initialization` (if `sequence_index` is 0) or `current` (otherwise).
@@ -663,13 +663,13 @@ class SequentialProperty(Property):
     previous_values: Property
     previous_value: Property
     initial_sampling_rule: Optional[Callable[..., Any]]
-    sampling_rule: Optional[Callable[..., Any]]
+    sample: Optional[Callable[..., Any]]
     action: Callable[..., Any]
 
     def __init__(
         self: SequentialProperty,
         initial_sampling_rule: Optional[Any] = None,
-        current_value: Optional[Any] = None,
+        sampling_rule: Optional[Any] = None,
         sequence_length: Optional[int] = None,
         sequence_index: Optional[int] = None,
         **kwargs: Dict[str, Property],
@@ -680,7 +680,7 @@ class SequentialProperty(Property):
         ----------
         initial_sampling_rule : Any, optional
             The sampling rule (value or callable) for step=0. Defaults to None.
-        current_value: Any, optional
+        sampling_rule: Any, optional
             The sampling rule (value or callable) for the current step.
             Defaults to None.
         sequence_length: int, optional
@@ -806,11 +806,11 @@ class SequentialProperty(Property):
         """
 
         try:
-            current_data = self.data[_ID].current_value()
+            current_data = self.data[_ID].sampling_rule()
         except KeyError:
             current_data = []
 
-        super().store(current_data + [value], _ID=_ID)
+        super().store(sampling_rule + [value], _ID=_ID)
 
     def current_value(
         self: SequentialProperty,
