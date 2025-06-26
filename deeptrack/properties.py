@@ -838,7 +838,7 @@ class SequentialProperty(Property):
 
         """
 
-        return super().sampling_rule(_ID=_ID)[self.sequence_index(_ID=_ID)]
+        return super().current_value(_ID=_ID)[self.sequence_index(_ID=_ID)]
 
     def __call__(
         self: SequentialProperty,
