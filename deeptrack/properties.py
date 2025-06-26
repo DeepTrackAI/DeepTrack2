@@ -613,7 +613,7 @@ class SequentialProperty(Property):
         By default, it returns `None`.
     action: Callable[..., Any]
         Overrides the default `Property.action` to select between 
-        `initialization` (if `sequence_index` is 0) or `current` (otherwise).
+        `initial_sampling_rule` (if `sequence_index` is 0) or `sampling_rule` (otherwise).
 
     Methods
     -------
@@ -623,11 +623,11 @@ class SequentialProperty(Property):
     store(value: Any, _ID: tuple[int, ...] = ()) -> None
         Store a newly computed `value` in the property’s internal list of 
         previously generated values.
-    current_value(_ID: tuple[int, ...] = ()) -> Any
-        Retrieve the value associated with the current step index.
+    sampling_rule(_ID: tuple[int, ...] = ()) -> Any
+        Retrieve the sampling_rule associated with the current step index.
     __call__(_ID: tuple[int, ...] = ()) -> Any
         Evaluate the property at the current step, returning either the 
-        initialization (if step=0) or current value (if step>0).
+        initialization (if index = 0) or current value (if index > 0).
     set_sequence_length(self, value, ID) -> None:
         Stores the value for the length of the sequence,
         analagous to SequentialProperty.sequence_length.store()        
@@ -635,8 +635,6 @@ class SequentialProperty(Property):
         Stores the value for the current step of the sequence,
         analagous to SequentialProperty.current_step.store()
         
-    
-
     Examples
     --------
     >>> import deeptrack as dt
@@ -644,17 +642,44 @@ class SequentialProperty(Property):
 
     >>> seq_prop = dt.SequentialProperty()
     >>> seq_prop.sequence_length.store(5)
-    >>> seq_prop.sampling_rule = lambda _ID=(): seq_prop.sequence_index() + 1
+    >>> seq_prop.sample = lambda _ID=(): seq_prop.sequence_index() + 1
     >>> for step in range(seq_prop.sequence_length()):
     ...     seq_prop.sequence_index.store(step)
-    ...     current_value = seq_prop.sampling_rule()
-    ...     seq_prop.store(current_value)
+    ...     sampled_value = seq_prop.sample()
+    ...     seq_prop.store(sampled_value)
     ...     print(seq_prop.data[()].current_value())
     [1]
     [1, 2]
     [1, 2, 3]
     [1, 2, 3, 4]
     [1, 2, 3, 4, 5]
+
+    One Dimensional Random Walker
+    
+    >>> import deeptrack as dt
+    >>> import numpy as np
+
+    >>> seq_prop = dt.SequentialProperty(
+    ...     initial_sampling_rule=0,
+    ...     sampling_rule= np.random.randn,
+    ...     sequence_length=10,
+    ...     sequence_index=0
+    ... )
+    
+    >>> start_position = seq_prop.initial_sampling_rule()
+    >>> seq_prop.store(start_position)
+
+    >>> for step in range(1, seq_prop.sequence_length()): 
+    ...     seq_prop.set_current_index(step)
+    ...     previous_position = seq_prop.previous()[-1] # Access the previously stored value.
+    ...     new_position = previous_position + seq_prop.sample()
+    ...     seq_prop.store(new_position)
+
+    >>> print(seq_prop.previous()) # Print all stored values.
+    
+    [0, 2.0119, 3.4899, 3.6947, 1.9720]
+
+    
     
     """
     
@@ -679,7 +704,7 @@ class SequentialProperty(Property):
         Parameters
         ----------
         initial_sampling_rule : Any, optional
-            The sampling rule (value or callable) for step=0. Defaults to None.
+            The sampling rule (value or callable) for step = 0. Defaults to None.
         sampling_rule: Any, optional
             The sampling rule (value or callable) for the current step.
             Defaults to None.
