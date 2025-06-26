@@ -806,7 +806,7 @@ class SequentialProperty(Property):
         """
 
         try:
-            current_data = self.data[_ID].sampling_rule()
+            current_data = self.data[_ID].current_value()
         except KeyError:
             current_data = []
 
