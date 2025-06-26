@@ -812,7 +812,7 @@ class SequentialProperty(Property):
 
         super().store(sampling_rule + [value], _ID=_ID)
 
-    def (
+    def current_value(
         self: SequentialProperty,
         _ID: tuple[int, ...] = (),
     ) -> Any:
