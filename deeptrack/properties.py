@@ -770,7 +770,14 @@ class SequentialProperty(Property):
 
         # 6) Define a default current function for steps >= 1.
         if sampling_rule is not None:
-            self.sample = self.create_action(sampling_rule, **kwargs)
+            self.sample = self.create_action(
+                sampling_rule,
+                sequence_index=self.sequence_index,
+                sequence_length=self.sequence_length,
+                previous_values=self.previous_values,
+                previous_value=self.previous_value,
+                **kwargs
+            )
         else:
             self.sample = lambda _ID=(): None
 
