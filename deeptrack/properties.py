@@ -608,7 +608,7 @@ class SequentialProperty(Property):
     initial_sampling_rule: Callable[..., Any], optional
         A function to compute the value at step=0. If `None`, the property 
         returns `None` at the first step.
-    sampling_rule: Callable[..., Any]
+    sample: Callable[..., Any]
         A function to compute the value at steps >= 1. By default,  it returns 
         `None`.
     action: Callable[..., Any]
@@ -745,9 +745,9 @@ class SequentialProperty(Property):
 
         # 6) Define a default current function for steps >= 1.
         if current_value is not None:
-            self.sampling_rule = self.create_action(current_value, **kwargs)
+            self.sample = self.create_action(sampling_rule, **kwargs)
         else:
-            self.sampling_rule = lambda _ID=(): None
+            self.sample = lambda _ID=(): None
 
         # 7) Override the default action with our custom logic.
         self.action = self._action_override
@@ -778,7 +778,7 @@ class SequentialProperty(Property):
                 return self.initial_sampling_rule(_ID=_ID)
             return None
 
-        return self.sampling_rule(_ID=_ID)
+        return self.sample(_ID=_ID)
 
     def store(
         self: SequentialProperty,
@@ -838,7 +838,7 @@ class SequentialProperty(Property):
 
         """
 
-        return super().current_value(_ID=_ID)[self.sequence_index(_ID=_ID)]
+        return super().sampling_rule(_ID=_ID)[self.sequence_index(_ID=_ID)]
 
     def __call__(
         self: SequentialProperty,
