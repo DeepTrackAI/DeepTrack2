@@ -190,9 +190,9 @@ __all__ = [
     "Upscale",  # TODO
     "NonOverlapping",  # TODO
     "Store",  # TODO
-    "Squeeze",  # TODO
-    "Unsqueeze",  # TODO
-    "ExpandDims",  # TODO
+    "Squeeze",
+    "Unsqueeze",
+    "ExpandDims",
     "MoveAxis",
     "Transpose",
     "Permute",
@@ -6494,7 +6494,7 @@ class Squeeze(Feature):
 
 
 class Unsqueeze(Feature):
-    """Unsqueezes the input image to the smallest possible dimension.
+    """Unsqueeze the input image to the smallest possible dimension.
 
     This feature adds new singleton dimensions to the input image at the 
     specified axis or axes. If no axis is specified, it defaults to adding 
@@ -6503,36 +6503,38 @@ class Unsqueeze(Feature):
     Parameters
     ----------
     axis: int or tuple[int, ...], optional
-        The axis or axes where new singleton dimensions should be added. 
-        It defaults to `None`, which adds a singleton dimension at the last axis.
-    **kwargs:: dict of str to Any
+        The axis or axes where new singleton dimensions should be added. It
+        defaults to `None`, which adds a singleton dimension at the last axis.
+    **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: np.ndarray, axis: int | tuple[int, ...] | None, **kwargs: dict[str, Any]) -> np.ndarray`
-        Add singleton dimensions to the input image.
+    `get(image: array, axis: int | tuple[int, ...] | None, **kwargs: Any) -> array`
+        Add singleton dimensions to the input image. The input and output
+        arrays can be a NumPy array, a PyTorch tensor, or an Image.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input array:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.array([1, 2, 3])
-    >>> print(input_image.shape)
+    >>> input_image.shape
     (3,)
 
-    Apply an Unsqueeze feature:
+    Apply Unsqueeze feature:
     >>> unsqueeze_feature = dt.Unsqueeze(axis=0)
     >>> output_image = unsqueeze_feature(input_image)
-    >>> print(output_image.shape)
+    >>> output_image.shape
     (1, 3)
 
-    Without specifying an axis:
+    Without specifying an axis, in unsqueezes the last dimension:
     >>> unsqueeze_feature = dt.Unsqueeze()
     >>> output_image = unsqueeze_feature(input_image)
-    >>> print(output_image.shape)
+    >>> output_image.shape
     (3, 1)
 
     """
@@ -6547,9 +6549,9 @@ class Unsqueeze(Feature):
         Parameters
         ----------
         axis: int or tuple[int, ...], optional
-            The axis or axes where new singleton dimensions should be added. 
-            It defaults to -1, which adds a singleton dimension at the last axis.
-        **kwargs:: dict of str to Any
+            The axis or axes where new singleton dimensions should be added. It
+            defaults to -1, which adds a singleton dimension at the last axis.
+        **kwargs:: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -6558,31 +6560,34 @@ class Unsqueeze(Feature):
 
     def get(
         self: Unsqueeze,
-        image: np.ndarray,
+        image: np.ndarray | torch.Tensor | Image,
         axis: int | tuple[int, ...] | None = -1,
         **kwargs: Any,
 
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor | Image:
         """Add singleton dimensions to the input image.
 
         Parameters
         ----------
-        image: np.ndarray
-            The input image to process.
+        image: array
+            The input image to process. The input array can be a NumPy array, a
+            PyTorch tensor, or an Image.
         axis: int or tuple[int, ...], optional
             The axis or axes where new singleton dimensions should be added. 
-            It defaults to -1, which adds a singleton dimension at the last axis.
-        **kwargs:: dict of str to Any
+            It defaults to -1, which adds a singleton dimension at the last
+            axis.
+        **kwargs: Any
             Additional keyword arguments (unused here).
 
         Returns
         -------
-        np.ndarray
-            The input image with the specified singleton dimensions added.
+        array
+            The input image with the specified singleton dimensions added. The
+            output array can be a NumPy array, a PyTorch tensor, or an Image.
 
         """
 
-        return np.expand_dims(image, axis=axis)
+        return xp.expand_dims(image, axis=axis)
 
 
 ExpandDims = Unsqueeze
