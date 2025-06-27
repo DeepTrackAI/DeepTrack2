@@ -23,6 +23,9 @@ from deeptrack import (
 from deeptrack.image import Image
 from deeptrack.noises import Gaussian
 
+if TORCH_AVAILABLE:
+    import torch
+
 def grid_test_features(
     tester,
     feature_a,
@@ -629,8 +632,6 @@ class TestFeatures(unittest.TestCase):
 
         # Test with PyTorch
         if TORCH_AVAILABLE:
-            import torch
-
             # Test with PyTorch tensor
             tensor = torch.ones(4, 4)
             self.assertIs(feature.get(tensor), tensor)
@@ -702,8 +703,6 @@ class TestFeatures(unittest.TestCase):
 
         # PyTorch tensor value tests
         if TORCH_AVAILABLE:
-            import torch
-
             tensor = torch.tensor([1., 2., 3.])
             value_tensor = features.Value(value=tensor)
             self.assertTrue(torch.equal(value_tensor(), tensor))
@@ -776,8 +775,6 @@ class TestFeatures(unittest.TestCase):
 
         # PyTorch tensor input (if available)
         if TORCH_AVAILABLE:
-            import torch
-
             addition_feature = features.ArithmeticOperationFeature(
                 lambda a, b: a + b, value=5,
             )
@@ -956,8 +953,6 @@ class TestFeatures(unittest.TestCase):
 
         # Stack PyTorch tensors
         if TORCH_AVAILABLE:
-            import torch
-
             t1 = torch.tensor([1, 2])
             t2 = torch.tensor([3, 4])
             feature = features.Stack(value=t2)
@@ -2400,6 +2395,9 @@ class TestFeatures(unittest.TestCase):
         transpose_feature = features.Transpose()
         output_image = transpose_feature(input_image)
         self.assertEqual(output_image.shape, (4, 3, 2))
+
+        if TORCH_AVAILABLE:
+            pass
 
 
     def test_OneHot(self):
