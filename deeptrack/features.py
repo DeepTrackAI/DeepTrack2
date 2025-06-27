@@ -137,7 +137,7 @@ from pint import Quantity
 from scipy.spatial.distance import cdist
 
 from deeptrack import units
-from deeptrack.backend import config, xp
+from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
 from deeptrack.image import Image
@@ -145,6 +145,8 @@ from deeptrack.properties import PropertyDict
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
 
+if TORCH_AVAILABLE:
+    import torch
 
 __all__ = [
     "Feature",  # TODO
@@ -196,7 +198,7 @@ __all__ = [
     "MoveAxis",
     "Transpose",
     "Permute",
-    "OneHot",  # TODO
+    "OneHot",
     "TakeProperties",  # TODO
 ]
 
@@ -6823,30 +6825,32 @@ class OneHot(Feature):
     ----------
     num_classes: int
         The total number of classes for the one-hot encoding.
-    **kwargs:: dict of str to Any
+    **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: np.ndarray, num_classes: int, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image: array, num_classes: int, **kwargs: Any) -> array`
         Convert the input array of class labels into a one-hot encoded array.
+        The input and output arrays can be a NumPy array, a PyTorch tensor, or
+        an Image.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
     
     Create an input array of class labels:
+    >>> import numpy as np
+    >>>
     >>> input_data = np.array([0, 1, 2])
 
     Apply a OneHot feature:
     >>> one_hot_feature = dt.OneHot(num_classes=3)
-    >>> one_hot_feature = dt.OneHot(num_classes=3)
     >>> one_hot_encoded = one_hot_feature.get(input_data, num_classes=3)
-    >>> print(one_hot_encoded)
-    [[1. 0. 0.]
-     [0. 1. 0.]
-     [0. 0. 1.]]
+    >>> one_hot_encoded
+    array([[1., 0., 0.],
+        [0., 1., 0.],
+        [0., 0., 1.]])
 
     """
 
@@ -6861,7 +6865,7 @@ class OneHot(Feature):
         ----------
         num_classes: int
             The total number of classes for the one-hot encoding.
-        **kwargs:: dict of str to Any
+        **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -6870,17 +6874,18 @@ class OneHot(Feature):
 
     def get(
         self: OneHot,
-        image: np.ndarray,
+        image: NDArray | torch.Tensor | Image,
         num_classes: int,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> NDArray | torch.Tensor | Image:
         """Convert the input array of labels into a one-hot encoded array.
 
         Parameters
         ----------
-        image: np.ndarray
+        image: array
             The input array of class labels. The last dimension should contain 
-            integers representing class indices.
+            integers representing class indices. The input array can be a NumPy
+            array, a PyTorch tensor, or an Image.
         num_classes: int
             The total number of classes for the one-hot encoding.
         **kwargs: Any
@@ -6888,9 +6893,11 @@ class OneHot(Feature):
 
         Returns
         -------
-        np.ndarray
+        array
             The one-hot encoded array. The last dimension is replaced with 
-            one-hot vectors of length `num_classes`.
+            one-hot vectors of length `num_classes`. The output array can be a
+            NumPy array, a PyTorch tensor, or an Image. In all cases, it is of
+            data type float32 (e.g., np.float32 or torch.float32).
 
         """
 
@@ -6899,10 +6906,12 @@ class OneHot(Feature):
             image = image[..., 0]
 
         if apc.is_torch_array(image):
-            return torch.nn.functional.one_hot(image, num_classes=num_classes)
+            return (torch.nn.functional
+                    .one_hot(image, num_classes=num_classes)
+                    .to(dtype=torch.float32))
 
         # Create the one-hot encoded array.
-        return xp.eye(num_classes)[image]
+        return xp.eye(num_classes, dtype=np.float32)[image]
 
 
 class TakeProperties(Feature):
