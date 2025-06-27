@@ -2363,8 +2363,8 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_Unsqueeze(self):
-
-        input_image = np.array([1, 2, 3])  # shape (3,)
+        ### Test with NumPy array
+        input_image = np.array([1, 2, 3])
 
         unsqueeze_feature = features.Unsqueeze(axis=0)
         output_image = unsqueeze_feature(input_image)
@@ -2374,6 +2374,33 @@ class TestFeatures(unittest.TestCase):
         output_image = unsqueeze_feature(input_image)
         self.assertEqual(output_image.shape, (3, 1))
 
+        ### Test with Image
+        input_data = np.array([1, 2, 3])
+        input_image = features.Image(input_data)
+
+        unsqueeze_feature = features.Unsqueeze(axis=0)
+        output_image = unsqueeze_feature(input_image)
+        self.assertEqual(output_image.shape, (1, 3))
+
+        unsqueeze_feature = features.Unsqueeze()
+        output_image = unsqueeze_feature(input_image)
+        self.assertEqual(output_image.shape, (3, 1))
+
+        ### Test with PyTorch tensor (if available)
+        if TORCH_AVAILABLE:
+            input_tensor = torch.tensor([1, 2, 3])
+
+            unsqueeze_feature = features.Unsqueeze(axis=0)
+            output_tensor = unsqueeze_feature(input_tensor)
+            self.assertEqual(output_tensor.shape, (1, 3))
+            torch.testing.assert_close(output_tensor,
+                                       input_tensor.unsqueeze(0))
+
+            unsqueeze_feature = features.Unsqueeze()
+            output_tensor = unsqueeze_feature(input_tensor)
+            self.assertEqual(output_tensor.shape, (3, 1))
+            torch.testing.assert_close(output_tensor,
+                                       input_tensor.unsqueeze(-1))
 
     def test_MoveAxis(self):
         ### Test with NumPy array
