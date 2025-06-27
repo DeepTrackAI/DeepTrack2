@@ -2376,28 +2376,74 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_MoveAxis(self):
-
+        ### Test with NumPy array
         input_image = np.random.rand(2, 3, 4)
 
         move_axis_feature = features.MoveAxis(source=0, destination=2)
         output_image = move_axis_feature(input_image)
         self.assertEqual(output_image.shape, (3, 4, 2))
 
+        ### Test with Image
+        input_data = np.random.rand(2, 3, 4)
+        input_image = features.Image(input_data)
+
+        move_axis_feature = features.MoveAxis(source=0, destination=2)
+        output_image = move_axis_feature(input_image)
+        self.assertEqual(output_image.shape, (3, 4, 2))
+
+        ### Test with PyTorch tensor (if available)
+        if TORCH_AVAILABLE:
+            input_tensor = torch.rand(2, 3, 4)
+
+            move_axis_feature = features.MoveAxis(source=0, destination=2)
+            output_tensor = move_axis_feature(input_tensor)
+            print(output_tensor.shape)
+            self.assertEqual(output_tensor.shape, (3, 4, 2))
+
 
     def test_Transpose(self):
-
+        ### Test with NumPy array
         input_image = np.random.rand(2, 3, 4)
+
+        # Explicit axes
+        transpose_feature = features.Transpose(axes=(1, 2, 0))
+        output_image = transpose_feature(input_image)
+        self.assertEqual(output_image.shape, (3, 4, 2))
+        expected_output = np.transpose(input_image, (1, 2, 0))
+        self.assertTrue(np.allclose(output_image, expected_output))
+
+        # Reversed axes
+        transpose_feature = features.Transpose()
+        output_image = transpose_feature(input_image)
+        self.assertEqual(output_image.shape, (4, 3, 2))
+        expected_output = np.transpose(input_image)
+        self.assertTrue(np.allclose(output_image, expected_output))
+
+        ### Test with Image
+        input_data = np.random.rand(2, 3, 4)
+        input_image = features.Image(input_data)
 
         transpose_feature = features.Transpose(axes=(1, 2, 0))
         output_image = transpose_feature(input_image)
         self.assertEqual(output_image.shape, (3, 4, 2))
 
-        transpose_feature = features.Transpose()
-        output_image = transpose_feature(input_image)
-        self.assertEqual(output_image.shape, (4, 3, 2))
-
+        ### Test with PyTorch tensor (if available)
         if TORCH_AVAILABLE:
-            pass
+            input_tensor = torch.rand(2, 3, 4)
+
+            # Explicit axes
+            transpose_feature = features.Transpose(axes=(1, 2, 0))
+            output_tensor = transpose_feature(input_tensor)
+            self.assertEqual(output_tensor.shape, (3, 4, 2))
+            expected_tensor = input_tensor.permute(1, 2, 0)
+            self.assertTrue(torch.allclose(output_tensor, expected_tensor))
+
+            # Reversed axes
+            transpose_feature = features.Transpose()
+            output_tensor = transpose_feature(input_tensor)
+            self.assertEqual(output_tensor.shape, (4, 3, 2))
+            expected_tensor = input_tensor.permute(2, 1, 0)
+            self.assertTrue(torch.allclose(output_tensor, expected_tensor))
 
 
     def test_OneHot(self):
