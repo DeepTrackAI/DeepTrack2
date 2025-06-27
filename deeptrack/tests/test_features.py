@@ -2552,17 +2552,52 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_OneHot(self):
-
+        ### Test with NumPy array
         input_image = np.array([0, 1, 2])
-
         one_hot_feature = features.OneHot(num_classes=3)
-        output_image = one_hot_feature.get(input_image, num_classes=3)
+        output_image = one_hot_feature(input_image)
+
         expected_output = np.array([
             [1.0, 0.0, 0.0],
             [0.0, 1.0, 0.0],
             [0.0, 0.0, 1.0]
-        ])
-        self.assertTrue(np.array_equal(output_image, expected_output))
+        ], dtype=np.float32)
+
+        self.assertEqual(output_image.shape, (3, 3))
+        np.testing.assert_array_equal(output_image, expected_output)
+
+        ### Test with singleton last dimension
+        input_image = np.array([[0], [1], [2]])  # shape (3, 1)
+        output_image = one_hot_feature(input_image)
+        self.assertEqual(output_image.shape, (3, 3))
+        np.testing.assert_array_equal(output_image, expected_output)
+
+        ### Test with Image
+        input_data = np.array([0, 1, 2])
+        input_image = features.Image(input_data)
+        output_image = one_hot_feature(input_image)
+        self.assertEqual(output_image.shape, (3, 3))
+        np.testing.assert_array_equal(output_image, expected_output)
+
+        ### Test with PyTorch tensor (if available)
+        if TORCH_AVAILABLE:
+            input_tensor = torch.tensor([0, 1, 2])
+            output_tensor = one_hot_feature(input_tensor)
+
+            expected_tensor = torch.tensor([
+                [1.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0],
+                [0.0, 0.0, 1.0]
+            ], dtype=torch.float32)
+
+            self.assertEqual(output_tensor.shape, (3, 3))
+            torch.testing.assert_close(output_tensor, expected_tensor)
+
+            # Test with singleton dimension
+            input_tensor = torch.tensor([[0], [1], [2]])
+            output_tensor = one_hot_feature(input_tensor)
+            self.assertEqual(output_tensor.shape, (3, 3))
+            torch.testing.assert_close(output_tensor, expected_tensor)
 
 
     def test_TakeProperties(self):
