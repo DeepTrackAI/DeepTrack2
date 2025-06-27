@@ -172,7 +172,7 @@ __all__ = [
     "Probability",
     "Repeat",
     "Combine",
-    "Slice",  # TODO
+    "Slice",
     "Bind",  # TODO
     "BindResolve",  # TODO
     "BindUpdate",  # TODO
