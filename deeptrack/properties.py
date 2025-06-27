@@ -871,7 +871,28 @@ class SequentialProperty(Property):
         """
 
         return super().current_value(_ID=_ID)[self.sequence_index(_ID=_ID)]
+        
+    def previous(self, _ID: tuple[int, ...] = ()) -> Any:
+        """Retrieve the previously stored value at ID without recomputing.
 
+        Parameters
+        ----------
+        _ID : Tuple[int, ...], optional
+            The ID for which to retrieve the previous value.
+
+        Returns
+        -------
+        Any
+            The previously stored value if `_ID` is valid.
+            Returns `[]` if `_ID` is not a valid index.
+        
+        """
+
+        if self.data.valid_index(_ID):
+            return self.data[_ID].current_value()
+        else:
+            return []
+        
     def set_sequence_length(
         self: SequentialProperty,
         value: Any,
