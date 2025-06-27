@@ -190,7 +190,7 @@ __all__ = [
     "Upscale",  # TODO
     "NonOverlapping",  # TODO
     "Store",  # TODO
-    "Squeeze",  # TODO
+    "Squeeze",
     "Unsqueeze",
     "ExpandDims",
     "MoveAxis",
@@ -6414,34 +6414,36 @@ class Squeeze(Feature):
     ----------
     axis: int or tuple[int, ...], optional
         The axis or axes to squeeze. It defaults to `None`, squeezing all axes.
-    **kwargs:: dict of str to Any
+    **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: np.ndarray, axis: int | tuple[int, ...], **kwargs: dict[str, Any]) -> np.ndarray`
-        Squeeze the input image by removing singleton dimensions.
+    `get(image: array, axis: int | tuple[int, ...], **kwargs: Any) -> array`
+        Squeeze the input image by removing singleton dimensions. The input and
+        output arrays can be a NumPy array, a PyTorch tensor, or an Image.
 
     Examples
     --------
-    >>> import numpy as np
-    >>> from deeptrack.features import Squeeze
+    >>> import deeptrack as dt
 
     Create an input array with extra dimensions:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.array([[[[1], [2], [3]]]])
-    >>> print(input_image.shape)
+    >>> input_image.shape
     (1, 1, 3, 1)
 
     Create a Squeeze feature:
-    >>> squeeze_feature = Squeeze(axis=0)
+    >>> squeeze_feature = dt.Squeeze(axis=0)
     >>> output_image = squeeze_feature(input_image)
-    >>> print(output_image.shape)
+    >>> output_image.shape
     (1, 3, 1)
 
     Without specifying an axis:
-    >>> squeeze_feature = Squeeze()
+    >>> squeeze_feature = dt.Squeeze()
     >>> output_image = squeeze_feature(input_image)
-    >>> print(output_image.shape)
+    >>> output_image.shape
     (3,)
 
     """
@@ -6457,8 +6459,8 @@ class Squeeze(Feature):
         ----------
         axis: int or tuple[int, ...], optional
             The axis or axes to squeeze. It defaults to `None`, which squeezes 
-            all axes.
-        **kwargs:: dict of str to Any
+            all singleton axes.
+        **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -6467,30 +6469,41 @@ class Squeeze(Feature):
 
     def get(
         self: Squeeze,
-        image: np.ndarray,
+        image: NDArray | torch.Tensor | Image,
         axis: int | tuple[int, ...] | None = None,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> NDArray | torch.Tensor | Image:
         """Squeeze the input image by removing singleton dimensions.
 
         Parameters
         ----------
-        image: np.ndarray
-            The input image to process.
+        image: array
+            The input image to process. The input array can be a NumPy array, a
+            PyTorch tensor, or an Image.
         axis: int or tuple[int, ...], optional
             The axis or axes to squeeze. It defaults to `None`, which squeezes 
-            all axes.
-        **kwargs:: dict of str to Any
+            all singleton axes.
+        **kwargs: Any
             Additional keyword arguments (unused here).
 
         Returns
         -------
-        np.ndarray
-            The squeezed image with reduced dimensions.
+        array
+            The squeezed image with reduced dimensions. The output array can be
+            a NumPy array, a PyTorch tensor, or an Image.
 
         """
 
-        return np.squeeze(image, axis=axis)
+        if apc.is_torch_array(image):
+            if axis is None:
+                return image.squeeze()
+            if isinstance(axis, int):
+                return image.squeeze(axis)
+            for ax in sorted(axis, reverse=True):
+                image = image.squeeze(ax)
+            return image
+
+        return xp.squeeze(image, axis=axis)
 
 
 class Unsqueeze(Feature):
@@ -6885,8 +6898,11 @@ class OneHot(Feature):
         if image.shape[-1] == 1:
             image = image[..., 0]
 
+        if apc.is_torch_array(image):
+            return torch.nn.functional.one_hot(image, num_classes=num_classes)
+
         # Create the one-hot encoded array.
-        return np.eye(num_classes)[image]
+        return xp.eye(num_classes)[image]
 
 
 class TakeProperties(Feature):
