@@ -6694,8 +6694,8 @@ class Transpose(Feature):
 
     Methods
     -------
-    `get(image: array or list[array], axes: tuple[int, ...] | None, **kwargs: Any) -> array or list[array]`
-        Transpose the axes of the input image
+    `get(image: array, axes: tuple[int, ...] | None, **kwargs: Any) -> array`
+        Transpose the axes of the input image(s).
 
     Examples
     --------
@@ -6743,15 +6743,15 @@ class Transpose(Feature):
 
     def get(
         self: Transpose,
-        image: ArrayLike[Any] | list[ArrayLike[Any]],
+        image: ArrayLike[Any],
         axes: tuple[int, ...] | None = None,
         **kwargs: Any,
-    ) -> ArrayLike[Any] | list[ArrayLike[Any]]:
+    ) -> ArrayLike[Any]:
         """Transpose the axes of the input image.
 
         Parameters
         ----------
-        image: array or list[array]
+        image: array
             The input image to process.
         axes: tuple[int, ...], optional
             A tuple specifying the permutation of the axes. If `None`, the 
@@ -6761,7 +6761,7 @@ class Transpose(Feature):
 
         Returns
         -------
-        array or list[array]
+        array
             The transposed image with rearranged axes.
 
         """
