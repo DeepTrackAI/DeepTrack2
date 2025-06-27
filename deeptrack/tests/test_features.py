@@ -2350,16 +2350,75 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_Squeeze(self):
+        ### Test with NumPy array
+        input_image = np.array([[[[3], [2], [1]]], [[[1], [2], [3]]]])
+        # shape: (2, 1, 3, 1)
 
-        input_image = np.array([[[[3], [2], [1]]],[[[1], [2], [3]]]])
+        # Squeeze axis 1
+        squeeze_feature = features.Squeeze(axis=1)
+        output_image = squeeze_feature(input_image)
+        self.assertEqual(output_image.shape, (2, 3, 1))
+        expected_output = np.squeeze(input_image, axis=1)
+        np.testing.assert_array_equal(output_image, expected_output)
+
+        # Squeeze all singleton dimensions
+        squeeze_feature = features.Squeeze()
+        output_image = squeeze_feature(input_image)
+        self.assertEqual(output_image.shape, (2, 3))
+        expected_output = np.squeeze(input_image)
+        np.testing.assert_array_equal(output_image, expected_output)
+
+        # Squeeze multiple axes
+        squeeze_feature = features.Squeeze(axis=(1, 3))
+        output_image = squeeze_feature(input_image)
+        self.assertEqual(output_image.shape, (2, 3))
+        expected_output = np.squeeze(np.squeeze(input_image, axis=3), axis=1)
+        np.testing.assert_array_equal(output_image, expected_output)
+
+        ### Test with Image
+        input_data = np.array([[[[3], [2], [1]]], [[[1], [2], [3]]]])
+        input_image = features.Image(input_data)
 
         squeeze_feature = features.Squeeze(axis=1)
         output_image = squeeze_feature(input_image)
         self.assertEqual(output_image.shape, (2, 3, 1))
+        expected_output = np.squeeze(input_data, axis=1)
+        np.testing.assert_array_equal(output_image, expected_output)
 
         squeeze_feature = features.Squeeze()
         output_image = squeeze_feature(input_image)
-        self.assertEqual(output_image.shape, (2,3))
+        self.assertEqual(output_image.shape, (2, 3))
+        expected_output = np.squeeze(input_data)
+        np.testing.assert_array_equal(output_image, expected_output)
+
+        squeeze_feature = features.Squeeze(axis=(1, 3))
+        output_image = squeeze_feature(input_image)
+        self.assertEqual(output_image.shape, (2, 3))
+        expected_output = np.squeeze(np.squeeze(input_data, axis=3), axis=1)
+        np.testing.assert_array_equal(output_image, expected_output)
+
+        ### Test with PyTorch tensor (if available)
+        if TORCH_AVAILABLE:
+            input_tensor = torch.tensor([[[[3], [2], [1]]], [[[1], [2], [3]]]])
+            # shape: (2, 1, 3, 1)
+
+            squeeze_feature = features.Squeeze(axis=1)
+            output_tensor = squeeze_feature(input_tensor)
+            self.assertEqual(output_tensor.shape, (2, 3, 1))
+            expected_tensor = input_tensor.squeeze(1)
+            torch.testing.assert_close(output_tensor, expected_tensor)
+
+            squeeze_feature = features.Squeeze()
+            output_tensor = squeeze_feature(input_tensor)
+            self.assertEqual(output_tensor.shape, (2, 3))
+            expected_tensor = input_tensor.squeeze()
+            torch.testing.assert_close(output_tensor, expected_tensor)
+
+            squeeze_feature = features.Squeeze(axis=(1, 3))
+            output_tensor = squeeze_feature(input_tensor)
+            self.assertEqual(output_tensor.shape, (2, 3))
+            expected_tensor = input_tensor.squeeze(3).squeeze(1)
+            torch.testing.assert_close(output_tensor, expected_tensor)
 
 
     def test_Unsqueeze(self):
@@ -2418,6 +2477,7 @@ class TestFeatures(unittest.TestCase):
             self.assertEqual(output_tensor.shape, (1, 3, 1))
             expected_tensor = input_tensor.unsqueeze(0).unsqueeze(2)
             torch.testing.assert_close(output_tensor, expected_tensor)
+
 
     def test_MoveAxis(self):
         ### Test with NumPy array
