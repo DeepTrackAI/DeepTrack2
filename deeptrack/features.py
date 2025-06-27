@@ -6587,6 +6587,13 @@ class Unsqueeze(Feature):
 
         """
 
+        if apc.is_torch_array(image):
+            if isinstance(axis, int):
+                axis = (axis,)
+            for ax in sorted(axis):
+                image = image.unsqueeze(ax)
+            return image
+
         return xp.expand_dims(image, axis=axis)
 
 
