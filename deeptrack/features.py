@@ -123,6 +123,7 @@ Process an input image:
 
 from __future__ import annotations
 
+import array_api_compat as apc
 import itertools
 import operator
 import random
@@ -193,8 +194,8 @@ __all__ = [
     "Unsqueeze",  # TODO
     "ExpandDims",  # TODO
     "MoveAxis",  # TODO
-    "Transpose",  # TODO
-    "Permute",  # TODO
+    "Transpose",
+    "Permute",
     "OneHot",  # TODO
     "TakeProperties",  # TODO
 ]
@@ -1764,7 +1765,7 @@ class Chain(StructuralFeature):
 
     Methods
     -------
-    `get(image: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any | list[Any]`
+    `get(image: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
         Apply the two features in sequence on the given input image.
 
     Examples
@@ -1825,10 +1826,10 @@ class Chain(StructuralFeature):
 
     def get(
         self: Feature,
-        image: Any | list[Any],
+        image: Any,
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
-    ) -> Any | list[Any]:
+    ) -> Any:
         """Apply the two features sequentially to the given input image(s).
 
         This method first applies `feature_1` to the input image(s) and then
@@ -1836,10 +1837,9 @@ class Chain(StructuralFeature):
 
         Parameters
         ----------
-        image: Any or list[Any]
+        image: Any
             The input data to transform sequentially. Most typically, this is
-            a NumPy array, a PyTorch tensor, or an Image, or a list of the
-            same.
+            a NumPy array, a PyTorch tensor, or an Image.
         _ID: tuple[int, ...], optional
             A unique identifier for caching or parallel execution. It defaults
             to an empty tuple.
@@ -1850,7 +1850,7 @@ class Chain(StructuralFeature):
 
         Returns
         -------
-        Any or list[Any]
+        Any
             The final output after `feature_1` and then `feature_2` have
             processed the input.
 
@@ -1973,7 +1973,7 @@ class Value(Feature):
 
     Methods
     -------
-    `get(image: Any, value: float, **kwargs: Any) -> float`
+    `get(image: Any, value: float, **kwargs: Any) -> float or array`
         Returns the stored value, ignoring the input image.
 
     Examples
@@ -2054,9 +2054,9 @@ class Value(Feature):
     def get(
         self: Value,
         image: Any,
-        value: float | ArrayLike,
+        value: float | ArrayLike[Any],
         **kwargs: Any,
-    ) -> float | ArrayLike:
+    ) -> float | ArrayLike[Any]:
         """Return the stored value, ignoring the input image.
 
         The `get` method simply returns the stored numerical value, allowing 
@@ -2114,7 +2114,7 @@ class ArithmeticOperationFeature(Feature):
 
     Methods
     -------
-    `get(image: Any or list[Any], value: float or int or list[float or int], **kwargs: Any) -> list[Any]`
+    `get(image: Any, value: float or int or list[float or int], **kwargs: Any) -> list[Any]`
         Apply the arithmetic operation element-wise to the input data.
 
     Examples
@@ -2171,7 +2171,7 @@ class ArithmeticOperationFeature(Feature):
 
     def get(
         self: ArithmeticOperationFeature,
-        image: Any | list[Any],
+        image: Any,
         value: float | int | ArrayLike | list[float | int | ArrayLike],
         **kwargs: Any,
     ) -> list[Any]:
@@ -6598,31 +6598,33 @@ class MoveAxis(Feature):
     Parameters
     ----------
     source: int
-        The axis to move.
+        The source position of the axis to move.
     destination: int
         The destination position of the axis.
-    **kwargs:: dict of str to Any
+    **kwargs:: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: np.ndarray, source: int, destination: int, **kwargs: dict[str, Any]) -> np.ndarray`
-        Move the specified axis of the input image to a new position.
+    `get(image: array, source: int, destination: int, **kwargs: Any) -> array`
+        Move the specified axis of the input image to a new position. The input
+        and output array can be a NumPy array, a PyTorch tensor, or an Image.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input array:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(2, 3, 4)
-    >>> print(input_image.shape)
+    >>> input_image.shape
     (2, 3, 4)
 
     Apply a MoveAxis feature:
     >>> move_axis_feature = dt.MoveAxis(source=0, destination=2)
     >>> output_image = move_axis_feature(input_image)
-    >>> print(output_image.shape)
+    >>> output_image.shape
     (3, 4, 2)
 
     """
@@ -6641,7 +6643,7 @@ class MoveAxis(Feature):
             The axis to move.
         destination: int
             The destination position of the axis.
-        **kwargs:: dict of str to Any
+        **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -6650,31 +6652,41 @@ class MoveAxis(Feature):
 
     def get(
         self: MoveAxis,
-        image: np.ndarray,
+        image: NDArray | torch.Tensor | Image,
         source: int,
-        destination: int, 
+        destination: int,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> NDArray | torch.Tensor | Image:
         """Move the specified axis of the input image to a new position.
 
         Parameters
         ----------
-        image: np.ndarray
-            The input image to process.
+        image: array
+            The input image to process. The input array can be a NumPy array, a
+            PyTorch tensor, or an Image.
         source: int
             The axis to move.
         destination: int
             The destination position of the axis.
-        **kwargs:: dict of str to Any
+        **kwargs: Any
             Additional keyword arguments (unused here).
 
         Returns
         -------
-        np.ndarray
+        array
             The input image with the specified axis moved to the destination.
+            The output array can be a NumPy array, a PyTorch tensor, or an
+            Image.
+
         """
 
-        return np.moveaxis(image, source, destination)
+        if apc.is_torch_array(image):
+            axes = list(range(image.ndim))
+            axis = axes.pop(source)
+            axes.insert(destination, axis)
+            return image.permute(*axes)
+
+        return xp.moveaxis(image, source, destination)
 
 
 class Transpose(Feature):
@@ -6695,7 +6707,8 @@ class Transpose(Feature):
     Methods
     -------
     `get(image: array, axes: tuple[int, ...] | None, **kwargs: Any) -> array`
-        Transpose the axes of the input image(s).
+        Transpose the axes of the input image(s). The input and output array
+        can be a NumPy array, a PyTorch tensor, or an Image.
 
     Examples
     --------
@@ -6734,7 +6747,7 @@ class Transpose(Feature):
         axes: tuple[int, ...], optional
             A tuple specifying the permutation of the axes. If `None`, the 
             axes are reversed by default.
-        **kwargs:: Any
+        **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
         
         """
@@ -6743,16 +6756,17 @@ class Transpose(Feature):
 
     def get(
         self: Transpose,
-        image: ArrayLike[Any],
+        image: NDArray | torch.Tensor | Image,
         axes: tuple[int, ...] | None = None,
         **kwargs: Any,
-    ) -> ArrayLike[Any]:
+    ) -> NDArray | torch.Tensor | Image:
         """Transpose the axes of the input image.
 
         Parameters
         ----------
         image: array
-            The input image to process.
+            The input image to process. The input array can be a NumPy array, a
+            PyTorch tensor, or an Image.
         axes: tuple[int, ...], optional
             A tuple specifying the permutation of the axes. If `None`, the 
             axes are reversed by default.
@@ -6762,7 +6776,8 @@ class Transpose(Feature):
         Returns
         -------
         array
-            The transposed image with rearranged axes.
+            The transposed image with rearranged axes. The output array can be
+            a NumPy array, a PyTorch tensor, or an Image.
 
         """
 
