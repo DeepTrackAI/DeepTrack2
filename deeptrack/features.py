@@ -1491,14 +1491,13 @@ class Feature(DeepTrackNode):
         slices: Any,
     ) -> 'Feature':
         """Allows direct slicing of the feature's output.
-        
+
         """
 
         if not isinstance(slices, tuple):
             slices = (slices,)
 
-        # We make it a list to ensure that each element is sampled 
-        # independently.
+        # Make it a list to ensure that each element is sampled independently.
         slices = list(slices)
 
         return self >> Slice(slices)
@@ -3577,15 +3576,17 @@ class Combine(StructuralFeature):
 
 class Slice(Feature):
     """Dynamically applies array indexing to inputs.
-    
+
     This feature allows dynamic slicing of an image using integer indices, 
-    slice objects, or ellipses (`...`). While normal array indexing is
-    preferred  for static cases, `Slice` is useful when the slicing parameters
-    *must be computed dynamically based on other properties.
+    slice objects, or ellipses (`...`).
+
+    While normal array indexing is preferred for static cases, `Slice` is
+    useful when the slicing parameters must be computed dynamically based on
+    other properties.
 
     Parameters
     ----------
-    slices: Iterable[int | slice | ...]
+    slices: tuple[int or slice or ellipsis] or list[int or slice or ellipsis]
         The slicing instructions for each dimension. Each element corresponds 
         to a dimension in the input image.
     **kwargs: Any
@@ -3593,7 +3594,7 @@ class Slice(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray, slices: tuple[int | slice | ...], **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image: array or list[array], slices: Iterable[int or slice or ellipsis], **kwargs: Any) -> array or list[array]`
         Applies the specified slices to the input image.
 
     Examples
@@ -3632,20 +3633,14 @@ class Slice(Feature):
 
     def __init__(
         self: Slice,
-        slices: PropertyLike[
-            Iterable[
-                PropertyLike[int]
-                | PropertyLike[slice]
-                | PropertyLike[...]
-            ]
-        ],
+        slices: PropertyLike[Iterable[int | slice | Ellipsis]],
         **kwargs: Any,
     ):
         """Initialize the Slice feature.
 
         Parameters
         ----------
-        slices: list[int | slice | ...] or tuple[int | slice | ...]
+        slices: Iterable[int or slice or ellipsis]
             The slicing instructions for each dimension, specified as a 
             list or tuple of integers, slice objects, or ellipses (`...`).
         **kwargs: Any
@@ -3657,27 +3652,28 @@ class Slice(Feature):
 
     def get(
         self: Slice,
-        image: np.ndarray,
-        slices: tuple[Any, ...] | Any,
+        image: ArrayLike[Any] | list[ArrayLike[Any]],
+        slices: slice | tuple[int | slice | Ellipsis, ...],
         **kwargs: Any,
-    ):
+    ) -> ArrayLike[Any] | list[ArrayLike[Any]]:
         """Apply the specified slices to the input image.
 
         Parameters
         ----------
-        image: np.ndarray
-            The input image to be sliced.
-        slices: tuple[int | slice | ellipsis, ...] | int | slice | ellipsis
-            The slicing instructions for the input image. Each element in the
-            tuple corresponds to a dimension in the input image. If a single
-            element is provided, it is converted to a tuple.
+        image: array or list[array]
+            The input image(s) to be sliced.
+        slices: slice ellipsis or tuple[int or slice or ellipsis, ...]
+            The slicing instructions for the input image. Typically it is a
+            tuple. Each element in the tuple corresponds to a dimension in the
+            input image. If a single element is provided, it is converted to a
+            tuple.
         **kwargs: Any
             Additional keyword arguments (unused in this implementation).
 
         Returns
         -------
-        np.ndarray
-            The sliced image.
+        array or list[array]
+            The sliced image(s).
 
         """
 
