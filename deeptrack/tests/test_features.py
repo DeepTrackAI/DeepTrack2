@@ -2377,6 +2377,7 @@ class TestFeatures(unittest.TestCase):
 
         ### Test with Image
         input_data = np.array([[[[3], [2], [1]]], [[[1], [2], [3]]]])
+        # shape: (2, 1, 3, 1)
         input_image = features.Image(input_data)
 
         squeeze_feature = features.Squeeze(axis=1)
