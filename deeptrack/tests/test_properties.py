@@ -12,7 +12,8 @@ from deeptrack.backend._config import TORCH_AVAILABLE
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.utils import get_kwarg_names
 
-from numpy import array, testing_assert_array_equal
+from numpy import array
+from numpy.testing import assert_array_equal
 from numpy.random import rand
 
 from deeptrack import properties
@@ -32,9 +33,9 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(P(), (1, 2, 3))
 
         P = properties.Property(array([1, 2, 3]))
-        testing.assert_array_equal(P(), array([1, 2, 3]))
+        assert_array_equal(P(), array([1, 2, 3]))
         P.update()
-        testing.assert_array_equal(P(), array([1, 2, 3]))
+        assert_array_equal(P(), array([1, 2, 3]))
 
         if TORCH_AVAILABLE:
             import torch
