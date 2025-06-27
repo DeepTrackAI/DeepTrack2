@@ -122,6 +122,7 @@ Process an input image:
 """
 
 from __future__ import annotations
+
 import itertools
 import operator
 import random
@@ -132,7 +133,6 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 from pint import Quantity
 from scipy.spatial.distance import cdist
-
 
 from deeptrack import units
 from deeptrack.backend import config, xp

@@ -69,7 +69,52 @@ Functions:
 
 Examples
 --------
-TODO
+
+Check if a method exists in an object:
+
+>>> from deeptrack.utils import hasmethod
+>>> class Example:
+...     def foo(self): pass
+>>> hasmethod(Example(), "foo")
+True
+>>> hasmethod(Example(), "bar")
+False
+
+Convert various objects to lists:
+
+>>> from deeptrack.utils import as_list
+>>> as_list(42)
+[42]
+>>> as_list((1, 2))
+[1, 2]
+>>> as_list("abc")
+['abc']
+
+Retrieve keyword argument names from a function:
+
+>>> from deeptrack.utils import get_kwarg_names
+>>> def func(x, y=1, z=2):
+...     pass
+>>> get_kwarg_names(func)
+['x', 'y', 'z']
+
+Check if a function argument has a default value:
+
+>>> from deeptrack.utils import kwarg_has_default
+>>> def func(x, y=1):
+...     pass
+>>> kwarg_has_default(func, "x")
+False
+>>> kwarg_has_default(func, "y")
+True
+
+Safely call a function with extra arguments:
+
+>>> from deeptrack.utils import safe_call
+>>> def f(a, b=2, c=3):
+...     return a + b + c
+>>> safe_call(f, positional_args=[1], b=5, x=100)
+9
 
 """
 
@@ -112,7 +157,42 @@ def hasmethod(
 
     Examples
     --------
-    TODO
+    >>> from deeptrack.utils import hasmethod
+
+    Check if an object has a method called 'foo':
+
+    >>> class MyClass:
+    ...     def foo(self):
+    ...         return 42
+    >>> obj = MyClass()
+    >>> hasmethod(obj, "foo")
+    True
+    >>> hasmethod(obj, "bar")
+    False
+
+    Built-in types:
+
+    >>> hasmethod([1, 2, 3], "append")
+    True
+    >>> hasmethod([1, 2, 3], "not_a_method")
+    False
+
+    Modules:
+
+    >>> import math
+    >>> hasmethod(math, "sqrt")
+    True
+    >>> hasmethod(math, "not_existing")
+    False
+
+    Edge cases:
+
+    >>> hasmethod(42, "bit_length")
+    True
+    >>> hasmethod(42, "foo")
+    False
+    >>> hasmethod(None, "foo")
+    False
 
     """
 
@@ -143,7 +223,53 @@ def as_list(obj: Any) -> list[Any]:
 
     Examples
     --------
-    TODO
+    from deeptrack.utils import as_list
+
+    Wrap a scalar in a list:
+
+    >>> as_list(5)
+    [5]
+    >>> as_list(None)
+    [None]
+
+    Pass through a list unchanged:
+
+    >>> as_list([1, 2, 3])
+    [1, 2, 3]
+
+    Convert a tuple or set to a list:
+
+    >>> as_list((1, 2, 3))
+    [1, 2, 3]
+    >>> sorted(as_list({3, 2, 1}))
+    [1, 2, 3]
+
+    Convert a generator to a list:
+
+    >>> generator = (x * 2 for x in range(3))
+    >>> as_list(generator)
+    [0, 2, 4]
+
+    Strings and bytes are treated as atomic (not split):
+
+    >>> as_list("abc")
+    ['abc']
+    >>> as_list(b"xyz")
+    [b'xyz']
+
+    NumPy arrays become lists of elements:
+
+    >>> import numpy as np
+    >>> as_list(np.array([1, 2, 3]))
+    [1, 2, 3]
+
+    PyTorch tensors become lists of elements along the first dimension
+    (if PyTorch is available):
+
+    >>> import torch
+    >>> t = torch.tensor([[1, 2], [3, 4]])
+    >>> as_list(t)
+    [tensor([1, 2]), tensor([3, 4])]
 
     """
 
@@ -174,7 +300,46 @@ def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
 
     Examples
     --------
-    TODO
+    from deeptrack.utils import get_kwarg_names
+
+    Basic usage:
+
+    >>> def f(a, b=1, c=2):
+    ...     pass
+    >>> get_kwarg_names(f)
+    ['a', 'b', 'c']
+
+    Functions with only positional arguments:
+
+    >>> def g(x, y):
+    ...     pass
+    >>> get_kwarg_names(g)
+    ['x', 'y']
+
+    Functions with *args and **kwargs (note: **kwargs are not listed):
+
+    >>> def k(*args, alpha=0.1, beta=0.2, **kwargs):
+    ...     pass
+    >>> get_kwarg_names(k)
+    ['alpha', 'beta']
+
+    Built-in functions (may return an empty list):
+
+    >>> get_kwarg_names(len)
+    ['obj']
+
+    Lambda functions:
+
+    >>> get_kwarg_names(lambda x, y=5: x + y)
+    ['x', 'y']
+
+    Methods (including 'self'):
+
+    >>> class MyClass:
+    ...     def method(self, a, b=2):
+    ...         pass
+    >>> get_kwarg_names(MyClass.method)
+    ['self', 'a', 'b']
 
     """
 
@@ -209,7 +374,42 @@ def kwarg_has_default(
 
     Examples
     --------
-    TODO
+    from deeptrack.utils import kwarg_has_default
+
+    Check default values for positional and keyword-only arguments:
+
+    >>> def f(a, b=2, c=3):
+    ...     pass
+    >>> kwarg_has_default(f, "a")
+    False
+    >>> kwarg_has_default(f, "b")
+    True
+    >>> kwarg_has_default(f, "c")
+    True
+
+    Missing argument:
+
+    >>> kwarg_has_default(f, "not_present")
+    False
+
+    Keyword-only arguments without defaults:
+
+    >>> def g(*, flag):
+    ...     pass
+    >>> kwarg_has_default(g, "flag")
+    False
+
+    Method example:
+
+    >>> class MyClass:
+    ...     def method(self, x, y=42):
+    ...         pass
+    >>> kwarg_has_default(MyClass.method, "self")
+    False
+    >>> kwarg_has_default(MyClass.method, "x")
+    False
+    >>> kwarg_has_default(MyClass.method, "y")
+    True
 
     """
 
@@ -250,7 +450,52 @@ def safe_call(
 
     Examples
     --------
-    TODO
+    from deeptrack.utils import safe_call
+
+    Basic usage with positional and keyword arguments:
+
+    >>> def f(a, b=2, c=3):
+    ...     return a + b + c
+    >>> safe_call(f, positional_args=[1], b=4, x=100)
+    8
+
+    All keyword arguments:
+
+    >>> safe_call(f, a=1, b=2, c=3)
+    6
+
+    Extra keyword arguments (ignored if not accepted by the function):
+
+    >>> safe_call(f, a=2, extra=42)
+    7
+
+    Missing required argument (raises TypeError):
+
+    >>> safe_call(f, b=2, c=3)
+    Traceback (most recent call last):
+        ...
+    TypeError: ...
+
+    Function with *args and **kwargs (the kwargs are not passed):
+
+    >>> def g(a, *args, b=5, **kwargs):
+    ...     return a, args, b, kwargs
+    >>> safe_call(g, positional_args=[1, 10], b=7, x=3, y=2)
+    (1, (10,), 7, {})
+
+    Function with only *args (positional):
+
+    >>> def h(*args):
+    ...     return args
+    >>> safe_call(h, positional_args=[1, 2, 3])
+    (1, 2, 3)
+
+    Function with only **kwargs (the kwargs are not passed):
+
+    >>> def i(**kwargs):
+    ...     return sorted(kwargs.items())
+    >>> safe_call(i, foo=1, bar=2)
+    []
 
     """
 
