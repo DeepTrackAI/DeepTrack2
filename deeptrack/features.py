@@ -6689,34 +6689,35 @@ class Transpose(Feature):
     axes: tuple[int, ...], optional
         A tuple specifying the permutation of the axes. If `None`, the axes are 
         reversed by default.
-    **kwargs:: dict of str to Any
+    **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: np.ndarray, axes: tuple[int, ...] | None, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image: array or list[array], axes: tuple[int, ...] | None, **kwargs: Any) -> array or list[array]`
         Transpose the axes of the input image
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input array:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(2, 3, 4)
-    >>> print(input_image.shape)
+    >>> input_image.shape
     (2, 3, 4)
 
     Apply a Transpose feature:
     >>> transpose_feature = dt.Transpose(axes=(1, 2, 0))
     >>> output_image = transpose_feature(input_image)
-    >>> print(output_image.shape)
+    >>> output_image.shape
     (3, 4, 2)
 
     Without specifying axes:
     >>> transpose_feature = dt.Transpose()
     >>> output_image = transpose_feature(input_image)
-    >>> print(output_image.shape)
+    >>> output_image.shape
     (4, 3, 2)
 
     """
@@ -6733,7 +6734,7 @@ class Transpose(Feature):
         axes: tuple[int, ...], optional
             A tuple specifying the permutation of the axes. If `None`, the 
             axes are reversed by default.
-        **kwargs:: dict of str to Any
+        **kwargs:: Any
             Additional keyword arguments passed to the parent `Feature` class.
         
         """
@@ -6742,15 +6743,15 @@ class Transpose(Feature):
 
     def get(
         self: Transpose,
-        image: np.ndarray,
+        image: ArrayLike[Any] | list[ArrayLike[Any]],
         axes: tuple[int, ...] | None = None,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> ArrayLike[Any] | list[ArrayLike[Any]]:
         """Transpose the axes of the input image.
 
         Parameters
         ----------
-        image: np.ndarray
+        image: array or list[array]
             The input image to process.
         axes: tuple[int, ...], optional
             A tuple specifying the permutation of the axes. If `None`, the 
@@ -6760,12 +6761,12 @@ class Transpose(Feature):
 
         Returns
         -------
-        np.ndarray
+        array or list[array]
             The transposed image with rearranged axes.
 
         """
 
-        return np.transpose(image, axes)
+        return xp.transpose(image, axes)
 
 
 Permute = Transpose
