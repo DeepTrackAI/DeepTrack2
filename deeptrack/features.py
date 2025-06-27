@@ -193,7 +193,7 @@ __all__ = [
     "Squeeze",  # TODO
     "Unsqueeze",  # TODO
     "ExpandDims",  # TODO
-    "MoveAxis",  # TODO
+    "MoveAxis",
     "Transpose",
     "Permute",
     "OneHot",  # TODO
