@@ -36,8 +36,12 @@ def random_sample(size: tuple[int, ...] | None = None) -> torch.Tensor:
     return torch.rand(*size) if size else torch.rand()
 
 
-def randn(*args: int) -> torch.Tensor:
-    return torch.randn(*args)
+def randn(
+    *args: int,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device | str = torch.device("cpu"),
+) -> torch.Tensor:
+    return torch.randn(*args, dtype=dtype, device=device)
 
 
 def beta(
@@ -54,8 +58,11 @@ def binomial(
     n: int,
     p: float,
     size: tuple[int, ...] | None = None,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device | str = torch.device("cpu"),
 ) -> torch.Tensor:
-    return torch.bernoulli(torch.full(size, p))
+    #return torch.bernoulli(torch.full(size, p))
+    return torch.tensor(np.random.binomial(n, p, size), dtype=dtype, device=device)
 
 
 def choice(
