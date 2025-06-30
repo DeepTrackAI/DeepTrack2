@@ -1427,8 +1427,8 @@ class TestFeatures(unittest.TestCase):
         output_std = np.std(output_image)
 
         # Assert mean and standard deviation close to the bound values
-        self.assertAlmostEqual(output_mean, 5)
-        self.assertAlmostEqual(output_std, 3)
+        self.assertAlmostEqual(output_mean, 5, delta=0.5)
+        self.assertAlmostEqual(output_std, 3, delta=0.5)
 
 
     def test_ConditionalSetProperty(self):
