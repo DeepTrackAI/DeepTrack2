@@ -1319,17 +1319,11 @@ class TestFeatures(unittest.TestCase):
             value=lambda input_value: input_value,
             input_value=10,
         )
-        value = features.Value(
-            value=lambda input_value: input_value,
-            input_value=10,
-        )
         pipeline = (value + 10) / value
-
-        pipeline_with_small_input = features.Bind(pipeline, input_value=1)
-
         res = pipeline.update().resolve()
         self.assertEqual(res, 2)
 
+        pipeline_with_small_input = features.Bind(pipeline, input_value=1)
         res = pipeline_with_small_input.update().resolve()
         self.assertEqual(res, 11)
 
@@ -1342,7 +1336,7 @@ class TestFeatures(unittest.TestCase):
         bound_feature = features.Bind(gaussian_noise, mu=-5, sigma=2)
 
         # Create the input image
-        input_image = np.zeros((512, 512))
+        input_image = np.zeros((128, 128))
 
         # Resolve the feature to get the output image
         output_image = bound_feature.resolve(input_image)
@@ -1352,10 +1346,8 @@ class TestFeatures(unittest.TestCase):
         output_std = np.std(output_image)
 
         # Assert that the mean and standard deviation are close to the bound values
-        self.assertAlmostEqual(output_mean, -5, delta=0.2, \
-            msg="Mean is not within the expected range")
-        self.assertAlmostEqual(output_std, 2, delta=0.2, \
-            msg="Standard deviation is not within the expected range")
+        self.assertAlmostEqual(output_mean, -5, delta=0.2)
+        self.assertAlmostEqual(output_std, 2, delta=0.2)
 
 
     def test_BindResolve(self):
