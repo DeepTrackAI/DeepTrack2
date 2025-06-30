@@ -3100,7 +3100,7 @@ class Arguments(Feature):
     --------
     >>> import deeptrack as dt
 
-    Create a temporary image:
+    Create a temporary image file:
     >>> import numpy as np
     >>> import PIL, tempfile
     >>>
@@ -4772,10 +4772,11 @@ class LoadImage(Feature):
     ----------
     __distributed__: bool
         Indicates whether this feature distributes computation across inputs.
+        It defaults to `False`.
 
     Methods
     -------
-    `get(image: Any, path: str | list[str], load_options: dict[str, Any] | None, ndim: int, to_grayscale: bool, as_list: bool, get_one_random: bool, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image: Any, path: str or list[str], load_options: dict[str, Any] | None, ndim: int, to_grayscale: bool, as_list: bool, get_one_random: bool, **kwargs: Any) -> array`
         Load the image(s) from disk and process them.
 
     Raises
@@ -4786,27 +4787,43 @@ class LoadImage(Feature):
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
-    >>> from tempfile import NamedTemporaryFile
 
     Create a temporary image file:
-    >>> temp_file = NamedTemporaryFile(suffix=".npy", delete=False)
-    >>> np.save(temp_file.name, np.random.rand(100, 100))
+    >>> import numpy as np
+    >>> import os, tempfile
+    >>> 
+    >>> temp_file = tempfile.NamedTemporaryFile(suffix=".npy", delete=False)
+    >>> np.save(temp_file.name, np.random.rand(100, 100, 3))
 
     Load the image using `LoadImage`:
-    >>> load_image_feature = dt.LoadImage(path=temp_file.name, to_grayscale=True)
+    >>> load_image_feature = dt.LoadImage(path=temp_file.name)
     >>> loaded_image = load_image_feature.resolve()
 
     Print image shape:
-    >>> print(loaded_image.shape)
+    >>> loaded_image.shape
+    (100, 100, 3)
 
-    If `to_grayscale=True`, the image is converted to grayscale (single channel).
-    If `ndim=4`, additional dimensions are added if necessary.
+    If `to_grayscale=True`, the image is converted to single channel:
+    >>> load_image_feature = dt.LoadImage(
+    ...     path=temp_file.name,
+    ...     to_grayscale=True,
+    ... )
+    >>> loaded_image = load_image_feature.resolve()
+    >>> loaded_image.shape
+    (100, 100, 1)
+
+    If `ndim=4`, additional dimensions are added if necessary:
+    >>> load_image_feature = dt.LoadImage(
+    ...     path=temp_file.name,
+    ...     ndim=4,
+    ... )
+    >>> loaded_image = load_image_feature.resolve()
+    >>> loaded_image.shape
+    (2, 2, 3, 1)
 
     Cleanup the temporary file:
-    >>> import os
     >>> os.remove(temp_file.name)
-    
+
     """
 
     __distributed__: bool = False
@@ -4826,23 +4843,23 @@ class LoadImage(Feature):
         Parameters
         ----------
         path: PropertyLike[str or list[str]]
-            The path(s) to the image(s) to load. Can be a single string or a list 
-            of strings.
+            The path(s) to the image(s) to load. Can be a single string or a
+            list of strings.
         load_options: PropertyLike[dict[str, Any]], optional
-            Additional options passed to the file reader (e.g., `mode` for OpenCV, 
-            `allow_pickle` for NumPy). It defaults to `None`.
+            Additional options passed to the file reader (e.g., `mode` for
+            OpenCV, `allow_pickle` for NumPy). It defaults to `None`.
         as_list: PropertyLike[bool], optional
-            If `True`, treats the first dimension of the image as a list of images. 
-            It defaults to `False`.
+            If `True`, treats the first dimension of the image as a list of
+            images. It defaults to `False`.
         ndim: PropertyLike[int], optional
-            Ensures the image has at least this many dimensions. If the loaded image 
-            has fewer dimensions, extra dimensions are added. It defaults to
-            `3`.
+            Ensures the image has at least this many dimensions. If the loaded
+            image has fewer dimensions, extra dimensions are added. It defaults
+            to `3`.
         to_grayscale: PropertyLike[bool], optional
             If `True`, converts the image to grayscale. It defaults to `False`.
         get_one_random: PropertyLike[bool], optional
-            If `True`, selects a single random image from a stack when `as_list=True`. 
-            It defaults to `False`.
+            If `True`, selects a single random image from a stack when
+            `as_list=True`. It defaults to `False`.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class, 
             allowing further customization.
@@ -4869,7 +4886,7 @@ class LoadImage(Feature):
         as_list: bool,
         get_one_random: bool,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> NDArray | torch.Tensor:
         """Load and process an image or a list of images from disk.
 
         This method attempts to load an image using multiple file readers 
@@ -4897,14 +4914,15 @@ class LoadImage(Feature):
         get_one_random: bool
             If `True`, selects a single random image from a multi-frame stack
             when `as_list=True`. It defaults to `False`.
-        **kwargs: dict[str, Any]
+        **kwargs: Any
             Additional keyword arguments.
 
         Returns
         -------
-        np.ndarray
+        array
             The loaded and processed image(s). If `as_list=True`, returns a 
-            list of images; otherwise, returns a single NumPy array.
+            list of images; otherwise, returns a single NumPy array or PyTorch
+            tensor.
 
         Raises
         ------
@@ -4932,7 +4950,7 @@ class LoadImage(Feature):
                 try:
                     import PIL.Image
 
-                    image = [PIL.Image.open(file, **load_options) 
+                    image = [PIL.Image.open(file, **load_options)
                              for file in path]
                 except (IOError, ImportError):
                     import cv2
@@ -4959,7 +4977,7 @@ class LoadImage(Feature):
             try:
                 import skimage
 
-                skimage.color.rgb2gray(image)
+                image = skimage.color.rgb2gray(image)
             except ValueError:
                 import warnings
 
@@ -4968,6 +4986,9 @@ class LoadImage(Feature):
         # Ensure the image has at least `ndim` dimensions.
         while ndim and image.ndim < ndim:
             image = np.expand_dims(image, axis=-1)
+
+        # Convert to PyTorch tensor if needed.
+        #TODO
 
         return image
 
