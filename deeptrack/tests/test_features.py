@@ -1820,7 +1820,7 @@ class TestFeatures(unittest.TestCase):
         from PIL import Image as PIL_Image
         import os
 
-        """Create temporary image files in multiple formats for testing."""
+        # Create temporary image files in multiple formats for testing.
         test_image_array = (np.random.rand(50, 50) * 255).astype(np.uint8)
 
         try:
@@ -1833,38 +1833,44 @@ class TestFeatures(unittest.TestCase):
                 # png_filename = temp_png.name
 
             with NamedTemporaryFile(suffix=".jpg", delete=False) as temp_jpg:
-                PIL_Image.fromarray(test_image_array).convert("RGB").save(temp_jpg.name)
+                PIL_Image.fromarray(test_image_array).convert("RGB") \
+                    .save(temp_jpg.name)
                 # jpg_filename = temp_jpg.name
 
-
-            """Test loading a .npy file."""
+            # Test loading a .npy file.
             load_feature = features.LoadImage(path=temp_npy.name)
             loaded_image = load_feature.resolve()
-            self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
+            self.assertEqual(loaded_image.shape[:2],
+                             test_image_array.shape[:2])
 
-            """Test loading a .png file."""
+            # Test loading a .png file.
             load_feature = features.LoadImage(path=temp_png.name)
             loaded_image = load_feature.resolve()
-            self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
+            self.assertEqual(loaded_image.shape[:2],
+                             test_image_array.shape[:2])
 
-            """Test loading a .jpg file."""
+            # Test loading a .jpg file.
             load_feature = features.LoadImage(path=temp_jpg.name)
             loaded_image = load_feature.resolve()
-            self.assertEqual(loaded_image.shape[:2], test_image_array.shape[:2])
-            
-            """Test loading an image and converting it to grayscale."""
-            load_feature = features.LoadImage(path=temp_png.name, to_grayscale=True)
-            loaded_image = load_feature.resolve()
-            self.assertEqual(loaded_image.shape[-1], 1) 
+            self.assertEqual(loaded_image.shape[:2],
+                             test_image_array.shape[:2])
 
-            """Test ensuring a minimum number of dimensions."""
+            # Test loading an image and converting it to grayscale.
+            load_feature = features.LoadImage(path=temp_png.name,
+                                              to_grayscale=True)
+            loaded_image = load_feature.resolve()
+            self.assertEqual(loaded_image.shape[-1], 1)
+
+            # Test ensuring a minimum number of dimensions.
             load_feature = features.LoadImage(path=temp_png.name, ndim=4)
             loaded_image = load_feature.resolve()
-            self.assertGreaterEqual(len(loaded_image.shape), 4)  
+            self.assertGreaterEqual(len(loaded_image.shape), 4)
 
         finally:
             for file in [temp_npy.name, temp_png.name, temp_jpg.name]:
                 os.remove(file)
+
+        #TODO: Add a test for loading a list of images.
 
 
     def test_SampleToMasks(self):
