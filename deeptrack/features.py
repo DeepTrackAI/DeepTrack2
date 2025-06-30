@@ -5043,16 +5043,16 @@ class SampleToMasks(Feature):
     Examples
     -------
     >>> import deeptrack as dt
-    >>> import matplotlib.pyplot as plt
-    >>> import numpy as np
 
     Define number of particles:
     >>> n_particles = 12
 
     Define optics and particles:
+    >>> import numpy as np
+    >>>    
     >>> optics = dt.Fluorescence(output_region=(0, 0, 64, 64))
     >>> particle = dt.PointParticle(
-    >>>     position=lambda: np.random.uniform(5, 55, size=2)
+    >>>     position=lambda: np.random.uniform(5, 55, size=2),
     >>> )
     >>> particles = particle ^ n_particles
 
@@ -5061,7 +5061,7 @@ class SampleToMasks(Feature):
     >>> sim_mask_pip = particles >> dt.SampleToMasks(
     ...     lambda: lambda particles: particles > 0,
     ...     output_region=optics.output_region,
-    ...     merge_method="or"
+    ...     merge_method="or",
     ... )
     >>> pipeline = sim_im_pip & sim_mask_pip
     >>> pipeline.store_properties()
@@ -5073,12 +5073,14 @@ class SampleToMasks(Feature):
     >>> positions = np.array(image.get_property("position", get_one=False))
 
     Visualize results:
+    >>> import matplotlib.pyplot as plt
+    >>>
     >>> plt.subplot(1, 2, 1)
     >>> plt.imshow(image, cmap="gray")
     >>> plt.title("Original Image")
     >>> plt.subplot(1, 2, 2)
     >>> plt.imshow(mask, cmap="gray")
-    >>> plt.scatter(positions[:,1], positions[:,0], c="r", marker="x", s = 10)
+    >>> plt.scatter(positions[:,1], positions[:,0], c="y", marker="x", s = 50)
     >>> plt.title("Mask")
     >>> plt.show()
 
@@ -5300,39 +5302,40 @@ class AsType(Feature):
 
     Parameters
     ----------
-    dtype: PropertyLike[Any], optional
+    dtype: PropertyLike[str], optional
         The desired data type for the image. It defaults to `"float64"`.
-    **kwargs:: dict of str to Any
+    **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: np.ndarray, dtype: str, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image: array, dtype: str, **kwargs: Any) -> array`
         Convert the data type of the input image.
 
     Examples
     --------
-    >>> import numpy as np
-    >>> from deeptrack.features import AsType
+    >>> import deeptrack as dt
 
     Create an input array:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.array([1.5, 2.5, 3.5])
 
     Apply an AsType feature to convert to `int32`:
-    >>> astype_feature = AsType(dtype="int32")
+    >>> astype_feature = dt.AsType(dtype="int32")
     >>> output_image = astype_feature.get(input_image, dtype="int32")
-    >>> print(output_image)
-    [1 2 3]
+    >>> output_image
+    array([1, 2, 3], dtype=int32)
 
     Verify the data type:
-    >>> print(output_image.dtype)
-    int32
+    >>> output_image.dtype
+    dtype('int32')
 
     """
 
     def __init__(
         self: Feature,
-        dtype: PropertyLike[Any] = "float64",
+        dtype: PropertyLike[str] = "float64",
         **kwargs: Any,
     ):
         """
@@ -5340,9 +5343,9 @@ class AsType(Feature):
 
         Parameters
         ----------
-        dtype: PropertyLike[Any], optional
+        dtype: PropertyLike[str], optional
             The desired data type for the image. It defaults to `"float64"`.
-        **kwargs:: dict of str to Any
+        **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -5351,16 +5354,17 @@ class AsType(Feature):
 
     def get(
         self: Feature,
-        image: np.ndarray,
+        image: NDArray | torch.Tensor | Image,
         dtype: str,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> NDArray | torch.Tensor | Image:
         """Convert the data type of the input image.
 
         Parameters
         ----------
-        image: np.ndarray
-            The input image to process.
+        image: array
+            The input image to process. It can be a NumPy array, a PyTorch
+            tensor, or an Image.
         dtype: str
             The desired data type for the image.
         **kwargs: Any
@@ -5368,8 +5372,9 @@ class AsType(Feature):
 
         Returns
         -------
-        np.ndarray
-            The input image converted to the specified data type.
+        array
+            The input image converted to the specified data type. It can be a
+            NumPy array, a PyTorch tensor, or an Image.
 
         """
 
@@ -5642,7 +5647,7 @@ class Upscale(Feature):
 
         # Downscale the result to the original resolution.        
         import skimage.measure
-        
+
         image = skimage.measure.block_reduce(
             image, (factor[0], factor[1]) + (1,) * (image.ndim - 2), np.mean
         )
