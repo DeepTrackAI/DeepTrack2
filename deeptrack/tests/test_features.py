@@ -1727,7 +1727,6 @@ class TestFeatures(unittest.TestCase):
 
         self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
 
-
     def test_OneOf_set(self):
 
         values = features.OneOf(
@@ -1795,26 +1794,24 @@ class TestFeatures(unittest.TestCase):
 
         input_image = np.array([1, 2, 3])
 
-        """Test that OneOfDict selects a feature randomly and applies it correctly."""
+        # Test OneOfDict selects a feature randomly and applies it correctly.
         output_image = one_of_dict_feature.resolve(input_image)
         expected_outputs = [
             input_image + 10,  # "add"
-            input_image * 2,   # "multiply"
+            input_image * 2,  # "multiply"
         ]
-        self.assertTrue(
-            any(np.array_equal(output_image, expected) for expected in expected_outputs),
-            f"Output {output_image} did not match any expected transformations."
-        )
+        self.assertTrue(any(np.array_equal(output_image, expected)
+                            for expected in expected_outputs))
 
-        """Test that OneOfDict selects the correct feature when a key is specified."""
+        # Test OneOfDict selects the correct feature when a key is specified.
         controlled_feature = features.OneOfDict(features_dict, key="add")
         output_image = controlled_feature.resolve(input_image)
-        expected_output = input_image + 10  # The "add" feature should be applied
+        expected_output = input_image + 10
         self.assertTrue(np.array_equal(output_image, expected_output))
 
         controlled_feature = features.OneOfDict(features_dict, key="multiply")
         output_image = controlled_feature.resolve(input_image)
-        expected_output = input_image * 2  # The "multiply" feature should be applied
+        expected_output = input_image * 2
         self.assertTrue(np.array_equal(output_image, expected_output))
 
 
