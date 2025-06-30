@@ -3,7 +3,23 @@ import unittest
 import numpy as np
 import torch
 from deeptrack.backend.array_api_compat_ext.torch import random
+"""
+TODO: Implement tests for all of these functions to start with.
+    "rand",
+    "random",
+    "random_sample",
+    "randn",
+    "beta",
+    "binomial",
+    "choice",
+    "multinomial",
+    "randint",
+    "shuffle",
+    "uniform",
+    "normal",
+    "poisson",
 
+"""
 
 class TestRandom(unittest.TestCase):
     def test_rand(self):
