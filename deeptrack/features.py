@@ -184,7 +184,7 @@ __all__ = [
     "Lambda",
     "Merge",
     "OneOf",
-    "OneOfDict",  # TODO
+    "OneOfDict",
     "LoadImage",  # TODO
     "SampleToMasks",  # TODO
     "AsType",  # TODO
@@ -4457,10 +4457,10 @@ class OneOf(Feature):
 
     Methods
     -------
-    `_process_properties(propertydict: dict[Property]) -> dict[Property]`
-        Processes the properties to determine the selected feature index.
+    `_process_properties(propertydict: dict) -> dict`
+        It processes the properties to determine the selected feature index.
     `get(image: Any, key: int, _ID: tuple[int, ...], **kwargs: Any) -> Any`
-        Applies the selected feature to the input.
+        It applies the selected feature to the input.
   
     Examples
     --------
@@ -4480,7 +4480,7 @@ class OneOf(Feature):
 
     Apply the `OneOf` feature to the input image:
     >>> output_image = one_of_feature(input_image)
-    >>> output_image # The output depends on the randomly selected feature.
+    >>> output_image  # The output depends on the randomly selected feature.
 
     Use `key` to apply a specific feature:
     >>> controlled_feature = dt.OneOf([feature_1, feature_2], key=0)
@@ -4528,20 +4528,20 @@ class OneOf(Feature):
 
     def _process_properties(
         self: Feature,
-        propertydict: dict[Property],
-    ) -> dict[Property]:
+        propertydict: dict,
+    ) -> dict:
         """Process the properties to determine the feature index.
 
         If `key` is not provided, a random feature index is assigned.
         
         Parameters
         ----------
-        propertydict: dict[Property]
+        propertydict: dict
             The dictionary containing properties of the feature.
 
         Returns
         -------
-        dict[Property]
+        dict
             The updated property dictionary with the `key` property set.
 
         """
@@ -4587,9 +4587,9 @@ class OneOf(Feature):
 class OneOfDict(Feature):
     """Resolve one feature from a dictionary and apply it to an input.
 
-    This feature selects a feature from a dictionary and applies it to an input. 
-    The selection is made randomly by default, but it can be controlled using 
-    the `key` argument.
+    This feature selects a feature from a dictionary and applies it to an
+    input.  The selection is made randomly by default, but it can be controlled
+    using the `key` argument.
 
     If `key` is not specified, a random key from the dictionary is selected, 
     and the corresponding feature is applied. Otherwise, the feature mapped to 
@@ -4609,35 +4609,46 @@ class OneOfDict(Feature):
     ----------
     __distributed__: bool
         Indicates whether this feature distributes computation across inputs.
+        It defaults to `False`.
 
     Methods
     -------
     `_process_properties(propertydict: dict) -> dict`
-        Determines which feature to use based on `key`.
-    `get(image: Any, key: Any, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
-        Resolves the selected feature and applies it to the input image.
+        It determines which feature to use based on `key`.
+    `get(image: Any, key: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
+        It resolves the selected feature and applies it to the input image.
    
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Define a dictionary of features:
     >>> features_dict = {
     ...     "add": dt.Add(value=10),
     ...     "multiply": dt.Multiply(value=2),
     ... }
+
+    Create a `OneOfDict` feature that randomly selects a transformation:
     >>> one_of_dict_feature = dt.OneOfDict(features_dict)
 
-    Apply a randomly selected feature:
+    Creare an image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.array([1, 2, 3])
+
+    Apply a randomly selected feature to the image:
     >>> output_image = one_of_dict_feature(input_image)
-    >>> print(output_image)
+    >>> output_image  # The output depends on the randomly selected feature.
+
+    Potentially select a different feature:
+    >>> output_image = one_of_dict_feature.update()(input_image)
+    >>> output_image
 
     Use a specific key to apply a predefined feature:
     >>> controlled_feature = dt.OneOfDict(features_dict, key="add")
     >>> output_image = controlled_feature(input_image)
-    >>> print(output_image)  # Adds 10 to each element.
+    >>> output_image
+    array([11, 12, 13])
 
     """
 
@@ -4664,6 +4675,7 @@ class OneOfDict(Feature):
         """
 
         super().__init__(key=key, **kwargs)
+
         self.collection = collection
 
         # Add all features in the dictionary as dependencies.
@@ -4671,8 +4683,8 @@ class OneOfDict(Feature):
             self.add_feature(feature)
 
     def _process_properties(
-        self: Feature, 
-        propertydict: dict
+        self: Feature,
+        propertydict: dict,
     ) -> dict:
         """Determine which feature to apply based on the selected key.
 
