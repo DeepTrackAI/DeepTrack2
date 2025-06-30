@@ -3706,33 +3706,35 @@ class Bind(StructuralFeature):
 
     Methods
     -------
-    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
-        Resolves the child feature with the provided arguments.
+    `get(image: Any, **kwargs: Any) -> Any`
+        It resolves the child feature with the provided arguments.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Start by creating a `Gaussian` feature: 
     >>> gaussian_noise = dt.Gaussian()
 
-    Dynamically modify the behavior of the feature using `Bind`:
-    >>> bound_feature = dt.Bind(gaussian_noise, mu = -5, sigma=2)
-    
+    Create a test image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.zeros((512, 512))
+
+    Bind fixed values to the parameters:
+    >>> bound_feature = dt.Bind(gaussian_noise, mu=-5, sigma=2)
+
+    Resolve the bound feature:
     >>> output_image = bound_feature.resolve(input_image)
-    >>> print(np.mean(output_image), np.std(output_image))
-    -4.9954959040123152 1.9975296489398942
+    >>> round(np.mean(output_image), 1), round(np.std(output_image), 1)
+    (-5.0, 2.0)
 
     """
 
-    __distributed__: bool = False
-
     def __init__(
-        self: Feature, 
-        feature: Feature, 
-        **kwargs: dict[str, Any]
+        self: Bind,
+        feature: Feature,
+        **kwargs: Any,
     ):
         """Initialize the Bind feature.
 
@@ -3746,12 +3748,13 @@ class Bind(StructuralFeature):
         """
 
         super().__init__(**kwargs)
+
         self.feature = self.add_feature(feature)
 
     def get(
-        self: Feature, 
-        image: Any, 
-        **kwargs: dict[str, Any]
+        self: Bind,
+        image: Any,
+        **kwargs: Any,
     ) -> Any:
         """Resolve the child feature with the dynamically provided arguments.
 
