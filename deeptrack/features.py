@@ -182,8 +182,8 @@ __all__ = [
     "ConditionalSetProperty",
     "ConditionalSetFeature",
     "Lambda",
-    "Merge",  # TODO
-    "OneOf",  # TODO
+    "Merge",
+    "OneOf",
     "OneOfDict",  # TODO
     "LoadImage",  # TODO
     "SampleToMasks",  # TODO
@@ -1734,7 +1734,7 @@ class StructuralFeature(Feature):
         property list. A value of `2` hides them from output.
     __distributed__ : bool
         If `True`, applies `get` to each element in a list individually.
-        If `False`, processes the entire list as a single unit. Defaults to
+        If `False`, processes the entire list as a single unit. It defaults to
         `False`.
 
     """
@@ -4317,42 +4317,41 @@ class Lambda(Feature):
 
 
 class Merge(Feature):
-    """Apply a custom function to a list of images.
+    """Apply a custom function to a list of inputs.
 
-    This feature allows applying a user-defined function to a list of images. 
+    This feature allows applying a user-defined function to a list of inputs. 
     The `function` parameter must be a callable that returns another function, 
     where:
       - The **outer function** can depend on other properties in the pipeline.
-      - The **inner function** takes a list of images and returns a single 
-      image or a list of images.
+      - The **inner function** takes a list of inputs and returns a single 
+      outputs or a list of outputs.
     
-    **Note:** The function must be wrapped in an **outer layer** to enable 
-    dependencies on other properties while ensuring correct execution.
+    The function must be wrapped in an outer layer to enable dependencies on
+    other properties while ensuring correct execution.
 
     Parameters
     ----------
-    function: Callable[..., Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]]]
-        A callable that produces a function. The **outer function** can depend 
-        on other properties of the pipeline, while the **inner function** 
-        processes a list of images and returns either a single image or a list 
-        of images.
-    **kwargs: dict[str, Any]
+    function: Callable[..., Callable[[list[Any]], Any or list[Any]]
+        A callable that produces a function. The outer function can depend on
+        other properties of the pipeline, while the inner function processes a
+        list of inputs and returns either a single output or a list of outputs.
+    **kwargs: Any
         Additional parameters passed to the parent `Feature` class.
 
     Attributes
     ----------
     __distributed__: bool
         Indicates whether this feature distributes computation across inputs.
+        It defaults to `False`.
 
     Methods
     -------
-    `get(list_of_images: list[np.ndarray] | list[Image], function: Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]], **kwargs: dict[str, Any]) -> Image | list[Image]`
-        Applies the custom function to the list of images.
+    `get(list_of_images: list[Any], function: Callable[[list[Any]], Any or list[Any]], **kwargs: Any) -> Any or list[Any]`
+        Applies the custom function to the list of inputs.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Define a merge function that averages multiple images:
     >>> def merge_function_factory():
@@ -4363,16 +4362,17 @@ class Merge(Feature):
     Create a Merge feature:
     >>> merge_feature = dt.Merge(function=merge_function_factory)
 
+    Create some images:
+    >>> import numpy as np
+    >>>
+    >>> image_1 = np.ones((2, 3)) * 2
+    >>> image_2 = np.ones((2, 3)) * 4
+
     Apply the feature to a list of images:
-    >>> image_1 = np.ones((5, 5)) * 2
-    >>> image_2 = np.ones((5, 5)) * 4
     >>> output_image = merge_feature([image_1, image_2])
-    >>> print(output_image)
-    [[3. 3. 3. 3. 3.]
-     [3. 3. 3. 3. 3.]
-     [3. 3. 3. 3. 3.]
-     [3. 3. 3. 3. 3.]
-     [3. 3. 3. 3. 3.]]
+    >>> output_image
+    array([[3., 3., 3.],
+        [3., 3., 3.]])
 
     """
 
@@ -4388,12 +4388,12 @@ class Merge(Feature):
 
         Parameters
         ----------
-        function: Callable[..., Callable[list[np.ndarray] | [list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]]]
+        function: Callable[..., Callable[list[Any]], Any or list[Any]]
             A callable that returns a function for processing a list of images.
-            - The **outer function** can depend on other properties in the pipeline.
-            - The **inner function** takes a list of images as input and 
-              returns either a single image or a list of images.
-        **kwargs: dict[str, Any]
+            The outer function can depend on other properties in the pipeline.
+            The inner function takes a list of inputs and returns either a
+            single output or a list of outputs.
+        **kwargs: Any
             Additional parameters passed to the parent `Feature` class.
 
         """
@@ -4406,17 +4406,16 @@ class Merge(Feature):
         function: Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]],
         **kwargs: Any,
     ) -> Image | list[Image]:
-        """Apply the custom function to a list of images.
+        """Apply the custom function to a list of inputs.
 
         Parameters
         ----------
-        list_of_images: list[np.ndarray or Image]
-            A list of images to be processed by the function.
-        function: Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]]
-            The function that processes the list of images and returns either:
-              - A single transformed image (`Image`)
-              - A list of transformed images (`list[Image]`)
-        **kwargs: dict[str, Any]
+        list_of_images: list[Any]
+            A list of inputs to be processed by the function.
+        function: Callable[[list[Any]], Any | list[Any]]
+            The function that processes the list of images and returns either a
+            single transformed input or a list of transformed inputs.
+        **kwargs: Any
             Additional arguments (unused in this implementation).
 
         Returns
@@ -4430,7 +4429,7 @@ class Merge(Feature):
 
 
 class OneOf(Feature):
-    """Resolves one feature from a given collection.
+    """Resolve one feature from a given collection.
 
     This feature selects and applies one of multiple features from a given 
     collection. The default behavior selects a feature randomly, but this 
@@ -4454,18 +4453,18 @@ class OneOf(Feature):
     ----------
     __distributed__: bool
         Indicates whether this feature distributes computation across inputs.
+        It defaults to `False`.
 
     Methods
     -------
-    `_process_properties(propertydict: dict) -> dict`
+    `_process_properties(propertydict: dict[Property]) -> dict[Property]`
         Processes the properties to determine the selected feature index.
-    `get(image: Any, key: int, _ID: tuple[int, ...], **kwargs: dict[str, Any]) -> Any`
-        Applies the selected feature to the input image.
+    `get(image: Any, key: int, _ID: tuple[int, ...], **kwargs: Any) -> Any`
+        Applies the selected feature to the input.
   
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Define multiple features:
     >>> feature_1 = dt.Add(value=10)
@@ -4474,15 +4473,25 @@ class OneOf(Feature):
     Create a `OneOf` feature that randomly selects a transformation:
     >>> one_of_feature = dt.OneOf([feature_1, feature_2])
 
-    Apply it to an input image:
+    Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.array([1, 2, 3])
-    >>> output_image = one_of_feature(input_image)
-    >>> print(output_image)  # The output depends on the randomly selected feature.
 
-    Use a `key` to apply a specific feature:
+    Apply the `OneOf` feature to the input image:
+    >>> output_image = one_of_feature(input_image)
+    >>> output_image # The output depends on the randomly selected feature.
+
+    Use `key` to apply a specific feature:
     >>> controlled_feature = dt.OneOf([feature_1, feature_2], key=0)
     >>> output_image = controlled_feature(input_image)
-    >>> print(output_image)  # Adds 10 to each element.
+    >>> output_image
+    array([11, 12, 13])
+
+    >>> controlled_feature.key.set_value(1)
+    >>> output_image = controlled_feature(input_image)
+    >>> output_image
+    array([2, 4, 6])
 
     """
 
@@ -4499,7 +4508,8 @@ class OneOf(Feature):
         Parameters
         ----------
         collection: Iterable[Feature]
-            A collection of features to choose from. It will be stored as a tuple.
+            A collection of features to choose from. It will be stored as a
+            tuple.
         key: int | None, optional
             The index of the feature to resolve from the collection. If not 
             provided, a feature is selected randomly at execution.
@@ -4509,28 +4519,29 @@ class OneOf(Feature):
         """
 
         super().__init__(key=key, **kwargs)
+
         self.collection = tuple(collection)
-                
+
         # Add all features in the collection as dependencies.
         for feature in self.collection:
             self.add_feature(feature)
 
     def _process_properties(
-        self: Feature, 
-        propertydict: dict,
-    ) -> dict:
+        self: Feature,
+        propertydict: dict[Property],
+    ) -> dict[Property]:
         """Process the properties to determine the feature index.
 
         If `key` is not provided, a random feature index is assigned.
         
         Parameters
         ----------
-        propertydict: dict
+        propertydict: dict[Property]
             The dictionary containing properties of the feature.
 
         Returns
         -------
-        dict
+        dict[Property]
             The updated property dictionary with the `key` property set.
 
         """
