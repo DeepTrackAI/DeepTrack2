@@ -181,7 +181,7 @@ __all__ = [
     "BindUpdate",
     "ConditionalSetProperty",
     "ConditionalSetFeature",
-    "Lambda",  # TODO
+    "Lambda",
     "Merge",  # TODO
     "OneOf",  # TODO
     "OneOfDict",  # TODO
@@ -4209,12 +4209,12 @@ class ConditionalSetFeature(StructuralFeature):
 
 
 class Lambda(Feature):
-    """Apply a user-defined function to each image in the input.
+    """Apply a user-defined function to the input.
 
-    This feature allows applying a custom function to individual images in the
-    input pipeline. The `function` parameter must be wrapped in an 
-    **outer function** that can depend on other properties of the pipeline. 
-    The **inner function** processes a single image.
+    This feature allows applying a custom function to individual inputs in the
+    input pipeline. The `function` parameter must be wrapped in an **outer
+    function** that can depend on other properties of the pipeline. 
+    The **inner function** processes a single input.
 
     Parameters
     ----------
@@ -4227,7 +4227,7 @@ class Lambda(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray | Image, function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image`
+    `get(image: Any, function: Callable[[Any], Any], **kwargs: Any) -> Any`
         Applies the custom function to the input image.
 
     Examples
@@ -4244,36 +4244,40 @@ class Lambda(Feature):
     Create a `Lambda` feature that scales images by a factor of 5:
     >>> lambda_feature = dt.Lambda(function=scale_function_factory, scale=5)
 
-    Apply the feature to an image:
-    >>> input_image = np.ones((5, 5))
+    Create an image:
+    >>> import numpy as np
+    >>> 
+    >>> input_image = np.ones((2, 3))
+    >>> input_image
+    array([[1., 1., 1.],
+        [1., 1., 1.]])
+
+    Apply the feature to the image:
     >>> output_image = lambda_feature(input_image)
-    >>> print(output_image)
-    [[5. 5. 5. 5. 5.]
-     [5. 5. 5. 5. 5.]
-     [5. 5. 5. 5. 5.]
-     [5. 5. 5. 5. 5.]
-     [5. 5. 5. 5. 5.]]
-    
+    >>> output_image
+    array([[5., 5., 5.],
+        [5., 5., 5.]])
+
     """
 
     def __init__(
         self: Feature,
-        function: Callable[..., Callable[[Image], Image]],
+        function: Callable[..., Callable[[Any], Any]],
         **kwargs: Any,
     ):
         """Initialize the Lambda feature.
 
-        This feature applies a user-defined function to process an image. The 
+        This feature applies a user-defined function to process an input. The 
         `function` parameter must be a callable that returns another function, 
-        where the inner function operates on the image.
+        where the inner function operates on the input.
 
         Parameters
         ----------
-        function: Callable[..., Callable[[Image], Image]]
+        function: Callable[..., Callable[[Any], Any]]
             A callable that produces a function. The outer function can accept 
             additional arguments from the pipeline, while the inner function 
-            processes a single image.
-        **kwargs: dict[str, Any]
+            processes a single input.
+        **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -4282,30 +4286,30 @@ class Lambda(Feature):
 
     def get(
         self: Feature,
-        image: np.ndarray | Image,
-        function: Callable[[Image], Image],
+        image: Any,
+        function: Callable[[Any], Any],
         **kwargs: Any,
-    ) -> Image:
-        """Apply the custom function to the input image.
+    ) -> Any:
+        """Apply the custom function to the input.
 
-        This method applies a user-defined function to transform the input 
-        image. The function should be a callable that takes an image as input 
-        and returns a modified version of it.
+        This method applies a user-defined function to transform the input. The
+        function should be a callable that takes an input and returns a
+        modified version of it.
 
         Parameters
         ----------
-        image: np.ndarray or Image
-            The input image to be processed.
-        function: Callable[[Image], Image]
-            A callable function that takes an image and returns a transformed 
-            image.
+        image: Any
+            The input to be processed.
+        function: Callable[[Any], Any]
+            A callable function that takes an input and returns a transformed 
+            output.
         **kwargs: Any
             Additional keyword arguments (unused in this implementation).
 
         Returns
         -------
-        Image
-            The transformed image after applying the function.
+        Any
+            The transformed output after applying the function.
 
         """
 
