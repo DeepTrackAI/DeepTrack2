@@ -1509,37 +1509,45 @@ class TestFeatures(unittest.TestCase):
 
         B = features.DummyFeature(
             key="a",
-            prop=lambda key: A.a() if key == "a" 
-                             else (A.b() if key == "b" else A.c()),
+            prop=lambda key: A.a() if key == "a"
+                             else (A.b() if key == "b"
+                                   else A.c()),
         )
 
         B.update()
         self.assertEqual(B.prop(), 1)
-        B.key.set_value("a")
-        self.assertEqual(B.prop(), 1)
+
         B.key.set_value("b")
         self.assertEqual(B.prop(), 2)
+
         B.key.set_value("c")
         self.assertEqual(B.prop(), 3)
+
+        B.key.set_value("a")
+        self.assertEqual(B.prop(), 1)
 
     def test_Lambda_dependence_twice(self):
         A = features.DummyFeature(a=1, b=2, c=3)
 
         B = features.DummyFeature(
             key="a",
-            prop=lambda key: A.a() if key == "a" 
-                             else (A.b() if key == "b" else A.c()),
+            prop=lambda key: A.a() if key == "a"
+                             else (A.b() if key == "b"
+                                   else A.c()),
             prop2=lambda prop: prop * 2,
         )
 
         B.update()
         self.assertEqual(B.prop2(), 2)
-        B.key.set_value("a")
-        self.assertEqual(B.prop2(), 2)
+
         B.key.set_value("b")
         self.assertEqual(B.prop2(), 4)
+
         B.key.set_value("c")
         self.assertEqual(B.prop2(), 6)
+
+        B.key.set_value("a")
+        self.assertEqual(B.prop2(), 2)
 
     def test_Lambda_dependence_other_feature(self):
 
@@ -1547,22 +1555,26 @@ class TestFeatures(unittest.TestCase):
 
         B = features.DummyFeature(
             key="a",
-            prop=lambda key: A.a() if key == "a" 
-                             else (A.b() if key == "b" else A.c()),
+            prop=lambda key: A.a() if key == "a"
+                             else (A.b() if key == "b"
+                                   else A.c()),
             prop2=lambda prop: prop * 2,
         )
 
-        C = features.DummyFeature(B_prop=B.prop2, 
+        C = features.DummyFeature(B_prop=B.prop2,
                                   prop=lambda B_prop: B_prop * 2)
 
         C.update()
         self.assertEqual(C.prop(), 4)
-        B.key.set_value("a")
-        self.assertEqual(C.prop(), 4)
+
         B.key.set_value("b")
         self.assertEqual(C.prop(), 8)
+
         B.key.set_value("c")
         self.assertEqual(C.prop(), 12)
+
+        B.key.set_value("a")
+        self.assertEqual(C.prop(), 4)
 
     def test_Lambda_scaling(self):
         def scale_function_factory(scale=2):
@@ -1570,19 +1582,20 @@ class TestFeatures(unittest.TestCase):
                 return image * scale
             return scale_function
 
-        lambda_feature = features.Lambda(function=scale_function_factory, scale=5)
+        lambda_feature = features.Lambda(
+            function=scale_function_factory,
+            scale=5,
+        )
         input_image = np.ones((5, 5))
-
         output_image = lambda_feature.resolve(input_image)
+        self.assertTrue(np.array_equal(output_image, np.ones((5, 5)) * 5))
 
-        expected_output = np.ones((5, 5)) * 5
-        self.assertTrue(np.array_equal(output_image, expected_output), "Arrays are not equal")
-
-        lambda_feature = features.Lambda(function=scale_function_factory, scale=3)
+        lambda_feature = features.Lambda(
+            function=scale_function_factory,
+            scale=3,
+        )
         output_image = lambda_feature.resolve(input_image)
-
-        expected_output = np.ones((5, 5)) * 3
-        self.assertTrue(np.array_equal(output_image, expected_output), "Arrays are not equal")
+        self.assertTrue(np.array_equal(output_image, np.ones((5, 5)) * 3))
 
 
     def test_Merge(self):
