@@ -4046,7 +4046,7 @@ class ConditionalSetFeature(StructuralFeature):
     
     The `condition` parameter specifies either:
     - A boolean value (default is `True`).
-    - The name of a property to listen to. For example, if 
+    - The name of a property to listen to. For example, if
     `condition="is_label"`, the selected feature can be toggled as follows:
     
     >>> feature.resolve(is_label=True)   # Resolves `on_true`
@@ -4071,20 +4071,19 @@ class ConditionalSetFeature(StructuralFeature):
     **kwargs: Any
         Additional keyword arguments passed to the parent `StructuralFeature`.
 
-    Attributes
-    ----------
-    __distributed__: bool
-        Indicates whether this feature distributes computation across inputs.
-
     Methods
     -------
-    `get(image: Any, condition: str | bool, **kwargs: dict[str, Any]) -> Any`
+    `get(image: Any, condition: str or bool, **kwargs: Any) -> Any`
         Resolves the appropriate feature based on the condition.
 
     Examples
     --------
     >>> import deeptrack as dt
+
+    Define an image:
     >>> import numpy as np
+    >>>
+    >>> image = np.ones((512, 512))
 
     Define two `Gaussian` noise features:
     >>> true_feature = dt.Gaussian(sigma=0)
@@ -4092,26 +4091,23 @@ class ConditionalSetFeature(StructuralFeature):
     
     --- Using a boolean condition ---
     Combine the features into a conditional set feature. 
-    If not provided explicitely, condition is assumed to be True:
+    If not provided explicitely, the condition is assumed to be True:
     >>> conditional_feature = dt.ConditionalSetFeature(
-    ...     on_true=true_feature, 
-    ...     on_false=false_feature, 
+    ...     on_true=true_feature,
+    ...     on_false=false_feature,
     ... )
 
-    Define an image:
-    >>> image = np.ones((512, 512))
-
-    Resolve based on the condition:
-    >>> clean_image = conditional_feature(image) # If not specified, default is True
-    >>> print(clean_image.std())  # Should be 0
+    Resolve based on the condition. If not specified, default is True:
+    >>> clean_image = conditional_feature(image)
+    >>> round(clean_image.std(), 1)
     0.0
     
     >>> noisy_image = conditional_feature(image, condition=False)
-    >>> print(noisy_image.std())  # Should be ~5
-    4.987707046984823
+    >>> round(noisy_image.std(), 1)
+    5.0
 
     >>> clean_image = conditional_feature(image, condition=True)
-    >>> print(clean_image.std())  # Should be 0
+    >>> round(clean_image.std(), 1)
     0.0
 
     --- Using a string-based condition ---
@@ -4124,16 +4120,14 @@ class ConditionalSetFeature(StructuralFeature):
 
     Resolve based on the conditions:
     >>> noisy_image = conditional_feature(image, is_noisy=False)
-    >>> print(noisy_image.std())  # Should be ~5
-    5.006310381139811
+    >>> round(noisy_image.std(), 1)
+    5.0
 
     >>> clean_image = conditional_feature(image, is_noisy=True)
-    >>> print(clean_image.std())  # Should be 0
+    >>> round(clean_image.std(), 1)
     0.0
 
     """
-
-    __distributed__: bool = False
 
     def __init__(
         self: Feature,
@@ -4152,8 +4146,8 @@ class ConditionalSetFeature(StructuralFeature):
             The feature to resolve if the condition evaluates to `True`.
         condition: str or bool, optional
             The name of the property to listen to, or a boolean value. It
-            defaults to `"is_label"`.
-        **kwargs:: dict of str to Any
+            defaults to `True`.
+        **kwargs:: Any
             Additional keyword arguments for the parent `StructuralFeature`.
 
         """
@@ -4162,7 +4156,7 @@ class ConditionalSetFeature(StructuralFeature):
             kwargs.setdefault(condition, True)
 
         super().__init__(condition=condition, **kwargs)
-        
+
         # Add the child features to the dependency graph if provided.
         if on_true:
             self.add_feature(on_true)
@@ -4189,7 +4183,7 @@ class ConditionalSetFeature(StructuralFeature):
             The name of the conditional property or a boolean value. If a 
             string is provided, it is looked up in `kwargs` to get the actual 
             boolean value.
-        **kwargs:: dict of str to Any
+        **kwargs:: Any
             Additional keyword arguments to pass to the resolved feature.
 
         Returns
@@ -4207,16 +4201,11 @@ class ConditionalSetFeature(StructuralFeature):
             _condition = kwargs.get(condition, False)
 
         # Resolve the appropriate feature.
-        if _condition:
-            if self.on_true:
-                return self.on_true(image)
-            else:
-                return image
-        else:
-            if self.on_false:
-                return self.on_false(image)
-            else:
-                return image
+        if _condition and self.on_true:
+            return self.on_true(image)
+        if not _condition and self.on_false:
+            return self.on_false(image)
+        return image
 
 
 class Lambda(Feature):
