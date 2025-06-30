@@ -1417,7 +1417,7 @@ class TestFeatures(unittest.TestCase):
         bound_feature = features.BindUpdate(gaussian_noise, mu=5, sigma=3)
 
         # Create the input image
-        input_image = np.zeros((512, 512))
+        input_image = np.zeros((128, 128))
 
         # Resolve the feature to get the output image
         output_image = bound_feature.resolve(input_image)
@@ -1432,13 +1432,12 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_ConditionalSetProperty(self):
-        """Test that ConditionalSetProperty correctly modifies properties based on condition."""
 
-        """Set up a Gaussian feature and a test image before each test."""
+        # Set up a Gaussian feature and a test image before each test.
         gaussian_noise = Gaussian(sigma=0)
         image = np.ones((128, 128))
 
-        """Test that sigma is correctly applied when condition is a boolean."""
+        # Test that sigma is correctly applied when condition is a boolean.
         conditional_feature = features.ConditionalSetProperty(
             gaussian_noise, sigma=5,
         )
@@ -1451,9 +1450,9 @@ class TestFeatures(unittest.TestCase):
         clean_image = conditional_feature.update()(image, condition=False)
         self.assertEqual(clean_image.std(), 0)
 
-        """Test that sigma is correctly applied when condition is a string property."""
+        # Test sigma is correctly applied when condition is string property.
         conditional_feature = features.ConditionalSetProperty(
-            gaussian_noise, sigma=5, condition="is_noisy"
+            gaussian_noise, sigma=5, condition="is_noisy",
         )
 
         # Test with condition met (should apply sigma=5)
@@ -1464,17 +1463,17 @@ class TestFeatures(unittest.TestCase):
         clean_image = conditional_feature.update()(image, is_noisy=False)
         self.assertEqual(clean_image.std(), 0)
 
-    def test_ConditionalSetFeature(self):
 
-        """Set up Gaussian noise features and test image before each test."""
+    def test_ConditionalSetFeature(self):
+        # Set up Gaussian noise features and test image before each test.
         true_feature = Gaussian(sigma=0)    # Clean image (no noise)
         false_feature = Gaussian(sigma=5)   # Noisy image (sigma=5)
         image = np.ones((512, 512))
 
-        """Test using a direct boolean condition."""
+        # Test using a direct boolean condition.
         conditional_feature = features.ConditionalSetFeature(
             on_true=true_feature,
-            on_false=false_feature
+            on_false=false_feature,
         )
 
         # Default condition is True (no noise)
@@ -1489,11 +1488,11 @@ class TestFeatures(unittest.TestCase):
         clean_image = conditional_feature(image, condition=True)
         self.assertEqual(clean_image.std(), 0)
 
-        """Test using a string-based condition."""
+        # Test using a string-based condition.
         conditional_feature = features.ConditionalSetFeature(
             on_true=true_feature,
             on_false=false_feature,
-            condition="is_noisy"
+            condition="is_noisy",
         )
 
         # Condition is False (sigma=5)
