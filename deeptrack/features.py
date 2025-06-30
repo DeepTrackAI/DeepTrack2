@@ -176,11 +176,11 @@ __all__ = [
     "Repeat",
     "Combine",
     "Slice",
-    "Bind",  # TODO
-    "BindResolve",  # TODO
-    "BindUpdate",  # TODO
-    "ConditionalSetProperty",  # TODO
-    "ConditionalSetFeature",  # TODO
+    "Bind",
+    "BindResolve",
+    "BindUpdate",
+    "ConditionalSetProperty",
+    "ConditionalSetFeature",
     "Lambda",  # TODO
     "Merge",  # TODO
     "OneOf",  # TODO
@@ -2048,7 +2048,8 @@ class Value(Feature):
                 "Passing an Image object as the value to dt.Value may lead to "
                 "performance deterioration. Consider converting the Image to "
                 "a NumPy array with np.array(image), or to a PyTorch tensor "
-                "with torch.tensor(np.array(image))."
+                "with torch.tensor(np.array(image)).",
+                DeprecationWarning,
             )
 
         super().__init__(value=value, **kwargs)
@@ -3796,23 +3797,19 @@ class BindUpdate(StructuralFeature):
 
     Methods
     -------
-    `get(image: Any, **kwargs: dict[str, Any]) -> Any`
-        Resolves the child feature with the provided arguments.
+    `get(image: Any, **kwargs: Any) -> Any`
+        It resolves the child feature with the provided arguments.
 
     Warnings
     --------
-    This feature is deprecated and may be removed in a future release. 
-    It is recommended to use `Bind` instead for equivalent functionality.
-
-    Notes
-    -----
-    The current implementation is not guaranteed to be exactly equivalent to 
-    prior implementations.
+    Deprecation: This feature is deprecated and may be removed in a future
+    release. It is recommended to use `Bind` instead for equivalent
+    functionality. Further, the current implementation is not guaranteed to be
+    exactly equivalent to prior implementations.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Start by creating a `Gaussian` feature:
     >>> gaussian_noise = dt.Gaussian()
@@ -3820,19 +3817,19 @@ class BindUpdate(StructuralFeature):
     Dynamically modify the behavior of the feature using `BindUpdate`:
     >>> bound_feature = dt.BindUpdate(gaussian_noise, mu = 5, sigma=3)
     
+    >>> import numpy as np
+    >>>
     >>> input_image = np.zeros((512, 512))
     >>> output_image = bound_feature.resolve(input_image)
-    >>> print(np.mean(output_image), np.std(output_image))
-    4.998501486851294 3.0020269383538176
+    >>> round(np.mean(output_image), 1), round(np.std(output_image), 1)
+    (5.0, 3.0)
 
     """
-
-    __distributed__: bool = False
 
     def __init__(
         self: Feature, 
         feature: Feature, 
-        **kwargs: dict[str, Any]
+        **kwargs: Any,
     ):
         """Initialize the BindUpdate feature.
 
@@ -3845,7 +3842,7 @@ class BindUpdate(StructuralFeature):
 
         Warnings
         --------
-        Emits a deprecation warning, encouraging the use of `Bind` instead.
+        It emits a deprecation warning, encouraging the use of `Bind` instead.
 
         """
 
@@ -3860,12 +3857,13 @@ class BindUpdate(StructuralFeature):
         )
 
         super().__init__(**kwargs)
+
         self.feature = self.add_feature(feature)
 
     def get(
-        self: Feature, 
-        image: Any, 
-        **kwargs: dict[str, Any]
+        self: Feature,
+        image: Any,
+        **kwargs: Any,
     ) -> Any:
         """Resolve the child feature with the provided arguments.
 
@@ -3896,64 +3894,60 @@ class ConditionalSetProperty(StructuralFeature):
     the given properties are applied; otherwise, the child feature remains 
     unchanged.
 
-    **Note**: It is advisable to use `dt.Arguments` instead when possible, 
-    since this feature **overwrites** properties, which may affect future 
-    calls to the feature.
+    It is advisable to use `dt.Arguments` instead when possible, since this
+    feature overwrites properties, which may affect future calls to the
+    feature.
+
+    If `condition` is a string, the condition must be explicitly passed when
+    resolving.
+
+    The properties applied do not persist unless explicitly stored.
 
     Parameters
     ----------
     feature: Feature
         The child feature whose properties will be modified conditionally.
-    condition: PropertyLike[str] or PropertyLike[bool]
-        Either a boolean value (`True`/`False`) or the name of a boolean 
+    condition: PropertyLike[str or bool] or None
+        Either a boolean value (`True`, `False`) or the name of a boolean 
         property in the feature’s property dictionary. If the condition 
         evaluates to `True`, the specified properties are applied.
-    **kwargs: dict[str, Any]
+    **kwargs: Any
         The properties to be applied to the child feature if `condition` is 
         `True`.
 
-    Attributes
-    ----------
-    __distributed__: bool
-        Indicates whether this feature distributes computation across inputs.
-
     Methods
     -------
-    `get(image: Any, condition: str | bool, **kwargs: dict[str, Any]) -> Any`
+    `get(image: Any, condition: str or bool, **kwargs: Any) -> Any`
         Resolves the child feature, conditionally applying the specified 
         properties.
-
-    Notes
-    -----
-    - If `condition` is a string, the condition must be explicitly passed when
-      resolving.
-    - The properties applied **do not persist** unless explicitly stored.
 
     Examples
     --------
     >>> import deeptrack as dt
+    
+    Define an image:
     >>> import numpy as np
+    >>>
+    >>> image = np.ones((512, 512))
 
     Define a `Gaussian` noise feature:
     >>> gaussian_noise = dt.Gaussian(sigma=0)
 
     --- Using a boolean condition ---
-    Apply `sigma=5` **only if** `condition=True`:
+    Apply `sigma=5` only if `condition=True`:
     >>> conditional_feature = dt.ConditionalSetProperty(
-    ...     gaussian_noise, sigma=5
+    ...     gaussian_noise, sigma=5,
     ... )
 
-    Define an image:
-    >>> image = np.ones((512, 512))
-
     Resolve with condition met:
-    >>> noisy_image = conditional_feature.update(image, condition=True)
-    >>> print(noisy_image.std())  # Should be ~5
-    4.987707046984823
+    >>> noisy_image = conditional_feature(image, condition=True)
+    >>> round(noisy_image.std(), 1)
+    5.0
 
     Resolve without condition:
-    >>> clean_image = conditional_feature.update(image, condition=False)
-    >>> print(clean_image.std())  # Should be 0
+    >>> conditional_feature.update()  # Essential to reset the property
+    >>> clean_image = conditional_feature(image, condition=False)
+    >>> round(clean_image.std(), 1)
     0.0
 
     --- Using a string-based condition ---
@@ -3963,18 +3957,17 @@ class ConditionalSetProperty(StructuralFeature):
     ... )
 
     Resolve with condition met:
-    >>> noisy_image = conditional_feature.update(image, is_noisy=True)
-    >>> print(noisy_image.std())  # Should be ~5
-    5.006310381139811
+    >>> noisy_image = conditional_feature(image, is_noisy=True)
+    >>> round(noisy_image.std(), 1)
+    5.0
 
     Resolve without condition:
-    >>> clean_image = conditional_feature.update(image, is_noisy=False)
-    >>> print(clean_image.std())  # Should be 0
+    >>> conditional_feature.update()
+    >>> clean_image = conditional_feature(image, is_noisy=False)
+    >>> round(clean_image.std(), 1)
     0.0
-    
-    """
 
-    __distributed__: bool = False
+    """
 
     def __init__(
         self: Feature,
@@ -3988,7 +3981,7 @@ class ConditionalSetProperty(StructuralFeature):
         ----------
         feature: Feature
             The child feature to conditionally modify.
-        condition: PropertyLike[str or bool]
+        condition: PropertyLike[str or bool] or None
             A boolean value or the name of a boolean property in the feature's 
             property dictionary. If the condition evaluates to `True`, the 
             specified properties are applied.
@@ -4002,6 +3995,7 @@ class ConditionalSetProperty(StructuralFeature):
             kwargs.setdefault(condition, True)
 
         super().__init__(condition=condition, **kwargs)
+
         self.feature = self.add_feature(feature)
 
     def get(
@@ -4020,7 +4014,7 @@ class ConditionalSetProperty(StructuralFeature):
             A boolean value or the name of a boolean property in the feature's 
             property dictionary. If the condition evaluates to `True`, the 
             specified properties are applied.
-        **kwargs:: dict of str to Any
+        **kwargs:: Any
             Additional properties to apply to the child feature if the 
             condition is `True`.
 
