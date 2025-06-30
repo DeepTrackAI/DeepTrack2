@@ -1609,9 +1609,12 @@ class TestFeatures(unittest.TestCase):
 
         image_1 = np.ones((5, 5)) * 2
         image_2 = np.ones((5, 5)) * 4
-        expected_output = np.ones((5, 5)) * 3
         output_image = merge_feature.resolve([image_1, image_2])
-        self.assertIsNone(np.testing.assert_array_almost_equal(output_image, expected_output))
+        self.assertIsNone(
+            np.testing.assert_array_almost_equal(
+                output_image, np.ones((5, 5)) * 3,
+            )
+        )
 
         image_1 = np.ones((5, 5)) * 2
         image_2 = np.ones((3, 3)) * 4 
@@ -1620,16 +1623,20 @@ class TestFeatures(unittest.TestCase):
 
         image_1 = np.ones((5, 5)) * 2
         output_image = merge_feature.resolve([image_1])
-        self.assertIsNone(np.testing.assert_array_almost_equal(output_image, image_1))
+        self.assertIsNone(
+            np.testing.assert_array_almost_equal(
+                output_image, image_1,
+            )
+        )
 
 
     def test_OneOf(self):
-        """Set up the features and input image for testing."""
+        # Set up the features and input image for testing.
         feature_1 = features.Add(value=10)
         feature_2 = features.Multiply(value=2)
         input_image = np.array([1, 2, 3])
 
-        """Test that OneOf applies one of the features randomly."""
+        # Test that OneOf applies one of the features randomly.
         one_of_feature = features.OneOf([feature_1, feature_2])
         output_image = one_of_feature.resolve(input_image)
         
@@ -1638,14 +1645,16 @@ class TestFeatures(unittest.TestCase):
         # - self.input_image * 2  (if feature_2 is chosen)
         expected_outputs = [
             input_image + 10,
-            input_image * 2
+            input_image * 2,
         ]
         self.assertTrue(
-            any(np.array_equal(output_image, expected) for expected in expected_outputs),
-            f"Output {output_image} did not match any expected transformations."
+            any(
+                np.array_equal(output_image, expected) 
+                for expected in expected_outputs
+            )
         )
 
-        """Test that OneOf applies the selected feature when `key` is provided."""
+        # Test that OneOf applies the selected feature when `key` is provided.
         controlled_feature = features.OneOf([feature_1, feature_2], key=0)
         output_image = controlled_feature.resolve(input_image)
         expected_output = input_image + 10
