@@ -19,7 +19,6 @@ tensor(0.3315, device='cuda:0', dtype=torch.float16)
 """
 
 from __future__ import annotations
-from deeptrack.types import ArrayLike
 import torch
 import numpy as np
 
@@ -217,7 +216,7 @@ def exponential(
 def multivariate_normal(
     mean: torch.Tensor,
     cov: torch.Tensor,
-    size: tuple[int, ...]] = None,
+    size: tuple[int, ...] = None,
     dtype: torch.dtype = torch.float32,
     device: torch.device | str = "cpu",
 ) -> torch.Tensor:
