@@ -322,8 +322,7 @@ class Feature(DeepTrackNode):
     `get(image: Any, **kwargs: Any) -> Any`
         Abstract method that defines how the feature transforms the input. The
         input is most commonly a NumPy array, PyTorch tensor, or Image object,
-        or a list of NumPy arrays, PyTorch tensors, or Image objects; however,
-        it can be anything.
+        but it can be anything.
     `__call__(image_list: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, _ID: tuple[int, ...] = (), **kwargs: Any) -> Any`
         Executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
@@ -478,28 +477,22 @@ class Feature(DeepTrackNode):
 
     def __init__(
         self: Feature,
-        _input: (
-            NDArray
-            | list[NDArray]
-            | torch.Tensor
-            | list[torch.Tensor]
-            | Image
-            | list[Image]
-        ) = [],
+        _input: Any = [],
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initialize a new Feature instance.
 
         Parameters
         ----------
-        _input: np.ndarray or list[np.ndarray] or torch.Tensor or list[torch.Tensor] or Image or list[Images], optional
-            The initial input(s) for the feature, often images or other data. 
-            If not provided, defaults to an empty list.
+        _input: Any, optional
+            The initial input(s) for the feature. It is most commonly a NumPy
+            array, PyTorch tensor, or Image object, or a list of NumPy arrays,
+            PyTorch tensors, or Image objects; however, it can be anything. If
+            not provided, defaults to an empty list.
         **kwargs: Any
             Keyword arguments that are wrapped into `Property` instances and 
             stored in `self.properties`, allowing for dynamic or parameterized
-            behavior.
-            If not provided, defaults to an empty list.
+            behavior. If not provided, it defaults to an empty list.
 
         """
 
@@ -540,25 +533,26 @@ class Feature(DeepTrackNode):
 
     def get(
         self: Feature,
-        image: np.ndarray | list[np.ndarray] | Image | list[Image],
+        image: Any,
         **kwargs: Any,
-    ) -> Image | list[Image]:
-        """Transform an image [abstract method].
+    ) -> Any:
+        """Transform an input (abstract method).
 
         Abstract method that defines how the feature transforms the input. The 
         current value of all properties will be passed as keyword arguments.
 
         Parameters
         ----------
-        image: np.ndarray or Image or list[np.ndarray or Image]
-            The image or list of images to transform.
+        image: Any
+            The input to transform. It is most commonly a NumPy array, PyTorch
+            tensor, or Image object, but it can be anything.
         **kwargs: Any
             The current value of all properties in `properties`, as well as any 
             global arguments passed to the feature.
 
         Returns
         -------
-        Image or list[Image]
+        Any
             The transformed image or list of images.
 
         Raises
@@ -572,19 +566,7 @@ class Feature(DeepTrackNode):
 
     def __call__(
         self: Feature,
-        image_list: (
-            Feature
-            | list[Feature]
-            | NDArray[Any]
-            | list[NDArray[Any]]
-            | torch.Tensor
-            | list[torch.Tensor]
-            | Image
-            | list[Image]
-            | Any
-            | list[Any]
-            | None
-        ) = None,
+        image_list: Any = None,
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
     ) -> Any:
@@ -600,9 +582,12 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        image_list: np.ndarrray or Image or list[np.ndarrray or Image], optional
-            The input to the feature or pipeline. If `None`, the feature uses 
-            previously set input values or propagates properties.
+        image_list: Any, optional
+            The input to the feature or pipeline. It is most commonly a NumPy
+            array, PyTorch tensor, or Image object, or a list of NumPy arrays,
+            PyTorch tensors, or Image objects; however, it can be anything. It
+            defaults to `None`, in which case the feature uses the previous set
+            input values or propagates properties.
         **kwargs: Any
             Additional parameters passed to the pipeline. These override 
             properties with matching names. For example, calling 
@@ -614,7 +599,11 @@ class Feature(DeepTrackNode):
         -------
         Any
             The output of the feature or pipeline after execution.
-        
+
+        Examples
+        --------
+        TODO: basic examples + examples with overwriting of features
+
         """
 
         with config.with_backend(self._backend):
