@@ -214,31 +214,56 @@ MERGE_STRATEGY_APPEND: int = 1
 class Feature(DeepTrackNode):
     """Base feature class.
 
-    Features define the image generation process. All features operate on lists 
-    of images. Most features, such as noise, apply some tranformation to all 
-    images in the list. This transformation can be additive, such as adding 
-    some Gaussian noise or a background illumination, or non-additive, such as 
-    introducing Poisson noise or performing a low-pass filter. This 
-    transformation is defined by the method `get(image, **kwargs)`, which all 
-    implementations of the class `Feature` need to define.
+    Features define the image generation process.
+    
+    All features operate on lists of images. Most features, such as noise,
+    apply a tranformation to all images in the list. This transformation can be
+    additive, such as adding some Gaussian noise or a background illumination,
+    or non-additive, such as introducing Poisson noise or performing a low-pass
+    filter. This transformation is defined by the `get(image, **kwargs)`
+    method, which all implementations of the class `Feature` need to define.
+    This method operates on a single image at a time.
 
-    Whenever a Feature is initiated, all keyword arguments passed to the
-    constructor will be wrapped as a `Property`, and stored in the `properties` 
-    attribute as a `PropertyDict`. When a Feature is resolved, the current 
-    value of each property is sent as input to the get method.
+    Whenever a Feature is initialized, it wraps all keyword arguments passed to
+    the constructor as `Property` objects, and stored in the `properties` 
+    attribute as a `PropertyDict`.
+    
+    When a Feature is resolved, the current value of each property is sent as
+    input to the get method.
+
+    **Computational Backends and Data Types**
+    
+    This class also provides mechanisms for managing numerical types and 
+    computational backends.
+
+    Supported backends include NumPy and PyTorch. The active backend is 
+    determined at initialization and stored in the `_backend` attribute, which 
+    is used internally to control how computations are executed. The backend
+    can be switched using the `.numpy()` and `.torch()` methods.
+
+    Numerical types used in computation (float, int, complex, and bool) can be 
+    configured using the `.dtype()` method. The chosen types are retrieved 
+    via the properties `float_dtype`, `int_dtype`, `complex_dtype`, and 
+    `bool_dtype`. These are resolved dynamically using the backend's internal 
+    type resolution system and are used in downstream computations.
+
+    The computational device (e.g., "cpu" or a specific GPU) is managed through 
+    the `.to()` method and accessed via the `device` property. This is 
+    especially relevant for PyTorch backends, which support GPU acceleration.
 
     Parameters
     ----------
-    _input: np.ndarray or Image or list[np.ndarray or Image], optional.
-        A list of np.ndarray or `DeepTrackNode` objects or a single np.ndarray 
-        or an `Image` object representing the input data for the feature. This
-        parameter specifies what the feature will process. If left empty, no 
-        initial input is set.
-    **kwargs: dict of str and Any
+    _input: Any, optional.
+        The input data for the feature. If left empty, no initial input is set.
+        It is most commonly a NumPy array, PyTorch tensor, or Image object, or
+        a list of NumPy arrays, PyTorch tensors, or Image objects; however, it
+        can be anything.
+    **kwargs: Any
         Keyword arguments to configure the feature. Each keyword argument is 
         wrapped as a `Property` and added to the `properties` attribute, 
         allowing dynamic sampling and parameterization during the feature's 
-        execution.
+        execution. These properties are passed to the `get()` method when a
+        feature is resolved.
 
     Attributes
     ----------
@@ -248,6 +273,37 @@ class Feature(DeepTrackNode):
         dynamically sample values during pipeline execution. A sampled copy of
         this dictionary is passed to the `get` function and appended to the 
         properties of the output image.
+    _input: DeepTrackNode
+        A node representing the input data for the feature. It is most commonly
+        a NumPy array, PyTorch tensor, or Image object, or a list of NumPy
+        arrays, PyTorch tensors, or Image objects; however, it can be anything.
+        It supports lazy evaluation and graph traversal.
+    _random_seed: DeepTrackNode
+        A node representing the feature’s random seed. This allows for 
+        deterministic behavior when generating random elements, and ensures 
+        reproducibility during evaluation.
+    arguments: Feature | None
+        An optional `Feature` whose properties are bound to this feature. This 
+        allows dynamic property sharing and centralized parameter management 
+        in complex pipelines.
+    __list_merge_strategy__: int
+        Specifies how the output of `.get(image, **kwargs)` is merged with the 
+        current `_input`. Options include:
+        - `MERGE_STRATEGY_OVERRIDE` (0, default): `_input` is replaced by the
+        new output.
+        - `MERGE_STRATEGY_APPEND` (1): The output is appended to the end of 
+        `_input`.
+    __distributed__: bool
+        Determines whether `.get(image, **kwargs)` is applied to each element 
+        of the input list independently (`__distributed__ = True`) or to the 
+        list as a whole (`__distributed__ = False`).
+    __conversion_table__: ConversionTable
+        Defines the unit conversions used by the feature to convert its 
+        properties into the desired units.
+    _wrap_array_with_image: bool
+        Internal flag that determines whether arrays are wrapped as `Image` 
+        instances during evaluation. When `True`, image metadata and properties 
+        are preserved and propagated. It defaults to `False`.
     float_dtype: np.dtype
         The data type of the float numbers.
     int_dtype: np.dtype
@@ -260,29 +316,14 @@ class Feature(DeepTrackNode):
         The device on which the feature is executed.
     _backend: Config
         The computational backend.
-    __list_merge_strategy__: int
-        Specifies how the output of `.get(image, **kwargs)` is merged with the 
-        input list. Options include:
-        - `MERGE_STRATEGY_OVERRIDE` (0, default): The input list is replaced by
-        the new list.
-        - `MERGE_STRATEGY_APPEND` (1): The new list is appended to the end of 
-        the input list.
-    __distributed__: bool
-        Determines whether `.get(image, **kwargs)` is applied to each element 
-        of the input list independently (`__distributed__ = True`) or to the 
-        list as a whole (`__distributed__ = False`).
-    __property_memorability__: int
-        Specifies whether to store the feature’s properties in the output 
-        image. Properties with a memorability value of `1` or lower are stored
-        by default.
-    __conversion_table__: ConversionTable
-        Defines the unit conversions used by the feature to convert its 
-        properties into the desired units.
 
     Methods
     -------
-    `get(image: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> Image | list[Image]`
-        Abstract method that defines how the feature transforms the input.
+    `get(image: Any, **kwargs: Any) -> Any`
+        Abstract method that defines how the feature transforms the input. The
+        input is most commonly a NumPy array, PyTorch tensor, or Image object,
+        or a list of NumPy arrays, PyTorch tensors, or Image objects; however,
+        it can be anything.
     `__call__(image_list: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, _ID: tuple[int, ...] = (), **kwargs: Any) -> Any`
         Executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
@@ -387,6 +428,10 @@ class Feature(DeepTrackNode):
     `_no_wrap_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
         Processes the output of the feature.
 
+    Examples
+    --------
+    TODO
+
     """
 
     properties: PropertyDict
@@ -396,14 +441,15 @@ class Feature(DeepTrackNode):
 
     __list_merge_strategy__ = MERGE_STRATEGY_OVERRIDE
     __distributed__ = True
-    __property_memorability__ = 1
     __conversion_table__ = ConversionTable()
 
     _wrap_array_with_image: bool = False
+
     _float_dtype: str
     _int_dtype: str
     _complex_dtype: str
     _device: str | torch.device
+    _backend: Config
 
     @property
     def float_dtype(self) -> np.dtype | torch.dtype:
@@ -3894,7 +3940,7 @@ class ConditionalSetProperty(StructuralFeature):
     the given properties are applied; otherwise, the child feature remains 
     unchanged.
 
-    It is advisable to use `dt.Arguments` instead when possible, since this
+    It is advisable to use `Arguments` instead when possible, since this
     feature overwrites properties, which may affect future calls to the
     feature.
 
@@ -3920,6 +3966,11 @@ class ConditionalSetProperty(StructuralFeature):
     `get(image: Any, condition: str or bool, **kwargs: Any) -> Any`
         Resolves the child feature, conditionally applying the specified 
         properties.
+
+    Warnings
+    --------
+    Deprecation: This feature is deprecated and may be removed in a future
+    release. It is recommended to use `Arguments` instead.
 
     Examples
     --------
@@ -3970,7 +4021,7 @@ class ConditionalSetProperty(StructuralFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: ConditionalSetProperty,
         feature: Feature,
         condition: PropertyLike[str | bool] | None = None,
         **kwargs: Any,
@@ -3991,6 +4042,14 @@ class ConditionalSetProperty(StructuralFeature):
 
         """
 
+        import warnings
+
+        warnings.warn(
+            "ConditionalSetFeature is deprecated and may be removed in a "
+            "future release. Please use Arguments instead when possible.",
+            DeprecationWarning,
+        )
+
         if isinstance(condition, str):
             kwargs.setdefault(condition, True)
 
@@ -3999,7 +4058,7 @@ class ConditionalSetProperty(StructuralFeature):
         self.feature = self.add_feature(feature)
 
     def get(
-        self: Feature,
+        self: ConditionalSetProperty,
         image: Any,
         condition: str | bool,
         **kwargs: Any,
@@ -4056,6 +4115,8 @@ class ConditionalSetFeature(StructuralFeature):
     Both `on_true` and `on_false` are updated during each call, even if only 
     one is resolved.
 
+    It is advisable to use `Arguments` instead when possible.
+
     Parameters
     ----------
     on_false: Feature, optional
@@ -4075,6 +4136,11 @@ class ConditionalSetFeature(StructuralFeature):
     -------
     `get(image: Any, condition: str or bool, **kwargs: Any) -> Any`
         Resolves the appropriate feature based on the condition.
+
+    Warnings
+    --------
+    Deprecation: This feature is deprecated and may be removed in a future
+    release. It is recommended to use `Arguments` instead.
 
     Examples
     --------
@@ -4130,7 +4196,7 @@ class ConditionalSetFeature(StructuralFeature):
     """
 
     def __init__(
-        self: Feature,
+        self: ConditionalSetFeature,
         on_false: Feature | None = None,
         on_true: Feature | None = None,
         condition: PropertyLike[str | bool] = True,
@@ -4152,6 +4218,14 @@ class ConditionalSetFeature(StructuralFeature):
 
         """
 
+        import warnings
+
+        warnings.warn(
+            "ConditionalSetFeature is deprecated and may be removed in a "
+            "future release. Please use Arguments instead when possible.",
+            DeprecationWarning,
+        )
+
         if isinstance(condition, str):
             kwargs.setdefault(condition, True)
 
@@ -4167,7 +4241,7 @@ class ConditionalSetFeature(StructuralFeature):
         self.on_false = on_false
 
     def get(
-        self: Feature,
+        self: ConditionalSetFeature,
         image: Any,
         *,
         condition: str | bool,
