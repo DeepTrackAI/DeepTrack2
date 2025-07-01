@@ -323,7 +323,7 @@ class Feature(DeepTrackNode):
         Abstract method that defines how the feature transforms the input. The
         input is most commonly a NumPy array, PyTorch tensor, or Image object,
         but it can be anything.
-    `__call__(image_list: Any = None, _ID: tuple[int, ...] = (), **kwargs: Any) -> Any`
+    `__call__(image_list: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
         It executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
     `store_properties(x: bool = True, recursive: bool = True) -> None`
@@ -685,9 +685,44 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         toggle: bool
-            If `True`, store properties. If `False`, do not store.
+            If `True` (default), store properties. If `False`, do not store.
         recursive: bool
-            If `True`, also set the same behavior for all dependent features.
+            If `True` (default), also set the same behavior for all dependent
+            features. If `False`, it does not.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create a feature and enable property storage:
+        >>> feature = dt.Add(value=2)
+        >>> feature.store_properties(True)
+
+        Evaluate the feature and inspect the stored properties:
+        >>> import numpy as np
+        >>>
+        >>> output = feature(np.array([1, 2, 3]))
+        >>> isinstance(output, dt.Image)
+        True
+        >>> output.get_property("value")
+        2
+
+        Disable property storage:
+        >>> feature.store_properties(False)
+        >>> output = feature(np.array([1, 2, 3]))
+        >>> isinstance(output, dt.Image)
+        False
+
+        Apply recursively to a pipeline:
+        >>> feature1 = dt.Add(value=1)
+        >>> feature2 = dt.Multiply(value=2)
+        >>> pipeline = feature1 >> feature2
+        >>> pipeline.store_properties(True, recursive=True)
+        >>> output = pipeline(np.array([1, 2]))
+        >>> output.get_property("value")
+        1
+        >>> output.get_property("value", get_one=False)
+        [1, 2]
 
         """
 
@@ -1562,7 +1597,7 @@ class Feature(DeepTrackNode):
 
         return self >> Slice(slices)
 
-    # private properties to dispatch based on config
+    # Private properties to dispatch based on config.
     @property
     def _format_input(self):
         """Selects the appropriate input formatting function based on 
