@@ -19,7 +19,7 @@ tensor(0.3315, device='cuda:0', dtype=torch.float16)
 """
 
 from __future__ import annotations
-
+from deeptrack.types import ArrayLike
 import torch
 import numpy as np
 
@@ -28,6 +28,7 @@ __all__ = [
     "random",
     "random_sample",
     "randn",
+    "standard_normal",
     "beta",
     "binomial",
     "choice",
@@ -37,6 +38,7 @@ __all__ = [
     "uniform",
     "normal",
     "poisson",
+    "gamma",
 ]
 
 
@@ -77,6 +79,12 @@ def randn(
 ) -> torch.Tensor:
     return torch.randn(*args, dtype=dtype, device=device)
 
+def standard_normal(
+    *args: int,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device | str = torch.device("cpu"),
+) -> torch.Tensor:
+    return torch.randn(*args, dtype=dtype, device=device)
 
 def beta(
     a: float,
@@ -115,7 +123,9 @@ def choice(
     
     return (
         torch.tensor(
-            np.random_choice(a_numpy, size=size, replace=replace, p=p_numpy), dtype=dtype, device=device
+            np.random_choice(
+                a_numpy, size=size, replace=replace, p=p_numpy
+            ), dtype=dtype, device=device
         )
     )
     
@@ -171,6 +181,23 @@ def poisson(
     device: torch.device | str = torch.device("cpu"),
 ) -> torch.Tensor:
     return torch.poisson(torch.full(size, lam, dtype=dtype, device=device))
+    
+def gamma(
+    shape: float | ArrayLike[float],
+    scale: float | ArrayLike[float] = 1.0, 
+    size: tuple[int, ...] | None = None,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device | str = torch.device("cpu"),
+) -> torch.Tensor:
+    
+    shape = torch.as_tensor(shape, dtype=dtype, device=device)
+    scale = torch.as_tensor(scale, dtype=dtype, device=device)
 
+    if size is not None:
+        shape = shape.expand(size)
+        scale = scale.expand(size)
+
+    gamma_distribution = torch.distributions.Gamma(shape, scale)
+    return gamma_distribution.sample()
 
 # TODO: implement the rest of the functions as they are needed
