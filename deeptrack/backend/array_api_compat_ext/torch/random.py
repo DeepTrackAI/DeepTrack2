@@ -1,7 +1,9 @@
 """Compatibility module for Numpy functions
 
-This module contains helper functions for various numpy.random functions
-that return torch.Tensors when used. Accept optional `dtype` and `device` arguments. 
+This module contains helper functions that use the same syntax as 
+the equivalent numpy.random functions. All functions return
+torch.Tensors when used and accept optional `dtype` and `device`
+arguments that default to `float32` and `cpu`. 
 
 
 Examples
