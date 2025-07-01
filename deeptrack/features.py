@@ -629,7 +629,8 @@ class Feature(DeepTrackNode):
             # If image_list is as Source, activate it.
             self._activate_sources(image_list)
 
-            # Potentially fragile. Maybe a special variable dt._last_input instead?
+            # Potentially fragile.
+            # Maybe a special variable dt._last_input instead?
             # If the input is not empty, set the value of the input.
             if (
                 image_list is not None
@@ -639,29 +640,31 @@ class Feature(DeepTrackNode):
             ):
                 self._input.set_value(image_list, _ID=_ID)
 
-            # A dict to store the values of self.arguments before updating them.
+            # A dict to store values of self.arguments before updating them.
             original_values = {}
 
-            # If there are no self.arguments, instead propagate the values of the
-            # kwargs to all properties in the computation graph.
+            # If there are no self.arguments, instead propagate the values of
+            # the kwargs to all properties in the computation graph.
             if kwargs and self.arguments is None:
                 propagate_data_to_dependencies(self, **kwargs)
 
-            # If there are self.arguments, update the values of self.arguments to 
-            # match kwargs.
+            # If there are self.arguments, update the values of self.arguments
+            # to match kwargs.
             if isinstance(self.arguments, Feature):
                 for key, value in kwargs.items():
                     if key in self.arguments.properties:
                         original_values[key] = \
                             self.arguments.properties[key](_ID=_ID)
-                        self.arguments.properties[key].set_value(value, _ID=_ID)
+                        self.arguments.properties[key]\
+                            .set_value(value, _ID=_ID)
 
-            # This executes the feature. DeepTrackNode will determine if it needs
-            # to be recalculated. If it does, it will call the `action` method.
+            # This executes the feature. DeepTrackNode will determine if it
+            # needs to be recalculated. If it does, it will call the `action`
+            # method.
             output = super().__call__(_ID=_ID)
 
-            # If there are self.arguments, reset the values of self.arguments to
-            # their original values.
+            # If there are self.arguments, reset the values of self.arguments
+            # to their original values.
             for key, value in original_values.items():
                 self.arguments.properties[key].set_value(value, _ID=_ID)
 
