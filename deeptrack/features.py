@@ -137,7 +137,7 @@ from pint import Quantity
 from scipy.spatial.distance import cdist
 
 from deeptrack import units
-from deeptrack.backend import config, TORCH_AVAILABLE, xp
+from deeptrack.backend import config, Config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
 from deeptrack.image import Image
