@@ -79,12 +79,14 @@ def randn(
 ) -> torch.Tensor:
     return torch.randn(*args, dtype=dtype, device=device)
 
+
 def standard_normal(
     *args: int,
     dtype: torch.dtype = torch.float32,
     device: torch.device | str = torch.device("cpu"),
 ) -> torch.Tensor:
     return torch.randn(*args, dtype=dtype, device=device)
+
 
 def beta(
     a: float,
@@ -109,6 +111,7 @@ def binomial(
         torch.tensor(np.random.binomial(n, p, size), dtype=dtype, device=device)
     )
 
+
 def choice(
     a: torch.Tensor | np.ndarray,
     size: tuple[int, ...] | None = None,
@@ -116,11 +119,10 @@ def choice(
     p: torch.Tensor | None = None,
     dtype: torch.dtype = torch.float32,
     device: torch.device | str = torch.device("cpu"),
-
 ) -> torch.Tensor:
+    
     a_numpy = a.cpu().numpy()
     p_numpy = p.cpu().numpy() if p is not None else None
-    
     return (
         torch.tensor(
             np.random_choice(
@@ -181,10 +183,11 @@ def poisson(
     device: torch.device | str = torch.device("cpu"),
 ) -> torch.Tensor:
     return torch.poisson(torch.full(size, lam, dtype=dtype, device=device))
-    
+
+
 def gamma(
-    shape: float | ArrayLike[float],
-    scale: float | ArrayLike[float] = 1.0, 
+    shape: float | torch.Tensor,
+    scale: float | torch.Tensor = 1.0, 
     size: tuple[int, ...] | None = None,
     dtype: torch.dtype = torch.float32,
     device: torch.device | str = torch.device("cpu"),
@@ -192,12 +195,63 @@ def gamma(
     
     shape = torch.as_tensor(shape, dtype=dtype, device=device)
     scale = torch.as_tensor(scale, dtype=dtype, device=device)
-
     if size is not None:
         shape = shape.expand(size)
         scale = scale.expand(size)
+    return torch.distributions.Gamma(shape, scale).sample()
 
-    gamma_distribution = torch.distributions.Gamma(shape, scale)
-    return gamma_distribution.sample()
+
+def exponential(
+    scale: float | torch.Tensor = 1.0,
+    size: tuple[int, ...] = None,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device | str = "cpu",
+) -> torch.Tensor:
+    
+    rate = torch.as_tensor(1.0/scale, dtype=dtype, device=device)
+    if size is None:
+        return torch.distributions.Exponential(rate).sample()
+    return torch.distributions.Exponential(rate).sample(size)
+
+
+def multivariate_normal(
+    mean: torch.Tensor,
+    cov: torch.Tensor,
+    size: tuple[int, ...]] = None,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device | str = "cpu",
+) -> torch.Tensor:
+    
+    mean = mean.to(dtype=dtype, device=device)
+    cov = cov.to(dtype=dtype, device=device)
+    if size is None:
+        return torch.distributions.MultivariateNormal(mean, covariance_matrix=cov).sample()
+    return torch.distributions.MultivariateNormal(mean, covariance_matrix=cov).sample(size)
+
+
+def geometric(
+    p: float | torch.Tensor,
+    size: tuple[int, ...] = None,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device | str = "cpu",
+) -> torch.Tensor:
+    
+    p = torch.as_tensor(p, dtype=torch.float32, device=device)
+    if size is None:
+        return torch.distributions.Geometric(probs=p).sample().to(dtype)
+    return torch.distributions.Geometric(probs=p).sample(size).to(dtype)
+
+
+def dirichlet(
+    alpha: torch.Tensor,
+    size: tuple[int, ...] = None,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device | str = "cpu",
+) -> torch.Tensor:
+    
+    alpha = alpha.to(dtype=dtype, device=device)
+    if size is None:
+        return torch.distributions.Dirichlet(alpha).sample()
+    return torch.distributions.Dirichlet(alpha).sample(size)
 
 # TODO: implement the rest of the functions as they are needed
