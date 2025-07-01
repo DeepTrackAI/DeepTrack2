@@ -154,13 +154,6 @@ Specific examples for label-free particle tracking using **LodeSTAR**:
   <p align="left">
     <img width="600" src=/assets/MPT-packed.gif?raw=true>
     <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx203_particle_sizing.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1063/5.0034891" alt="LodeSTAR article">
-      <img src="https://img.shields.io/badge/article-10.1063/5.0034891-blue">
-    </a> 
-    <br/>
     <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb">
       <img src="https://colab.research.google.com/assets/colab-badge.svg">
     </a>
