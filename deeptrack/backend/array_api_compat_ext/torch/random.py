@@ -1,7 +1,7 @@
-"""xp compatibility module for Numpy functions
+"""Compatibility module for Numpy functions
 
-This module contains wrapper functions for various numpy.random functions
-that return torch tensors when and can accept optional `dtype` and`device` arguments. 
+This module contains helper functions for various numpy.random functions
+that return torch.Tensors when used. Accept optional `dtype` and`device` arguments. 
 
 
 Examples
