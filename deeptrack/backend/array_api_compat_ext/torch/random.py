@@ -1,7 +1,7 @@
 """Compatibility module for Numpy functions
 
 This module contains helper functions for various numpy.random functions
-that return torch.Tensors when used. Accept optional `dtype` and`device` arguments. 
+that return torch.Tensors when used. Accept optional `dtype` and `device` arguments. 
 
 
 Examples
@@ -95,7 +95,9 @@ def beta(
     device: torch.device | str = torch.device("cpu"),
 ) -> torch.Tensor:
     return (
-        torch.tensor(np.random.beta(a, b, size), dtype=dtype, device=device)
+        torch.tensor(
+            np.random.beta(a, b, size), dtype=dtype, device=device
+        )
     )
 
 
@@ -107,7 +109,9 @@ def binomial(
     device: torch.device | str = torch.device("cpu"),
 ) -> torch.Tensor:
     return (
-        torch.tensor(np.random.binomial(n, p, size), dtype=dtype, device=device)
+        torch.tensor(
+            np.random.binomial(n, p, size), dtype=dtype, device=device
+        )
     )
 
 
@@ -119,7 +123,6 @@ def choice(
     dtype: torch.dtype = torch.float32,
     device: torch.device | str = torch.device("cpu"),
 ) -> torch.Tensor:
-    
     a_numpy = a.cpu().numpy()
     p_numpy = p.cpu().numpy() if p is not None else None
     return (
@@ -149,7 +152,7 @@ def randint(
     device: torch.device | str = torch.device("cpu"),
 ) -> torch.Tensor:
     return torch.randint(low, high, size, dtype=dtype, device=device)
-
+    
 
 def shuffle(x: torch.Tensor) -> torch.Tensor:
     return x[torch.randperm(x.shape[0], device=x.device)]
@@ -191,7 +194,6 @@ def gamma(
     dtype: torch.dtype = torch.float32,
     device: torch.device | str = torch.device("cpu"),
 ) -> torch.Tensor:
-    
     shape = torch.as_tensor(shape, dtype=dtype, device=device)
     scale = torch.as_tensor(scale, dtype=dtype, device=device)
     if size is not None:
@@ -206,7 +208,6 @@ def exponential(
     dtype: torch.dtype = torch.float32,
     device: torch.device | str = "cpu",
 ) -> torch.Tensor:
-    
     rate = torch.as_tensor(1.0/scale, dtype=dtype, device=device)
     if size is None:
         return torch.distributions.Exponential(rate).sample()
@@ -220,12 +221,13 @@ def multivariate_normal(
     dtype: torch.dtype = torch.float32,
     device: torch.device | str = "cpu",
 ) -> torch.Tensor:
-    
     mean = mean.to(dtype=dtype, device=device)
     cov = cov.to(dtype=dtype, device=device)
     if size is None:
-        return torch.distributions.MultivariateNormal(mean, covariance_matrix=cov).sample()
-    return torch.distributions.MultivariateNormal(mean, covariance_matrix=cov).sample(size)
+        return torch.distributions.MultivariateNormal(
+            mean, covariance_matrix=cov).sample()
+    return torch.distributions.MultivariateNormal(
+        mean, covariance_matrix=cov).sample(size)
 
 
 def geometric(
@@ -234,11 +236,12 @@ def geometric(
     dtype: torch.dtype = torch.float32,
     device: torch.device | str = "cpu",
 ) -> torch.Tensor:
-    
     p = torch.as_tensor(p, dtype=torch.float32, device=device)
     if size is None:
-        return torch.distributions.Geometric(probs=p).sample().to(dtype)
-    return torch.distributions.Geometric(probs=p).sample(size).to(dtype)
+        return torch.distributions.Geometric(
+            probs=p).sample().to(dtype)
+    return torch.distributions.Geometric(
+        probs=p).sample(size).to(dtype)
 
 
 def dirichlet(
@@ -247,7 +250,6 @@ def dirichlet(
     dtype: torch.dtype = torch.float32,
     device: torch.device | str = "cpu",
 ) -> torch.Tensor:
-    
     alpha = alpha.to(dtype=dtype, device=device)
     if size is None:
         return torch.distributions.Dirichlet(alpha).sample()
