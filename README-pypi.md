@@ -111,8 +111,6 @@ These are examples of how DeepTrack2 can be used on real datasets:
 - 
   Detecting quantum dots in a low SNR image.
 
-  
-
 - DTEx214 **Particle Feature Extraction**
 - 
   Extracting the radius and refractive index of particles.
@@ -132,6 +130,8 @@ These are examples of how DeepTrack2 can be used on real datasets:
 Specific examples for label-free particle tracking using **LodeSTAR**:
 
 - DTEx231A **LodeSTAR Autotracker Template**
+
+  
 
 - DTEx231B **LodeSTAR Detecting Particles of Various Shapes**
 
