@@ -323,8 +323,8 @@ class Feature(DeepTrackNode):
         Abstract method that defines how the feature transforms the input. The
         input is most commonly a NumPy array, PyTorch tensor, or Image object,
         but it can be anything.
-    `__call__(image_list: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, _ID: tuple[int, ...] = (), **kwargs: Any) -> Any`
-        Executes the feature or pipeline on the input and applies property 
+    `__call__(image_list: Any = None, _ID: tuple[int, ...] = (), **kwargs: Any) -> Any`
+        It executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
     `store_properties(x: bool = True, recursive: bool = True) -> None`
         Controls whether the properties are stored in the output `Image` object.
