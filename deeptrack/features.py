@@ -598,11 +598,30 @@ class Feature(DeepTrackNode):
         Returns
         -------
         Any
-            The output of the feature or pipeline after execution.
+            The output of the feature or pipeline after execution. This is
+            typically a NumPy array, PyTorch tensor, or Image object, or a list
+            of NumPy arrays, PyTorch tensors, or Image objects.
 
         Examples
         --------
-        TODO: basic examples + examples with overwriting of features
+        >>> import deeptrack as dt
+
+        Deafine a feature:
+        >>> feature = dt.Add(value=2)
+
+        Call this feature with an input:
+        >>> import numpy as np
+        >>>
+        >>> feature(np.array([1, 2, 3]))
+        array([3, 4, 5])
+
+        Execute the feature with previously set input:
+        >>> feature()  # Uses stored input
+        array([3, 4, 5])
+
+        Override a property:
+        >>> feature(np.array([1, 2, 3]), value=10)
+        array([11, 12, 13])
 
         """
 
