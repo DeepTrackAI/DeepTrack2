@@ -144,6 +144,7 @@ import array_api_strict
 
 __all__ = [
     "config",
+    "Config",
     "OPENCV_AVAILABLE",
     "TORCH_AVAILABLE",
     "xp",
