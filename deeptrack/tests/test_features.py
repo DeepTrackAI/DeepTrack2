@@ -1922,6 +1922,7 @@ class TestFeatures(unittest.TestCase):
 
     def test_AsType(self):
 
+        # Test for Numpy arrays.
         input_image = np.array([1.5, 2.5, 3.5])
 
         data_types = ["float64", "int32", "uint16", "int16", "uint8", "int8"]
@@ -1936,6 +1937,12 @@ class TestFeatures(unittest.TestCase):
                 self.assertTrue(
                     np.all(output_image == np.array([1, 2, 3], dtype=dtype))
                 )
+
+        # Test for Image.
+        #TODO
+
+        # Test for PyTorch tensors.
+        #TODO
 
 
     def test_ChannelFirst2d(self):
