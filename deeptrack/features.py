@@ -743,14 +743,57 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         device: torch.device, optional
-            The target device of the output (e.g., cpu or cuda).
+            The target device of the output (e.g., cpu or cuda). It defaults to
+            `None`.
         recursive: bool, optional
-            If `True`, also convert all dependent features.
+            If `True` (default), it also convert all dependent features. If
+            `False`, it does not.
 
         Returns
         -------
         Feature
             self
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+        >>> import torch
+
+        Create a feature and switch to the PyTorch backend:
+        >>> feature = dt.Multiply(value=2)
+        >>> feature.torch()
+
+        Call the feature on a torch tensor:
+        >>> input_tensor = torch.tensor([1.0, 2.0, 3.0])
+        >>> output = feature(input_tensor)
+        >>> output
+        tensor([2., 4., 6.])
+
+        Switch to GPU if available (CUDA):
+        >>> if torch.cuda.is_available():
+        ...     device = torch.device("cuda")
+        ...     feature.torch(device=device)
+        ...     output = feature(torch.tensor([1.0, 2.0, 3.0], device=device))
+        ...     output.device.type
+        'cuda'
+
+        Switch to GPU if available (MPS):
+        >>> if (torch.backends.mps.is_available()
+        ...     and torch.backends.mps.is_built()):
+        ...     device = torch.device("mps")
+        ...     feature.torch(device=device)
+        ...     output = feature(torch.tensor([1.0, 2.0, 3.0], device=device))
+        ...     output.device.type
+        'mps'
+
+        Apply recursively in a pipeline:
+        >>> f1 = dt.Add(value=1)
+        >>> f2 = dt.Multiply(value=2)
+        >>> pipeline = f1 >> f2
+        >>> pipeline.torch()
+        >>> output = pipeline(torch.tensor([1.0, 2.0]))
+        >>> output
+        tensor([4., 6.])
 
         """
 
@@ -763,18 +806,44 @@ class Feature(DeepTrackNode):
         self.invalidate()
         return self
 
-    def numpy(self: Feature, recursive: bool = True) -> Feature:
+    def numpy(
+        self: Feature,
+        recursive: bool = True,
+    ) -> Feature:
         """Set the backend to numpy.
 
         Parameters
         ----------
         recursive: bool, optional
-            If `True`, also convert all dependent features.
+            If `True` (default), also convert all dependent features.
 
         Returns
         -------
         Feature
             self
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+        >>> import numpy as np
+
+        Create a feature and ensure it uses the NumPy backend:
+        >>> feature = dt.Add(value=5)
+        >>> feature.numpy()
+
+        Evaluate the feature on a NumPy array:
+        >>> output = feature(np.array([1, 2, 3]))
+        >>> output
+        array([6, 7, 8])
+
+        Apply recursively in a pipeline:
+        >>> f1 = dt.Multiply(value=2)
+        >>> f2 = dt.Subtract(value=1)
+        >>> pipeline = f1 >> f2
+        >>> pipeline.numpy()
+        >>> output = pipeline(np.array([1, 2, 3]))
+        >>> output
+        array([1, 3, 5])
 
         """
 
@@ -795,19 +864,45 @@ class Feature(DeepTrackNode):
     ) -> None:
         """Set the dtype to be used during evaluation.
 
-        This alters the dtype used for array creation, but does not
-        automatically cast the type.
+        It alters the dtype used for array creation, but does not automatically
+        cast the type.
 
         Parameters
         ----------
         float: str, optional
-            The float dtype to set.
+            The float dtype to set. It can be `"float32"`, `"float64"`,
+            `"default"`, or `None`. It defaults to `None`.
         int: str, optional
-            The int dtype to set.
+            The int dtype to set. It can be `"int16"`, `"int32"`, `"int64"`,
+            `"default"`, or `None`. It defaults to `None`.
         complex: str, optional
-            The complex dtype to set.
+            The complex dtype to set. It can be `"complex64"`, `"complex128"`,
+            `"default"`, or `None`. It defaults to `None`.
         bool: str, optional
-            The bool dtype to set.
+            The bool dtype to set. It cna be `"bool"`, `"default"`, or `None`.
+            It defaults to `None`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Set float and int data types for a feature:
+        >>> feature = dt.Multiply(value=2)
+        >>> feature.dtype(float="float32", int="int16")
+        >>> feature.float_dtype
+        dtype('float32')
+        >>> feature.int_dtype
+        dtype('int16')
+
+        Use complex numbers in the feature:
+        >>> feature.dtype(complex="complex128")
+        >>> feature.complex_dtype
+        dtype('complex128')
+
+        Reset float dtype to default:
+        >>> feature.dtype(float="default")
+        >>> feature.float_dtype  # resolved from config
+        dtype('float64')  # depending on backend config
 
         """
 
@@ -820,15 +915,41 @@ class Feature(DeepTrackNode):
         if bool is not None:
             self._bool_dtype = bool
 
-    def to(self: Feature, device: str | torch.device):
+    def to(
+        self: Feature,
+        device: str | torch.device,
+    ) -> None:
         """Set the device to be used during evaluation.
-
-        If the backend is numpy, this can only be "cpu".
 
         Parameters
         ----------
         device: str or torch.device
-            The device to use.
+            The device to use. If the backend is numpy, this can only be "cpu".
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+        >>> import torch
+
+        Create a feature and assign a device (for torch backend):
+        >>> feature = dt.Add(value=1)
+        >>> feature.torch()
+        >>> feature.to(torch.device("cpu"))
+        >>> feature.device
+        device(type='cpu')
+
+        Move the feature to GPU (if available):
+        >>> if torch.cuda.is_available():
+        ...     feature.to(torch.device("cuda"))
+        ...     feature.device
+        device(type='cuda')
+
+        Use Apple MPS device on Apple Silicon (if supported):
+        >>> if (torch.backends.mps.is_available()
+        ...     and torch.backends.mps.is_built()):
+        ...     feature.to(torch.device("mps"))
+        ...     feature.device
+        device(type='mps')
 
         """
 
