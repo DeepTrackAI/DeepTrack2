@@ -417,24 +417,26 @@ class Feature(DeepTrackNode):
         It overrides right AND operator.
     `__getitem__(key: Any) -> Feature`
         It allows direct slicing of the data.
-    `_format_input(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Formats the input data for the feature.
-    `_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Calls the `get` method according to the `__distributed__` attribute.
-    `_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
-        Processes the output of the feature.
+    `_format_input(image_list: Any, **kwargs: Any) -> list[Any or Image]`
+        It formats the input data for the feature.
+    `_process_and_get(image_list: Any, **kwargs: Any) -> list[Any or Image]`
+        It calls the `get` method according to the `__distributed__` attribute.
+    `_process_output(image_list: Any, **kwargs: Any) -> None`
+        It processes the output of the feature.
     `_image_wrapped_format_input(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Ensures the input is a list of Image.
-    `_no_wrap_format_input(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Ensures the input is a list of Image.
+        It ensures the input is a list of Image.
+    `_no_wrap_format_input(image_list: Any, **kwargs: Any) -> list[Any]`
+        It ensures the input is a list of Image.
     `_image_wrapped_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Calls the `get` method according to the `__distributed__` attribute.
-    `_no_wrap_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Calls the `get` method according to the `__distributed__` attribute.
+        It calls the `get()` method according to the `__distributed__`
+        attribute.
+    `_no_wrap_process_and_get(image_list: Any | list[Any], **kwargs: Any) -> list[Any]`
+        It calls the `get()` method according to the `__distributed__`
+        attribute.
     `_image_wrapped_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
-        Processes the output of the feature.
-    `_no_wrap_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
-        Processes the output of the feature.
+        It processes the output of the feature.
+    `_no_wrap_process_output(image_list: Any | list[Any], **kwargs: Any) -> None`
+        It processes the output of the feature.
 
     Examples
     --------
@@ -1328,48 +1330,46 @@ class Feature(DeepTrackNode):
             plt.imshow(output_image, **kwargs)
             return plt.gca()
 
-        else:
-            # Assume video
-            fig = plt.figure()
-            images = []
-            plt.axis("off")
-            for image in output_image:
-                images.append([plt.imshow(image, **kwargs)])
+        # Assume video
+        fig = plt.figure()
+        images = []
+        plt.axis("off")
+        for image in output_image:
+            images.append([plt.imshow(image, **kwargs)])
 
+        if not interval:
+            if isinstance(output_image[0], Image):
+                interval = output_image[0].get_property("interval") or (1 / 30 * 1000)
+            else:
+                interval = 1 / 30 * 1000
 
-            if not interval:
-                if isinstance(output_image[0], Image):
-                    interval = output_image[0].get_property("interval") or (1 / 30 * 1000)
-                else:
-                    interval = (1 / 30 * 1000)
+        anim = animation.ArtistAnimation(
+            fig, images, interval=interval, blit=True, repeat_delay=0
+        )
 
-            anim = animation.ArtistAnimation(
-                fig, images, interval=interval, blit=True, repeat_delay=0
-            )
+        try:
+            get_ipython  # Throws NameError if not in Notebook
+            display(HTML(anim.to_jshtml()))
+            return anim
 
-            try:
-                get_ipython  # Throws NameError if not in Notebook
-                display(HTML(anim.to_jshtml()))
-                return anim
+        except NameError:
+            # Not in an notebook
+            plt.show()
 
-            except NameError:
-                # Not in an notebook
+        except RuntimeError:
+            # In notebook, but animation failed
+            import ipywidgets as widgets
+
+            def plotter(frame=0):
+                plt.imshow(output_image[frame][:, :, 0], **kwargs)
                 plt.show()
 
-            except RuntimeError:
-                # In notebook, but animation failed
-                import ipywidgets as widgets
-
-                def plotter(frame=0):
-                    plt.imshow(output_image[frame][:, :, 0], **kwargs)
-                    plt.show()
-
-                return widgets.interact(
-                    plotter,
-                    frame=widgets.IntSlider(
-                        value=0, min=0, max=len(images) - 1, step=1
-                    ),
-                )
+            return widgets.interact(
+                plotter,
+                frame=widgets.IntSlider(
+                    value=0, min=0, max=len(images) - 1, step=1
+                ),
+            )
 
     # **GV**
     def _normalize(
@@ -2158,7 +2158,7 @@ class Feature(DeepTrackNode):
 
         >>> feature[:, 0]
 
-        to extract a slice from the output of the feature, just as you would 
+        to extract a slice from the output of the feature, just as one would 
         with a NumPy array or PyTorch tensor.
 
         Internally, this is equivalent to chaining with `dt.Slice`, and the 
