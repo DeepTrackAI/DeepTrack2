@@ -6153,8 +6153,10 @@ class ChannelFirst2d(Feature):
     Parameters
     ----------
     axis: int, optional
-        The axis to move to the first position. It defaults to `-1` (last axis).
-    **kwargs:: dict of str to Any
+        The axis to move to the first position. It defaults to `-1` (last axis) which
+        is the case for numpy arrays.
+        
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
@@ -6214,7 +6216,7 @@ class ChannelFirst2d(Feature):
         image: np.ndarray,
         axis: int,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor:
         """Rearrange the axes of an image to channel-first format.
 
         Rearrange the axes of a 3D image to channel-first format or add a 
@@ -6222,7 +6224,7 @@ class ChannelFirst2d(Feature):
 
         Parameters
         ----------
-        image: np.ndarray
+        image: np.ndarray | torch.tensor
             The input image to process. Can be 2D or 3D.
         axis: int
             The axis to move to the first position (for 3D images).
@@ -6231,7 +6233,7 @@ class ChannelFirst2d(Feature):
 
         Returns
         -------
-        np.ndarray
+        np.ndarray | torch.tensor
             The processed image in channel-first format.
 
         Raises
@@ -6245,11 +6247,18 @@ class ChannelFirst2d(Feature):
 
         # Add a new dimension for 2D images.
         if ndim == 2:
-            return image[None]
+            if isinstance(image, np.ndarray):
+                return image[None]
+            elif isinstance(image, torch.tensor):
+                return image.unsqueeze(0)
 
         # Move the specified axis to the first position for 3D images.
         if ndim == 3:
-            return np.moveaxis(image, axis, 0)
+            if isinstance(image, np.ndarray):
+                return np.moveaxis(image, axis, 0)
+            elif isinstance(image, torch.tensor):
+                dims = [axis] + [i for i in range(ndim) if i != axis]
+                return image.permute(*dims)
 
         raise ValueError("ChannelFirst2d only supports 2D or 3D images. "
                          f"Received {ndim}D image.")
