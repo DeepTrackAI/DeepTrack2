@@ -955,7 +955,10 @@ class Feature(DeepTrackNode):
 
         self._device = device
 
-    def batch(self: Feature, batch_size: int = 32) -> tuple | list[Image]:
+    def batch(
+        self: Feature,
+        batch_size: int = 32,
+    ) -> tuple:
         """Batch the feature.
 
         This method produces a batch of outputs by repeatedly calling 
@@ -964,14 +967,38 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         batch_size: int
-            The number of times to sample or generate data.
+            The number of times to sample or generate data. It defaults to 32.
 
         Returns
         -------
-        tuple or list[Image]
-            A tuple of stacked arrays (if the outputs are NumPy arrays or 
-            torch tensors) or a list of images if the outputs are not 
-            stackable.
+        tuple
+            A tuple where each element corresponds to one component of the
+            output. If the outputs are NumPy arrays or PyTorch tensors, each
+            element is a stacked array.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Define a feature that adds a random value to a fixed array:
+        >>> import numpy as np
+        >>>
+        >>> feature = (
+        ...     dt.Value(value=np.array([[-1, 1]]))
+        ...     >> dt.Add(value=lambda: np.random.rand())
+        ... )
+
+        Evaluate the feature once:
+        >>> output = feature()
+        >>> output
+        array([[-0.77378939,  1.22621061]])
+
+        Generate a batch of outputs:
+        >>> batch = feature.batch(batch_size=3)
+        >>> batch
+        (array([[-0.2375814 ,  1.7624186 ],
+                [-0.65764878,  1.34235122],
+                [-0.87449525,  1.12550475]]),)
 
         """
 
@@ -979,21 +1006,14 @@ class Feature(DeepTrackNode):
         results = list(zip(*results))
 
         for idx, r in enumerate(results):
-
-            if isinstance(r[0], np.ndarray):
-                results[idx] = np.stack(r)
-            else:
-                import torch
-
-                if isinstance(r[0], torch.Tensor):
-                    results[idx] = torch.stack(r)
+            results[idx] = xp.stack(r)
 
         return tuple(results)
 
     def action(
         self: Feature,
         _ID: tuple[int, ...] = (),
-    ) -> Image | list[Image]:
+    ) -> Any | list[Any]:
         """Core logic to create or transform the image.
 
         This method creates or transforms the input image by calling the 
@@ -1002,11 +1022,11 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         _ID: tuple of int
-            The unique identifier for the current execution.
+            The unique identifier for the current execution. It defaults to ().
 
         Returns
         -------
-        Image or list[Image]
+        Any or list[Any]
             The resolved image or list of resolved images.
 
         """
@@ -1018,7 +1038,7 @@ class Feature(DeepTrackNode):
         feature_input = self.properties(_ID=_ID).copy()
 
         # Call the _process_properties hook, default does nothing.
-        # For example, it can be used to ensure properties are formatted 
+        # For example, it can be used to ensure properties are formatted
         # correctly or to rescale properties.
         feature_input = self._process_properties(feature_input)
         if _ID != ():
