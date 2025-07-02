@@ -361,10 +361,10 @@ class Feature(DeepTrackNode):
         Activates sources in the input data.
     `__getattr__(key: str) -> Any`
         Custom attribute access for the Feature class.
-    `__iter__() -> Iterable`
-        Iterates over the feature.
-    `__next__() -> Any`
-        Returns the next element in the feature.
+    `__iter__() -> Any`
+        It return the next element iterating over the feature.
+    `__next__() -> Iterable`
+        It returns an iterator for the feature.
     `__rshift__(other: Any) -> Feature`
         It allows chaining of features.
     `__rrshift__(other: Any) -> Feature`
@@ -1543,24 +1543,74 @@ class Feature(DeepTrackNode):
         raise AttributeError(f"'{self.__class__.__name__}' object has "
                              "no attribute '{key}'")
 
-    # **GV**
     def __iter__(
         self: Feature,
-    ) -> Iterable:
-        """ Returns an infinite iterator that continuously yields feature 
-        values.
+    ) -> Any:
+        """ Return infinite iterator that continuously yields feature values.
+
+        This method allows a `Feature` instance to be used in a `for` loop or 
+        as a generator. It repeatedly calls `__next__()` to resolve and yield 
+        new values.
+
+        Each iteration generates a fresh output by calling
+        `self.update().resolve()`, meaning it resamples all properties before
+        evaluation.
+
+        Returns
+        -------
+        Any
+            A newly generated output from the feature.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create a feature:
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(value=lambda: np.random.rand())
+
+        Use the feature in a loop:
+        >>> for i, sample in enumerate(feature):
+        ...     print(sample)
+        ...     if i == 2:
+        ...         break
+        0.43126475134786546
+        0.3270413736199965
+        0.6734339603677173
 
         """
 
         while True:
             yield from next(self)
 
-    # **GV**
     def __next__(
         self: Feature,
-    ) -> Any:
-        """Returns the next resolved feature in the sequence.
-        
+    ) -> Iterator:
+        """Return the next resolved feature in the sequence.
+
+        This method is called by `next(feature)` and yields one new sample by
+        first resampling all properties via `update()` and then evaluating the
+        feature using `resolve()`.
+
+        Returns
+        -------
+        Iterable
+            An infinite generator that yields evaluated feature outputs.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create a feature:
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(value=lambda: np.random.rand())
+
+        Get a single sample multiple times:
+        >>> for _ in enumerate(3):
+        ...     next(feature)
+
         """
 
         yield self.update().resolve()
