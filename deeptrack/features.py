@@ -1840,38 +1840,36 @@ class Feature(DeepTrackNode):
     # Private properties to dispatch based on config.
     @property
     def _format_input(self):
-        """Selects the appropriate input formatting function based on 
-        configuration.
+        """Select the appropriate input formatting function for configuration.
         
         """
 
         if self._wrap_array_with_image:
             return self._image_wrapped_format_input
-        else:
-            return self._no_wrap_format_input
+
+        return self._no_wrap_format_input
 
     @property
     def _process_and_get(self):
-        """Selects the appropriate processing function based on configuration.
-        
+        """Select the appropriate processing function based on configuration.
+
         """
 
         if self._wrap_array_with_image:
             return self._image_wrapped_process_and_get
-        else:
-            return self._no_wrap_process_and_get
+
+        return self._no_wrap_process_and_get
 
     @property
     def _process_output(self):
-        """Selects the appropriate output processing function based on 
-        configuration.
-        
+        """Select the appropriate output processing function for configuration.
+
         """
 
         if self._wrap_array_with_image:
             return self._image_wrapped_process_output
-        else:
-            return self._no_wrap_process_output
+
+        return self._no_wrap_process_output
 
     def _image_wrapped_format_input(
         self: Feature,
@@ -1906,30 +1904,6 @@ class Feature(DeepTrackNode):
             image_list = [image_list]
 
         return image_list
-
-    def _no_wrap_process_and_get(
-        self: Feature,
-        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
-        **feature_input: dict[str, Any],
-    ) -> list[Image]:
-        """Processes input data without additional wrapping and retrieves 
-        results.
-        
-        """
-
-        if self.__distributed__:
-            # Call get on each image in list, and merge properties from 
-            # corresponding image
-            return [self.get(x, **feature_input) for x in image_list]
-
-        else:
-            # Call get on entire list.
-            new_list = self.get(image_list, **feature_input)
-
-            if not isinstance(new_list, list):
-                new_list = [new_list]
-
-            return new_list
 
     def _image_wrapped_process_and_get(
         self: Feature,
@@ -1966,6 +1940,30 @@ class Feature(DeepTrackNode):
             for idx, image in enumerate(new_list):
                 if not isinstance(image, Image):
                     new_list[idx] = Image(image)
+            return new_list
+
+    def _no_wrap_process_and_get(
+        self: Feature,
+        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
+        **feature_input: dict[str, Any],
+    ) -> list[Image]:
+        """Processes input data without additional wrapping and retrieves 
+        results.
+        
+        """
+
+        if self.__distributed__:
+            # Call get on each image in list, and merge properties from 
+            # corresponding image
+            return [self.get(x, **feature_input) for x in image_list]
+
+        else:
+            # Call get on entire list.
+            new_list = self.get(image_list, **feature_input)
+
+            if not isinstance(new_list, list):
+                new_list = [new_list]
+
             return new_list
 
     def _image_wrapped_process_output(
