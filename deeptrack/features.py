@@ -1839,9 +1839,21 @@ class Feature(DeepTrackNode):
 
     # Private properties to dispatch based on config.
     @property
-    def _format_input(self):
+    def _format_input(self: Feature) -> Callable[[Any], list[Any or Image]]:
         """Select the appropriate input formatting function for configuration.
-        
+
+        Returns either `_image_wrapped_format_input` or
+        `_no_wrap_format_input`, depending on whether image metadata
+        (properties) should be preserved and processed downstream.
+
+        This selection is controlled by the `_wrap_array_with_image` flag.
+
+        Returns
+        -------
+        Callable
+            A function that formats the input into a list of Image objects or
+            raw arrays, depending on the configuration.
+
         """
 
         if self._wrap_array_with_image:
@@ -1850,8 +1862,22 @@ class Feature(DeepTrackNode):
         return self._no_wrap_format_input
 
     @property
-    def _process_and_get(self):
+    def _process_and_get(self: Feature) -> Callable[[Any], list[Any or Image]]:
         """Select the appropriate processing function based on configuration.
+
+        Returns a method that applies the feature’s transformation (`get`) to
+        the input data, either with or without wrapping and preserving `Image`
+        metadata.
+
+        The decision is based on the `_wrap_array_with_image` flag:
+        - If `True`, returns `_image_wrapped_process_and_get`
+        - If `False`, returns `_no_wrap_process_and_get`
+
+        Returns
+        -------
+        Callable
+            A function that applies `.get()` to the input, either preserving
+            or ignoring metadata depending on configuration.
 
         """
 
@@ -1861,8 +1887,23 @@ class Feature(DeepTrackNode):
         return self._no_wrap_process_and_get
 
     @property
-    def _process_output(self):
+    def _process_output(self: Feature) -> Callable[[Any], None]:
         """Select the appropriate output processing function for configuration.
+
+        Returns a method that post-processes the outputs of the feature,
+        typically after the `get()` method has been called. The selected method
+        depends on whether the feature is configured to wrap outputs in `Image`
+        objects (`_wrap_array_with_image = True`).
+
+        - If `True`, returns `_image_wrapped_process_output`, which appends
+          feature properties to each `Image`.
+        - If `False`, returns `_no_wrap_process_output`, which extracts raw
+          array values from any `Image` instances.
+
+        Returns
+        -------
+        Callable
+            A post-processing function for the feature output.
 
         """
 
@@ -1873,11 +1914,27 @@ class Feature(DeepTrackNode):
 
     def _image_wrapped_format_input(
         self: Feature,
-        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
+        image_list: np.ndarray | list[np.ndarray] | Image | list[Image] | None,
         **kwargs: Any,
     ) -> list[Image]:
-        """Wraps input data as Image instances before processing.
-        
+        """Wrap input data as Image instances before processing.
+
+        This method ensures that all elements in the input are `Image`
+        objects. If any raw arrays are provided, they are wrapped in `Image`.
+        This allows features to propagate metadata and store properties in the
+        output.
+
+        Parameters
+        ----------
+        image_list: np.ndarray or list[np.ndarray] or Image or list[Image] or None
+            The input to the feature. If not a list, it is converted into a
+            single-element list. If `None`, it returns an empty list.
+
+        Returns
+        -------
+        list[Image]
+            A list where all items are instances of `Image`.
+
         """
 
         if image_list is None:
@@ -1889,12 +1946,26 @@ class Feature(DeepTrackNode):
         return [(Image(image)) for image in image_list]
 
     def _no_wrap_format_input(
-        self: Feature, 
-        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
+        self: Feature,
+        image_list: Any,
         **kwargs: Any,
-    ) -> list[Image]:
-        """Processes input data without wrapping it as Image instances.
-       
+    ) -> list[Any]:
+        """Process input data without wrapping it as Image instances.
+
+        This method returns the input list as-is (after ensuring it is a list).
+        It is used when metadata is not needed or performance is a concern.
+
+        Parameters
+        ----------
+        image_list: Any
+            The input to the feature. If not already a list, it is wrapped in
+            one. If `None`, it returns an empty list.
+
+        Returns
+        -------
+        list[Any]
+            A list of raw input elements, without any transformation.
+
         """
 
         if image_list is None:
@@ -1907,16 +1978,36 @@ class Feature(DeepTrackNode):
 
     def _image_wrapped_process_and_get(
         self: Feature,
-        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
+        image_list: Image | list[Image] | Any | list[Any],
         **feature_input: dict[str, Any],
     ) -> list[Image]:
         """Processes input data while maintaining Image properties.
-        
+
+        This method applies the `get()` method to the input while ensuring that
+        output values are wrapped as `Image` instances and preserve the 
+        properties of the corresponding input images.
+
+        If `__distributed__ = True`, `get()` is called separately for each 
+        input image. If `False`, the full list is passed to `get()` at once.
+
+        Parameters
+        ----------
+        image_list: Image or list[Image] or Any or list[Any]
+            The input data to be processed.
+        **feature_input: dict[str, Any]
+            The keyword arguments containing the sampled properties to pass 
+            to the `get()` method.
+
+        Returns
+        -------
+        list[Image]
+            The list of processed images, with properties preserved.
+
         """
 
         if self.__distributed__:
-            # Call get on each image in list, and merge properties from 
-            # corresponding image
+            # Call get on each image in list, and merge properties from
+            # corresponding image.
 
             results = []
 
@@ -1930,69 +2021,108 @@ class Feature(DeepTrackNode):
 
             return results
 
-        else:
-            # Call get on entire list.
-            new_list = self.get(image_list, **feature_input)
+        # ELse, call get on entire list.
+        new_list = self.get(image_list, **feature_input)
 
-            if not isinstance(new_list, list):
-                new_list = [new_list]
+        if not isinstance(new_list, list):
+            new_list = [new_list]
 
-            for idx, image in enumerate(new_list):
-                if not isinstance(image, Image):
-                    new_list[idx] = Image(image)
-            return new_list
+        for idx, image in enumerate(new_list):
+            if not isinstance(image, Image):
+                new_list[idx] = Image(image)
+        return new_list
 
     def _no_wrap_process_and_get(
         self: Feature,
-        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
+        image_list: Any | list[Any],
         **feature_input: dict[str, Any],
-    ) -> list[Image]:
-        """Processes input data without additional wrapping and retrieves 
-        results.
-        
+    ) -> list[Any]:
+        """Process input data without additional wrapping and retrieve results.
+
+        This method applies the `get()` method to the input without wrapping 
+        results in `Image` objects, and without propagating or merging metadata.
+
+        If `__distributed__ = True`, `get()` is called separately for each 
+        element in the input list. If `False`, the full list is passed to 
+        `get()` at once.
+
+        Parameters
+        ----------
+        image_list: Any or list[Any]
+            The input data to be processed.
+        **feature_input: dict
+            The keyword arguments containing the sampled properties to pass 
+            to the `get()` method.
+
+        Returns
+        -------
+        list[Any]
+            The list of processed outputs (raw arrays, tensors, etc.).
+
         """
 
         if self.__distributed__:
-            # Call get on each image in list, and merge properties from 
+            # Call get on each image in list, and merge properties from
             # corresponding image
+
             return [self.get(x, **feature_input) for x in image_list]
 
-        else:
-            # Call get on entire list.
-            new_list = self.get(image_list, **feature_input)
+        # Else, call get on entire list.
+        new_list = self.get(image_list, **feature_input)
 
-            if not isinstance(new_list, list):
-                new_list = [new_list]
+        if not isinstance(new_list, list):
+            new_list = [new_list]
 
-            return new_list
+        return new_list
 
     def _image_wrapped_process_output(
         self: Feature,
-        image_list: np.ndarray | list[np.ndarray] | Image | list[Image], 
+        image_list: Image | list[Image] | Any | list[Any],
         feature_input: dict[str, Any],
     ) -> None:
-        """Appends feature properties and input data to each Image.
-        
+        """Append feature properties and input data to each Image.
+
+        This method is called after `get()` when the feature is set to wrap
+        its outputs in `Image` instances. It appends the sampled properties
+        (from `feature_input`) to the metadata of each `Image`. If the feature
+        is bound to an `arguments` object, those properties are also appended.
+
+        Parameters
+        ----------
+        image_list: list[Image]
+            The output images from the feature.
+        feature_input: dict[str, Any]
+            The resolved property values used during this evaluation.
+
         """
 
         for index, image in enumerate(image_list):
-
             if self.arguments:
                 image.append(self.arguments.properties())
-
             image.append(feature_input)
 
     def _no_wrap_process_output(
         self: Feature,
-        image_list: np.ndarray | list[np.ndarray] | Image | list[Image],
+        image_list: Any | list[Any],
         feature_input: dict[str, Any],
     ) -> None:
-        """Extracts and updates raw values from Image instances.
-        
+        """Extract and update raw values from Image instances.
+
+        This method is called after `get()` when the feature is not configured
+        to wrap outputs as `Image` instances. If any `Image` objects are
+        present in the output list, their underlying array values are extracted
+        using `.value` (i.e., `image._value`).
+
+        Parameters
+        ----------
+        image_list: list[Any]
+            The list of outputs returned by the feature.
+        feature_input: dict[str, Any]
+            The resolved property values used during this evaluation (unused).
+
         """
 
         for index, image in enumerate(image_list):
-
             if isinstance(image, Image):
                 image_list[index] = image._value
 
