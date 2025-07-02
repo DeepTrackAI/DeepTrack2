@@ -349,10 +349,12 @@ class Feature(DeepTrackNode):
         Sets the random seed for the feature, ensuring deterministic behavior.
     `bind_arguments(arguments: Feature) -> Feature`
         Binds another feature’s properties as arguments to this feature.
-    `_normalize(**properties: dict[str, Any]) -> dict[str, Any]`
-        Normalizes the properties of the feature.
     `plot(input_image: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, resolve_kwargs: dict | None = None, interval: float | None = None, **kwargs) -> Any`
         Visualizes the output of the feature.
+
+    **Private and internal methods.**
+    `_normalize(**properties: dict[str, Any]) -> dict[str, Any]`
+        Normalizes the properties of the feature.
     `_process_properties(propertydict: dict[str, Any]) -> dict[str, Any]`
         Preprocesses the input properties before calling the `get` method.
     `_activate_sources(x: Any) -> None`
@@ -364,57 +366,57 @@ class Feature(DeepTrackNode):
     `__next__() -> Any`
         Returns the next element in the feature.
     `__rshift__(other: Any) -> Feature`
-        Allows chaining of features.
+        It allows chaining of features.
     `__rrshift__(other: Any) -> Feature`
-        Allows right chaining of features.
+        It allows right chaining of features.
     `__add__(other: Any) -> Feature`
-        Overrides add operator.
+        It overrides add operator.
     `__radd__(other: Any) -> Feature`
-        Overrides right add operator.
+        It overrides right add operator.
     `__sub__(other: Any) -> Feature`
-        Overrides subtraction operator.
+        It overrides subtraction operator.
     `__rsub__(other: Any) -> Feature`
-        Overrides right subtraction operator.
+        It overrides right subtraction operator.
     `__mul__(other: Any) -> Feature`
-        Overrides multiplication operator.
+        It overrides multiplication operator.
     `__rmul__(other: Any) -> Feature`
-        Overrides right multiplication operator.
+        It overrides right multiplication operator.
     `__truediv__(other: Any) -> Feature`
-        Overrides division operator.
+        It overrides division operator.
     `__rtruediv__(other: Any) -> Feature`
-        Overrides right division operator.
+        It overrides right division operator.
     `__floordiv__(other: Any) -> Feature`
-        Overrides floor division operator.
+        It overrides floor division operator.
     `__rfloordiv__(other: Any) -> Feature`
-        Overrides right floor division operator.
+        It overrides right floor division operator.
     `__pow__(other: Any) -> Feature`
-        Overrides power operator.
+        It overrides power operator.
     `__rpow__(other: Any) -> Feature`
-        Overrides right power operator.
+        It overrides right power operator.
     `__gt__(other: Any) -> Feature`
-        Overrides greater than operator.
+        It overrides greater than operator.
     `__rgt__(other: Any) -> Feature`
-        Overrides right greater than operator.
+        It overrides right greater than operator.
     `__lt__(other: Any) -> Feature`
-        Overrides less than operator.
+        It overrides less than operator.
     `__rlt__(other: Any) -> Feature`
-        Overrides right less than operator.
+        It overrides right less than operator.
     `__le__(other: Any) -> Feature`
-        Overrides less than or equal to operator.
+        It overrides less than or equal to operator.
     `__rle__(other: Any) -> Feature`
-        Overrides right less than or equal to operator.
+        It overrides right less than or equal to operator.
     `__ge__(other: Any) -> Feature`
-        Overrides greater than or equal to operator.
+        It overrides greater than or equal to operator.
     `__rge__(other: Any) -> Feature`
-        Overrides right greater than or equal to operator.
+        It overrides right greater than or equal to operator.
     `__xor__(other: Any) -> Feature`
-        Overrides XOR operator.
+        It overrides XOR operator.
     `__and__(other: Feature) -> Feature`
-        Overrides AND operator.
+        It overrides AND operator.
     `__rand__(other: Feature) -> Feature`
-        Overrides right AND operator.
+        It overrides right AND operator.
     `__getitem__(key: Any) -> Feature`
-        Allows direct slicing of the data.
+        It allows direct slicing of the data.
     `_format_input(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
         Formats the input data for the feature.
     `_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
@@ -1271,42 +1273,6 @@ class Feature(DeepTrackNode):
 
         return self
 
-    def _normalize(
-        self: Feature,
-        **properties: dict[str, Any],
-    ) -> dict[str, Any]:
-        """Normalize the properties.
-
-        This method handles all unit normalizations and conversions. For each
-        class in the method resolution order (MRO), it checks if the class has
-        a `__conversion_table__` attribute. If found, it calls the `convert`
-        method of the conversion table using the properties as arguments.
-
-        Parameters
-        ----------
-        **properties: dict[str, Any]
-            The properties to be normalized and converted.
-
-        Returns
-        -------
-        dict[str, Any]
-            The normalized and converted properties.
-
-        Examples
-        --------
-        TODO
-
-        """
-
-        for cl in type(self).mro():
-            if hasattr(cl, "__conversion_table__"):
-                properties = cl.__conversion_table__.convert(**properties)
-
-        for key, val in properties.items():
-            if isinstance(val, Quantity):
-                properties[key] = val.magnitude
-        return properties
-
     def plot(
         self: Feature,
         input_image: np.ndarray | list[np.ndarray] | Image | list[Image] = None,
@@ -1399,6 +1365,42 @@ class Feature(DeepTrackNode):
                         value=0, min=0, max=len(images) - 1, step=1
                     ),
                 )
+
+    def _normalize(
+        self: Feature,
+        **properties: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Normalize the properties.
+
+        This method handles all unit normalizations and conversions. For each
+        class in the method resolution order (MRO), it checks if the class has
+        a `__conversion_table__` attribute. If found, it calls the `convert`
+        method of the conversion table using the properties as arguments.
+
+        Parameters
+        ----------
+        **properties: dict[str, Any]
+            The properties to be normalized and converted.
+
+        Returns
+        -------
+        dict[str, Any]
+            The normalized and converted properties.
+
+        Examples
+        --------
+        TODO
+
+        """
+
+        for cl in type(self).mro():
+            if hasattr(cl, "__conversion_table__"):
+                properties = cl.__conversion_table__.convert(**properties)
+
+        for key, val in properties.items():
+            if isinstance(val, Quantity):
+                properties[key] = val.magnitude
+        return properties
 
     def _process_properties(
         self: Feature,
