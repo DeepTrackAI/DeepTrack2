@@ -1557,7 +1557,70 @@ class Feature(DeepTrackNode):
         other: Any,
     ) -> Feature:
         """Chains this feature with another feature or function using '>>'.
-        
+
+        This operator enables pipeline-style chaining. The expression:
+
+        >>> feature >> other
+
+        creates a new pipeline where the output of `feature` is passed as 
+        input to `other`.
+
+        If `other` is a `Feature` or `DeepTrackNode`, this returns a 
+        `Chain(feature, other)`. If `other` is a callable (e.g., a function),
+        it is wrapped using `dt.Lambda(lambda: other)` and chained 
+        similarly.
+
+        If `other` is neither a `DeepTrackNode` nor a callable, the operator 
+        is not implemented and returns `NotImplemented`, which may lead to a 
+        `TypeError` if no matching reverse operator is defined.
+
+        Parameters
+        ----------
+        other: Any
+            The feature, node, or callable to chain after `self`.
+
+        Returns
+        -------
+        Feature
+            A new chained feature combining `self` and `other`.
+
+        Raises
+        ------
+        TypeError
+            If `other` is not a `DeepTrackNode` or callable, the operator 
+            returns `NotImplemented`, which may raise a `TypeError` if no 
+            matching reverse operator is defined.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Chain two features:
+        >>> feature1 = dt.Value(value=[1, 2, 3])
+        >>> feature2 = dt.Add(value=1)
+        >>> pipeline = feature1 >> feature2
+        >>> result = pipeline()
+        >>> result
+        [2, 3, 4]
+
+        Chain with a callable (e.g., NumPy function):
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(value=np.array([1, 2, 3]))
+        >>> function = np.mean
+        >>> pipeline = feature >> function
+        >>> result = pipeline()
+        >>> result
+        2.0
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Lambda(lambda: function)
+
+        Attempting to chain with an unsupported object raise a TypeError:
+        >>> feature >> "invalid"
+            ...
+        TypeError: unsupported operand type(s) for >>: 'Value' and 'str'
+
         """
 
         if isinstance(other, DeepTrackNode):
