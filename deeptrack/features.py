@@ -361,10 +361,10 @@ class Feature(DeepTrackNode):
         Activates sources in the input data.
     `__getattr__(key: str) -> Any`
         Custom attribute access for the Feature class.
-    `__iter__() -> Any`
-        It return the next element iterating over the feature.
-    `__next__() -> Iterable`
+    `__iter__() -> Feature`
         It returns an iterator for the feature.
+    `__next__() -> Any`
+        It return the next element iterating over the feature.
     `__rshift__(other: Any) -> Feature`
         It allows chaining of features.
     `__rrshift__(other: Any) -> Feature`
@@ -1545,16 +1545,55 @@ class Feature(DeepTrackNode):
 
     def __iter__(
         self: Feature,
+    ) -> Feature:
+        """Return self as an iterator over feature values.
+
+        This makes the `Feature` object compatible with Python's iterator 
+        protocol. Each call to `next(feature)` generates a new output by 
+        resampling its properties and resolving the pipeline.
+
+        Returns
+        -------
+        Feature
+            Returns self, which defines `__next__()` to yield outputs.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create feature:
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(value=lambda: np.random.rand())
+
+        Use the feature in a loop:
+        >>> for sample in feature:
+        ...     print(sample)
+        ...     if sample > 0.5:
+        ...         break
+        0.43126475134786546
+        0.3270413736199965
+        0.6734339603677173
+
+        """
+
+        return self
+
+        #TODO **BM** TBE? Previous implementation, not standard in Python
+        # while True:
+        #     yield from next(self)
+
+    def __next__(
+        self: Feature,
     ) -> Any:
-        """ Return infinite iterator that continuously yields feature values.
+        """Return the next resolved feature in the sequence.
 
-        This method allows a `Feature` instance to be used in a `for` loop or 
-        as a generator. It repeatedly calls `__next__()` to resolve and yield 
-        new values.
+        This method allows a `Feature` to be used as an iterator that yields
+        a new result at each step. It is called automatically by `next(feature)`
+        or when used in iteration.
 
-        Each iteration generates a fresh output by calling
-        `self.update().resolve()`, meaning it resamples all properties before
-        evaluation.
+        Each call to `__next__()` triggers a resampling of all properties and
+        evaluation of the pipeline using `self.update().resolve()`.
 
         Returns
         -------
@@ -1570,50 +1609,16 @@ class Feature(DeepTrackNode):
         >>>
         >>> feature = dt.Value(value=lambda: np.random.rand())
 
-        Use the feature in a loop:
-        >>> for i, sample in enumerate(feature):
-        ...     print(sample)
-        ...     if i == 2:
-        ...         break
-        0.43126475134786546
-        0.3270413736199965
-        0.6734339603677173
+        Get a single sample:
+        >>> next(feature)
+        0.41251758103924216
 
         """
 
-        while True:
-            yield from next(self)
+        return self.update().resolve()
 
-    def __next__(
-        self: Feature,
-    ) -> Iterator:
-        """Return the next resolved feature in the sequence.
-
-        This method is called by `next(feature)` and yields one new sample by
-        first resampling all properties via `update()` and then evaluating the
-        feature using `resolve()`.
-
-        Returns
-        -------
-        Iterable
-            An infinite generator that yields evaluated feature outputs.
-
-        Examples
-        --------
-        >>> import deeptrack as dt
-
-        Create a feature:
-        >>> import numpy as np
-        >>>
-        >>> feature = dt.Value(value=lambda: np.random.rand())
-
-        Get a single sample multiple times:
-        >>> for _ in enumerate(3):
-        ...     next(feature)
-
-        """
-
-        yield self.update().resolve()
+        #TODO **BM** TBE? Previous implementation, not standard in Python
+        # yield self.update().resolve()
 
     def __rshift__(
         self: Feature,
@@ -2143,12 +2148,73 @@ class Feature(DeepTrackNode):
         
         return Value(other) >> Stack(self)
 
-    # **GV**
     def __getitem__(
         self: Feature,
         slices: Any,
-    ) -> 'Feature':
+    ) -> Feature:
         """Allows direct slicing of the feature's output.
+
+        This operator enables syntax like:
+
+        >>> feature[:, 0]
+
+        to extract a slice from the output of the feature, just as you would 
+        with a NumPy array or PyTorch tensor.
+
+        Internally, this is equivalent to chaining with `dt.Slice`, and the 
+        expression:
+
+        >>> feature[slices]
+
+        is equivalent to:
+
+        >>> feature >> dt.Slice(slices)
+
+        If the slice is not already a tuple (i.e., a single index or slice),
+        it is wrapped in one. The resulting tuple is converted to a list to 
+        allow sampling of dynamic slices at runtime.
+
+        Parameters
+        ----------
+        slices: Any
+            The slice or index to apply to the feature output. Can be an int, 
+            slice object, or a tuple of them.
+
+        Returns
+        -------
+        Feature
+            A new feature that applies slicing to the output of the current 
+            feature.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create a feature:
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(value=np.arange(9).reshape(3, 3))
+        >>> feature()
+        array([[0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8]])
+
+        Slice a row:
+        >>> sliced = feature[1]
+        >>> sliced()
+        array([3, 4, 5])
+
+        This is equivalent to:
+        >>> sliced = feature >> dt.Slice([1])
+
+        Slice with multiple axes:
+        >>> sliced = feature[1:, 1:]
+        >>> sliced()
+        array([[4, 5],
+               [7, 8]])
+
+        This is equivalent to:
+        >>> sliced = feature >> dt.Slice([slice(1, None), slice(1, None)])
 
         """
 
