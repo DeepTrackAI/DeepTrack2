@@ -425,9 +425,9 @@ class Feature(DeepTrackNode):
         Ensures the input is a list of Image.
     `_no_wrap_format_input(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
         Ensures the input is a list of Image.
-    `_no_wrap_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Calls the `get` method according to the `__distributed__` attribute.
     `_image_wrapped_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
+        Calls the `get` method according to the `__distributed__` attribute.
+    `_no_wrap_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
         Calls the `get` method according to the `__distributed__` attribute.
     `_image_wrapped_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
         Processes the output of the feature.
