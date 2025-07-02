@@ -149,7 +149,7 @@ if TORCH_AVAILABLE:
     import torch
 
 __all__ = [
-    "Feature",  # TODO
+    "Feature",  # TODO **GV**
     "StructuralFeature",
     "Chain",
     "Branch",
@@ -1161,6 +1161,7 @@ class Feature(DeepTrackNode):
         else:
             return image_list
 
+    # **GV**
     def update(
         self: Feature,
         **global_arguments: Any,
@@ -1198,6 +1199,7 @@ class Feature(DeepTrackNode):
 
         return self
 
+    # **GV**
     def add_feature(
         self: Feature,
         feature: Feature,
@@ -1221,6 +1223,7 @@ class Feature(DeepTrackNode):
 
         return feature
 
+    # **GV**
     def seed(
         self: Feature,
         _ID: tuple[int, ...] = (),
@@ -1236,6 +1239,7 @@ class Feature(DeepTrackNode):
 
         np.random.seed(self._random_seed(_ID=_ID))
 
+    # **GV**
     def bind_arguments(
         self: Feature,
         arguments: Feature,
@@ -1273,6 +1277,7 @@ class Feature(DeepTrackNode):
 
         return self
 
+    # **GV**
     def plot(
         self: Feature,
         input_image: np.ndarray | list[np.ndarray] | Image | list[Image] = None,
@@ -1366,6 +1371,7 @@ class Feature(DeepTrackNode):
                     ),
                 )
 
+    # **GV**
     def _normalize(
         self: Feature,
         **properties: dict[str, Any],
@@ -1402,6 +1408,7 @@ class Feature(DeepTrackNode):
                 properties[key] = val.magnitude
         return properties
 
+    # **GV**
     def _process_properties(
         self: Feature,
         propertydict: dict[str, Any],
@@ -1438,6 +1445,7 @@ class Feature(DeepTrackNode):
 
         return propertydict
 
+    # **GV**
     def _activate_sources(
         self: Feature,
         x: Any,
@@ -1470,6 +1478,7 @@ class Feature(DeepTrackNode):
                     if isinstance(source, SourceItem):
                         source()
 
+    # **GV**
     def __getattr__(
         self: Feature,
         key: str,
@@ -1534,6 +1543,7 @@ class Feature(DeepTrackNode):
         raise AttributeError(f"'{self.__class__.__name__}' object has "
                              "no attribute '{key}'")
 
+    # **GV**
     def __iter__(
         self: Feature,
     ) -> Iterable:
@@ -1545,6 +1555,7 @@ class Feature(DeepTrackNode):
         while True:
             yield from next(self)
 
+    # **GV**
     def __next__(
         self: Feature,
     ) -> Any:
@@ -2082,6 +2093,7 @@ class Feature(DeepTrackNode):
         
         return Value(other) >> Stack(self)
 
+    # **GV**
     def __getitem__(
         self: Feature,
         slices: Any,
