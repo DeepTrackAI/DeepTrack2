@@ -1568,7 +1568,9 @@ class Feature(DeepTrackNode):
         If `other` is a `Feature` or `DeepTrackNode`, this returns a 
         `Chain(feature, other)`. If `other` is a callable (e.g., a function),
         it is wrapped using `dt.Lambda(lambda: other)` and chained 
-        similarly.
+        similarly. The lambda returns the function itself, which is then 
+        automatically called with the upstream feature’s output during 
+        evaluation.
 
         If `other` is neither a `DeepTrackNode` nor a callable, the operator 
         is not implemented and returns `NotImplemented`, which may lead to a 
@@ -1616,7 +1618,10 @@ class Feature(DeepTrackNode):
         This is equivalent to:
         >>> pipeline = feature >> dt.Lambda(lambda: function)
 
-        Attempting to chain with an unsupported object raise a TypeError:
+        The lambda returns the function object. During evaluation, DeepTrack 
+        internally calls that function with the resolved output of `feature`.
+
+        Attempting to chain with an unsupported object raises a TypeError:
         >>> feature >> "invalid"
             ...
         TypeError: unsupported operand type(s) for >>: 'Value' and 'str'
@@ -1634,12 +1639,74 @@ class Feature(DeepTrackNode):
         # The operator is not implemented for other inputs.
         return NotImplemented
 
+    #TODO **BM** TBE? note that it's never actually accessed
     def __rrshift__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Chains another feature or function with this feature using '<<'.
-        
+        """Chains another feature or value with this feature using '>>'.
+
+        This operator supports chaining when the `Feature` appears on the 
+        right-hand side of a pipeline. The expression:
+
+        >>> other >> feature
+
+        triggers `feature.__rrshift__(other)` if `other` does not implement 
+        `__rshift__`, or if its implementation returns `NotImplemented`.
+
+        If `other` is a `Feature`, this is equivalent to:
+
+        >>> dt.Chain(other, feature)
+
+        If `other` is a raw value (e.g., a list or array), it is wrapped using
+        `dt.Value(value=other)` before chaining:
+
+        >>> dt.Chain(dt.Value(value=other), feature)
+
+        Parameters
+        ----------
+        other: Any
+            The value or feature to be evaluated before this feature.
+
+        Returns
+        -------
+        Feature
+            A new chained feature where `other` is evaluated first.
+
+        Raises
+        ------
+        TypeError
+            If `other` is not a supported type, this method returns 
+            `NotImplemented`, which may raise a `TypeError` if no matching 
+            forward operator is defined.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Chain a constant value into a feature:
+        >>> feature = dt.Add(value=1)
+        >>> pipeline = [1, 2, 3] >> feature
+        >>> result = pipeline()
+        >>> result
+        [2, 3, 4]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=[1, 2, 3]) >> feature
+
+        Chain two features (normally handled by __rshift__):
+        >>> feature1 = dt.Value(value=[1, 2, 3])
+        >>> feature2 = dt.Add(value=1)
+        >>> pipeline = feature1 >> feature2
+        >>> result = pipeline()
+        >>> result
+        [2, 3, 4]
+
+        Attempting to chain an unsupported object raises a TypeError:
+        >>> object() >> feature
+            ...
+        TypeError: unsupported operand type(s) for >>: 'object' and 'Add'
+
         """
 
         if isinstance(other, Feature):
