@@ -1014,20 +1014,24 @@ class Feature(DeepTrackNode):
         self: Feature,
         _ID: tuple[int, ...] = (),
     ) -> Any | list[Any]:
-        """Core logic to create or transform the image.
+        """Core logic to create or transform the input.
 
-        This method creates or transforms the input image by calling the 
-        `get()` method with the correct inputs.
+        This method creates or transforms the input by calling the `get()`
+        method with the correct inputs.
 
         Parameters
         ----------
-        _ID: tuple of int
+        _ID: tuple[int], optional
             The unique identifier for the current execution. It defaults to ().
 
         Returns
         -------
         Any or list[Any]
-            The resolved image or list of resolved images.
+            The resolved output or list of resolved outputs.
+
+        Examples
+        --------
+        TODO
 
         """
 
