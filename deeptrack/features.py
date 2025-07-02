@@ -185,13 +185,13 @@ __all__ = [
     "Merge",
     "OneOf",
     "OneOfDict",
-    "LoadImage",  # TODO
-    "SampleToMasks",  # TODO
-    "AsType",  # TODO
-    "ChannelFirst2d",  # TODO
-    "Upscale",  # TODO
-    "NonOverlapping",  # TODO
-    "Store",  # TODO
+    "LoadImage",  # TODO **MG**
+    "SampleToMasks",  # TODO **MG**
+    "AsType",  # TODO **MG**
+    "ChannelFirst2d",  # TODO **AL**
+    "Upscale",  # TODO **AL**
+    "NonOverlapping",  # TODO **AL**
+    "Store",  # TODO **JH**
     "Squeeze",
     "Unsqueeze",
     "ExpandDims",
@@ -199,7 +199,7 @@ __all__ = [
     "Transpose",
     "Permute",
     "OneHot",
-    "TakeProperties",  # TODO
+    "TakeProperties",  # TODO **JH**
 ]
 
 
@@ -1708,8 +1708,8 @@ class Feature(DeepTrackNode):
         return Value(other) >> Power(self)
 
     def __gt__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
         """Checks if this feature is greater than another using '>'.
 
