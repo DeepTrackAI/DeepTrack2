@@ -6296,7 +6296,7 @@ class Upscale(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray | Image, factor: int | tuple[int, int, int], **kwargs) -> np.ndarray`
+    `get(image: np.ndarray | Image | torch.tensor, factor: int | tuple[int, int, int], **kwargs) -> np.ndarray | torch.tensor`
         Simulates the pipeline at a higher resolution and returns the result at 
         the original resolution.
 
@@ -6351,7 +6351,7 @@ class Upscale(Feature):
         feature: Feature,
         factor: int | tuple[int, int, int] = 1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the Upscale feature.
 
         Parameters
@@ -6373,15 +6373,15 @@ class Upscale(Feature):
 
     def get(
         self: Feature,
-        image: np.ndarray,
+        image: np.ndarray | torch.tensor,
         factor: int | tuple[int, int, int],
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.tensor:
         """Simulate the pipeline at a higher resolution and return result.
 
         Parameters
         ----------
-        image: np.ndarray
+        image: np.ndarray | torch.tensor
             The input image to process.
         factor: int or tuple[int, int, int]
             The factor by which to upscale the simulation. If a single integer 
@@ -6392,7 +6392,7 @@ class Upscale(Feature):
 
         Returns
         -------
-        np.ndarray
+        np.ndarray | torch.tensor
             The processed image at the original resolution.
 
         Raises
