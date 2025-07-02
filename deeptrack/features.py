@@ -1639,7 +1639,6 @@ class Feature(DeepTrackNode):
         # The operator is not implemented for other inputs.
         return NotImplemented
 
-    #TODO **BM** TBE? note that it's never actually accessed
     def __rrshift__(
         self: Feature,
         other: Any,
@@ -1680,32 +1679,40 @@ class Feature(DeepTrackNode):
             `NotImplemented`, which may raise a `TypeError` if no matching 
             forward operator is defined.
 
-        Examples
-        --------
-        >>> import deeptrack as dt
+        Notes
+        -----
+        This method enables chaining where a `Feature` appears on the
+        right-hand side of the `>>` operator. It is triggered when the
+        left-hand operand does not implement `__rshift__`, or when its
+        implementation returns `NotImplemented`.
 
-        Chain a constant value into a feature:
-        >>> feature = dt.Add(value=1)
-        >>> pipeline = [1, 2, 3] >> feature
-        >>> result = pipeline()
-        >>> result
-        [2, 3, 4]
+        This is particularly useful when chaining two `Feature` instances or
+        when the left-hand operand is a custom class designed to delegate
+        chaining behavior. For example:
 
-        This is equivalent to:
-        >>> pipeline = dt.Value(value=[1, 2, 3]) >> feature
+        >>> pipeline = dt.Value(value=[1, 2, 3]) >> dt.Add(value=1)
 
-        Chain two features (normally handled by __rshift__):
-        >>> feature1 = dt.Value(value=[1, 2, 3])
-        >>> feature2 = dt.Add(value=1)
-        >>> pipeline = feature1 >> feature2
-        >>> result = pipeline()
-        >>> result
-        [2, 3, 4]
+        In this case, if `dt.Value` does not handle `__rshift__`, Python will
+        fall back to calling `Add.__rrshift__(...)`, which constructs the
+        chain.
 
-        Attempting to chain an unsupported object raises a TypeError:
-        >>> object() >> feature
-            ...
-        TypeError: unsupported operand type(s) for >>: 'object' and 'Add'
+        However, this mechanism does **not** apply to built-in types like
+        `int`, `float`, or `list`. Due to limitations in Python's operator
+        overloading, expressions like:
+
+        >>> 1 >> dt.Add(value=1)
+        >>> [1, 2, 3] >> dt.Add(value=1)
+
+        will raise `TypeError`, because Python does not delegate to the
+        right-hand operand’s `__rrshift__` method for built-in types.
+
+        To chain a raw value into a feature, wrap it explicitly using
+        `dt.Value`:
+
+        >>> dt.Value(1) >> dt.Add(value=1)
+
+        This is functionally equivalent and avoids the need for fallback
+        behavior.
 
         """
 
