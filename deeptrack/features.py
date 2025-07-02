@@ -188,7 +188,7 @@ __all__ = [
     "LoadImage",  # TODO **MG**
     "SampleToMasks",  # TODO **MG**
     "AsType",  # TODO **MG**
-    "ChannelFirst2d",  # TODO **AL**
+    "ChannelFirst2d",  # IMPLEMENTED
     "Upscale",  # TODO **AL**
     "NonOverlapping",  # TODO **AL**
     "Store",  # TODO **JH**
@@ -6196,7 +6196,7 @@ class ChannelFirst2d(Feature):
         self: Feature,
         axis: int = -1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the ChannelFirst2d feature.
 
         Parameters
@@ -6213,7 +6213,7 @@ class ChannelFirst2d(Feature):
 
     def get(
         self: Feature,
-        image: np.ndarray,
+        image: np.ndarray | torch.tensor,
         axis: int,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
