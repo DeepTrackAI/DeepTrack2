@@ -1588,25 +1588,127 @@ class Feature(DeepTrackNode):
         return NotImplemented
 
     def __add__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
         """Adds another value or feature using '+'.
-        
+
+        This operator is shorthand for chaining with `dt.Add`. The expression:
+
+        >>> feature + other
+
+        is equivalent to:
+
+        >>> feature >> dt.Add(value=other)
+
+        Internally, this method constructs a new `Add` feature and uses the 
+        right-shift operator (`>>`) to chain the current feature into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to be added. It is passed to `dt.Add` as 
+            the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature that adds `other` to the output of `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Add a constant value to a static input:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature + 5
+        >>> result = pipeline()
+        >>> result
+        [6, 7, 8]
+
+        This is equivalent to:
+        >>> pipeline = f >> dt.Add(value=5)
+
+        Add a dynamic feature that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.rand())
+        >>> pipeline = feature + noise
+        >>> result = pipeline.update()()
+        >>> result
+        [1.325563919290048, 2.325563919290048, 3.325563919290048]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Add(value=noise)
+
         """
 
         return self >> Add(other)
 
     def __radd__(
-        self: Feature, 
+        self: Feature,
         other: Any
     ) -> Feature:
         """Adds this feature to another value using right '+'.
-        
+
+        This operator is the right-hand version of `+`, enabling expressions 
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other + feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.Add(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other` and 
+        chains it into an `Add` feature that adds the current feature as a 
+        dynamic value.
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` to which `self` will be added. It is 
+            passed as the input to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature that adds `self` to `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Add a feature to a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 5 + feature
+        >>> result = pipeline()
+        >>> result
+        [6, 7, 8]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=5) >> dt.Add(value=feature)
+
+        Add a feature to a dynamic value:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.rand())
+        >>> pipeline = noise + feature
+        >>> result = pipeline.update()()
+        >>> result
+        [1.5254613210875014, 2.5254613210875014, 3.5254613210875014]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=lambda: np.random.rand())
+        ...     >> dt.Add(value=feature)
+        ... )
+
         """
 
         return Value(other) >> Add(self)
 
+    #TODO **MG**
     def __sub__(
         self: Feature, 
         other: Any
@@ -1617,6 +1719,7 @@ class Feature(DeepTrackNode):
 
         return self >> Subtract(other)
 
+    #TODO **MG**
     def __rsub__(
         self: Feature, 
         other: Any
@@ -1627,6 +1730,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Subtract(self)
 
+    #TODO **MG**
     def __mul__(
         self: Feature, 
         other: Any
@@ -1637,6 +1741,7 @@ class Feature(DeepTrackNode):
 
         return self >> Multiply(other)
 
+    #TODO **MG**
     def __rmul__(
         self: Feature, 
         other: Any
@@ -1647,6 +1752,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Multiply(self)
 
+    #TODO **AL**
     def __truediv__(
         self: Feature, 
         other: Any
@@ -1657,6 +1763,7 @@ class Feature(DeepTrackNode):
 
         return self >> Divide(other)
 
+    #TODO **AL**
     def __rtruediv__(
         self: Feature, 
         other: Any
@@ -1667,6 +1774,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Divide(self)
 
+    #TODO **AL**
     def __floordiv__(
         self: Feature, 
         other: Any
@@ -1677,6 +1785,7 @@ class Feature(DeepTrackNode):
 
         return self >> FloorDivide(other)
 
+    #TODO **AL**
     def __rfloordiv__(
         self: Feature, 
         other: Any
@@ -1687,6 +1796,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> FloorDivide(self)
 
+    #TODO **JH**
     def __pow__(
         self: Feature, 
         other: Any
@@ -1697,6 +1807,7 @@ class Feature(DeepTrackNode):
 
         return self >> Power(other)
 
+    #TODO **JH**
     def __rpow__(
         self: Feature, 
         other: Any
@@ -1707,6 +1818,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Power(self)
 
+    #TODO **JH**
     def __gt__(
         self: Feature,
         other: Any,
@@ -1717,6 +1829,7 @@ class Feature(DeepTrackNode):
 
         return self >> GreaterThan(other)
 
+    #TODO **JH**
     def __rgt__(
         self: Feature, 
         other: Any
@@ -1728,6 +1841,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> GreaterThan(self)
 
+    #TODO **JH**
     def __lt__(
         self: Feature, 
         other: Any
@@ -1738,6 +1852,7 @@ class Feature(DeepTrackNode):
 
         return self >> LessThan(other)
 
+    #TODO **JH**
     def __rlt__(
         self: Feature, 
         other: Any
@@ -1748,6 +1863,7 @@ class Feature(DeepTrackNode):
         
         return Value(other) >> LessThan(self)
 
+    #TODO **JH**
     def __le__(
         self: Feature, 
         other: Any
@@ -1758,6 +1874,7 @@ class Feature(DeepTrackNode):
 
         return self >> LessThanOrEquals(other)
 
+    #TODO **JH**
     def __rle__(
         self: Feature,
         other: Any
@@ -1769,6 +1886,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> LessThanOrEquals(self)
 
+    #TODO **JH**
     def __ge__(
         self: Feature, 
         other: Any
@@ -1780,6 +1898,7 @@ class Feature(DeepTrackNode):
 
         return self >> GreaterThanOrEquals(other)
 
+    #TODO **JH**
     def __rge__(
         self: Feature, 
         other: Any
@@ -1791,6 +1910,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> GreaterThanOrEquals(self)
 
+    #TODO **JH**
     def __xor__(
         self: Feature,
         other: Any,
@@ -1801,6 +1921,7 @@ class Feature(DeepTrackNode):
 
         return Repeat(self, other)
 
+    #TODO **JH**
     def __and__(
         self: Feature,
         other: Any,
@@ -1811,6 +1932,7 @@ class Feature(DeepTrackNode):
 
         return self >> Stack(other)
 
+    #TODO **JH**
     def __rand__(
         self: Feature,
         other: Any,
