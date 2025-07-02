@@ -326,14 +326,21 @@ class Feature(DeepTrackNode):
     `__call__(image_list: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
         It executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
-    `store_properties(x: bool = True, recursive: bool = True) -> None`
-        Controls whether the properties are stored in the output `Image` object.
-    `torch(dtype: torch.dtype | None = None, device: torch.device | None = None, permute_mode: str = "never") -> 'Feature'`
-        Converts the feature into a PyTorch-compatible feature.
-    `batch(batch_size: int = 32) -> tuple | list[Image]`
-        Batches the feature for repeated execution.
-    `action(_ID: tuple[int, ...] = ()) -> Image | list[Image]`
-        Core logic to create or transform the image.
+    `store_properties(toggle: bool, recursive: bool) -> Feature`
+        It controls whether the properties are stored in the output `Image`
+        object.
+    `torch(device: torch.device or None, recursive: bool) -> 'Feature'`
+        It sets the backend to torch.
+    `numpy(recursice: bool) -> Feature`
+        It set the backend to numpy.
+    `dtype(float: Literal["float32", "float64", "default"] or None, int: Literal["int16", "int32", "int64", "default"] or None, complex: Literal["complex64", "complex128", "default"] or None, bool: Literal["bool", "default"] or None) -> Feature`
+        It set the dtype to be used during evaluation.
+    `to(device: str or torch.device) -> Feature`
+        It set the device to be used during evaluation.
+    `batch(batch_size: int) -> tuple`
+        It batches the feature for repeated execution.
+    `action(_ID: tuple[int, ...]) -> Any | list[Any]`
+        Implement the core logic to create or transform the input(s).
     `update(**global_arguments: Any) -> Feature`
         Refreshes the feature to create a new image.
     `add_feature(feature: Feature) -> Feature`
@@ -676,7 +683,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         toggle: bool = True,
         recursive: bool = True,
-    ) -> None:
+    ) -> Feature:
         """Control whether to return an Image object.
         
         If selected `True`, the output of the evaluation of the feature is an 
@@ -689,6 +696,11 @@ class Feature(DeepTrackNode):
         recursive: bool
             If `True` (default), also set the same behavior for all dependent
             features. If `False`, it does not.
+
+        Returns
+        -------
+        Feature
+            self
 
         Examples
         --------
@@ -733,9 +745,11 @@ class Feature(DeepTrackNode):
                 if isinstance(dependency, Feature):
                     dependency.store_properties(toggle, recursive=False)
 
+        return self
+
     def torch(
         self: Feature,
-        device: torch.device = None,
+        device: torch.device | None = None,
         recursive: bool = True,
     ) -> Feature:
         """Set the backend to torch.
@@ -861,7 +875,7 @@ class Feature(DeepTrackNode):
         int: Literal["int16", "int32", "int64", "default"] | None = None,
         complex: Literal["complex64", "complex128", "default"] | None = None,
         bool: Literal["bool", "default"] | None = None,
-    ) -> None:
+    ) -> Feature:
         """Set the dtype to be used during evaluation.
 
         It alters the dtype used for array creation, but does not automatically
@@ -881,6 +895,11 @@ class Feature(DeepTrackNode):
         bool: str, optional
             The bool dtype to set. It cna be `"bool"`, `"default"`, or `None`.
             It defaults to `None`.
+
+        Returns
+        -------
+        Feature
+            self
 
         Examples
         --------
@@ -915,16 +934,23 @@ class Feature(DeepTrackNode):
         if bool is not None:
             self._bool_dtype = bool
 
+        return self
+
     def to(
         self: Feature,
         device: str | torch.device,
-    ) -> None:
+    ) -> Feature:
         """Set the device to be used during evaluation.
 
         Parameters
         ----------
         device: str or torch.device
             The device to use. If the backend is numpy, this can only be "cpu".
+
+        Returns
+        -------
+        Feature
+            self
 
         Examples
         --------
@@ -954,6 +980,8 @@ class Feature(DeepTrackNode):
         """
 
         self._device = device
+
+        return self
 
     def batch(
         self: Feature,
@@ -1016,10 +1044,43 @@ class Feature(DeepTrackNode):
     ) -> Any | list[Any]:
         """Core logic to create or transform the input.
 
-        This method creates or transforms the input by calling the `get()`
-        method with the correct inputs.
+        This method is the central point where the feature's transformation is
+        actually executed. It retrieves the input data, evaluates the current
+        values of all properties, formats the input into a list of `Image`
+        objects, and applies the `get()` method to perform the desired
+        transformation.
 
+        Depending on the configuration, the transformation can be applied to
+        each element of the input independently or to the full list at once.
+
+        The outputs are optionally post-processed, and then merged back into
+        the input according to the configured merge strategy.
         Parameters
+
+        The behavior of this method is influenced by several class attributes:
+
+        - `__distributed__`: If `True` (default), the `get()` method is applied
+          independently to each input in the input list. If `False`, the
+          `get()` method is applied to the entire list at once.
+
+        - `__list_merge_strategy__`: Determines how the outputs returned by
+          `get()` are combined with the original inputs:
+            * `MERGE_STRATEGY_OVERRIDE` (default): The output replaces the
+              input.
+            * `MERGE_STRATEGY_APPEND`: The output is appended to the input
+              list.
+
+        - `_wrap_array_with_image`: If `True`, input arrays are wrapped as
+          `Image` instances and their properties are preserved. Otherwise,
+          they are treated as raw arrays.
+
+        - `_process_properties()`: This hook can be overridden to pre-process
+          properties before they are passed to `get()` (e.g., for unit
+          normalization).
+
+        - `_process_output()`: Handles post-processing of the output images,
+          including appending feature properties and binding argument features.
+
         ----------
         _ID: tuple[int], optional
             The unique identifier for the current execution. It defaults to ().
@@ -1027,11 +1088,37 @@ class Feature(DeepTrackNode):
         Returns
         -------
         Any or list[Any]
-            The resolved output or list of resolved outputs.
+            The resolved output or list of resolved outputs. If only a single
+            output is generated, the result is unwrapped for convenience.
 
         Examples
         --------
-        TODO
+        >>> import deeptrack as dt
+
+        Define a feature that adds a sampled value:
+        >>> import numpy as np
+        >>>
+        >>> feature = (
+        ...     dt.Value(value=np.array([1, 2, 3]))
+        ...     >> dt.Add(value=0.5)
+        ... )
+
+        Execute core logic manually:
+        >>> output = feature.action()
+        >>> output
+        array([1.5, 2.5, 3.5])
+
+        Use a list of inputs:
+        >>> feature = (
+        ...     dt.Value(value=[
+        ...         np.array([1, 2, 3]),
+        ...         np.array([4, 5, 6]),
+        ...     ])
+        ...     >> dt.Add(value=0.5)
+        ... )
+        >>> output = feature.action()
+        >>> output
+        [array([1.5, 2.5, 3.5]), array([4.5, 5.5, 6.5])]
 
         """
 
@@ -1188,22 +1275,26 @@ class Feature(DeepTrackNode):
         self: Feature,
         **properties: dict[str, Any],
     ) -> dict[str, Any]:
-        """Normalizes the properties.
+        """Normalize the properties.
 
-        This method handles all unit normalizations and conversions. For each class in 
-        the method resolution order (MRO), it checks if the class has a 
-        `__conversion_table__` attribute. If found, it calls the `convert` method of 
-        the conversion table using the properties as arguments.
+        This method handles all unit normalizations and conversions. For each
+        class in the method resolution order (MRO), it checks if the class has
+        a `__conversion_table__` attribute. If found, it calls the `convert`
+        method of the conversion table using the properties as arguments.
 
         Parameters
         ----------
-        **properties: dict of str to Any
+        **properties: dict[str, Any]
             The properties to be normalized and converted.
 
         Returns
         -------
-        dict of str to Any
+        dict[str, Any]
             The normalized and converted properties.
+
+        Examples
+        --------
+        TODO
 
         """
 
@@ -1313,11 +1404,16 @@ class Feature(DeepTrackNode):
         self: Feature,
         propertydict: dict[str, Any],
     ) -> dict[str, Any]:
-        """Preprocesses the input properties before calling `.get()`.
+        """Preprocess the input properties before calling `.get()`.
 
         This method acts as a preprocessing hook for subclasses, allowing them 
         to modify or normalize input properties before the feature's main 
         computation.
+
+        Notes:
+        - Calls `_normalize()` internally to standardize input properties.
+        - Subclasses may override this method to implement additional 
+          preprocessing steps.
 
         Parameters
         ----------
@@ -1330,15 +1426,14 @@ class Feature(DeepTrackNode):
         dict[str, Any]
             The processed property dictionary after normalization.
 
-        Notes
-        -----
-        - Calls `_normalize()` internally to standardize input properties.
-        - Subclasses may override this method to implement additional 
-          preprocessing steps.
-        
+        Examples
+        --------
+        TODO
+
         """
 
         propertydict = self._normalize(**propertydict)
+
         return propertydict
 
     def _activate_sources(
