@@ -21,9 +21,13 @@ tensor(0.3315, device='cuda:0', dtype=torch.float16)
 """
 
 from __future__ import annotations
-import torch
+from deeptrack import TORCH_AVAILABLE
+
 import numpy as np
 
+if TORCH_AVAILABLE:
+    import torch
+    
 __all__ = [
     "rand",
     "random",
