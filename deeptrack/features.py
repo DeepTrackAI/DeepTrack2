@@ -6213,10 +6213,10 @@ class ChannelFirst2d(Feature):
 
     def get(
         self: Feature,
-        image: NDArray | torch.tensor,
+        image: NDArray | torch.tensor | Image,
         axis: int,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor:
+    ) -> NDArray | torch.Tensor | Image:
         """Rearrange the axes of an image to channel-first format.
 
         Rearrange the axes of a 3D image to channel-first format or add a 
@@ -6242,23 +6242,24 @@ class ChannelFirst2d(Feature):
             If the input image is neither 2D nor 3D.
 
         """
-
+        
         ndim = image.ndim
 
         # Add a new dimension for 2D images.
+
         if ndim == 2:
-            if isinstance(image, np.ndarray):
-                return image[None]
-            elif isinstance(image, torch.tensor):
+            if apc.is_torch_array(image):
                 return image.unsqueeze(0)
+            else:
+                return image[None]
 
         # Move the specified axis to the first position for 3D images.
         if ndim == 3:
-            if isinstance(image, np.ndarray):
-                return np.moveaxis(image, axis, 0)
-            elif isinstance(image, torch.tensor):
+            if apc.is_torch_array(image):
                 dims = [axis] + [i for i in range(ndim) if i != axis]
                 return image.permute(*dims)
+            else:
+                return xp.moveaxis(image, axis, 0)
 
         raise ValueError("ChannelFirst2d only supports 2D or 3D images. "
                          f"Received {ndim}D image.")
