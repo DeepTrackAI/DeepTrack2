@@ -1225,7 +1225,6 @@ class Feature(DeepTrackNode):
 
         return feature
 
-    # **GV**
     def seed(
         self: Feature,
         updated_seed: int | None = None,
