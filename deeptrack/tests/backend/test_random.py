@@ -23,9 +23,10 @@ TODO: Implement tests for all of these functions to start with.
     "poisson",
 
 """
-
-class TestRandom(unittest.TestCase):
-    if TORCH_AVAILABLE:
+if TORCH_AVAILABLE:
+    import torch
+    class TestRandom(unittest.TestCase):
+    
         def test_rand(self):
             shapes = [(2, ), (3, 4)]
             dtypes = [torch.float32, torch.float64]
@@ -41,3 +42,6 @@ class TestRandom(unittest.TestCase):
             a = random.rand(100, dtype=torch.float32, device="cpu")
             b = np.random.rand(100)
             self.assertAlmostEqual(a.mean(), np.mean(b), delta=1)  # Use a different rand
+            
+    if __name__ == "__main__":
+        unittest.main()
