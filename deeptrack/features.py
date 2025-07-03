@@ -5903,15 +5903,22 @@ class SampleToMasks(Feature):
     Methods
     -------
     `get(
-        image: np.ndarray | Image,
+        image: np.ndarray | torch.Tensor | Image,
         transformation_function: Callable[[Image], Image],
         **kwargs: dict[str, Any]
     ) -> Image`
         Applies the transformation function to the input image.
     `_process_and_get(
-    images: list[np.ndarray] | np.ndarray | list[Image] | Image,
+    images: (
+        list[np.ndarray]
+        | np.ndarray
+        | list[torch.Tensor]
+        | torch.Tensor
+        | list[Image]
+        | Image
+    ),
     **kwargs: dict[str, Any]
-    ) -> Image | np.ndarray`
+    ) -> Image | np.ndarray | torch.Tensor`
         Processes a list of images and generates a multi-layer mask.
 
     Returns
