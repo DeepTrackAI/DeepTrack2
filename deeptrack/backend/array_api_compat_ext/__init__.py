@@ -7,4 +7,4 @@ if TORCH_AVAILABLE:
 # The current array_api_compat module does not fix this incompatibility.
 # So we implement our own patch, which implements a numpy-compatible interface
 # for the torch random functions.
-apctorch.random = random
+  apctorch.random = random
