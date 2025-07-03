@@ -137,7 +137,7 @@ from pint import Quantity
 from scipy.spatial.distance import cdist
 
 from deeptrack import units
-from deeptrack.backend import config, Config, TORCH_AVAILABLE, xp
+from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
 from deeptrack.image import Image
@@ -459,7 +459,7 @@ class Feature(DeepTrackNode):
     _int_dtype: str
     _complex_dtype: str
     _device: str | torch.device
-    _backend: Config
+    _backend: Literal["numpy", "torch"]
 
     @property
     def float_dtype(self) -> np.dtype | torch.dtype:
