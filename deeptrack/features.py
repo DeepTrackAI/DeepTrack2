@@ -345,7 +345,7 @@ class Feature(DeepTrackNode):
         Refreshes the feature to create a new image.
     `add_feature(feature: Feature) -> Feature`
         Adds a feature to the dependency graph of this one.
-    `seed(_ID: tuple[int, ...] = ()) -> None`
+    `seed(updated_seed: int, _ID: tuple[int, ...]) -> int`
         Sets the random seed for the feature, ensuring deterministic behavior.
     `bind_arguments(arguments: Feature) -> Feature`
         Binds another feature’s properties as arguments to this feature.
@@ -1228,18 +1228,106 @@ class Feature(DeepTrackNode):
     # **GV**
     def seed(
         self: Feature,
+        updated_seed: int | None = None,
         _ID: tuple[int, ...] = (),
-    ) -> None:
-        """Seed the random number generator.
+    ) -> int:
+        """Seed all random number generators for reproducibility.
+
+        This method sets the global random seed for Python's `random` module, 
+        NumPy, and (if available) PyTorch. If `updated_seed` is provided, it 
+        replaces the value of the internal `_random_seed` node before
+        resolution.
+
+        This method sets the following:
+        - `random.seed(seed)` for Python's RNG
+        - `np.random.seed(seed)` for NumPy
+        - `torch.manual_seed(seed)` and `torch.cuda.manual_seed_all(seed)`
+
+        The same seed will lead to deterministic behavior within each backend
+        (e.g., `random`, NumPy or PyTorch), but not **across** them. NumPy and
+        PyTorch use different RNG algorithms, so identical seeds will not
+        generate the same random numbers across backends.
 
         Parameters
         ----------
+        updated_seed: int or None, optional
+            If provided, sets a fixed value for the internal `_random_seed`.
         _ID: tuple[int, ...], optional
-            Unique identifier for parallel evaluations.
+            Unique identifier used to resolve the seed value. It defaults to
+            `()`.
+
+        Returns
+        -------
+        int
+            The resolved seed value used for all RNGs.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        **Using `random`**
+        Define a feature that samples a random integer from 0 to 10 using the
+        Python standard library's `random` module:
+        >>> import random
+        >>>
+        >>> feature = dt.Value(lambda: random.randint(0, 10))
+        >>> 
+        >>> for _ in range(3):
+        ...     print(f"output={feature.update()()} seed={feature.seed()}")
+        output=3 seed=355549663
+        output=5 seed=119234165
+        output=9 seed=1956541335
+
+        Each time `.update()` is called, the internal `_random_seed` is
+        re-sampled and used to reseed the Python `random` module. This 
+        produces a new deterministic seed, but different output values.
+
+        Fix the seed to reuse it later for reproducibility:
+        >>> seed = feature.seed()
+        >>> seed
+        1956541335
+
+        Now reseed the feature with the same value before each update,
+        to make the output deterministic and repeatable.
+        >>> for _ in range(3):
+        ...    feature.seed(seed)
+        ...    print(f"output={feature.update()()} seed={feature.seed()}")
+        output=5 seed=1933964715
+        output=5 seed=1933964715
+        output=5 seed=1933964715
+
+        Since the random seed is fixed before each sample, the output is
+        the same every time. Note: the seed reported after sampling may
+        differ if it's re-sampled internally, but the output remains stable.
+
+        **Using NumPy**
+        Similar observations can be made with NumPy:
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(lambda: np.random.randint(0, 10))
+
+        **Using PyTorch**        
+        Similar observations can be made with PyTorch:
+        >>> import torch
+        >>>
+        >>> feature = dt.Value(lambda: torch.randint(0, 10, (1,)).item())
 
         """
 
-        np.random.seed(self._random_seed(_ID=_ID))
+        if updated_seed:
+            self._random_seed.set_value(updated_seed)
+
+        seed = self._random_seed(_ID=_ID)
+
+        random.seed(seed)
+        np.random.seed(seed)
+
+        if TORCH_AVAILABLE:
+            torch.manual_seed(seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed_all(seed)
+
+        return seed
 
     # **GV**
     def bind_arguments(
