@@ -2004,11 +2004,11 @@ class Feature(DeepTrackNode):
     #TODO **JH**
     def __pow__(
         self: Feature, 
-        other: Any
+        other: Any,
     ) -> Feature:
-        """Raises this feature to a power using '**'.
+        """Raise this feature to a power using '**'.
 
-        This operator is shorthand for chaining with `dt.Power`. The expression:
+        This operator is shorthand for chaining with `Power`. The expression:
 
         >>> feature ** other
 
@@ -2022,8 +2022,8 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         other: Any
-            The value or `Feature` representing the exponent. It is passed to 
-            `dt.Power` as the `value` argument.
+            The value or `Feature` representing the exponent. It is passed to `dt.Power` 
+            as the `value` argument.
 
         Returns
         -------
