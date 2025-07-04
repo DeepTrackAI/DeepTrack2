@@ -1952,7 +1952,7 @@ class TestFeatures(unittest.TestCase):
         input_image_2d = np.random.rand(10, 20)
         output_image = channel_first_feature.get(input_image_2d, axis=-1)
         self.assertEqual(output_image.shape, (1, 10, 20))
-        
+
         input_image_3d = np.random.rand(10, 20, 3)
         output_image = channel_first_feature.get(input_image_3d, axis=-1)
         self.assertEqual(output_image.shape, (3, 10, 20))
@@ -1961,12 +1961,12 @@ class TestFeatures(unittest.TestCase):
             input_image_2d = torch.rand(10, 20)
             output_image = channel_first_feature.get(input_image_2d, axis=-1)
             self.assertEqual(tuple(output_image.shape), (1, 10, 20))
-        
+
             input_image_3d = torch.rand(10, 20, 3)
             output_image_3d = channel_first_feature.get(input_image_3d,
                                                         axis=-1)
             self.assertEqual(tuple(output_image_3d.shape), (3, 10, 20))
-        
+
 
     def test_Upscale(self):
         microscope = optics.Fluorescence(output_region=(0, 0, 32, 32))
