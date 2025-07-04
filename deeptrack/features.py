@@ -186,7 +186,7 @@ __all__ = [
     "OneOf",
     "OneOfDict",
     "LoadImage",  # TODO **MG**
-    "SampleToMasks",  # TODO **MG**
+    "SampleToMasks",
     "AsType",  # TODO **MG**
     "ChannelFirst2d",  # TODO **AL**
     "Upscale",  # TODO **AL**
@@ -5871,7 +5871,7 @@ class LoadImage(Feature):
 
 
 class SampleToMasks(Feature):
-    """Creates a mask from a list of images.
+    """Create a mask from a list of images.
 
     This feature applies a transformation function to each input image and
     merges the resulting masks into a single multi-layer image. Each input
@@ -5907,7 +5907,7 @@ class SampleToMasks(Feature):
         transformation_function: Callable[[Image], Image],
         **kwargs: dict[str, Any]
     ) -> Image`
-        Applies the transformation function to the input image.
+        Apply the transformation function to the input image.
     `_process_and_get(
     images: (
         list[np.ndarray]
@@ -5919,7 +5919,7 @@ class SampleToMasks(Feature):
     ),
     **kwargs: dict[str, Any]
     ) -> Image | np.ndarray | torch.Tensor`
-        Processes a list of images and generates a multi-layer mask.
+        Process a list of images and generate a multi-layer mask.
 
     Returns
     -------
