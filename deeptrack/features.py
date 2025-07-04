@@ -6208,6 +6208,14 @@ class ChannelFirst2d(Feature):
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
+        import warnings
+
+        warnings.warn(
+            "ChannelFirst2d is deprecated and may be removed in a future release. "
+            "The current implementation is not guaranteed to be exactly "
+            "equivalent to prior implementations. "
+            DeprecationWarning,
+        )
 
         super().__init__(axis=axis, **kwargs)
 
