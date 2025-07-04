@@ -6153,8 +6153,8 @@ class ChannelFirst2d(Feature):
     Parameters
     ----------
     axis: int, optional
-        The axis to move to the first position. It defaults to `-1` (last axis) which
-        is the case for numpy arrays.
+        The axis to move to the first position. It defaults to `-1` (last axis)
+        which is the case for numpy arrays.
         
     **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
