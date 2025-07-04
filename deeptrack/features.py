@@ -314,7 +314,7 @@ class Feature(DeepTrackNode):
         The data type of the boolean numbers.
     device: str or torch.device
         The device on which the feature is executed.
-    _backend: Config
+    _backend: "numpy" or "torch"
         The computational backend.
 
     Methods
