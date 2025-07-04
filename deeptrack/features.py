@@ -2000,12 +2000,60 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Add(self)
 
-    #TODO **MG**
     def __sub__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Subtracts another value or feature using '-'.
+        """Subtract another value or feature using '-'.
+
+        This operator is shorthand for chaining with `Subtract`.
+        The expression:
+
+        >>> feature - other
+
+        is equivalent to:
+
+        >>> feature >> dt.Subtract(value=other)
+
+        Internally, this method constructs a new `Subtract` feature and uses
+        the right-shift operator (`>>`) to chain the current feature into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to be subtracted. It is passed to
+            `Subtract` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature that subtracts `other` from the output of `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Subtract a constant value from a static input:
+        >>> feature = dt.Value(value=[5, 6, 7])
+        >>> pipeline = feature - 2
+        >>> result = pipeline()
+        >>> result
+        [3, 4, 5]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Subtract(value=2)
+
+        Subtract a dynamic feature that samples a value at each call:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.rand())
+        >>> pipeline = feature - noise
+        >>> result = pipeline.update()()
+        >>> result
+        [4.524072925059197, 5.524072925059197, 6.524072925059197]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Subtract(value=noise)
         
         """
 
