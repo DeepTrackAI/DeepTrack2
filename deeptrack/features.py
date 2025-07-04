@@ -6147,7 +6147,7 @@ class ChannelFirst2d(Feature):
 
     This feature rearranges the axes of a 3D image so that the specified axis 
     (e.g., channel axis) is moved to the first position. If the input image is 
-    2D, it adds a new dimension at the front, effectively treating the 2D 
+    2D, it adds a new dimension at the first index, effectively treating the 2D 
     image as a single-channel image.
 
     Parameters
@@ -6194,7 +6194,7 @@ class ChannelFirst2d(Feature):
 
     def __init__(
         self: Feature,
-        axis: int = -1,
+        axis: PropertyLike[int] = -1,
         **kwargs: Any,
     ) -> None:
         """Initialize the ChannelFirst2d feature.
@@ -6204,7 +6204,7 @@ class ChannelFirst2d(Feature):
         axis: int, optional
             The axis to move to the first position. 
             It defaults to `-1` (last axis).
-        **kwargs:: dict of str to Any
+        **kwargs: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
