@@ -1530,7 +1530,6 @@ class Feature(DeepTrackNode):
                 properties[key] = val.magnitude
         return properties
 
-    # **GV**
     def _process_properties(
         self: Feature,
         propertydict: dict[str, Any],
@@ -1600,7 +1599,6 @@ class Feature(DeepTrackNode):
                     if isinstance(source, SourceItem):
                         source()
 
-    # **GV**
     def __getattr__(
         self: Feature,
         key: str,
@@ -1642,7 +1640,7 @@ class Feature(DeepTrackNode):
 
         Examples
         --------
-        >>> import deptrack as dt 
+        >>> import deeptrack as dt
 
         Accessing an attribute as if it were a property:
         >>> feature = dt.DummyFeature(value=42)
@@ -1652,6 +1650,7 @@ class Feature(DeepTrackNode):
         If the `properties` attribute is not defined for the instance or if the
         `key` does not exist in `properties`, an `AttributeError` is raised:
         >>> feature.nonexistent_property
+        ...
         AttributeError: 'MyFeature' object has no attribute 
         'nonexistent_property'
         
@@ -1662,8 +1661,9 @@ class Feature(DeepTrackNode):
             if key in properties:
                 return properties[key]
 
-        raise AttributeError(f"'{self.__class__.__name__}' object has "
-                             "no attribute '{key}'")
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{key}'"
+        )
 
     def __iter__(
         self: Feature,
