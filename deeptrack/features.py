@@ -5979,11 +5979,30 @@ class SampleToMasks(Feature):
 
     def __init__(
         self: Feature,
-        transformation_function: Callable[[Image], Image],
+        transformation_function: PropertyLike[
+            Callable[
+                [
+                    NDArray
+                    | list[NDArray]
+                    | torch.Tensor
+                    | list[torch.Tensor]
+                    | Image
+                    | list[Image]
+                ],
+                NDArray
+                | list[NDArray]
+                | torch.Tensor
+                | list[torch.Tensor]
+                | Image
+                | list[Image]
+            ],
+        ],
         number_of_masks: PropertyLike[int] = 1,
-        output_region: PropertyLike[tuple[int, int, int, int]] = None,
+        output_region: PropertyLike[tuple[int, int, int, int]] | None = None,
         merge_method: PropertyLike[
-            str | Callable | list[str | Callable]
+            str
+            | Callable[[...], ...]
+            | list[str | Callable[[...], ...]]
         ] = "add",
         **kwargs: Any,
     ):
@@ -5994,9 +6013,9 @@ class SampleToMasks(Feature):
         transformation_function: Callable[[Image], Image]
             Function to transform input images into masks.
         number_of_masks: PropertyLike[int], optional
-            Number of mask layers. Default is 1.
+            Number of mask layers. It defaults to 1.
         output_region: PropertyLike[tuple[int, int, int, int]], optional
-            Output region of the mask. Default is None.
+            Output region of the mask. It defaults to `None`.
         merge_method: PropertyLike[
             str | Callable | list[str | Callable]
         ], optional
