@@ -1919,7 +1919,7 @@ class Feature(DeepTrackNode):
         [6, 7, 8]
 
         This is equivalent to:
-        >>> pipeline = f >> dt.Add(value=5)
+        >>> pipeline = feature >> dt.Add(value=5)
 
         Add a dynamic feature that samples values at each call:
         >>> import numpy as np
@@ -2136,13 +2136,60 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> FloorDivide(self)
 
-    #TODO **JH**
     def __pow__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Raises this feature to a power using '**'.
+        """Raise this feature to a power using '**'.
 
+        This operator is shorthand for chaining with `Power`. The expression:
+
+        >>> feature ** other
+
+        is equivalent to:
+
+        >>> feature >> dt.Power(value=other)
+
+        Internally, this method constructs a new `Power` feature and uses the 
+        right-shift operator (`>>`) to chain the current feature into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` representing the exponent. It is passed to `Power` 
+            as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature representing `self` to the power of `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Raise a static base to a constant exponent:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature ** 3
+        >>> result = pipeline()
+        >>> result
+        [1, 8, 27]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Power(value=3)
+
+        Raise to a dynamic exponent that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.randint(10))
+        >>> pipeline = feature ** noise
+        >>> result = pipeline.update()()
+        >>> result
+        [1, 64, 729]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Power(value=noise)
+ 
         """
 
         return self >> Power(other)
