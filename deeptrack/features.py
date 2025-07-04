@@ -1915,11 +1915,11 @@ class Feature(DeepTrackNode):
 
     def __sub__(
         self: Feature, 
-        other: Any
+        other: Any,
     ) -> Feature:
-        """Subtracts another value or feature using '-'.
+        """Subtract another value or feature using '-'.
 
-        This operator is shorthand for chaining with `dt.Subtract`.
+        This operator is shorthand for chaining with `Subtract`.
         The expression:
 
         >>> feature - other
@@ -1935,7 +1935,7 @@ class Feature(DeepTrackNode):
         ----------
         other: Any
             The value or `Feature` to be subtracted. It is passed to
-            `dt.Subtract` as the `value` argument.
+            `Subtract` as the `value` argument.
 
         Returns
         -------
