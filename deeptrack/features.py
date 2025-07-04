@@ -1225,7 +1225,7 @@ class Feature(DeepTrackNode):
 
         return feature
 
-    def seed(
+    def  seed(
         self: Feature,
         updated_seed: int | None = None,
         _ID: tuple[int, ...] = (),
@@ -1899,8 +1899,8 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         other: Any
-            The value or `Feature` to be added. It is passed to `dt.Add` as 
-            the `value` argument.
+            The value or `Feature` to be added. It is passed to `Add` as the
+            `value` argument.
 
         Returns
         -------
