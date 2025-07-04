@@ -539,7 +539,7 @@ class Feature(DeepTrackNode):
 
     def to_sequential(
             self: Feature,
-            **kwargs
+            **kwargs,
     ) -> Feature:
         """Converts a feature to be resolved as a sequence.
 
