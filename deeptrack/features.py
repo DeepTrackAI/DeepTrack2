@@ -333,6 +333,8 @@ class Feature(DeepTrackNode):
         It sets the backend to torch.
     `numpy(recursice: bool) -> Feature`
         It set the backend to numpy.
+    `get_backend() -> Literal["numpy", "torch"]`
+        It returns the current backend of the feature.
     `dtype(float: Literal["float32", "float64", "default"] or None, int: Literal["int16", "int32", "int64", "default"] or None, complex: Literal["complex64", "complex128", "default"] or None, bool: Literal["bool", "default"] or None) -> Feature`
         It set the dtype to be used during evaluation.
     `to(device: str or torch.device) -> Feature`
@@ -872,6 +874,31 @@ class Feature(DeepTrackNode):
                     dependency.numpy(recursive=False)
         self.invalidate()
         return self
+    
+    def get_backend(
+            self: Feature
+    ) -> Literal["numpy", "torch"]:
+        """Get the current backend of the feature.
+
+        Returns
+        -------
+        Literal["numpy", "torch"]
+            The backend of this feature
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+        >>> feature = dt.Add(value=5)
+        >>> feature.numpy()
+        >>> feature.get_backend()
+        'numpy'
+
+        >>> feature.torch()
+        >>> feature.get_backend()
+        'torch'
+
+        """
+        return self._backend
 
     def dtype(
         self: Feature,

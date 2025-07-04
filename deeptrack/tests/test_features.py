@@ -131,6 +131,16 @@ def test_operator(self, operator, emulated_operator=None):
         operator,
     )
 
+def test_backend_switching(self):
+    f = features.Add(value=5)
+
+    f.numpy()
+    self.assertEqual(f.get_backend(), "numpy")
+
+    if TORCH_AVAILABLE:
+        f.torch()
+        self.assertEqual(f.get_backend(), "torch")
+
 
 class TestFeatures(unittest.TestCase):
 
