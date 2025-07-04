@@ -6161,7 +6161,7 @@ class ChannelFirst2d(Feature):
 
     Methods
     -------
-    `get(image: NDArray, axis: int, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image: NDArray, axis: int, **kwargs: Any) -> NDArray | torch.Tensor`
         Rearrange the axes of an image to channel-first format.
 
     Examples
@@ -6202,8 +6202,8 @@ class ChannelFirst2d(Feature):
         Parameters
         ----------
         axis: int, optional
-            The axis to move to the first position. 
-            It defaults to `-1` (last axis).
+            The axis to move to the first position, 
+            defaults to `-1` (last axis).
         **kwargs: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
@@ -6213,7 +6213,7 @@ class ChannelFirst2d(Feature):
 
     def get(
         self: Feature,
-        image: NDArray | torch.tensor,
+        image: NDArray | torch.Tensor,
         axis: int,
         **kwargs: Any,
     ) -> NDArray | torch.Tensor:
@@ -6224,7 +6224,7 @@ class ChannelFirst2d(Feature):
 
         Parameters
         ----------
-        image: NDArray | torch.tensor 
+        image: NDArray | torch.Tensor 
             The input image to process. Can be 2D or 3D.
         axis: int
             The axis to move to the first position (for 3D images).
@@ -6233,7 +6233,7 @@ class ChannelFirst2d(Feature):
 
         Returns
         -------
-        NDArray | torch.tensor 
+        NDArray | torch.Tensor 
             The processed image in channel-first format.
 
         Raises
