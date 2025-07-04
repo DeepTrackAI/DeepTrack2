@@ -1914,7 +1914,7 @@ class Feature(DeepTrackNode):
         return Value(other) >> Add(self)
 
     def __sub__(
-        self: Feature, 
+        self: Feature,
         other: Any,
     ) -> Feature:
         """Subtract another value or feature using '-'.
