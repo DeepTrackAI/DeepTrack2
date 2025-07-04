@@ -188,7 +188,7 @@ __all__ = [
     "LoadImage",  # TODO **MG**
     "SampleToMasks",  # TODO **MG**
     "AsType",  # TODO **MG**
-    "ChannelFirst2d",  # IMPLEMENTED
+    "ChannelFirst2d",
     "Upscale",  # TODO **AL**
     "NonOverlapping",  # TODO **AL**
     "Store",  # TODO **JH**
