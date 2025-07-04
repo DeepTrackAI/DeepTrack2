@@ -2001,9 +2001,8 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> FloorDivide(self)
 
-    #TODO **JH**
     def __pow__(
-        self: Feature, 
+        self: Feature,
         other: Any,
     ) -> Feature:
         """Raise this feature to a power using '**'.
@@ -2022,7 +2021,7 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         other: Any
-            The value or `Feature` representing the exponent. It is passed to `dt.Power` 
+            The value or `Feature` representing the exponent. It is passed to `Power` 
             as the `value` argument.
 
         Returns
