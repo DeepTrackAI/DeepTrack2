@@ -149,7 +149,7 @@ if TORCH_AVAILABLE:
     import torch
 
 __all__ = [
-    "Feature",  # TODO **GV**
+    "Feature",  #TODO ***GV***
     "StructuralFeature",
     "Chain",
     "Branch",
@@ -1163,7 +1163,7 @@ class Feature(DeepTrackNode):
         else:
             return image_list
 
-    # **GV**
+    #TODO ***GV***
     def update(
         self: Feature,
         **global_arguments: Any,
@@ -1363,7 +1363,7 @@ class Feature(DeepTrackNode):
 
         return seed
 
-    # **GV**
+    #TODO ***GV***
     def bind_arguments(
         self: Feature,
         arguments: Feature,
@@ -1401,7 +1401,7 @@ class Feature(DeepTrackNode):
 
         return self
 
-    # **GV**
+    #TODO ***GV***
     def plot(
         self: Feature,
         input_image: np.ndarray | list[np.ndarray] | Image | list[Image] = None,
@@ -1493,7 +1493,7 @@ class Feature(DeepTrackNode):
                 ),
             )
 
-    # **GV**
+    #TODO ***GV***
     def _normalize(
         self: Feature,
         **properties: dict[str, Any],
@@ -1566,7 +1566,7 @@ class Feature(DeepTrackNode):
 
         return propertydict
 
-    # **GV**
+    #TODO ***GV***
     def _activate_sources(
         self: Feature,
         x: Any,
@@ -1603,23 +1603,18 @@ class Feature(DeepTrackNode):
         self: Feature,
         key: str,
     ) -> Any:
-        """Custom attribute access for the Feature class.
+        """Access properties of the feature as if they were attributes.
 
-        This method allows the properties of the `Feature` instance to be 
-        accessed as if they were attributes. For example, `feature.my_property`
-        is equivalent to `feature.properties["my_property"]`.
+        This method allows dynamic access to the feature's properties via 
+        standard attribute syntax. For example, `feature.my_property` is 
+        equivalent to:
 
-        If the requested attribute (`key`) exists in the `properties` 
-        dictionary, the corresponding value is returned. If the attribute does
-        not exist, or if the `properties` attribute is not set, an 
-        This method allows the properties of the `Feature` instance to be 
-        accessed as if they were attributes. For example, `feature.my_property`
-        is equivalent to `feature.properties["my_property"]`.
+        >>> feature.properties["my_property"]`()
 
-        If the requested attribute (`key`) exists in the `properties` 
-        dictionary, the corresponding value is returned. If the attribute does
-        not exist, or if the `properties` attribute is not set, an 
-        `AttributeError` is raised.
+        This is only called if the attribute is not found via the normal lookup
+        process (i.e., it's not a real attribute or method). It checks whether
+        `key` exists in the `properties` dictionary, and if so, returns the
+        corresponding `Property` instance.
 
         Parameters
         ----------
@@ -1629,31 +1624,29 @@ class Feature(DeepTrackNode):
         Returns
         -------
         Any
-            The value of the property corresponding to the given `key` in the 
-            `properties` dictionary.
+            The corresponding property if it exists in `self.properties`.
 
         Raises
         ------
         AttributeError
-            If the `properties` attribute is not defined for the instance or 
-            if the `key` does not exist in `properties`.
+            If `properties` is not set, or if `key` does not exist in it.
 
         Examples
         --------
         >>> import deeptrack as dt
 
-        Accessing an attribute as if it were a property:
+        Create a feature with a property:
         >>> feature = dt.DummyFeature(value=42)
+
+        Access the property as an attribute:
         >>> feature.value()
         42
 
-        If the `properties` attribute is not defined for the instance or if the
-        `key` does not exist in `properties`, an `AttributeError` is raised:
-        >>> feature.nonexistent_property
+        Attempting to access a non-existent property raises an `AttributeError`:
+        >>> feature.nonexistent()
         ...
-        AttributeError: 'MyFeature' object has no attribute 
-        'nonexistent_property'
-        
+        AttributeError: 'DummyFeature' object has no attribute 'nonexistent'
+
         """
 
         if "properties" in self.__dict__:
