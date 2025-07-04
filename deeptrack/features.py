@@ -344,7 +344,7 @@ class Feature(DeepTrackNode):
     `update(**global_arguments: Any) -> Feature`
         Refreshes the feature to create a new image.
     `add_feature(feature: Feature) -> Feature`
-        Adds a feature to the dependency graph of this one.
+        It adds a feature to the dependency graph of this one.
     `seed(updated_seed: int, _ID: tuple[int, ...]) -> int`
         Sets the random seed for the feature, ensuring deterministic behavior.
     `bind_arguments(arguments: Feature) -> Feature`
@@ -1201,12 +1201,22 @@ class Feature(DeepTrackNode):
 
         return self
 
-    # **GV**
     def add_feature(
         self: Feature,
         feature: Feature,
     ) -> Feature:
-        """Adds a feature to the dependecy graph of this one.
+        """Add a feature to the dependecy graph of this one.
+
+        This method establishes a dependency relationship by registering the 
+        provided `feature` as a child node of the current feature. This ensures
+        that its evaluation and property resolution are included in the current
+        feature’s computation graph.
+
+        Internally, it calls `feature.add_child(self)`, which automatically 
+        handles graph integration and triggers recomputation if necessary.
+
+        This is often used to define explicit data dependencies or to ensure 
+        side-effect features are computed when this feature is resolved.
 
         Parameters
         ----------
@@ -1217,6 +1227,31 @@ class Feature(DeepTrackNode):
         -------
         Feature
             The newly added feature (for chaining).
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Define the main feature that adds a constant to the input:
+        >>> feature = dt.Add(value=2)
+
+        Define a side-effect feature:
+        >>> dependency = dt.Value(value=42)
+
+        Register the dependency so its state becomes part of the graph:
+        >>> feature.add_feature(dependency)
+
+        Execute the main feature on an input array:
+        >>> import numpy as np
+        >>>
+        >>> result = feature(np.array([1, 2, 3]))
+        >>> result
+        array([3, 4, 5])
+
+        Note that the `dependency` does not affect the result directly, but it
+        will be tracked and updated as part of the pipeline's evaluation graph.
+        This can be useful if the dependency affects any parameters of the main
+        feature.
 
         """
 
