@@ -41,33 +41,74 @@ Module Structure
 ----------------
 Key Classes: 
 
-- `Feature`:
+- `Feature`: Base class for all features in DeepTrack2.
 
-    Base class for all features in DeepTrack2. Represents a modular data 
-    transformation with properties and methods for customization.
+    It represents a modular data transformation with properties and methods for
+    customization.
 
-- `StructuralFeature`:
+- `StructuralFeature`: Provide structure without input transformations.
 
     A specialized feature for organizing and managing hierarchical or logical 
     structures in the pipeline.
 
-- `Value`:
-
-    Stores a constant value as a feature. Useful for passing parameters through
-    the pipeline.
-
-- `Chain`:
-
-    Sequentially applies multiple features to the input data (>>).
-
-- `DummyFeature`:
-
-    A no-op feature that passes the input data unchanged.
-
-- `ArithmeticOperationFeature`:
+- `ArithmeticOperationFeature`: Apply arithmetic operation element-wise.
 
     A parent class for features performing arithmetic operations like addition,
     subtraction, multiplication, and division.
+
+Structural Feature Classes:
+- `Chain`: Sequentially apply multiple features to the input data (>>).
+- `Branch`: Alias of `Chain`.
+- `Probability`: Resolve a feature with a certain probability.
+- `Repeat`: Apply a feature multiple times in sequence (^).
+- `Combine`: Combine multiple features into a single feature.
+- `Bind`: Bind a feature with property arguments.
+- `BindResolve`: Alias of `Bind`.
+- `BindUpdate`: DEPRECATED Bind a feature with certain arguments.
+- `ConditionalSetProperty`: DEPRECATED Conditionally override child properties.
+- `ConditionalSetFeature`: DEPRECATED Conditionally resolve features.
+
+Other Feature Classes:
+- `DummyFeature`: A no-op feature that simply returns the input unchanged.
+- `Value`: Store a constant value as a feature.
+- `Stack`: Stack the input and the value.
+- `Arguments`: A convenience container for pipeline arguments.
+- `Slice`: Dynamically applies array indexing to inputs.
+- `Lambda`: Apply a user-defined function to the input.
+- `Merge`: Apply a custom function to a list of inputs.
+- `OneOf`: Resolve one feature from a given collection.
+- `OneOfDict`: Resolve one feature from a dictionary and apply it to an input.
+- `LoadImage`: Load an image from disk and preprocess it.
+- `SampleToMasks`: Create a mask from a list of images.
+- `AsType`: Convert the data type of images.
+- `ChannelFirst2d`: DEPRECATED Convert an image to a channel-first format.
+- `Upscale`: Simulate a pipeline at a higher resolution.
+- `NonOverlapping`: Ensure volumes are placed non-overlapping in a 3D space.
+- `Store`: Store the output of a feature for reuse.
+- `Squeeze`: Squeeze the input image to the smallest possible dimension.
+- `Unsqueeze`: Unsqueeze the input image to the smallest possible dimension.
+- `ExpandDims`: Alias of `Unsqueeze`.
+- `MoveAxis`: Moves the axis of the input image.
+- `Transpose`: Transpose the input image.
+- `Permute`: Alias of `Transpose`.
+- `OneHot`: Convert the input to a one-hot encoded array.
+- `TakeProperties`: Extract all instances of properties from a pipeline.
+
+Arithmetic Feature Classes:
+- `Add`: Add a value to the input.
+- `Subtract`: Subtract a value from the input.
+- `Multiply`: Multiply the input by a value.
+- `Divide`: Divide the input with a value.
+- `FloorDivide`: Divide the input with a value.
+- `Power`: Raise the input to a power.
+- `LessThan`: Determine if input is less than value.
+- `LessThanOrEquals`: Determine if input is less than or equal to value.
+- `LessThanOrEqual`: Alias for `LessThanOrEquals`.
+- `GreaterThan`: Determine if input is greater than value.
+- `GreaterThanOrEquals`: Determine if input is greater than or equal to value.
+- `GreaterThanOrEqual`: Alias for `GreaterThanOrEquals`.
+- `Equals`: Determine if input is equal to value.
+- `Equal`: Alias for `Equals`.
 
 Functions:
 
@@ -80,16 +121,6 @@ Functions:
 
     Propagates data to all dependencies of a feature, updating their properties
     with the provided values.
-
-- `merge_features`:
-
-    def merge_features(
-        features: list[Feature],
-        merge_strategy: int = MERGE_STRATEGY_OVERRIDE,
-    ) -> Feature
-
-    Merges multiple features into a single feature using the specified merge
-    strategy.
 
 Examples
 --------
@@ -123,12 +154,12 @@ Process an input image:
 
 from __future__ import annotations
 
-import array_api_compat as apc
 import itertools
 import operator
 import random
 from typing import Any, Callable, Iterable, Literal, TYPE_CHECKING
 
+import array_api_compat as apc
 import numpy as np
 from numpy.typing import NDArray
 import matplotlib.pyplot as plt
@@ -3331,7 +3362,7 @@ class DummyFeature(Feature):
 
 
 class Value(Feature):
-    """Represents a constant (per evaluation) value in a DeepTrack pipeline.
+    """Represent a constant (per evaluation) value in a DeepTrack pipeline.
 
     This feature holds a constant value (e.g., a scalar or array) and supplies 
     it on demand to other parts of the pipeline.
@@ -3471,7 +3502,7 @@ class Value(Feature):
 
 
 class ArithmeticOperationFeature(Feature):
-    """Applies an arithmetic operation element-wise to inputs.
+    """Apply an arithmetic operation element-wise to inputs.
 
     This feature performs an arithmetic operation (e.g., addition, subtraction,
     multiplication) on the input data. The inputs can be single values or lists
@@ -4334,7 +4365,7 @@ Equal = Equals
 
 
 class Stack(Feature):
-    """Stacks the input and the value.
+    """Stack the input and the value.
     
     This feature combines the output of the input data (`image`) and the 
     value produced by the specified feature (`value`). The resulting output 
@@ -4961,7 +4992,7 @@ class Combine(StructuralFeature):
 
 
 class Slice(Feature):
-    """Dynamically applies array indexing to inputs.
+    """Dynamically apply array indexing to inputs.
 
     This feature allows dynamic slicing of an image using integer indices, 
     slice objects, or ellipses (`...`).
@@ -5432,7 +5463,7 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
 
 
 class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
-    """Conditionally resolves one of two features based on a condition.
+    """Conditionally resolve one of two features.
 
     .. deprecated:: 2.0
         This feature is deprecated and may be removed in a future release. It
@@ -6405,7 +6436,7 @@ class LoadImage(Feature):
 
 
 class SampleToMasks(Feature):
-    """Creates a mask from a list of images.
+    """Create a mask from a list of images.
 
     This feature applies a transformation function to each input image and 
     merges the resulting masks into a single multi-layer image. Each input 
@@ -6792,7 +6823,7 @@ class AsType(Feature):
         return image.astype(dtype)
 
 
-class ChannelFirst2d(Feature):
+class ChannelFirst2d(Feature):  # DEPRECATED
     """Convert an image to a channel-first format.
 
     This feature rearranges the axes of a 3D image so that the specified axis 
@@ -7730,7 +7761,7 @@ class NonOverlapping(Feature):
 
 
 class Store(Feature):
-    """Stores the output of a feature for reuse.
+    """Store the output of a feature for reuse.
 
     The `Store` feature evaluates a given feature and stores its output in an 
     internal dictionary. Subsequent calls with the same key will return the 
@@ -8266,7 +8297,7 @@ Permute = Transpose
 
 
 class OneHot(Feature):
-    """Converts the input to a one-hot encoded array.
+    """Convert the input to a one-hot encoded array.
 
     This feature takes an input array of integer class labels and converts it 
     into a one-hot encoded array. The last dimension of the input is replaced 
@@ -8366,7 +8397,7 @@ class OneHot(Feature):
 
 
 class TakeProperties(Feature):
-    """Extracts all instances of a set of properties from a pipeline.
+    """Extract all instances of a set of properties from a pipeline.
 
     Only extracts the properties if the feature contains all given 
     property-names. The order of the properties is not guaranteed to be the 
