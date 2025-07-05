@@ -14,14 +14,14 @@ import numpy as np
 
 from deeptrack import (
     features,
+    Image,
+    Gaussian,
     optics,
     properties,
     scatterers,
     TORCH_AVAILABLE,
     units,
 )
-from deeptrack.image import Image
-from deeptrack.noises import Gaussian
 
 if TORCH_AVAILABLE:
     import torch
