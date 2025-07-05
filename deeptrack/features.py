@@ -1316,28 +1316,49 @@ class Feature(DeepTrackNode):
         else:
             return image_list
 
-    #TODO ***GV***
     def update(
         self: Feature,
         **global_arguments: Any,
     ) -> Feature:
-        """Refreshes the feature to generate a new output.
+        """Refresh the feature to generate a new output.
 
         By default, when a feature is called multiple times, it returns the 
-        same value. Calling `update()` forces the feature to recompute and 
+        same value.
+
+        Calling `update()` forces the feature to recompute and 
         return a new value the next time it is evaluated.
 
         Parameters
         ----------
         **global_arguments: Any
-            Optional global arguments that can be passed to modify the 
-            feature update behavior.
+            Deprecated. Has no effect. Previously used to inject values 
+            during update. Use `Arguments` or call-time overrides instead.
 
         Returns
         -------
         Feature
             The updated feature instance, ensuring the next evaluation produces 
             a fresh result.
+
+        Examples
+        -------
+        >>> import deeptrack as dt
+
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(value=lambda: np.random.rand())
+        >>> output1 = feature()
+        >>> output1
+        0.9173610765203623
+
+        >>> output2 = feature()
+        >>> output2  # Same as before
+        0.9173610765203623
+
+        >>> feature.update()  # Feature updated
+        >>> output3 = feature()
+        >>> output3
+        0.13917950359184617
 
         """
 
