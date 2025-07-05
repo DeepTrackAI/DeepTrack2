@@ -326,6 +326,8 @@ class Feature(DeepTrackNode):
     `__call__(image_list: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
         It executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
+    `to_sequential(**kwargs: Any) -> Feature`
+        It convert a feature to be resolved as a sequence.
     `store_properties(toggle: bool, recursive: bool) -> Feature`
         It controls whether the properties are stored in the output `Image`
         object.
@@ -687,9 +689,9 @@ class Feature(DeepTrackNode):
 
     def to_sequential(
             self: Feature,
-            **kwargs,
+            **kwargs: Any,
     ) -> Feature:
-        """Converts a feature to be resolved as a sequence.
+        """Convert a feature to be resolved as a sequence.
 
         Should be called on individual features, not combinations of features. All
         keyword arguments will be treated as sequential properties and will be
@@ -705,16 +707,16 @@ class Feature(DeepTrackNode):
             Feature to make sequential.
         kwargs
             Keyword arguments to pass on as sequential properties of `feature`.
-            
+
         Returns
         -------
         Feature
             The input feature evolved as a sequence
-            
+
         Examples
         --------
         Sequentially evaluate a rotating ellipse.
-        
+
         >>> from deeptrack.scatterers import ellipse
         >>> from deeptrack.optics import Fluorescence
         >>> from deeptrack.sequences import Sequence
@@ -727,7 +729,7 @@ class Feature(DeepTrackNode):
         ...     wavelength=633e-9,
         ...     output_region=(0, 0, 32, 32),
         ... )
-    
+
         >>> ellipse = Ellipse(
         ...     position_unit="pixel",
         ...     position=(16, 16),
@@ -735,23 +737,21 @@ class Feature(DeepTrackNode):
         ...     radius=(1.5e-6, 1e-6),
         ...     rotation=0, # This will be the value at time 0.
         ... )
-    
-    
+
         >>> def get_rotation(sequence_length, previous_value):
         ...     delta = 2 * pi / sequence_length
         ...     return previous_value + delta
 
         Call `to_sequential` to resolve the feature sequentially.
-        
         >>> rotating_ellipse = ellipse.to_sequential(rotation=get_rotation)    
         >>> imaged_rotating_ellipse = optics(rotating_ellipse)
-    
+
         >>> imaged_rotating_ellipse_sequence = Sequence(
         ...     imaged_rotating_ellipse,
         ...     sequence_length=10
         ... )
         >>> imaged_rotating_ellipse_sequence.update().plot()
-        
+
         """
 
         for property_name in kwargs.keys():
