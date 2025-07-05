@@ -228,8 +228,12 @@ class TestProperties(unittest.TestCase):
             current_value = SP.sample()
             SP.store(current_value)
 
-            self.assertEqual(SP.data[()].current_value(),
-                             list(range(1, step + 2)))
+            self.assertEqual(
+                SP.data[()].current_value(), list(range(1, step + 2)),
+            )
+            self.assertEqual(
+                SP.previous(), list(range(1, step + 2)),
+            )
 
             SP.previous_value.invalidate()
             # print(SP.previous_value())
