@@ -888,11 +888,16 @@ class Feature(DeepTrackNode):
         Examples
         --------
         >>> import deeptrack as dt
+
+        Create a feature:
         >>> feature = dt.Add(value=5)
+
+        Set the feature's backend to NumPy and check it:
         >>> feature.numpy()
         >>> feature.get_backend()
         'numpy'
 
+        Set the feature's backend to PyTorch and check it:
         >>> feature.torch()
         >>> feature.get_backend()
         'torch'
