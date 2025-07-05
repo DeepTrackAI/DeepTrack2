@@ -185,13 +185,13 @@ __all__ = [
     "Merge",
     "OneOf",
     "OneOfDict",
-    "LoadImage",  # TODO **MG**
-    "SampleToMasks",  # TODO **MG**
-    "AsType",  # TODO **MG**
-    "ChannelFirst2d",  # TODO **AL**
-    "Upscale",  # TODO **AL**
-    "NonOverlapping",  # TODO **AL**
-    "Store",  # TODO **JH**
+    "LoadImage",  #TODO ***MG***
+    "SampleToMasks",  #TODO ***MG***
+    "AsType",  #TODO ***MG***
+    "Upscale",  #TODO ***AL***
+    "ChannelFirst2d",  #TODO ***AL***
+    "NonOverlapping",  #TODO ***AL***
+    "Store",  #TODO ***JH***
     "Squeeze",
     "Unsqueeze",
     "ExpandDims",
@@ -199,7 +199,7 @@ __all__ = [
     "Transpose",
     "Permute",
     "OneHot",
-    "TakeProperties",  # TODO **JH**
+    "TakeProperties",  #TODO ***JH***
 ]
 
 
@@ -314,7 +314,7 @@ class Feature(DeepTrackNode):
         The data type of the boolean numbers.
     device: str or torch.device
         The device on which the feature is executed.
-    _backend: "numpy" or "torch"
+    _backend: Literal["numpy", "torch"]
         The computational backend.
 
     Methods
@@ -326,6 +326,8 @@ class Feature(DeepTrackNode):
     `__call__(image_list: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
         It executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
+    `resolve(image_list: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
+        A shadow of the `__call__()` method.
     `to_sequential(**kwargs: Any) -> Feature`
         It convert a feature to be resolved as a sequence.
     `store_properties(toggle: bool, recursive: bool) -> Feature`
@@ -344,27 +346,28 @@ class Feature(DeepTrackNode):
     `batch(batch_size: int) -> tuple`
         It batches the feature for repeated execution.
     `action(_ID: tuple[int, ...]) -> Any | list[Any]`
-        Implement the core logic to create or transform the input(s).
+        It implements the core logic to create or transform the input(s).
     `update(**global_arguments: Any) -> Feature`
-        Refreshes the feature to create a new image.
+        It refreshes the feature to create a new image.
     `add_feature(feature: Feature) -> Feature`
         It adds a feature to the dependency graph of this one.
     `seed(updated_seed: int, _ID: tuple[int, ...]) -> int`
-        Sets the random seed for the feature, ensuring deterministic behavior.
+        It sets the random seed for the feature, ensuring deterministic 
+        behavior.
     `bind_arguments(arguments: Feature) -> Feature`
-        Binds another feature’s properties as arguments to this feature.
-    `plot(input_image: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, resolve_kwargs: dict | None = None, interval: float | None = None, **kwargs) -> Any`
-        Visualizes the output of the feature.
+        It binds another feature’s properties as arguments to this feature.
+    `plot(input_image: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, resolve_kwargs: dict | None = None, interval: float | None = None, **kwargs: Any) -> Any`
+        It visualizes the output of the feature.
 
     **Private and internal methods.**
-    `_normalize(**properties: dict[str, Any]) -> dict[str, Any]`
-        Normalizes the properties of the feature.
+    `_normalize(**properties: Any) -> dict[str, Any]`
+        It normalizes the properties of the feature.
     `_process_properties(propertydict: dict[str, Any]) -> dict[str, Any]`
-        Preprocesses the input properties before calling the `get` method.
+        It preprocesses the input properties before calling the `get` method.
     `_activate_sources(x: Any) -> None`
-        Activates sources in the input data.
+        It activates sources in the input data.
     `__getattr__(key: str) -> Any`
-        Custom attribute access for the Feature class.
+        It provides custom attribute access for the Feature class.
     `__iter__() -> Feature`
         It returns an iterator for the feature.
     `__next__() -> Any`
@@ -507,7 +510,7 @@ class Feature(DeepTrackNode):
         **kwargs: Any
             Keyword arguments that are wrapped into `Property` instances and 
             stored in `self.properties`, allowing for dynamic or parameterized
-            behavior. If not provided, it defaults to an empty list.
+            behavior.
 
         """
 
@@ -995,7 +998,7 @@ class Feature(DeepTrackNode):
                     dependency.numpy(recursive=False)
         self.invalidate()
         return self
-    
+
     def get_backend(
             self: Feature
     ) -> Literal["numpy", "torch"]:
@@ -1050,7 +1053,7 @@ class Feature(DeepTrackNode):
             The complex dtype to set. It can be `"complex64"`, `"complex128"`,
             `"default"`, or `None`. It defaults to `None`.
         bool: str, optional
-            The bool dtype to set. It cna be `"bool"`, `"default"`, or `None`.
+            The bool dtype to set. It can be `"bool"`, `"default"`, or `None`.
             It defaults to `None`.
 
         Returns
@@ -1687,7 +1690,7 @@ class Feature(DeepTrackNode):
                 ),
             )
 
-    #TODO ***GV***
+    #TODO ***AL***
     def _normalize(
         self: Feature,
         **properties: dict[str, Any],
@@ -1722,6 +1725,7 @@ class Feature(DeepTrackNode):
         for key, val in properties.items():
             if isinstance(val, Quantity):
                 properties[key] = val.magnitude
+
         return properties
 
     def _process_properties(
@@ -1888,7 +1892,7 @@ class Feature(DeepTrackNode):
 
         return self
 
-        #TODO **BM** TBE? Previous implementation, not standard in Python
+        #TODO ***BM*** TBE? Previous implementation, not standard in Python
         # while True:
         #     yield from next(self)
 
@@ -1926,7 +1930,7 @@ class Feature(DeepTrackNode):
 
         return self.update().resolve()
 
-        #TODO **BM** TBE? Previous implementation, not standard in Python
+        #TODO ***BM*** TBE? Previous implementation, not standard in Python
         # yield self.update().resolve()
 
     def __rshift__(
@@ -2281,7 +2285,7 @@ class Feature(DeepTrackNode):
 
         return self >> Subtract(other)
 
-    #TODO **MG**
+    #TODO ***MG***
     def __rsub__(
         self: Feature, 
         other: Any
@@ -2292,7 +2296,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Subtract(self)
 
-    #TODO **MG**
+    #TODO ***MG***
     def __mul__(
         self: Feature, 
         other: Any
@@ -2314,7 +2318,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Multiply(self)
 
-    #TODO **AL**
+    #TODO ***AL***
     def __truediv__(
         self: Feature, 
         other: Any
@@ -2325,7 +2329,7 @@ class Feature(DeepTrackNode):
 
         return self >> Divide(other)
 
-    #TODO **AL**
+    #TODO ***AL***
     def __rtruediv__(
         self: Feature, 
         other: Any
@@ -2336,7 +2340,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Divide(self)
 
-    #TODO **AL**
+    #TODO ***AL***
     def __floordiv__(
         self: Feature, 
         other: Any
@@ -2347,7 +2351,7 @@ class Feature(DeepTrackNode):
 
         return self >> FloorDivide(other)
 
-    #TODO **AL**
+    #TODO ***AL***
     def __rfloordiv__(
         self: Feature, 
         other: Any
@@ -2416,7 +2420,7 @@ class Feature(DeepTrackNode):
 
         return self >> Power(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rpow__(
         self: Feature, 
         other: Any
@@ -2427,7 +2431,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Power(self)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __gt__(
         self: Feature,
         other: Any,
@@ -2438,7 +2442,7 @@ class Feature(DeepTrackNode):
 
         return self >> GreaterThan(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rgt__(
         self: Feature, 
         other: Any
@@ -2450,7 +2454,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> GreaterThan(self)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __lt__(
         self: Feature, 
         other: Any
@@ -2461,7 +2465,7 @@ class Feature(DeepTrackNode):
 
         return self >> LessThan(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rlt__(
         self: Feature, 
         other: Any
@@ -2472,7 +2476,7 @@ class Feature(DeepTrackNode):
         
         return Value(other) >> LessThan(self)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __le__(
         self: Feature, 
         other: Any
@@ -2483,7 +2487,7 @@ class Feature(DeepTrackNode):
 
         return self >> LessThanOrEquals(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rle__(
         self: Feature,
         other: Any
@@ -2495,7 +2499,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> LessThanOrEquals(self)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __ge__(
         self: Feature, 
         other: Any
@@ -2507,7 +2511,7 @@ class Feature(DeepTrackNode):
 
         return self >> GreaterThanOrEquals(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rge__(
         self: Feature, 
         other: Any
@@ -2519,7 +2523,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> GreaterThanOrEquals(self)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __xor__(
         self: Feature,
         other: Any,
@@ -2530,7 +2534,7 @@ class Feature(DeepTrackNode):
 
         return Repeat(self, other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __and__(
         self: Feature,
         other: Any,
@@ -2541,7 +2545,7 @@ class Feature(DeepTrackNode):
 
         return self >> Stack(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rand__(
         self: Feature,
         other: Any,
