@@ -688,24 +688,24 @@ class Feature(DeepTrackNode):
     resolve = __call__
 
     def to_sequential(
-            self: Feature,
-            **kwargs: Any,
+        self: Feature,
+        **kwargs: Any,
     ) -> Feature:
         """Convert a feature to be resolved as a sequence.
 
-        Should be called on individual features, not combinations of features. All
-        keyword arguments will be treated as sequential properties and will be
-        passed to the parent feature.
+        Should be called on individual features, not combinations of features.
+        All keyword arguments will be treated as sequential properties and will
+        be passed to the parent feature.
 
-        If a property from the keyword argument already exists on the feature, the
-        existing property will be used to initialize the passed property (that is,
-        it will be used for the first timestep).
+        If a property from the keyword argument already exists in the feature,
+        the existing property will be used to initialize the passed property
+        (that is, it will be used for the first timestep).
 
         Parameters
         ----------
         self: Feature
             Feature to make sequential.
-        kwargs
+        kwargs: Any
             Keyword arguments to pass on as sequential properties of `feature`.
 
         Returns
@@ -715,14 +715,12 @@ class Feature(DeepTrackNode):
 
         Examples
         --------
+        >>> import deeptrack as dt
+
         Sequentially evaluate a rotating ellipse.
 
-        >>> from deeptrack.scatterers import ellipse
-        >>> from deeptrack.optics import Fluorescence
-        >>> from deeptrack.sequences import Sequence
-        >>> from numpy import pi
-
-        >>> optics = Fluorescence(
+        Create the optics:
+        >>> optics = dt.Fluorescence(
         ...     NA=0.6,
         ...     magnification=10,
         ...     resolution=1e-6,
@@ -730,47 +728,54 @@ class Feature(DeepTrackNode):
         ...     output_region=(0, 0, 32, 32),
         ... )
 
+        Create the scatterer:
         >>> ellipse = Ellipse(
         ...     position_unit="pixel",
         ...     position=(16, 16),
         ...     intensity=1,
         ...     radius=(1.5e-6, 1e-6),
-        ...     rotation=0, # This will be the value at time 0.
+        ...     rotation=0,  # Initial rotation at time step 0
         ... )
 
+        Implement a function to increment the rotation:
+        >>> from numpy import pi
+        >>>
         >>> def get_rotation(sequence_length, previous_value):
         ...     delta = 2 * pi / sequence_length
         ...     return previous_value + delta
 
-        Call `to_sequential` to resolve the feature sequentially.
-        >>> rotating_ellipse = ellipse.to_sequential(rotation=get_rotation)    
+        Call `to_sequential()` to resolve the feature sequentially:
+        >>> rotating_ellipse = ellipse.to_sequential(rotation=get_rotation)
+
+        Image the scatterer with the optics:
         >>> imaged_rotating_ellipse = optics(rotating_ellipse)
 
+        Encapsulate as a `Sequence` object and specify the sequence length:
         >>> imaged_rotating_ellipse_sequence = Sequence(
         ...     imaged_rotating_ellipse,
         ...     sequence_length=10
         ... )
-        >>> imaged_rotating_ellipse_sequence.update().plot()
+
+        Finally observe the scatterer rotate:
+        >>> imaged_rotating_ellipse_sequence.update().plot();
 
         """
 
         for property_name in kwargs.keys():
-
             if property_name in self.properties:
                 # Insert sequential property with initialized value taken from
-                # the already available property
+                # the already available property.
                 self.properties[property_name] = SequentialProperty(
                     self.properties[property_name], **self.properties
                 )
             else:
-                # Insert empty sequential property
+                # Insert empty sequential property.
                 self.properties[property_name] = SequentialProperty()
 
             self.properties.add_dependency(self.properties[property_name])
             # self.properties[property_name].add_child(self.properties)
 
         for property_name, sampling_rule in kwargs.items():
-
             prop = self.properties[property_name]
 
             all_kwargs = dict(
