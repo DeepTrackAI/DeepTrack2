@@ -27,9 +27,9 @@ if tensorflow_installed:
 units = UnitRegistry(pint_definitions.split("\n"))
 
 
-from deeptrack.properties import *
 from deeptrack.backend import *
 
+from deeptrack.properties import *
 from deeptrack.features import *
 from deeptrack.aberrations import *
 from deeptrack.augmentations import *
