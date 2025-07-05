@@ -149,7 +149,7 @@ if TORCH_AVAILABLE:
     import torch
 
 __all__ = [
-    "Feature",  #TODO ***GV***
+    "Feature",
     "StructuralFeature",
     "Chain",
     "Branch",
@@ -1539,10 +1539,9 @@ class Feature(DeepTrackNode):
 
         return seed
 
-    #TODO ***GV***
     def bind_arguments(
         self: Feature,
-        arguments: Feature,
+        arguments: Arguments | Feature,
     ) -> Feature:
         """Bind another feature’s properties as arguments to this feature.
 
@@ -1550,13 +1549,16 @@ class Feature(DeepTrackNode):
         to this feature, enabling shared configurations across multiple
         features. It is commonly used in advanced feature pipelines.
 
-        This method is often used in combination with the `Arguments` Feature,
+        This method is often used in combination with the `Arguments` feature,
         which provides a utility that helps manage and propagate feature
         arguments efficiently.
 
+        The values from `arguments` override the corresponding feature’s own
+        properties at call-time, but do not modify them permanently.
+
         Parameters
         ----------
-        arguments: Feature
+        arguments: Arguments or Feature
             The feature whose properties will be bound as arguments to this
             feature.
 
@@ -1567,9 +1569,25 @@ class Feature(DeepTrackNode):
 
         Examples
         --------
-        TODO method alone
+        >>> import deeptrack as dt
 
-        TODO use with Arguments
+        Create an `Arguments` feature:
+        >>> arguments = dt.Arguments(scale=2.0)
+
+        Bind it with a pipeline:
+        >>> pipeline = dt.Value(value=3) >> dt.Add(value=1 * arguments.scale)
+        >>> pipeline.bind_arguments(arguments)
+        >>> result = pipeline()
+        >>> result
+        5.0
+
+        Override the argument dynamically:
+        >>> result = pipeline(scale=1.0)
+        >>> result
+        4.0
+
+        Without binding, the result would be still 5.0 as `scale` would still
+        be the original one.
 
         """
 
@@ -1577,13 +1595,13 @@ class Feature(DeepTrackNode):
 
         return self
 
-    #TODO ***GV***
+    #TODO ***MG***
     def plot(
         self: Feature,
         input_image: np.ndarray | list[np.ndarray] | Image | list[Image] = None,
         resolve_kwargs: dict = None,
         interval: float = None,
-        **kwargs
+        **kwargs: Any,
     ) -> Any:
         """Visualizes the output of the feature.
 
