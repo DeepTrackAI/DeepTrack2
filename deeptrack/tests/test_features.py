@@ -131,16 +131,6 @@ def test_operator(self, operator, emulated_operator=None):
         operator,
     )
 
-def test_backend_switching(self):
-    f = features.Add(value=5)
-
-    f.numpy()
-    self.assertEqual(f.get_backend(), "numpy")
-
-    if TORCH_AVAILABLE:
-        f.torch()
-        self.assertEqual(f.get_backend(), "torch")
-
 
 class TestFeatures(unittest.TestCase):
 
@@ -564,6 +554,17 @@ class TestFeatures(unittest.TestCase):
             for b in output.get_property("b", get_one=False):
                 self.assertLess(b - a, 1000)
                 self.assertGreaterEqual(b - a, 0)
+
+
+    def test_backend_switching(self):
+        f = features.Add(value=5)
+
+        f.numpy()
+        self.assertEqual(f.get_backend(), "numpy")
+
+        if TORCH_AVAILABLE:
+            f.torch()
+            self.assertEqual(f.get_backend(), "torch")
 
 
     def test_Chain(self):
