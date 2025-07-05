@@ -447,7 +447,123 @@ class Feature(DeepTrackNode):
 
     Examples
     --------
-    TODO
+    >>> import deeptrack as dt
+
+    **Define and evaluate a simple feature**
+
+    >>> import numpy as np
+    >>>
+    >>> feature = dt.Value(value=np.array([1, 2, 3]))
+    >>> result = feature()
+    >>> result
+    array([1, 2, 3])
+
+    **Chain features using '>>'**
+
+    >>> pipeline = dt.Value(value=np.array([1, 2, 3])) >> dt.Add(value=2)
+    >>> pipeline()
+    array([3, 4, 5])
+
+    **Use arithmetic operators for syntactic sugar**
+
+    >>> feature = dt.Value(value=np.array([1, 2, 3]))
+    >>> result = (feature + 1) * 2 - 1
+    >>> result()
+    array([3, 5, 7])
+
+    This is equivalent to chaining with `Add`, `Multiply`, and `Subtract`.
+
+    **Evaluate a dynamic feature using `.update()`**
+
+    >>> feature = dt.Value(value=lambda: np.random.rand())
+    >>> output1 = feature()
+    >>> output1
+    0.9938966963707441
+
+    >>> output2 = feature()  # Cached result
+    >>> output2
+    0.9938966963707441
+
+    >>> feature.update()
+    >>> output3 = feature()  # New sample
+    >>> output3
+    0.3874078815170007
+
+    **Generate a batch of outputs**
+
+    >>> feature = dt.Value(lambda: np.random.rand()) + 1
+    >>> batch = feature.batch(batch_size=3)
+    >>> batch
+    (array([1.6888222 , 1.88422131, 1.90027316]),)
+
+    **Store and retrieve properties from outputs**
+
+    >>> feature = dt.Value(value=3).store_properties(True)
+    >>> output = feature(np.array([1, 2]))
+    >>> output.get_property("value")
+    3
+
+    **Switch computational backend to torch**
+
+    >>> import torch
+    >>>
+    >>> feature = dt.Add(value=5).torch()
+    >>> input_tensor = torch.tensor([1.0, 2.0])
+    >>> feature(input_tensor)
+    tensor([6., 7.])
+
+    **Use `.seed()` for reproducibility**
+
+    >>> feature = dt.Value(lambda: np.random.randint(0, 100))
+    >>> seed = feature.seed()
+    >>> v1 = feature.update()()
+    >>> v1
+    76
+
+    >>> feature.seed(seed)
+    >>> v2 = feature.update()()
+    >>> v2
+    76
+
+    **Sequential feature with evolving property**
+
+    >>> def rotate(sequence_length, previous_value):
+    ...     return previous_value + 2 * np.pi / sequence_length
+
+    >>> rotating = dt.Ellipse(
+    ...     position=(16, 16),
+    ...     radius=(1.5, 1),
+    ...     rotation=0,
+    ... ).to_sequential(rotation=rotate)
+
+    >>> frames = dt.Sequence(rotating, sequence_length=5).update()
+    >>> images = frames()
+    >>> len(images)
+    5
+
+    **Bind dynamic arguments across multiple features**
+
+    >>> arguments = dt.Arguments(frequency=1, amplitude=2)
+    >>> wave = (
+    ...     dt.Value(
+    ...         value=lambda frequency: np.linspace(0, 2 * np.pi * frequency, 100),
+    ...         frequency=arguments.frequency,
+    ...     )
+    ...     >> np.sin
+    ...     >> dt.Multiply(
+    ...         value=lambda amplitude: amplitude,
+    ...         amplitude=arguments.amplitude,
+    ...     )
+    ... )
+    >>> wave.bind_arguments(arguments)
+
+    >>> from matplotlib import pyplot as plt
+    >>>
+    >>> plt.plot(wave())
+    >>> plt.show()
+
+    >>> plt.plot(wave(frequency=2, amplitude=1))  # Raw image with no noise
+    >>> plt.show()
 
     """
 
@@ -1191,6 +1307,15 @@ class Feature(DeepTrackNode):
         """
 
         results = [self.update()() for _ in range(batch_size)]
+
+        try:
+            # Attempt to unzip results
+            results = [(r,) for r in results]
+        except TypeError:
+            # If outputs are scalar (not iterable), wrap each in a tuple
+            results = [(r,) for r in results]
+            results = [(r,) for r in results]
+
         results = list(zip(*results))
 
         for idx, r in enumerate(results):
