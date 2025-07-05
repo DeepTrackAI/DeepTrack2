@@ -107,7 +107,7 @@ from scipy.ndimage.interpolation import map_coordinates
 from deeptrack import utils
 from deeptrack.features import Feature
 from deeptrack.image import Image
-from deeptrack.types import ArrayLike, PropertyLike
+from deeptrack.types import PropertyLike
 
 
 class Augmentation(Feature):
