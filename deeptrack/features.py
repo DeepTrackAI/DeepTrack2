@@ -358,7 +358,7 @@ class Feature(DeepTrackNode):
         It executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
     `resolve(image_list: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
-        A shadow of the `__call__()` method.
+        Alias of `__call__()`.
     `to_sequential(**kwargs: Any) -> Feature`
         It convert a feature to be resolved as a sequence.
     `store_properties(toggle: bool, recursive: bool) -> Feature`
