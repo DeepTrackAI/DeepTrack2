@@ -1333,6 +1333,7 @@ class Feature(DeepTrackNode):
         Feature
             The updated feature instance, ensuring the next evaluation produces 
             a fresh result.
+
         """
 
         if global_arguments:
@@ -4990,8 +4991,14 @@ class Bind(StructuralFeature):
 BindResolve = Bind
 
 
-class BindUpdate(StructuralFeature):
+class BindUpdate(StructuralFeature):  # DEPRECATED
     """Bind a feature with certain arguments.
+
+    .. deprecated:: 2.0
+        This feature is deprecated and may be removed in a future release. It
+        is recommended to use `Bind` instead for equivalent functionality.
+        Further, the current implementation is not guaranteed to be exactly
+        equivalent to prior implementations.
 
     This feature binds a child feature with specific properties (`kwargs`) that 
     are passed to it when it is updated. It is similar to the `Bind` feature 
@@ -5008,13 +5015,6 @@ class BindUpdate(StructuralFeature):
     -------
     `get(image: Any, **kwargs: Any) -> Any`
         It resolves the child feature with the provided arguments.
-
-    Warnings
-    --------
-    Deprecation: This feature is deprecated and may be removed in a future
-    release. It is recommended to use `Bind` instead for equivalent
-    functionality. Further, the current implementation is not guaranteed to be
-    exactly equivalent to prior implementations.
 
     Examples
     --------
@@ -5095,8 +5095,12 @@ class BindUpdate(StructuralFeature):
         return self.feature.resolve(image, **kwargs)
 
 
-class ConditionalSetProperty(StructuralFeature):
+class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
     """Conditionally override the properties of a child feature.
+
+    .. deprecated:: 2.0
+        This feature is deprecated and may be removed in a future release. It
+        is recommended to use `Arguments` instead.
 
     This feature modifies the properties of a child feature only when a 
     specified condition is met. If the condition evaluates to `True`, 
@@ -5129,11 +5133,6 @@ class ConditionalSetProperty(StructuralFeature):
     `get(image: Any, condition: str or bool, **kwargs: Any) -> Any`
         Resolves the child feature, conditionally applying the specified 
         properties.
-
-    Warnings
-    --------
-    Deprecation: This feature is deprecated and may be removed in a future
-    release. It is recommended to use `Arguments` instead.
 
     Examples
     --------
@@ -5259,8 +5258,12 @@ class ConditionalSetProperty(StructuralFeature):
         return self.feature(image)
 
 
-class ConditionalSetFeature(StructuralFeature):
+class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
     """Conditionally resolves one of two features based on a condition.
+
+    .. deprecated:: 2.0
+        This feature is deprecated and may be removed in a future release. It
+        is recommended to use `Arguments` instead.
 
     This feature allows dynamically selecting and resolving one of two child 
     features depending on whether a specified condition evaluates to `True` or 
@@ -5299,11 +5302,6 @@ class ConditionalSetFeature(StructuralFeature):
     -------
     `get(image: Any, condition: str or bool, **kwargs: Any) -> Any`
         Resolves the appropriate feature based on the condition.
-
-    Warnings
-    --------
-    Deprecation: This feature is deprecated and may be removed in a future
-    release. It is recommended to use `Arguments` instead.
 
     Examples
     --------
@@ -6218,7 +6216,10 @@ class LoadImage(Feature):
             except ValueError:
                 import warnings
 
-                warnings.warn("Non-rgb image, ignoring to_grayscale")
+                warnings.warn(
+                    "Non-rgb image, ignoring to_grayscale",
+                    UserWarning,
+                )
 
         # Ensure the image has at least `ndim` dimensions.
         while ndim and image.ndim < ndim:
@@ -7146,7 +7147,7 @@ class NonOverlapping(Feature):
             "Non-overlapping placement could not be achieved. Consider "
             "adjusting parameters: reduce object radius, increase FOV, "
             "or decrease min_distance.",
-            UserWarning
+            UserWarning,
         )
         return list_of_volumes
 
