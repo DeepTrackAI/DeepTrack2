@@ -11,7 +11,10 @@ import unittest
 from deeptrack.backend._config import TORCH_AVAILABLE
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.utils import get_kwarg_names
-import numpy as np
+
+from numpy import array
+from numpy.testing import assert_array_equal
+from numpy.random import rand
 
 from deeptrack import properties
 
@@ -29,10 +32,10 @@ class TestProperties(unittest.TestCase):
         P.update()
         self.assertEqual(P(), (1, 2, 3))
 
-        P = properties.Property(np.array([1, 2, 3]))
-        np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
+        P = properties.Property(array([1, 2, 3]))
+        assert_array_equal(P(), array([1, 2, 3]))
         P.update()
-        np.testing.assert_array_equal(P(), np.array([1, 2, 3]))
+        assert_array_equal(P(), array([1, 2, 3]))
 
         if TORCH_AVAILABLE:
             import torch
@@ -60,7 +63,7 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(P(), 20)
 
         # Lambda function with randomness.
-        P = properties.Property(lambda: np.random.rand())
+        P = properties.Property(lambda: rand())
         for _ in range(10):
             P.update()
             self.assertEqual(P(), P())
@@ -72,7 +75,7 @@ class TestProperties(unittest.TestCase):
 
         P = properties.Property(
             func2,
-            x=properties.Property(lambda: np.random.rand()),
+            x=properties.Property(lambda: rand()),
         )
         for _ in range(10):
             P.update()
@@ -109,9 +112,9 @@ class TestProperties(unittest.TestCase):
 
         P = properties.Property(
             [
-                lambda _ID=(): 1 * np.random.rand(),
-                lambda: 2 * np.random.rand(),
-                properties.Property(lambda _ID=(): 3 * np.random.rand()),
+                lambda _ID=(): 1 * rand(),
+                lambda: 2 * rand(),
+                properties.Property(lambda _ID=(): 3 * rand()),
             ]
         )
         for _ in range(10):
@@ -135,9 +138,9 @@ class TestProperties(unittest.TestCase):
 
         P = properties.Property(
             {
-                "a": lambda _ID=(): 1 * np.random.rand(),
-                "b": lambda: 2 * np.random.rand(),
-                "c": properties.Property(lambda _ID=(): 3 * np.random.rand()),
+                "a": lambda _ID=(): 1 * rand(),
+                "b": lambda: 2 * rand(),
+                "c": properties.Property(lambda _ID=(): 3 * rand()),
             }
         )
         for _ in range(10):
@@ -154,7 +157,7 @@ class TestProperties(unittest.TestCase):
         P.update()
         self.assertEqual(P(), 100)
 
-        node = DeepTrackNode(lambda _ID=(): np.random.rand())
+        node = DeepTrackNode(lambda _ID=(): rand())
         P = properties.Property(node)
         for _ in range(10):
             P.update()
@@ -197,7 +200,7 @@ class TestProperties(unittest.TestCase):
 
         PD = properties.PropertyDict(
             constant=42,
-            random=lambda: np.random.rand(),
+            random=lambda: rand(),
             dependent=lambda constant: constant + 1,
         )
 

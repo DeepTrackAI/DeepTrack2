@@ -10,7 +10,8 @@ from deeptrack import sequences
 
 from deeptrack.optics import Fluorescence
 from deeptrack.scatterers import Ellipse
-import numpy as np
+from numpy import pi
+from numpy.random import randn
 
 
 class TestSequences(unittest.TestCase):
@@ -24,11 +25,11 @@ class TestSequences(unittest.TestCase):
             intensity=1,
             radius=(1.5e-6, 1e-6),
             rotation=0,  # This will be the value at time 0.
-            upsample=2,
+            #upsample=2,
         )
 
         def get_rotation(sequence_length, previous_value):
-            return previous_value + 2 * np.pi / sequence_length
+            return previous_value + 2 * pi / sequence_length
 
         rotating_ellipse = ellipse.to_sequential(rotation=get_rotation)
         imaged_rotating_ellipse = optics(rotating_ellipse)
@@ -43,7 +44,7 @@ class TestSequences(unittest.TestCase):
 
         for i, out in enumerate(outputs):
 
-            self.assertAlmostEqual(out.get_property("rotation"), 2 * i * np.pi / 5)
+            self.assertAlmostEqual(out.get_property("rotation"), 2 * i * pi / 5)
 
     def test_Dependent_Sequential(self):
 
@@ -55,11 +56,11 @@ class TestSequences(unittest.TestCase):
             position=(16, 16),
             radius=(1.5e-6, 1e-6),
             rotation=0,  # This will be the value at time 0.
-            upsample=2,
+            #upsample=2,
         )
 
         def get_rotation(sequence_length, previous_value):
-            return previous_value + 2 * np.pi / sequence_length
+            return previous_value + 2 * pi / sequence_length
 
         def get_intensity(rotation):
             return rotation * 2
@@ -77,8 +78,8 @@ class TestSequences(unittest.TestCase):
         outputs = imaged_rotating_ellipse_sequence()
 
         for i, out in enumerate(outputs):
-            self.assertAlmostEqual(out.get_property("rotation"), 2 * i * np.pi / 5)
-            self.assertAlmostEqual(out.get_property("intensity"), 4 * i * np.pi / 5)
+            self.assertAlmostEqual(out.get_property("rotation"), 2 * i * pi / 5)
+            self.assertAlmostEqual(out.get_property("intensity"), 4 * i * pi / 5)
 
     def test_RepeatedParticle(self):
 
@@ -87,14 +88,14 @@ class TestSequences(unittest.TestCase):
         )
         ellipse = Ellipse(
             position_unit="pixel",
-            position=lambda: np.random.randn(2) * 4 + (16, 16),
+            position=lambda: randn(2) * 4 + (16, 16),
             radius=(1.5e-6, 1e-6),
             rotation=0,  # This will be the value at time 0.
-            upsample=2,
+            #upsample=2,
         )
 
         def get_rotation(sequence_length, previous_value):
-            return previous_value + 2 * np.pi / sequence_length
+            return previous_value + 2 * pi / sequence_length
 
         def get_intensity(rotation):
             return rotation * 2
@@ -118,10 +119,10 @@ class TestSequences(unittest.TestCase):
             self.assertEqual(len(rotations), 2)
             self.assertEqual(len(intensity), 2)
             self.assertEqual(len(positions), 2)
-            self.assertAlmostEqual(rotations[0], 2 * i * np.pi / 5)
-            self.assertAlmostEqual(rotations[1], 2 * i * np.pi / 5)
-            self.assertAlmostEqual(intensity[0], 4 * i * np.pi / 5)
-            self.assertAlmostEqual(intensity[1], 4 * i * np.pi / 5)
+            self.assertAlmostEqual(rotations[0], 2 * i * pi / 5)
+            self.assertAlmostEqual(rotations[1], 2 * i * pi / 5)
+            self.assertAlmostEqual(intensity[0], 4 * i * pi / 5)
+            self.assertAlmostEqual(intensity[1], 4 * i * pi / 5)
 
             self.assertNotEqual(positions[0][0], positions[1][0])
             self.assertNotEqual(positions[0][1], positions[1][1])
@@ -137,11 +138,11 @@ class TestSequences(unittest.TestCase):
             position=lambda _ID: positions[_ID[-1]],
             radius=(1.5e-6, 1e-6),
             rotation=0,  # This will be the value at time 0.
-            upsample=2,
+            #upsample=2,
         )
 
         def get_rotation(sequence_length, previous_value):
-            return previous_value + 2 * np.pi / sequence_length
+            return previous_value + 2 * pi / sequence_length
 
         def get_intensity(rotation):
             return rotation * 2
@@ -165,10 +166,10 @@ class TestSequences(unittest.TestCase):
             self.assertEqual(len(rotations), 2)
             self.assertEqual(len(intensity), 2)
             self.assertEqual(len(positions), 2)
-            self.assertAlmostEqual(rotations[0], 2 * i * np.pi / 5)
-            self.assertAlmostEqual(rotations[1], 2 * i * np.pi / 5)
-            self.assertAlmostEqual(intensity[0], 4 * i * np.pi / 5)
-            self.assertAlmostEqual(intensity[1], 4 * i * np.pi / 5)
+            self.assertAlmostEqual(rotations[0], 2 * i * pi / 5)
+            self.assertAlmostEqual(rotations[1], 2 * i * pi / 5)
+            self.assertAlmostEqual(intensity[0], 4 * i * pi / 5)
+            self.assertAlmostEqual(intensity[1], 4 * i * pi / 5)
 
             self.assertSequenceEqual(list(p_positions[0]), list(positions[0]))
             self.assertSequenceEqual(list(p_positions[1]), list(positions[1]))

@@ -770,7 +770,14 @@ class SequentialProperty(Property):
 
         # 6) Define a default current function for steps >= 1.
         if sampling_rule is not None:
-            self.sample = self.create_action(sampling_rule, **kwargs)
+            self.sample = self.create_action(
+                sampling_rule,
+                sequence_index=self.sequence_index,
+                sequence_length=self.sequence_length,
+                previous_values=self.previous_values,
+                previous_value=self.previous_value,
+                **kwargs
+            )
         else:
             self.sample = lambda _ID=(): None
 
@@ -864,6 +871,27 @@ class SequentialProperty(Property):
         """
 
         return super().current_value(_ID=_ID)[self.sequence_index(_ID=_ID)]
+        
+    def previous(self, _ID: tuple[int, ...] = ()) -> Any:
+        """Retrieve the previously stored value at ID without recomputing.
+
+        Parameters
+        ----------
+        _ID : Tuple[int, ...], optional
+            The ID for which to retrieve the previous value.
+
+        Returns
+        -------
+        Any
+            The previously stored value if `_ID` is valid.
+            Returns `[]` if `_ID` is not a valid index.
+        
+        """
+
+        if self.data.valid_index(_ID):
+            return self.data[_ID].current_value()
+        else:
+            return []
 
     def set_sequence_length(
         self: SequentialProperty,

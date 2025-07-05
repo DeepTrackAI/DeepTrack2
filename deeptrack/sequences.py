@@ -77,7 +77,7 @@ class Sequence(Feature):
     __distributed__ = False
 
     def __init__(
-        self,
+        self: Sequence,
         feature: Feature,
         sequence_length: PropertyLike[int] = 1,
         **kwargs,
@@ -89,8 +89,8 @@ class Sequence(Feature):
         # self.update()
 
     def get(
-        self,
-        input_list,
+        self: Sequence,
+        input_list: list[Feature],
         sequence_length=None,
         **kwargs
     ):
@@ -132,7 +132,10 @@ def propagate_sequential_data(
                     getattr(dep, key).set_value(value)
 
 
-def Sequential(feature: Feature, **kwargs):  # DEPRECATED
+def Sequential(
+    feature: Feature,
+    **kwargs
+) -> Feature:  # DEPRECATED
     """Converts a feature to be resolved as a sequence.
 
     .. deprecated:: 2.0

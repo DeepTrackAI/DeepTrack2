@@ -1175,30 +1175,6 @@ class DeepTrackNode:
 
         return self
 
-    # TODO: The previous() method should be moved into SequentialProperty
-    def previous(
-        self: DeepTrackNode,
-        _ID: tuple[int, ...] = (),
-    ) -> Any:
-        """Retrieve the previously stored value at _ID without recomputing.
-
-        Parameters
-        ----------
-        _ID: tuple[int, ...], optional
-            The _ID for which to retrieve the previous value.
-
-        Returns
-        -------
-        Any
-            The previously stored value if `_ID` is valid.
-            Returns `[]` if `_ID` is not a valid index.
-        
-        """
-
-        if self.data.valid_index(_ID):
-            return self.data[_ID].current_value()
-
-        return []  # If `_ID` is not a valid index
 
     def recurse_children(
         self: DeepTrackNode,
