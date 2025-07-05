@@ -1337,6 +1337,7 @@ class Feature(DeepTrackNode):
 
         if global_arguments:
             import warnings
+
             # Deprecated, but not necessary to raise hard error.
             warnings.warn(
                 "Passing information through .update is no longer supported. "
@@ -3251,6 +3252,7 @@ class Value(Feature):
 
         if isinstance(value, Image):
             import warnings
+
             warnings.warn(
                 "Passing an Image object as the value to dt.Value may lead to "
                 "performance deterioration. Consider converting the Image to "
@@ -7139,6 +7141,7 @@ class NonOverlapping(Feature):
             self.feature.update()
 
         import warnings
+
         warnings.warn(
             "Non-overlapping placement could not be achieved. Consider "
             "adjusting parameters: reduce object radius, increase FOV, "
