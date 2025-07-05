@@ -1,20 +1,22 @@
-import sys
+# pylint: disable=C0115:missing-class-docstring
+# pylint: disable=C0116:missing-function-docstring
+# pylint: disable=C0103:invalid-name
 
-# sys.path.append(".")  # Adds the module to path
+# Use this only when running the test locally.
+# import sys
+# sys.path.append(".")  # Adds the module to path.
 
 import unittest
 
-from matplotlib import pyplot
-
-from deeptrack import sequences
-
-from deeptrack.optics import Fluorescence
-from deeptrack.scatterers import Ellipse
 from numpy import pi
 from numpy.random import randn
 
+from deeptrack import sequences
+from deeptrack.optics import Fluorescence
+from deeptrack.scatterers import Ellipse
 
 class TestSequences(unittest.TestCase):
+
     def test_Sequence(self):
         optics = Fluorescence(
             output_region=(0, 0, 32, 32),
@@ -24,7 +26,7 @@ class TestSequences(unittest.TestCase):
             position=(16, 16),
             intensity=1,
             radius=(1.5e-6, 1e-6),
-            rotation=0,  # This will be the value at time 0.
+            rotation=0,  # This will be the value at time 0
             #upsample=2,
         )
 
@@ -38,13 +40,15 @@ class TestSequences(unittest.TestCase):
         )
         imaged_rotating_ellipse_sequence.store_properties()
 
-        self.assertIsInstance(imaged_rotating_ellipse_sequence, sequences.Sequence)
+        self.assertIsInstance(imaged_rotating_ellipse_sequence,
+                              sequences.Sequence)
 
         outputs = imaged_rotating_ellipse_sequence()
 
         for i, out in enumerate(outputs):
 
-            self.assertAlmostEqual(out.get_property("rotation"), 2 * i * pi / 5)
+            self.assertAlmostEqual(out.get_property("rotation"),
+                                   2 * i * pi / 5)
 
     def test_Dependent_Sequential(self):
 
@@ -55,7 +59,7 @@ class TestSequences(unittest.TestCase):
             position_unit="pixel",
             position=(16, 16),
             radius=(1.5e-6, 1e-6),
-            rotation=0,  # This will be the value at time 0.
+            rotation=0,  # This will be the value at time 0
             #upsample=2,
         )
 
@@ -65,21 +69,25 @@ class TestSequences(unittest.TestCase):
         def get_intensity(rotation):
             return rotation * 2
 
-        rotating_ellipse = ellipse.to_sequential(rotation=get_rotation, intensity=get_intensity)
-        
+        rotating_ellipse = ellipse.to_sequential(rotation=get_rotation,
+                                                 intensity=get_intensity)
+
         imaged_rotating_ellipse = optics(rotating_ellipse)
         imaged_rotating_ellipse_sequence = sequences.Sequence(
             imaged_rotating_ellipse, sequence_length=5
         )
         imaged_rotating_ellipse_sequence.store_properties()
 
-        self.assertIsInstance(imaged_rotating_ellipse_sequence, sequences.Sequence)
+        self.assertIsInstance(imaged_rotating_ellipse_sequence,
+                              sequences.Sequence)
 
         outputs = imaged_rotating_ellipse_sequence()
 
         for i, out in enumerate(outputs):
-            self.assertAlmostEqual(out.get_property("rotation"), 2 * i * pi / 5)
-            self.assertAlmostEqual(out.get_property("intensity"), 4 * i * pi / 5)
+            self.assertAlmostEqual(out.get_property("rotation"),
+                                   2 * i * pi / 5)
+            self.assertAlmostEqual(out.get_property("intensity"),
+                                   4 * i * pi / 5)
 
     def test_RepeatedParticle(self):
 
@@ -100,7 +108,8 @@ class TestSequences(unittest.TestCase):
         def get_intensity(rotation):
             return rotation * 2
 
-        rotating_ellipse = ellipse.to_sequential(rotation=get_rotation, intensity=get_intensity)
+        rotating_ellipse = ellipse.to_sequential(rotation=get_rotation,
+                                                 intensity=get_intensity)
         
         imaged_rotating_ellipse = optics(rotating_ellipse ^ 2)
         imaged_rotating_ellipse_sequence = sequences.Sequence(
@@ -108,7 +117,8 @@ class TestSequences(unittest.TestCase):
         )
         imaged_rotating_ellipse_sequence.store_properties()
 
-        self.assertIsInstance(imaged_rotating_ellipse_sequence, sequences.Sequence)
+        self.assertIsInstance(imaged_rotating_ellipse_sequence,
+                              sequences.Sequence)
         imaged_rotating_ellipse_sequence.update()
         outputs = imaged_rotating_ellipse_sequence()
 
@@ -137,7 +147,7 @@ class TestSequences(unittest.TestCase):
             position_unit="pixel",
             position=lambda _ID: positions[_ID[-1]],
             radius=(1.5e-6, 1e-6),
-            rotation=0,  # This will be the value at time 0.
+            rotation=0,  # This will be the value at time 0
             #upsample=2,
         )
 
@@ -147,7 +157,8 @@ class TestSequences(unittest.TestCase):
         def get_intensity(rotation):
             return rotation * 2
 
-        rotating_ellipse = ellipse.to_sequential(rotation=get_rotation, intensity=get_intensity)
+        rotating_ellipse = ellipse.to_sequential(rotation=get_rotation,
+                                                 intensity=get_intensity)
         
         imaged_rotating_ellipse = optics(rotating_ellipse ^ 2)
         imaged_rotating_ellipse_sequence = sequences.Sequence(
@@ -155,7 +166,8 @@ class TestSequences(unittest.TestCase):
         )
         imaged_rotating_ellipse_sequence.store_properties()
 
-        self.assertIsInstance(imaged_rotating_ellipse_sequence, sequences.Sequence)
+        self.assertIsInstance(imaged_rotating_ellipse_sequence,
+                              sequences.Sequence)
         imaged_rotating_ellipse_sequence.update()
         outputs = imaged_rotating_ellipse_sequence()
 
@@ -171,8 +183,10 @@ class TestSequences(unittest.TestCase):
             self.assertAlmostEqual(intensity[0], 4 * i * pi / 5)
             self.assertAlmostEqual(intensity[1], 4 * i * pi / 5)
 
-            self.assertSequenceEqual(list(p_positions[0]), list(positions[0]))
-            self.assertSequenceEqual(list(p_positions[1]), list(positions[1]))
+            self.assertSequenceEqual(list(p_positions[0]),
+                                     list(positions[0]))
+            self.assertSequenceEqual(list(p_positions[1]),
+                                     list(positions[1]))
 
 
 if __name__ == "__main__":
