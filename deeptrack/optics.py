@@ -89,7 +89,7 @@ Utility Functions:
         pad: int,
         output_region: Tuple[int, int, int, int],
         refractive_index_medium: float,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> np.ndarray
 
     Combines multiple scatterer objects into a single 3D volume for imaging.
@@ -101,7 +101,7 @@ Utility Functions:
         limits: np.ndarray,
         padding: Tuple[int, int, int, int],
         output_region: Tuple[int, int, int, int],
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> Tuple[np.ndarray, np.ndarray]
 
     Pads a volume with zeros to avoid edge effects during imaging.
@@ -205,7 +205,7 @@ class Microscope(StructuralFeature):
         self:  Microscope,
         sample: Feature,
         objective: Feature,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initialize the `Microscope` instance.
 
@@ -490,7 +490,7 @@ class Optics(Feature):
         pupil: Feature = None,
         illumination: Feature = None,
         upscale: int = 1,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initialize the `Optics` instance.
 
@@ -687,7 +687,7 @@ class Optics(Feature):
         refractive_index_medium: float,
         include_aberration: bool = True,   
         defocus: float | ArrayLike[float] = 0,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ):
         """Calculates the pupil function at different focal points.
 
@@ -791,7 +791,7 @@ class Optics(Feature):
         limits: ArrayLike[int] = None,
         padding: ArrayLike[int] = None,
         output_region: ArrayLike[int] = None,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> tuple:
         """Pads the volume with zeros to avoid edge effects.
 
@@ -885,7 +885,7 @@ class Optics(Feature):
     def __call__(
         self: Optics,
         sample: Feature,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> Microscope:
         """Creates a Microscope instance with the given sample and optics.
 
@@ -972,8 +972,6 @@ class Fluorescence(Optics):
 
     Attributes
     ----------
-    __gpu_compatible__: bool
-        Indicates whether the class supports GPU acceleration.
     NA: float
         Numerical aperture of the optical system.
     wavelength: float
@@ -1017,8 +1015,6 @@ class Fluorescence(Optics):
     1.4
 
     """
-
-    __gpu_compatible__ = True
 
     def get(
         self:  Fluorescence, 
@@ -1198,8 +1194,6 @@ class Brightfield(Optics):
 
     Attributes
     ----------
-    __gpu_compatible__: bool
-        Indicates whether the class supports GPU acceleration.
     __conversion_table__: ConversionTable
         Table used to convert properties of the feature to desired units.
     NA: float
@@ -1247,8 +1241,6 @@ class Brightfield(Optics):
     
     """
 
-    __gpu_compatible__ = True
-
     __conversion_table__ = ConversionTable(
         working_distance=(u.meter, u.meter),
     )
@@ -1258,7 +1250,7 @@ class Brightfield(Optics):
         illuminated_volume: ArrayLike[complex],
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> Image:
         """Simulates imaging with brightfield microscopy.
 
@@ -1515,7 +1507,7 @@ class ISCAT(Brightfield):
         self:  ISCAT,
         illumination_angle: float = np.pi,
         amp_factor: float = 1, 
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the ISCAT class.
 
@@ -1625,7 +1617,7 @@ class Darkfield(Brightfield):
         illuminated_volume: ArrayLike[complex],
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> Image:
         """Retrieve the darkfield image of the illuminated volume.
 
@@ -1706,7 +1698,7 @@ class IlluminationGradient(Feature):
         constant: PropertyLike[float] = 0,
         vmin: PropertyLike[float] = 0,
         vmax: PropertyLike[float] = np.inf,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the IlluminationGradient class.
 
@@ -1739,7 +1731,7 @@ class IlluminationGradient(Feature):
         constant: float,
         vmin: float,
         vmax: float,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> ArrayLike[complex]:
         """Applies the gradient and constant offset to the amplitude of the 
         field.
@@ -1866,7 +1858,7 @@ def _create_volume(
     pad: tuple = (0, 0, 0, 0),
     output_region: tuple = (None, None, None, None),
     refractive_index_medium: float = 1.33,
-    **kwargs: Dict[str, Any],
+    **kwargs: Any,
 ) -> tuple:
     """Converts a list of scatterers into a volumetric representation.
 

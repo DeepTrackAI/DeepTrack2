@@ -791,8 +791,6 @@ class MieScatterer(Scatterer):
         
     """
 
-    __gpu_compatible__ = True
-
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
         polarization_angle=(u.radian, u.radian),

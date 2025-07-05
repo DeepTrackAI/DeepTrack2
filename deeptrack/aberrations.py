@@ -397,7 +397,7 @@ class Zernike(Aberration):
         n: int | list[int],
         m: int | list[int],
         coefficient: float | list[float],
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> np.ndarray:
         """Applies the Zernike phase aberration to the input pupil function.
 
@@ -564,7 +564,7 @@ class Piston(Zernike):
         self: "Piston", 
         *args: tuple[Any, ...], 
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the Piston class.
 
@@ -623,7 +623,7 @@ class VerticalTilt(Zernike):
         self: VerticalTilt, 
         *args: tuple[Any, ...], 
         coefficient: PropertyLike[float | list[float]] = 1, 
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the VerticalTilt class.
 
@@ -682,7 +682,7 @@ class HorizontalTilt(Zernike):
         self: HorizontalTilt,
         *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the HorizontalTilt class.
 
@@ -743,7 +743,7 @@ class ObliqueAstigmatism(Zernike):
         self: ObliqueAstigmatism,
         *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the ObliqueAstigmatism class.
 
@@ -802,7 +802,7 @@ class Defocus(Zernike):
         self: Defocus,
         *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the Defocus class.
 
@@ -861,7 +861,7 @@ class Astigmatism(Zernike):
         self: Astigmatism,
         *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the Astigmatism class.
 
@@ -909,7 +909,7 @@ class ObliqueTrefoil(Zernike):
         self: ObliqueTrefoil,
         *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         super().__init__(*args, n=3, m=-3, coefficient=coefficient, **kwargs)
 
@@ -930,7 +930,7 @@ class VerticalComa(Zernike):
         self: VerticalComa,
         *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         super().__init__(*args, n=3, m=-1, coefficient=coefficient, **kwargs)
 
@@ -951,7 +951,7 @@ class HorizontalComa(Zernike):
         self: HorizontalComa,
         *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         super().__init__(*args, n=3, m=1, coefficient=coefficient, **kwargs)
 
@@ -972,7 +972,7 @@ class Trefoil(Zernike):
         self: Trefoil,
         *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         super().__init__(*args, n=3, m=3, coefficient=coefficient, **kwargs)
 
@@ -993,6 +993,6 @@ class SphericalAberration(Zernike):
         self: SphericalAberration,
         *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         super().__init__(*args, n=4, m=0, coefficient=coefficient, **kwargs)
