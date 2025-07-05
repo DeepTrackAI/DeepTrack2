@@ -42,7 +42,7 @@ that are then passed to the constructor of the feature parent, because these
 can be intrisically either `Type` or `Callable[..., Type]`.
 
 **Using `ImageLike`**
->>> def print_imagelike(image: dt.ArrayLike[float]) -> None:
+>>> def print_imagelike(image: dt.types.ArrayLike[float]) -> None:
 ...     print(image)
 
 - NumPy arrays:
@@ -56,10 +56,10 @@ can be intrisically either `Type` or `Callable[..., Type]`.
 >>> print_imagelike(torch.Tensor([1.0, 2.0, 3.0]))
 
 - `Image` objects:
->>> print_imagelike(dt.Image([1.0, 2.0, 3.0]))
+>>> print_imagelike(dt.types.Image([1.0, 2.0, 3.0]))
 
 **Using `ArrayLike`**
->>> def print_arraylike(array: dt.ArrayLike[float]) -> None:
+>>> def print_arraylike(array: dt.types.ArrayLike[float]) -> None:
 ...     print(array)
 
 It works for:
@@ -81,7 +81,7 @@ It works for:
 >>> print_arraylike(torch.Tensor([1.0, 2.0, 3.0]))
 
 - `Image` objects:
->>> print_arraylike(dt.Image([1.0, 2.0, 3.0]))
+>>> print_arraylike(dt.types.Image([1.0, 2.0, 3.0]))
 
 **Using `NumberLike`**
 >>> def add_numbers(a: NumberLike, b: NumberLike) -> NumberLike:
