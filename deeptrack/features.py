@@ -141,7 +141,7 @@ from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
 from deeptrack.image import Image
-from deeptrack.properties import PropertyDict
+from deeptrack.properties import PropertyDict, SequentialProperty
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
 
@@ -326,6 +326,8 @@ class Feature(DeepTrackNode):
     `__call__(image_list: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
         It executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
+    `to_sequential(**kwargs: Any) -> Feature`
+        It convert a feature to be resolved as a sequence.
     `store_properties(toggle: bool, recursive: bool) -> Feature`
         It controls whether the properties are stored in the output `Image`
         object.
@@ -684,6 +686,125 @@ class Feature(DeepTrackNode):
         return output
 
     resolve = __call__
+
+    def to_sequential(
+        self: Feature,
+        **kwargs: Any,
+    ) -> Feature:
+        """Convert a feature to be resolved as a sequence.
+
+        Should be called on individual features, not combinations of features.
+        All keyword arguments will be treated as sequential properties and will
+        be passed to the parent feature.
+
+        If a property from the keyword argument already exists in the feature,
+        the existing property will be used to initialize the passed property
+        (that is, it will be used for the first timestep).
+
+        Parameters
+        ----------
+        self: Feature
+            Feature to make sequential.
+        kwargs: Any
+            Keyword arguments to pass on as sequential properties of `feature`.
+
+        Returns
+        -------
+        Feature
+            The input feature evolved as a sequence
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Sequentially evaluate a rotating ellipse.
+
+        Create the optics:
+        >>> optics = dt.Fluorescence(
+        ...     NA=0.6,
+        ...     magnification=10,
+        ...     resolution=1e-6,
+        ...     wavelength=633e-9,
+        ...     output_region=(0, 0, 32, 32),
+        ... )
+
+        Create the scatterer:
+        >>> ellipse = Ellipse(
+        ...     position_unit="pixel",
+        ...     position=(16, 16),
+        ...     intensity=1,
+        ...     radius=(1.5e-6, 1e-6),
+        ...     rotation=0,  # Initial rotation at time step 0
+        ... )
+
+        Implement a function to increment the rotation:
+        >>> from numpy import pi
+        >>>
+        >>> def get_rotation(sequence_length, previous_value):
+        ...     delta = 2 * pi / sequence_length
+        ...     return previous_value + delta
+
+        Call `to_sequential()` to resolve the feature sequentially:
+        >>> rotating_ellipse = ellipse.to_sequential(rotation=get_rotation)
+
+        Image the scatterer with the optics:
+        >>> imaged_rotating_ellipse = optics(rotating_ellipse)
+
+        Encapsulate as a `Sequence` object and specify the sequence length:
+        >>> imaged_rotating_ellipse_sequence = Sequence(
+        ...     imaged_rotating_ellipse,
+        ...     sequence_length=10
+        ... )
+
+        Finally observe the scatterer rotate:
+        >>> imaged_rotating_ellipse_sequence.update().plot();
+
+        """
+
+        for property_name in kwargs.keys():
+            if property_name in self.properties:
+                # Insert sequential property with initialized value taken from
+                # the already available property.
+                self.properties[property_name] = SequentialProperty(
+                    self.properties[property_name], **self.properties
+                )
+            else:
+                # Insert empty sequential property.
+                self.properties[property_name] = SequentialProperty()
+
+            self.properties.add_dependency(self.properties[property_name])
+            # self.properties[property_name].add_child(self.properties)
+
+        for property_name, sampling_rule in kwargs.items():
+            prop = self.properties[property_name]
+
+            all_kwargs = dict(
+                previous_value=prop.previous_value,
+                previous_values=prop.previous_values,
+                sequence_length=prop.sequence_length,
+                sequence_index=prop.sequence_index,
+            )
+
+            for key, value in self.properties.items():
+                if key == property_name:
+                    continue
+
+                if isinstance(value, SequentialProperty):
+                    all_kwargs[key] = value
+                    all_kwargs["previous_" + key] = value.previous_values
+                else:
+                    all_kwargs[key] = value
+
+            if not prop.initial_sampling_rule:
+                prop.initial_sampling_rule = prop.create_action(
+                    sampling_rule,
+                    **{k:all_kwargs[k] for k in all_kwargs
+                       if k != "previous_value"},
+                )
+
+            prop.sample = prop.create_action(sampling_rule, **all_kwargs)
+
+        return self
 
     def store_properties(
         self: Feature,
@@ -1217,10 +1338,12 @@ class Feature(DeepTrackNode):
         Feature
             The updated feature instance, ensuring the next evaluation produces 
             a fresh result.
+
         """
 
         if global_arguments:
             import warnings
+
             # Deprecated, but not necessary to raise hard error.
             warnings.warn(
                 "Passing information through .update is no longer supported. "
@@ -3135,6 +3258,7 @@ class Value(Feature):
 
         if isinstance(value, Image):
             import warnings
+
             warnings.warn(
                 "Passing an Image object as the value to dt.Value may lead to "
                 "performance deterioration. Consider converting the Image to "
@@ -4872,8 +4996,14 @@ class Bind(StructuralFeature):
 BindResolve = Bind
 
 
-class BindUpdate(StructuralFeature):
+class BindUpdate(StructuralFeature):  # DEPRECATED
     """Bind a feature with certain arguments.
+
+    .. deprecated:: 2.0
+        This feature is deprecated and may be removed in a future release. It
+        is recommended to use `Bind` instead for equivalent functionality.
+        Further, the current implementation is not guaranteed to be exactly
+        equivalent to prior implementations.
 
     This feature binds a child feature with specific properties (`kwargs`) that 
     are passed to it when it is updated. It is similar to the `Bind` feature 
@@ -4890,13 +5020,6 @@ class BindUpdate(StructuralFeature):
     -------
     `get(image: Any, **kwargs: Any) -> Any`
         It resolves the child feature with the provided arguments.
-
-    Warnings
-    --------
-    Deprecation: This feature is deprecated and may be removed in a future
-    release. It is recommended to use `Bind` instead for equivalent
-    functionality. Further, the current implementation is not guaranteed to be
-    exactly equivalent to prior implementations.
 
     Examples
     --------
@@ -4977,8 +5100,12 @@ class BindUpdate(StructuralFeature):
         return self.feature.resolve(image, **kwargs)
 
 
-class ConditionalSetProperty(StructuralFeature):
+class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
     """Conditionally override the properties of a child feature.
+
+    .. deprecated:: 2.0
+        This feature is deprecated and may be removed in a future release. It
+        is recommended to use `Arguments` instead.
 
     This feature modifies the properties of a child feature only when a 
     specified condition is met. If the condition evaluates to `True`, 
@@ -5011,11 +5138,6 @@ class ConditionalSetProperty(StructuralFeature):
     `get(image: Any, condition: str or bool, **kwargs: Any) -> Any`
         Resolves the child feature, conditionally applying the specified 
         properties.
-
-    Warnings
-    --------
-    Deprecation: This feature is deprecated and may be removed in a future
-    release. It is recommended to use `Arguments` instead.
 
     Examples
     --------
@@ -5141,8 +5263,12 @@ class ConditionalSetProperty(StructuralFeature):
         return self.feature(image)
 
 
-class ConditionalSetFeature(StructuralFeature):
+class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
     """Conditionally resolves one of two features based on a condition.
+
+    .. deprecated:: 2.0
+        This feature is deprecated and may be removed in a future release. It
+        is recommended to use `Arguments` instead.
 
     This feature allows dynamically selecting and resolving one of two child 
     features depending on whether a specified condition evaluates to `True` or 
@@ -5181,11 +5307,6 @@ class ConditionalSetFeature(StructuralFeature):
     -------
     `get(image: Any, condition: str or bool, **kwargs: Any) -> Any`
         Resolves the appropriate feature based on the condition.
-
-    Warnings
-    --------
-    Deprecation: This feature is deprecated and may be removed in a future
-    release. It is recommended to use `Arguments` instead.
 
     Examples
     --------
@@ -6100,7 +6221,10 @@ class LoadImage(Feature):
             except ValueError:
                 import warnings
 
-                warnings.warn("Non-rgb image, ignoring to_grayscale")
+                warnings.warn(
+                    "Non-rgb image, ignoring to_grayscale",
+                    UserWarning,
+                )
 
         # Ensure the image has at least `ndim` dimensions.
         while ndim and image.ndim < ndim:
@@ -7023,11 +7147,12 @@ class NonOverlapping(Feature):
             self.feature.update()
 
         import warnings
+
         warnings.warn(
             "Non-overlapping placement could not be achieved. Consider "
             "adjusting parameters: reduce object radius, increase FOV, "
             "or decrease min_distance.",
-            UserWarning
+            UserWarning,
         )
         return list_of_volumes
 
