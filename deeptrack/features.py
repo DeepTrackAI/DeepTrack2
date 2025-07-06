@@ -1920,38 +1920,57 @@ class Feature(DeepTrackNode):
 
         return propertydict
 
-    #TODO ***GV***
     def _activate_sources(
         self: Feature,
-        x: Any,
+        x: SourceItem | list[SourceItem] | Any,
     ) -> None:
         """Activates source items within the given input.
 
-        This method checks if `x` or its elements (if `x` is a list) are 
-        instances of `SourceItem`, and if so, calls them to trigger their 
-        behavior.
+        This method checks whether the input `x` or its elements (if `x` is a 
+        list) are instances of `SourceItem`. If so, the source is called to 
+        trigger its behavior—typically to update or emit a new value. This is 
+        necessary to ensure source-driven features (e.g., time-dependent or 
+        externally updated values) are evaluated when the pipeline is run.
+
+        Non-`SourceItem` elements in `x` are ignored.
+
+        This method is typically invoked at the beginning of `__call__()` to 
+        activate all relevant sources before resolving a feature.
 
         Parameters
         ----------
-        x: Any
+        x: SourceItem or list[SourceItem] or Any
             The input to process. If `x` is a `SourceItem`, it is activated.
             If `x` is a list, each `SourceItem` within the list is activated.
+            If `x` is `None` or contains no sources, the method has no effect.
 
-        Notes
-        -----
-        - Non-`SourceItem` elements in `x` are ignored.
-        - This method is used to ensure that all source-dependent computations
-          are properly triggered when required.
-        
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create a dummy source that prints when called:
+        >>> class MySource(dt.sources.SourceItem):
+        ...     def __call__(self):
+        ...         print("Source activated")
+
+        Instantiate a feature and manually activate a source:
+        >>> feature = dt.Value(value=1)
+        >>> source = MySource(callbacks=[])
+        >>> feature._activate_sources(source)
+        Source activated
+
+        Use a list of sources:
+        >>> feature._activate_sources([source, 42, "text"])
+        Source activated
+
         """
-        
+
         if isinstance(x, SourceItem):
             x()
-        else:
-            if isinstance(x, list):
-                for source in x:
-                    if isinstance(source, SourceItem):
-                        source()
+        elif isinstance(x, list):
+            for source in x:
+                if isinstance(source, SourceItem):
+                    source()
 
     def __getattr__(
         self: Feature,
