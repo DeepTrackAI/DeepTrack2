@@ -129,7 +129,7 @@ _T: TypeVar = TypeVar("T")
 
 # PropertyLike is a type alias representing a value of type T
 # or a callable returning type T.
-PropertyLike = _T | Callable[..., _T]
+PropertyLike = Union[_T, Callable[..., _T]]
 
 # ImageLike is a type alias representing any 
 ImageLike = Union[
