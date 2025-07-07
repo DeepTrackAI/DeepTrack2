@@ -6161,7 +6161,7 @@ class ChannelFirst2d(Feature):
 
     Methods
     -------
-    `get(image: NDArray, axis: int, **kwargs: Any) -> NDArray | torch.Tensor`
+    `get(image: NDArray | torch.Tensor | Image, axis: int, **kwargs: Any) -> NDArray | torch.Tensor`
         Rearrange the axes of an image to channel-first format.
 
     Examples
@@ -6221,10 +6221,10 @@ class ChannelFirst2d(Feature):
 
     def get(
         self: Feature,
-        image: NDArray | torch.Tensor,
+        image: NDArray | torch.Tensor | Image,
         axis: int,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor:
+    ) -> NDArray | torch.Tensor | Image:
         """Rearrange the axes of an image to channel-first format.
 
         Rearrange the axes of a 3D image to channel-first format or add a 
@@ -6232,7 +6232,7 @@ class ChannelFirst2d(Feature):
 
         Parameters
         ----------
-        image: NDArray | torch.Tensor 
+        image: NDArray | torch.Tensor | Image
             The input image to process. Can be 2D or 3D.
         axis: int
             The axis to move to the first position (for 3D images).
@@ -6241,7 +6241,7 @@ class ChannelFirst2d(Feature):
 
         Returns
         -------
-        NDArray | torch.Tensor 
+        NDArray | torch.Tensor | Image
             The processed image in channel-first format.
 
         Raises
@@ -6250,28 +6250,33 @@ class ChannelFirst2d(Feature):
             If the input image is neither 2D nor 3D.
 
         """
-        
-        ndim = image.ndim
+        # Pre-processing logic to check for Image objects.
+        is_image = isinstance(image, Image)
+        array = image._value if is_image else image
 
-        # Add a new dimension for 2D images.
-
-        if ndim == 2:
-            if apc.is_torch_array(image):
-                return image.unsqueeze(0)
-            else:
-                return image[None]
-
-        # Move the specified axis to the first position for 3D images.
-        if ndim == 3:
-            if apc.is_torch_array(image):
-                dims = [axis] + [i for i in range(ndim) if i != axis]
-                return image.permute(*dims)
-            else:
-                return xp.moveaxis(image, axis, 0)
-
-        raise ValueError("ChannelFirst2d only supports 2D or 3D images. "
+        # Raise error if not 2D or 3D.
+        ndim = array.ndim
+        if ndim not in (2, 3):
+            raise ValueError("ChannelFirst2d only supports 2D or 3D images. "
                          f"Received {ndim}D image.")
 
+        # Add a new dimension for 2D images.
+        if ndim == 2:
+            array = array.unsqueeze(0) if apc.is_torch_array(array) else array[None]
+            
+        # Move axis for 3D images.
+        else:
+            if apc.is_torch_array(array):
+                dims = [axis] + [i for i in range(ndim) if i != axis]
+                array = array.permute(*dims)
+            else:
+                array = xp.moveaxis(array, axis, 0)
+                
+        if is_image:
+            image._value = array # Preserves properties
+            return image
+            
+        return array
 
 class Upscale(Feature):
     """Simulate a pipeline at a higher resolution.
