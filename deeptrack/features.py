@@ -6843,12 +6843,12 @@ class AsType(Feature):
         return image.astype(dtype)
 
 
-class ChannelFirst2d(Feature):  # DEPRECATED
+class ChannelFirst2d(Feature):
     """Convert an image to a channel-first format.
 
-    This feature rearranges the axes of a 3D image so that the specified axis 
-    (e.g., channel axis) is moved to the first position. If the input image is 
-    2D, it adds a new dimension at the first index, effectively treating the 2D 
+    This feature rearranges the axes of a 3D image so that the specified axis
+    (e.g., channel axis) is moved to the first position. If the input image is
+    2D, it adds a new dimension at the first index, effectively treating the 2D
     image as a single-channel image.
 
     Parameters
@@ -6862,7 +6862,11 @@ class ChannelFirst2d(Feature):  # DEPRECATED
 
     Methods
     -------
-    `get(image: NDArray | torch.Tensor | Image, axis: int, **kwargs: Any) -> NDArray | torch.Tensor`
+    `get(
+        image: NDArray | torch.Tensor | Image,
+        axis: int,
+        **kwargs: Any
+    ) -> NDArray | torch.Tensor | Image`
         Rearrange the axes of an image to channel-first format.
 
     Examples
@@ -6912,9 +6916,9 @@ class ChannelFirst2d(Feature):  # DEPRECATED
         import warnings
 
         warnings.warn(
-            "ChannelFirst2d is deprecated and may be removed in a future release. "
-            "The current implementation is not guaranteed to be exactly "
-            "equivalent to prior implementations. ",
+            "ChannelFirst2d is deprecated and may be removed in a "
+            "future release. The current implementation is not guaranteed "
+            "to be exactly equivalent to prior implementations. ",
             DeprecationWarning,
         )
 
@@ -6923,7 +6927,7 @@ class ChannelFirst2d(Feature):  # DEPRECATED
     def get(
         self: Feature,
         image: NDArray | torch.Tensor | Image,
-        axis: int,
+        axis: int = -1,
         **kwargs: Any,
     ) -> NDArray | torch.Tensor | Image:
         """Rearrange the axes of an image to channel-first format.
@@ -6937,6 +6941,7 @@ class ChannelFirst2d(Feature):  # DEPRECATED
             The input image to process. Can be 2D or 3D.
         axis: int
             The axis to move to the first position (for 3D images).
+            For 2D images, this argument does nothing.
         **kwargs: Any
             Additional keyword arguments (unused here).
 
@@ -6968,6 +6973,7 @@ class ChannelFirst2d(Feature):  # DEPRECATED
         # Move axis for 3D images.
         else:
             if apc.is_torch_array(array):
+                axis = ndim + axis if axis < 0 else axis
                 dims = [axis] + [i for i in range(ndim) if i != axis]
                 array = array.permute(*dims)
             else:
