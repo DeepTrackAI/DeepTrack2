@@ -6213,7 +6213,7 @@ class ChannelFirst2d(Feature):
         warnings.warn(
             "ChannelFirst2d is deprecated and may be removed in a future release. "
             "The current implementation is not guaranteed to be exactly "
-            "equivalent to prior implementations. "
+            "equivalent to prior implementations. ",
             DeprecationWarning,
         )
 
@@ -6227,7 +6227,7 @@ class ChannelFirst2d(Feature):
     ) -> NDArray | torch.Tensor | Image:
         """Rearrange the axes of an image to channel-first format.
 
-        Rearrange the axes of a 3D image to channel-first format or add a 
+        Rearrange the axes of a 3D image to channel-first format or add a
         channel dimension to a 2D image.
 
         Parameters
@@ -6271,11 +6271,11 @@ class ChannelFirst2d(Feature):
                 array = array.permute(*dims)
             else:
                 array = xp.moveaxis(array, axis, 0)
-                
+
         if is_image:
             image._value = array # Preserves properties
             return image
-            
+
         return array
 
 class Upscale(Feature):
