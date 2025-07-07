@@ -2498,7 +2498,7 @@ class Feature(DeepTrackNode):
         self: Feature, 
         other: Any
         ) -> Feature:
-        """Divide a feature using `/` with another value.
+        """Divide a feature (nominator) using `/` with another value (denominator). 
 
         This operator is shorthand for chaining with `dt.Divide`.
         The expression:
@@ -2560,7 +2560,7 @@ class Feature(DeepTrackNode):
         self: Feature, 
         other: Any
     ) -> Feature:
-        """Divides an `other` value by this feature using right '/'.
+        """Divide `other` value (nominator) by this feature (denominator) using right '/'.
 
         This operator is shorthand for chaining with `dt.Divide`, and is the
         reversed version of  `__truediv__`.
