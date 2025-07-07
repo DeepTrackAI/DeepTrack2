@@ -2541,7 +2541,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Raise this feature to a power using '**'.
+        """Raise this feature (base) to a power (exponent) using '**'.
 
         This operator is shorthand for chaining with `Power`. The expression:
 
