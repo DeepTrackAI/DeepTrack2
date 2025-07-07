@@ -2551,13 +2551,13 @@ class Feature(DeepTrackNode):
 
         >>> feature >> dt.Power(value=other)
 
-        Internally, this method constructs a new `Power` feature and uses the 
+        Internally, this method constructs a new `Power` feature and uses the
         right-shift operator (`>>`) to chain the current feature into it.
 
         Parameters
         ----------
         other: Any
-            The value or `Feature` representing the exponent. It is passed to `Power` 
+            The value or `Feature` representing the exponent. It is passed to `Power`
             as the `value` argument.
 
         Returns
@@ -2581,7 +2581,7 @@ class Feature(DeepTrackNode):
 
         Raise to a dynamic exponent that samples values at each call:
         >>> import numpy as np
-        >>>
+        
         >>> noise = dt.Value(value=lambda: np.random.randint(10))
         >>> pipeline = feature ** noise
         >>> result = pipeline.update()()
