@@ -674,7 +674,8 @@ class Optics(Feature):
                 To fix, set magnification to {required_upscale}, and downsample
                 the resulting image with 
                 dt.AveragePooling(({required_upscale}, {required_upscale}, 1))
-                """
+                """,
+                UserWarning,
             )
 
         return propertydict
@@ -921,7 +922,7 @@ class Optics(Feature):
                 f"{type(self).__name__} optics must be used with Mie scatterers "
                 f"to produce a {type(self).__name__} image. "
                 f"Got sample of type {type(sample).__name__}.",
-                UserWarning
+                UserWarning,
             )
 
         return Microscope(sample, self, **kwargs)
