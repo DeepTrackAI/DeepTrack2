@@ -8,11 +8,12 @@
 
 import unittest
 
-import deeptrack as dt
 import numpy as np
 
-from deeptrack import utils
+from deeptrack import TORCH_AVAILABLE, utils
 
+if TORCH_AVAILABLE:
+    import torch
 
 class DummyClass:
     def method(self): pass
@@ -59,9 +60,7 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(isinstance(result, list))
         self.assertTrue(all(isinstance(x, (int, np.generic)) for x in result))
 
-        if dt.TORCH_AVAILABLE:
-            import torch
-
+        if TORCH_AVAILABLE:
             tensor = torch.tensor([[1, 2], [3, 4]])
             result = utils.as_list(tensor)
 
