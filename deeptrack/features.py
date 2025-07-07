@@ -2460,14 +2460,67 @@ class Feature(DeepTrackNode):
 
         return self >> Subtract(other)
 
-    #TODO ***MG***
+
     def __rsub__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Subtracts this feature from another value using right '-'.
-        
-    """
+        """Subtract this feature from another value using right '-'.
+
+        This operator is the right-hand version of `-`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other - feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.Subtract(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other` and
+        chains it into a `Subtract` feature that subtracts the current feature
+        as a dynamic value.
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` to which `self` will be subtracted. It is
+            passed as the input to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature that subtracts `self` from `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Subtract a feature from a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 5 - feature
+        >>> result = pipeline()
+        >>> result
+        [4, 3, 2]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=5) >> dt.Subtract(value=feature)
+
+        Subtract a feature from a dynamic value:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.rand())
+        >>> pipeline = noise - feature
+        >>> result = pipeline.update()()
+        >>> result
+        [-0.18761746914784516, -1.1876174691478452, -2.1876174691478454]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=lambda: np.random.rand())
+        ...     >> dt.Subtract(value=feature)
+        ... )
+
+        """
 
         return Value(other) >> Subtract(self)
 
