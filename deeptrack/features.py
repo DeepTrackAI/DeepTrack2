@@ -6968,7 +6968,10 @@ class ChannelFirst2d(Feature):
 
         # Add a new dimension for 2D images.
         if ndim == 2:
-            array = array.unsqueeze(0) if apc.is_torch_array(array) else array[None]
+            if apc.is_torch_array(array):
+                array = array.unsqueeze(0)  
+            else:
+                 array[None]
             
         # Move axis for 3D images.
         else:
@@ -6979,9 +6982,8 @@ class ChannelFirst2d(Feature):
             else:
                 array = xp.moveaxis(array, axis, 0)
 
-        if is_image:
-            image._value = array # Preserves properties
-            return image
+        if is_image: 
+            return Image(array)
 
         return array
 
