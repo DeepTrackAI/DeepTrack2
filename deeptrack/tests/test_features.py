@@ -1946,27 +1946,39 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_ChannelFirst2d(self):
-
+    
         channel_first_feature = features.ChannelFirst2d()
-
-        input_image_2d = np.random.rand(10, 20)
+        
+        # Numpy 2D
+        input_image_2d = np.zeros((10, 20))
         output_image = channel_first_feature.get(input_image_2d, axis=-1)
         self.assertEqual(output_image.shape, (1, 10, 20))
-
-        input_image_3d = np.random.rand(10, 20, 3)
+    
+        # Numpy 3D
+        input_image_3d = np.zeros((10, 20, 3))
         output_image = channel_first_feature.get(input_image_3d, axis=-1)
         self.assertEqual(output_image.shape, (3, 10, 20))
-
+    
+        # Image[Numpy 3D]
+        input_image_3d = Image(np.zeros((10, 20, 3)))
+        output_image = channel_first_feature.get(input_image_3d, axis=-1)
+        self.assertEqual(output_image.shape, (3, 10, 20))
+    
         if TORCH_AVAILABLE:
-            input_image_2d = torch.rand(10, 20)
+            # Torch 2D
+            input_image_2d = torch.zeros(10, 20)
             output_image = channel_first_feature.get(input_image_2d, axis=-1)
             self.assertEqual(tuple(output_image.shape), (1, 10, 20))
-
-            input_image_3d = torch.rand(10, 20, 3)
-            output_image_3d = channel_first_feature.get(input_image_3d,
-                                                        axis=-1)
+            
+            # Torch 3D
+            input_image_3d = torch.zeros(10, 20, 3)
+            output_image_3d = channel_first_feature.get(input_image_3d, axis=-1)
             self.assertEqual(tuple(output_image_3d.shape), (3, 10, 20))
-
+    
+            # Image[Torch 3D]
+            input_image_3d = Image(torch.zeros(10, 20, 3))
+            output_image_3d = channel_first_feature.get(input_image_3d, axis=-1)
+            self.assertEqual(tuple(output_image_3d.shape), (3, 10, 20))            
 
     def test_Upscale(self):
         microscope = optics.Fluorescence(output_region=(0, 0, 32, 32))
