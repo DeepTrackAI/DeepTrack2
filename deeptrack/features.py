@@ -41,33 +41,74 @@ Module Structure
 ----------------
 Key Classes: 
 
-- `Feature`:
+- `Feature`: Base class for all features in DeepTrack2.
 
-    Base class for all features in DeepTrack2. Represents a modular data 
-    transformation with properties and methods for customization.
+    It represents a modular data transformation with properties and methods for
+    customization.
 
-- `StructuralFeature`:
+- `StructuralFeature`: Provide structure without input transformations.
 
     A specialized feature for organizing and managing hierarchical or logical 
     structures in the pipeline.
 
-- `Value`:
-
-    Stores a constant value as a feature. Useful for passing parameters through
-    the pipeline.
-
-- `Chain`:
-
-    Sequentially applies multiple features to the input data (>>).
-
-- `DummyFeature`:
-
-    A no-op feature that passes the input data unchanged.
-
-- `ArithmeticOperationFeature`:
+- `ArithmeticOperationFeature`: Apply arithmetic operation element-wise.
 
     A parent class for features performing arithmetic operations like addition,
     subtraction, multiplication, and division.
+
+Structural Feature Classes:
+- `Chain`: Sequentially apply multiple features to the input data (>>).
+- `Branch`: Alias of `Chain`.
+- `Probability`: Resolve a feature with a certain probability.
+- `Repeat`: Apply a feature multiple times in sequence (^).
+- `Combine`: Combine multiple features into a single feature.
+- `Bind`: Bind a feature with property arguments.
+- `BindResolve`: Alias of `Bind`.
+- `BindUpdate`: DEPRECATED Bind a feature with certain arguments.
+- `ConditionalSetProperty`: DEPRECATED Conditionally override child properties.
+- `ConditionalSetFeature`: DEPRECATED Conditionally resolve features.
+
+Other Feature Classes:
+- `DummyFeature`: A no-op feature that simply returns the input unchanged.
+- `Value`: Store a constant value as a feature.
+- `Stack`: Stack the input and the value.
+- `Arguments`: A convenience container for pipeline arguments.
+- `Slice`: Dynamically applies array indexing to inputs.
+- `Lambda`: Apply a user-defined function to the input.
+- `Merge`: Apply a custom function to a list of inputs.
+- `OneOf`: Resolve one feature from a given collection.
+- `OneOfDict`: Resolve one feature from a dictionary and apply it to an input.
+- `LoadImage`: Load an image from disk and preprocess it.
+- `SampleToMasks`: Create a mask from a list of images.
+- `AsType`: Convert the data type of images.
+- `ChannelFirst2d`: DEPRECATED Convert an image to a channel-first format.
+- `Upscale`: Simulate a pipeline at a higher resolution.
+- `NonOverlapping`: Ensure volumes are placed non-overlapping in a 3D space.
+- `Store`: Store the output of a feature for reuse.
+- `Squeeze`: Squeeze the input image to the smallest possible dimension.
+- `Unsqueeze`: Unsqueeze the input image to the smallest possible dimension.
+- `ExpandDims`: Alias of `Unsqueeze`.
+- `MoveAxis`: Moves the axis of the input image.
+- `Transpose`: Transpose the input image.
+- `Permute`: Alias of `Transpose`.
+- `OneHot`: Convert the input to a one-hot encoded array.
+- `TakeProperties`: Extract all instances of properties from a pipeline.
+
+Arithmetic Feature Classes:
+- `Add`: Add a value to the input.
+- `Subtract`: Subtract a value from the input.
+- `Multiply`: Multiply the input by a value.
+- `Divide`: Divide the input with a value.
+- `FloorDivide`: Divide the input with a value.
+- `Power`: Raise the input to a power.
+- `LessThan`: Determine if input is less than value.
+- `LessThanOrEquals`: Determine if input is less than or equal to value.
+- `LessThanOrEqual`: Alias for `LessThanOrEquals`.
+- `GreaterThan`: Determine if input is greater than value.
+- `GreaterThanOrEquals`: Determine if input is greater than or equal to value.
+- `GreaterThanOrEqual`: Alias for `GreaterThanOrEquals`.
+- `Equals`: Determine if input is equal to value.
+- `Equal`: Alias for `Equals`.
 
 Functions:
 
@@ -80,16 +121,6 @@ Functions:
 
     Propagates data to all dependencies of a feature, updating their properties
     with the provided values.
-
-- `merge_features`:
-
-    def merge_features(
-        features: list[Feature],
-        merge_strategy: int = MERGE_STRATEGY_OVERRIDE,
-    ) -> Feature
-
-    Merges multiple features into a single feature using the specified merge
-    strategy.
 
 Examples
 --------
@@ -123,12 +154,12 @@ Process an input image:
 
 from __future__ import annotations
 
-import array_api_compat as apc
 import itertools
 import operator
 import random
 from typing import Any, Callable, Iterable, Literal, TYPE_CHECKING
 
+import array_api_compat as apc
 import numpy as np
 from numpy.typing import NDArray
 import matplotlib.pyplot as plt
@@ -137,11 +168,11 @@ from pint import Quantity
 from scipy.spatial.distance import cdist
 
 from deeptrack import units
-from deeptrack.backend import config, Config, TORCH_AVAILABLE, xp
+from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
 from deeptrack.image import Image
-from deeptrack.properties import PropertyDict
+from deeptrack.properties import PropertyDict, SequentialProperty
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
 
@@ -149,7 +180,7 @@ if TORCH_AVAILABLE:
     import torch
 
 __all__ = [
-    "Feature",  # TODO **GV**
+    "Feature",
     "StructuralFeature",
     "Chain",
     "Branch",
@@ -192,6 +223,7 @@ __all__ = [
     "Upscale",  # TODO **AL**
     "NonOverlapping",  # TODO **AL**
     "Store",  # TODO **JH**
+
     "Squeeze",
     "Unsqueeze",
     "ExpandDims",
@@ -199,7 +231,7 @@ __all__ = [
     "Transpose",
     "Permute",
     "OneHot",
-    "TakeProperties",  # TODO **JH**
+    "TakeProperties",  #TODO ***JH***
 ]
 
 
@@ -314,7 +346,7 @@ class Feature(DeepTrackNode):
         The data type of the boolean numbers.
     device: str or torch.device
         The device on which the feature is executed.
-    _backend: Config
+    _backend: Literal["numpy", "torch"]
         The computational backend.
 
     Methods
@@ -326,6 +358,10 @@ class Feature(DeepTrackNode):
     `__call__(image_list: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
         It executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
+    `resolve(image_list: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
+        Alias of `__call__()`.
+    `to_sequential(**kwargs: Any) -> Feature`
+        It convert a feature to be resolved as a sequence.
     `store_properties(toggle: bool, recursive: bool) -> Feature`
         It controls whether the properties are stored in the output `Image`
         object.
@@ -333,6 +369,8 @@ class Feature(DeepTrackNode):
         It sets the backend to torch.
     `numpy(recursice: bool) -> Feature`
         It set the backend to numpy.
+    `get_backend() -> Literal["numpy", "torch"]`
+        It returns the current backend of the feature.
     `dtype(float: Literal["float32", "float64", "default"] or None, int: Literal["int16", "int32", "int64", "default"] or None, complex: Literal["complex64", "complex128", "default"] or None, bool: Literal["bool", "default"] or None) -> Feature`
         It set the dtype to be used during evaluation.
     `to(device: str or torch.device) -> Feature`
@@ -340,31 +378,32 @@ class Feature(DeepTrackNode):
     `batch(batch_size: int) -> tuple`
         It batches the feature for repeated execution.
     `action(_ID: tuple[int, ...]) -> Any | list[Any]`
-        Implement the core logic to create or transform the input(s).
+        It implements the core logic to create or transform the input(s).
     `update(**global_arguments: Any) -> Feature`
-        Refreshes the feature to create a new image.
+        It refreshes the feature to create a new image.
     `add_feature(feature: Feature) -> Feature`
-        Adds a feature to the dependency graph of this one.
-    `seed(_ID: tuple[int, ...] = ()) -> None`
-        Sets the random seed for the feature, ensuring deterministic behavior.
+        It adds a feature to the dependency graph of this one.
+    `seed(updated_seed: int, _ID: tuple[int, ...]) -> int`
+        It sets the random seed for the feature, ensuring deterministic 
+        behavior.
     `bind_arguments(arguments: Feature) -> Feature`
-        Binds another feature’s properties as arguments to this feature.
-    `plot(input_image: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, resolve_kwargs: dict | None = None, interval: float | None = None, **kwargs) -> Any`
-        Visualizes the output of the feature.
+        It binds another feature’s properties as arguments to this feature.
+    `plot(input_image: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, resolve_kwargs: dict | None = None, interval: float | None = None, **kwargs: Any) -> Any`
+        It visualizes the output of the feature.
 
     **Private and internal methods.**
-    `_normalize(**properties: dict[str, Any]) -> dict[str, Any]`
-        Normalizes the properties of the feature.
+    `_normalize(**properties: Any) -> dict[str, Any]`
+        It normalizes the properties of the feature.
     `_process_properties(propertydict: dict[str, Any]) -> dict[str, Any]`
-        Preprocesses the input properties before calling the `get` method.
+        It preprocesses the input properties before calling the `get` method.
     `_activate_sources(x: Any) -> None`
-        Activates sources in the input data.
+        It activates sources in the input data.
     `__getattr__(key: str) -> Any`
-        Custom attribute access for the Feature class.
-    `__iter__() -> Iterable`
-        Iterates over the feature.
+        It provides custom attribute access for the Feature class.
+    `__iter__() -> Feature`
+        It returns an iterator for the feature.
     `__next__() -> Any`
-        Returns the next element in the feature.
+        It return the next element iterating over the feature.
     `__rshift__(other: Any) -> Feature`
         It allows chaining of features.
     `__rrshift__(other: Any) -> Feature`
@@ -417,28 +456,146 @@ class Feature(DeepTrackNode):
         It overrides right AND operator.
     `__getitem__(key: Any) -> Feature`
         It allows direct slicing of the data.
-    `_format_input(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Formats the input data for the feature.
-    `_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Calls the `get` method according to the `__distributed__` attribute.
-    `_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
-        Processes the output of the feature.
+    `_format_input(image_list: Any, **kwargs: Any) -> list[Any or Image]`
+        It formats the input data for the feature.
+    `_process_and_get(image_list: Any, **kwargs: Any) -> list[Any or Image]`
+        It calls the `get` method according to the `__distributed__` attribute.
+    `_process_output(image_list: Any, **kwargs: Any) -> None`
+        It processes the output of the feature.
     `_image_wrapped_format_input(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Ensures the input is a list of Image.
-    `_no_wrap_format_input(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Ensures the input is a list of Image.
+        It ensures the input is a list of Image.
+    `_no_wrap_format_input(image_list: Any, **kwargs: Any) -> list[Any]`
+        It ensures the input is a list of Image.
     `_image_wrapped_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Calls the `get` method according to the `__distributed__` attribute.
-    `_no_wrap_process_and_get(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> list[Image]`
-        Calls the `get` method according to the `__distributed__` attribute.
+        It calls the `get()` method according to the `__distributed__`
+        attribute.
+    `_no_wrap_process_and_get(image_list: Any | list[Any], **kwargs: Any) -> list[Any]`
+        It calls the `get()` method according to the `__distributed__`
+        attribute.
     `_image_wrapped_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
-        Processes the output of the feature.
-    `_no_wrap_process_output(image_list: np.ndarray | list[np.ndarray] | Image | list[Image], **kwargs: Any) -> None`
-        Processes the output of the feature.
+        It processes the output of the feature.
+    `_no_wrap_process_output(image_list: Any | list[Any], **kwargs: Any) -> None`
+        It processes the output of the feature.
 
     Examples
     --------
-    TODO
+    >>> import deeptrack as dt
+
+    **Define and evaluate a simple feature**
+
+    >>> import numpy as np
+    >>>
+    >>> feature = dt.Value(value=np.array([1, 2, 3]))
+    >>> result = feature()
+    >>> result
+    array([1, 2, 3])
+
+    **Chain features using '>>'**
+
+    >>> pipeline = dt.Value(value=np.array([1, 2, 3])) >> dt.Add(value=2)
+    >>> pipeline()
+    array([3, 4, 5])
+
+    **Use arithmetic operators for syntactic sugar**
+
+    >>> feature = dt.Value(value=np.array([1, 2, 3]))
+    >>> result = (feature + 1) * 2 - 1
+    >>> result()
+    array([3, 5, 7])
+
+    This is equivalent to chaining with `Add`, `Multiply`, and `Subtract`.
+
+    **Evaluate a dynamic feature using `.update()`**
+
+    >>> feature = dt.Value(value=lambda: np.random.rand())
+    >>> output1 = feature()
+    >>> output1
+    0.9938966963707441
+
+    >>> output2 = feature()  # Cached result
+    >>> output2
+    0.9938966963707441
+
+    >>> feature.update()
+    >>> output3 = feature()  # New sample
+    >>> output3
+    0.3874078815170007
+
+    **Generate a batch of outputs**
+
+    >>> feature = dt.Value(lambda: np.random.rand()) + 1
+    >>> batch = feature.batch(batch_size=3)
+    >>> batch
+    (array([1.6888222 , 1.88422131, 1.90027316]),)
+
+    **Store and retrieve properties from outputs**
+
+    >>> feature = dt.Value(value=3).store_properties(True)
+    >>> output = feature(np.array([1, 2]))
+    >>> output.get_property("value")
+    3
+
+    **Switch computational backend to torch**
+
+    >>> import torch
+    >>>
+    >>> feature = dt.Add(value=5).torch()
+    >>> input_tensor = torch.tensor([1.0, 2.0])
+    >>> feature(input_tensor)
+    tensor([6., 7.])
+
+    **Use `.seed()` for reproducibility**
+
+    >>> feature = dt.Value(lambda: np.random.randint(0, 100))
+    >>> seed = feature.seed()
+    >>> v1 = feature.update()()
+    >>> v1
+    76
+
+    >>> feature.seed(seed)
+    >>> v2 = feature.update()()
+    >>> v2
+    76
+
+    **Sequential feature with evolving property**
+
+    >>> def rotate(sequence_length, previous_value):
+    ...     return previous_value + 2 * np.pi / sequence_length
+
+    >>> rotating = dt.Ellipse(
+    ...     position=(16, 16),
+    ...     radius=(1.5, 1),
+    ...     rotation=0,
+    ... ).to_sequential(rotation=rotate)
+
+    >>> frames = dt.Sequence(rotating, sequence_length=5).update()
+    >>> images = frames()
+    >>> len(images)
+    5
+
+    **Bind dynamic arguments across multiple features**
+
+    >>> arguments = dt.Arguments(frequency=1, amplitude=2)
+    >>> wave = (
+    ...     dt.Value(
+    ...         value=lambda frequency: np.linspace(0, 2 * np.pi * frequency, 100),
+    ...         frequency=arguments.frequency,
+    ...     )
+    ...     >> np.sin
+    ...     >> dt.Multiply(
+    ...         value=lambda amplitude: amplitude,
+    ...         amplitude=arguments.amplitude,
+    ...     )
+    ... )
+    >>> wave.bind_arguments(arguments)
+
+    >>> from matplotlib import pyplot as plt
+    >>>
+    >>> plt.plot(wave())
+    >>> plt.show()
+
+    >>> plt.plot(wave(frequency=2, amplitude=1))  # Raw image with no noise
+    >>> plt.show()
 
     """
 
@@ -457,7 +614,7 @@ class Feature(DeepTrackNode):
     _int_dtype: str
     _complex_dtype: str
     _device: str | torch.device
-    _backend: Config
+    _backend: Literal["numpy", "torch"]
 
     @property
     def float_dtype(self) -> np.dtype | torch.dtype:
@@ -501,7 +658,7 @@ class Feature(DeepTrackNode):
         **kwargs: Any
             Keyword arguments that are wrapped into `Property` instances and 
             stored in `self.properties`, allowing for dynamic or parameterized
-            behavior. If not provided, it defaults to an empty list.
+            behavior.
 
         """
 
@@ -680,6 +837,125 @@ class Feature(DeepTrackNode):
         return output
 
     resolve = __call__
+
+    def to_sequential(
+        self: Feature,
+        **kwargs: Any,
+    ) -> Feature:
+        """Convert a feature to be resolved as a sequence.
+
+        Should be called on individual features, not combinations of features.
+        All keyword arguments will be treated as sequential properties and will
+        be passed to the parent feature.
+
+        If a property from the keyword argument already exists in the feature,
+        the existing property will be used to initialize the passed property
+        (that is, it will be used for the first timestep).
+
+        Parameters
+        ----------
+        self: Feature
+            Feature to make sequential.
+        kwargs: Any
+            Keyword arguments to pass on as sequential properties of `feature`.
+
+        Returns
+        -------
+        Feature
+            The input feature evolved as a sequence
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Sequentially evaluate a rotating ellipse.
+
+        Create the optics:
+        >>> optics = dt.Fluorescence(
+        ...     NA=0.6,
+        ...     magnification=10,
+        ...     resolution=1e-6,
+        ...     wavelength=633e-9,
+        ...     output_region=(0, 0, 32, 32),
+        ... )
+
+        Create the scatterer:
+        >>> ellipse = Ellipse(
+        ...     position_unit="pixel",
+        ...     position=(16, 16),
+        ...     intensity=1,
+        ...     radius=(1.5e-6, 1e-6),
+        ...     rotation=0,  # Initial rotation at time step 0
+        ... )
+
+        Implement a function to increment the rotation:
+        >>> from numpy import pi
+        >>>
+        >>> def get_rotation(sequence_length, previous_value):
+        ...     delta = 2 * pi / sequence_length
+        ...     return previous_value + delta
+
+        Call `to_sequential()` to resolve the feature sequentially:
+        >>> rotating_ellipse = ellipse.to_sequential(rotation=get_rotation)
+
+        Image the scatterer with the optics:
+        >>> imaged_rotating_ellipse = optics(rotating_ellipse)
+
+        Encapsulate as a `Sequence` object and specify the sequence length:
+        >>> imaged_rotating_ellipse_sequence = Sequence(
+        ...     imaged_rotating_ellipse,
+        ...     sequence_length=10
+        ... )
+
+        Finally observe the scatterer rotate:
+        >>> imaged_rotating_ellipse_sequence.update().plot();
+
+        """
+
+        for property_name in kwargs.keys():
+            if property_name in self.properties:
+                # Insert sequential property with initialized value taken from
+                # the already available property.
+                self.properties[property_name] = SequentialProperty(
+                    self.properties[property_name], **self.properties
+                )
+            else:
+                # Insert empty sequential property.
+                self.properties[property_name] = SequentialProperty()
+
+            self.properties.add_dependency(self.properties[property_name])
+            # self.properties[property_name].add_child(self.properties)
+
+        for property_name, sampling_rule in kwargs.items():
+            prop = self.properties[property_name]
+
+            all_kwargs = dict(
+                previous_value=prop.previous_value,
+                previous_values=prop.previous_values,
+                sequence_length=prop.sequence_length,
+                sequence_index=prop.sequence_index,
+            )
+
+            for key, value in self.properties.items():
+                if key == property_name:
+                    continue
+
+                if isinstance(value, SequentialProperty):
+                    all_kwargs[key] = value
+                    all_kwargs["previous_" + key] = value.previous_values
+                else:
+                    all_kwargs[key] = value
+
+            if not prop.initial_sampling_rule:
+                prop.initial_sampling_rule = prop.create_action(
+                    sampling_rule,
+                    **{k:all_kwargs[k] for k in all_kwargs
+                       if k != "previous_value"},
+                )
+
+            prop.sample = prop.create_action(sampling_rule, **all_kwargs)
+
+        return self
 
     def store_properties(
         self: Feature,
@@ -871,6 +1147,36 @@ class Feature(DeepTrackNode):
         self.invalidate()
         return self
 
+    def get_backend(
+            self: Feature
+    ) -> Literal["numpy", "torch"]:
+        """Get the current backend of the feature.
+
+        Returns
+        -------
+        Literal["numpy", "torch"]
+            The backend of this feature
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create a feature:
+        >>> feature = dt.Add(value=5)
+
+        Set the feature's backend to NumPy and check it:
+        >>> feature.numpy()
+        >>> feature.get_backend()
+        'numpy'
+
+        Set the feature's backend to PyTorch and check it:
+        >>> feature.torch()
+        >>> feature.get_backend()
+        'torch'
+
+        """
+        return self._backend
+
     def dtype(
         self: Feature,
         float: Literal["float32", "float64", "default"] | None = None,
@@ -895,7 +1201,7 @@ class Feature(DeepTrackNode):
             The complex dtype to set. It can be `"complex64"`, `"complex128"`,
             `"default"`, or `None`. It defaults to `None`.
         bool: str, optional
-            The bool dtype to set. It cna be `"bool"`, `"default"`, or `None`.
+            The bool dtype to set. It can be `"bool"`, `"default"`, or `None`.
             It defaults to `None`.
 
         Returns
@@ -1033,6 +1339,15 @@ class Feature(DeepTrackNode):
         """
 
         results = [self.update()() for _ in range(batch_size)]
+
+        try:
+            # Attempt to unzip results
+            results = [(r,) for r in results]
+        except TypeError:
+            # If outputs are scalar (not iterable), wrap each in a tuple
+            results = [(r,) for r in results]
+            results = [(r,) for r in results]
+
         results = list(zip(*results))
 
         for idx, r in enumerate(results):
@@ -1161,32 +1476,55 @@ class Feature(DeepTrackNode):
         else:
             return image_list
 
-    # **GV**
     def update(
         self: Feature,
         **global_arguments: Any,
     ) -> Feature:
-        """Refreshes the feature to generate a new output.
+        """Refresh the feature to generate a new output.
 
         By default, when a feature is called multiple times, it returns the 
-        same value. Calling `update()` forces the feature to recompute and 
+        same value.
+
+        Calling `update()` forces the feature to recompute and 
         return a new value the next time it is evaluated.
 
         Parameters
         ----------
         **global_arguments: Any
-            Optional global arguments that can be passed to modify the 
-            feature update behavior.
+            Deprecated. Has no effect. Previously used to inject values 
+            during update. Use `Arguments` or call-time overrides instead.
 
         Returns
         -------
         Feature
             The updated feature instance, ensuring the next evaluation produces 
             a fresh result.
+
+        Examples
+        -------
+        >>> import deeptrack as dt
+
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(value=lambda: np.random.rand())
+        >>> output1 = feature()
+        >>> output1
+        0.9173610765203623
+
+        >>> output2 = feature()
+        >>> output2  # Same as before
+        0.9173610765203623
+
+        >>> feature.update()  # Feature updated
+        >>> output3 = feature()
+        >>> output3
+        0.13917950359184617
+
         """
 
         if global_arguments:
             import warnings
+
             # Deprecated, but not necessary to raise hard error.
             warnings.warn(
                 "Passing information through .update is no longer supported. "
@@ -1199,12 +1537,22 @@ class Feature(DeepTrackNode):
 
         return self
 
-    # **GV**
     def add_feature(
         self: Feature,
         feature: Feature,
     ) -> Feature:
-        """Adds a feature to the dependecy graph of this one.
+        """Add a feature to the dependecy graph of this one.
+
+        This method establishes a dependency relationship by registering the 
+        provided `feature` as a child node of the current feature. This ensures
+        that its evaluation and property resolution are included in the current
+        feature’s computation graph.
+
+        Internally, it calls `feature.add_child(self)`, which automatically 
+        handles graph integration and triggers recomputation if necessary.
+
+        This is often used to define explicit data dependencies or to ensure 
+        side-effect features are computed when this feature is resolved.
 
         Parameters
         ----------
@@ -1216,6 +1564,31 @@ class Feature(DeepTrackNode):
         Feature
             The newly added feature (for chaining).
 
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Define the main feature that adds a constant to the input:
+        >>> feature = dt.Add(value=2)
+
+        Define a side-effect feature:
+        >>> dependency = dt.Value(value=42)
+
+        Register the dependency so its state becomes part of the graph:
+        >>> feature.add_feature(dependency)
+
+        Execute the main feature on an input array:
+        >>> import numpy as np
+        >>>
+        >>> result = feature(np.array([1, 2, 3]))
+        >>> result
+        array([3, 4, 5])
+
+        Note that the `dependency` does not affect the result directly, but it
+        will be tracked and updated as part of the pipeline's evaluation graph.
+        This can be useful if the dependency affects any parameters of the main
+        feature.
+
         """
 
         feature.add_child(self)
@@ -1223,26 +1596,112 @@ class Feature(DeepTrackNode):
 
         return feature
 
-    # **GV**
-    def seed(
+    def  seed(
         self: Feature,
+        updated_seed: int | None = None,
         _ID: tuple[int, ...] = (),
-    ) -> None:
-        """Seed the random number generator.
+    ) -> int:
+        """Seed all random number generators for reproducibility.
+
+        This method sets the global random seed for Python's `random` module, 
+        NumPy, and (if available) PyTorch. If `updated_seed` is provided, it 
+        replaces the value of the internal `_random_seed` node before
+        resolution.
+
+        This method sets the following:
+        - `random.seed(seed)` for Python's RNG
+        - `np.random.seed(seed)` for NumPy
+        - `torch.manual_seed(seed)` and `torch.cuda.manual_seed_all(seed)`
+
+        The same seed will lead to deterministic behavior within each backend
+        (e.g., `random`, NumPy or PyTorch), but not **across** them. NumPy and
+        PyTorch use different RNG algorithms, so identical seeds will not
+        generate the same random numbers across backends.
 
         Parameters
         ----------
+        updated_seed: int or None, optional
+            If provided, sets a fixed value for the internal `_random_seed`.
         _ID: tuple[int, ...], optional
-            Unique identifier for parallel evaluations.
+            Unique identifier used to resolve the seed value. It defaults to
+            `()`.
+
+        Returns
+        -------
+        int
+            The resolved seed value used for all RNGs.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        **Using `random`**
+        Define a feature that samples a random integer from 0 to 10 using the
+        Python standard library's `random` module:
+        >>> import random
+        >>>
+        >>> feature = dt.Value(lambda: random.randint(0, 10))
+        >>> 
+        >>> for _ in range(3):
+        ...     print(f"output={feature.update()()} seed={feature.seed()}")
+        output=3 seed=355549663
+        output=5 seed=119234165
+        output=9 seed=1956541335
+
+        Each time `.update()` is called, the internal `_random_seed` is
+        re-sampled and used to reseed the Python `random` module. This 
+        produces a new deterministic seed, but different output values.
+
+        Fix the seed to reuse it later for reproducibility:
+        >>> seed = feature.seed()
+        >>> seed
+        1956541335
+
+        Now reseed the feature with the same value before each update,
+        to make the output deterministic and repeatable.
+        >>> for _ in range(3):
+        ...    feature.seed(seed)
+        ...    print(f"output={feature.update()()} seed={feature.seed()}")
+        output=5 seed=1933964715
+        output=5 seed=1933964715
+        output=5 seed=1933964715
+
+        Since the random seed is fixed before each sample, the output is
+        the same every time. Note: the seed reported after sampling may
+        differ if it's re-sampled internally, but the output remains stable.
+
+        **Using NumPy**
+        Similar observations can be made with NumPy:
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(lambda: np.random.randint(0, 10))
+
+        **Using PyTorch**        
+        Similar observations can be made with PyTorch:
+        >>> import torch
+        >>>
+        >>> feature = dt.Value(lambda: torch.randint(0, 10, (1,)).item())
 
         """
 
-        np.random.seed(self._random_seed(_ID=_ID))
+        if updated_seed:
+            self._random_seed.set_value(updated_seed)
 
-    # **GV**
+        seed = self._random_seed(_ID=_ID)
+
+        random.seed(seed)
+        np.random.seed(seed)
+
+        if TORCH_AVAILABLE:
+            torch.manual_seed(seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed_all(seed)
+
+        return seed
+
     def bind_arguments(
         self: Feature,
-        arguments: Feature,
+        arguments: Arguments | Feature,
     ) -> Feature:
         """Bind another feature’s properties as arguments to this feature.
 
@@ -1250,13 +1709,16 @@ class Feature(DeepTrackNode):
         to this feature, enabling shared configurations across multiple
         features. It is commonly used in advanced feature pipelines.
 
-        This method is often used in combination with the `Arguments` Feature,
+        This method is often used in combination with the `Arguments` feature,
         which provides a utility that helps manage and propagate feature
         arguments efficiently.
 
+        The values from `arguments` override the corresponding feature’s own
+        properties at call-time, but do not modify them permanently.
+
         Parameters
         ----------
-        arguments: Feature
+        arguments: Arguments or Feature
             The feature whose properties will be bound as arguments to this
             feature.
 
@@ -1267,9 +1729,25 @@ class Feature(DeepTrackNode):
 
         Examples
         --------
-        TODO method alone
+        >>> import deeptrack as dt
 
-        TODO use with Arguments
+        Create an `Arguments` feature:
+        >>> arguments = dt.Arguments(scale=2.0)
+
+        Bind it with a pipeline:
+        >>> pipeline = dt.Value(value=3) >> dt.Add(value=1 * arguments.scale)
+        >>> pipeline.bind_arguments(arguments)
+        >>> result = pipeline()
+        >>> result
+        5.0
+
+        Override the argument dynamically:
+        >>> result = pipeline(scale=1.0)
+        >>> result
+        4.0
+
+        Without binding, the result would be still 5.0 as `scale` would still
+        be the original one.
 
         """
 
@@ -1277,13 +1755,13 @@ class Feature(DeepTrackNode):
 
         return self
 
-    # **GV**
+    #TODO ***MG***
     def plot(
         self: Feature,
         input_image: np.ndarray | list[np.ndarray] | Image | list[Image] = None,
         resolve_kwargs: dict = None,
         interval: float = None,
-        **kwargs
+        **kwargs: Any,
     ) -> Any:
         """Visualizes the output of the feature.
 
@@ -1328,50 +1806,48 @@ class Feature(DeepTrackNode):
             plt.imshow(output_image, **kwargs)
             return plt.gca()
 
-        else:
-            # Assume video
-            fig = plt.figure()
-            images = []
-            plt.axis("off")
-            for image in output_image:
-                images.append([plt.imshow(image, **kwargs)])
+        # Assume video
+        fig = plt.figure()
+        images = []
+        plt.axis("off")
+        for image in output_image:
+            images.append([plt.imshow(image, **kwargs)])
 
+        if not interval:
+            if isinstance(output_image[0], Image):
+                interval = output_image[0].get_property("interval") or (1 / 30 * 1000)
+            else:
+                interval = 1 / 30 * 1000
 
-            if not interval:
-                if isinstance(output_image[0], Image):
-                    interval = output_image[0].get_property("interval") or (1 / 30 * 1000)
-                else:
-                    interval = (1 / 30 * 1000)
+        anim = animation.ArtistAnimation(
+            fig, images, interval=interval, blit=True, repeat_delay=0
+        )
 
-            anim = animation.ArtistAnimation(
-                fig, images, interval=interval, blit=True, repeat_delay=0
-            )
+        try:
+            get_ipython  # Throws NameError if not in Notebook
+            display(HTML(anim.to_jshtml()))
+            return anim
 
-            try:
-                get_ipython  # Throws NameError if not in Notebook
-                display(HTML(anim.to_jshtml()))
-                return anim
+        except NameError:
+            # Not in an notebook
+            plt.show()
 
-            except NameError:
-                # Not in an notebook
+        except RuntimeError:
+            # In notebook, but animation failed
+            import ipywidgets as widgets
+
+            def plotter(frame=0):
+                plt.imshow(output_image[frame][:, :, 0], **kwargs)
                 plt.show()
 
-            except RuntimeError:
-                # In notebook, but animation failed
-                import ipywidgets as widgets
+            return widgets.interact(
+                plotter,
+                frame=widgets.IntSlider(
+                    value=0, min=0, max=len(images) - 1, step=1
+                ),
+            )
 
-                def plotter(frame=0):
-                    plt.imshow(output_image[frame][:, :, 0], **kwargs)
-                    plt.show()
-
-                return widgets.interact(
-                    plotter,
-                    frame=widgets.IntSlider(
-                        value=0, min=0, max=len(images) - 1, step=1
-                    ),
-                )
-
-    # **GV**
+    #TODO ***AL***
     def _normalize(
         self: Feature,
         **properties: dict[str, Any],
@@ -1406,9 +1882,9 @@ class Feature(DeepTrackNode):
         for key, val in properties.items():
             if isinstance(val, Quantity):
                 properties[key] = val.magnitude
+
         return properties
 
-    # **GV**
     def _process_properties(
         self: Feature,
         propertydict: dict[str, Any],
@@ -1445,61 +1921,74 @@ class Feature(DeepTrackNode):
 
         return propertydict
 
-    # **GV**
     def _activate_sources(
         self: Feature,
-        x: Any,
+        x: SourceItem | list[SourceItem] | Any,
     ) -> None:
         """Activates source items within the given input.
 
-        This method checks if `x` or its elements (if `x` is a list) are 
-        instances of `SourceItem`, and if so, calls them to trigger their 
-        behavior.
+        This method checks whether the input `x` or its elements (if `x` is a 
+        list) are instances of `SourceItem`. If so, the source is called to 
+        trigger its behavior—typically to update or emit a new value. This is 
+        necessary to ensure source-driven features (e.g., time-dependent or 
+        externally updated values) are evaluated when the pipeline is run.
+
+        Non-`SourceItem` elements in `x` are ignored.
+
+        This method is typically invoked at the beginning of `__call__()` to 
+        activate all relevant sources before resolving a feature.
 
         Parameters
         ----------
-        x: Any
+        x: SourceItem or list[SourceItem] or Any
             The input to process. If `x` is a `SourceItem`, it is activated.
             If `x` is a list, each `SourceItem` within the list is activated.
+            If `x` is `None` or contains no sources, the method has no effect.
 
-        Notes
-        -----
-        - Non-`SourceItem` elements in `x` are ignored.
-        - This method is used to ensure that all source-dependent computations
-          are properly triggered when required.
-        
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create a dummy source that prints when called:
+        >>> class MySource(dt.sources.SourceItem):
+        ...     def __call__(self):
+        ...         print("Source activated")
+
+        Instantiate a feature and manually activate a source:
+        >>> feature = dt.Value(value=1)
+        >>> source = MySource(callbacks=[])
+        >>> feature._activate_sources(source)
+        Source activated
+
+        Use a list of sources:
+        >>> feature._activate_sources([source, 42, "text"])
+        Source activated
+
         """
-        
+
         if isinstance(x, SourceItem):
             x()
-        else:
-            if isinstance(x, list):
-                for source in x:
-                    if isinstance(source, SourceItem):
-                        source()
+        elif isinstance(x, list):
+            for source in x:
+                if isinstance(source, SourceItem):
+                    source()
 
-    # **GV**
     def __getattr__(
         self: Feature,
         key: str,
     ) -> Any:
-        """Custom attribute access for the Feature class.
+        """Access properties of the feature as if they were attributes.
 
-        This method allows the properties of the `Feature` instance to be 
-        accessed as if they were attributes. For example, `feature.my_property`
-        is equivalent to `feature.properties["my_property"]`.
+        This method allows dynamic access to the feature's properties via 
+        standard attribute syntax. For example, `feature.my_property` is 
+        equivalent to:
 
-        If the requested attribute (`key`) exists in the `properties` 
-        dictionary, the corresponding value is returned. If the attribute does
-        not exist, or if the `properties` attribute is not set, an 
-        This method allows the properties of the `Feature` instance to be 
-        accessed as if they were attributes. For example, `feature.my_property`
-        is equivalent to `feature.properties["my_property"]`.
+        >>> feature.properties["my_property"]`()
 
-        If the requested attribute (`key`) exists in the `properties` 
-        dictionary, the corresponding value is returned. If the attribute does
-        not exist, or if the `properties` attribute is not set, an 
-        `AttributeError` is raised.
+        This is only called if the attribute is not found via the normal lookup
+        process (i.e., it's not a real attribute or method). It checks whether
+        `key` exists in the `properties` dictionary, and if so, returns the
+        corresponding `Property` instance.
 
         Parameters
         ----------
@@ -1509,30 +1998,29 @@ class Feature(DeepTrackNode):
         Returns
         -------
         Any
-            The value of the property corresponding to the given `key` in the 
-            `properties` dictionary.
+            The corresponding property if it exists in `self.properties`.
 
         Raises
         ------
         AttributeError
-            If the `properties` attribute is not defined for the instance or 
-            if the `key` does not exist in `properties`.
+            If `properties` is not set, or if `key` does not exist in it.
 
         Examples
         --------
-        >>> import deptrack as dt 
+        >>> import deeptrack as dt
 
-        Accessing an attribute as if it were a property:
+        Create a feature with a property:
         >>> feature = dt.DummyFeature(value=42)
+
+        Access the property as an attribute:
         >>> feature.value()
         42
 
-        If the `properties` attribute is not defined for the instance or if the
-        `key` does not exist in `properties`, an `AttributeError` is raised:
-        >>> feature.nonexistent_property
-        AttributeError: 'MyFeature' object has no attribute 
-        'nonexistent_property'
-        
+        Attempting to access a non-existent property raises an `AttributeError`:
+        >>> feature.nonexistent()
+        ...
+        AttributeError: 'DummyFeature' object has no attribute 'nonexistent'
+
         """
 
         if "properties" in self.__dict__:
@@ -1540,30 +2028,86 @@ class Feature(DeepTrackNode):
             if key in properties:
                 return properties[key]
 
-        raise AttributeError(f"'{self.__class__.__name__}' object has "
-                             "no attribute '{key}'")
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{key}'"
+        )
 
-    # **GV**
     def __iter__(
         self: Feature,
-    ) -> Iterable:
-        """ Returns an infinite iterator that continuously yields feature 
-        values.
+    ) -> Feature:
+        """Return self as an iterator over feature values.
+
+        This makes the `Feature` object compatible with Python's iterator 
+        protocol. Each call to `next(feature)` generates a new output by 
+        resampling its properties and resolving the pipeline.
+
+        Returns
+        -------
+        Feature
+            Returns self, which defines `__next__()` to yield outputs.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create feature:
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(value=lambda: np.random.rand())
+
+        Use the feature in a loop:
+        >>> for sample in feature:
+        ...     print(sample)
+        ...     if sample > 0.5:
+        ...         break
+        0.43126475134786546
+        0.3270413736199965
+        0.6734339603677173
 
         """
 
-        while True:
-            yield from next(self)
+        return self
 
-    # **GV**
+        #TODO ***BM*** TBE? Previous implementation, not standard in Python
+        # while True:
+        #     yield from next(self)
+
     def __next__(
         self: Feature,
     ) -> Any:
-        """Returns the next resolved feature in the sequence.
-        
+        """Return the next resolved feature in the sequence.
+
+        This method allows a `Feature` to be used as an iterator that yields
+        a new result at each step. It is called automatically by `next(feature)`
+        or when used in iteration.
+
+        Each call to `__next__()` triggers a resampling of all properties and
+        evaluation of the pipeline using `self.update().resolve()`.
+
+        Returns
+        -------
+        Any
+            A newly generated output from the feature.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create a feature:
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(value=lambda: np.random.rand())
+
+        Get a single sample:
+        >>> next(feature)
+        0.41251758103924216
+
         """
 
-        yield self.update().resolve()
+        return self.update().resolve()
+
+        #TODO ***BM*** TBE? Previous implementation, not standard in Python
+        # yield self.update().resolve()
 
     def __rshift__(
         self: Feature,
@@ -1757,8 +2301,8 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         other: Any
-            The value or `Feature` to be added. It is passed to `dt.Add` as 
-            the `value` argument.
+            The value or `Feature` to be added. It is passed to `Add` as the
+            `value` argument.
 
         Returns
         -------
@@ -1777,7 +2321,7 @@ class Feature(DeepTrackNode):
         [6, 7, 8]
 
         This is equivalent to:
-        >>> pipeline = f >> dt.Add(value=5)
+        >>> pipeline = feature >> dt.Add(value=5)
 
         Add a dynamic feature that samples values at each call:
         >>> import numpy as np
@@ -1858,18 +2402,66 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Add(self)
 
-    #TODO **MG**
     def __sub__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Subtracts another value or feature using '-'.
+        """Subtract another value or feature using '-'.
+
+        This operator is shorthand for chaining with `Subtract`.
+        The expression:
+
+        >>> feature - other
+
+        is equivalent to:
+
+        >>> feature >> dt.Subtract(value=other)
+
+        Internally, this method constructs a new `Subtract` feature and uses
+        the right-shift operator (`>>`) to chain the current feature into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to be subtracted. It is passed to
+            `Subtract` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature that subtracts `other` from the output of `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Subtract a constant value from a static input:
+        >>> feature = dt.Value(value=[5, 6, 7])
+        >>> pipeline = feature - 2
+        >>> result = pipeline()
+        >>> result
+        [3, 4, 5]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Subtract(value=2)
+
+        Subtract a dynamic feature that samples a value at each call:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.rand())
+        >>> pipeline = feature - noise
+        >>> result = pipeline.update()()
+        >>> result
+        [4.524072925059197, 5.524072925059197, 6.524072925059197]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Subtract(value=noise)
         
         """
 
         return self >> Subtract(other)
 
-    #TODO **MG**
+    #TODO ***MG***
     def __rsub__(
         self: Feature, 
         other: Any
@@ -1880,7 +2472,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Subtract(self)
 
-    #TODO **MG**
+    #TODO ***MG***
     def __mul__(
         self: Feature, 
         other: Any
@@ -1902,7 +2494,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Multiply(self)
 
-    #TODO **AL**
+    #TODO ***AL***
     def __truediv__(
         self: Feature, 
         other: Any
@@ -1913,7 +2505,7 @@ class Feature(DeepTrackNode):
 
         return self >> Divide(other)
 
-    #TODO **AL**
+    #TODO ***AL***
     def __rtruediv__(
         self: Feature, 
         other: Any
@@ -1924,7 +2516,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Divide(self)
 
-    #TODO **AL**
+    #TODO ***AL***
     def __floordiv__(
         self: Feature, 
         other: Any
@@ -1935,7 +2527,7 @@ class Feature(DeepTrackNode):
 
         return self >> FloorDivide(other)
 
-    #TODO **AL**
+    #TODO ***AL***
     def __rfloordiv__(
         self: Feature, 
         other: Any
@@ -1946,18 +2538,65 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> FloorDivide(self)
 
-    #TODO **JH**
     def __pow__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Raises this feature to a power using '**'.
+        """Raise this feature to a power using '**'.
 
+        This operator is shorthand for chaining with `Power`. The expression:
+
+        >>> feature ** other
+
+        is equivalent to:
+
+        >>> feature >> dt.Power(value=other)
+
+        Internally, this method constructs a new `Power` feature and uses the 
+        right-shift operator (`>>`) to chain the current feature into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` representing the exponent. It is passed to `Power` 
+            as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature representing `self` to the power of `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Raise a static base to a constant exponent:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature ** 3
+        >>> result = pipeline()
+        >>> result
+        [1, 8, 27]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Power(value=3)
+
+        Raise to a dynamic exponent that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.randint(10))
+        >>> pipeline = feature ** noise
+        >>> result = pipeline.update()()
+        >>> result
+        [1, 64, 729]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Power(value=noise)
+ 
         """
 
         return self >> Power(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rpow__(
         self: Feature, 
         other: Any
@@ -1968,7 +2607,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Power(self)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __gt__(
         self: Feature,
         other: Any,
@@ -1979,7 +2618,7 @@ class Feature(DeepTrackNode):
 
         return self >> GreaterThan(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rgt__(
         self: Feature, 
         other: Any
@@ -1991,7 +2630,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> GreaterThan(self)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __lt__(
         self: Feature, 
         other: Any
@@ -2002,7 +2641,7 @@ class Feature(DeepTrackNode):
 
         return self >> LessThan(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rlt__(
         self: Feature, 
         other: Any
@@ -2013,7 +2652,7 @@ class Feature(DeepTrackNode):
         
         return Value(other) >> LessThan(self)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __le__(
         self: Feature, 
         other: Any
@@ -2024,7 +2663,7 @@ class Feature(DeepTrackNode):
 
         return self >> LessThanOrEquals(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rle__(
         self: Feature,
         other: Any
@@ -2036,7 +2675,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> LessThanOrEquals(self)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __ge__(
         self: Feature, 
         other: Any
@@ -2048,7 +2687,7 @@ class Feature(DeepTrackNode):
 
         return self >> GreaterThanOrEquals(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rge__(
         self: Feature, 
         other: Any
@@ -2060,7 +2699,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> GreaterThanOrEquals(self)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __xor__(
         self: Feature,
         other: Any,
@@ -2071,7 +2710,7 @@ class Feature(DeepTrackNode):
 
         return Repeat(self, other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __and__(
         self: Feature,
         other: Any,
@@ -2082,7 +2721,7 @@ class Feature(DeepTrackNode):
 
         return self >> Stack(other)
 
-    #TODO **JH**
+    #TODO ***JH***
     def __rand__(
         self: Feature,
         other: Any,
@@ -2093,12 +2732,73 @@ class Feature(DeepTrackNode):
         
         return Value(other) >> Stack(self)
 
-    # **GV**
     def __getitem__(
         self: Feature,
         slices: Any,
-    ) -> 'Feature':
+    ) -> Feature:
         """Allows direct slicing of the feature's output.
+
+        This operator enables syntax like:
+
+        >>> feature[:, 0]
+
+        to extract a slice from the output of the feature, just as one would 
+        with a NumPy array or PyTorch tensor.
+
+        Internally, this is equivalent to chaining with `dt.Slice`, and the 
+        expression:
+
+        >>> feature[slices]
+
+        is equivalent to:
+
+        >>> feature >> dt.Slice(slices)
+
+        If the slice is not already a tuple (i.e., a single index or slice),
+        it is wrapped in one. The resulting tuple is converted to a list to 
+        allow sampling of dynamic slices at runtime.
+
+        Parameters
+        ----------
+        slices: Any
+            The slice or index to apply to the feature output. Can be an int, 
+            slice object, or a tuple of them.
+
+        Returns
+        -------
+        Feature
+            A new feature that applies slicing to the output of the current 
+            feature.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create a feature:
+        >>> import numpy as np
+        >>>
+        >>> feature = dt.Value(value=np.arange(9).reshape(3, 3))
+        >>> feature()
+        array([[0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8]])
+
+        Slice a row:
+        >>> sliced = feature[1]
+        >>> sliced()
+        array([3, 4, 5])
+
+        This is equivalent to:
+        >>> sliced = feature >> dt.Slice([1])
+
+        Slice with multiple axes:
+        >>> sliced = feature[1:, 1:]
+        >>> sliced()
+        array([[4, 5],
+               [7, 8]])
+
+        This is equivalent to:
+        >>> sliced = feature >> dt.Slice([slice(1, None), slice(1, None)])
 
         """
 
@@ -2682,7 +3382,7 @@ class DummyFeature(Feature):
 
 
 class Value(Feature):
-    """Represents a constant (per evaluation) value in a DeepTrack pipeline.
+    """Represent a constant (per evaluation) value in a DeepTrack pipeline.
 
     This feature holds a constant value (e.g., a scalar or array) and supplies 
     it on demand to other parts of the pipeline.
@@ -2777,6 +3477,7 @@ class Value(Feature):
 
         if isinstance(value, Image):
             import warnings
+
             warnings.warn(
                 "Passing an Image object as the value to dt.Value may lead to "
                 "performance deterioration. Consider converting the Image to "
@@ -2821,7 +3522,7 @@ class Value(Feature):
 
 
 class ArithmeticOperationFeature(Feature):
-    """Applies an arithmetic operation element-wise to inputs.
+    """Apply an arithmetic operation element-wise to inputs.
 
     This feature performs an arithmetic operation (e.g., addition, subtraction,
     multiplication) on the input data. The inputs can be single values or lists
@@ -3684,7 +4385,7 @@ Equal = Equals
 
 
 class Stack(Feature):
-    """Stacks the input and the value.
+    """Stack the input and the value.
     
     This feature combines the output of the input data (`image`) and the 
     value produced by the specified feature (`value`). The resulting output 
@@ -4311,7 +5012,7 @@ class Combine(StructuralFeature):
 
 
 class Slice(Feature):
-    """Dynamically applies array indexing to inputs.
+    """Dynamically apply array indexing to inputs.
 
     This feature allows dynamic slicing of an image using integer indices, 
     slice objects, or ellipses (`...`).
@@ -4514,8 +5215,14 @@ class Bind(StructuralFeature):
 BindResolve = Bind
 
 
-class BindUpdate(StructuralFeature):
+class BindUpdate(StructuralFeature):  # DEPRECATED
     """Bind a feature with certain arguments.
+
+    .. deprecated:: 2.0
+        This feature is deprecated and may be removed in a future release. It
+        is recommended to use `Bind` instead for equivalent functionality.
+        Further, the current implementation is not guaranteed to be exactly
+        equivalent to prior implementations.
 
     This feature binds a child feature with specific properties (`kwargs`) that 
     are passed to it when it is updated. It is similar to the `Bind` feature 
@@ -4532,13 +5239,6 @@ class BindUpdate(StructuralFeature):
     -------
     `get(image: Any, **kwargs: Any) -> Any`
         It resolves the child feature with the provided arguments.
-
-    Warnings
-    --------
-    Deprecation: This feature is deprecated and may be removed in a future
-    release. It is recommended to use `Bind` instead for equivalent
-    functionality. Further, the current implementation is not guaranteed to be
-    exactly equivalent to prior implementations.
 
     Examples
     --------
@@ -4619,8 +5319,12 @@ class BindUpdate(StructuralFeature):
         return self.feature.resolve(image, **kwargs)
 
 
-class ConditionalSetProperty(StructuralFeature):
+class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
     """Conditionally override the properties of a child feature.
+
+    .. deprecated:: 2.0
+        This feature is deprecated and may be removed in a future release. It
+        is recommended to use `Arguments` instead.
 
     This feature modifies the properties of a child feature only when a 
     specified condition is met. If the condition evaluates to `True`, 
@@ -4653,11 +5357,6 @@ class ConditionalSetProperty(StructuralFeature):
     `get(image: Any, condition: str or bool, **kwargs: Any) -> Any`
         Resolves the child feature, conditionally applying the specified 
         properties.
-
-    Warnings
-    --------
-    Deprecation: This feature is deprecated and may be removed in a future
-    release. It is recommended to use `Arguments` instead.
 
     Examples
     --------
@@ -4783,8 +5482,12 @@ class ConditionalSetProperty(StructuralFeature):
         return self.feature(image)
 
 
-class ConditionalSetFeature(StructuralFeature):
-    """Conditionally resolves one of two features based on a condition.
+class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
+    """Conditionally resolve one of two features.
+
+    .. deprecated:: 2.0
+        This feature is deprecated and may be removed in a future release. It
+        is recommended to use `Arguments` instead.
 
     This feature allows dynamically selecting and resolving one of two child 
     features depending on whether a specified condition evaluates to `True` or 
@@ -4823,11 +5526,6 @@ class ConditionalSetFeature(StructuralFeature):
     -------
     `get(image: Any, condition: str or bool, **kwargs: Any) -> Any`
         Resolves the appropriate feature based on the condition.
-
-    Warnings
-    --------
-    Deprecation: This feature is deprecated and may be removed in a future
-    release. It is recommended to use `Arguments` instead.
 
     Examples
     --------
@@ -5742,7 +6440,10 @@ class LoadImage(Feature):
             except ValueError:
                 import warnings
 
-                warnings.warn("Non-rgb image, ignoring to_grayscale")
+                warnings.warn(
+                    "Non-rgb image, ignoring to_grayscale",
+                    UserWarning,
+                )
 
         # Ensure the image has at least `ndim` dimensions.
         while ndim and image.ndim < ndim:
@@ -5755,7 +6456,7 @@ class LoadImage(Feature):
 
 
 class SampleToMasks(Feature):
-    """Creates a mask from a list of images.
+    """Create a mask from a list of images.
 
     This feature applies a transformation function to each input image and 
     merges the resulting masks into a single multi-layer image. Each input 
@@ -6142,7 +6843,7 @@ class AsType(Feature):
         return image.astype(dtype)
 
 
-class ChannelFirst2d(Feature):
+class ChannelFirst2d(Feature):  # DEPRECATED
     """Convert an image to a channel-first format.
 
     This feature rearranges the axes of a 3D image so that the specified axis 
@@ -6688,11 +7389,12 @@ class NonOverlapping(Feature):
             self.feature.update()
 
         import warnings
+
         warnings.warn(
             "Non-overlapping placement could not be achieved. Consider "
             "adjusting parameters: reduce object radius, increase FOV, "
             "or decrease min_distance.",
-            UserWarning
+            UserWarning,
         )
         return list_of_volumes
 
@@ -7102,7 +7804,7 @@ class NonOverlapping(Feature):
 
 
 class Store(Feature):
-    """Stores the output of a feature for reuse.
+    """Store the output of a feature for reuse.
 
     The `Store` feature evaluates a given feature and stores its output in an 
     internal dictionary. Subsequent calls with the same key will return the 
@@ -7638,7 +8340,7 @@ Permute = Transpose
 
 
 class OneHot(Feature):
-    """Converts the input to a one-hot encoded array.
+    """Convert the input to a one-hot encoded array.
 
     This feature takes an input array of integer class labels and converts it 
     into a one-hot encoded array. The last dimension of the input is replaced 
@@ -7738,7 +8440,7 @@ class OneHot(Feature):
 
 
 class TakeProperties(Feature):
-    """Extracts all instances of a set of properties from a pipeline.
+    """Extract all instances of a set of properties from a pipeline.
 
     Only extracts the properties if the feature contains all given 
     property-names. The order of the properties is not guaranteed to be the 
