@@ -219,7 +219,7 @@ __all__ = [
     "LoadImage",  #TODO ***MG***
     "SampleToMasks",  #TODO ***MG***
     "AsType",  #TODO ***MG***
-    "Upscale",  #TODO ***AL***
+    "Upscale",
     "ChannelFirst2d",  #TODO ***AL***
     "NonOverlapping",  #TODO ***AL***
     "Store",  #TODO ***JH***
@@ -6987,7 +6987,7 @@ class Upscale(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray | Image, factor: int | tuple[int, int, int], **kwargs) -> np.ndarray`
+    `get(image: NDArray | torch.Tensor | Image, factor: int | tuple[int, int, int], **kwargs) -> np.ndarray`
         Simulates the pipeline at a higher resolution and returns the result at 
         the original resolution.
 
@@ -7064,10 +7064,10 @@ class Upscale(Feature):
 
     def get(
         self: Feature,
-        image: np.ndarray,
+        image: NDArray | torch.Tensor | Image,
         factor: int | tuple[int, int, int],
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> NDArray | torch.Tensor | Image:
         """Simulate the pipeline at a higher resolution and return result.
 
         Parameters
