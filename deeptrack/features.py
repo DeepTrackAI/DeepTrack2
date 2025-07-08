@@ -2460,7 +2460,6 @@ class Feature(DeepTrackNode):
 
         return self >> Subtract(other)
 
-
     def __rsub__(
         self: Feature,
         other: Any,
