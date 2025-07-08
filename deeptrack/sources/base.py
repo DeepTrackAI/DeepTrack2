@@ -52,9 +52,9 @@ Functions:
 
     def random_split(
         source: Source,
-        lengths: List[Union[int, float]],
+        lengths: list[int or float],
         generator: np.random.Generator = np.random.default_rng()
-    ) -> List[Subset]:
+    ) -> list[Subset]:
         Randomly split source into non-overlapping new sources of given lengths.
 
 Examples
@@ -103,7 +103,7 @@ Join multiple sources into a single access point:
 
 from __future__ import annotations
 
-from typing import Any, Callable, List, Dict, Union, Generator
+from typing import Any, Callable, Generator
 import functools
 import itertools
 import math 
@@ -227,22 +227,22 @@ class SourceItem(dict):
     """
 
     def __init__(
-        self,
-        callbacks: List[Callable[[Any], None]],
+        self: SourceItem,
+        callbacks: list[Callable[[Any], None]],
         **kwargs: Any
     ) -> None:
         self._callbacks = callbacks
         super().__init__(**kwargs)
 
     def __call__(
-        self
+        self: SourceItem,
     ) -> SourceItem:
         for callback in self._callbacks:
             callback(self)
         return self
 
     def __repr__(
-        self
+        self: SourceItem,
     ) -> str:
         return f"SourceItem({super().__repr__()})"
 
@@ -275,9 +275,9 @@ class Source:
         A dictionary of lists or arrays. The keys of the dictionary are
         the names of the sources, and the values are the sources themselves.
     """
-    
+
     def __init__(
-        self,
+        self: Source,
         **kwargs
     ) -> None:
         self.validate_all_same_length(kwargs)
@@ -290,21 +290,21 @@ class Source:
             setattr(self, k, self._wrap(k))
         
     def __len__(
-        self
+        self: Source,
     ) -> int:
         return self._length
 
     def __getitem__(
-        self,
+        self: Source,
         index: int
-    ) -> Union[SourceItem, List[SourceItem]]:
+    ) -> SourceItem | list[SourceItem]:
         if isinstance(index, slice):
             return self._get_slice(index)
         else:
             return self._get_item(index)
 
     def product(
-        self,
+        self: Source,
         **kwargs
     ) -> Product:
         """Return the product of the source with the given sources.
@@ -335,7 +335,7 @@ class Source:
         return Product(self, **kwargs)
     
     def constants(
-        self,
+        self: Source,
         **kwargs
     ) -> Product:
         """Return a new source where the given values are constant.
@@ -360,7 +360,7 @@ class Source:
         return Product(self, **{k: [v] for k, v in kwargs.items()}) 
     
     def filter(
-        self,
+        self: Source,
         predicate: Callable[..., bool]
     ) -> Subset:
         """Return a new source with only the items that satisfy the predicate.
@@ -380,16 +380,16 @@ class Source:
         return Subset(self, indices)
 
     def validate_all_same_length(
-        self,
-        kwargs: Dict[str, List[Any]]
+        self: Source,
+        kwargs: list[Any],
     ) -> None:
         lengths = [len(v) for v in kwargs.values()]
         if not all([l == lengths[0] for l in lengths]):
             raise ValueError("All sources must have the same length.")
 
     def _wrap_indexable(
-        self,
-        key: str
+        self: Source,
+        key: str,
     ) -> SourceDeepTrackNode:
         value_getter = SourceDeepTrackNode(
             lambda: self._dict[key][self._current_index()]
@@ -397,20 +397,20 @@ class Source:
         value_getter.add_dependency(self._current_index)
         self._current_index.add_child(value_getter)
         return value_getter
-        
+
     def _wrap(
-        self,
-        key: str
+        self: Source,
+        key: str,
     ) -> SourceDeepTrackNode:
         value = self._dict[key]
         if hasattr(value, "__getitem__"):
             return self._wrap_indexable(key)
-        
+
         return self._wrap_iterable(key)
-    
+
     def _wrap_iterable(
-        self,
-        key: str
+        self: Source,
+        key: str,
     ) -> SourceDeepTrackNode:
         value_getter = SourceDeepTrackNode(
             lambda: list(self._dict[key])[self._current_index()]
@@ -420,20 +420,20 @@ class Source:
         return value_getter
 
     def __iter__(
-        self
+        self: Source,
     ) -> Generator[SourceItem, None, None]:
         for i in range(len(self)):
             yield self[i]
-    
+
     def set_index(
-        self,
+        self: Source,
         index: int
     ) -> Source:
         self._current_index.set_value(index)
         return self
 
     def _get_item(
-        self,
+        self: Source,
         index: int
     ) -> SourceItem:
         values = {k: v[index] for k, v in self._dict.items()}
@@ -442,19 +442,19 @@ class Source:
         return SourceItem(callbacks, **values)
 
     def _get_slice(
-        self,
-        slice: List[SourceItem]
-    ) -> List[SourceItem]:
+        self: Source,
+        slice: list[SourceItem],
+    ) -> list[SourceItem]:
 
         # Convert slice to list of indices.
         indices = list(range(*slice.indices(len(self))))
 
         # Get values for each index.
         return [self[i] for i in indices]
-    
+
     def on_activate(
-        self,
-        callback: Callable[[Any], None]
+        self: Source,
+        callback: Callable[[Any], None],
     ) -> None:
         self._callbacks.add(callback)
 
@@ -471,16 +471,16 @@ class Product(Source):
     """
 
     def __init__(
-        self,
+        self: Product,
         __source: Source = [{}],
-        **kwargs: List[Any]
+        **kwargs: list[Any],
     ) -> None:
 
         product = itertools.product(__source, *kwargs.values())
 
         dict_of_lists = {k: [] for k in kwargs.keys()}
         source_dict = {k: [] for k in __source[0].keys()}
-        
+
         # If overlapping keys, error.
         if set(kwargs.keys()).intersection(set(source_dict.keys())):
             raise ValueError(
@@ -502,9 +502,9 @@ class Product(Source):
 class Subset(Source):
 
     def __init__(
-        self,
+        self: Subset,
         source: Source,
-        indices: List[int]
+        indices: list[int],
     ) -> None:
         self.source = source
         self.indices = indices
@@ -512,25 +512,25 @@ class Subset(Source):
                       for k, v in source._dict.items()}
 
     def __iter__(
-        self
+        self: Subset,
     ) -> Generator[SourceItem, None, None]:
         for i in self.indices:
             yield self.source[i]
-    
+
     def __getitem__(
-        self,
+        self: Subset,
         index: int
     ) -> SourceItem:
         return self.source[self.indices[index]]
 
     def __len__(
-        self
+        self: Subset,
     ) -> int:
         return len(self.indices)
-    
+
     def __getattr__(
-        self,
-        name: str
+        self: Subset,
+        name: str,
     ) -> Any:
         return getattr(self.source, name)
 
@@ -551,15 +551,15 @@ class Sources:
     """
 
     def __init__(
-        self,
-        *sources: Source
+        self: Sources,
+        *sources: Source,
     ) -> None:
         self.sources = sources
 
         keys = set()
         for source in sources:
             keys.update(source._dict.keys())
-        
+
         self._dict = dict.fromkeys(keys)
 
         for key in keys:
@@ -573,8 +573,8 @@ class Sources:
             source.on_activate(self._callback)
 
     def _callback(
-        self,
-        item: SourceItem
+        self: Sources,
+        item: SourceItem,
     ) -> None:
         for key in item:
             getattr(self, key).invalidate()
@@ -586,9 +586,9 @@ Join = Sources
 
 def random_split(
     source: Source,
-    lengths: List[Union[int, float]],
+    lengths: list[int | float],
     generator: np.random.Generator = np.random.default_rng()
-) -> List[Subset]:
+) -> list[Subset]:
     """Randomly split source into non-overlapping new sources of given lengths.
 
     Parameters
@@ -618,7 +618,7 @@ def random_split(
             )
             subset_lengths.append(n_items_in_split)
         remainder = len(source) - sum(subset_lengths)  # type: ignore[arg-type]
-        
+
         # Add 1 to all the lengths in round-robin fashion
         #  until the remainder is 0.
         for i in range(remainder):
@@ -629,7 +629,7 @@ def random_split(
             if length == 0:
                 warnings.warn(f"Length of split at index {i} is 0. "
                                 f"This might result in an empty source.")
-                
+
         # Cannot verify that dataset is Sized.
     if sum(lengths) != len(source):    # type: ignore[arg-type]
         raise ValueError("Sum of input lengths does not\
@@ -642,8 +642,8 @@ def random_split(
 
 
 def _accumulate(
-    iterable: List[int],
-    fn: Callable [[int, int], int]=lambda x, y: x + y
+    iterable: list[int],
+    fn: Callable [[int, int], int]=lambda x, y: x + y,
 ) -> Generator[int, None, None]:
     """Returns running totals with user specified operator.
     
