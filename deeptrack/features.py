@@ -2496,9 +2496,9 @@ class Feature(DeepTrackNode):
 
     def __truediv__(
         self: Feature, 
-        other: Any
+        other: Any,
         ) -> Feature:
-        """Divide a feature (nominator) using `/` with another value (denominator). 
+        """Divide a feature (nominator) using `/` with another value (denominator).
 
         This operator is shorthand for chaining with `dt.Divide`.
         The expression:
@@ -2509,7 +2509,7 @@ class Feature(DeepTrackNode):
 
         >>> feature >> dt.Divide(value=other)
 
-        Internally, this method constructs a new `Divide` feature and uses the 
+        Internally, this method constructs a new `Divide` feature and uses the
         right-shift operator (`>>`) to chain the current feature into it, and
         is the reversed version of  `__rtruediv__`.
 
@@ -2542,11 +2542,11 @@ class Feature(DeepTrackNode):
         Implement feature that normalizes the features values to 1.0:
 
         >>> feature = dt.Value(value=[-1.0938, 25.4832, 193.03])
-        >>> magnitudes = dt.Value(value=lambda: feature())
-        >>> pipeline = feature / magnitudes
+        >>> magnitude = dt.Value(value=lambda: max(feature()))
+        >>> pipeline = feature / magnitude
         >>> result = pipeline.update()()
         >>> result
-        [1.0, 1.0, 1.0]
+        [-0.0056, 0.1320, 1.0]
 
         This is equivalent to:
         >>> pipeline = feature >> dt.Divide(value=feature())
@@ -2558,7 +2558,7 @@ class Feature(DeepTrackNode):
 
     def __rtruediv__(
         self: Feature, 
-        other: Any
+        other: Any,
     ) -> Feature:
         """Divide `other` value (nominator) by this feature (denominator) using right '/'.
 
@@ -2573,7 +2573,7 @@ class Feature(DeepTrackNode):
 
         >>> other >> dt.Divide(value=feature)
 
-        Internally, this method constructs a new `Divide` feature and uses the 
+        Internally, this method constructs a new `Divide` feature and uses the
         right-shift operator (`>>`) to chain the current feature into it.
 
         Parameters
