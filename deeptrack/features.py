@@ -2581,7 +2581,7 @@ class Feature(DeepTrackNode):
 
         Raise to a dynamic exponent that samples values at each call:
         >>> import numpy as np
-        
+        >>>
         >>> random_exponent = dt.Value(value=lambda: np.random.randint(10))
         >>> pipeline = feature ** random_exponent
         >>> result = pipeline.update()()
