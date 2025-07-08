@@ -2582,7 +2582,6 @@ class Feature(DeepTrackNode):
 
         return self >> Multiply(other)
 
-
     def __rmul__(
         self: Feature,
         other: Any,
