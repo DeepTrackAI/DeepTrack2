@@ -2639,9 +2639,6 @@ class Feature(DeepTrackNode):
         This is equivalent to:
         >>> pipeline = dt.Value(value=5) >> dt.Power(value=feature)
 
-        is also equivalent to this expression:
-        >>> pipeline = feature.__rpow__(5)
-
         Raise a dynamic base that samples values at each call to the static
         exponent:
         >>> import numpy as np
