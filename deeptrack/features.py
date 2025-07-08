@@ -2471,7 +2471,6 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Subtract(self)
 
-
     def __mul__(
         self: Feature,
         other: Any,
