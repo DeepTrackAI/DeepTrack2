@@ -2582,13 +2582,66 @@ class Feature(DeepTrackNode):
 
         return self >> Multiply(other)
 
-    #TODO **MG**
+
     def __rmul__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Multiplies another value with this feature using right '*'.
-        
+        """Multiply another value with this feature using right '*'.
+
+        This operator is the right-hand version of `*`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other * feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.Multiply(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other` and
+        chains it into a `Multiply` feature that multiplies the current feature
+        as a dynamic value.
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` that will be multiplied by `self`. It is
+            passed as the input to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature that muliplies `self` by `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Multiply a feature to a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 2 * feature
+        >>> result = pipeline()
+        >>> result
+        [2, 4, 6]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=2) >> dt.Multiply(value=feature)
+
+        Multiply a feature to a dynamic value:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.rand())
+        >>> pipeline = noise * feature
+        >>> result = pipeline.update()()
+        >>> result
+        [0.8784860790329121, 1.7569721580658242, 2.635458237098736]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=lambda: np.random.rand())
+        ...     >> dt.Multiply(value=feature)
+        ... )
+
         """
 
         return Value(other) >> Multiply(self)
