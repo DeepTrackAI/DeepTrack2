@@ -2557,8 +2557,8 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         other: Any
-            The value or `Feature` representing the exponent. It is passed to `Power`
-            as the `value` argument.
+            The value or `Feature` representing the exponent. It is passed to
+            `Power` as the `value` argument.
 
         Returns
         -------
@@ -2582,14 +2582,14 @@ class Feature(DeepTrackNode):
         Raise to a dynamic exponent that samples values at each call:
         >>> import numpy as np
         
-        >>> noise = dt.Value(value=lambda: np.random.randint(10))
-        >>> pipeline = feature ** noise
+        >>> random_exponent = dt.Value(value=lambda: np.random.randint(10))
+        >>> pipeline = feature ** random_exponent
         >>> result = pipeline.update()()
         >>> result
         [1, 64, 729]
 
         This is equivalent to:
-        >>> pipeline = feature >> dt.Power(value=noise)
+        >>> pipeline = feature >> dt.Power(value=random_exponent)
  
         """
 
