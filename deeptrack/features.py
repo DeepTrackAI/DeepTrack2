@@ -2610,14 +2610,14 @@ class Feature(DeepTrackNode):
 
         >>> dt.Value(value=other) >> dt.Power(value=feature)
 
-        Internally, this method constructs a `Value` feature from `other` (base)
-        and chains it into a `Power` feature (exponent).
+        Internally, this method constructs a `Value` feature from `other`
+        (base) and chains it into a `Power` feature (exponent).
 
         Parameters
         ----------
         other: Any
-            A constant or `Feature` representing the base. It is
-            passed as the `value` argument to `Value`.
+            A constant or `Feature` representing the base. It is passed as the
+            `value` argument to `Value`.
 
         Returns
         -------
@@ -2641,12 +2641,12 @@ class Feature(DeepTrackNode):
         is also equivalent to this expression:
         >>> pipeline = feature.__rpow__(5)
 
-        Raise a dynamic base that samples values at each call
-        to the static exponent:
+        Raise a dynamic base that samples values at each call to the
+        static exponent:
         >>> import numpy as np
 
-        >>> noise = dt.Value(value=lambda: np.random.randint(10))
-        >>> pipeline = noise ** feature
+        >>> random_base = dt.Value(value=lambda: np.random.randint(10))
+        >>> pipeline = random_base ** feature
         >>> result = pipeline.update()()
         >>> result
         [9, 81, 729]
