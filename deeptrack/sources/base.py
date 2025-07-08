@@ -34,6 +34,8 @@ Classes:
 
 - `Source`: Represents one or more sources of data.
 
+- `Join`: Alias of `Source`.
+
 - `Product`: Represents the product of the source with the given sources.
 
     This class is used to represent the product of a source with
@@ -209,31 +211,84 @@ class SourceDeepTrackNode(DeepTrackNode):
 
 
 class SourceItem(dict):
-    """A dict-like object that calls a list of callbacks when called.
+    """A dict-like object that triggers a list of callbacks when called.
 
-    Used in conjunction with the Source class to call a list of callbacks
-    when called. These callbacks are used to activate a certain item
-    in the source, ensuring all DeepTrackNodes are updated.
-
+    `SourceItem` is used within the `Source` framework to wrap a dictionary
+    entry that activates one or more callbacks when accessed via calling.
+    This mechanism ensures that all dependent `DeepTrackNode`s are updated
+    when a particular item in the source is selected.
 
     Parameters
     ----------
-    callbacks: list
-        A list of callables that are called when the SourceItem is called.
-        
+    callbacks: list[Callable[[Any], None]]
+        A list of callback functions that are executed when the item is called.
+        Each function receives the `SourceItem` itself as argument.
+
+    Attributes
+    ----------
+    _callbacks : list[Callable[[SourceItem], None]]
+        Internal list of callbacks that are triggered on call.
+
+    Methods
+    -------
+    __call__() -> SourceItem
+        Executes all callbacks and returns the item.
+
+    __repr__() -> str
+        Returns a string representation including the dictionary content
+        and number of callbacks.
+
+    Examples
+    --------
+    >>> from deeptrack.sources.base import SourceItem
+
+    Implement a callback function:
+    >>> def log_callback(item):
+    ...     print(f"CALLBACK - Accessed item: {item}")
+
+    Create a SourceItem with dictionary contents and callbacks:
+    >>> item = dt.SourceItem(callbacks=[log_callback], a=1, b=2)
+
+    Call the item to trigger the callbacks:
+    >>> item();
+    CALLBACK - Accessed item: SourceItem({'a': 1, 'b': 2}, 1 callback(s))
+
     """
+
+    _callbacks: list[Callable[[Any], None]]
 
     def __init__(
         self: SourceItem,
         callbacks: list[Callable[[Any], None]],
+        **kwargs: Any,
+    ):
+        """Initialize a SourceItem.
+
+        Parameters
+        ----------
+        callbacks: list[Callable[[SourceItem], None]]
+            The list of callbacks to trigger when the item is called.
         **kwargs: Any
-    ) -> None:
+            Additional key-value pairs stored in the dictionary.
+
+        """
+
         self._callbacks = callbacks
+  
         super().__init__(**kwargs)
 
     def __call__(
         self: SourceItem,
     ) -> SourceItem:
+        """Call the item, triggering all associated callbacks.
+
+        Returns
+        -------
+        SourceItem
+            The item itself, after invoking all callbacks.
+
+        """
+
         for callback in self._callbacks:
             callback(self)
         return self
@@ -241,7 +296,17 @@ class SourceItem(dict):
     def __repr__(
         self: SourceItem,
     ) -> str:
-        return f"SourceItem({super().__repr__()})"
+        """Return a string representation of the item.
+
+        Returns
+        -------
+        str
+            The string representation of the dictionary contents.
+
+        """
+
+        return (f"SourceItem({super().__repr__()}, "
+                f"{len(self._callbacks)} callback(s))")
 
 
 class Source:
@@ -253,6 +318,12 @@ class Source:
 
     The feature can then be called with an item from the source to get the 
     value of the feature for that item. 
+
+    Parameters
+    ----------
+    kwargs: dict
+        A dictionary of lists or arrays. The keys of the dictionary are
+        the names of the sources, and the values are the sources themselves.
 
     Example
     -------
@@ -266,17 +337,12 @@ class Source:
     >>> sum_feature(source[0]) # returns 4
     >>> sum_feature(source[1]) # returns 6
 
-    Parameters
-    ----------
-    kwargs: dict
-        A dictionary of lists or arrays. The keys of the dictionary are
-        the names of the sources, and the values are the sources themselves.
     """
 
     def __init__(
         self: Source,
         **kwargs
-    ) -> None:
+    ):
         self.validate_all_same_length(kwargs)
         self._length = len(kwargs[list(kwargs.keys())[0]])
         self._current_index = DeepTrackNode(0)
@@ -471,7 +537,7 @@ class Product(Source):
         self: Product,
         __source: Source = [{}],
         **kwargs: list[Any],
-    ) -> None:
+    ):
 
         product = itertools.product(__source, *kwargs.values())
 
@@ -502,7 +568,7 @@ class Subset(Source):
         self: Subset,
         source: Source,
         indices: list[int],
-    ) -> None:
+    ):
         self.source = source
         self.indices = indices
         self._dict = {k: [v[i] for i in indices]
@@ -550,7 +616,7 @@ class Sources:
     def __init__(
         self: Sources,
         *sources: Source,
-    ) -> None:
+    ):
         self.sources = sources
 
         keys = set()
