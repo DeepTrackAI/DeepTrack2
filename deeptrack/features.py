@@ -2599,7 +2599,8 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Raise another value to this feature as a power using right '**'.
+        """Raise another value (base) to this feature (exponent) as a power
+        using right '**'.
 
         This operator is the right-hand version of `**`, enabling expressions
         where the `Feature` appears on the right-hand side. The expression:
