@@ -103,6 +103,7 @@ Join multiple sources into a single access point:
 """
 
 from __future__ import annotations
+
 from typing import Any, Callable, List, Dict, Union, Generator
 import functools
 import itertools
@@ -114,6 +115,18 @@ import weakref
 import numpy as np
 
 from deeptrack.backend.core import DeepTrackNode
+
+
+__all__ [
+    "Source",
+    "SourceItem",
+    "Product",
+    "Subset",
+    "Sources",
+    "Join",
+    "random_split",
+]
+
 
 class SourceDeepTrackNode(DeepTrackNode):
     """A node that creates child nodes when attributes are accessed.
@@ -422,7 +435,6 @@ class Product(Source):
 
         super().__init__(**dict_of_lists)    
 
-
 class Subset(Source):
 
     def __init__(
@@ -457,8 +469,6 @@ class Subset(Source):
         name: str
     ) -> Any:
         return getattr(self.source, name)
-
-
 
 class Sources:
     """Joins multiple sources into a single access point.
@@ -562,8 +572,6 @@ def random_split(
         sum(lengths)).tolist()  # type: ignore[call-overload]
     return [Subset(source, indices[offset - length : offset])\
             for offset, length in zip(_accumulate(lengths), lengths)]
-
-        
 
 def _accumulate(
     iterable: List[int],
