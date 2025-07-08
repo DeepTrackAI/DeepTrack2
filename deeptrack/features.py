@@ -2747,12 +2747,65 @@ class Feature(DeepTrackNode):
 
         return self >> Power(other)
 
-    #TODO ***JH***
     def __rpow__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Raises another value to this feature as a power using right '**'.
+        """Raise another value (base) to this feature (exponent) as a power
+        using right '**'.
+
+        This operator is the right-hand version of `**`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other ** feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.Power(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other`
+        (base) and chains it into a `Power` feature (exponent).
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` representing the base. It is passed as the
+            `value` argument to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature representing `other` to the power of `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Raise a static base to a constant exponent:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 5 ** feature
+        >>> result = pipeline()
+        >>> result
+        [5, 25, 125]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=5) >> dt.Power(value=feature)
+
+        Raise a dynamic base that samples values at each call to the static
+        exponent:
+        >>> import numpy as np
+        >>>
+        >>> random_base = dt.Value(value=lambda: np.random.randint(10))
+        >>> pipeline = random_base ** feature
+        >>> result = pipeline.update()()
+        >>> result
+        [9, 81, 729]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=lambda: np.random.randint(10))
+        ...     >> dt.Power(value=feature)
+        ... )
 
         """
 
