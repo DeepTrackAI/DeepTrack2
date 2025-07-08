@@ -2515,26 +2515,132 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Divide(self)
 
-    #TODO ***AL***
-    def __floordiv__(
-        self: Feature, 
-        other: Any
-    ) -> Feature:
-        """Performs floor division using '//'.
 
+    def __floordiv__(
+        self: Feature,
+        other: Any,
+    ) -> Feature:
+        """Perform floor division of `feature` (numerator) with `other` (denominator)
+        using '//'.
+    
+        This operator is shorthand for chaining with `FloorDivide`.
+        The expression:
+    
+        >>> feature // other
+    
+        is equivalent to:
+    
+        >>> feature >> dt.FloorDivide(value=other)
+    
+        Internally, this method constructs a new `FloorDivide` feature and uses
+        the right-shift operator (`>>`) to chain the current feature with it.
+    
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` to which `self` will be floor divided by. It is
+            passed as the input to `value`.
+    
+        Returns
+        -------
+        Feature
+            A new feature that floor divides `self` with `other`.
+    
+        Examples
+        --------
+        >>> import deeptrack as dt
+    
+        Floor divide a feature with a constant:
+        >>> feature = dt.Value(value=[5, 9, 12])
+        >>> pipeline = feature // 2
+        >>> result = pipeline()
+        >>> result
+        [2, 4, 6]
+    
+        This is equivalent to:
+        >>> pipeline = feature >> dt.FloorDivide(value=2)
+    
+        Floor divide a dynamic feature by another feature:
+        >>> import numpy as np
+        
+        >>> randint = dt.Value(value=lambda: np.random.randint(1, 5))
+        >>> feature = dt.Value(value=[20, 30, 40])
+        >>> pipeline = feature // randint
+        >>> result = pipeline.update()()
+        >>> result
+        [6, 10, 13]
+        
+        This is equivalent to:
+        >>> pipeline = (
+        ...     feature
+        ...     >> dt.FloorDivide(value=randint)
+        ... )
         """
 
         return self >> FloorDivide(other)
 
-    #TODO ***AL***
+
     def __rfloordiv__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Performs right floor division using '//'.
-
+        """Perform floor division of `other` (numerator) with `feature` (denominator)
+        using '//'.
+    
+        This operator is shorthand for chaining with `FloorDivide`.
+        The expression:
+    
+        >>> other // feature
+    
+        is equivalent to:
+    
+        >>> dt.Value(value=other) >> dt.FloorDivide(value=feature)
+    
+        Internally, this method constructs a `Value` feature from `other` and
+        chains it into a `FloorDivide` feature that divides with the current feature
+        as a dynamic value.
+    
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` to which `self` will be floor divided with. It is
+            passed as the input to `value`.
+    
+        Returns
+        -------
+        Feature
+            A new feature that floor divides `other` with `self`.
+    
+        Examples
+        --------
+        >>> import deeptrack as dt
+    
+        Floor divide a feature with a constant:
+        >>> feature = dt.Value(value=[5, 9, 12])
+        >>> pipeline = 10 // feature
+        >>> result = pipeline()
+        >>> result
+        [2, 1, 0]
+    
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=2) >> dt.FloorDivide(value=feature)
+    
+        Floor divide a dynamic feature by another feature:
+        >>> import numpy as np
+        
+        >>> randint = dt.Value(value=lambda: np.random.randint(1, 5))
+        >>> feature = dt.Value(value=[2, 3, 4])
+        >>> pipeline = randint // feature
+        >>> result = pipeline.update()()
+        >>> result
+        [1, 1, 1]
+        
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=randint)
+        ...     >> dt.FloorDivide(value=feature)
+        ... )
         """
-
         return Value(other) >> FloorDivide(self)
 
     def __pow__(
