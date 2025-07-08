@@ -182,8 +182,9 @@ class SourceDeepTrackNode(DeepTrackNode):
 
         Parameters
         ----------
-        name : str
-            The key to retrieve from the dictionary-like data returned by `self()`.
+        name: str
+            The key to retrieve from the dictionary-like data returned by
+            `self()`.
 
         Returns
         -------
