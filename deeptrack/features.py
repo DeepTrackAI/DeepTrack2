@@ -2641,8 +2641,8 @@ class Feature(DeepTrackNode):
         is also equivalent to this expression:
         >>> pipeline = feature.__rpow__(5)
 
-        Raise a dynamic base that samples values at each call to the
-        static exponent:
+        Raise a dynamic base that samples values at each call to the static
+        exponent:
         >>> import numpy as np
 
         >>> random_base = dt.Value(value=lambda: np.random.randint(10))
