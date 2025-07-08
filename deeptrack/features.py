@@ -2520,8 +2520,8 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Perform floor division of `feature` (numerator) with `other` (denominator)
-        using '//'.
+        """Perform floor division of `feature` (numerator) with
+        `other` (denominator) using `//`.
     
         This operator is shorthand for chaining with `FloorDivide`.
         The expression:
@@ -2573,7 +2573,7 @@ class Feature(DeepTrackNode):
         This is equivalent to:
         >>> pipeline = (
         ...     feature
-        ...     >> dt.FloorDivide(value=randint)
+        ...     >> dt.FloorDivide(value=lambda: np.random.randint(1, 5))
         ... )
         """
 
@@ -2597,14 +2597,14 @@ class Feature(DeepTrackNode):
         >>> dt.Value(value=other) >> dt.FloorDivide(value=feature)
     
         Internally, this method constructs a `Value` feature from `other` and
-        chains it into a `FloorDivide` feature that divides with the current feature
-        as a dynamic value.
+        chains it into a `FloorDivide` feature that divides with the current
+        feature.
     
         Parameters
         ----------
         other: Any
-            A constant or `Feature` to which `self` will be floor divided with. It is
-            passed as the input to `value`.
+            A constant or `Feature` which will be floor divided with `self`.
+            It is passed as the input to `Value`.
     
         Returns
         -------
@@ -2637,10 +2637,11 @@ class Feature(DeepTrackNode):
         
         This is equivalent to:
         >>> pipeline = (
-        ...     dt.Value(value=randint)
+        ...     dt.Value(value=lambda: np.random.randint(1, 5))
         ...     >> dt.FloorDivide(value=feature)
         ... )
         """
+
         return Value(other) >> FloorDivide(self)
 
     def __pow__(
