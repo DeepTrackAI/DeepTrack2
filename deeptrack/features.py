@@ -7072,7 +7072,7 @@ class Upscale(Feature):
 
         Parameters
         ----------
-        image: np.ndarray
+        image: NDArray | torch.Tensor | Image
             The input image to process.
         factor: int or tuple[int, int, int]
             The factor by which to upscale the simulation. If a single integer 
@@ -7083,7 +7083,7 @@ class Upscale(Feature):
 
         Returns
         -------
-        np.ndarray
+        NDArray | torch.Tensor | Image
             The processed image at the original resolution.
 
         Raises
