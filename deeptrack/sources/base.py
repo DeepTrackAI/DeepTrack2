@@ -107,7 +107,9 @@ from __future__ import annotations
 
 import functools
 import itertools
-import math 
+import math
+
+from collections.abc import Sequence
 from typing import Any, Callable, Generator
 
 import numpy as np
@@ -149,7 +151,7 @@ class SourceDeepTrackNode(DeepTrackNode):
 
     Examples
     --------
-    >>> from deeptrack.sources.base import SourceDeepTrackNode
+    >>> from deeptrack.sources import SourceDeepTrackNode
 
     Basic usage with a dictionary-like source:
     >>> data = {"x": 42, "y": {"z": 3.14}}
@@ -240,7 +242,7 @@ class SourceItem(dict):
 
     Examples
     --------
-    >>> from deeptrack.sources.base import SourceItem
+    >>> from deeptrack.sources import SourceItem
 
     Implement a callback function:
     >>> def log_callback(item):
@@ -312,46 +314,107 @@ class SourceItem(dict):
 class Source:
     """A class that represents one or more sources of data.
 
-    This class is used to represent one or more sources of data.
-    When accessed, it returns a deeptrack object that can be passed
-    as properties to features.
+    `Source` holds one or more named sequences (e.g., lists, arrays) and
+    makes them accessible by index. It returns `SourceItem` objects that
+    activate registered callbacks (e.g., for dependency tracking) when called.
 
-    The feature can then be called with an item from the source to get the 
-    value of the feature for that item. 
+    Each named field is accessible as an attribute (e.g., `source.a`) and
+    can be passed directly to DeepTrack features such as `Value`. Features
+    can then be evaluated on specific items by indexing the source (e.g.,
+    `feature(source[i])`).
 
     Parameters
     ----------
-    kwargs: dict
-        A dictionary of lists or arrays. The keys of the dictionary are
-        the names of the sources, and the values are the sources themselves.
+    *kwargs: Sequence[Any]
+        Named data sources, where each key is the name of a source (e.g., "x",
+        "label") and each value is an indexable sequence (e.g., list, NumPy
+        array, PyTorch tensor). All sequences must have the same length and
+        support integer indexing.
 
-    Example
+    Attributes
+    ----------
+    _dict: dict[str, Sequence[Any]]
+        Internal mapping of source names to their corresponding data sequences.
+
+    _length: int
+        Number of items in the source. All fields must have the same length.
+
+    _current_index: DeepTrackNode
+        A node that holds the current active index. Used for dynamic access
+        when a source attribute (e.g., `source.a`) is passed to a feature.
+
+    _callbacks: set[Callable[[Any], None]]
+        A set of callback functions triggered when a `SourceItem` is called.
+
+    Methods #TODO ***GV*** check and complete list of methods
     -------
+    __len__() -> int
+        It returns the number of items in the source.
+
+    __getitem__(index) -> SourceItem or list[SourceItem]
+        It retrieves one or more items by index or slice.
+
+    __iter__() -> Generator[SourceItem, None, None]
+        Iterates over all items in the source.
+
+    product(**kwargs: Sequence[Any]) -> Product
+        It returns a new source representing the cartesian product of the
+        current source with the given sequences.
+
+    constants(**kwargs: Sequence[Any]) -> Product
+        It returns a new source where the given values are treated as
+        constants.
+
+    filter(predicate: Callable[..., bool]) -> Subset
+        It returns a new source containing only the items for which the
+        predicate returns `True`.
+
+    on_activate(callback) -> None
+        Registers a callback to be called when any item is activated.
+
+    set_index(index) -> Source
+        Sets the active index used when evaluating attributes like `source.a`.
+
+    Examples
+    --------
     >>> import deeptrack as dt
     >>> from deeptrack.sources import Source
-    
-    >>> source = Source(a=[1, 2], b=[3, 4])
+
+    Define a source with two fields:
+    >>> source = Source(a=[1, 2], b=[10, 20])
+
+    Create features from the source:
     >>> feature_a = dt.Value(source.a)
     >>> feature_b = dt.Value(source.b)
     >>> sum_feature = feature_a + feature_b
-    >>> sum_feature(source[0]) # returns 4
-    >>> sum_feature(source[1]) # returns 6
+
+    Evaluate features on individual items:
+    >>> sum_feature(source[0])
+    11
+    >>> sum_feature(source[1])
+    22
 
     """
 
+    _dict: dict[str, Sequence[Any]]
+    _length: int
+    _current_index: DeepTrackNode
+    _callbacks: set[Callable[[Any], None]]
+
     def __init__(
         self: Source,
-        **kwargs
+        **kwargs: Sequence[Any],
     ):
         self.validate_all_same_length(kwargs)
+
+        self._dict = kwargs
         self._length = len(kwargs[list(kwargs.keys())[0]])
         self._current_index = DeepTrackNode(0)
-        self._dict = kwargs
         self._callbacks = set()
 
         for k in kwargs:
             setattr(self, k, self._wrap(k))
-        
+
     def __len__(
         self: Source,
     ) -> int:
@@ -359,7 +422,7 @@ class Source:
 
     def __getitem__(
         self: Source,
-        index: int
+        index: int,
     ) -> SourceItem | list[SourceItem]:
         if isinstance(index, slice):
             return self._get_slice(index)
@@ -368,7 +431,7 @@ class Source:
 
     def product(
         self: Source,
-        **kwargs
+        **kwargs: Sequence[Any],
     ) -> Product:
         """Return the product of the source with the given sources.
 
@@ -396,10 +459,10 @@ class Source:
             
         """
         return Product(self, **kwargs)
-    
+
     def constants(
         self: Source,
-        **kwargs
+        **kwargs: Sequence[Any],
     ) -> Product:
         """Return a new source where the given values are constant.
 
@@ -420,11 +483,11 @@ class Source:
             names of the sources, and the values are the values themselves.
             
         """
-        return Product(self, **{k: [v] for k, v in kwargs.items()}) 
-    
+        return Product(self, **{k: [v] for k, v in kwargs.items()})
+
     def filter(
         self: Source,
-        predicate: Callable[..., bool]
+        predicate: Callable[..., bool],
     ) -> Subset:
         """Return a new source with only the items that satisfy the predicate.
 
