@@ -381,7 +381,10 @@ class Source:
     >>> from deeptrack.sources import Source
 
     Define a source with two fields:
-    >>> source = Source(a=[1, 2], b=[10, 20])
+    >>> source = Source(
+    ...     a=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+    ...     b=[10, 20, 30, 40, 50, 60, 70, 80, 90],
+    >>> )
 
     Create features from the source:
     >>> feature_a = dt.Value(source.a)
@@ -391,8 +394,54 @@ class Source:
     Evaluate features on individual items:
     >>> sum_feature(source[0])
     11
-    >>> sum_feature(source[1])
-    22
+    >>> sum_feature(source[8])
+    99
+
+    Filter items using a predicate:
+    >>> filtered = source.filter(lambda a, b: a > 5 and b < 80)
+    >>> list(filtered)
+    [SourceItem({'a': 6, 'b': 60}, 1 callback(s)),
+    SourceItem({'a': 7, 'b': 70}, 1 callback(s))]
+
+    Slice the source:
+    >>> subset = source[3:5]
+    >>> subset
+    [SourceItem({'a': 4, 'b': 40}, 1 callback(s)),
+    SourceItem({'a': 5, 'b': 50}, 1 callback(s))]
+
+    Add a constant field to the source:
+    >>> augmented = source.constants(label="train")
+    >>> augmented[0]["label"]
+    'train'
+
+    Take a Cartesian product with a new field:
+    >>> extended = source.product(c=[100, 200])
+    >>> len(extended)
+    18  # 9 original items × 2 values in "c"
+    >>> extended[0]["c"]
+    100
+    >>> extended[17]["c"]
+    200
+
+    Use set_index to manually select the active item:
+    >>> source.set_index(1)
+    >>> source.a()
+    2
+    >>> source.b()
+    20
+
+    Iterate over items in the source:
+    >>> for item in source:
+    ...     print(item["a"], item["b"])
+    1 10
+    2 20
+    3 30
+    4 40
+    5 50
+    6 60
+    7 70
+    8 80
+    9 90
 
     """
 
@@ -405,6 +454,52 @@ class Source:
         self: Source,
         **kwargs: Sequence[Any],
     ):
+        """Initialize a Source with one or more named data sequences.
+
+        The input sequences must all have the same length and support integer
+        indexing (i.e., implement both `__getitem__` and `__len__`). Each key
+        becomes an attribute of the source and can be passed to DeepTrack
+        features for dynamic evaluation.
+
+        Parameters
+        ----------
+        **kwargs : Sequence[Any]
+            Named data sources, where each key is the name of a field (e.g.,
+            "x", "label") and each value is an indexable sequence (e.g., list,
+            NumPy array, PyTorch tensor). All sequences must have the same
+            length.
+
+        Raises
+        ------
+        ValueError
+            If the input sequences do not all have the same length.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source
+
+        Create a source with two named sequences (note that they are of the
+        same length):
+        >>> source = Source(
+        ...     a=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+        ...     b=[10, 20, 30, 40, 50, 60, 70, 80, 90],
+        >>> )
+
+        Iterate over items in the source:
+        >>> for item in source:
+        ...     print(item["a"], item["b"])
+        1 10
+        2 20
+        3 30
+        4 40
+        5 50
+        6 60
+        7 70
+        8 80
+        9 90
+
+        """
+
         self.validate_all_same_length(kwargs)
 
         self._dict = kwargs
