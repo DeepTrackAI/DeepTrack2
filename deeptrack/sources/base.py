@@ -103,13 +103,10 @@ Join multiple sources into a single access point:
 
 from __future__ import annotations
 
-from typing import Any, Callable, Generator
 import functools
 import itertools
 import math 
-import random
-import warnings
-import weakref
+from typing import Any, Callable, Generator
 
 import numpy as np
 
@@ -627,8 +624,12 @@ def random_split(
         lengths = subset_lengths
         for i, length in enumerate(lengths):
             if length == 0:
-                warnings.warn(f"Length of split at index {i} is 0. "
-                                f"This might result in an empty source.")
+                import warnings
+
+                warnings.warn(
+                    f"Length of split at index {i} is 0. "
+                    "This might result in an empty source."
+                )
 
         # Cannot verify that dataset is Sized.
     if sum(lengths) != len(source):    # type: ignore[arg-type]
