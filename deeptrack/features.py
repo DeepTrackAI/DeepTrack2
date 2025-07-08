@@ -2523,13 +2523,61 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Subtract(self)
 
-    #TODO ***MG***
     def __mul__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Multiplies this feature with another value using '*'.
-        
+        """Multiply this feature with another value using '*'.
+
+        This operator is shorthand for chaining with `Multiply`.
+        The expression:
+
+        >>> feature * other
+
+        is equivalent to:
+
+        >>> feature >> dt.Multiply(value=other)
+
+        Internally, this method constructs a new `Multiply` feature and uses
+        the right-shift operator (`>>`) to chain the current feature into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to be multiplied. It is passed to
+            `dt.Multiply` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature that multiplies `other` to the output of `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Multiply a constant value to a static input:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature * 2
+        >>> result = pipeline()
+        >>> result
+        [2, 4, 6]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Multiply(value=2)
+
+        Multiply with a dynamic feature that samples a value at each call:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.rand())
+        >>> pipeline = feature * noise
+        >>> result = pipeline.update()()
+        >>> result
+        [0.2809370704818722, 0.5618741409637444, 0.8428112114456167]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Multiply(value=noise)
+
         """
 
         return self >> Multiply(other)
