@@ -1,23 +1,22 @@
 """Utility classes for data sources.
 
-This module provides a set of utility classes
-designed for managing and manipulating data sources.
+This module provides a set of utility classes designed for managing and
+manipulating data sources.
 
-These tools are primarily used in scenarios where
-data needs to be dynamically manipulated, filtered, or combined
-for feature generation in machine learning pipelines.
+These tools are primarily used in scenarios where data needs to be dynamically
+manipulated, filtered, or combined for feature generation in machine learning
+pipelines.
 
 Key Features
 ------------
 - **Node Hierarchy**
 
-    Extends `DeepTrackNode` with utilities to create
+    `SourceDeepTrackNode` extends `DeepTrackNode` with utilities to create
     nested nodes, and structured data access.
     
 - **Dynamic Data Access**
 
-    Retrieve data items as callable objects, supporting
-    custom callbacks and dependency tracking.
+    It retrieves data items as callable objects, supporting custom callbacks and dependency tracking.
 
 - **Randomized Splitting**
 
@@ -131,24 +130,85 @@ __all__ = [
 class SourceDeepTrackNode(DeepTrackNode):
     """A node that creates child nodes when attributes are accessed.
     
-    This class is used to create a node that creates child nodes when 
-    attributes are accessed. Assumes the value of the node is dict-like
-    (i.e. has a __getitem__ method that takes a string).
+    `SourceDeepTrackNode` is a subclass of `DeepTrackNode` designed to
+    facilitate structured data access. When an attribute is accessed, it
+    creates a new child node that retrieves the corresponding key from the
+    underlying dictionary-like data.
+
+    This is particularly useful when working with hierarchical or nested
+    data sources, allowing intuitive access via attribute syntax (e.g.
+    `source.position.x`) and automatic dependency tracking between nodes.
+    
+    It assumes the value of the node is dict-like (i.e., that it has a
+    `__getitem__()` method that takes a string).
 
     Parameters
     ----------
-    action: callable
-        The action that returns the value of the node.    
+    action: Callable[[...], Any]
+        A callable that returns the value of the node. The return value
+        must be a dictionary-like object supporting string-key indexing.
+
+    Examples
+    --------
+    >>> from deeptrack.sources.base import SourceDeepTrackNode
+
+    Basic usage with a dictionary-like source:
+    >>> data = {"x": 42, "y": {"z": 3.14}}
+    >>> source = SourceDeepTrackNode(lambda: data)
+    >>> source.x()
+    42
+
+    >>> source.y()
+    {'z': 3.14}
+
+    >>> source.y.z()
+    3.14
+
     """
 
     def __getattr__(
-        self,
+        self: SourceDeepTrackNode,
         name: str
     ) -> SourceDeepTrackNode:
+        """Return a child node corresponding to a key in the underlying data.
+
+        This method is triggered when an attribute is accessed and no
+        explicitly defined attribute is found. It constructs a new
+        `SourceDeepTrackNode` that retrieves the value associated with the
+        given key from the parent node's dictionary-like output.
+
+        The new node is registered as a dependent of the current node to ensure
+        correct dependency tracking during evaluation.
+
+        Parameters
+        ----------
+        name : str
+            The key to retrieve from the dictionary-like data returned by `self()`.
+
+        Returns
+        -------
+        SourceDeepTrackNode
+            A new node that resolves to `self()[name]` when evaluated.
+
+        Examples
+        --------
+        >>> from deeptrack.sources.base import SourceDeepTrackNode
+
+        Basic usage with a dictionary-like source:
+        >>> source = SourceDeepTrackNode(lambda: {"a": {"b": 1}})
+        >>> source.a()
+        {'b': 1}
+    
+        >>> source.a.b()
+        1
+
+        """
+
         node = SourceDeepTrackNode(lambda: self()[name])
         node.add_dependency(self)
-        self.add_child(node)
+        # self.add_child(node)
         return node
+
 
 class SourceItem(dict):
     """A dict-like object that calls a list of callbacks when called.
@@ -184,6 +244,7 @@ class SourceItem(dict):
         self
     ) -> str:
         return f"SourceItem({super().__repr__()})"
+
 
 class Source:
     """A class that represents one or more sources of data.
@@ -396,6 +457,7 @@ class Source:
     ) -> None:
         self._callbacks.add(callback)
 
+
 class Product(Source):
     """Class that represents the product of a source with one or more sources.
 
@@ -435,6 +497,7 @@ class Product(Source):
 
         super().__init__(**dict_of_lists)    
 
+
 class Subset(Source):
 
     def __init__(
@@ -469,6 +532,7 @@ class Subset(Source):
         name: str
     ) -> Any:
         return getattr(self.source, name)
+
 
 class Sources:
     """Joins multiple sources into a single access point.
@@ -515,7 +579,9 @@ class Sources:
             getattr(self, key).invalidate()
             getattr(self, key).set_value(item[key])
 
+
 Join = Sources
+
 
 def random_split(
     source: Source,
@@ -572,6 +638,7 @@ def random_split(
         sum(lengths)).tolist()  # type: ignore[call-overload]
     return [Subset(source, indices[offset - length : offset])\
             for offset, length in zip(_accumulate(lengths), lengths)]
+
 
 def _accumulate(
     iterable: List[int],
