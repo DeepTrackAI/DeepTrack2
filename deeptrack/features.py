@@ -2460,35 +2460,187 @@ class Feature(DeepTrackNode):
 
         return self >> Subtract(other)
 
-    #TODO ***MG***
     def __rsub__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Subtracts this feature from another value using right '-'.
-        
-    """
+        """Subtract this feature from another value using right '-'.
+
+        This operator is the right-hand version of `-`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other - feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.Subtract(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other` and
+        chains it into a `Subtract` feature that subtracts the current feature
+        as a dynamic value.
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` to which `self` will be subtracted. It is
+            passed as the input to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature that subtracts `self` from `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Subtract a feature from a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 5 - feature
+        >>> result = pipeline()
+        >>> result
+        [4, 3, 2]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=5) >> dt.Subtract(value=feature)
+
+        Subtract a feature from a dynamic value:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.rand())
+        >>> pipeline = noise - feature
+        >>> result = pipeline.update()()
+        >>> result
+        [-0.18761746914784516, -1.1876174691478452, -2.1876174691478454]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=lambda: np.random.rand())
+        ...     >> dt.Subtract(value=feature)
+        ... )
+
+        """
 
         return Value(other) >> Subtract(self)
 
-    #TODO ***MG***
     def __mul__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Multiplies this feature with another value using '*'.
-        
+        """Multiply this feature with another value using '*'.
+
+        This operator is shorthand for chaining with `Multiply`.
+        The expression:
+
+        >>> feature * other
+
+        is equivalent to:
+
+        >>> feature >> dt.Multiply(value=other)
+
+        Internally, this method constructs a new `Multiply` feature and uses
+        the right-shift operator (`>>`) to chain the current feature into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to be multiplied. It is passed to
+            `dt.Multiply` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature that multiplies `other` to the output of `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Multiply a constant value to a static input:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature * 2
+        >>> result = pipeline()
+        >>> result
+        [2, 4, 6]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Multiply(value=2)
+
+        Multiply with a dynamic feature that samples a value at each call:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.rand())
+        >>> pipeline = feature * noise
+        >>> result = pipeline.update()()
+        >>> result
+        [0.2809370704818722, 0.5618741409637444, 0.8428112114456167]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Multiply(value=noise)
+
         """
 
         return self >> Multiply(other)
 
-    #TODO **MG**
     def __rmul__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Multiplies another value with this feature using right '*'.
-        
+        """Multiply another value with this feature using right '*'.
+
+        This operator is the right-hand version of `*`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other * feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.Multiply(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other` and
+        chains it into a `Multiply` feature that multiplies the current feature
+        as a dynamic value.
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` that will be multiplied by `self`. It is
+            passed as the input to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature that muliplies `self` by `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Multiply a feature to a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 2 * feature
+        >>> result = pipeline()
+        >>> result
+        [2, 4, 6]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=2) >> dt.Multiply(value=feature)
+
+        Multiply a feature to a dynamic value:
+        >>> import numpy as np
+        >>>
+        >>> noise = dt.Value(value=lambda: np.random.rand())
+        >>> pipeline = noise * feature
+        >>> result = pipeline.update()()
+        >>> result
+        [0.8784860790329121, 1.7569721580658242, 2.635458237098736]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=lambda: np.random.rand())
+        ...     >> dt.Multiply(value=feature)
+        ... )
+
         """
 
         return Value(other) >> Multiply(self)
@@ -2541,7 +2693,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Raise this feature to a power using '**'.
+        """Raise this feature (base) to a power (exponent) using '**'.
 
         This operator is shorthand for chaining with `Power`. The expression:
 
@@ -2551,14 +2703,14 @@ class Feature(DeepTrackNode):
 
         >>> feature >> dt.Power(value=other)
 
-        Internally, this method constructs a new `Power` feature and uses the 
+        Internally, this method constructs a new `Power` feature and uses the
         right-shift operator (`>>`) to chain the current feature into it.
 
         Parameters
         ----------
         other: Any
-            The value or `Feature` representing the exponent. It is passed to `Power` 
-            as the `value` argument.
+            The value or `Feature` representing the exponent. It is passed to
+            `Power` as the `value` argument.
 
         Returns
         -------
@@ -2582,25 +2734,78 @@ class Feature(DeepTrackNode):
         Raise to a dynamic exponent that samples values at each call:
         >>> import numpy as np
         >>>
-        >>> noise = dt.Value(value=lambda: np.random.randint(10))
-        >>> pipeline = feature ** noise
+        >>> random_exponent = dt.Value(value=lambda: np.random.randint(10))
+        >>> pipeline = feature ** random_exponent
         >>> result = pipeline.update()()
         >>> result
         [1, 64, 729]
 
         This is equivalent to:
-        >>> pipeline = feature >> dt.Power(value=noise)
+        >>> pipeline = feature >> dt.Power(value=random_exponent)
  
         """
 
         return self >> Power(other)
 
-    #TODO ***JH***
     def __rpow__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Raises another value to this feature as a power using right '**'.
+        """Raise another value (base) to this feature (exponent) as a power
+        using right '**'.
+
+        This operator is the right-hand version of `**`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other ** feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.Power(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other`
+        (base) and chains it into a `Power` feature (exponent).
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` representing the base. It is passed as the
+            `value` argument to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature representing `other` to the power of `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Raise a static base to a constant exponent:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 5 ** feature
+        >>> result = pipeline()
+        >>> result
+        [5, 25, 125]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=5) >> dt.Power(value=feature)
+
+        Raise a dynamic base that samples values at each call to the static
+        exponent:
+        >>> import numpy as np
+        >>>
+        >>> random_base = dt.Value(value=lambda: np.random.randint(10))
+        >>> pipeline = random_base ** feature
+        >>> result = pipeline.update()()
+        >>> result
+        [9, 81, 729]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=lambda: np.random.randint(10))
+        ...     >> dt.Power(value=feature)
+        ... )
 
         """
 
