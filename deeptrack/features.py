@@ -2539,14 +2539,14 @@ class Feature(DeepTrackNode):
         This is equivalent to:
         >>> pipeline = feature >> dt.Divide(value=5)
 
-        Implement feature that normalizes the features values to 1.0:
+        Implement feature that normalizes the features values:
 
-        >>> feature = dt.Value(value=[-1.0938, 25.4832, 193.03])
+        >>> feature = dt.Value(value=[1.0938, 25.4832, 193.03])
         >>> magnitude = dt.Value(value=lambda: max(feature()))
         >>> pipeline = feature / magnitude
         >>> result = pipeline.update()()
         >>> result
-        [-0.0056, 0.1320, 1.0]
+        [0.0056, 0.1320, 1.0]
 
         This is equivalent to:
         >>> pipeline = feature >> dt.Divide(value=feature())
