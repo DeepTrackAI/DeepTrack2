@@ -117,7 +117,7 @@ import numpy as np
 from deeptrack.backend.core import DeepTrackNode
 
 
-__all__ [
+__all__ = [
     "Source",
     "SourceItem",
     "Product",
