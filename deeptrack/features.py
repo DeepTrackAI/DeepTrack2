@@ -2561,11 +2561,11 @@ class Feature(DeepTrackNode):
     
         Floor divide a dynamic feature by another feature:
         >>> import numpy as np
-        
+        >>>
         >>> randint = dt.Value(value=lambda: np.random.randint(1, 5))
         >>> feature = dt.Value(value=[20, 30, 40])
         >>> pipeline = feature // randint
-        >>> result = pipeline()
+        >>> result = pipeline.update()()
         >>> result
         [6, 10, 13]
         
@@ -2626,7 +2626,7 @@ class Feature(DeepTrackNode):
     
         Floor divide a dynamic feature by another feature:
         >>> import numpy as np
-        
+        >>>
         >>> randint = dt.Value(value=lambda: np.random.randint(1, 5))
         >>> feature = dt.Value(value=[2, 3, 4])
         >>> pipeline = randint // feature
