@@ -2759,7 +2759,7 @@ class Feature(DeepTrackNode):
 
         Divide a dynamic value with a feature:
         >>> import numpy as np
-        
+        >>>
         >>> scale_factor = dt.Value(value=5)
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = noise / scale_factor
@@ -2772,6 +2772,7 @@ class Feature(DeepTrackNode):
         ...     dt.Value(value=lambda: np.random.rand())
         ...     >> dt.Divide(value=feature)
         ... )
+
         """
 
         return Value(other) >> Divide(self)
