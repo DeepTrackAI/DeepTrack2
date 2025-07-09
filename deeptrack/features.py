@@ -3081,7 +3081,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Checks if this feature is less than or equal to another using '<='.
+        """Check if this feature is less than or equal to another using '<='.
 
         This operator is shorthand for chaining with `LessThanOrEquals`.
         The expression:
