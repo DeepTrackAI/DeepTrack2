@@ -2327,7 +2327,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = feature + noise
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [1.325563919290048, 2.325563919290048, 3.325563919290048]
 
@@ -2387,7 +2387,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = noise + feature
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [1.5254613210875014, 2.5254613210875014, 3.5254613210875014]
 
@@ -2449,7 +2449,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = feature - noise
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [4.524072925059197, 5.524072925059197, 6.524072925059197]
 
@@ -2509,7 +2509,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = noise - feature
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [-0.18761746914784516, -1.1876174691478452, -2.1876174691478454]
 
@@ -2571,7 +2571,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = feature * noise
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [0.2809370704818722, 0.5618741409637444, 0.8428112114456167]
 
@@ -2631,7 +2631,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = noise * feature
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [0.8784860790329121, 1.7569721580658242, 2.635458237098736]
 
@@ -2846,7 +2846,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> random_exponent = dt.Value(value=lambda: np.random.randint(10))
         >>> pipeline = feature ** random_exponent
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [1, 64, 729]
 
@@ -2907,7 +2907,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> random_base = dt.Value(value=lambda: np.random.randint(10))
         >>> pipeline = random_base ** feature
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [9, 81, 729]
 
