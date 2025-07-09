@@ -52,6 +52,12 @@ from typing import List, Tuple
 
 from deeptrack.sources.base import Source
 
+
+__all__ = [
+    "ImageFolder",
+]
+
+
 known_extensions = ["png", "jpg", "jpeg", "tif", "tiff", "bmp", "gif"]
 
 class ImageFolder(Source):
@@ -262,4 +268,3 @@ class ImageFolder(Source):
             output.append(subfolder)
 
         return tuple(output)
-
