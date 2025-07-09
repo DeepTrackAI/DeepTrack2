@@ -335,31 +335,16 @@ class Source:
     ----------
     _dict: dict[str, Sequence[Any]]
         Internal mapping of source names to their corresponding data sequences.
-
     _length: int
         Number of items in the source. All fields must have the same length.
-
     _current_index: DeepTrackNode
         A node that holds the current active index. Used for dynamic access
         when a source attribute (e.g., `source.a`) is passed to a feature.
-
     _callbacks: set[Callable[[Any], None]]
         A set of callback functions triggered when a `SourceItem` is called.
 
-    Methods #TODO ***GV*** check and complete list of methods
+    Methods
     -------
-    __len__() -> int
-        It returns the number of items in the source.
-
-    __getitem__(index: int | slice) -> SourceItem or list[SourceItem]
-        It retrieves one or more items by index or slice.
-
-    _get_item(index: int) -> SourceItem:
-        It retrieves a single SourceItem at a specified index.
-
-    _get_slice(slice_obj: slice) -> list[SourceItem]:
-        It retrieves a list of SourceItems corresponding to a slice.
-
     product(**kwargs: Sequence[Any]) -> Product
         It returns a new source representing the cartesian product of the
         current source with the given sequences.
@@ -371,19 +356,34 @@ class Source:
     filter(predicate: Callable[..., bool]) -> Subset
         It returns a new source containing only the items for which the
         predicate returns `True`.
-
-    _validate_all_same_length(kwargs: dict[str, Sequence[Any]]) -> None:
-        It validates that all input sequences have the same length.
-
-    __iter__() -> Generator[SourceItem, None, None]
-        It iterates over all items in the source.
-
     set_index(index) -> Source
         It sets the active index used when evaluating attributes, like in
         `source.a()`.
 
     on_activate(callback: Callable[[SourceItem], None]) -> None
         It registers a callback to be called when any item is activated.
+
+    **Private and internal methods.**
+    __len__() -> int
+        It returns the number of items in the source.
+    __getitem__(index: int | slice) -> SourceItem or list[SourceItem]
+        It retrieves one or more items by index or slice.
+    _get_item(index: int) -> SourceItem:
+        It retrieves a single SourceItem at a specified index.
+    _get_slice(slice_obj: slice) -> list[SourceItem]:
+        It retrieves a list of SourceItems corresponding to a slice.
+    _validate_all_same_length(kwargs: dict[str, Sequence[Any]]) -> None:
+        It validates that all input sequences have the same length.
+    _wrap(key: str) -> SourceDeepTrackNode
+        It wraps a field from the source into a SourceDeepTrackNode.
+    _wrap_indexable(key: str) -> SourceDeepTrackNode
+        It wraps an indexable field as a SourceDeepTrackNode.
+    _wrap_iterable(key: str) -> SourceDeepTrackNode
+        It wraps a non-indexable iterable field as a SourceDeepTrackNode.
+    __iter__() -> Generator[SourceItem, None, None]
+        It iterates over all items in the source.
+    __repr__() -> str:
+        It returns a string representation of the source object.
 
     Examples
     --------
@@ -712,76 +712,124 @@ class Source:
         self: Source,
         **kwargs: Sequence[Any],
     ) -> Product:
-        """Return the product of the source with the given sources.
+        """Cartesian product of the current source with additional fields.
 
-        Returns a source that is the product of th
-        source with the given sources.
-
-        Example
-        -------
-        >>> from deeptrack.sources import Source
-        
-        >>> source = Source(a=[1, 2], b=[3, 4])
-        >>> new_source = source.product(c=[5, 6])
-        >>> new_source 
-        Source(c=[5, 6, 5, 6],
-               a=[1, 1, 2, 2],
-               b=[3, 3, 4, 4]
-        )
+        This method returns a new `Product` source formed by taking the
+        Cartesian product of the current source with the provided sequences.
+        The new source will contain one item for every combination of the
+        original items and the new sequences.
 
         Parameters
         ----------
-        kwargs: dict
-            A dictionary of lists or arrays.
-            The keys of the dictionary are the names of the sources,
-            and the values are the sources themselves.
-            
+        **kwargs: Sequence[Any]
+            One or more additional sequences to combine with the current
+            source. The keys define the names of the new fields, and the
+            values are indexable sequences (e.g., lists or arrays).
+
+        Returns
+        -------
+        Product
+            A new source representing the Cartesian product of the current
+            source with the additional sequences.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source
+
+        Create an initial source:
+        >>> source = Source(a=[1, 2], b=[3, 4])
+
+        Take the product with a new sequence:
+        >>> new_source = source.product(c=[5, 6])
+
+        Result:
+        >>> new_source
+        Product(c=[5, 6, 5, 6], a=[1, 1, 2, 2], b=[3, 3, 4, 4])
+
         """
+
         return Product(self, **kwargs)
 
     def constants(
         self: Source,
         **kwargs: Sequence[Any],
     ) -> Product:
-        """Return a new source where the given values are constant.
+        """New source where the given values are treated as constants.
 
-        Example
-        -------
-        from deeptrack.sources import Source
-        
-        >>> source = Source(a=[1, 2], b=[3, 4])
-        >>> new_source = source.constants(c=5)
-        >>> new_source
-        Equivalent to:
-        >>> Source(c=[5, 5], a=[1, 2], b=[3, 4]).
+        This method extends the current source with one or more constant
+        fields. Each value is repeated to match the length of the existing
+        source.
 
         Parameters
         ----------
-        kwargs: dict
-            A dictionary of values. The keys of the dictionary are the
-            names of the sources, and the values are the values themselves.
-            
+        **kwargs: Sequence[Any]
+            Named constant values to add to the source. Each key defines
+            the name of a new field, and each value will be broadcasted
+            as a constant (e.g., scalar, string, etc.).
+
+        Returns
+        -------
+        Product
+            A new source that includes the constant fields in addition to
+            the original fields.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source
+
+        Create a source:
+        >>> source = Source(a=[1, 2], b=[3, 4])
+
+        Add a constant field:
+        >>> new_source = source.constants(c=5)
+
+        Result:
+        >>> new_source
+        Product(c=[5, 5], a=[1, 2], b=[3, 4])
+
         """
+
         return Product(self, **{k: [v] for k, v in kwargs.items()})
 
     def filter(
         self: Source,
         predicate: Callable[..., bool],
     ) -> Subset:
-        """Return a new source with only the items that satisfy the predicate.
+        """New source containing only items that satisfy a predicate.
 
-        Example
+        This method filters the source based on a boolean-valued predicate
+        applied to each `SourceItem`. The result is a `Subset` containing
+        only the items for which the predicate returns `True`.
+
+        Parameters
+        ----------
+        predicate: Callable[..., bool]
+            A function that takes the fields of a `SourceItem` as keyword
+            arguments and returns `True` if the item should be included.
+
+        Returns
         -------
+        Subset
+            A new source containing only the filtered items.
+
+        Examples
+        --------
         >>> from deeptrack.sources import Source
-        
+
+        Create a source:
         >>> source = Source(a=[1, 2], b=[3, 4])
+
+        Filter to keep only items where a > 1:
         >>> new_source = source.filter(lambda a, b: a > 1)
+
+        Result:
         >>> new_source
-        Equivalent to:
-        >>> Source(a=[2], b=[4]).
-        
+        Subset(a=[2], b=[4])
+
         """
+
         indices = [i for i, item in enumerate(self) if predicate(**item)]
+
         return Subset(self, indices)
 
     def _validate_all_same_length(
@@ -825,36 +873,103 @@ class Source:
                 f"lengths were found: {lengths}"
             )
 
-    def _wrap_indexable(
-        self: Source,
-        key: str,
-    ) -> SourceDeepTrackNode:
-        value_getter = SourceDeepTrackNode(
-            lambda: self._dict[key][self._current_index()]
-        )
-        value_getter.add_dependency(self._current_index)
-        self._current_index.add_child(value_getter)
-        return value_getter
-
     def _wrap(
         self: Source,
         key: str,
     ) -> SourceDeepTrackNode:
+        """Wrap a field from the source into a SourceDeepTrackNode.
+
+        This method is called during source initialization to convert
+        input sequences into graph-compatible nodes.
+
+        This method checks whether the field associated with the given key
+        is indexable (i.e., supports `__getitem__()`) and wraps it accordingly
+        using either `_wrap_indexable()` or `_wrap_iterable()`.
+
+        Parameters
+        ----------
+        key: str
+            The name of the field in the source dictionary.
+
+        Returns
+        -------
+        SourceDeepTrackNode
+            A node representing access to the field at the current index.        
+
+        """
+
         value = self._dict[key]
+
+        # If the value supports __getitem__, treat it as indexable
         if hasattr(value, "__getitem__"):
             return self._wrap_indexable(key)
 
+        # Otherwise, attempt to convert it into a list and wrap it
         return self._wrap_iterable(key)
+
+    def _wrap_indexable(
+        self: Source,
+        key: str,
+    ) -> SourceDeepTrackNode:
+        """Wrap an indexable field as a SourceDeepTrackNode.
+
+        This method creates a node that returns the value at the current
+        index for a field that supports direct indexing (i.e., implements
+        `__getitem__`).
+
+        The returned node depends on the `_current_index` node, allowing
+        dynamic evaluation as the index changes.
+
+        Parameters
+        ----------
+        key: str
+            The name of the field in the source dictionary.
+
+        Returns
+        -------
+        SourceDeepTrackNode
+            A node that evaluates to `self._dict[key][self._current_index()]`.
+
+        """
+
+        value_getter = SourceDeepTrackNode(
+            lambda: self._dict[key][self._current_index()]
+        )
+        value_getter.add_dependency(self._current_index)
+        # self._current_index.add_child(value_getter)
+        return value_getter
 
     def _wrap_iterable(
         self: Source,
         key: str,
     ) -> SourceDeepTrackNode:
+        """Wrap a non-indexable iterable field as a SourceDeepTrackNode.
+
+        This method converts the iterable to a list and creates a node that
+        returns the value at the current index. It is used when the field does
+        not support direct indexing.
+
+        Like `_wrap_indexable`, the resulting node depends on the
+        `_current_index` node for dynamic evaluation.
+
+        Parameters
+        ----------
+        key: str
+            The name of the field in the source dictionary.
+
+        Returns
+        -------
+        SourceDeepTrackNode
+            A node that evaluates to
+            `list(self._dict[key])[self._current_index()]`.
+
+        """
+
         value_getter = SourceDeepTrackNode(
             lambda: list(self._dict[key])[self._current_index()]
             )
         value_getter.add_dependency(self._current_index)
-        self._current_index.add_child(value_getter)
+        # self._current_index.add_child(value_getter)
         return value_getter
 
     def __iter__(
@@ -977,6 +1092,40 @@ class Source:
         """
 
         self._callbacks.add(callback)
+
+    def __repr__(
+        self: Source,
+    ) -> str:
+        """Return a string representation of the source object.
+
+        Shows the class name and a truncated preview of each field, displaying
+        the first four items followed by an ellipsis if longer.
+
+        Returns
+        -------
+        str
+            A readable summary of the source fields and their contents.
+
+        """
+
+        field_summaries = []
+
+        for k, v in self._dict.items():
+            try:
+                preview = list(v[:4]) if len(v) > 4 else list(v)
+            except Exception:
+                preview = "<?>"
+
+            if isinstance(preview, list):
+                suffix = "..." if len(v) > 4 else ""
+                summary = f"{k}={preview}{suffix}"
+            else:
+                summary = f"{k}={preview}"
+
+            field_summaries.append(summary)
+
+        fields_repr = ", ".join(field_summaries)
+        return f"{self.__class__.__name__}({fields_repr})"
 
 
 class Product(Source):
