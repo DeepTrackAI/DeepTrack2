@@ -587,9 +587,8 @@ class Source:
         """Retrieve a list of SourceItems corresponding to a slice.
 
         This method returns a list of `SourceItem`s corresponding to the given
-        slice object (e.g., `source[1:4]`). It converts the slice to a list
-        of integer indices and uses the `_get_item()` method to retrieve each
-        item.
+        slice object (e.g., `source[1:4]`). It converts the slice into a list
+        of integer indices and uses `_get_item()` to retrieve each item.
 
         Parameters
         ----------
@@ -619,13 +618,12 @@ class Source:
 
         This is equivalent to:
         >>> source._get_slice(slice(1, 4))
-
         """
 
-        # Convert slice to list of indices
+        # Convert the slice to a list of indices
         indices = list(range(*slice_obj.indices(len(self))))
 
-        # Get values for each index
+        # Get values for each index using _get_item()
         return [self[i] for i in indices]
 
     def product(
