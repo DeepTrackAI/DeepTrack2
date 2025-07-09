@@ -3070,7 +3070,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Checks if another value is less than this feature using right '<'.
+        """Check if another value is less than this feature using right '<'.
 
         This operator is the right-hand version of `>`, enabling expressions
         where the `Feature` appears on the right-hand side. The expression:
