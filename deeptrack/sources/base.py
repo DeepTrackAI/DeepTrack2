@@ -1131,13 +1131,35 @@ class Source:
 class Product(Source):
     """Cartesian product of a source with one or more additional fields.
 
-    `Product` constructs a new source by taking the Cartesian product
-    between an existing `Source` and one or more sequences passed as
-    keyword arguments. Each item in the result is a unique combination
-    of an item from the original source and a value from each added field.
+    `Product` constructs a new source by taking the Cartesian product between
+    an existing `Source` and one or more sequences passed as keyword arguments.
+    Each item in the result is a unique combination of an item from the
+    original source and a value from each added field.
 
     This is typically used via `Source.product(...)`, and the resulting
     `Product` can be passed to DeepTrack features for dynamic evaluation.
+
+    If no base source is provided, a dummy source with a single empty item is
+    used. This allows syntax such as:
+
+    >>> Product(x=[1, 2], y=[3, 4])
+
+    to create a Cartesian product of just the keyword arguments.
+
+    While a list of dictionaries like `[{}]` would also technically work, this
+    approach is not type-safe. Internally, `Source(__dummy=[0])` is used and
+    then cleaned up to preserve correctness and consistency.
+
+
+    Parameters
+    ----------
+    __source: Source | None, optional
+        The base source to be expanded. If None, a default single-item
+        source is used, allowing `Product` to act on keyword arguments alone.
+
+    **kwargs: list[Any]
+        Named sequences to take the product with. Each field will be
+        broadcasted across all items in the base source.
 
     Examples
     --------
@@ -1160,21 +1182,27 @@ class Product(Source):
     >>>
     >>> product = Product(source, b=[10, 20])
 
+    Using Product without a base source:
+    >>> product = Product(x=[1, 2], y=["a", "b"])
+    >>> product
+    Product(x=[1, 1, 2, 2], y=['a', 'b', 'a', 'b'])
+
     """
 
     def __init__(
         self: Product,
-        __source: Source,
+        __source: Source | None = None,
         **kwargs: list[Any],
     ):
         """Initialize the Cartesian product of a source with additional fields.
 
         Parameters
         ----------
-        __source : Source
+        __source: Source | None
             The base source to be expanded via Cartesian product.
+            It defaults to None.
 
-        **kwargs : list[Any]
+        **kwargs: list[Any]
             Named sequences to take the product with. Each value must be
             a list or array of equal length.
 
@@ -1184,6 +1212,10 @@ class Product(Source):
             If any key in `kwargs` overlaps with a key in the original source.
 
         """
+
+        # This might be fragile and could be changed to a dummy source
+        if __source == None:
+            __source = [{}]
 
         # Compute the cartesian product of all items
         product = itertools.product(__source, *kwargs.values())
