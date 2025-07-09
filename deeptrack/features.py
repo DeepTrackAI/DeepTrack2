@@ -2645,23 +2645,117 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Multiply(self)
 
-    #TODO ***AL***
     def __truediv__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
         ) -> Feature:
-        """Divides this feature by another value using '/'.
+        """Divide a feature (nominator) using `/` with another
+        value (denominator).
+
+        This operator is shorthand for chaining with `dt.Divide`.
+        The expression:
+
+        >>> feature / other
+
+        is equivalent to:
+
+        >>> feature >> dt.Divide(value=other)
+
+        Internally, this method constructs a new `Divide` feature and uses the
+        right-shift operator (`>>`) to chain the current feature into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to divide feature with. It is passed to
+            `Divide` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature that is `self` divided by `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Divide a feature with a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature / 5
+        >>> result = pipeline()
+        >>> result
+        [0.2, 0.4, 0.6]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Divide(value=5)
+
+        Implement feature that normalizes the features values:
+        >>> feature = dt.Value(value=[1, 25, 20])
+        >>> magnitude = dt.Value(value=lambda: max(feature()))
+        >>> pipeline = feature / magnitude
+        >>> result = pipeline()
+        >>> result
+        [0.04, 1.0, 0.8]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     feature
+        ...     >> dt.Divide(value=lambda: max(feature())
+        ... )
 
         """
 
         return self >> Divide(other)
 
-    #TODO ***AL***
     def __rtruediv__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Divides another value by this feature using right '/'.
+        """Divide `other` value (nominator) by this feature (denominator)
+        using right '/'.
+
+        This operator is shorthand for chaining with `dt.Divide`, and is the
+        right-hand side version of  `__truediv__`.
+
+        The expression:
+
+        >>> other / feature
+
+        is equivalent to:
+
+        >>> other >> dt.Divide(value=feature)
+
+        Internally, this method constructs a new `Value` feature from `other`
+        and uses the right-shift operator (`>>`) to chain it into a `Divide`
+        feature.
+
+        Parameters
+        ----------
+        other: Any
+            The constant or `Feature` to be divided by `self`. It is passed to
+            `Divide` as the input to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature that is `other` divided by `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Divide a constant with a feature.
+        >>> feature = dt.Value(value=[-1, 2, 2])
+        >>> pipeline = 5 / feature
+        >>> result = pipeline()
+        >>> result
+        [-5.0, 2.5, 2.5]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=5)
+        ...     >> dt.Divide(value=feature)
+        ... )
 
         """
 
@@ -2684,7 +2778,7 @@ class Feature(DeepTrackNode):
         other: Any
     ) -> Feature:
         """Performs right floor division using '//'.
-
+        
         """
 
         return Value(other) >> FloorDivide(self)
