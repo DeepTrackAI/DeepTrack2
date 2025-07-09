@@ -1244,38 +1244,234 @@ class Product(Source):
 
 
 class Subset(Source):
+    """A filtered view of a Source defined by a list of indices.
+
+    `Subset` represents a restricted view of a parent `Source`, exposing
+    only the items corresponding to the provided list of indices. It
+    supports indexing, iteration, and can be passed to DeepTrack features.
+
+    The subset preserves all attributes and dynamic behavior of the
+    original source, but limits iteration and indexing to the selected
+    indices.
+
+    Parameters
+    ----------
+    source: Source
+        The original source to take a subset from.
+    indices: list[int]
+        A list of indices specifying which items to include.
+
+    Attributes
+    ----------
+    source: Source
+        The original full source that this subset is derived from.
+    indices: list[int]
+        The list of selected indices within the original source.
+    _dict: dict[str, Sequence[Any]]
+        Dictionary of sliced field values for compatibility with the
+        `Source` interface and `__repr__()`.
+
+    Methods
+    -------
+    __iter__() -> Generator[SourceItem, None, None]
+        It iterates over the items at the specified indices.
+    __getitem__(index: int) -> SourceItem
+        It retrieves the item at a given position in the subset.
+    __len__() -> int
+        It returns the number of items in the subset.
+    __getattr__(name: str) -> Any
+        It delegates attribute access to the parent source.
+
+    Examples
+    --------
+    >>> from deeptrack.sources import Source, Subset
+
+    Create a source:
+    >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
+
+    Extract a subset:
+    >>> subset = Subset(source, [0, 2])
+    >>> subset
+    Subset(a=[1, 3], b=[10, 30])
+
+    >>> list[subset]
+    [SourceItem({'a': 1, 'b': 10}, 1 callback(s)),
+    SourceItem({'a': 3, 'b': 30}, 1 callback(s))]
+
+    """
+
+    source: Source
+    indices: list[int]
+    _dict: dict[str, Sequence[Any]]
 
     def __init__(
         self: Subset,
         source: Source,
         indices: list[int],
     ):
+        """Initialize a Subset from a source and a list of indices.
+
+        This constructor extracts a subset of items from the given source
+        by selecting only the entries corresponding to the provided indices.
+
+        The underlying source is preserved in `self.source`, while `self._dict`
+        holds the sliced values for compatibility with `Source` methods
+        such as `__repr__`. The subset supports all dynamic attribute access
+        via delegation to the original source.
+
+        Parameters
+        ----------
+        source: Source
+            The original source from which to extract the subset.
+        indices: list[int]
+            The indices of the items to include in the subset.
+
+        """
+
         self.source = source
         self.indices = indices
+
+        # Build the field dictionary for the subset by slicing each field
         self._dict = {k: [v[i] for i in indices]
                       for k, v in source._dict.items()}
 
     def __iter__(
         self: Subset,
     ) -> Generator[SourceItem, None, None]:
+        """Iterate over the items in the subset.
+
+        This method yields each `SourceItem` corresponding to the indices
+        stored in the subset. Items are retrieved from the original source.
+
+        Yields
+        ------
+        SourceItem
+            An item from the original source at one of the selected indices.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source, Subset
+
+        Create a source:
+        >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
+
+        Extract a subset:
+        >>> subset = Subset(source, [0, 2])
+
+        Iterate ove the items of the subset:
+        >>> for item in subset:
+        ...     print(item["a"], item["b"])
+        1 10
+        3 30
+
+        """
+
         for i in self.indices:
             yield self.source[i]
 
     def __getitem__(
         self: Subset,
-        index: int
+        index: int,
     ) -> SourceItem:
+        """Retrieve a SourceItem at a given position in the subset.
+
+        This method returns the item at the specified position in the
+        subset, mapped to its corresponding index in the original source.
+
+        Parameters
+        ----------
+        index: int
+            The position within the subset (not the original source).
+
+        Returns
+        -------
+        SourceItem
+            The item corresponding to `self.indices[index]` in the original
+            source.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source, Subset
+
+        Create a source:
+        >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
+
+        Extract a subset:
+        >>> subset = Subset(source, [0, 2])
+
+        >>> item = subset[1]
+        >>> item["a"], item["b"]
+        (3, 30)
+
+        """
+
         return self.source[self.indices[index]]
 
     def __len__(
         self: Subset,
     ) -> int:
+        """Return the number of items in the subset.
+
+        This corresponds to the number of selected indices from the
+        original source.
+
+        Returns
+        -------
+        int
+            The number of items in the subset.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source, Subset
+
+        Create a source:
+        >>> source = Source(a=[1, 2, 3])
+
+        Extract a subset:
+        >>> subset = Subset(source, [0, 2])
+
+        Get the length of the subset:
+        >>> len(subset)
+        2
+
+        """
+
         return len(self.indices)
 
     def __getattr__(
         self: Subset,
         name: str,
     ) -> Any:
+        """Delegate attribute access to the original source.
+
+        This allows the subset to transparently expose dynamic attributes
+        from the original source, such as fields like `source.a` or methods
+        defined on the source class.
+
+        Parameters
+        ----------
+        name: str
+            The name of the attribute to access.
+
+        Returns
+        -------
+        Any
+            The corresponding attribute from the original source.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source, Subset
+
+        Create a source:
+        >>> source = Source(a=[1, 2, 3])
+
+        Extract a subset:
+        >>> subset = Subset(source, [0, 2])
+        >>> subset.a()
+        1
+    
+        """
+
         return getattr(self.source, name)
 
 
