@@ -2965,7 +2965,19 @@ class Feature(DeepTrackNode):
 
         This is equivalent to:
         >>> pipeline = feature >> dt.GreaterThan(value=2)
- 
+
+        Compare to a dynamic cutoff that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
+        >>> pipeline = feature > random_cutoff
+        >>> result = pipeline.update()()
+        >>> result
+        [False, True, True]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.GreaterThan(value=random_cutoff)
+
         """
 
         return self >> GreaterThan(other)
