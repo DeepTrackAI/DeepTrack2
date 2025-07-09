@@ -524,6 +524,110 @@ class Source:
         else:
             return self._get_item(index)
 
+    def _get_item(
+        self: Source,
+        index: int,
+    ) -> SourceItem:
+        """Retrieve a single SourceItem at a specified index.
+
+        This method extracts the values at the given index from all fields
+        in the source and wraps them in a `SourceItem`. It also attaches
+        callbacks that are executed when the item is activated (i.e., called).
+
+        The first callback sets the active index in the source to the given
+        index. Additional callbacks come from those registered via the
+        `on_activate()` method.
+
+        Parameters
+        ----------
+        index: int
+            The index of the item to retrieve.
+
+        Returns
+        -------
+        SourceItem
+            The item at the specified index, wrapped with activation callbacks.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source
+
+        Create a source:
+        >>> source = Source(a=[1, 2], b=[10, 20])
+
+        Extract the source item corresponding to index 1:
+        >>> item = source._get_item(1)
+        >>> item
+        SourceItem({'a': 2, 'b': 20}, 1 callback(s))
+
+        Since the item has not been activated the current index of the source
+        is still 0:
+        >>> source._current_index()
+        0
+
+        Activate the item and sets the source's current index to 1:
+        >>> item()
+        >>> source._current_index()
+        1
+
+        """
+
+        # Collect field values at the given index from all source sequences
+        values = {k: v[index] for k, v in self._dict.items()}
+
+        # Prepend the set_index callback so the active index is updated first
+        callbacks = [lambda _: self.set_index(index)] + list(self._callbacks)
+
+        return SourceItem(callbacks, **values)
+
+    def _get_slice(
+        self: Source,
+        slice_obj: slice,
+    ) -> list[SourceItem]:
+        """Retrieve a list of SourceItems corresponding to a slice.
+
+        This method returns a list of `SourceItem`s corresponding to the given
+        slice object (e.g., `source[1:4]`). It converts the slice to a list
+        of integer indices and uses the `_get_item()` method to retrieve each
+        item.
+
+        Parameters
+        ----------
+        slice_obj: slice
+            A slice object representing the range of indices to retrieve.
+
+        Returns
+        -------
+        list[SourceItem]
+            A list of SourceItems corresponding to the selected range.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source
+
+        Create a source:
+        >>> source = Source(
+        ...     a=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+        ...     b=[10, 20, 30, 40, 50, 60, 70, 80, 90],
+        ... )
+
+        Get a slice of the source:
+        >>> source[1:4]
+        [SourceItem({'a': 2, 'b': 20}, 1 callback(s)),
+        SourceItem({'a': 3, 'b': 30}, 1 callback(s)),
+        SourceItem({'a': 4, 'b': 40}, 1 callback(s))]
+
+        This is equivalent to:
+        >>> source._get_slice(slice(1, 4))
+
+        """
+
+        # Convert slice to list of indices
+        indices = list(range(*slice_obj.indices(len(self))))
+
+        # Get values for each index
+        return [self[i] for i in indices]
+
     def product(
         self: Source,
         **kwargs: Sequence[Any],
@@ -653,26 +757,6 @@ class Source:
 
         self._current_index.set_value(index)
         return self
-
-    def _get_item(
-        self: Source,
-        index: int,
-    ) -> SourceItem:
-        values = {k: v[index] for k, v in self._dict.items()}
-        callbacks = list(self._callbacks)
-        [lambda _: self.set_index(index)] + list(self._callbacks)  # callbacks.append(lambda _: self.set_index(index))
-        return SourceItem(callbacks, **values)
-
-    def _get_slice(
-        self: Source,
-        slice: list[SourceItem],
-    ) -> list[SourceItem]:
-
-        # Convert slice to list of indices.
-        indices = list(range(*slice.indices(len(self))))
-
-        # Get values for each index.
-        return [self[i] for i in indices]
 
     def on_activate(
         self: Source,
