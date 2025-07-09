@@ -276,7 +276,7 @@ class SourceItem(dict):
         """
 
         self._callbacks = callbacks
-  
+
         super().__init__(**kwargs)
 
     def __call__(
@@ -369,11 +369,11 @@ class Source:
         It returns a new source containing only the items for which the
         predicate returns `True`.
 
-    on_activate(callback) -> None
-        Registers a callback to be called when any item is activated.
-
     set_index(index) -> Source
         Sets the active index used when evaluating attributes like `source.a`.
+
+    on_activate(callback: Callable[[SourceItem], None]) -> None
+        Registers a callback to be called when any item is activated.
 
     Examples
     --------
@@ -648,18 +648,19 @@ class Source:
 
     def set_index(
         self: Source,
-        index: int
+        index: int,
     ) -> Source:
+
         self._current_index.set_value(index)
         return self
 
     def _get_item(
         self: Source,
-        index: int
+        index: int,
     ) -> SourceItem:
         values = {k: v[index] for k, v in self._dict.items()}
         callbacks = list(self._callbacks)
-        callbacks.append(lambda _: self.set_index(index))
+        [lambda _: self.set_index(index)] + list(self._callbacks)  # callbacks.append(lambda _: self.set_index(index))
         return SourceItem(callbacks, **values)
 
     def _get_slice(
@@ -675,8 +676,40 @@ class Source:
 
     def on_activate(
         self: Source,
-        callback: Callable[[Any], None],
+        callback: Callable[[SourceItem], None],
     ) -> None:
+        """Register a callback to be triggered when a SourceItem is activated.
+
+        The callback will be executed every time a `SourceItem` produced by
+        this `Source` is called (i.e., when `item()` is invoked). The callback
+        receives the `SourceItem` as its argument, allowing access or mutation
+        of its contents.
+
+        Parameters
+        ----------
+        callback : Callable[[SourceItem], None]
+            A function that takes a `SourceItem` and performs a side-effect
+            (e.g., logging, modifying metadata, triggering updates). The
+            function must return None.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source
+
+        Define a callback function:
+        >>> def log_access(item):
+        ...     print(f"CALLBACK - Item accessed: {item}")
+
+        Create a source and register the callback:
+        >>> source = Source(a=[1, 2], b=[10, 20])
+        >>> source.on_activate(log_access)
+
+        >>> item = source[0]
+        >>> item();
+        CALLBACK - Item accessed: SourceItem({'a': 1, 'b': 10}, 2 callback(s))
+
+        """
+
         self._callbacks.add(callback)
 
 
