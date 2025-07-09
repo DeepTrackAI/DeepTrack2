@@ -3047,7 +3047,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Check if another value is greater than this feature using 
+        """Check if another value is greater than this feature using
         right '>'.
 
         This operator is the right-hand version of `>`, enabling expressions
