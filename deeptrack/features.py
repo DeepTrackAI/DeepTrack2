@@ -3071,8 +3071,8 @@ class Feature(DeepTrackNode):
         Returns
         -------
         Feature
-            A new feature representing the result of greater-than comparison
-            between `other` and `self`.
+            A new feature representing the element-wise result of greater-than
+            comparison between `other` and `self`.
 
         Examples
         --------
