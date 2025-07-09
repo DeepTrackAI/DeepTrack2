@@ -2781,16 +2781,18 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Perform floor division of `feature` (numerator) with
-        `other` (denominator) using `//`.
+        """Perform floor division of feature with other using `//`.
+    
+        It performs the floor division of `feature` (numerator) with `other`
+        (denominator) using `//`.
     
         This operator is shorthand for chaining with `FloorDivide`.
         The expression:
     
         >>> feature // other
-    
+
         is equivalent to:
-    
+
         >>> feature >> dt.FloorDivide(value=other)
     
         Internally, this method constructs a new `FloorDivide` feature and uses
@@ -2845,7 +2847,9 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Perform floor division of `other` (numerator) with
+        """Perform floor division of other with feature using '//'.
+    
+        This operator performs the floor division of `other` (numerator) with
         `feature` (denominator) using '//'.
     
         This operator is shorthand for chaining with `FloorDivide`.
