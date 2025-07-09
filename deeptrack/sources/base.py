@@ -351,11 +351,14 @@ class Source:
     __len__() -> int
         It returns the number of items in the source.
 
-    __getitem__(index) -> SourceItem or list[SourceItem]
+    __getitem__(index: int | slice) -> SourceItem or list[SourceItem]
         It retrieves one or more items by index or slice.
 
-    __iter__() -> Generator[SourceItem, None, None]
-        Iterates over all items in the source.
+    _get_item(index: int) -> SourceItem:
+        It retrieves a single SourceItem at a specified index.
+
+    _get_slice(slice_obj: slice) -> list[SourceItem]:
+        It retrieves a list of SourceItems corresponding to a slice.
 
     product(**kwargs: Sequence[Any]) -> Product
         It returns a new source representing the cartesian product of the
@@ -369,11 +372,18 @@ class Source:
         It returns a new source containing only the items for which the
         predicate returns `True`.
 
+    _validate_all_same_length(kwargs: dict[str, Sequence[Any]]) -> None:
+        It validates that all input sequences have the same length.
+
+    __iter__() -> Generator[SourceItem, None, None]
+        It iterates over all items in the source.
+
     set_index(index) -> Source
-        Sets the active index used when evaluating attributes like `source.a`.
+        It sets the active index used when evaluating attributes, like in
+        `source.a()`.
 
     on_activate(callback: Callable[[SourceItem], None]) -> None
-        Registers a callback to be called when any item is activated.
+        It registers a callback to be called when any item is activated.
 
     Examples
     --------
@@ -500,7 +510,7 @@ class Source:
 
         """
 
-        self.validate_all_same_length(kwargs)
+        self._validate_all_same_length(kwargs)
 
         self._dict = kwargs
         self._length = len(kwargs[list(kwargs.keys())[0]])
@@ -513,12 +523,84 @@ class Source:
     def __len__(
         self: Source,
     ) -> int:
+        """Return the number of items in the source.
+
+        This returns the number of indexed entries available in the source,
+        which corresponds to the length of any of the underlying sequences.
+
+        Returns
+        -------
+        int
+            The number of items in the source.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source
+
+        Create a source:
+        >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
+
+        Get its length:
+        >>> len(source)
+        3
+
+        """
+
         return self._length
 
     def __getitem__(
         self: Source,
-        index: int,
+        index: int | slice,
     ) -> SourceItem | list[SourceItem]:
+        """Retrieve one or more SourceItems by index or slice.
+
+        If the input is an integer, this returns a single `SourceItem`
+        at the specified index. If the input is a slice, it returns a list
+        of `SourceItem`s corresponding to the slice range.
+
+        Parameters
+        ----------
+        index: int or slice
+            The index or slice specifying which item(s) to retrieve.
+
+        Returns
+        -------
+        SourceItem or list[SourceItem]
+            The item(s) corresponding to the given index or slice.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source
+
+        Create a source:
+        >>> source = Source(
+        ...     a=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+        ...     b=[10, 20, 30, 40, 50, 60, 70, 80, 90],
+        ... )
+
+        Retrieve a single item:
+        >>> item = source[1]
+        >>> item
+        SourceItem({'a': 2, 'b': 20}, 1 callback(s))
+
+        >>> item["a"]
+        20
+
+        >>> item["b"]
+        2
+
+        Retrieve a slice of items:
+        >>> items = source[1:4]
+        >>> items
+        [SourceItem({'a': 2, 'b': 20}, 1 callback(s)),
+        SourceItem({'a': 3, 'b': 30}, 1 callback(s)),
+        SourceItem({'a': 4, 'b': 40}, 1 callback(s))]
+ 
+        >>> [(item["a"], item["b"]) for item in items]
+        [(2, 20), (3, 30), (4, 40)]
+
+        """
+
         if isinstance(index, slice):
             return self._get_slice(index)
         else:
@@ -702,13 +784,46 @@ class Source:
         indices = [i for i, item in enumerate(self) if predicate(**item)]
         return Subset(self, indices)
 
-    def validate_all_same_length(
+    def _validate_all_same_length(
         self: Source,
-        kwargs: list[Any],
+        kwargs: dict[str, Sequence[Any]],
     ) -> None:
+        """Validate that all input sequences have the same length.
+
+        This method checks that all sequences provided to the source have equal
+        length. It is called during initialization to ensure consistent
+        indexing behavior.
+
+        Parameters
+        ----------
+        kwargs: dict[str, Sequence[Any]]
+            Dictionary of named sequences to validate.
+
+        Raises
+        ------
+        ValueError
+            If the sequences do not all have the same length.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source
+
+        This works:
+        >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
+
+        This raises a ValueError:
+        >>> source = Source(a=[1, 2], b=[10, 20, 30])
+
+        """
+
         lengths = [len(v) for v in kwargs.values()]
-        if not all([l == lengths[0] for l in lengths]):
-            raise ValueError("All sources must have the same length.")
+        unique_lengths = set(lengths)
+
+        if len(unique_lengths) > 1:
+            raise ValueError(
+                "All sources must have the same length, but the following "
+                f"lengths were found: {lengths}"
+            )
 
     def _wrap_indexable(
         self: Source,
@@ -745,6 +860,31 @@ class Source:
     def __iter__(
         self: Source,
     ) -> Generator[SourceItem, None, None]:
+        """Iterate over all items in the source.
+
+        This method allows the source to be used in for-loops and
+        comprehensions by yielding each `SourceItem` in sequence. Each item is
+        constructed using `__getitem__()`, which attaches the appropriate
+        callbacks.
+
+        Yields
+        ------
+        SourceItem
+            Each item in the source, one at a time.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source
+
+        >>> source = Source(a=[1, 2], b=[10, 20])
+
+        >>> for item in source:
+        ...     print(item["a"], item["b"])
+        1 10
+        2 20
+
+        """
+
         for i in range(len(self)):
             yield self[i]
 
@@ -752,8 +892,52 @@ class Source:
         self: Source,
         index: int,
     ) -> Source:
+        """Set the active index of the source for dynamic evaluation.
+
+        This method updates the internal `_current_index` node, which is
+        used when evaluating attribute-based access such as `source.a()`.
+        It is typically called automatically when a `SourceItem` is
+        activated, but can also be called manually to override the index.
+
+        Parameters
+        ----------
+        index: int
+            The index to set as the current active index.
+
+        Returns
+        -------
+        Source
+            The source itself, allowing method chaining.
+
+        Examples
+        --------
+        >>> from deeptrack.sources import Source
+
+        Create a source:
+        >>> source = Source(
+        ...     a=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+        ...     b=[10, 20, 30, 40, 50, 60, 70, 80, 90],
+        ... )
+
+        >>> source.a(), source.b()
+        (1, 10)
+
+        >>> source.set_index(5)
+        >>> source.a(), source.b()
+        (6, 60)
+
+        >>> source.set_index(-1)
+        >>> source.a(), source.b()
+        (9, 90)
+
+        >>> source.set_index(1)
+        >>> source.a(), source.b()
+        (2, 20)
+
+        """
 
         self._current_index.set_value(index)
+
         return self
 
     def on_activate(
