@@ -2763,7 +2763,7 @@ class Feature(DeepTrackNode):
         >>> scale_factor = dt.Value(value=5)
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = noise / scale_factor
-        >>> result = pipeline()
+        >>> result = pipeline.update()()
         >>> result
         0.13736078990870043
 
