@@ -2689,7 +2689,7 @@ class Feature(DeepTrackNode):
         This is equivalent to:
         >>> pipeline = feature >> dt.Divide(value=5)
 
-        Implement feature that normalizes the features values:
+        Implement a normalization pipeline:
         >>> feature = dt.Value(value=[1, 25, 20])
         >>> magnitude = dt.Value(value=lambda: max(feature()))
         >>> pipeline = feature / magnitude
@@ -2727,7 +2727,7 @@ class Feature(DeepTrackNode):
 
         Internally, this method constructs a new `Value` feature from `other`
         and uses the right-shift operator (`>>`) to chain it into a `Divide`
-        feature.
+        feature that divides the current feature as a dynamic value.
 
         Parameters
         ----------
@@ -2757,6 +2757,21 @@ class Feature(DeepTrackNode):
         ...     >> dt.Divide(value=feature)
         ... )
 
+        Divide a dynamic value with a feature:
+        >>> import numpy as np
+        
+        >>> scale_factor = dt.Value(value=5)
+        >>> noise = dt.Value(value=lambda: np.random.rand())
+        >>> pipeline = noise / scale_factor
+        >>> result = pipeline()
+        >>> result
+        0.13736078990870043
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=lambda: np.random.rand())
+        ...     >> dt.Divide(value=feature)
+        ... )
         """
 
         return Value(other) >> Divide(self)
