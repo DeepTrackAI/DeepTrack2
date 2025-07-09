@@ -1,7 +1,9 @@
-"""Utility classes for data sources.
+"""Utility classes and functions for dynamic data sources in DeepTrack.
 
-This module provides a set of utility classes designed for managing and
-manipulating data sources.
+This module provides core abstractions for representing and manipulating
+collections of data in a modular and composable way. It defines the structure
+and behavior of dynamic sources that can be indexed, filtered, combined,
+and tracked through DeepTrack's computational graph.
 
 These tools are primarily used in scenarios where data needs to be dynamically
 manipulated, filtered, or combined for feature generation in machine learning
@@ -9,44 +11,60 @@ pipelines.
 
 Key Features
 ------------
-- **Node Hierarchy**
-
-    `SourceDeepTrackNode` extends `DeepTrackNode` with utilities to create
-    nested nodes, and structured data access.
-    
 - **Dynamic Data Access**
 
-    It retrieves data items as callable objects, supporting custom callbacks and dependency tracking.
+    Sources return dictionary-like items (`SourceItem`) that activate
+    custom callbacks when accessed, enabling dynamic behavior such as
+    dependency tracking and delayed evaluation.
 
-- **Randomized Splitting**
+- **Composable Data Structures**
 
-    Enables splitting of data sources into non-overlapping
-    subsets with user-specified length.
-    
+    Includes tools like `Product`, `Subset`, and `Sources` to manipulate
+    and combine data sources for flexible pipeline construction.
+
+- **Hierarchical Node System**
+
+    The `SourceDeepTrackNode` class extends `DeepTrackNode` to support
+    hierarchical field access and automatic dependency propagation.
+
+- **Random Splitting Utilities**
+
+    Provides utilities such as `random_split()` for reproducible partitioning
+    of sources into disjoint subsets for training/validation/test workflows.
 
 Module Structure
 ----------------
 Classes:
 
-- `SourceDeepTrackNode`: Creates child nodes when accessing attributes.
+- `Source`: Represents one or more named sequences of data.
 
-- `SourceItem`: Dict-like object that calls a list of callbacks when called.
+    Provides access to items as `SourceItem` and integrates with features
+    for graph-based computation.
 
-- `Source`: Represents one or more sources of data.
+- `SourceItem`: A dict-like object that triggers callbacks when called.
 
-- `Join`: Alias of `Source`.
+    Wraps data fields from a `Source` and activates dependency updates
+    on use.
 
-- `Product`: Represents the product of the source with the given sources.
+- `SourceDeepTrackNode`: A DeepTrack node that supports attribute access.
 
-    This class is used to represent the product of a source with
-    one or more sources. When accessed, it returns a deeptrack object that
-    can be passed as properties to features.
-        
-- `Subset`: Represents the subset of a `Source`.
+    Automatically creates child nodes when dictionary-like attributes
+    are accessed (e.g., `source.a.b`).
 
-- `Sources`: Represents multiple sources as a single access point.
+- `Product`: Cartesian product of a `Source` with additional fields.
 
-    Used when one of multiple sources can be passed to a feature.
+    Allows combining items with new fields, either with or without a base
+    source.
+
+- `Subset`: Represents a filtered view of a `Source` via explicit indices.
+
+    Provides indexed access to a restricted set of items.
+
+- `Sources`: Joins multiple `Source` objects into one dynamic access point.
+
+    Enables field sharing and flexible evaluation across datasets.
+
+- `Join`: Alias for `Sources`.
 
 Functions:
 
@@ -54,52 +72,85 @@ Functions:
 
     def random_split(
         source: Source,
-        lengths: list[int or float],
-        generator: np.random.Generator = np.random.default_rng()
-    ) -> list[Subset]:
-        Randomly split source into non-overlapping new sources of given lengths.
+        lengths: list[int | float],
+        generator: np.random.Generator = np.random.default_rng(),
+    ) -> list[Subset]
+
+    Randomly splits a `Source` into multiple non-overlapping subsets.
 
 Examples
 --------
-Call a list of callbacks:
+import deeptrack as dt
+
+**Trigger callbacks when a source item is accessed**
 
 >>> from deeptrack.sources import Source
-
+>>>
 >>> source = Source(a=[1, 2], b=[3, 4])
+>>>
 >>> @source.on_activate
->>> def callback(item):
->>>     print(item)
->>> source[0]() 
+... def callback(item):
+...     print("Activated:", item)
 
-Equivalent to:
+>>> source[0]();
+Activated: SourceItem({'a': 1, 'b': 3}, 2 callback(s))
 
->>> SourceItem({'a': 1, 'b': 3}).
+**Access nested dictionary-like data with dynamic nodes**
 
-Create a node that creates child nodes when attributes are accessed:
-
->>> from deeptrack.sources import SourceDeepTrackNode
-
->>> node = SourceDeepTrackNode(lambda: {"a": 1, "b": 2})
->>> child = node.a
->>> child()
+>>> from deeptrack.sources.base import SourceDeepTrackNode
+>>>
+>>> node = SourceDeepTrackNode(lambda: {"a": 1, "b": {"x": 42}})
+>>> node.a()
 1
+>>> node.b.x()
+42
 
-Join multiple sources into a single access point:
+**Use shared features across multiple sources**
 
->>> import deeptrack as dt
->>> from deeptrack.sources import Source
-
->>> source1 = Source(a=[1, 2], b=[3, 4])
->>> source2 = Source(a=[5, 6], b=[7, 8])
->>> joined_source = Sources(source1, source2)
->>> feature_a = dt.Value(joined_source.a)
->>> feature_b = dt.Value(joined_source.b)
->>> sum_feature = feature_a + feature_b
-
->>> sum_feature(source1[0])
+>>> from deeptrack.sources import Source, Sources
+>>>
+>>> train = Source(a=[1, 2], b=[3, 4])
+>>> val = Source(a=[5, 6], b=[7, 8])
+>>> joined = Sources(train, val)
+>>> feature = dt.Value(joined.a) + dt.Value(joined.b)
+>>> feature(train[0])
 4
->>> sum_feature(source2[0])
+>>> feature(val[0])
 12
+
+**Create a Cartesian product of fields**
+
+>>> from deeptrack.sources import Source
+>>>
+>>> source = Source(a=[1, 2])
+>>> product = source.product(b=[10, 20])
+>>> list(product)
+[SourceItem({'b': 10, 'a': 1}, 1 callback(s)),
+ SourceItem({'b': 20, 'a': 1}, 1 callback(s)),
+ SourceItem({'b': 10, 'a': 2}, 1 callback(s)),
+ SourceItem({'b': 20, 'a': 2}, 1 callback(s))]
+
+**Extract a subset of selected indices**
+
+>>> from deeptrack.sources import Source, Subset
+>>>
+>>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
+>>> subset = Subset(source, [0, 2])
+>>> list(subset)
+[SourceItem({'a': 1, 'b': 10}, 1 callback(s)),
+ SourceItem({'a': 3, 'b': 30}, 1 callback(s))]
+
+**Split a source randomly into multiple parts**
+
+>>> from deeptrack.sources import random_split, Source
+>>>
+>>> source = Source(
+...     a=list(range(10)),
+...     b=list(range(10, 20)),
+... )
+>>> train, val, test = random_split(source, [0.5, 0.3, 0.2])
+>>> len(train), len(val), len(test)
+(5, 3, 2)
 
 """
 
