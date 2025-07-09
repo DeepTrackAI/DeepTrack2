@@ -2537,8 +2537,8 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         other: Any
-            A constant or `Feature` by which `self` will be floor-divided. It is
-            passed as the input to `value`.
+            A constant or `Feature` by which `self` will be floor-divided. It
+            is passed as the input to `value`.
     
         Returns
         -------
@@ -2574,6 +2574,7 @@ class Feature(DeepTrackNode):
         ...     feature
         ...     >> dt.FloorDivide(value=lambda: np.random.randint(1, 5))
         ... )
+        
         """
 
         return self >> FloorDivide(other)
@@ -2638,6 +2639,7 @@ class Feature(DeepTrackNode):
         ...     dt.Value(value=lambda: np.random.randint(1, 5))
         ...     >> dt.FloorDivide(value=feature)
         ... )
+        
         """
 
         return Value(other) >> FloorDivide(self)
