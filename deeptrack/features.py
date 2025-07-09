@@ -2770,7 +2770,7 @@ class Feature(DeepTrackNode):
         This is equivalent to:
         >>> pipeline = (
         ...     dt.Value(value=lambda: np.random.rand())
-        ...     >> dt.Divide(value=feature)
+        ...     >> dt.Divide(value=scale_factor)
         ... )
 
         """
