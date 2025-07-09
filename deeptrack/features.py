@@ -3065,7 +3065,7 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         other: Any
-            A constant or `Feature` representing the base. It is passed as
+            A constant or `Feature` to compare against. It is passed as
             the `value` argument to `Value`.
 
         Returns
