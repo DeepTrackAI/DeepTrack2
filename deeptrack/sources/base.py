@@ -1476,32 +1476,100 @@ class Subset(Source):
 
 
 class Sources:
-    """Joins multiple sources into a single access point.
+    """Joins multiple sources into a single dynamic access point.
 
-    Used when one of multiple sources can be passed to a feature.
-    For example the sources are split into training and validation sets,
-    and the user can choose which one to use.
+    `Sources` is used to combine multiple `Source` objects into one logical
+    interface. It enables multiple independent sources to share the same
+    features dynamically. This is particularly useful in cases like training/
+    validation/test splits, where features are defined once and evaluated
+    on different datasets.
+
+    When any item from one of the joined sources is activated (i.e., called),
+    the corresponding fields in the `Sources` object are updated and
+    propagated through the computational graph via `SourceDeepTrackNode`.
+
+    Aliased as `Join` for semantic clarity in different contexts.
 
     Parameters
     ----------
-    sources: Source
-    
-        The sources to join.
-        
+    *sources: Source
+        One or more `Source` instances to join. Each source must have
+        compatible field names (e.g., all sources used with a common feature
+        must define that feature’s required fields).
+
+    Attributes
+    ----------
+    sources: tuple[Source, ...]
+        The tuple of joined source instances.
+
+    _dict: dict[str, Any]
+        Dictionary used internally to store the currently active values
+        for each field.
+
+    <dynamic field accessors>: SourceDeepTrackNode
+        Each field key becomes a `SourceDeepTrackNode` that reflects the
+        currently activated item from any of the joined sources.
+
+    Methods
+    -------
+    _callback(item: SourceItem) -> None
+        Internal method triggered on activation. Updates dynamic fields
+        with the activated item values.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.sources import Source, Sources
+
+    Create two disjoint sources:
+    >>> train = Source(a=[1, 2], b=[10, 20])
+    >>> val = Source(a=[3, 4], b=[30, 40])
+
+    Join them together:
+    >>> joined = Sources(train, val)
+
+    Create a shared feature:
+    >>> feature = dt.Value(joined.a) + dt.Value(joined.b)
+
+    Evaluate on items from different sources:
+    >>> feature(train[0])
+    11
+    >>> feature(train[0])
+    22
+    >>> feature(val[1])
+    33
+    >>> feature(val[1])
+    44
+
     """
+
+    sources: tuple[Source, ...]
+    _dict: dict[str, Any]
 
     def __init__(
         self: Sources,
         *sources: Source,
     ):
+        """Initialize a joined multi-source access point.
+
+        Parameters
+        ----------
+        *sources : Source
+            One or more `Source` instances to join.
+
+        """
+
         self.sources = sources
 
+        # Determine all unique keys across all sources
         keys = set()
         for source in sources:
             keys.update(source._dict.keys())
 
+        # Initialize internal storage
         self._dict = dict.fromkeys(keys)
 
+        # Create dynamic nodes for each key
         for key in keys:
             node = SourceDeepTrackNode(
                 functools.partial(lambda key: self._dict[key], key)
@@ -1509,6 +1577,7 @@ class Sources:
 
             setattr(self, key, node)
 
+        # Register callback for each source
         for source in sources:
             source.on_activate(self._callback)
 
@@ -1516,6 +1585,20 @@ class Sources:
         self: Sources,
         item: SourceItem,
     ) -> None:
+        """Update dictionary and nodes with values from activated item.
+
+        This method is called when an item is activated from any of the joined
+        sources. It updates the internal `_dict` with the field values from the
+        item and sets the corresponding `SourceDeepTrackNode` values to reflect
+        the active state.
+
+        Parameters
+        ----------
+        item : SourceItem
+            The activated item whose values will update the joined source nodes.
+
+        """
+
         for key in item:
             getattr(self, key).invalidate()
             getattr(self, key).set_value(item[key])
@@ -1544,7 +1627,6 @@ def random_split(
         The random number generator to use.
         
     """
-
 
     if math.isclose(sum(lengths), 1) and sum(lengths) <= 1:
         subset_lengths = []
