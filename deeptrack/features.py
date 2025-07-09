@@ -2632,7 +2632,7 @@ class Feature(DeepTrackNode):
         >>> pipeline = randint // feature
         >>> result = pipeline.update()()
         >>> result
-        [1, 1, 1]
+        [1, 1, 0]
         
         This is equivalent to:
         >>> pipeline = (
