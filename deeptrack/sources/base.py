@@ -1610,22 +1610,71 @@ Join = Sources
 def random_split(
     source: Source,
     lengths: list[int | float],
-    generator: np.random.Generator = np.random.default_rng()
+    generator: np.random.Generator = np.random.default_rng(),
 ) -> list[Subset]:
-    """Randomly split source into non-overlapping new sources of given lengths.
+    """Randomly split a source into non-overlapping subsets of specified sizes.
+
+    This function splits a `Source` into multiple disjoint `Subset`s either
+    by specifying absolute lengths (integers) or relative proportions (floats).
+
+    If all entries in `lengths` are floats that sum to 1 or less, they are
+    interpreted as fractions and scaled to match the total size of the source.
+    Remaining items (due to rounding) are distributed round-robin to ensure
+    full coverage.
 
     Parameters
     ----------
-    source: Source
-        The source to split.
-        
-    lengths: list of int or float
-        The lengths of the new sources. If the lengths are floats,
-        they are interpreted as fractions of the source.
-        
-    generator: numpy.random.Generator, optional
-        The random number generator to use.
-        
+    source : Source
+        The input `Source` to split.
+    lengths : list[int or float]
+        A list of lengths for the resulting splits. If all values are floats
+        summing to 1 (or slightly less), they are treated as proportions.
+    generator : np.random.Generator, optional
+        A NumPy random generator used for shuffling. Defaults to
+        `np.random.default_rng()`.
+
+    Returns
+    -------
+    list[Subset]
+        A list of `Subset` instances corresponding to the split parts.
+
+    Raises
+    ------
+    ValueError
+        If the sum of provided lengths does not match the length of the source.
+
+    Examples
+    --------
+    >>> from deeptrack.sources import Source, random_split
+
+    Create a source:
+    >>> source = Source(
+    ...     a=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    ...     b=[10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+    ... )
+
+    Split into train (70%) and validation (30%):
+    >>> train, val, test = random_split(source, [0.4, 0.3, 0.3])
+    >>> train
+    Subset(a=[3, 2, 7, 9], b=[13, 12, 17, 19])
+
+    >>> val
+    Subset(a=[5, 6, 1], b=[15, 16, 11])
+
+    >>> test
+    Subset(a=[0, 8, 4], b=[10, 18, 14])
+
+    Split into fixed sizes:
+    >>> train, val, test = random_split(source, [4, 3, 3])
+    >>> train
+    Subset(a=[3, 2, 7, 9], b=[13, 12, 17, 19])
+
+    >>> val
+    Subset(a=[5, 6, 1], b=[15, 16, 11])
+
+    >>> test
+    Subset(a=[0, 8, 4], b=[10, 18, 14])
+
     """
 
     if math.isclose(sum(lengths), 1) and sum(lengths) <= 1:
@@ -1656,7 +1705,7 @@ def random_split(
                     "This might result in an empty source."
                 )
 
-        # Cannot verify that dataset is Sized.
+    # Cannot verify that dataset is Sized.
     if sum(lengths) != len(source):    # type: ignore[arg-type]
         raise ValueError("Sum of input lengths does not\
                           equal the length of the input dataset!")
@@ -1671,25 +1720,60 @@ def _accumulate(
     iterable: list[int],
     fn: Callable [[int, int], int]=lambda x, y: x + y,
 ) -> Generator[int, None, None]:
-    """Returns running totals with user specified operator.
-    
-    Default is summation.
-    
+    """Return running totals using a binary accumulation function.
+
+    This utility function computes cumulative values from a list using a
+    user-defined binary operator. By default, it performs cumulative summation
+    (i.e., partial sums), similar to `itertools.accumulate()`.
+
+    Parameters
+    ----------
+    iterable : list[int]
+        A list of integers to be accumulated.
+    fn : Callable[[int, int], int], optional
+        A binary function that takes two integers and returns a new integer.
+        It defaults to addition.
+
+    Yields
+    ------
+    int
+        The cumulative value at each step of the accumulation.
+
     Examples
     --------
-    >>> _accumulate([1,2,3,4,5])
-    1 3 6 10 15
-    
-    >>> _accumulate([1,2,3,4,5], operator.mul)
-    1 2 6 24 120   
+    >>> from deeptrack.sources.base import _accumulate
+
+    Default behavior (cumulative sum):
+    >>> for value in _accumulate([1, 2, 3, 4, 5]):
+    ...     print(value)
+    1
+    3
+    6
+    10
+    15
+
+    Using a custom operator (e.g., multiplication):
+    >>> import operator
+    >>>
+    >>> for value in _accumulate([1, 2, 3, 4, 5], fn=operator.mul):
+    ...     print(value)
+    1
+    2
+    6
+    24
+    120
     
     """
+
     it = iter(iterable)
+
     try:
         total = next(it)
     except StopIteration:
         return
+
     yield total
+
     for element in it:
         total = fn(total, element)
         yield total
