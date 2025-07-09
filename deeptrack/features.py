@@ -2515,7 +2515,6 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Divide(self)
 
-
     def __floordiv__(
         self: Feature,
         other: Any,
@@ -2538,7 +2537,7 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         other: Any
-            A constant or `Feature` to which `self` will be floor divided by. It is
+            A constant or `Feature` by which `self` will be floor-divided. It is
             passed as the input to `value`.
     
         Returns
@@ -2566,7 +2565,7 @@ class Feature(DeepTrackNode):
         >>> randint = dt.Value(value=lambda: np.random.randint(1, 5))
         >>> feature = dt.Value(value=[20, 30, 40])
         >>> pipeline = feature // randint
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [6, 10, 13]
         
@@ -2579,13 +2578,12 @@ class Feature(DeepTrackNode):
 
         return self >> FloorDivide(other)
 
-
     def __rfloordiv__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Perform floor division of `other` (numerator) with `feature` (denominator)
-        using '//'.
+        """Perform floor division of `other` (numerator) with
+        `feature` (denominator) using '//'.
     
         This operator is shorthand for chaining with `FloorDivide`.
         The expression:
@@ -2623,7 +2621,7 @@ class Feature(DeepTrackNode):
         [2, 1, 0]
     
         This is equivalent to:
-        >>> pipeline = dt.Value(value=2) >> dt.FloorDivide(value=feature)
+        >>> pipeline = dt.Value(value=10) >> dt.FloorDivide(value=feature)
     
         Floor divide a dynamic feature by another feature:
         >>> import numpy as np
@@ -2664,8 +2662,8 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         other: Any
-            The value or `Feature` representing the exponent. It is passed to `Power` 
-            as the `value` argument.
+            The value or `Feature` representing the exponent. It is passed to
+            `Power` as the `value` argument.
 
         Returns
         -------
