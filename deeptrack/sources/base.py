@@ -1129,36 +1129,79 @@ class Source:
 
 
 class Product(Source):
-    """Class that represents the product of a source with one or more sources.
+    """Cartesian product of a source with one or more additional fields.
 
-    This class is used to represent the product of a source with
-    one or more sources. When accessed, it returns a deeptrack object that
-    can be passed as properties to features.
+    `Product` constructs a new source by taking the Cartesian product
+    between an existing `Source` and one or more sequences passed as
+    keyword arguments. Each item in the result is a unique combination
+    of an item from the original source and a value from each added field.
 
-    The feature can then be called with an item from the source
-    to get the value of the feature for that item.
+    This is typically used via `Source.product(...)`, and the resulting
+    `Product` can be passed to DeepTrack features for dynamic evaluation.
+
+    Examples
+    --------
+    >>> from deeptrack.sources import Source
+
+    Using the recommended Source.product() method:
+    >>> source = Source(a=[1, 2])
+    >>> product = source.product(b=[10, 20])
+    >>> product
+    Product(b=[10, 20, 10, 20], a=[1, 1, 2, 2])
+
+    >>> list(product)
+    [SourceItem({'b': 10, 'a': 1}, 1 callback(s)),
+    SourceItem({'b': 20, 'a': 1}, 1 callback(s)),
+    SourceItem({'b': 10, 'a': 2}, 1 callback(s)),
+    SourceItem({'b': 20, 'a': 2}, 1 callback(s))]
+
+    Equivalent direct usage of Product (advanced):
+    >>> from deeptrack.sources.base import Product
+    >>>
+    >>> product = Product(source, b=[10, 20])
+
     """
 
     def __init__(
         self: Product,
-        __source: Source = [{}],
+        __source: Source,
         **kwargs: list[Any],
     ):
+        """Initialize the Cartesian product of a source with additional fields.
 
+        Parameters
+        ----------
+        __source : Source
+            The base source to be expanded via Cartesian product.
+
+        **kwargs : list[Any]
+            Named sequences to take the product with. Each value must be
+            a list or array of equal length.
+
+        Raises
+        ------
+        ValueError
+            If any key in `kwargs` overlaps with a key in the original source.
+
+        """
+
+        # Compute the cartesian product of all items
         product = itertools.product(__source, *kwargs.values())
 
         dict_of_lists = {k: [] for k in kwargs.keys()}
         source_dict = {k: [] for k in __source[0].keys()}
 
-        # If overlapping keys, error.
+        # Check for overlapping keys. If overlapping keys, error.
         if set(kwargs.keys()).intersection(set(source_dict.keys())):
             raise ValueError(
                 f"Overlapping keys in product. Duplicate keys: "
                 f"{set(kwargs.keys()).intersection(set(source_dict.keys()))}"
             )
 
+        # Initialize combined dictionary
         dict_of_lists.update(source_dict)
 
+        # Populate each field from the cartesian product
         for source, *items in product:
             for k, v in source.items():
                 dict_of_lists[k].append(v)
