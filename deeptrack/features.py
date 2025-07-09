@@ -2956,7 +2956,7 @@ class Feature(DeepTrackNode):
         --------
         >>> import deeptrack as dt
 
-        Compare each element in a value feature to a constant:
+        Compare each element in a feature to a constant:
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = feature > 2
         >>> result = pipeline()
