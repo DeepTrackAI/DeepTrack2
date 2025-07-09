@@ -2493,7 +2493,6 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Multiply(self)
 
-
     def __truediv__(
         self: Feature,
         other: Any,
@@ -2542,7 +2541,7 @@ class Feature(DeepTrackNode):
         >>> feature = dt.Value(value=[1, 25, 20])
         >>> magnitude = dt.Value(value=lambda: max(feature()))
         >>> pipeline = feature / magnitude
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [0.04, 1.0, 0.8]
 
@@ -2555,7 +2554,6 @@ class Feature(DeepTrackNode):
         """
 
         return self >> Divide(other)
-
 
     def __rtruediv__(
         self: Feature,
@@ -2592,8 +2590,9 @@ class Feature(DeepTrackNode):
 
         Examples
         --------
-        Divide a constant with a feature.
         >>> import deeptrack as dt
+
+        Divide a constant with a feature.
         >>> feature = dt.Value(value=[-1, 2, 2])
         >>> pipeline = 5 / feature
         >>> result = pipeline()
@@ -2605,6 +2604,7 @@ class Feature(DeepTrackNode):
         ...     dt.Value(value=5)
         ...     >> dt.Divide(value=feature)
         ... )
+
         """
 
         return Value(other) >> Divide(self)
