@@ -3066,12 +3066,66 @@ class Feature(DeepTrackNode):
 
         return self >> LessThan(other)
 
-    #TODO ***JH***
     def __rlt__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
         """Checks if another value is less than this feature using right '<'.
+
+        This operator is the right-hand version of `>`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other < feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.LessThan(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other`
+        and chains it into a `LessThan` feature.
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` to compare against. It is passed as
+            the `value` argument to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of less-than
+            comparison between `other` and `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare a constant to each element in a feature:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 2 < feature
+        >>> result = pipeline()
+        >>> result
+        [False, False, True]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=2) >> dt.LessThan(value=feature)
+
+        Compare a constant to each element in a dynamic feature that samples
+        values at each call:
+        >>> from random import randint
+        >>>
+        >>> random = dt.Value(value=lambda: [randint(0,3) for _ in range(3)])
+        >>> pipeline = 2 < random
+        >>> result = pipeline.update()()
+        >>> result
+        [False, True, False]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=2)
+        ...     >> dt.LessThan(value=lambda:
+        ...     [randint(0,3) for _ in range(3)])
+        ... )
 
         """
         
