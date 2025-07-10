@@ -7269,7 +7269,7 @@ class AsType(Feature):
         return image.astype(dtype)
 
 
-class ChannelFirst2d(Feature):
+class ChannelFirst2d(Feature):  # DEPRECATED
     """Convert an image to a channel-first format.
 
     This feature rearranges the axes of a 3D image so that the specified axis
@@ -7282,17 +7282,13 @@ class ChannelFirst2d(Feature):
     axis: int, optional
         The axis to move to the first position. It defaults to `-1`
         (last axis), which is typically the channel axis for NumPy arrays.
-    **kwargs: dict of str to Any
+    **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(
-        image: NDArray | torch.Tensor | Image,
-        axis: int,
-        **kwargs: Any
-    ) -> NDArray | torch.Tensor | Image`
-        Rearrange the axes of an image to channel-first format.
+    `get(image: array, axis: int, **kwargs: Any) -> array`
+        It rearranges the axes of an image to channel-first format.
 
     Examples
     --------
@@ -7334,16 +7330,17 @@ class ChannelFirst2d(Feature):
         axis: int, optional
             The axis to move to the first position, 
             defaults to `-1` (last axis).
-        **kwargs: dict of str to Any
+        **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
+
         import warnings
 
         warnings.warn(
             "ChannelFirst2d is deprecated and may be removed in a "
             "future release. The current implementation is not guaranteed "
-            "to be exactly equivalent to prior implementations. ",
+            "to be exactly equivalent to prior implementations.",
             DeprecationWarning,
         )
 
@@ -7362,7 +7359,7 @@ class ChannelFirst2d(Feature):
 
         Parameters
         ----------
-        image: NDArray | torch.Tensor | Image
+        image: array
             The input image to process. Can be 2D or 3D.
         axis: int
             The axis to move to the first position (for 3D images).
@@ -7372,7 +7369,7 @@ class ChannelFirst2d(Feature):
 
         Returns
         -------
-        NDArray | torch.Tensor | Image
+        array
             The processed image in channel-first format.
 
         Raises
@@ -7381,6 +7378,7 @@ class ChannelFirst2d(Feature):
             If the input image is neither 2D nor 3D.
 
         """
+
         # Pre-processing logic to check for Image objects.
         is_image = isinstance(image, Image)
         array = image._value if is_image else image
@@ -7394,10 +7392,10 @@ class ChannelFirst2d(Feature):
         # Add a new dimension for 2D images.
         if ndim == 2:
             if apc.is_torch_array(array):
-                array = array.unsqueeze(0)  
+                array = array.unsqueeze(0)
             else:
                  array[None]
-            
+
         # Move axis for 3D images.
         else:
             if apc.is_torch_array(array):
@@ -7407,7 +7405,7 @@ class ChannelFirst2d(Feature):
             else:
                 array = xp.moveaxis(array, axis, 0)
 
-        if is_image: 
+        if is_image:
             return Image(array)
 
         return array
