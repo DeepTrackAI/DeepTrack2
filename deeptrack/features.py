@@ -3147,12 +3147,66 @@ class Feature(DeepTrackNode):
 
         return self >> Stack(other)
 
-    #TODO ***JH***
     def __rand__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Stacks another value with this feature using right '&'.
+        """Stack another value with this feature using right '&'.
+
+        This operator is the right-hand version of `&`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other & feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.Stack(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other`
+        and chains it into a `Stack` feature.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to stack with `self`.
+
+        Returns
+        -------
+        Feature
+            A new feature containing all elements from `other` and `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Stack with the fixed data:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = [4, 5, 6] & feature
+        >>> result = pipeline()
+        >>> result
+        [4, 5, 6, 1, 2, 3]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=[4, 5, 6]) >> dt.Stack(value=feature)
+
+        is also equivalent to this expression:
+        >>> pipeline = feature.__rand__([4, 5, 6])
+
+        Stack with the dynamic data that samples values at each call:
+        >>> from random import randint
+        >>>
+        >>> random = dt.Value(value=lambda: [randint(0,3) for _ in range(3)])
+        >>> pipeline = random & feature
+        >>> result = pipeline.update()()
+        >>> result
+        [0, 3, 1, 1, 2, 3]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=lambda:
+        ...     [randint(0,3) for _ in range(3)])
+        ...     >> dt.Stack(value=feature)
+        ... )
         
         """
         
