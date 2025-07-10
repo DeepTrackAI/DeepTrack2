@@ -2,60 +2,69 @@
 # pylint: disable=C0116:missing-function-docstring
 # pylint: disable=C0103:invalid-name
 
-import unittest
 import os
 import shutil
+import unittest
 
-from deeptrack.sources.folder import ImageFolder
+from deeptrack.sources import folder
 
 
 class TestFolder(unittest.TestCase):
 
     def setUp(self):
-        self.root = "temp_test_data"
-        self.splits = ["train", "val"]
+        self.root_dir = "temp_test_dir"
         self.classes = ["cat", "dog", "bird"]
 
-        for split in self.splits:
-            for cls in self.classes:
-                path = os.path.join(self.root, split, cls)
-                os.makedirs(path, exist_ok=True)
-                for i in range(2):
-                    file_path = os.path.join(path, f"img{i}.jpg")
-                    with open(file_path, "w") as f:
-                        f.write("")
+        os.makedirs(self.root_dir, exist_ok=True)
+
+        for class_name in self.classes:
+            class_dir = os.path.join(self.root_dir, class_name)
+            os.makedirs(class_dir, exist_ok=True)
+            for i in range(3):
+                file_path = os.path.join(class_dir, f"image_{i}.jpg")
+                with open(file_path, "w") as f:
+                    f.write("")
 
     def tearDown(self):
-        shutil.rmtree(self.root)
+        if os.path.exists(self.root_dir):
+            shutil.rmtree(self.root_dir)
 
     def test_ImageFolder_basic(self):
-        dataset = ImageFolder(os.path.join(self.root, "train"))
-        self.assertEqual(len(dataset), 6)
-        self.assertSetEqual(set(dataset.classes), set(self.classes))
-        self.assertTrue(all(os.path.isfile(item["path"]) for item in dataset))
+        dataset = folder.ImageFolder(self.root_dir)
 
-    def test_ImageFolder_split(self):
-        combined = ImageFolder(self.root)
-        train, val = combined.split("train", "val")
+        self.assertEqual(len(dataset), 9)
+        self.assertCountEqual(dataset.classes, self.classes)
 
-        self.assertEqual(len(train), 6)
-        self.assertEqual(len(val), 6)
-
-        train_paths = [item["path"] for item in train]
-        val_paths = [item["path"] for item in val]
-
-        self.assertTrue(all("train" in path for path in train_paths))
-        self.assertTrue(all("val" in path for path in val_paths))
+    def test_ImageFolder_get_category_name(self):
+        dataset = folder.ImageFolder(self.root_dir)
+        for item in dataset:
+            path = item["path"]
+            name = dataset.get_category_name(path, 0)
+            self.assertIn(name, self.classes)
 
     def test_ImageFolder_label_mapping(self):
-        dataset = ImageFolder(os.path.join(self.root, "train"))
+        dataset = folder.ImageFolder(self.root_dir)
 
-        for label in dataset["label"]:
+        for item in dataset:
+            label = item["label"]
             name = dataset.label_to_name(label)
-            self.assertIsInstance(name, str)
-            self.assertIn(name, dataset.classes)
-            back_label = dataset.name_to_label(name)
-            self.assertEqual(label, back_label)
+            idx = dataset.name_to_label(name)
+            self.assertEqual(idx, label)
+
+    def test_ImageFolder_split(self):
+        dataset = folder.ImageFolder(self.root_dir)
+
+        cat_ds, dog_ds = dataset.split("cat", "dog")
+
+        cat_names = set([item["label_name"] for item in cat_ds])
+        dog_names = set([item["label_name"] for item in dog_ds])
+
+        self.assertEqual(cat_names,
+                         {"image_0.jpg", "image_1.jpg", "image_2.jpg"})
+        self.assertEqual(dog_names,
+                         {"image_0.jpg", "image_1.jpg", "image_2.jpg"})
+        self.assertEqual(len(cat_ds), 3)
+        self.assertEqual(len(dog_ds), 3)
 
 
 if __name__ == "__main__":
