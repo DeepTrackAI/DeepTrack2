@@ -184,26 +184,26 @@ class ImageFolder(Source):
         path: str,
         directory_level: int
     ) -> str:
-        
+
         relative_path = path.replace(self._root, "", 1).lstrip(os.sep)
         folder = relative_path.split(os.sep)[directory_level] \
             if relative_path else ""
         return folder
-    
+
     def label_to_name(
         self,
         label: int
     ) -> str:
         """Gets the category corresponding to a label"""
         return self._int_to_category[label]
-    
+
     def name_to_label(
         self,
         name: str
     ) -> int:
         """Gets the label corresponding to a category"""
         return self._category_to_int[name]
-    
+
     def split(
         self,
         *splits: str
@@ -236,12 +236,12 @@ class ImageFolder(Source):
             The names of the categories to split into.
             
         """
-        
-        all_splits = set([self.get_category_name(path, 0) 
+
+        all_splits = set([self.get_category_name(path, 0)
                           for path in self._paths])
 
         if len(splits) == 0:
-            
+
             if len(all_splits) == 0:
                 raise ValueError("No categories to split into")
             return self.split(*all_splits)
@@ -260,7 +260,6 @@ class ImageFolder(Source):
             for key in item:
                 getattr(self, key).invalidate()
                 getattr(self, key).set_value(item[key])
-    
 
         for split in splits:
             subfolder = ImageFolder(os.path.join(self._root, split))
