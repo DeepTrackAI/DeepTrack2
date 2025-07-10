@@ -46,11 +46,12 @@ Print some information about a source of data:
 
 """
 
+from __future__ import annotations
+
 import glob
 import os
-from typing import List, Tuple
 
-from deeptrack.sources.base import Source
+from deeptrack.sources.base import Source, SourceItem
 
 
 __all__ = [
@@ -134,15 +135,15 @@ class ImageFolder(Source):
 
     @property
     def classes(
-        self
-    ) -> List:
+        self: ImageFolder,
+    ) -> list[str]:
         return list(self._category_to_int.keys())
 
     def __init__(
-        self,
-        root: str
+        self: ImageFolder,
+        root: str,
     ) -> None:
-        
+
         self._root = root
 
         self._paths = glob.glob(f"{root}/**/*", recursive=True)
@@ -175,14 +176,14 @@ class ImageFolder(Source):
         )
 
     def __len__(
-        self
+        self: ImageFolder,
     ) -> int:
         return self._length
 
     def get_category_name(
-        self, 
+        self: ImageFolder,
         path: str,
-        directory_level: int
+        directory_level: int,
     ) -> str:
 
         relative_path = path.replace(self._root, "", 1).lstrip(os.sep)
@@ -191,23 +192,23 @@ class ImageFolder(Source):
         return folder
 
     def label_to_name(
-        self,
-        label: int
+        self: ImageFolder,
+        label: int,
     ) -> str:
         """Gets the category corresponding to a label"""
         return self._int_to_category[label]
 
     def name_to_label(
-        self,
-        name: str
+        self: ImageFolder,
+        name: str,
     ) -> int:
         """Gets the label corresponding to a category"""
         return self._category_to_int[name]
 
     def split(
-        self,
-        *splits: str
-    ) -> Tuple[str]:
+        self: ImageFolder,
+        *splits: str,
+    ) -> tuple[str]:
         """Split the dataset into subsets.
         
         The splits are defined by the names of the first folder
@@ -254,7 +255,7 @@ class ImageFolder(Source):
         output = []
 
         def update_root_source(
-            item
+            item: SourceItem,
         ) -> None:
             """Inner function which updates attributes of root source."""
             for key in item:
