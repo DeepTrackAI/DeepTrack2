@@ -1,47 +1,53 @@
-"""Utility class for data sources in a directory structure.
+"""Data sources from images organized in a directory structure.
 
-This module provies the `ImageFolder` DeepTrack2 class which enables control of
-image sources organized in a directory structure.
+This module provides the `ImageFolder` class, which enables structured access
+to images stored in a hierarchical folder layout, such as:
 
-The primary usage is to facilitate naming and organizing of data sources.
+    root/train/cat/image1.jpg
+    root/train/dog/image2.jpg
+    root/test/bird/image3.jpg
+
+The class supports automatic labeling based on directory names, integration
+with DeepTrack data pipelines, and flexible splitting of datasets by folder.
 
 Key Features
 ------------
 - **Attribute Access**
 
-    Enables accessing attributes tied to a data source such as
-    paths, directory structure, length etc.
-    
-- **Labeling**
+    Provides access to common attributes such as image paths, label indices,
+    and category names. Each entry is returned as a `SourceItem` with fields
+    `path`, `label`, and `label_name`.
 
-    Allows converting category names of images to integers,
-    which is more flexible and easy to process in a data pipeline.
+- **Automatic Labeling**
 
-- **Category Splitting**
+    Converts directory names into integer labels, supporting direct use in
+    training pipelines or models that expect categorical inputs.
 
-    The sources of images can be split into subcategories of which the 
-    user specifies the name of.
-    
+- **Flexible Dataset Splitting**
+
+    Supports splitting datasets based on the top-level folder structure.
+    This enables separating data into training, validation, and test sets
+    using directory naming conventions.
 
 Module Structure
 ----------------
-Class:
-`ImageFolder`: Data source for images organized in a directory structure.
+Classes:
 
-    It allows for processing of image sources with `Dict` data strucutres,
-    splitting, naming and labeling functions.
+- `ImageFolder`: Source of image paths and labels from a structured folder.
+
+    Wraps a directory of image files into a DeepTrack `Source`, supporting
+    standard methods such as iteration, indexing, and filtering.
+
+Attributes:
+
+- `known_extensions: list[str]`
+
+    List of recognized file extensions used when scanning directories for
+    valid image files: `["png", "jpg", "jpeg", "tif", "tiff", "bmp", "gif"]`
 
 Examples
 --------
-Print some information about a source of data:
-
->>> from deeptrack.sources import folder
-
->>> root = "data/train"
->>> data_source = folder.ImageFolder(root)
-
->>> print(f"Total images in training data: {len(train_data)}")
->>> print(f"Classes: {train_data.classes}")
+TODO
 
 """
 
