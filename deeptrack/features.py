@@ -3135,13 +3135,59 @@ class Feature(DeepTrackNode):
 
         return Repeat(self, other)
 
-    #TODO ***JH***
     def __and__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Stacks this feature with another using '&'.
+        """Stack this feature with another using '&'.
 
+        This operator is shorthand for chaining with `Stack`. The expression:
+
+        >>> feature & other
+
+        is equivalent to:
+
+        >>> feature >> dt.Stack(value=other)
+
+        Internally, this method constructs a new `Stack` feature and uses the
+        right-shift operator (`>>`) to chain the current feature into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to stack with `self`.
+
+        Returns
+        -------
+        Feature
+            A new feature containing all elements from `self` and `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Stack with the fixed data:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature & [4, 5, 6]
+        >>> result = pipeline()
+        >>> result
+        [1, 2, 3, 4, 5, 6]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Stack(value=[4, 5, 6])
+
+        Stack with the dynamic data that samples values at each call:
+        >>> from random import randint
+        >>>
+        >>> random = dt.Value(value=lambda: [randint(0,3) for _ in range(3)])
+        >>> pipeline = feature & random
+        >>> result = pipeline.update()()
+        >>> result
+        [1, 2, 3, 3, 1, 3]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Stack(value=random)
+ 
         """
 
         return self >> Stack(other)
