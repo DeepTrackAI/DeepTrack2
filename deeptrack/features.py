@@ -3119,7 +3119,7 @@ class Feature(DeepTrackNode):
         """Check if another value is greater than or equal to this feature
         using right '>='.
 
-        This operator is the right-hand version of `>`, enabling expressions
+        This operator is the right-hand version of `>=`, enabling expressions
         where the `Feature` appears on the right-hand side. The expression:
 
         >>> other >= feature
@@ -3155,7 +3155,10 @@ class Feature(DeepTrackNode):
         [True, True, False]
 
         This is equivalent to:
-        >>> pipeline = dt.Value(value=2) >> dt.GreaterThanOrEquals(value=feature)
+        >>> pipeline = (
+        ...     dt.Value(value=2) 
+        ...     >> dt.GreaterThanOrEquals(value=feature)
+        ... )
 
         Compare a constant to each element in a dynamic feature that samples
         values at each call:
