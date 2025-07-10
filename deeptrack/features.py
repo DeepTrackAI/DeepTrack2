@@ -3156,7 +3156,7 @@ class Feature(DeepTrackNode):
 
         This is equivalent to:
         >>> pipeline = (
-        ...     dt.Value(value=2) 
+        ...     dt.Value(value=2)
         ...     >> dt.GreaterThanOrEquals(value=feature)
         ... )
 
