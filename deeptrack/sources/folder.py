@@ -67,6 +67,7 @@ __all__ = [
 
 known_extensions = ["png", "jpg", "jpeg", "tif", "tiff", "bmp", "gif"]
 
+
 class ImageFolder(Source):
     """Data source for images organized in a directory structure.
 
