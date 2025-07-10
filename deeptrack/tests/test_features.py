@@ -1956,17 +1956,50 @@ class TestFeatures(unittest.TestCase):
         #TODO
 
 
-    def test_ChannelFirst2d(self):
+def test_ChannelFirst2d(self):
 
-        channel_first_feature = features.ChannelFirst2d()
+    channel_first_feature = features.ChannelFirst2d()
 
-        input_image_2d = np.random.rand(10, 20)
-        output_image = channel_first_feature.get(input_image_2d, axis=-1)
-        self.assertEqual(output_image.shape, (1, 10, 20))
+    # Numpy shapes
+    input_image = np.zeros((10, 20))
+    output_image = channel_first_feature.get(input_image, axis=-1)
+    self.assertEqual(output_image.shape, (1, 10, 20))
 
-        input_image_3d = np.random.rand(10, 20, 3)
-        output_image = channel_first_feature.get(input_image_3d, axis=-1)
-        self.assertEqual(output_image.shape, (3, 10, 20))
+    input_image = np.zeros((10, 20, 3))
+    output_image = channel_first_feature.get(input_image, axis=-1)
+    self.assertEqual(output_image.shape, (3, 10, 20))
+
+    # Image[Numpy] shape
+    input_image = Image(np.zeros((10, 20, 3)))
+    output_image = channel_first_feature.get(input_image, axis=-1)
+    self.assertEqual(output_image._value.shape, (3, 10, 20))
+
+    # Numpy values
+    input_image = np.array([[[1, 2, 3], [4, 5, 6]]])
+    output_image = channel_first_feature.get(input_image, axis=-1)
+    self.assertEqual(output_image.shape, (3, 1, 2))
+    np.testing.assert_array_equal(output_image, np.moveaxis(input_image, -1, 0))
+
+    if TORCH_AVAILABLE:
+        # Torch shapes
+        input_image = torch.zeros(10, 20)
+        output_image = channel_first_feature.get(input_image, axis=-1)
+        self.assertEqual(tuple(output_image.shape), (1, 10, 20))
+
+        input_image = torch.zeros(10, 20, 3)
+        output_image = channel_first_feature.get(input_image, axis=-1)
+        self.assertEqual(tuple(output_image.shape), (3, 10, 20))
+
+        # Image[Torch] shape
+        input_image = Image(torch.zeros(10, 20, 3))
+        output_image = channel_first_feature.get(input_image, axis=-1)
+        self.assertEqual(tuple(output_image.shape), (3, 10, 20))
+
+        # Torch values
+        input_image = torch.tensor([[[1, 2, 3], [4, 5, 6]]])
+        output_image = channel_first_feature.get(input_image, axis=-1)
+        self.assertEqual(output_image.shape, (3, 1, 2))
+        self.assertTrue(torch.equal(output_image, input_image.permute(2, 0, 1)))
 
 
     def test_Upscale(self):

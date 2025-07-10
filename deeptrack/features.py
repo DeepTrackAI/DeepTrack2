@@ -216,13 +216,14 @@ __all__ = [
     "Merge",
     "OneOf",
     "OneOfDict",
-    "LoadImage",  #TODO ***MG***
-    "SampleToMasks",  #TODO ***MG***
-    "AsType",  #TODO ***MG***
-    "Upscale",  #TODO ***AL***
-    "ChannelFirst2d",  #TODO ***AL***
-    "NonOverlapping",  #TODO ***AL***
-    "Store",  #TODO ***JH***
+    "LoadImage",  # TODO **MG**
+    "SampleToMasks",  # TODO **MG**
+    "AsType",  # TODO **MG**
+    "ChannelFirst2d",
+    "Upscale",  # TODO **AL**
+    "NonOverlapping",  # TODO **AL**
+    "Store",  # TODO **JH**
+
     "Squeeze",
     "Unsqueeze",
     "ExpandDims",
@@ -7268,24 +7269,29 @@ class AsType(Feature):
         return image.astype(dtype)
 
 
-class ChannelFirst2d(Feature):  # DEPRECATED
+class ChannelFirst2d(Feature):
     """Convert an image to a channel-first format.
 
-    This feature rearranges the axes of a 3D image so that the specified axis 
-    (e.g., channel axis) is moved to the first position. If the input image is 
-    2D, it adds a new dimension at the front, effectively treating the 2D 
+    This feature rearranges the axes of a 3D image so that the specified axis
+    (e.g., channel axis) is moved to the first position. If the input image is
+    2D, it adds a new dimension at the first index, effectively treating the 2D
     image as a single-channel image.
 
     Parameters
     ----------
     axis: int, optional
-        The axis to move to the first position. It defaults to `-1` (last axis).
-    **kwargs:: dict of str to Any
+        The axis to move to the first position. It defaults to `-1`
+        (last axis), which is typically the channel axis for NumPy arrays.
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: np.ndarray, axis: int, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(
+        image: NDArray | torch.Tensor | Image,
+        axis: int,
+        **kwargs: Any
+    ) -> NDArray | torch.Tensor | Image`
         Rearrange the axes of an image to channel-first format.
 
     Examples
@@ -7318,46 +7324,55 @@ class ChannelFirst2d(Feature):  # DEPRECATED
 
     def __init__(
         self: Feature,
-        axis: int = -1,
+        axis: PropertyLike[int] = -1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the ChannelFirst2d feature.
 
         Parameters
         ----------
         axis: int, optional
-            The axis to move to the first position. 
-            It defaults to `-1` (last axis).
-        **kwargs:: dict of str to Any
+            The axis to move to the first position, 
+            defaults to `-1` (last axis).
+        **kwargs: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
+        import warnings
+
+        warnings.warn(
+            "ChannelFirst2d is deprecated and may be removed in a "
+            "future release. The current implementation is not guaranteed "
+            "to be exactly equivalent to prior implementations. ",
+            DeprecationWarning,
+        )
 
         super().__init__(axis=axis, **kwargs)
 
     def get(
         self: Feature,
-        image: np.ndarray,
-        axis: int,
+        image: NDArray | torch.Tensor | Image,
+        axis: int = -1,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> NDArray | torch.Tensor | Image:
         """Rearrange the axes of an image to channel-first format.
 
-        Rearrange the axes of a 3D image to channel-first format or add a 
+        Rearrange the axes of a 3D image to channel-first format or add a
         channel dimension to a 2D image.
 
         Parameters
         ----------
-        image: np.ndarray
+        image: NDArray | torch.Tensor | Image
             The input image to process. Can be 2D or 3D.
         axis: int
             The axis to move to the first position (for 3D images).
+            For 2D images, this argument does nothing.
         **kwargs: Any
             Additional keyword arguments (unused here).
 
         Returns
         -------
-        np.ndarray
+        NDArray | torch.Tensor | Image
             The processed image in channel-first format.
 
         Raises
@@ -7366,20 +7381,36 @@ class ChannelFirst2d(Feature):  # DEPRECATED
             If the input image is neither 2D nor 3D.
 
         """
+        # Pre-processing logic to check for Image objects.
+        is_image = isinstance(image, Image)
+        array = image._value if is_image else image
 
-        ndim = image.ndim
+        # Raise error if not 2D or 3D.
+        ndim = array.ndim
+        if ndim not in (2, 3):
+            raise ValueError("ChannelFirst2d only supports 2D or 3D images. "
+                         f"Received {ndim}D image.")
 
         # Add a new dimension for 2D images.
         if ndim == 2:
-            return image[None]
+            if apc.is_torch_array(array):
+                array = array.unsqueeze(0)  
+            else:
+                 array[None]
+            
+        # Move axis for 3D images.
+        else:
+            if apc.is_torch_array(array):
+                axis = ndim + axis if axis < 0 else axis
+                dims = [axis] + [i for i in range(ndim) if i != axis]
+                array = array.permute(*dims)
+            else:
+                array = xp.moveaxis(array, axis, 0)
 
-        # Move the specified axis to the first position for 3D images.
-        if ndim == 3:
-            return np.moveaxis(image, axis, 0)
+        if is_image: 
+            return Image(array)
 
-        raise ValueError("ChannelFirst2d only supports 2D or 3D images. "
-                         f"Received {ndim}D image.")
-
+        return array
 
 class Upscale(Feature):
     """Simulate a pipeline at a higher resolution.
@@ -7413,7 +7444,7 @@ class Upscale(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray | Image, factor: int | tuple[int, int, int], **kwargs) -> np.ndarray`
+    `get(image: np.ndarray | Image, factor: int | tuple[int, int, int], **kwargs) -> np.ndarray | torch.tensor`
         Simulates the pipeline at a higher resolution and returns the result at 
         the original resolution.
 
@@ -7468,7 +7499,7 @@ class Upscale(Feature):
         feature: Feature,
         factor: int | tuple[int, int, int] = 1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the Upscale feature.
 
         Parameters
@@ -7493,7 +7524,7 @@ class Upscale(Feature):
         image: np.ndarray,
         factor: int | tuple[int, int, int],
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.tensor:
         """Simulate the pipeline at a higher resolution and return result.
 
         Parameters
