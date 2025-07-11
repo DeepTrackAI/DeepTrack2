@@ -3285,12 +3285,62 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> LessThan(self)
 
-    #TODO ***JH***
     def __le__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Checks if this feature is less than or equal to another using '<='.
+        """Check if this feature is less than or equal to another using '<='.
+
+        This operator is shorthand for chaining with `LessThanOrEquals`.
+        The expression:
+
+        >>> feature <= other
+
+        is equivalent to:
+
+        >>> feature >> dt.LessThanOrEquals(value=other)
+
+        Internally, this method constructs a new `LessThanOrEquals` feature
+        and uses the right-shift operator (`>>`) to chain the current feature
+        into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to compare against. It is passed to
+            `LessThanOrEquals` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of
+            less-than-or-equals comparison between `self` and `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare each element in a feature to a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature <= 2
+        >>> result = pipeline()
+        >>> result
+        [True, True, False]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.LessThanOrEquals(value=2)
+
+        Compare to a dynamic cutoff that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
+        >>> pipeline = feature <= random_cutoff
+        >>> result = pipeline.update()()
+        >>> result
+        [False, False, False]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.LessThanOrEquals(value=random_cutoff)
 
         """
 
