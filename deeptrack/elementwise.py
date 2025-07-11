@@ -116,7 +116,11 @@ Apply cosine elementwise to a Feature:
 
 """
 
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT389
+
 from __future__ import annotations
+
 from typing import Any, Callable
 
 import numpy as np
@@ -124,6 +128,7 @@ import numpy as np
 from deeptrack.features import Feature
 
 
+#TODO ***??*** revise ElementwiseFeature - torch, typing, docstring, unit test
 class ElementwiseFeature(Feature):
     """
     Base class for applying NumPy functions elementwise.
@@ -145,8 +150,6 @@ class ElementwiseFeature(Feature):
         Returns the result of applying the function to the input array.
 
     """
-    
-    __gpu_compatible__: bool = True
 
     def __init__(
         self: ElementwiseFeature,
@@ -172,6 +175,7 @@ class ElementwiseFeature(Feature):
         return self.function(image)
 
 
+#TODO ***??*** revise Sin - torch, typing, docstring, unit test
 class Sin(ElementwiseFeature):
     """
     Applies the sine function elementwise.
@@ -192,6 +196,7 @@ class Sin(ElementwiseFeature):
         super().__init__(np.sin, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Cos - torch, typing, docstring, unit test
 class Cos(ElementwiseFeature):
     """
     Applies the cosine function elementwise.
@@ -212,6 +217,7 @@ class Cos(ElementwiseFeature):
         super().__init__(np.cos, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Tan - torch, typing, docstring, unit test
 class Tan(ElementwiseFeature):
     """
     Applies the tangent function elementwise.
@@ -232,6 +238,7 @@ class Tan(ElementwiseFeature):
         super().__init__(np.tan, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Arcsin - torch, typing, docstring, unit test
 class Arcsin(ElementwiseFeature):
     """
     Applies the arcsine function elementwise.
@@ -252,6 +259,7 @@ class Arcsin(ElementwiseFeature):
         super().__init__(np.arcsin, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Arccos - torch, typing, docstring, unit test
 class Arccos(ElementwiseFeature):
     """
     Applies the arccosine function elementwise.
@@ -272,6 +280,7 @@ class Arccos(ElementwiseFeature):
         super().__init__(np.arccos, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Arctan - torch, typing, docstring, unit test
 class Arctan(ElementwiseFeature):
     """
     Applies the arctangent function elementwise.
@@ -291,6 +300,7 @@ class Arctan(ElementwiseFeature):
         super().__init__(np.arctan, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Sinh - torch, typing, docstring, unit test
 class Sinh(ElementwiseFeature):
     """
     Applies the hyperbolic sine function elementwise.
@@ -310,6 +320,7 @@ class Sinh(ElementwiseFeature):
         super().__init__(np.sinh, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Cosh - torch, typing, docstring, unit test
 class Cosh(ElementwiseFeature):
     """
     Applies the hyperbolic cosine function elementwise.
@@ -330,6 +341,7 @@ class Cosh(ElementwiseFeature):
         super().__init__(np.cosh, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Tanh - torch, typing, docstring, unit test
 class Tanh(ElementwiseFeature):
     """
     Applies the hyperbolic tangent function elementwise.
@@ -350,6 +362,7 @@ class Tanh(ElementwiseFeature):
         super().__init__(np.tanh, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Arcsinh - torch, typing, docstring, unit test
 class Arcsinh(ElementwiseFeature):
     """
     Applies the hyperbolic arcsine function elementwise.
@@ -370,6 +383,7 @@ class Arcsinh(ElementwiseFeature):
         super().__init__(np.arcsinh, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Arccosh - torch, typing, docstring, unit test
 class Arccosh(ElementwiseFeature):
     """
     Applies the hyperbolic arccosine function elementwise.
@@ -390,6 +404,7 @@ class Arccosh(ElementwiseFeature):
         super().__init__(np.arccosh, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Arctanh - torch, typing, docstring, unit test
 class Arctanh(ElementwiseFeature):
     """
     Applies the hyperbolic arctangent function elementwise.
@@ -410,6 +425,7 @@ class Arctanh(ElementwiseFeature):
         super().__init__(np.arctanh, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Round - torch, typing, docstring, unit test
 class Round(ElementwiseFeature):
     """
     Applies the round function elementwise.
@@ -430,6 +446,7 @@ class Round(ElementwiseFeature):
         super().__init__(np.around, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Floor - torch, typing, docstring, unit test
 class Floor(ElementwiseFeature):
     """
     Applies the floor function elementwise.
@@ -450,6 +467,7 @@ class Floor(ElementwiseFeature):
         super().__init__(np.floor, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Ceil - torch, typing, docstring, unit test
 class Ceil(ElementwiseFeature):
     """
     Applies the ceil function elementwise.
@@ -470,6 +488,7 @@ class Ceil(ElementwiseFeature):
         super().__init__(np.ceil, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Exp - torch, typing, docstring, unit test
 class Exp(ElementwiseFeature):
     """
     Applies the exponential function elementwise.
@@ -490,6 +509,7 @@ class Exp(ElementwiseFeature):
         super().__init__(np.exp, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Log - torch, typing, docstring, unit test
 class Log(ElementwiseFeature):
     """
     Applies the natural logarithm function elementwise.
@@ -510,6 +530,7 @@ class Log(ElementwiseFeature):
         super().__init__(np.log, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Log10 - torch, typing, docstring, unit test
 class Log10(ElementwiseFeature):
     """
     Applies the logarithm function with base 10 elementwise.
@@ -530,6 +551,7 @@ class Log10(ElementwiseFeature):
         super().__init__(np.log10, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Log2 - torch, typing, docstring, unit test
 class Log2(ElementwiseFeature):
     """
     Applies the logarithm function with base 2 elementwise.
@@ -550,6 +572,7 @@ class Log2(ElementwiseFeature):
         super().__init__(np.log2, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Angle - torch, typing, docstring, unit test
 class Angle(ElementwiseFeature):
     """
     Applies the angle function elementwise.
@@ -570,6 +593,7 @@ class Angle(ElementwiseFeature):
         super().__init__(np.angle, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Real - torch, typing, docstring, unit test
 class Real(ElementwiseFeature):
     """
     Applies the real function elementwise.
@@ -590,6 +614,7 @@ class Real(ElementwiseFeature):
         super().__init__(np.real, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Imag - torch, typing, docstring, unit test
 class Imag(ElementwiseFeature):
     """
     Applies the imaginary function elementwise.
@@ -610,6 +635,7 @@ class Imag(ElementwiseFeature):
         super().__init__(np.imag, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Abs - torch, typing, docstring, unit test
 class Abs(ElementwiseFeature):
     """
     Applies the absolute value function elementwise.
@@ -630,6 +656,7 @@ class Abs(ElementwiseFeature):
         super().__init__(np.abs, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Conjugate - torch, typing, docstring, unit test
 class Conjugate(ElementwiseFeature):
     """
     Applies the conjugate function elementwise.
@@ -650,6 +677,7 @@ class Conjugate(ElementwiseFeature):
         super().__init__(np.conjugate, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Sqrt - torch, typing, docstring, unit test
 class Sqrt(ElementwiseFeature):
     """
     Applies the square root function elementwise.
@@ -670,6 +698,7 @@ class Sqrt(ElementwiseFeature):
         super().__init__(np.sqrt, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Square - torch, typing, docstring, unit test
 class Square(ElementwiseFeature):
     """
     Applies the square function elementwise.
@@ -690,6 +719,7 @@ class Square(ElementwiseFeature):
         super().__init__(np.square, feature=feature, **kwargs)
 
 
+#TODO ***??*** revise Sign - torch, typing, docstring, unit test
 class Sign(ElementwiseFeature):
     """
     Applies the sign function elementwise.
@@ -710,7 +740,8 @@ class Sign(ElementwiseFeature):
         super().__init__(np.sign, feature=feature, **kwargs)
 
 
-## TODO Consider creating classes dynamically
+#TODO ***GV*** Consider creating classes dynamically
+#TODO ***BM*** Does this eliminate the need for the classes above?
 
 # def create_elementwise_class(name: str, np_function: Callable) -> type:
 #    """Factory function to create an ElementwiseFeature subclass."""

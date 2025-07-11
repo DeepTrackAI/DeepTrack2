@@ -32,20 +32,30 @@ Print them:
 
 """
 
-from typing import List, Tuple, Union
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT399E
+
+from __future__ import annotations
 
 import numpy as np
+from numpy.typing import NDArray
 
 from .polynomials import (
-    ricbesh, ricbesy, ricbesj, dricbesh, dricbesj, dricbesy
+    ricbesh,
+    ricbesy,
+    ricbesj,
+    dricbesh,
+    dricbesj,
+    dricbesy,
 )
 
 
+#TODO ***??*** revise coefficients - torch, docstring, unit test
 def coefficients(
-    m: Union[float, complex],
+    m: float | complex,
     a: float,
     L: int,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Calculate the Mie scattering coefficients for a spherical particle.
 
     These coefficients are used in the computation of the scattering
@@ -94,11 +104,12 @@ def coefficients(
     return A, B
 
 
+#TODO ***??*** revise stratified_coefficients - torch, docstring, unit test
 def stratified_coefficients(
-    m: List[complex],
-    a: List[float],
+    m: list[complex],
+    a: list[float],
     L: int,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Calculate the Mie scattering coefficients for stratified spherical 
     particles.
 
@@ -184,10 +195,11 @@ def stratified_coefficients(
     return an, bn
 
 
+#TODO ***??*** revise harmonics - torch, docstring, unit test
 def harmonics(
-    x: np.ndarray,
+    x: NDArray,
     L: int,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[NDArray, NDArray]:
     """Calculate the spherical harmonics of the Mie field.
 
     The harmonics are calculated up to order L using an iterative method.

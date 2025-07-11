@@ -78,18 +78,18 @@ Utility Functions:
 
     def _get_position(
         image: np.ndarray, mode: str = "corner", return_z: bool = False
-    ) -> Tuple[int, int, Optional[int]]
+    ) -> tuple[int, int, Optional[int]]
 
     Extracts the position of the upper-left corner of a scatterer in the image.
 
 - `_create_volume(list_of_scatterers:, pad, output_region, refractive_index_medium, **kwargs)`
 
     def _create_volume(
-        list_of_scatterers: List[np.ndarray],
+        list_of_scatterers: list[np.ndarray],
         pad: int,
-        output_region: Tuple[int, int, int, int],
+        output_region: tuple[int, int, int, int],
         refractive_index_medium: float,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> np.ndarray
 
     Combines multiple scatterer objects into a single 3D volume for imaging.
@@ -99,10 +99,10 @@ Utility Functions:
     def _pad_volume(
         volume: np.ndarray,
         limits: np.ndarray,
-        padding: Tuple[int, int, int, int],
-        output_region: Tuple[int, int, int, int],
-        **kwargs: Dict[str, Any],
-    ) -> Tuple[np.ndarray, np.ndarray]
+        padding: tuple[int, int, int, int],
+        output_region: tuple[int, int, int, int],
+        **kwargs: Any,
+    ) -> tuple[np.ndarray, np.ndarray]
 
     Pads a volume with zeros to avoid edge effects during imaging.
 
@@ -131,9 +131,20 @@ Simulating an image with the `Fluorescence` class:
 >>> image.plot(cmap="gray")
 
 """
+
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT323
+#TODO ***??*** polish imports
+
 from __future__ import annotations
+
 from pint import Quantity
-from typing import Any, Dict, List, Tuple
+from typing import Any
+import warnings
+
+import numpy as np
+from scipy.ndimage import convolve
+
 from deeptrack.backend.units import (
     ConversionTable,
     create_context,
@@ -142,18 +153,16 @@ from deeptrack.backend.units import (
 )
 from deeptrack.math import AveragePooling
 from deeptrack.features import propagate_data_to_dependencies
-import numpy as np
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
 from deeptrack.image import Image, pad_image_to_fft, maybe_cupy
 from deeptrack.types import ArrayLike, PropertyLike
-from scipy.ndimage import convolve
-import warnings
 
 from . import units as u
 from deeptrack.backend import config
 from deeptrack import image
 
 
+#TODO ***??*** revise Microscope - torch, typing, docstring, unit test
 class Microscope(StructuralFeature):
     """Simulates imaging of a sample using an optical system.
 
@@ -180,7 +189,7 @@ class Microscope(StructuralFeature):
 
     Methods
     -------
-    `get(image: Image or None, **kwargs: Dict[str, Any]) -> Image`
+    `get(image: Image or None, **kwargs: Any) -> Image`
         Simulates the imaging process using the defined optical system and 
         returns the resulting image.
 
@@ -205,7 +214,7 @@ class Microscope(StructuralFeature):
         self:  Microscope,
         sample: Feature,
         objective: Feature,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initialize the `Microscope` instance.
 
@@ -216,7 +225,7 @@ class Microscope(StructuralFeature):
             imaged.
         objective: Feature
             A feature-set defining the optical device that images the sample.
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
             Additional parameters passed to the base `StructuralFeature` class.
 
         Attributes
@@ -236,7 +245,7 @@ class Microscope(StructuralFeature):
     def get(
         self: Microscope,
         image: Image | None,
-        **kwargs:  Dict[str, Any],
+        **kwargs: Any,
     ) -> Image:
         """Generate an image of the sample using the defined optical system.
 
@@ -247,7 +256,7 @@ class Microscope(StructuralFeature):
         ----------
         image: Image | None
             The input image to be processed. If None, a new image is created.
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
             Additional parameters for the imaging process.
 
         Returns
@@ -381,6 +390,7 @@ class Microscope(StructuralFeature):
     #     return self._image_wrapped_process_output(*args, **feature_input)
 
 
+#TODO ***??*** revise Optics - torch, typing, docstring, unit test
 class Optics(Feature):
     """Abstract base optics class.
 
@@ -417,7 +427,7 @@ class Optics(Feature):
         illumination is applied.
     upscale: int, optional
         Scaling factor for the resolution of the optical system, by default 1.
-    **kwargs: Dict[str, Any]
+    **kwargs: Any
         Additional parameters passed to the base `Feature` class.
 
     Attributes
@@ -451,13 +461,13 @@ class Optics(Feature):
 
     Methods
     -------
-    `_process_properties(propertydict: Dict[str, Any]) -> Dict[str, Any]`
+    `_process_properties(propertydict: dict[str, Any]) -> dict[str, Any]`
         Processes and validates the input properties.
-    `_pupil(shape:  array_like[int, int], NA: float, wavelength: float, refractive_index_medium: float, include_aberration: bool, defocus: float, **kwargs: Dict[str, Any]) -> array_like[complex]`
+    `_pupil(shape:  array_like[int, int], NA: float, wavelength: float, refractive_index_medium: float, include_aberration: bool, defocus: float, **kwargs: Any) -> array_like[complex]`
         Calculates the pupil function at different focal points.
-    `_pad_volume(volume: array_like[complex], limits: array_like[int, int], padding: array_like[int], output_region: array_like[int], **kwargs: Dict[str, Any]) -> tuple`
+    `_pad_volume(volume: array_like[complex], limits: array_like[int, int], padding: array_like[int], output_region: array_like[int], **kwargs: Any) -> tuple`
         Pads the volume with zeros to avoid edge effects.
-    `__call__(sample: Feature, **kwargs: Dict[str, Any]) -> Microscope`
+    `__call__(sample: Feature, **kwargs: Any) -> Microscope`
         Creates a Microscope instance with the given sample and optics.
 
     Examples
@@ -490,8 +500,8 @@ class Optics(Feature):
         pupil: Feature = None,
         illumination: Feature = None,
         upscale: int = 1,
-        **kwargs: Dict[str, Any],
-    ) -> None:
+        **kwargs: Any,
+    ):
         """Initialize the `Optics` instance.
 
         Parameters
@@ -521,7 +531,7 @@ class Optics(Feature):
             illumination is applied.
         upscale: int, optional
             Scaling factor for the resolution of the optical system, by default 1.
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
             Additional parameters passed to the base `Feature` class.
 
         Attributes
@@ -641,20 +651,20 @@ class Optics(Feature):
 
     def _process_properties(
         self: Optics,
-        propertydict: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        propertydict: dict[str, Any],
+    ) -> dict[str, Any]:
         """Processes and validates the input properties.
 
         Ensures that the provided optical parameters are reasonable.
 
         Parameters
         ----------
-        propertydict:  Dict[str, Any]
+        propertydict: dict[str, Any]
             The input properties.
 
         Returns
         -------
-        dict: Dict[str, Any]
+        dict[str, Any]
             The processed properties.
         
         """
@@ -674,7 +684,8 @@ class Optics(Feature):
                 To fix, set magnification to {required_upscale}, and downsample
                 the resulting image with 
                 dt.AveragePooling(({required_upscale}, {required_upscale}, 1))
-                """
+                """,
+                UserWarning,
             )
 
         return propertydict
@@ -687,7 +698,7 @@ class Optics(Feature):
         refractive_index_medium: float,
         include_aberration: bool = True,   
         defocus: float | ArrayLike[float] = 0,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ):
         """Calculates the pupil function at different focal points.
 
@@ -791,7 +802,7 @@ class Optics(Feature):
         limits: ArrayLike[int] = None,
         padding: ArrayLike[int] = None,
         output_region: ArrayLike[int] = None,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> tuple:
         """Pads the volume with zeros to avoid edge effects.
 
@@ -885,7 +896,7 @@ class Optics(Feature):
     def __call__(
         self: Optics,
         sample: Feature,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> Microscope:
         """Creates a Microscope instance with the given sample and optics.
 
@@ -893,7 +904,7 @@ class Optics(Feature):
         ----------
         sample: Feature
             The sample to be imaged.
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
             Additional parameters for the Microscope.
 
         Returns
@@ -921,7 +932,7 @@ class Optics(Feature):
                 f"{type(self).__name__} optics must be used with Mie scatterers "
                 f"to produce a {type(self).__name__} image. "
                 f"Got sample of type {type(sample).__name__}.",
-                UserWarning
+                UserWarning,
             )
 
         return Microscope(sample, self, **kwargs)
@@ -936,6 +947,7 @@ class Optics(Feature):
     #     return self._image_wrapped_process_output(*args, **feature_input)
 
 
+#TODO ***??*** revise Fluorescence - torch, typing, docstring, unit test
 class Fluorescence(Optics):
     """Optical device for fluorescent imaging.
 
@@ -968,12 +980,10 @@ class Fluorescence(Optics):
         A feature set defining the illumination source.
     upscale: int, optional
         Scaling factor for the resolution of the optical system.
-    **kwargs: Dict[str, Any]
+    **kwargs: Any
 
     Attributes
     ----------
-    __gpu_compatible__: bool
-        Indicates whether the class supports GPU acceleration.
     NA: float
         Numerical aperture of the optical system.
     wavelength: float
@@ -1001,7 +1011,7 @@ class Fluorescence(Optics):
 
     Methods
     -------
-    `get(illuminated_volume: array_like[complex], limits: array_like[int, int], **kwargs: Dict[str, Any]) -> Image`
+    `get(illuminated_volume: array_like[complex], limits: array_like[int, int], **kwargs: Any) -> Image`
         Simulates the imaging process using a fluorescence microscope.
 
     Examples
@@ -1018,13 +1028,11 @@ class Fluorescence(Optics):
 
     """
 
-    __gpu_compatible__ = True
-
     def get(
-        self:  Fluorescence, 
-        illuminated_volume: ArrayLike[complex], 
-        limits: ArrayLike[int], 
-        **kwargs: Dict[str, Any]
+        self:  Fluorescence,
+        illuminated_volume: ArrayLike[complex],
+        limits: ArrayLike[int],
+        **kwargs: Any,
     ) -> Image:
         """Simulates the imaging process using a fluorescence microscope.
 
@@ -1037,7 +1045,7 @@ class Fluorescence(Optics):
             The illuminated 3D volume to be imaged.
         limits: array_like[int, int]
             Boundaries of the illuminated volume in each dimension.
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
             Additional properties for the imaging process, such as:
             - 'padding': Padding to apply to the sample.
             - 'output_region': Specific region to extract from the image.
@@ -1162,6 +1170,7 @@ class Fluorescence(Optics):
         return output_image
 
 
+#TODO ***??*** revise Brightfield - torch, typing, docstring, unit test
 class Brightfield(Optics):
     """Simulates imaging of coherently illuminated samples.
 
@@ -1198,8 +1207,6 @@ class Brightfield(Optics):
 
     Attributes
     ----------
-    __gpu_compatible__: bool
-        Indicates whether the class supports GPU acceleration.
     __conversion_table__: ConversionTable
         Table used to convert properties of the feature to desired units.
     NA: float
@@ -1231,7 +1238,7 @@ class Brightfield(Optics):
     -------
     `get(illuminated_volume: array_like[complex], 
         limits: array_like[int, int], fields: array_like[complex], 
-        **kwargs: Dict[str, Any]) -> Image`
+        **kwargs: Any) -> Image`
         Simulates imaging with brightfield microscopy.
 
 
@@ -1247,8 +1254,6 @@ class Brightfield(Optics):
     
     """
 
-    __gpu_compatible__ = True
-
     __conversion_table__ = ConversionTable(
         working_distance=(u.meter, u.meter),
     )
@@ -1258,7 +1263,7 @@ class Brightfield(Optics):
         illuminated_volume: ArrayLike[complex],
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> Image:
         """Simulates imaging with brightfield microscopy.
 
@@ -1275,7 +1280,7 @@ class Brightfield(Optics):
             Boundaries of the sample volume in each dimension.
         fields: array_like[complex]
             Input fields to be used in the imaging process.
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
             Additional parameters for the imaging process, including:
             - 'padding': Padding to apply to the sample volume.
             - 'output_region': Specific region to extract from the image.
@@ -1440,6 +1445,7 @@ class Brightfield(Optics):
         return output_image
 
 
+#TODO ***??*** revise Holography - torch, typing, docstring, unit test
 class Holography(Brightfield):
     """An alias for the Brightfield class, representing holographic 
     imaging setups.
@@ -1451,6 +1457,7 @@ class Holography(Brightfield):
     pass
 
 
+#TODO ***??*** revise ISCAT - torch, typing, docstring, unit test
 class ISCAT(Brightfield):
     """Images coherently illuminated samples using Interferometric Scattering 
     (ISCAT) microscopy.
@@ -1515,7 +1522,7 @@ class ISCAT(Brightfield):
         self:  ISCAT,
         illumination_angle: float = np.pi,
         amp_factor: float = 1, 
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the ISCAT class.
 
@@ -1526,7 +1533,7 @@ class ISCAT(Brightfield):
         amp_factor: float
             Amplitude factor of the illuminating field relative to the reference 
             field.
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
             Additional parameters for the Brightfield class.
 
         """
@@ -1539,7 +1546,9 @@ class ISCAT(Brightfield):
             phase_shift_correction=True,
             **kwargs
             )
-        
+  
+
+#TODO ***??*** revise Darkfield - torch, typing, docstring, unit test      
 class Darkfield(Brightfield):
     """Images coherently illuminated samples using Darkfield microscopy.
 
@@ -1600,9 +1609,9 @@ class Darkfield(Brightfield):
     """
 
     def __init__(
-        self: Darkfield, 
-        illumination_angle: float = np.pi/2, 
-        **kwargs: Dict[str, Any]
+        self: Darkfield,
+        illumination_angle: float = np.pi/2,
+        **kwargs: Any,
     ) -> None:
         """Initializes the Darkfield class.
 
@@ -1610,7 +1619,7 @@ class Darkfield(Brightfield):
         ----------
         illumination_angle: float
             The angle of illumination, in radians.
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
             Additional parameters for the Brightfield class.
 
         """
@@ -1625,7 +1634,7 @@ class Darkfield(Brightfield):
         illuminated_volume: ArrayLike[complex],
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> Image:
         """Retrieve the darkfield image of the illuminated volume.
 
@@ -1637,7 +1646,7 @@ class Darkfield(Brightfield):
             The spatial limits of the volume.
         fields: array_like
             The fields interacting with the sample.
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
             Additional parameters passed to the super class's get method.
 
         Returns
@@ -1652,6 +1661,7 @@ class Darkfield(Brightfield):
         return np.square(np.abs(field-1))
 
 
+#TODO ***??*** revise IlluminationGradient - torch, typing, docstring, unit test
 class IlluminationGradient(Feature):
     """
     Adds a gradient to the illumination of the sample.
@@ -1706,7 +1716,7 @@ class IlluminationGradient(Feature):
         constant: PropertyLike[float] = 0,
         vmin: PropertyLike[float] = 0,
         vmax: PropertyLike[float] = np.inf,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the IlluminationGradient class.
 
@@ -1723,7 +1733,7 @@ class IlluminationGradient(Feature):
         vmax: float, optional
             Maximum allowed value for the amplitude. Values above this are 
             clipped. Default is infinity.
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
             Additional parameters for customization.
 
         """
@@ -1739,7 +1749,7 @@ class IlluminationGradient(Feature):
         constant: float,
         vmin: float,
         vmax: float,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> ArrayLike[complex]:
         """Applies the gradient and constant offset to the amplitude of the 
         field.
@@ -1756,7 +1766,7 @@ class IlluminationGradient(Feature):
             Minimum value for clipping the amplitude.
         vmax: float
             Maximum value for clipping the amplitude.
-        **kwargs: Dict[str, Any]
+        **kwargs: Any
             Additional parameters for customization.
 
         Returns
@@ -1794,6 +1804,7 @@ class IlluminationGradient(Feature):
         return image
 
 
+#TODO ***??*** revise _get_position - torch, typing, docstring, unit test
 def _get_position(
     image: Image,
     mode: str = "corner",
@@ -1861,12 +1872,13 @@ def _get_position(
     return position
 
 
+#TODO ***??*** revise _create_volume - torch, typing, docstring, unit test
 def _create_volume(
     list_of_scatterers: list,
     pad: tuple = (0, 0, 0, 0),
     output_region: tuple = (None, None, None, None),
     refractive_index_medium: float = 1.33,
-    **kwargs: Dict[str, Any],
+    **kwargs: Any,
 ) -> tuple:
     """Converts a list of scatterers into a volumetric representation.
 
@@ -1883,7 +1895,7 @@ def _create_volume(
     refractive_index_medium: float, optional
         Refractive index of the medium surrounding the scatterers. Default is 
         1.33.
-    **kwargs: Dict[str, Any]
+    **kwargs: Any
         Additional arguments for customization.
 
     Returns

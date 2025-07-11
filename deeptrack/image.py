@@ -95,15 +95,22 @@ Property tracking:
 
 """
 
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT311
+#TODO ***BM*** shall Image also support PyTorch tensors?
+
 from __future__ import annotations
+
 import operator as ops
 from typing import Any, Callable, Iterable
 
 import numpy as np
+
 from deeptrack.properties import Property
 from deeptrack.types import NumberLike
 
 
+#TODO ***??*** revise _binary_method - typing, docstring, unit test
 def _binary_method(
     op: Callable[[NumberLike, NumberLike], NumberLike],
 ) -> Callable[[Image, Image | NumberLike], Image]:
@@ -189,6 +196,7 @@ def _binary_method(
     return func
 
 
+#TODO ***??*** revise _reflected_binary_method - typing, docstring, unit test
 def _reflected_binary_method(
     op: Callable[[NumberLike, NumberLike], NumberLike],
 ) -> Callable[[Image | NumberLike, Image], Image]:
@@ -275,6 +283,7 @@ def _reflected_binary_method(
     return func
 
 
+#TODO ***??*** revise _inplace_binary_method - typing, docstring, unit test
 def _inplace_binary_method(
     op: Callable[[NumberLike, NumberLike], NumberLike],
 ) -> Callable[[Image, Image | NumberLike], Image]:
@@ -354,6 +363,7 @@ def _inplace_binary_method(
     return func
 
 
+#TODO ***??*** revise _numeric_methods - typing, docstring, unit test
 def _numeric_methods(
     op: Callable[[NumberLike, NumberLike], NumberLike],
 ) -> tuple[
@@ -428,6 +438,7 @@ def _numeric_methods(
     )
 
 
+#TODO ***??*** revise _unary_method - typing, docstring, unit test
 def _unary_method(
     op: Callable[[NumberLike], NumberLike],
 ) -> Callable[[Image], Image]:
@@ -481,6 +492,7 @@ def _unary_method(
     return func
 
 
+#TODO ***??*** revise Image - typing, docstring, unit test
 class Image:
     """Wrapper for array-like values with property tracking.
 
@@ -1004,7 +1016,7 @@ class Image:
         ufunc: np.ufunc,
         method: str,
         *inputs: tuple[Any, ...],
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> Image | tuple[Image, ...] | None:
         """Enable Image objects to use NumPy ufuncs.
 
@@ -1211,7 +1223,7 @@ class Image:
     def __array__(
         self: Image | np.ndarray,
         *args: tuple[Any, ...],
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> np.ndarray:
         """Convert the Image object to a NumPy array.
 
@@ -1571,6 +1583,7 @@ class Image:
     __invert__ = _unary_method(ops.invert)
 
 
+#TODO ***??*** revise strip - typing, docstring, unit test
 def strip(
     element: Image | np.ndarray | list | tuple | Any,
 ) -> Any:
@@ -1625,6 +1638,7 @@ def strip(
     return element
 
 
+#TODO ***??*** revise coerce - typing, docstring, unit test
 def coerce(
     images: list[Image | np.ndarray],
 ) -> list[Image]:
@@ -1688,6 +1702,7 @@ for n in range(1, 10):
 _FASTEST_SIZES = np.sort(_FASTEST_SIZES)
 
 
+#TODO ***??*** revise pad_image_to_fft - typing, docstring, unit test
 def pad_image_to_fft(
     image: Image | np.ndarray | np.ndarray,
     axes: Iterable[int] = (0, 1),
@@ -1762,6 +1777,7 @@ def pad_image_to_fft(
     return np.pad(image, pad_width, mode="constant")
 
 
+#TODO ***BM*** can be eliminated?
 def maybe_cupy(
     array: np.ndarray | list | tuple,
 ) -> np.ndarray:

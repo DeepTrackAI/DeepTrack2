@@ -30,17 +30,24 @@ Add Poisson noise with a specified signal-to-noise ratio:
 
 """
 
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT327
+
+from __future__ import annotations
+
 import numpy as np
 
-from .features import Feature
-from .image import Image
-from .types import PropertyLike
+from deeptrack.features import Feature
+from deeptrack.image import Image
+from deeptrack.types import PropertyLike
 
 
+#TODO ***??*** revise Noise - docstring
 class Noise(Feature):
     """Base abstract noise class."""
 
 
+#TODO ***??*** revise Background - torch, typing, docstring, unit test
 class Background(Noise):
     """Adds a constant value to an image
 
@@ -50,17 +57,26 @@ class Background(Noise):
         The value to add to the image
     """
 
-    def __init__(self, offset: PropertyLike[float], **kwargs):
+    def __init__(
+        self,
+        offset: PropertyLike[float],
+        **kwargs,
+    ):
         super().__init__(offset=offset, **kwargs)
 
-    def get(self, image, offset, **kwargs):
+    def get(
+        self,
+        image,
+        offset,
+        **kwargs,
+    ):
         return image + offset
 
 
-# ALIASES
 Offset = Background
 
 
+#TODO ***??*** revise Gaussian - torch, typing, docstring, unit test
 class Gaussian(Noise):
     """Adds IID Gaussian noise to an image.
 
@@ -76,15 +92,22 @@ class Gaussian(Noise):
         self,
         mu: PropertyLike[float] = 0,
         sigma: PropertyLike[float] = 1,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
-    def get(self, image, mu, sigma, **kwargs):
+    def get(
+        self,
+        image,
+        mu,
+        sigma,
+        **kwargs,
+    ):
         noisy_image = mu + image + np.random.randn(*image.shape) * sigma
         return noisy_image
 
 
+#TODO ***??*** revise ComplexGaussian - torch, typing, docstring, unit test
 class ComplexGaussian(Noise):
     """Adds complex-valued IID Gaussian noise to an image.
 
@@ -100,17 +123,24 @@ class ComplexGaussian(Noise):
         self,
         mu: PropertyLike[float] = 0,
         sigma: PropertyLike[float] = 1,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
-    def get(self, image, mu, sigma, **kwargs):
+    def get(
+        self,
+        image,
+        mu,
+        sigma,
+        **kwargs,
+    ):
         real_noise = np.random.randn(*image.shape)
         imag_noise = np.random.randn(*image.shape) * 1j
         noisy_image = mu + image + (real_noise + imag_noise) * sigma
         return noisy_image
 
 
+#TODO ***??*** revise Poisson - torch, typing, docstring, unit test
 class Poisson(Noise):
     """Adds Poisson-distributed noise to an image.
 
@@ -133,13 +163,20 @@ class Poisson(Noise):
         snr: PropertyLike[float] = 100,
         background: PropertyLike[float] = 0,
         max_val=1e8,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             *args, snr=snr, background=background, max_val=max_val, **kwargs
         )
 
-    def get(self, image, snr, background, max_val, **kwargs):
+    def get(
+        self,
+        image,
+        snr,
+        background,
+        max_val,
+        **kwargs,
+    ):
         image[image < 0] = 0
         immax = np.max(image)
         peak = np.abs(immax - background)

@@ -155,7 +155,11 @@ Create a stratified Mie sphere and resolve it through a microscope:
 
 """
 
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT321
+
 from __future__ import annotations
+
 from typing import Callable 
 import warnings
 
@@ -174,6 +178,8 @@ from deeptrack.image import pad_image_to_fft, maybe_cupy, Image
 from deeptrack.types import ArrayLike
 from deeptrack import units as u
 
+
+#TODO ***??*** revise Scatterer - torch, typing, docstring, unit test
 class Scatterer(Feature):
     """Base abstract class for scatterers.
 
@@ -332,6 +338,8 @@ class Scatterer(Feature):
     ) -> list:
         return self._image_wrapped_process_output(*args, **feature_input)
 
+
+#TODO ***??*** revise PointParticle - torch, typing, docstring, unit test
 class PointParticle(Scatterer):
     """Generates a point particle
 
@@ -373,6 +381,7 @@ class PointParticle(Scatterer):
         return np.ones((1, 1, 1)) * np.prod(scale)
 
 
+#TODO ***??*** revise Ellipse - torch, typing, docstring, unit test
 class Ellipse(Scatterer):
     """Generates an elliptical disk scatterer
 
@@ -486,6 +495,7 @@ class Ellipse(Scatterer):
         return mask
 
 
+#TODO ***??*** revise Sphere - torch, typing, docstring, unit test
 class Sphere(Scatterer):
     """Generates a spherical scatterer
 
@@ -550,6 +560,7 @@ class Sphere(Scatterer):
         return mask
 
 
+#TODO ***??*** revise Ellipsoid - torch, typing, docstring, unit test
 class Ellipsoid(Scatterer):
     """Generates an ellipsoidal scatterer
 
@@ -706,6 +717,7 @@ class Ellipsoid(Scatterer):
         return mask
 
 
+#TODO ***??*** revise MieScatterer - torch, typing, docstring, unit test
 class MieScatterer(Scatterer):
     """Base implementation of a Mie particle.
 
@@ -790,8 +802,6 @@ class MieScatterer(Scatterer):
         arr*=np.exp(1j * k * z + 1j * np.pi / 2)
         
     """
-
-    __gpu_compatible__ = True
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
@@ -1190,6 +1200,7 @@ class MieScatterer(Scatterer):
             return np.fft.ifft2(fourier_field)[..., np.newaxis]
 
 
+#TODO ***??*** revise MieSphere - torch, typing, docstring, unit test
 class MieSphere(MieScatterer):
     """Scattered field by a sphere
 
@@ -1280,6 +1291,7 @@ class MieSphere(MieScatterer):
         )
 
 
+#TODO ***??*** revise MieStratifiedSphere - torch, typing, docstring, unit test
 class MieStratifiedSphere(MieScatterer):
     """Scattered field by a stratified sphere
 
