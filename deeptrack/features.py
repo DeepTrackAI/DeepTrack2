@@ -3282,7 +3282,7 @@ class Feature(DeepTrackNode):
         ... )
 
         """
-        
+
         return Value(other) >> LessThan(self)
 
     #TODO ***JH***
