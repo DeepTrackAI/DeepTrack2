@@ -216,13 +216,13 @@ __all__ = [
     "Merge",
     "OneOf",
     "OneOfDict",
-    "LoadImage",  # TODO **MG**
-    "SampleToMasks",  # TODO **MG**
-    "AsType",  # TODO **MG**
+    "LoadImage",  # TODO ***MG***
+    "SampleToMasks",  # TODO ***MG***
+    "AsType",  # TODO ***MG***
     "ChannelFirst2d",
-    "Upscale",  # TODO **AL**
-    "NonOverlapping",  # TODO **AL**
-    "Store",  # TODO **JH**
+    "Upscale",  # TODO ***AL***
+    "NonOverlapping",  # TODO ***AL***
+    "Store",  # TODO ***JH***
 
     "Squeeze",
     "Unsqueeze",
