@@ -806,6 +806,9 @@ class Feature(DeepTrackNode):
             ):
                 self._input.set_value(image_list, _ID=_ID)
 
+            elif image_list is None and self._input(_ID=_ID) is not None:
+                self._input.set_value(self._input(_ID=_ID), _ID=_ID)
+
             # A dict to store values of self.arguments before updating them.
             original_values = {}
 
