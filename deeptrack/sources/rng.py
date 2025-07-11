@@ -17,7 +17,6 @@ Module Structure
 
 - `PythonRNG`: Class that generates multiple python random number generators.
 
-
 Examples
 --------
 Generate 3 rng's with different seeds, and get a random number from them:
@@ -30,8 +29,14 @@ Generate 3 rng's with different seeds, and get a random number from them:
 
 """
 
-import random 
-from typing import Any, List, Callable
+#TODO ___??___ revise module docstring
+#TODO ___??___ add unit test
+#TODO ___??___ revise DTAT391C
+
+from __future__ import annotations
+
+import random
+from typing import Any, Callable
 
 import numpy as np
 
@@ -45,6 +50,7 @@ __all__ = [
 ]
 
 
+#TODO ___??___ Revise NumpyRNG
 class NumpyRNG(Source, np.random.RandomState):
     """Class that generates multiple numpy random number generators.
 
@@ -83,15 +89,16 @@ class NumpyRNG(Source, np.random.RandomState):
 
     set_index(index): self
         Sets the current index and resets the random number generators.
+
     """
 
     rng: list
 
     def __init__(
-        self,
+        self: NumpyRNG,
         n_states,
-        seed=None
-    ) -> None:
+        seed=None,
+    ):
         self._n_states = n_states
 
         if seed is None:
@@ -103,8 +110,8 @@ class NumpyRNG(Source, np.random.RandomState):
         super().__init__(rng=states)
 
     def _generate_states(
-        self
-    ) -> List[np.random.RandomState]:
+        self: NumpyRNG,
+    ) -> list[np.random.RandomState]:
 
         n_states = self._n_states
         seed = self._seed
@@ -115,23 +122,22 @@ class NumpyRNG(Source, np.random.RandomState):
             ) for _ in range(n_states)]
 
     def reset(
-        self
+        self: NumpyRNG,
     ) -> None:
         self._dict["rng"] = self._generate_states()
 
-    
     def __getattribute__(
-        self,
-        __name: str
+        self: NumpyRNG,
+        __name: str,
     ) -> Any:
         if hasattr(
             np.random.RandomState, __name) and not __name.startswith("_"):
             return self._create_lazy_callback(__name)
         return super().__getattribute__(__name)
-    
+
     def _create_lazy_callback(
-        self,
-        __name: str
+        self: NumpyRNG,
+        __name: str,
     ) -> Callable[[DeepTrackNode], DeepTrackNode]:
         def lazy_callback(
             *args,
@@ -139,22 +145,23 @@ class NumpyRNG(Source, np.random.RandomState):
         ) -> DeepTrackNode:
             node = DeepTrackNode(
                 lambda: getattr(
-                    self._dict["rng"][self._current_index()], __name)\
-                        (*args, **kwargs))
+                    self._dict["rng"][self._current_index()], __name
+                )(*args, **kwargs)
+            )
             node.add_dependency(self._current_index)
             self._current_index.add_child(node)
             return node
         return lazy_callback
-    
 
     def set_index(
-        self,
-        index
+        self: NumpyRNG,
+        index,
     ) -> Callable:
         self.reset()
         return super().set_index(index)
 
 
+#TODO ___??___ Revise PythonRNG
 class PythonRNG(Source, random.Random):
     """Class that generates multiple random.Random number generators.
 
@@ -195,14 +202,13 @@ class PythonRNG(Source, random.Random):
         Sets the current index and resets the random number generators.
     """
 
-    
     rng: list
 
     def __init__(
-        self,
+        self: PythonRNG,
         n_states,
-        seed=None
-    ) -> None:
+        seed=None,
+    ):
         self._n_states = n_states
 
         if seed is None:
@@ -214,8 +220,8 @@ class PythonRNG(Source, random.Random):
         super().__init__(rng=states)
 
     def _generate_states(
-        self
-    ) -> List[random.Random]:
+        self: PythonRNG,
+    ) -> list[random.Random]:
 
         n_states = self._n_states
         seed = self._seed
@@ -226,42 +232,43 @@ class PythonRNG(Source, random.Random):
         ) for _ in range(n_states)]
 
     def reset(
-        self
+        self: PythonRNG,
     ) -> None:
         self._dict["rng"] = self._generate_states()
 
-    
     def __getattribute__(
-        self,
-        __name: str
+        self: PythonRNG,
+        __name: str,
     ) -> Any:
         if hasattr(
             np.random.RandomState, __name) and not __name.startswith("_"):
             return self._create_lazy_callback(__name)
         return super().__getattribute__(__name)
-    
+
     def _create_lazy_callback(
-        self,
-        __name: str
+        self: PythonRNG,
+        __name: str,
     ) -> Callable[[DeepTrackNode], DeepTrackNode]:
         def lazy_callback(
             *args,
-            **kwargs
+            **kwargs,
         ) -> DeepTrackNode:
             node = DeepTrackNode(
                 lambda: getattr(
-                    self._dict["rng"][self._current_index()], __name)\
-                        (*args, **kwargs)
-                    )
+                    self._dict["rng"][self._current_index()], __name
+                )(*args, **kwargs)
+            )
             node.add_dependency(self._current_index)
             self._current_index.add_child(node)
             return node
         return lazy_callback
-    
 
     def set_index(
-        self,
-        index
+        self: PythonRNG,
+        index,
     ) -> Callable:
         self.reset()
         return super().set_index(index)
+
+
+#TODO ___??___ add PyTorchRNG
