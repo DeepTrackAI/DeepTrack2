@@ -3130,7 +3130,7 @@ class Feature(DeepTrackNode):
         other: int,
     ) -> Feature:
         """Repeat the feature a given number of times using '^'.
-        
+
         This operator is shorthand for chaining with `Repeat`. The expression:
 
         >>> feature ^ other
