@@ -47,7 +47,97 @@ Attributes:
 
 Examples
 --------
-TODO
+**Create a dummy dataset structure with train/test subfolders**
+
+>>> import os
+>>> import shutil
+
+Temporary root directory:
+>>> root = "tmp_data"
+
+Remove existing directory if needed:
+>>> if os.path.exists(root):
+...     shutil.rmtree(root)
+
+Define splits and classes:
+>>> splits = ["train", "test"]
+>>> classes = ["cat", "dog", "bird"]
+
+Create directories and dummy files:
+>>> for split in splits:
+...     for cls in classes:
+...         folder_path = os.path.join(root, split, cls)
+...         os.makedirs(folder_path)
+...         for i in range(2):
+...             file_path = os.path.join(folder_path, f"image_{i}.jpg")
+...             with open(file_path, "w") as f:
+...                 f.write("dummy")
+
+Load a split of the dataset, specifically, the training set:
+>>> from deeptrack.sources.folder import ImageFolder
+>>>
+>>> train_data = ImageFolder(os.path.join(root, "train"))
+
+>>> len(train_data)
+6
+>>> train_data.classes
+['bird', 'dog', 'cat']
+>>> train_data.path()
+'tmp_data/train/bird/image_0.jpg'
+
+**Access a source item**
+
+>>> item = train_data[0]
+
+>>> item["path"]
+'tmp_data/train/bird/image_0.jpg'
+
+>>> item["label"]
+0
+
+>>> item["label_name"]
+'bird'
+
+**Convert between label names and indices**
+
+>>> train_data.name_to_label("cat")
+2
+
+>>> train_data.label_to_name(0)
+'bird'
+
+**Split the dataset across top-level folders**
+
+>>> all_data = ImageFolder(root)
+>>> train, test = all_data.split("train", "test")
+
+>>> print(f"Train size: {len(train)}")
+Train size: 6
+
+>>> print(f"Test size: {len(test)}")
+Test size: 6
+
+**Print paths in each split**
+
+Train files:
+>>> for item in train:
+...     print(item["path"])
+tmp_data/train/bird/image_0.jpg
+tmp_data/train/bird/image_1.jpg
+tmp_data/train/cat/image_0.jpg
+tmp_data/train/cat/image_1.jpg
+tmp_data/train/dog/image_0.jpg
+tmp_data/train/dog/image_1.jpg
+
+Test files:
+>>> for item in test:
+...     print(item["path"])
+tmp_data/test/bird/image_0.jpg
+tmp_data/test/bird/image_1.jpg
+tmp_data/test/cat/image_0.jpg
+tmp_data/test/cat/image_1.jpg
+tmp_data/test/dog/image_0.jpg
+tmp_data/test/dog/image_1.jpg
 
 """
 
@@ -66,6 +156,7 @@ __all__ = [
 
 
 known_extensions = ["png", "jpg", "jpeg", "tif", "tiff", "bmp", "gif"]
+
 
 class ImageFolder(Source):
     """Data source for images organized in a directory structure.
@@ -117,70 +208,95 @@ class ImageFolder(Source):
     --------
     **Create a dummy dataset structure with train/test subfolders**
 
-import os
-import shutil
+    >>> import os
+    >>> import shutil
 
-# Temporary root directory
-root = "tmp_data"
+    Temporary root directory:
+    >>> root = "tmp_data"
 
-# Remove existing directory if needed
-if os.path.exists(root):
-    shutil.rmtree(root)
+    Remove existing directory if needed:
+    >>> if os.path.exists(root):
+    ...     shutil.rmtree(root)
 
-# Define splits and classes
-splits = ["train", "test"]
-classes = ["cat", "dog", "bird"]
+    Define splits and classes:
+    >>> splits = ["train", "test"]
+    >>> classes = ["cat", "dog", "bird"]
 
-# Create directories and dummy files
-for split in splits:
-    for cls in classes:
-        folder_path = os.path.join(root, split, cls)
-        os.makedirs(folder_path)
-        for i in range(2):
-            file_path = os.path.join(folder_path, f"image_{i}.jpg")
-            with open(file_path, "w") as f:
-                f.write("dummy")
+    Create directories and dummy files:
+    >>> for split in splits:
+    ...     for cls in classes:
+    ...         folder_path = os.path.join(root, split, cls)
+    ...         os.makedirs(folder_path)
+    ...         for i in range(2):
+    ...             file_path = os.path.join(folder_path, f"image_{i}.jpg")
+    ...             with open(file_path, "w") as f:
+    ...                 f.write("dummy")
 
-    **Load a split of the dataset**
+    Load a split of the dataset, specifically, the training set:
+    >>> from deeptrack.sources.folder import ImageFolder
+    >>>
+    >>> train_data = ImageFolder(os.path.join(root, "train"))
 
-from deeptrack.sources.folder import ImageFolder
-
-# Load the training set
-train_data = ImageFolder(os.path.join(root, "train"))
-
-print(len(train_data))
-print(train_data.classes)
-print(train_data.path())
+    >>> len(train_data)
+    6
+    >>> train_data.classes
+    ['bird', 'dog', 'cat']
+    >>> train_data.path()
+    'tmp_data/train/bird/image_0.jpg'
 
     **Access a source item**
 
-item = train_data[0]
-print(item["path"])
-print(item["label"])
-print(item["label_name"])
+    >>> item = train_data[0]
+
+    >>> item["path"]
+    'tmp_data/train/bird/image_0.jpg'
+
+    >>> item["label"]
+    0
+
+    >>> item["label_name"]
+    'bird'
 
     **Convert between label names and indices**
 
-train_data.name_to_label("cat")
-train_data.label_to_name(0)
+    >>> train_data.name_to_label("cat")
+    2
+
+    >>> train_data.label_to_name(0)
+    'bird'
 
     **Split the dataset across top-level folders**
 
-all_data = ImageFolder(root)
-train, test = all_data.split("train", "test")
+    >>> all_data = ImageFolder(root)
+    >>> train, test = all_data.split("train", "test")
 
-print(f"Train size: {len(train)}")
-print(f"Test size: {len(test)}")
+    >>> print(f"Train size: {len(train)}")
+    Train size: 6
+
+    >>> print(f"Test size: {len(test)}")
+    Test size: 6
 
     **Print paths in each split**
 
-print("Train files:")
-for item in train:
-    print(item["path"])
+    Train files:
+    >>> for item in train:
+    ...     print(item["path"])
+    tmp_data/train/bird/image_0.jpg
+    tmp_data/train/bird/image_1.jpg
+    tmp_data/train/cat/image_0.jpg
+    tmp_data/train/cat/image_1.jpg
+    tmp_data/train/dog/image_0.jpg
+    tmp_data/train/dog/image_1.jpg
 
-print("Test files:")
-for item in test:
-    print(item["path"])
+    Test files:
+    >>> for item in test:
+    ...     print(item["path"])
+    tmp_data/test/bird/image_0.jpg
+    tmp_data/test/bird/image_1.jpg
+    tmp_data/test/cat/image_0.jpg
+    tmp_data/test/cat/image_1.jpg
+    tmp_data/test/dog/image_0.jpg
+    tmp_data/test/dog/image_1.jpg
 
     """
 

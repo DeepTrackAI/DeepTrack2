@@ -216,13 +216,13 @@ __all__ = [
     "Merge",
     "OneOf",
     "OneOfDict",
-    "LoadImage",  # TODO **MG**
-    "SampleToMasks",  # TODO **MG**
-    "AsType",  # TODO **MG**
+    "LoadImage",  # TODO ***MG***
+    "SampleToMasks",  # TODO ***MG***
+    "AsType",  # TODO ***MG***
     "ChannelFirst2d",
-    "Upscale",  # TODO **AL**
-    "NonOverlapping",  # TODO **AL**
-    "Store",  # TODO **JH**
+    "Upscale",  # TODO ***AL***
+    "NonOverlapping",  # TODO ***AL***
+    "Store",  # TODO ***JH***
 
     "Squeeze",
     "Unsqueeze",
@@ -3033,129 +3033,688 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Power(self)
 
-    #TODO ***JH***
     def __gt__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Checks if this feature is greater than another using '>'.
+        """Check if this feature is greater than another using '>'.
+
+        This operator is shorthand for chaining with `GreaterThan`.
+        The expression:
+
+        >>> feature > other
+
+        is equivalent to:
+
+        >>> feature >> dt.GreaterThan(value=other)
+
+        Internally, this method constructs a new `GreaterThan` feature and
+        uses the right-shift operator (`>>`) to chain the current feature
+        into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to compare against. It is passed to
+            `GreaterThan` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of greater-than
+            comparison between `self` and `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare each element in a feature to a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature > 2
+        >>> result = pipeline()
+        >>> result
+        [False, False, True]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.GreaterThan(value=2)
+
+        Compare to a dynamic cutoff that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
+        >>> pipeline = feature > random_cutoff
+        >>> result = pipeline.update()()
+        >>> result
+        [False, True, True]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.GreaterThan(value=random_cutoff)
 
         """
 
         return self >> GreaterThan(other)
 
-    #TODO ***JH***
     def __rgt__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Checks if another value is greater than this feature using 
-        right '>'.
+        """Check if another value is greater than feature using right '>'.
+ 
+        This operator is the right-hand version of `>`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other > feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.GreaterThan(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other`
+        and chains it into a `GreaterThan` feature.
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` to compare against. It is passed as
+            the `value` argument to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of greater-than
+            comparison between `other` and `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare a constant to each element in a feature:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 2 > feature
+        >>> result = pipeline()
+        >>> result
+        [True, False, False]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=2) >> dt.GreaterThan(value=feature)
+
+        Compare a constant to each element in a dynamic feature that samples
+        values at each call:
+        >>> from random import randint
+        >>>
+        >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
+        >>> pipeline = 2 > random
+        >>> result = pipeline.update()()
+        >>> result
+        [False, False, True]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=2)
+        ...     >> dt.GreaterThan(value=lambda:
+        ...         [randint(0, 3) for _ in range(3)])
+        ... )
 
         """
 
         return Value(other) >> GreaterThan(self)
 
-    #TODO ***JH***
     def __lt__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Checks if this feature is less than another using '<'.
+        """Check if this feature is less than another using '<'.
+
+        This operator is shorthand for chaining with `LessThan`.
+        The expression:
+
+        >>> feature < other
+
+        is equivalent to:
+
+        >>> feature >> dt.LessThan(value=other)
+
+        Internally, this method constructs a new `LessThan` feature and
+        uses the right-shift operator (`>>`) to chain the current feature
+        into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to compare against. It is passed to
+            `LessThan` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of less-than
+            comparison between `self` and `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare each element in a feature to a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature < 2
+        >>> result = pipeline()
+        >>> result
+        [True, False, False]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.LessThan(value=2)
+
+        Compare to a dynamic cutoff that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
+        >>> pipeline = feature < random_cutoff
+        >>> result = pipeline.update()()
+        >>> result
+        [False, False, False]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.LessThan(value=random_cutoff)
 
         """
 
         return self >> LessThan(other)
 
-    #TODO ***JH***
     def __rlt__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Checks if another value is less than this feature using right '<'.
+        """Check if another value is less than this feature using right '<'.
+
+        This operator is the right-hand version of `<`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other < feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.LessThan(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other`
+        and chains it into a `LessThan` feature.
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` to compare against. It is passed as
+            the `value` argument to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of less-than
+            comparison between `other` and `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare a constant to each element in a feature:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 2 < feature
+        >>> result = pipeline()
+        >>> result
+        [False, False, True]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=2) >> dt.LessThan(value=feature)
+
+        Compare a constant to each element in a dynamic feature that samples
+        values at each call:
+        >>> from random import randint
+        >>>
+        >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
+        >>> pipeline = 2 < random
+        >>> result = pipeline.update()()
+        >>> result
+        [False, True, False]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=2)
+        ...     >> dt.LessThan(value=lambda:
+        ...         [randint(0, 3) for _ in range(3)])
+        ... )
 
         """
-        
+
         return Value(other) >> LessThan(self)
 
-    #TODO ***JH***
     def __le__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Checks if this feature is less than or equal to another using '<='.
+        """Check if this feature is less than or equal to another using '<='.
+
+        This operator is shorthand for chaining with `LessThanOrEquals`.
+        The expression:
+
+        >>> feature <= other
+
+        is equivalent to:
+
+        >>> feature >> dt.LessThanOrEquals(value=other)
+
+        Internally, this method constructs a new `LessThanOrEquals` feature
+        and uses the right-shift operator (`>>`) to chain the current feature
+        into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to compare against. It is passed to
+            `LessThanOrEquals` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of
+            less-than-or-equals comparison between `self` and `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare each element in a feature to a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature <= 2
+        >>> result = pipeline()
+        >>> result
+        [True, True, False]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.LessThanOrEquals(value=2)
+
+        Compare to a dynamic cutoff that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
+        >>> pipeline = feature <= random_cutoff
+        >>> result = pipeline.update()()
+        >>> result
+        [False, False, False]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.LessThanOrEquals(value=random_cutoff)
 
         """
 
         return self >> LessThanOrEquals(other)
 
-    #TODO ***JH***
     def __rle__(
         self: Feature,
-        other: Any
+        other: Any,
     ) -> Feature:
-        """Checks if another value is less than or equal to this feature using 
-        right '<='.
+        """Check if other is less than or equal to feature using right '<='.
+
+        This operator is the right-hand version of `<=`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other <= feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.LessThanOrEquals(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other`
+        and chains it into a `LessThanOrEquals` feature.
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` to compare against. It is passed as
+            the `value` argument to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of
+            less-than-or-equals comparison between `other` and `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare a constant to each element in a feature:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 2 <= feature
+        >>> result = pipeline()
+        >>> result
+        [False, True, True]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=2) >> dt.LessThanOrEquals(value=feature)
+
+        Compare a constant to each element in a dynamic feature that samples
+        values at each call:
+        >>> from random import randint
+        >>>
+        >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
+        >>> pipeline = 2 <= random
+        >>> result = pipeline.update()()
+        >>> result
+        [True, False, False]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=2)
+        ...     >> dt.LessThanOrEquals(value=lambda:
+        ...         [randint(0, 3) for _ in range(3)])
+        ... )
 
         """
 
         return Value(other) >> LessThanOrEquals(self)
 
-    #TODO ***JH***
     def __ge__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Checks if this feature is greater than or equal to another 
-        using '>='.
+        """Check if this feature is greater than or equal to other using '>='.
+
+        This operator is shorthand for chaining with `GreaterThanOrEquals`.
+        The expression:
+
+        >>> feature >= other
+
+        is equivalent to:
+
+        >>> feature >> dt.GreaterThanOrEquals(value=other)
+
+        Internally, this method constructs a new `GreaterThanOrEquals` feature
+        and uses the right-shift operator (`>>`) to chain the current feature
+        into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to compare against. It is passed to
+            `GreaterThanOrEquals` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of
+            greater-than-or-equals comparison between `self` and `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare each element in a feature to a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature >= 2
+        >>> result = pipeline()
+        >>> result
+        [False, True, True]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.GreaterThanOrEquals(value=2)
+
+        Compare to a dynamic cutoff that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
+        >>> pipeline = feature >= random_cutoff
+        >>> result = pipeline.update()()
+        >>> result
+        [True, True, True]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.GreaterThanOrEquals(value=random_cutoff)
 
         """
 
         return self >> GreaterThanOrEquals(other)
 
-    #TODO ***JH***
     def __rge__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Checks if another value is greater than or equal to this feature 
-        using right '>='.
+        """Check if other is greater than or equal to feature using right '>='.
+
+        This operator is the right-hand version of `>=`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other >= feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.GreaterThanOrEquals(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other`
+        and chains it into a `GreaterThanOrEquals` feature.
+
+        Parameters
+        ----------
+        other: Any
+            A constant or `Feature` to compare against. It is passed as
+            the `value` argument to `Value`.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of
+            greater-than-or-equals comparison between `other` and `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare a constant to each element in a feature:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = 2 >= feature
+        >>> result = pipeline()
+        >>> result
+        [True, True, False]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=2)
+        ...     >> dt.GreaterThanOrEquals(value=feature)
+        ... )
+
+        Compare a constant to each element in a dynamic feature that samples
+        values at each call:
+        >>> from random import randint
+        >>>
+        >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
+        >>> pipeline = 2 >= random
+        >>> result = pipeline.update()()
+        >>> result
+        [True, False, True]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=2)
+        ...     >> dt.GreaterThanOrEquals(value=lambda:
+        ...         [randint(0, 3) for _ in range(3)])
+        ... )
 
         """
 
         return Value(other) >> GreaterThanOrEquals(self)
 
-    #TODO ***JH***
     def __xor__(
         self: Feature,
-        other: Any,
+        other: int,
     ) -> Feature:
-        """Repeats the feature a given number of times using '^'.
-        
+        """Repeat the feature a given number of times using '^'.
+
+        This operator is shorthand for chaining with `Repeat`. The expression:
+
+        >>> feature ^ other
+
+        is equivalent to:
+
+        >>> dt.Repeat(feature, N=other)
+
+        Internally, this method constructs a new `Repeat` feature taking
+        `self` and `other` as argument.
+
+        Parameters
+        ----------
+        other: int
+            The int value representing the repeat times. It is passed to
+            `Repeat` as the `N` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature that applies `self` repeatedly `other` times.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Repeat the `Add` feature by 3 times:
+        >>> add_ten = dt.Add(value=10)
+        >>> pipeline = add_ten ^ 3
+        >>> result = pipeline([1, 2, 3])
+        >>> result
+        [31, 32, 33]
+
+        This is equivalent to:
+        >>> pipeline = dt.Repeat(add_ten, N=3)
+
+        Repeat by random times that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> random_times = dt.Value(value=lambda: np.random.randint(10))
+        >>> pipeline = add_ten ^ random_times
+        >>> result = pipeline.update()([1, 2, 3])
+        >>> result
+        [81, 82, 83]
+
+        This is equivalent to:
+        >>> pipeline = dt.Repeat(add_ten, N=random_times)
+
         """
 
         return Repeat(self, other)
 
-    #TODO ***JH***
     def __and__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Stacks this feature with another using '&'.
+        """Stack this feature with another using '&'.
 
+        This operator is shorthand for chaining with `Stack`. The expression:
+
+        >>> feature & other
+
+        is equivalent to:
+
+        >>> feature >> dt.Stack(value=other)
+
+        Internally, this method constructs a new `Stack` feature and uses the
+        right-shift operator (`>>`) to chain the current feature into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to stack with `self`.
+
+        Returns
+        -------
+        Feature
+            A new feature containing all elements from `self` and `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Stack with the fixed data:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature & [4, 5, 6]
+        >>> result = pipeline()
+        >>> result
+        [1, 2, 3, 4, 5, 6]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Stack(value=[4, 5, 6])
+
+        Stack with the dynamic data that samples values at each call:
+        >>> from random import randint
+        >>>
+        >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
+        >>> pipeline = feature & random
+        >>> result = pipeline.update()()
+        >>> result
+        [1, 2, 3, 3, 1, 3]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.Stack(value=random)
+ 
         """
 
         return self >> Stack(other)
 
-    #TODO ***JH***
     def __rand__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Stacks another value with this feature using right '&'.
+        """Stack another value with this feature using right '&'.
+
+        This operator is the right-hand version of `&`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression:
+
+        >>> other & feature
+
+        is equivalent to:
+
+        >>> dt.Value(value=other) >> dt.Stack(value=feature)
+
+        Internally, this method constructs a `Value` feature from `other`
+        and chains it into a `Stack` feature.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to stack with `self`.
+
+        Returns
+        -------
+        Feature
+            A new feature containing all elements from `other` and `self`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Stack with the fixed data:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = [4, 5, 6] & feature
+        >>> result = pipeline()
+        >>> result
+        [4, 5, 6, 1, 2, 3]
+
+        This is equivalent to:
+        >>> pipeline = dt.Value(value=[4, 5, 6]) >> dt.Stack(value=feature)
+
+        Stack with the dynamic data that samples values at each call:
+        >>> from random import randint
+        >>>
+        >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
+        >>> pipeline = random & feature
+        >>> result = pipeline.update()()
+        >>> result
+        [0, 3, 1, 1, 2, 3]
+
+        This is equivalent to:
+        >>> pipeline = (
+        ...     dt.Value(value=lambda:
+        ...         [randint(0, 3) for _ in range(3)])
+        ...     >> dt.Stack(value=feature)
+        ... )
         
         """
-        
+
         return Value(other) >> Stack(self)
 
     def __getitem__(
