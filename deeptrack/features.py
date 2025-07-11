@@ -3415,8 +3415,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Check if this feature is greater than or equal to another
-        using '>='.
+        """Check if this feature is greater than or equal to other using '>='.
 
         This operator is shorthand for chaining with `GreaterThanOrEquals`.
         The expression:
