@@ -1,8 +1,12 @@
+#TODO ***??*** class docstring
+#TODO ***??*** revise DTAT399C
+
 from numpy import ndarray
 from pint import Quantity, Unit, Context
-from .. import units as u
+from .. import units as u  #TODO ***??*** is this import needed??
 
 
+#TODO ***??*** revise get_active_voxel_size - torch, docstring, unit test
 def get_active_voxel_size():
     """Gets the size of a voxel used for simulation."""
     grid_x = (1 * u.sxpx).to(u.m).magnitude
@@ -11,6 +15,7 @@ def get_active_voxel_size():
     return grid_x, grid_y, grid_z
 
 
+#TODO ***??*** revise get_active_scale - torch, docstring, unit test
 def get_active_scale():
     """Gets the active scale difference between optical units and simulation units."""
     current_xscale = (1 * u.xpx / u.sxpx).to_base_units().magnitude or 1
@@ -19,6 +24,7 @@ def get_active_scale():
     return (current_xscale, current_yscale, current_zscale)
 
 
+#TODO ***??*** revise create_context - torch, docstring, unit test
 def create_context(
     xpixel=None,
     ypixel=None,
@@ -63,6 +69,7 @@ def create_context(
     return ctx
 
 
+#TODO ***??*** revise ConversionTable - torch, docstring, unit test
 class ConversionTable:
     """Convert a dictionary of values to the desired units.
 
