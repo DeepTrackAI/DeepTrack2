@@ -3411,13 +3411,63 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> LessThanOrEquals(self)
 
-    #TODO ***JH***
     def __ge__(
-        self: Feature, 
-        other: Any
+        self: Feature,
+        other: Any,
     ) -> Feature:
-        """Checks if this feature is greater than or equal to another 
+        """Check if this feature is greater than or equal to another
         using '>='.
+
+        This operator is shorthand for chaining with `GreaterThanOrEquals`.
+        The expression:
+
+        >>> feature >= other
+
+        is equivalent to:
+
+        >>> feature >> dt.GreaterThanOrEquals(value=other)
+
+        Internally, this method constructs a new `GreaterThanOrEquals` feature
+        and uses the right-shift operator (`>>`) to chain the current feature
+        into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to compare against. It is passed to
+            `GreaterThanOrEquals` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of
+            greater-than-or-equals comparison between `self` and `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare each element in a feature to a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature >= 2
+        >>> result = pipeline()
+        >>> result
+        [False, True, True]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.GreaterThanOrEquals(value=2)
+
+        Compare to a dynamic cutoff that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
+        >>> pipeline = feature >= random_cutoff
+        >>> result = pipeline.update()()
+        >>> result
+        [True, True, True]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.GreaterThanOrEquals(value=random_cutoff)
 
         """
 
