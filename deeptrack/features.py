@@ -3033,12 +3033,62 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Power(self)
 
-    #TODO ***JH***
     def __gt__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Checks if this feature is greater than another using '>'.
+        """Check if this feature is greater than another using '>'.
+
+        This operator is shorthand for chaining with `GreaterThan`.
+        The expression:
+
+        >>> feature > other
+
+        is equivalent to:
+
+        >>> feature >> dt.GreaterThan(value=other)
+
+        Internally, this method constructs a new `GreaterThan` feature and
+        uses the right-shift operator (`>>`) to chain the current feature
+        into it.
+
+        Parameters
+        ----------
+        other: Any
+            The value or `Feature` to compare against. It is passed to
+            `GreaterThan` as the `value` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature representing the element-wise result of greater-than
+            comparison between `self` and `other`.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Compare each element in a feature to a constant:
+        >>> feature = dt.Value(value=[1, 2, 3])
+        >>> pipeline = feature > 2
+        >>> result = pipeline()
+        >>> result
+        [False, False, True]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.GreaterThan(value=2)
+
+        Compare to a dynamic cutoff that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
+        >>> pipeline = feature > random_cutoff
+        >>> result = pipeline.update()()
+        >>> result
+        [False, True, True]
+
+        This is equivalent to:
+        >>> pipeline = feature >> dt.GreaterThan(value=random_cutoff)
 
         """
 
