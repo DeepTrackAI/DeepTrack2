@@ -3540,13 +3540,60 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> GreaterThanOrEquals(self)
 
-    #TODO ***JH***
     def __xor__(
         self: Feature,
-        other: Any,
+        other: int,
     ) -> Feature:
-        """Repeats the feature a given number of times using '^'.
-        
+        """Repeat the feature a given number of times using '^'.
+
+        This operator is shorthand for chaining with `Repeat`. The expression:
+
+        >>> feature ^ other
+
+        is equivalent to:
+
+        >>> dt.Repeat(feature, N=other)
+
+        Internally, this method constructs a new `Repeat` feature taking
+        `self` and `other` as argument.
+
+        Parameters
+        ----------
+        other: int
+            The int value representing the repeat times. It is passed to
+            `Repeat` as the `N` argument.
+
+        Returns
+        -------
+        Feature
+            A new feature that applies `self` repeatedly `other` times.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Repeat the `Add` feature by 3 times:
+        >>> add_ten = dt.Add(value=10)
+        >>> pipeline = add_ten ^ 3
+        >>> result = pipeline([1, 2, 3])
+        >>> result
+        [31, 32, 33]
+
+        This is equivalent to:
+        >>> pipeline = dt.Repeat(add_ten, N=3)
+
+        Repeat by random times that samples values at each call:
+        >>> import numpy as np
+        >>>
+        >>> random_times = dt.Value(value=lambda: np.random.randint(10))
+        >>> pipeline = add_ten ^ random_times
+        >>> result = pipeline.update()([1, 2, 3])
+        >>> result
+        [81, 82, 83]
+
+        This is equivalent to:
+        >>> pipeline = dt.Repeat(add_ten, N=random_times)
+
         """
 
         return Repeat(self, other)
