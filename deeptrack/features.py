@@ -6662,21 +6662,27 @@ class LoadImage(Feature):
     Methods
     -------
     `get(
-        image: Any,
-        path: str or list[str],
+        path: str | list[str],
         load_options: dict[str, Any] | None,
         ndim: int,
         to_grayscale: bool,
         as_list: bool,
         get_one_random: bool,
         **kwargs: Any
-    ) -> array`
+    ) -> np.ndarray | torch.tensor | list`
         Load the image(s) from disk and process them.
 
     Raises
     ------
     IOError
         If no file reader could parse the file or the file does not exist.
+
+    Notes
+    ----
+    By default, `LoadImage` returns a NumPy array. If you want the output as
+    a PyTorch tensor, either set the backend to `'torch'` globally using
+    `dt.backend.config.set_backend('torch')` or convert the feature by calling
+    `.torch()` before resolving.
 
     Examples
     --------
@@ -6713,7 +6719,21 @@ class LoadImage(Feature):
     ... )
     >>> loaded_image = load_image_feature.resolve()
     >>> loaded_image.shape
-    (2, 2, 3, 1)
+    (100, 100, 3, 1)
+
+    Load an image as a PyTorch tensor by setting the backend of the feature:
+    >>> load_image_feature = dt.LoadImage(path=temp_file.name)
+    >>> load_image_feature.torch()
+    >>> loaded_image = load_image_feature.resolve()
+    >>> print(type(loaded_image))
+    <class 'torch.Tensor'>
+
+    Load an image as a PyTorch tensor by setting the backend globally:
+    >>> dt.backend.config.set_backend('torch')
+    >>> load_image_feature = dt.LoadImage(path=temp_file.name)
+    >>> loaded_image = load_image_feature.resolve()
+    >>> print(type(loaded_image))
+    <class 'torch.Tensor'>
 
     Cleanup the temporary file:
     >>> os.remove(temp_file.name)
@@ -6780,7 +6800,7 @@ class LoadImage(Feature):
         as_list: bool,
         get_one_random: bool,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor:
+    ) -> NDArray | torch.Tensor | list:
         """Load and process an image or a list of images from disk.
 
         This method attempts to load an image using multiple file readers 
@@ -6788,6 +6808,10 @@ class LoadImage(Feature):
         found. It supports optional processing steps such as ensuring a minimum
         number of dimensions, grayscale conversion, and treating multi-frame 
         images as lists.
+
+        The output is returned as a NumPy array by default. If `as_list=True`,
+        the result is a Python list of arrays. If the backend is `'torch'`, the
+        image is returned as a PyTorch tensor.
 
         Parameters
         ----------
@@ -6799,12 +6823,13 @@ class LoadImage(Feature):
             for NumPy, `mode` for OpenCV). It defaults to `None`.
         ndim: int
             Ensures the image has at least this many dimensions. If the loaded 
-            image has fewer dimensions, extra dimensions are added.
+            image has fewer dimensions, extra dimensions are added. It defaults
+            to `3`.
         to_grayscale: bool
             If `True`, converts the image to grayscale. It defaults to `False`.
         as_list: bool
             If `True`, treats the first dimension as a list of images instead 
-            of stacking them into a NumPy array.
+            of stacking them into a NumPy array. It defaults to `False`.
         get_one_random: bool
             If `True`, selects a single random image from a multi-frame stack
             when `as_list=True`. It defaults to `False`.
@@ -6813,7 +6838,7 @@ class LoadImage(Feature):
 
         Returns
         -------
-        array
+        NDArray | torch.Tensor | list
             The loaded and processed image(s). If `as_list=True`, returns a 
             list of images; otherwise, returns a single NumPy array or PyTorch
             tensor.
