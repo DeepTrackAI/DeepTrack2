@@ -6881,8 +6881,9 @@ class LoadImage(Feature):
                 )
 
         # Ensure the image has at least `ndim` dimensions.
-        while ndim and image.ndim < ndim:           # this gives problems when loading a list with "as_list=True"
-            image = np.expand_dims(image, axis=-1)
+        if not isinstance(image, list) and ndim:
+            while image.ndim < ndim:
+                image = np.expand_dims(image, axis=-1)
 
         # Convert to PyTorch tensor if needed.
         if self.get_backend() == 'torch':
@@ -6892,11 +6893,6 @@ class LoadImage(Feature):
                 image = np.stack(image, axis=0)
             
             image = torch.from_numpy(image)
-
-            if image.ndim == 3:     # do we want to do this?
-                image = image.permute(2, 0, 1)
-            elif image.ndim == 4:
-                image = image.permute(0, 3, 1, 2)
 
         return image
 
