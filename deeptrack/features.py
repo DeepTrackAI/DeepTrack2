@@ -3189,13 +3189,10 @@ class Feature(DeepTrackNode):
         This is equivalent to:
         >>> pipeline = dt.Value(value=[4, 5, 6]) >> dt.Stack(value=feature)
 
-        is also equivalent to this expression:
-        >>> pipeline = feature.__rand__([4, 5, 6])
-
         Stack with the dynamic data that samples values at each call:
         >>> from random import randint
         >>>
-        >>> random = dt.Value(value=lambda: [randint(0,3) for _ in range(3)])
+        >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
         >>> pipeline = random & feature
         >>> result = pipeline.update()()
         >>> result
@@ -3204,7 +3201,7 @@ class Feature(DeepTrackNode):
         This is equivalent to:
         >>> pipeline = (
         ...     dt.Value(value=lambda:
-        ...     [randint(0,3) for _ in range(3)])
+        ...         [randint(0, 3) for _ in range(3)])
         ...     >> dt.Stack(value=feature)
         ... )
         
