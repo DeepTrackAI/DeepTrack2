@@ -3465,7 +3465,7 @@ class Feature(DeepTrackNode):
         """Stacks another value with this feature using right '&'.
         
         """
-        
+
         return Value(other) >> Stack(self)
 
     def __getitem__(
