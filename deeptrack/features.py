@@ -3642,7 +3642,7 @@ class Feature(DeepTrackNode):
         Stack with the dynamic data that samples values at each call:
         >>> from random import randint
         >>>
-        >>> random = dt.Value(value=lambda: [randint(0,3) for _ in range(3)])
+        >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
         >>> pipeline = feature & random
         >>> result = pipeline.update()()
         >>> result
