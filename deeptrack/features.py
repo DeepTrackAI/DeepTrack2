@@ -3114,7 +3114,7 @@ class Feature(DeepTrackNode):
 
     def __rge__(
         self: Feature,
-        other: Any，
+        other: Any,
     ) -> Feature:
         """Check if another value is greater than or equal to this feature
         using right '>='.
