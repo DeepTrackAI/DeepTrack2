@@ -216,7 +216,7 @@ __all__ = [
     "Merge",
     "OneOf",
     "OneOfDict",
-    "LoadImage",  # TODO **MG**
+    "LoadImage",
     "SampleToMasks",  # TODO **MG**
     "AsType",  # TODO **MG**
     "ChannelFirst2d",
@@ -6661,7 +6661,16 @@ class LoadImage(Feature):
 
     Methods
     -------
-    `get(image: Any, path: str or list[str], load_options: dict[str, Any] | None, ndim: int, to_grayscale: bool, as_list: bool, get_one_random: bool, **kwargs: Any) -> array`
+    `get(
+        image: Any,
+        path: str or list[str],
+        load_options: dict[str, Any] | None,
+        ndim: int,
+        to_grayscale: bool,
+        as_list: bool,
+        get_one_random: bool,
+        **kwargs: Any
+    ) -> array`
         Load the image(s) from disk and process them.
 
     Raises
@@ -6872,11 +6881,22 @@ class LoadImage(Feature):
                 )
 
         # Ensure the image has at least `ndim` dimensions.
-        while ndim and image.ndim < ndim:
+        while ndim and image.ndim < ndim:           # this gives problems when loading a list with "as_list=True"
             image = np.expand_dims(image, axis=-1)
 
         # Convert to PyTorch tensor if needed.
-        #TODO
+        if self.get_backend() == 'torch':
+
+            # Convert to stack if needed.
+            if isinstance(image, list):
+                image = np.stack(image, axis=0)
+            
+            image = torch.from_numpy(image)
+
+            if image.ndim == 3:     # do we want to do this?
+                image = image.permute(2, 0, 1)
+            elif image.ndim == 4:
+                image = image.permute(0, 3, 1, 2)
 
         return image
 

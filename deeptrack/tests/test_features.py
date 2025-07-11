@@ -1839,6 +1839,12 @@ class TestFeatures(unittest.TestCase):
                 np.save(temp_npy.name, test_image_array)
                 # npy_filename = temp_npy.name
 
+            with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy2:
+                np.save(temp_npy2.name, test_image_array)
+
+            with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy3:
+                np.save(temp_npy3.name, test_image_array)
+
             with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
                 PIL_Image.fromarray(test_image_array).save(temp_png.name)
                 # png_filename = temp_png.name
@@ -1877,9 +1883,40 @@ class TestFeatures(unittest.TestCase):
             loaded_image = load_feature.resolve()
             self.assertGreaterEqual(len(loaded_image.shape), 4)
 
+
+            # load_feature = features.LoadImage(path=[temp_npy2.name, temp_npy3.name])
+            # loaded_list = load_feature.resolve()
+            # print(len(loaded_list))
+            # # self.assertIsInstance(loaded_list, list)
+            # self.assertEqual(len(loaded_list), 2)
+            
+            # for img in loaded_list:
+            #     self.assertTrue(isinstance(img, np.ndarray))
+
+            # Test loading an image as a torch tensor.
+            if TORCH_AVAILABLE:
+                load_feature = features.LoadImage(path=temp_png.name)
+                load_feature.torch()
+                loaded_image = load_feature.resolve()
+                self.assertIsInstance(loaded_image, torch.Tensor)
+                self.assertEqual(loaded_image.shape[1:], test_image_array.shape)
+
+                loaded_image_np = loaded_image.numpy()
+                self.assertTrue(np.allclose(test_image_array, loaded_image_np[0]))
+
+
         finally:
-            for file in [temp_npy.name, temp_png.name, temp_jpg.name]:
+            for file in [temp_npy.name, temp_png.name, temp_jpg.name, temp_npy2.name, temp_npy3.name]:
                 os.remove(file)
+
+        
+
+        # load_feature = features.LoadImage(path=[temp_npy.name, temp_npy2.name])
+        # loaded_list = load_feature.resolve()
+        # self.assertIsInstance(loaded_list, list)
+        # self.assertEqual(len(loaded_list), 2)
+        # for img in loaded_list:
+        #     self.assertTrue(isinstance(img, np.ndarray))
 
         #TODO: Add a test for loading a list of images.
 
