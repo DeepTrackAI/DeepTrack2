@@ -1836,11 +1836,13 @@ class TestFeatures(unittest.TestCase):
 
         try:
             with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy:
-                np.save(temp_npy.name, test_image_array)
+                pass
+            np.save(temp_npy.name, test_image_array)
                 # npy_filename = temp_npy.name
 
             with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy2:
-                np.save(temp_npy2.name, test_image_array)
+                pass
+            np.save(temp_npy2.name, test_image_array)
 
             with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
                 PIL_Image.fromarray(test_image_array).save(temp_png.name)
