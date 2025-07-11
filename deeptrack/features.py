@@ -3047,9 +3047,8 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Check if another value is greater than this feature using
-        right '>'.
-
+        """Check if another value is greater than feature using right '>'.
+ 
         This operator is the right-hand version of `>`, enabling expressions
         where the `Feature` appears on the right-hand side. The expression:
 
@@ -3092,7 +3091,7 @@ class Feature(DeepTrackNode):
         values at each call:
         >>> from random import randint
         >>>
-        >>> random = dt.Value(value=lambda: [randint(0,3) for _ in range(3)])
+        >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
         >>> pipeline = 2 > random
         >>> result = pipeline.update()()
         >>> result
@@ -3102,7 +3101,7 @@ class Feature(DeepTrackNode):
         >>> pipeline = (
         ...     dt.Value(value=2)
         ...     >> dt.GreaterThan(value=lambda:
-        ...     [randint(0,3) for _ in range(3)])
+        ...         [randint(0, 3) for _ in range(3)])
         ... )
 
         """
