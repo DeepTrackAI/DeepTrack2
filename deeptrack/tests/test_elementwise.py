@@ -1,86 +1,71 @@
-import sys
+# pylint: disable=C0115:missing-class-docstring
+# pylint: disable=C0116:missing-function-docstring
+# pylint: disable=C0103:invalid-name
 
-# sys.path.append(".")  # Adds the module to path
+# Use this only when running the test locally.
+# import sys
+# sys.path.append(".")  # Adds the module to path.
 
+import inspect
 import unittest
-import operator
-import itertools
-from numpy.core.numeric import array_equal
-
-from numpy.testing._private.utils import assert_almost_equal
-
-from deeptrack import elementwise, features, Image
 
 import numpy as np
 
-import numpy.testing
-import inspect
+from deeptrack import elementwise, features, TORCH_AVAILABLE
 
+if TORCH_AVAILABLE:
+    import torch
 
 def grid_test_features(
     tester,
-    feature,
+    elementwise_class,
     feature_inputs,
-    expected_result_function,
+    function,
 ):
+    for feature_input in feature_inputs:
+        pip_a = elementwise_class(features.Value(feature_input))
+        pip_b = features.Value(feature_input) >> elementwise_class()
 
-    for f_a_input in feature_inputs:
+        expected_result = function(feature_input)
 
-        inp = features.Value(f_a_input)
+        for pip in [pip_a, pip_b]:
+            result = pip()
 
-        f_a = feature(inp)
-        f_b = inp >> feature()
-
-        for f in [f_a, f_b]:
-            try:
-                output = f()
-            except Exception as e:
-                tester.assertRaises(
-                    type(e),
-                    lambda: expected_result_function(f_a_input),
+            if TORCH_AVAILABLE and isinstance(result, torch.Tensor):
+                torch.testing.assert_close(
+                    result,
+                    expected_result,
+                    rtol=1e-5,
+                    atol=1e-8,
+                    msg=f"{elementwise_class.__name__} failed with PyTorch.",
                 )
-                continue
-
-            expected_result = expected_result_function(f_a_input)
-            output = np.array(output)
-            try:
-                expected_result = np.array(expected_result)
-            except TypeError:
-                expected_result = expected_result.get()
-
-            if isinstance(output, list) and isinstance(expected_result, list):
-                [
-                    np.testing.assert_almost_equal(np.array(a), np.array(b))
-                    for a, b in zip(output, expected_result)
-                ]
-
             else:
-                is_equal = np.allclose(
-                    np.array(output), np.array(expected_result), equal_nan=True
-                )
-
-                tester.assertFalse(
-                    not is_equal,
-                    "Feature output {} is not equal to expect result {}.\n Using arguments {}".format(
-                        output, expected_result, f_a_input
-                    ),
+                np.testing.assert_allclose(
+                    result,
+                    expected_result,
+                    rtol=1e-5,
+                    atol=1e-8,
+                    err_msg=f"{elementwise_class.__name__} failed with NumPy.",
                 )
 
 
-def create_test(cl):
-    testname = "test_{}".format(cl.__name__)
+def create_test(elementwise_class):
+    testname = f"test_{elementwise_class.__name__}"
 
     def test(self):
+        inputs = [-1, 0, 1, (np.random.rand(8, 15) - 0.5) * 100]
+
+        if TORCH_AVAILABLE:
+            inputs.extend([
+                torch.tensor([-1.0, 0.0, 1.0]),
+                (torch.rand(8, 15) - 0.5) * 100,
+            ])
+
         grid_test_features(
             self,
-            cl,
-            [
-                -1,
-                0,
-                1,
-                (np.random.rand(50, 500) - 0.5) * 100,
-            ],
-            np.__dict__[cl.__name__.lower()],
+            elementwise_class,
+            inputs,
+            np.__dict__[elementwise_class.__name__.lower()],
         )
 
     test.__name__ = testname
@@ -88,21 +73,23 @@ def create_test(cl):
     return testname, test
 
 
-class TestFeatures(unittest.TestCase):
+class TestElementwiseFeatures(unittest.TestCase):
     pass
 
 
-classes = inspect.getmembers(elementwise, inspect.isclass)
+elementwise_classes = inspect.getmembers(elementwise, inspect.isclass)
 
-for clname, cl in classes:
+for class_name, elementwise_class in elementwise_classes:
 
-    if not issubclass(cl, elementwise.ElementwiseFeature) or (
-        cl is elementwise.ElementwiseFeature
+    if (
+        elementwise_class is elementwise.ElementwiseFeature
+        or
+        not issubclass(elementwise_class, elementwise.ElementwiseFeature)
     ):
         continue
 
-    testname, test_method = create_test(cl)
-    setattr(TestFeatures, testname, test_method)
+    test_name, test_method = create_test(elementwise_class)
+    setattr(TestElementwiseFeatures, test_name, test_method)
 
 
 if __name__ == "__main__":
