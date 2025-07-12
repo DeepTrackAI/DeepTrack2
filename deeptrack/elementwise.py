@@ -1242,12 +1242,12 @@ class Floor(ElementwiseFeature):
 
         Parameters
         ----------
-        x: np.ndarray or torch.Tensor
+        x: NDArray or torch.Tensor
             The input to transform.
 
         Returns
         -------
-        np.ndarray or torch.Tensor
+        NDArray or torch.Tensor
             The result after applying floor elementwise.
 
         """
@@ -1351,12 +1351,12 @@ class Ceil(ElementwiseFeature):
 
         Parameters
         ----------
-        x: np.ndarray or torch.Tensor
+        x: NDArray or torch.Tensor
             The input to transform.
 
         Returns
         -------
-        np.ndarray or torch.Tensor
+        NDArray or torch.Tensor
             The result after applying ceil elementwise.
 
         """
@@ -1797,11 +1797,11 @@ class Imag(ElementwiseFeature):
 
         Parameters
         ----------
-        x: np.ndarray or torch.Tensor
+        x: NDArray or torch.Tensor
 
         Returns
         -------
-        np.ndarray or torch.Tensor
+        NDArray or torch.Tensor
             Imaginary part of the input, or zero if real.
 
         """
@@ -2138,12 +2138,12 @@ class Sign(ElementwiseFeature):
 
         Parameters
         ----------
-        x : np.ndarray or torch.Tensor
+        x : NDArray or torch.Tensor
             The input array or tensor whose elementwise signs will be computed.
 
         Returns
         -------
-        np.ndarray or torch.Tensor
+        NDArray or torch.Tensor
             The elementwise sign values of the input.
 
         """
