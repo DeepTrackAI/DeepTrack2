@@ -1995,27 +1995,22 @@ Square = create_elementwise_class(
 )
 
 
-Sign = create_elementwise_class(
-    name="Sign",
-    function=xp.sign,
-    docstring="""
-    Apply the sign function elementwise.
+class Sign(ElementwiseFeature):
+    """Apply the sign function elementwise.
 
-    This feature applies `xp.sign` to each element in a NumPy array or a
-    PyTorch tensor. It supports both direct input and pipeline composition.
+    This class uses a backend-aware dispatch to handle NumPy and PyTorch
+    tensors safely. It returns:
+    - -1 for negative values,
+    -  0 for zero,
+    - +1 for positive values.
 
-    The sign function returns:
-    - `-1` for negative elements,
-    - `0` for zero,
-    - `+1` for positive elements.
-
-    For complex numbers, the result is `x / abs(x)` when `x != 0`.
+    For complex numbers, it returns `x / abs(x)` when `x != 0`.
 
     Parameters
     ----------
     feature: Feature or None, optional
         The input feature to which the sign function will be applied. 
-        If None, the function is applied to the input array directly.
+        If None, the function is applied directly to the input array.
 
     Examples
     --------
@@ -2052,4 +2047,67 @@ Sign = create_elementwise_class(
     >>> pipeline = Sign(value)
 
     """
-)
+
+    def __init__(
+        self: Sign,
+        feature: Feature | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the Sign feature.
+
+        This constructor sets up the elementwise sign operation using a
+        backend-aware dispatch. It optionally accepts another Feature whose output
+        will be processed by the sign function.
+
+        Parameters
+        ----------
+        feature : Feature or None, optional
+            An optional input feature to be wrapped. If provided, the sign
+            operation will be applied to the result of this feature.
+            If None, the sign function is applied to the input directly.
+        **kwargs : Any
+            Additional keyword arguments passed to the base Feature class.
+
+        """
+
+        super().__init__(
+            function=self._sign_dispatch,
+            feature=feature,
+            **kwargs,
+        )
+
+    @staticmethod
+    def _sign_dispatch(x):
+        """Dispatch the sign operation depending on backend and input type.
+
+        This method returns the sign of each element in the input:
+        - -1 for negative values,
+        -  0 for zero,
+        - +1 for positive values.
+
+        For complex inputs, it returns `x / abs(x)` if `x ≠ 0`.
+
+        This function uses `torch.sign()` when the input is a `torch.Tensor`,
+        and `np.sign()` otherwise. It avoids using `xp.sign()` from
+        `array-api-compat`, which internally calls `xp.issubdtype(...)` and
+        fails when provided with a `torch.float32` tensor.
+
+        This method enables full compatibility with both NumPy and PyTorch
+        backends, and supports both real and complex-valued inputs.
+
+        Parameters
+        ----------
+        x : np.ndarray or torch.Tensor
+            The input array or tensor whose elementwise signs will be computed.
+
+        Returns
+        -------
+        np.ndarray or torch.Tensor
+            The elementwise sign values of the input.
+
+        """
+
+        if TORCH_AVAILABLE and isinstance(x, torch.Tensor):
+            return torch.sign(x)
+
+        return np.sign(x)
