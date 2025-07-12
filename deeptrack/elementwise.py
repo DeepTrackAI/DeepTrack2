@@ -1,97 +1,141 @@
-"""Classes that apply functions to features elementwise.
+"""Elementwise mathematical operations for DeepTrack features.
 
-This module provides the `elementwise` DeepTrack2 classes
-which work as a handle to apply various NumPy functions 
-to `Feature` objects elementwise.
+This module defines a collection of `Feature` classes that apply mathematical
+functions elementwise to arrays or tensors in a DeepTrack2 pipeline. These
+operations are backend-agnostic and compatible with both NumPy and PyTorch.
+
+Elementwise features can be created in two ways:
+
+1. **Using the Factory Function (`create_elementwise_class`)**
+
+   For most functions that are available in both NumPy and PyTorch and are
+   supported by the `array-api-compat` backend abstraction (`xp`), the class
+   can be generated dynamically using the `create_elementwise_class` factory.
+
+   For example:
+
+   >>> from deeptrack.backend import xp
+   >>> from deeptrack.elementwise import create_elementwise_class
+   >>> Abs = create_elementwise_class("Abs", xp.abs)
+
+   This creates a `Feature` class named `Abs` that applies `abs()` to the
+   input elementwise, supporting both direct and pipeline usage.
+
+2. **Defining a Custom Subclass of `ElementwiseFeature`**
+
+   In cases where the `array-api-compat` implementation fails or does not
+   support the required function for a backend (e.g., `torch.float32` with
+   `xp.floor`), a custom subclass of `ElementwiseFeature` can be defined
+   explicitly.
+
+   These subclasses manually dispatch to the appropriate backend function 
+   (e.g., `torch.floor`, `np.floor`) depending on the input type and device,
+   ensuring robust and backend-safe behavior.
+
+   For example, `Floor`, `Ceil`, `Imag`, and `Sign` are implemented this way.
+
+This dual mechanism provides both flexibility and robustness for applying
+mathematical operations in a pipeline-agnostic, extensible, and modular way.
 
 Key Features
 ------------
-- **Extends NumPy Functions**
+- **Seamless Backend Compatibility**
 
-    The convenience of NumPy functions are extended with this module such that
-    they can be applied elementwise to a DeepTrack `Feature` object. 
+    Most functions use `array-api-compat` (`xp`) to ensure compatibility with
+    both NumPy and PyTorch backends. Manual dispatch is used for cases where
+    `xp` fails (e.g., `ceil`, `floor`, `imag`, `sign`).
 
-- **Trigonometric Functions**
-    The elementary trigonometric functions: Sin, Cos, Tan.
+- **Factory-Generated and Manual Implementations**
 
-- **Hyperbolic Functions**
-    The trigonometric hyperbolic functions: Sinh, Cosh, Tanh.
+    Elementwise operations are implemented using either:
+    - `create_elementwise_class()` for standard backend-agnostic functions.
+    - Dedicated subclasses of `ElementwiseFeature` for operations requiring
+      manual backend dispatch.
 
-- **Rounding Functions**
-    Common rounding functions: nearest integer rounding `Round`,
-    nearest lowest integer `Floor`, nearest highest integer `Ceil`.
+- **Supports Direct and Pipeline Composition**
 
-- **Exponents And Logarithm Functions**
-    Includes Exponential (exp) function, Natural Logarithm function,
-    Logarithm function with base 10, and Logarithm function with base 2.
+    These features can be applied directly to NumPy arrays or PyTorch tensors,
+    or used in combination with other DeepTrack `Feature` objects in pipelines.
 
-- **Complex Number Functions**
-    Functions to get various values from a complex number:
-    Angle, Absolute value, Real value, Imaginary value, Conjugate
+- **Extensive Documentation and Examples**
 
-- **Miscellaneous Functions**
-    Contains Square root, Square, Sign function.
+    Each class includes detailed docstrings with usage examples for both
+    backends and for pipeline integration.
 
 Module Structure
 ----------------
 Classes:
 
 - `ElementwiseFeature`
-   Forms the base from which other classes inherit from.
+    
+    Base class for features that apply mathematical operations elementwise to
+    NumPy arrays or PyTorch tensors. Accepts a function and an optional
+    input `Feature`.
 
-- `Sin`
+Functions:
 
-- `Cos`
+- `create_elementwise_class(name, function, docstring="")`
 
-- `Tan`
+    def create_elementwise_class(
+        name: str,
+        function: Callable[[NDArray | torch.Tensor], NDArray | torch.Tensor],
+        docstring: str = "",
+    ) -> type
 
-- `ArcSin`
+    Factory function that returns a new subclass of `ElementwiseFeature` with
+    the given `name` and `function`. Automatically sets the class name,
+    module, and docstring for full introspection and documentation support.
 
-- `Arccos`
+Elementwise Features
+--------------------
 
-- `ArcTan`
+All elementwise features inherit from `ElementwiseFeature` and apply a
+mathematical operation elementwise to the output of another `Feature`, or
+directly to an input array or tensor.
 
-- `Sinh`
+The following features are available:
 
-- `Cosh`
+Trigonometric Functions:
+- `Sin`: Applies the sine function `sin(x)` elementwise.
+- `Cos`: Applies the cosine function `cos(x)` elementwise.
+- `Tan`: Applies the tangent function `tan(x)` elementwise.
 
-- `Tanh`
+Inverse Trigonometric Functions:
+- `Arcsin`: Applies the arcsine function `arcsin(x)` elementwise.
+- `Arctan`: Applies the arctangent function `arctan(x)` elementwise.
 
-- `ArcSinh`
+Hyperbolic Functions:
+- `Sinh`: Applies the hyperbolic sine function `sinh(x)` elementwise.
+- `Cosh`: Applies the hyperbolic cosine function `cosh(x)` elementwise.
+- `Tanh`: Applies the hyperbolic tangent function `tanh(x)` elementwise.
 
-- `Arccosh`
+Inverse Hyperbolic Functions:
+- `Arcsinh`: Applies the inverse hyperbolic sine `arcsinh(x)` elementwise.
+- `Arccosh`: Applies the inverse hyperbolic cosine `arccosh(x)` elementwise.
+- `Arctanh`: Applies the inverse hyperbolic tangent `arctanh(x)` elementwise.
 
-- `ArcTanh`
+Rounding Functions:
+- `Round`: Applies nearest-integer rounding elementwise.
+- `Floor`: Applies floor function `floor(x)` elementwise.
+- `Ceil`: Applies ceil function `ceil(x)` elementwise.
 
-- `Round`
+Exponential and Logarithmic Functions:
+- `Exp`: Applies the exponential function `exp(x)` elementwise.
+- `Log`: Applies the natural logarithm `log(x)` elementwise.
+- `Log10`: Applies the base-10 logarithm `log10(x)` elementwise.
+- `Log2`: Applies the base-2 logarithm `log2(x)` elementwise.
 
-- `Floor`
+Complex Number Functions:
+- `Angle`: Returns the phase angle `angle(x)` of complex inputs.
+- `Real`: Extracts the real part `real(x)` of complex inputs.
+- `Imag`: Extracts the imaginary part `imag(x)`; returns zero for real tensors.
+- `Abs`: Returns the magnitude or absolute value `abs(x)`.
+- `Conj`, `Conjugate`: Returns the complex conjugate `conj(x)`.
 
-- `Ceil`
-
-- `Exp`
-
-- `Log`
-
-- `Log10`
-
-- `Log2`
-
-- `Angle`
-
-- `Real`
-
-- `Imag`
-
-- `Abs`
-
-- `Conjugate`
-
-- `Sqrt`
-
-- `Square`
-
-- `Sign`
+Miscellaneous Mathematical Functions:
+- `Sqrt`: Applies the square root `sqrt(x)` elementwise.
+- `Square`: Applies squaring operation `x**2` elementwise.
+- `Sign`: Applies the sign function `sign(x)`; returns -1, 0, or 1.
 
 
 Examples
@@ -151,9 +195,6 @@ This is equivalent to:
 >>> pipeline = Abs(value)
 
 """
-
-#TODO ***??*** revise class docstring
-#TODO ***??*** revise DTAT389
 
 from __future__ import annotations
 
