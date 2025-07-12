@@ -172,6 +172,7 @@ __all__ = [
     "create_elementwise_class",
     "Sin",
     "Cos",
+    "Tan",
 ]
 
 
@@ -507,28 +508,57 @@ Cos = create_elementwise_class(
     """
 )
 
+
+Tan = create_elementwise_class(
+    name="Tan",
+    function=xp.tan,
+    docstring="""
+    Apply the tangent function elementwise to the output of a feature.
+
+    This feature applies `xp.tan` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Tan
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Tan()(np.array([0, np.pi / 4, np.pi / 2]))
+    >>> result
+    array([0.00000000e+00, 1.00000000e+00, 1.63312394e+16])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Tan()(torch.tensor([0, torch.pi / 4, torch.pi / 2]))
+    >>> result
+    tensor([ 0.0000e+00,  1.0000e+00, -2.2877e+07])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([0, np.pi / 4, np.pi / 2]))
+    >>> pipeline = value >> Tan()
+    >>> result = pipeline()
+    >>> result
+    array([0.00000000e+00, 1.00000000e+00, 1.63312394e+16])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([0, torch.pi / 4, torch.pi / 2]))
+    >>> pipeline = value >> Tan()
+    >>> result = pipeline()
+    >>> result
+    tensor([ 0.0000e+00,  1.0000e+00, -2.2877e+07])
+
+    These are equivalent to:
+    >>> pipeline = Tan(value)
+
+    """
+)
+
+
 if False:
-    #TODO ***??*** revise Tan - torch, typing, docstring, unit test
-    class Tan(ElementwiseFeature):
-        """
-        Applies the tangent function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the tangent function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Tan,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.tan, feature=feature, **kwargs)
-
-
     #TODO ***??*** revise Arcsin - torch, typing, docstring, unit test
     class Arcsin(ElementwiseFeature):
         """
