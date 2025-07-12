@@ -184,6 +184,19 @@ __all__ = [
     "Round",
     "Floor",
     "Ceil",
+    "Exp",
+    "Log",
+    "Log10",
+    "Log2",
+    "Angle",
+    "Real",
+    "Imag",
+    "Abs",
+    "Conj",
+    "Conjugate",
+    "Sqrt",
+    "Square",
+    "Sign",
 ]
 
 
@@ -1153,21 +1166,59 @@ class Floor(ElementwiseFeature):
         feature: Feature | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the Floor feature.
+
+        Parameters
+        ----------
+        feature: Feature or None, optional
+            The input feature whose output will be transformed.
+        **kwargs: Any
+            Additional keyword arguments passed to the base Feature class.
+
+        """
+
         super().__init__(
             function=self._floor_dispatch,
             feature=feature,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
     def _floor_dispatch(x):
+        """Dispatch floor function based on backend.
+
+        This method applies `torch.floor` if the input is a PyTorch tensor,
+        and `np.floor` if it is a NumPy array. It ensures compatibility
+        across both backends and avoids errors caused by `array-api-compat`.
+
+        This explicit dispatch is necessary because `array-api-compat`'s
+        `xp.floor` internally calls `xp.issubdtype(x.dtype, xp.integer)`,
+        which fails when `x` is a `torch.Tensor`.
+
+        As a result, this class cannot safely use the
+        `create_elementwise_class()` factory, and must be defined manually
+        using this backend-aware method.
+
+        Parameters
+        ----------
+        x: np.ndarray or torch.Tensor
+            The input to transform.
+
+        Returns
+        -------
+        np.ndarray or torch.Tensor
+            The result after applying floor elementwise.
+
+        """
+
         if TORCH_AVAILABLE and isinstance(x, torch.Tensor):
             return torch.floor(x)
+
         return np.floor(x)
 
 
 class Ceil(ElementwiseFeature):
-    """    Apply the ceiling function elementwise to the output of a feature.
+    """Apply the ceiling function elementwise.
 
     This feature applies `xp.ceil` to each element in a NumPy array or a
     PyTorch tensor. It supports both direct input and pipeline composition.
@@ -1224,6 +1275,17 @@ class Ceil(ElementwiseFeature):
         feature: Feature | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the Ceil feature.
+
+        Parameters
+        ----------
+        feature: Feature or None, optional
+            The input feature whose output will be transformed.
+        **kwargs: Any
+            Additional keyword arguments passed to the base Feature class.
+
+        """
+
         super().__init__(
             function=self._ceil_dispatch,
             feature=feature,
@@ -1232,259 +1294,762 @@ class Ceil(ElementwiseFeature):
 
     @staticmethod
     def _ceil_dispatch(x):
+        """Dispatch ceiling function based on backend.
+
+        This method applies `torch.ceil` if the input is a PyTorch tensor,
+        and `np.ceil` if it is a NumPy array. It ensures compatibility
+        across both backends and avoids errors caused by `array-api-compat`.
+
+        This explicit dispatch is necessary because `array-api-compat`'s
+        `xp.ceil` internally calls `xp.issubdtype(x.dtype, xp.integer)`,
+        which fails when `x` is a `torch.Tensor`.
+
+        As a result, this class cannot safely use the
+        `create_elementwise_class()` factory, and must be defined manually
+        using this backend-aware method.
+
+        Parameters
+        ----------
+        x: np.ndarray or torch.Tensor
+            The input to transform.
+
+        Returns
+        -------
+        np.ndarray or torch.Tensor
+            The result after applying ceil elementwise.
+
+        """
+
         if TORCH_AVAILABLE and isinstance(x, torch.Tensor):
             return torch.ceil(x)
+
         return np.ceil(x)
 
 
-if False:
-    #TODO ***??*** revise Exp - torch, typing, docstring, unit test
-    class Exp(ElementwiseFeature):
-        """
-        Applies the exponential function elementwise.
+Exp = create_elementwise_class(
+    name="Exp",
+    function=xp.exp,
+    docstring="""
+    Apply the exponential function elementwise.
+
+    This feature applies `xp.exp` (NumPy or PyTorch) to each element in the
+    input. It supports both direct input and pipeline composition.
+
+    The exponential function computes `e**x` elementwise.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the exponential function will be applied. 
+        If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Exp
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Exp()(np.array([-1.0, 0.0, 1.0]))
+    >>> result
+    array([0.36787944, 1.        , 2.71828183])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Exp()(torch.tensor([-1.0, 0.0, 1.0]))
+    >>> result
+    tensor([0.3679, 1.0000, 2.7183])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Exp()
+    >>> result = pipeline()
+    >>> result
+    array([0.36787944, 1.        , 2.71828183])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Exp()
+    >>> result = pipeline()
+    >>> result
+    tensor([0.3679, 1.0000, 2.7183])
+
+    These are equivalent to:
+    >>> pipeline = Exp(value)
+
+    """
+)
+
+
+Log = create_elementwise_class(
+    name="Log",
+    function=xp.log,
+    docstring="""
+    Apply the natural logarithm function elementwise.
+
+    This feature applies `xp.log` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    The input must be strictly positive. Passing zero or negative values will
+    return `-inf` or `NaN`, and may raise warnings or errors depending on 
+    the backend.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the natural logarithm function will be 
+        applied. If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Log
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Log()(np.array([1.0, np.e, 10.0]))
+    >>> result
+    array([0.        , 1.        , 2.30258509])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Log()(torch.tensor([1.0, torch.exp(torch.tensor(1.0)), 10.0]))
+    >>> result
+    tensor([0.0000, 1.0000, 2.3026])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([1.0, np.e, 10.0]))
+    >>> pipeline = value >> Log()
+    >>> result = pipeline()
+    >>> result
+    array([0.        , 1.        , 2.30258509])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor(
+    ...     [1.0, torch.exp(torch.tensor(1.0)), 10.0])
+    ... )
+    >>> pipeline = value >> Log()
+    >>> result = pipeline()
+    >>> result
+    tensor([0.0000, 1.0000, 2.3026])
+
+    These are equivalent to:
+    >>> pipeline = Log(value)
+
+    """
+)
+
+
+Log10 = create_elementwise_class(
+    name="Log10",
+    function=xp.log10,
+    docstring="""
+    Apply the base-10 logarithm function elementwise.
+
+    This feature applies `xp.log10` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    The input must be strictly positive. Passing zero or negative values will
+    return `-inf` or `NaN`, and may raise warnings or errors depending on 
+    the backend.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the logarithm function with base 10 will be
+        applied. If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Log10
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Log10()(np.array([1.0, 10.0, 100.0]))
+    >>> result
+    array([0., 1., 2.])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Log10()(torch.tensor([1.0, 10.0, 100.0]))
+    >>> result
+    tensor([0., 1., 2.])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([1.0, 10.0, 100.0]))
+    >>> pipeline = value >> Log10()
+    >>> result = pipeline()
+    >>> result
+    array([0., 1., 2.])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([1.0, 10.0, 100.0]))
+    >>> pipeline = value >> Log10()
+    >>> result = pipeline()
+    >>> result
+    tensor([0., 1., 2.])
+
+    These are equivalent to:
+    >>> pipeline = Log10(value)
+
+    """
+)
+
+
+Log2 = create_elementwise_class(
+    name="Log2",
+    function=xp.log2,
+    docstring="""
+    Apply the base-2 logarithm function elementwise.
+
+    This feature applies `xp.log2` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    The input must be strictly positive. Passing zero or negative values will
+    return `-inf` or `NaN`, and may raise warnings or errors depending on 
+    the backend.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the logarithm function with base 2 will be 
+        applied. If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Log2
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Log2()(np.array([1.0, 2.0, 4.0, 8.0]))
+    >>> result
+    array([0., 1., 2., 3.])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Log2()(torch.tensor([1.0, 2.0, 4.0, 8.0]))
+    >>> result
+    tensor([0., 1., 2., 3.])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([1.0, 2.0, 4.0, 8.0]))
+    >>> pipeline = value >> Log2()
+    >>> result = pipeline()
+    >>> result
+    array([0., 1., 2., 3.])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([1.0, 2.0, 4.0, 8.0]))
+    >>> pipeline = value >> Log2()
+    >>> result = pipeline()
+    >>> result
+    tensor([0., 1., 2., 3.])
+
+    These are equivalent to:
+    >>> pipeline = Log2(value)
+
+    """
+)
+
+
+Angle = create_elementwise_class(
+    name="Angle",
+    function=xp.angle,
+    docstring="""
+    Apply the angle (phase) function elementwise.
+
+    This feature applies `xp.angle` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    The angle function returns the phase angle (in radians) of a complex
+    number. For real-valued inputs, it returns 0 for positive and π for
+    negative values.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the angle function will be applied. 
+        If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Angle
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Angle()(np.array([1+0j, 0+1j, -1+0j, 1+1j]))
+    >>> result
+    array([0.        , 1.57079633, 3.14159265, 0.78539816])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Angle()(torch.tensor([1+0j, 0+1j, -1+0j, 1+1j]))
+    >>> result
+    tensor([0.0000, 1.5708, 3.1416, 0.7854])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([1+0j, 0+1j, -1+0j, 1+1j]))
+    >>> pipeline = value >> Angle()
+    >>> result = pipeline()
+    >>> result
+    array([0.        , 1.57079633, 3.14159265, 0.78539816])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([1+0j, 0+1j, -1+0j, 1+1j]))
+    >>> pipeline = value >> Angle()
+    >>> result = pipeline()
+    >>> result
+    tensor([0.0000, 1.5708, 3.1416, 0.7854])
+
+    These are equivalent to:
+    >>> pipeline = Angle(value)
+
+    """
+)
+
+
+Real = create_elementwise_class(
+    name="Real",
+    function=xp.real,
+    docstring="""
+    Apply the real-part function elementwise.
+
+    This feature applies `xp.real` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    For real-valued inputs, it returns the input unchanged.
+    For complex-valued inputs, it returns the real part.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the real function will be applied. 
+        If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Real
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Real()(np.array([1+2j, 3+0j, -4.5]))
+    >>> result
+    array([ 1. ,  3. , -4.5])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Real()(torch.tensor([1+2j, 3+0j, -4.5+0j]))
+    >>> result
+    tensor([ 1.0000,  3.0000, -4.5000])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([1+2j, 3+0j, -4.5]))
+    >>> pipeline = value >> Real()
+    >>> result = pipeline()
+    >>> result
+    array([ 1. ,  3. , -4.5])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([1+2j, 3+0j, -4.5+0j]))
+    >>> pipeline = value >> Real()
+    >>> result = pipeline()
+    >>> result
+    tensor([ 1.0000,  3.0000, -4.5000])
+
+    These are equivalent to:
+    >>> pipeline = Real(value)
+
+    """
+)
+
+
+class Imag(ElementwiseFeature):
+    """Apply the imaginary-part function elementwise.
+
+    This class handles real and complex inputs for both NumPy and PyTorch
+    backends. For real inputs, it returns 0; for complex inputs, it extracts
+    the imaginary part.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the imaginary-part function will be applied.
+        If None, the function is applied directly to the input.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Imag
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Imag()(np.array([1+2j, 3+0j, -4.5]))
+    >>> result
+    array([ 2.,  0.,  0.])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Imag()(torch.tensor([1+2j, 3+0j, -4.5+0j]))
+    >>> result
+    tensor([2., 0., 0.])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([1+2j, 3+0j, -4.5]))
+    >>> pipeline = value >> Imag()
+    >>> result = pipeline()
+    >>> result
+    array([ 2.,  0.,  0.])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([1+2j, 3+0j, -4.5+0j]))
+    >>> pipeline = value >> Imag()
+    >>> result = pipeline()
+    >>> result
+    tensor([2., 0., 0.])
+
+    These are equivalent to:
+    >>> pipeline = Imag(value)
+
+    """
+
+    def __init__(
+        self: Imag,
+        feature: Feature | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the Imag feature.
 
         Parameters
         ----------
-        feature : Feature or None, optional
-            The input feature to which the exponential function will be applied. 
-            If None, the function is applied to the input array directly.
-        
+        feature: Feature or None, optional
+            The input feature whose output will be transformed.
+        **kwargs: Any
+            Additional keyword arguments passed to the base Feature class.
+
         """
+        super().__init__(
+            function=self._imag_dispatch,
+            feature=feature,
+            **kwargs
+        )
 
-        def __init__(
-            self: Exp,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.exp, feature=feature, **kwargs)
+    @staticmethod
+    def _imag_dispatch(x):
+        """Dispatch imag function based on backend and dtype.
 
+        This method extracts the imaginary part of the input. For NumPy arrays,
+        `np.imag` always returns an array, returning zeros for real-valued inputs.
+        However, PyTorch's `torch.imag()` raises a `RuntimeError` when called on
+        real tensors.
 
-    #TODO ***??*** revise Log - torch, typing, docstring, unit test
-    class Log(ElementwiseFeature):
-        """
-        Applies the natural logarithm function elementwise.
+        To ensure compatibility with both backends, this function checks whether
+        the input is a complex tensor before calling `torch.imag`. If it is not
+        complex, it returns a zero tensor of the same shape and dtype.
+
+        This logic is necessary because `xp.imag` (from array-api-compat) does not
+        handle real PyTorch tensors safely, and thus this function cannot be
+        created using the factory-based method.
 
         Parameters
         ----------
-        feature : Feature or None, optional
-            The input feature to which the natural logarithm function will be 
-            applied. If None, the function is applied to the input array directly.
-        
+        x: np.ndarray or torch.Tensor
+
+        Returns
+        -------
+        np.ndarray or torch.Tensor
+            Imaginary part of the input, or zero if real.
+
         """
 
-        def __init__(
-            self: Log,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.log, feature=feature, **kwargs)
+        if TORCH_AVAILABLE and isinstance(x, torch.Tensor):
+            if x.is_complex():
+                return torch.imag(x)
+            return torch.zeros_like(x)
+
+        return np.imag(x)
 
 
-    #TODO ***??*** revise Log10 - torch, typing, docstring, unit test
-    class Log10(ElementwiseFeature):
-        """
-        Applies the logarithm function with base 10 elementwise.
+Abs = create_elementwise_class(
+    name="Abs",
+    function=xp.abs,
+    docstring="""
+    Apply the absolute value function elementwise.
 
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the logarithm function with base 10 will be
-            applied. If None, the function is applied to the input array directly.
-        
-        """
+    This feature applies `xp.abs` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
 
-        def __init__(
-            self: Log10,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.log10, feature=feature, **kwargs)
+    For real-valued inputs, this is the absolute value.
+    For complex-valued inputs, this is the magnitude.
 
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Abs
 
-    #TODO ***??*** revise Log2 - torch, typing, docstring, unit test
-    class Log2(ElementwiseFeature):
-        """
-        Applies the logarithm function with base 2 elementwise.
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Abs()(np.array([-1.0, 0.0, 2.5]))
+    >>> result
+    array([1. , 0. , 2.5])
 
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the logarithm function with base 2 will be 
-            applied. If None, the function is applied to the input array directly.
-        
-        """
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Abs()(torch.tensor([-1.0, 0.0, 2.5]))
+    >>> result
+    tensor([1.0000, 0.0000, 2.5000])
 
-        def __init__(
-            self: Log2,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.log2, feature=feature, **kwargs)
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-3.0, 0.0, 3.0]))
+    >>> pipeline = value >> Abs()
+    >>> result = pipeline()
+    >>> result
+    array([3., 0., 3.])
 
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-3.0, 0.0, 3.0]))
+    >>> pipeline = value >> Abs()
+    >>> result = pipeline()
+    >>> result
+    tensor([3., 0., 3.])
 
-    #TODO ***??*** revise Angle - torch, typing, docstring, unit test
-    class Angle(ElementwiseFeature):
-        """
-        Applies the angle function elementwise.
+    These are equivalent to:
+    >>> pipeline = Abs(value)
 
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the angle function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Angle,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.angle, feature=feature, **kwargs)
+    """
+)
 
 
-    #TODO ***??*** revise Real - torch, typing, docstring, unit test
-    class Real(ElementwiseFeature):
-        """
-        Applies the real function elementwise.
+Conj = create_elementwise_class(
+    name="Conj",
+    function=xp.conj,
+    docstring="""
+    Apply the complex conjugate function elementwise.
 
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the real function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
+    This feature applies `xp.conj` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
 
-        def __init__(
-            self: Real,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.real, feature=feature, **kwargs)
+    For real-valued inputs, the result is unchanged. For complex-valued inputs,
+    it returns the complex conjugate (i.e., `a + bj → a - bj`).
 
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the conjugate function will be applied. 
+        If None, the function is applied to the input array directly.
 
-    #TODO ***??*** revise Imag - torch, typing, docstring, unit test
-    class Imag(ElementwiseFeature):
-        """
-        Applies the imaginary function elementwise.
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Conj
 
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the imaginary function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Conj()(np.array([1+2j, 3+0j, -4.5]))
+    >>> result
+    array([ 1.-2.j,  3.-0.j, -4.5+0.j])
 
-        def __init__(
-            self: Imag,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.imag, feature=feature, **kwargs)
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Conj()(torch.tensor([1+2j, 3+0j, -4.5+0j]))
+    >>> result
+    tensor([ 1.-2.j,  3.-0.j, -4.5+0.j])
 
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([1+2j, 3+0j, -4.5]))
+    >>> pipeline = value >> Conj()
+    >>> result = pipeline()
+    >>> result
+    array([ 1.-2.j,  3.-0.j, -4.5+0.j])
 
-    #TODO ***??*** revise Abs - torch, typing, docstring, unit test
-    class Abs(ElementwiseFeature):
-        """
-        Applies the absolute value function elementwise.
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([1+2j, 3+0j, -4.5+0j]))
+    >>> pipeline = value >> Conj()
+    >>> result = pipeline()
+    >>> result
+    tensor([ 1.-2.j,  3.-0.j, -4.5+0.j])
 
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the absolute value function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
+    These are equivalent to:
+    >>> pipeline = Conj(value)
 
-        def __init__(
-            self: Abs,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.abs, feature=feature, **kwargs)
+    """
+)
 
 
-    #TODO ***??*** revise Conjugate - torch, typing, docstring, unit test
-    class Conjugate(ElementwiseFeature):
-        """
-        Applies the conjugate function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the conjugate function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Conjugate,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.conjugate, feature=feature, **kwargs)
+Conjugate = Conj
 
 
-    #TODO ***??*** revise Sqrt - torch, typing, docstring, unit test
-    class Sqrt(ElementwiseFeature):
-        """
-        Applies the square root function elementwise.
+Sqrt = create_elementwise_class(
+    name="Sqrt",
+    function=xp.sqrt,
+    docstring="""
+    Apply the square root function elementwise.
 
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the square root function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
+    This feature applies `xp.sqrt` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
 
-        def __init__(
-            self: Sqrt,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.sqrt, feature=feature, **kwargs)
+    For non-negative real values, it returns the usual square root.
+    For negative inputs, the behavior depends on the backend:
+    - NumPy may return `nan` or a complex result depending on dtype.
+    - PyTorch raises an error unless the input is explicitly complex.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the square root function will be applied. 
+        If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Sqrt
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Sqrt()(np.array([0.0, 1.0, 4.0]))
+    >>> result
+    array([0., 1., 2.])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Sqrt()(torch.tensor([0.0, 1.0, 4.0]))
+    >>> result
+    tensor([0., 1., 2.])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([0.0, 1.0, 4.0]))
+    >>> pipeline = value >> Sqrt()
+    >>> result = pipeline()
+    >>> result
+    array([0., 1., 2.])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([0.0, 1.0, 4.0]))
+    >>> pipeline = value >> Sqrt()
+    >>> result = pipeline()
+    >>> result
+    tensor([0., 1., 2.])
+
+    These are equivalent to:
+    >>> pipeline = Sqrt(value)
+
+    """
+)
 
 
-    #TODO ***??*** revise Square - torch, typing, docstring, unit test
-    class Square(ElementwiseFeature):
-        """
-        Applies the square function elementwise.
+Square = create_elementwise_class(
+    name="Square",
+    function=xp.square,
+    docstring="""
+    Apply the square function elementwise.
 
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the square function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
+    This feature applies `xp.square` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
 
-        def __init__(
-            self: Square,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.square, feature=feature, **kwargs)
+    This operation computes `x ** 2` for each element.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the square function will be applied. 
+        If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Square
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Square()(np.array([-2.0, 0.0, 3.0]))
+    >>> result
+    array([4., 0., 9.])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Square()(torch.tensor([-2.0, 0.0, 3.0]))
+    >>> result
+    tensor([4., 0., 9.])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-2.0, 0.0, 3.0]))
+    >>> pipeline = value >> Square()
+    >>> result = pipeline()
+    >>> result
+    array([4., 0., 9.])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-2.0, 0.0, 3.0]))
+    >>> pipeline = value >> Square()
+    >>> result = pipeline()
+    >>> result
+    tensor([4., 0., 9.])
+
+    These are equivalent to:
+    >>> pipeline = Square(value)
+
+    """
+)
 
 
-    #TODO ***??*** revise Sign - torch, typing, docstring, unit test
-    class Sign(ElementwiseFeature):
-        """
-        Applies the sign function elementwise.
+Sign = create_elementwise_class(
+    name="Sign",
+    function=xp.sign,
+    docstring="""
+    Apply the sign function elementwise.
 
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the sign function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
+    This feature applies `xp.sign` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
 
-        def __init__(
-            self: Sign,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.sign, feature=feature, **kwargs)
+    The sign function returns:
+    - `-1` for negative elements,
+    - `0` for zero,
+    - `+1` for positive elements.
+
+    For complex numbers, the result is `x / abs(x)` when `x != 0`.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the sign function will be applied. 
+        If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Sign
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>> result = Sign()(np.array([-5.0, 0.0, 2.0]))
+    >>> result
+    array([-1.,  0.,  1.])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>> result = Sign()(torch.tensor([-5.0, 0.0, 2.0]))
+    >>> result
+    tensor([-1.,  0.,  1.])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-5.0, 0.0, 2.0]))
+    >>> pipeline = value >> Sign()
+    >>> result = pipeline()
+    >>> result
+    array([-1.,  0.,  1.])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-5.0, 0.0, 2.0]))
+    >>> pipeline = value >> Sign()
+    >>> result = pipeline()
+    >>> result
+    tensor([-1.,  0.,  1.])
+
+    These are equivalent to:
+    >>> pipeline = Sign(value)
+
+    """
+)
