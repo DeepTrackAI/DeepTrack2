@@ -173,6 +173,7 @@ __all__ = [
     "Sin",
     "Cos",
     "Tan",
+    "Arcsin",
 ]
 
 
@@ -420,6 +421,12 @@ Sin = create_elementwise_class(
     This feature applies `xp.sin` to each element in a NumPy array or a
     PyTorch tensor. It supports both direct input and pipeline composition.
 
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the sine function will be applied. 
+        If None, the function is applied to the input array directly.
+
     Examples
     --------
     >>> import deeptrack as dt
@@ -468,6 +475,12 @@ Cos = create_elementwise_class(
 
     This feature applies `xp.cos` to each element in a NumPy array or a
     PyTorch tensor. It supports both direct input and pipeline composition.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the cosine function will be applied. 
+        If None, the function is applied to the input array directly.
 
     Examples
     --------
@@ -518,6 +531,12 @@ Tan = create_elementwise_class(
     This feature applies `xp.tan` to each element in a NumPy array or a
     PyTorch tensor. It supports both direct input and pipeline composition.
 
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the tangent function will be applied. 
+        If None, the function is applied to the input array directly.
+
     Examples
     --------
     >>> import deeptrack as dt
@@ -558,49 +577,67 @@ Tan = create_elementwise_class(
 )
 
 
+Arcsin = create_elementwise_class(
+    name="Arcsin",
+    function=xp.arcsin,
+    docstring="""
+    Apply the arcsine function elementwise to the output of a feature.
+
+    This feature applies `xp.arcsin` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the arccosine function will be applied. 
+        If None, the function is applied to the input array directly.
+
+    Notes
+    -----
+    The input must be in the domain [-1, 1]. Values outside this range will
+    produce NaNs or raise runtime warnings or errors, depending on the backend.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Arcsin
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Arcsin()(np.array([0.0, 0.5, 1.0]))
+    >>> result
+    array([0.        , 0.52359878, 1.57079633])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Arcsin()(torch.tensor([0.0, 0.5, 1.0]))
+    >>> result
+    tensor([0.0000, 0.5236, 1.5708])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([0.0, 0.5, 1.0]))
+    >>> pipeline = value >> Arcsin()
+    >>> result = pipeline()
+    >>> result
+    array([0.        , 0.52359878, 1.57079633])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([0.0, 0.5, 1.0]))
+    >>> pipeline = value >> Arcsin()
+    >>> result = pipeline()
+    >>> result
+    tensor([0.0000, 0.5236, 1.5708])
+
+    These are equivalent to:
+    >>> pipeline = Arcsin(value)
+
+    """
+)
+
+
 if False:
-    #TODO ***??*** revise Arcsin - torch, typing, docstring, unit test
-    class Arcsin(ElementwiseFeature):
-        """
-        Applies the arcsine function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the arcsine function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Arcsin,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.arcsin, feature=feature, **kwargs)
-
-
-    #TODO ***??*** revise Arccos - torch, typing, docstring, unit test
-    class Arccos(ElementwiseFeature):
-        """
-        Applies the arccosine function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the arccosine function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Arccos,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.arccos, feature=feature, **kwargs)
-
-
     #TODO ***??*** revise Arctan - torch, typing, docstring, unit test
     class Arctan(ElementwiseFeature):
         """
