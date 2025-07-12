@@ -31,7 +31,14 @@ def grid_test_features(
 
             if TORCH_AVAILABLE and isinstance(result, torch.Tensor):
                 function = torch.__dict__[function_name]
-                expected_result = function(feature_input)
+                if function == torch.imag:
+                    # Torch workaround: handle real vs complex manually
+                    if feature_input.is_complex():
+                        expected_result = torch.imag(feature_input)
+                    else:
+                        expected_result = torch.zeros_like(feature_input)
+                else:                
+                    expected_result = function(feature_input)
 
                 # In PyTorch, NaNs are unequal by default
                 valid_mask = ~(torch.isnan(result) 
