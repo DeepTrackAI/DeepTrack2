@@ -63,7 +63,12 @@ def create_test(elementwise_class):
     testname = f"test_{elementwise_class.__name__}"
 
     def test(self):
-        inputs = [-1, 0, 1, (np.random.rand(8, 15) - 0.5) * 100]
+        inputs = [
+            np.array(-1.0),
+            np.array(0.0),
+            np.array(1.0),
+            (np.random.rand(8, 15) - 0.5) * 100,
+        ]
 
         if TORCH_AVAILABLE:
             inputs.extend([
