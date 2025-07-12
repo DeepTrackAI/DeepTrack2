@@ -174,6 +174,16 @@ __all__ = [
     "Cos",
     "Tan",
     "Arcsin",
+    "Arctan",
+    "Sinh",
+    "Cosh",
+    "Tanh",
+    "Arcsinh",
+    "Arccosh",
+    "Arctanh",
+    "Round",
+    "Floor",
+    "Ceil",
 ]
 
 
@@ -416,7 +426,7 @@ Sin = create_elementwise_class(
     name="Sin",
     function=xp.sin,
     docstring="""
-    Apply the sine function elementwise to the output of a feature.
+    Apply the sine function elementwise.
 
     This feature applies `xp.sin` to each element in a NumPy array or a
     PyTorch tensor. It supports both direct input and pipeline composition.
@@ -471,7 +481,7 @@ Cos = create_elementwise_class(
     name="Cos",
     function=xp.cos,
     docstring="""
-    Apply the cosine function elementwise to the output of a feature.
+    Apply the cosine function elementwise.
 
     This feature applies `xp.cos` to each element in a NumPy array or a
     PyTorch tensor. It supports both direct input and pipeline composition.
@@ -526,7 +536,7 @@ Tan = create_elementwise_class(
     name="Tan",
     function=xp.tan,
     docstring="""
-    Apply the tangent function elementwise to the output of a feature.
+    Apply the tangent function elementwise.
 
     This feature applies `xp.tan` to each element in a NumPy array or a
     PyTorch tensor. It supports both direct input and pipeline composition.
@@ -581,21 +591,19 @@ Arcsin = create_elementwise_class(
     name="Arcsin",
     function=xp.arcsin,
     docstring="""
-    Apply the arcsine function elementwise to the output of a feature.
+    Apply the arcsine function elementwise.
 
     This feature applies `xp.arcsin` to each element in a NumPy array or a
     PyTorch tensor. It supports both direct input and pipeline composition.
+
+    The input must be in the domain [-1, 1]. Values outside this range will
+    produce NaNs or raise runtime warnings or errors, depending on the backend.
 
     Parameters
     ----------
     feature: Feature or None, optional
         The input feature to which the arccosine function will be applied. 
         If None, the function is applied to the input array directly.
-
-    Notes
-    -----
-    The input must be in the domain [-1, 1]. Values outside this range will
-    produce NaNs or raise runtime warnings or errors, depending on the backend.
 
     Examples
     --------
@@ -637,215 +645,599 @@ Arcsin = create_elementwise_class(
 )
 
 
+Arctan = create_elementwise_class(
+    name="Arctan",
+    function=xp.arctan,
+    docstring="""
+    Apply the arctangent function elementwise.
+
+    This feature applies `xp.arctan` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the arctangent function will be applied. 
+        If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Arctan
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Arctan()(np.array([-1.0, 0.0, 1.0]))
+    >>> result
+    array([-0.78539816,  0.        ,  0.78539816])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Arctan()(torch.tensor([-1.0, 0.0, 1.0]))
+    >>> result
+    tensor([-0.7854,  0.0000,  0.7854])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Arctan()
+    >>> result = pipeline()
+    >>> result
+    array([-0.78539816,  0.        ,  0.78539816])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Arctan()
+    >>> result = pipeline()
+    >>> result
+    tensor([-0.7854,  0.0000,  0.7854])
+
+    These are equivalent to:
+    >>> pipeline = Arctan(value)
+
+    """
+)
+
+
+Sinh = create_elementwise_class(
+    name="Sinh",
+    function=xp.sinh,
+    docstring="""
+    Apply the hyperbolic sine function elementwise.
+
+    This feature applies `xp.sinh` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the hyperbolic sine function will be 
+        applied. If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Sinh
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Sinh()(np.array([-1.0, 0.0, 1.0]))
+    >>> result
+    array([-1.17520119,  0.        ,  1.17520119])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Sinh()(torch.tensor([-1.0, 0.0, 1.0]))
+    >>> result
+    tensor([-1.1752,  0.0000,  1.1752])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Sinh()
+    >>> result = pipeline()
+    >>> result
+    array([-1.17520119,  0.        ,  1.17520119])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Sinh()
+    >>> result = pipeline()
+    >>> result
+    tensor([-1.1752,  0.0000,  1.1752])
+
+    These are equivalent to:
+    >>> pipeline = Sinh(value)
+
+    """
+)
+
+
+Cosh = create_elementwise_class(
+    name="Cosh",
+    function=xp.cosh,
+    docstring="""
+    Apply the hyperbolic cosine function elementwise.
+
+    This feature applies `xp.cosh` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the hyperbolic cosine function will be 
+        applied. If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Cosh
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Cosh()(np.array([-1.0, 0.0, 1.0]))
+    >>> result
+    array([1.54308063, 1.        , 1.54308063])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Cosh()(torch.tensor([-1.0, 0.0, 1.0]))
+    >>> result
+    tensor([1.5431, 1.0000, 1.5431])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Cosh()
+    >>> result = pipeline()
+    >>> result
+    array([1.54308063, 1.        , 1.54308063])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Cosh()
+    >>> result = pipeline()
+    >>> result
+    tensor([1.5431, 1.0000, 1.5431])
+
+    These are equivalent to:
+    >>> pipeline = Cosh(value)
+
+    """
+)
+
+
+Tanh = create_elementwise_class(
+    name="Tanh",
+    function=xp.tanh,
+    docstring="""
+    Apply the hyperbolic tangent function elementwise.
+
+    This feature applies `xp.tanh` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the hyperbolic tangent function will be 
+        applied. If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Tanh
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Tanh()(np.array([-1.0, 0.0, 1.0]))
+    >>> result
+    array([-0.76159416,  0.        ,  0.76159416])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Tanh()(torch.tensor([-1.0, 0.0, 1.0]))
+    >>> result
+    tensor([-0.7616,  0.0000,  0.7616])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Tanh()
+    >>> result = pipeline()
+    >>> result
+    array([-0.76159416,  0.        ,  0.76159416])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Tanh()
+    >>> result = pipeline()
+    >>> result
+    tensor([-0.7616,  0.0000,  0.7616])
+
+    These are equivalent to:
+    >>> pipeline = Tanh(value)
+
+    """
+)
+
+
+Arcsinh = create_elementwise_class(
+    name="Arcsinh",
+    function=xp.arcsinh,
+    docstring="""
+    Apply the inverse hyperbolic sine function elementwise.
+
+    This feature applies `xp.arcsinh` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the hyperbolic arcsine function will be 
+        applied. If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Arcsinh
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Arcsinh()(np.array([-1.0, 0.0, 1.0]))
+    >>> result
+    array([-0.88137359,  0.        ,  0.88137359])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Arcsinh()(torch.tensor([-1.0, 0.0, 1.0]))
+    >>> result
+    tensor([-0.8814,  0.0000,  0.8814])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Arcsinh()
+    >>> result = pipeline()
+    >>> result
+    array([-0.88137359,  0.        ,  0.88137359])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
+    >>> pipeline = value >> Arcsinh()
+    >>> result = pipeline()
+    >>> result
+    tensor([-0.8814,  0.0000,  0.8814])
+
+    These are equivalent to:
+    >>> pipeline = Arcsinh(value)
+
+    """
+)
+
+
+Arccosh = create_elementwise_class(
+    name="Arccosh",
+    function=xp.arccosh,
+    docstring="""
+    Apply the inverse hyperbolic cosine function elementwise.
+
+    This feature applies `xp.arccosh` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    The input must be greater than or equal to 1. Values below this will 
+    return NaN or raise errors depending on the backend.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the hyperbolic arccosine function will be 
+        applied. If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Arccosh
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Arccosh()(np.array([1.0, 2.0, 3.0]))
+    >>> result
+    array([0.        , 1.3169579 , 1.76274717])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Arccosh()(torch.tensor([1.0, 2.0, 3.0]))
+    >>> result
+    tensor([0.0000, 1.3170, 1.7627])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([1.0, 2.0, 3.0]))
+    >>> pipeline = value >> Arccosh()
+    >>> result = pipeline()
+    >>> result
+    array([0.        , 1.3169579 , 1.76274717])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([1.0, 2.0, 3.0]))
+    >>> pipeline = value >> Arccosh()
+    >>> result = pipeline()
+    >>> result
+    tensor([0.0000, 1.3170, 1.7627])
+
+    These are equivalent to:
+    >>> pipeline = Arccosh(value)
+
+    """
+)
+
+
+Arctanh = create_elementwise_class(
+    name="Arctanh",
+    function=xp.arctanh,
+    docstring="""
+    Apply the inverse hyperbolic tangent function elementwise.
+
+    This feature applies `xp.arctanh` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    The input must be within the open interval (-1, 1). Values outside this 
+    range will produce NaNs or raise domain errors depending on the backend.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the hyperbolic arctangent function will be 
+        applied. If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Arctanh
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Arctanh()(np.array([-0.5, 0.0, 0.5]))
+    >>> result
+    array([-0.54930614,  0.        ,  0.54930614])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Arctanh()(torch.tensor([-0.5, 0.0, 0.5]))
+    >>> result
+    tensor([-0.5493,  0.0000,  0.5493])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-0.5, 0.0, 0.5]))
+    >>> pipeline = value >> Arctanh()
+    >>> result = pipeline()
+    >>> result
+    array([-0.54930614,  0.        ,  0.54930614])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-0.5, 0.0, 0.5]))
+    >>> pipeline = value >> Arctanh()
+    >>> result = pipeline()
+    >>> result
+    tensor([-0.5493,  0.0000,  0.5493])
+
+    These are equivalent to:
+    >>> pipeline = Arctanh(value)
+
+    """
+)
+
+
+Round = create_elementwise_class(
+    name="Round",
+    function=xp.round,
+    docstring="""
+    Apply the rounding function elementwise.
+
+    This feature applies `xp.round` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    This function rounds to the nearest integer. For NumPy, ties round to
+    the even number (bankers' rounding). For PyTorch, ties round away from
+    zero.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the round function will be applied. 
+        If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Round
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Round()(np.array([-1.5, -0.5, 0.5, 1.5]))
+    >>> result
+    array([-2., -0.,  0.,  2.])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Round()(torch.tensor([-1.5, -0.5, 0.5, 1.5]))
+    >>> result
+    tensor([-2., -1.,  1.,  2.])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-1.5, -0.5, 0.5, 1.5]))
+    >>> pipeline = value >> Round()
+    >>> result = pipeline()
+    >>> result
+    array([-2., -0.,  0.,  2.])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-1.5, -0.5, 0.5, 1.5]))
+    >>> pipeline = value >> Round()
+    >>> result = pipeline()
+    >>> result
+    tensor([-2., -1.,  1.,  2.])
+
+    These are equivalent to:
+    >>> pipeline = Round(value)
+
+    """
+)
+
+
+class Floor(ElementwiseFeature):
+    """Apply the floor function elementwise.
+
+    This feature applies `xp.floor` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    The floor function returns the greatest integer less than or equal to
+    each element of the input.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the floor function will be applied. 
+        If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Floor
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Floor()(np.array([-1.7, -0.5, 0.0, 0.5, 1.7]))
+    >>> result
+    array([-2., -1.,  0.,  0.,  1.])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Floor()(torch.tensor([-1.7, -0.5, 0.0, 0.5, 1.7]))
+    >>> result
+    tensor([-2., -1.,  0.,  0.,  1.])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-1.7, -0.5, 0.0, 0.5, 1.7]))
+    >>> pipeline = value >> Floor()
+    >>> result = pipeline()
+    >>> result
+    array([-2., -1.,  0.,  0.,  1.])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-1.7, -0.5, 0.0, 0.5, 1.7]))
+    >>> pipeline = value >> Floor()
+    >>> result = pipeline()
+    >>> result
+    tensor([-2., -1.,  0.,  0.,  1.])
+
+    These are equivalent to:
+    >>> pipeline = Floor(value)
+
+    """
+
+    def __init__(
+        self: Floor,
+        feature: Feature | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            function=self._floor_dispatch,
+            feature=feature,
+            **kwargs
+        )
+
+    @staticmethod
+    def _floor_dispatch(x):
+        if TORCH_AVAILABLE and isinstance(x, torch.Tensor):
+            return torch.floor(x)
+        return np.floor(x)
+
+
+class Ceil(ElementwiseFeature):
+    """    Apply the ceiling function elementwise to the output of a feature.
+
+    This feature applies `xp.ceil` to each element in a NumPy array or a
+    PyTorch tensor. It supports both direct input and pipeline composition.
+
+    The ceiling function returns the smallest integer greater than or equal to
+    each element of the input.
+
+    Parameters
+    ----------
+    feature: Feature or None, optional
+        The input feature to which the ceil function will be applied. 
+        If None, the function is applied to the input array directly.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> from deeptrack.elementwise import Ceil
+
+    Use with NumPy directly:
+    >>> import numpy as np
+    >>>
+    >>> result = Ceil()(np.array([-1.7, -0.5, 0.0, 0.5, 1.7]))
+    >>> result
+    array([-1., -0.,  0.,  1.,  2.])
+
+    Use with PyTorch directly:
+    >>> import torch
+    >>>
+    >>> result = Ceil()(torch.tensor([-1.7, -0.5, 0.0, 0.5, 1.7]))
+    >>> result
+    tensor([-1., -0.,  0.,  1.,  2.])
+
+    Use in a pipeline with a NumPy value:
+    >>> value = dt.Value(value=np.array([-1.7, -0.5, 0.0, 0.5, 1.7]))
+    >>> pipeline = value >> Ceil()
+    >>> result = pipeline()
+    >>> result
+    array([-1., -0.,  0.,  1.,  2.])
+
+    Use in a pipeline with a Torch value:
+    >>> value = dt.Value(value=torch.tensor([-1.7, -0.5, 0.0, 0.5, 1.7]))
+    >>> pipeline = value >> Ceil()
+    >>> result = pipeline()
+    >>> result
+    tensor([-1., -0.,  0.,  1.,  2.])
+
+    These are equivalent to:
+    >>> pipeline = Ceil(value)
+
+    """
+
+    def __init__(
+        self: Ceil,
+        feature: Feature | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            function=self._ceil_dispatch,
+            feature=feature,
+            **kwargs
+        )
+
+    @staticmethod
+    def _ceil_dispatch(x):
+        if TORCH_AVAILABLE and isinstance(x, torch.Tensor):
+            return torch.ceil(x)
+        return np.ceil(x)
+
+
 if False:
-    #TODO ***??*** revise Arctan - torch, typing, docstring, unit test
-    class Arctan(ElementwiseFeature):
-        """
-        Applies the arctangent function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the arctangent function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
-        def __init__(
-            self: Arctan,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.arctan, feature=feature, **kwargs)
-
-
-    #TODO ***??*** revise Sinh - torch, typing, docstring, unit test
-    class Sinh(ElementwiseFeature):
-        """
-        Applies the hyperbolic sine function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the hyperbolic sine function will be 
-            applied. If None, the function is applied to the input array directly.
-        
-        """
-        def __init__(
-            self: Sinh,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.sinh, feature=feature, **kwargs)
-
-
-    #TODO ***??*** revise Cosh - torch, typing, docstring, unit test
-    class Cosh(ElementwiseFeature):
-        """
-        Applies the hyperbolic cosine function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the hyperbolic cosine function will be 
-            applied. If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Cosh,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.cosh, feature=feature, **kwargs)
-
-
-    #TODO ***??*** revise Tanh - torch, typing, docstring, unit test
-    class Tanh(ElementwiseFeature):
-        """
-        Applies the hyperbolic tangent function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the hyperbolic tangent function will be 
-            applied. If None, the function is applied to the input array directly.
-        
-        """
-            
-        def __init__(
-            self: Tanh,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.tanh, feature=feature, **kwargs)
-
-
-    #TODO ***??*** revise Arcsinh - torch, typing, docstring, unit test
-    class Arcsinh(ElementwiseFeature):
-        """
-        Applies the hyperbolic arcsine function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the hyperbolic arcsine function will be 
-            applied. If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Arcsinh,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.arcsinh, feature=feature, **kwargs)
-
-
-    #TODO ***??*** revise Arccosh - torch, typing, docstring, unit test
-    class Arccosh(ElementwiseFeature):
-        """
-        Applies the hyperbolic arccosine function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the hyperbolic arccosine function will be 
-            applied. If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Arccosh,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.arccosh, feature=feature, **kwargs)
-
-
-    #TODO ***??*** revise Arctanh - torch, typing, docstring, unit test
-    class Arctanh(ElementwiseFeature):
-        """
-        Applies the hyperbolic arctangent function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the hyperbolic arctangent function will be 
-            applied. If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Arctanh,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.arctanh, feature=feature, **kwargs)
-
-
-    #TODO ***??*** revise Round - torch, typing, docstring, unit test
-    class Round(ElementwiseFeature):
-        """
-        Applies the round function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the round function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Round,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.around, feature=feature, **kwargs)
-
-
-    #TODO ***??*** revise Floor - torch, typing, docstring, unit test
-    class Floor(ElementwiseFeature):
-        """
-        Applies the floor function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the floor function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Floor,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.floor, feature=feature, **kwargs)
-
-
-    #TODO ***??*** revise Ceil - torch, typing, docstring, unit test
-    class Ceil(ElementwiseFeature):
-        """
-        Applies the ceil function elementwise.
-
-        Parameters
-        ----------
-        feature : Feature or None, optional
-            The input feature to which the ceil function will be applied. 
-            If None, the function is applied to the input array directly.
-        
-        """
-
-        def __init__(
-            self: Ceil,
-            feature: Feature | None = None,
-            **kwargs: Any
-        ) -> None:
-            super().__init__(np.ceil, feature=feature, **kwargs)
-
-
     #TODO ***??*** revise Exp - torch, typing, docstring, unit test
     class Exp(ElementwiseFeature):
         """
