@@ -11,7 +11,7 @@ import unittest
 
 import numpy as np
 
-from deeptrack import elementwise, features, TORCH_AVAILABLE
+from deeptrack import elementwise, features, TORCH_AVAILABLE, xp
 
 if TORCH_AVAILABLE:
     import torch
@@ -20,26 +20,36 @@ def grid_test_features(
     tester,
     elementwise_class,
     feature_inputs,
-    function,
+    function_name,
 ):
     for feature_input in feature_inputs:
         pip_a = elementwise_class(features.Value(feature_input))
         pip_b = features.Value(feature_input) >> elementwise_class()
 
-        expected_result = function(feature_input)
-
         for pip in [pip_a, pip_b]:
             result = pip()
 
             if TORCH_AVAILABLE and isinstance(result, torch.Tensor):
+                function = torch.__dict__[function_name]
+                expected_result = function(feature_input)
+
+                # In PyTorch, NaNs are unequal by default
+                valid_mask = ~(torch.isnan(result) 
+                               | torch.isnan(expected_result))
+
                 torch.testing.assert_close(
-                    result,
-                    expected_result,
+                    result[valid_mask],
+                    expected_result[valid_mask],
                     rtol=1e-5,
                     atol=1e-8,
                     msg=f"{elementwise_class.__name__} failed with PyTorch.",
                 )
             else:
+                function = np.__dict__[function_name]
+                expected_result = function(feature_input)
+
+                # In NumPy, NaNs are ignored
+
                 np.testing.assert_allclose(
                     result,
                     expected_result,
@@ -65,7 +75,7 @@ def create_test(elementwise_class):
             self,
             elementwise_class,
             inputs,
-            np.__dict__[elementwise_class.__name__.lower()],
+            elementwise_class.__name__.lower(),
         )
 
     test.__name__ = testname
