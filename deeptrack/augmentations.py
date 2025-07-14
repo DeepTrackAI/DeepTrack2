@@ -276,8 +276,8 @@ class Reuse(Feature):
     def __init__(
         self: Reuse,
         feature: Feature,
-        uses: int = 2,
-        storage:int = 1,
+        uses: PropertyLike[int] = 2,
+        storage: PropertyLike[int] = 1,
         **kwargs
     ):
         super().__init__(uses=uses, storage=storage, **kwargs)
@@ -288,8 +288,8 @@ class Reuse(Feature):
     def get(
         self: Reuse,
         image: Image | np.ndarray,
-        uses: PropertyLike[int],
-        storage: PropertyLike[int],
+        uses: int,
+        storage: int,
         **kwargs
     ) -> list[Image]:
         """Abstract method which performs the `Reuse` augmentation.
@@ -365,7 +365,7 @@ class FlipLR(Augmentation):
     def get(
         self: FlipLR,
         image: Image | np.ndarray,
-        augment: PropertyLike[bool],
+        augment: bool,
         **kwargs
     ) -> Image:
         """Abstract method which performs the `FlipLR` augmentation.
@@ -379,7 +379,7 @@ class FlipLR(Augmentation):
     def update_properties(
         self: FlipLR,
         image: Image | np.ndarray,
-        augment: PropertyLike[bool],
+        augment: bool,
         **kwargs
     ) -> None:
         """Abstract method to update the properties of the image.
@@ -419,7 +419,7 @@ class FlipUD(Augmentation):
 
     def __init__(
         self: FlipUD,
-        p: float = 0.5,
+        p: PropertyLike[float] = 0.5,
         augment: PropertyLike[bool] = None,
         **kwargs
     ) -> None:
@@ -434,7 +434,7 @@ class FlipUD(Augmentation):
     def get(
         self: FlipUD,
         image: Image | np.ndarray,
-        augment: PropertyLike[bool],
+        augment: bool,
         **kwargs
     ) -> Image:
         """Abstract method which performs the `FlipUD` augmentation.
@@ -448,7 +448,7 @@ class FlipUD(Augmentation):
     def update_properties(
         self: FlipUD,
         image: Image | np.ndarray,
-        augment: PropertyLike[bool],
+        augment: bool,
         **kwargs
     ) -> None:
         """Abstract method to update the properties of the image.
@@ -503,7 +503,7 @@ class FlipDiagonal(Augmentation):
     def get(
         self: FlipDiagonal,
         image: Image | np.ndarray,
-        augment: PropertyLike[bool],
+        augment: bool,
         **kwargs
     ) -> Image:
         """Abstract method which performs the `FlipDiagonal` augmentation.
@@ -516,7 +516,7 @@ class FlipDiagonal(Augmentation):
     def update_properties(
         self: FlipDiagonal,
         image: Image | np.ndarray,
-        augment: PropertyLike[bool],
+        augment: bool,
         **kwargs
     ) -> None:
         """Abstract method to update the properties of the image.
@@ -649,10 +649,10 @@ class Affine(Augmentation):
     def get(
         self: Affine,
         image: Image | np.ndarray,
-        scale: PropertyLike[float],
-        translate: PropertyLike[float],
-        rotate: PropertyLike[float],
-        shear: PropertyLike[float],
+        scale: float,
+        translate: float,
+        rotate: float,
+        shear: float,
         **kwargs
     ) -> Image:
         """Abstract method which performs the `Affine` augmentation.
@@ -830,9 +830,9 @@ class ElasticTransformation(Augmentation):
     def get(
         self: ElasticTransformation,
         image: Image | np.ndarray,
-        sigma: PropertyLike[float],
-        alpha: PropertyLike[float],
-        ignore_last_dim: PropertyLike[bool],
+        sigma: float,
+        alpha: float,
+        ignore_last_dim: bool,
         **kwargs
     ) -> Image:
         """Abstract method which performs the `ElasticTransformation` augmentation.
@@ -940,9 +940,9 @@ class Crop(Augmentation):
     def get(
         self: Crop,
         image: Image | np.ndarray,
-        corner: PropertyLike[str],
+        corner: str,
         crop: int | list[int] | tuple[int],
-        crop_mode: PropertyLike[str],
+        crop_mode: str,
         **kwargs
     ) -> Image:
         """Abstract method which performs the `Crop` augmentation.
@@ -1033,7 +1033,7 @@ class CropToMultiplesOf(Crop):
 
     def __init__(
         self: CropToMultiplesOf,
-        multiple: int | tuple[int] | tuple[None] = 1,
+        multiple: PropertyLike[int | tuple[int] | tuple[None]] = 1,
         corner: PropertyLike[str] = "random",
         **kwargs
     ) -> None:
@@ -1098,7 +1098,7 @@ class CropTight(Feature):
     def get(
         self: CropTight,
         image: Image | np.ndarray,
-        eps: PropertyLike[float],
+        eps: float,
         **kwargs
     ) -> Image:
         """Abstract method which performs the `CropTight` augmentation.
@@ -1160,7 +1160,7 @@ class Pad(Augmentation):
     def get(
         self: Pad,
         image: Image | np.ndarray,
-        px: PropertyLike[int],
+        px: int,
         **kwargs
     ) -> Image:
         """Abstract method which performs the `Pad` augmentation.

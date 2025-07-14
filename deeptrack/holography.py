@@ -84,13 +84,20 @@ Reconstruct the field using the inverse Fourier transform:
 
 """
 
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT324
+
 from __future__ import annotations
+
 from typing import Any
-from deeptrack.image import maybe_cupy, Image
-from deeptrack import Feature
+
 import numpy as np
 
+from deeptrack.image import maybe_cupy, Image
+from deeptrack import Feature
 
+
+#TODO ***??*** revise get_propagation_matrix - torch, typing, docstring, unit test
 def get_propagation_matrix(
     shape: tuple[int, int],
     to_z: float,
@@ -154,6 +161,7 @@ def get_propagation_matrix(
     )
 
 
+#TODO ***??*** revise Rescale - torch, typing, docstring, unit test
 class Rescale(Feature):
     """Rescales an optical field by modifying its real and imaginary 
     components.
@@ -216,6 +224,7 @@ class Rescale(Feature):
         return image
 
 
+#TODO ***??*** revise FourierTransform - torch, typing, docstring, unit test
 class FourierTransform(Feature):
     """Computes the Fourier transform of an optical field with optional 
     symmetric padding.
@@ -282,6 +291,7 @@ class FourierTransform(Feature):
         return f1
 
 
+#TODO ***??*** revise InverseFourierTransform - torch, typing, docstring, unit test
 class InverseFourierTransform(Feature):
     """Applies a power of the forward or inverse propagation matrix to an 
     optical field.
@@ -358,6 +368,7 @@ class InverseFourierTransform(Feature):
         return imnew
 
 
+#TODO ***??*** revise FourierTransformTransformation - torch, typing, docstring, unit test
 class FourierTransformTransformation(Feature):
     """Applies a power of the forward or inverse propagation matrix to an 
     optical field.

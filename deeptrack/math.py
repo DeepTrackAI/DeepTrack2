@@ -88,8 +88,12 @@ Process an input image:
 
 """
 
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT381
+
 from __future__ import annotations
-from typing import TYPE_CHECKING, Callable, Any, List
+
+from typing import Any, Callable, TYPE_CHECKING
 
 import numpy as np
 import scipy.ndimage as ndimage
@@ -106,6 +110,7 @@ if TYPE_CHECKING:
     import torch
 
 
+#TODO ***??*** revise Average - torch, typing, docstring, unit test
 class Average(Feature):
     """Average of input images.
 
@@ -187,7 +192,7 @@ class Average(Feature):
 
     def get(
         self: Average,
-        images: ArrayLike | List[ArrayLike],
+        images: ArrayLike | list[ArrayLike],
         axis: int,
         **kwargs: Any,
     ) -> ArrayLike:
@@ -216,6 +221,7 @@ class Average(Feature):
         return result
 
 
+#TODO ***??*** revise Clip - torch, typing, docstring, unit test
 class Clip(Feature):
     """Clip the input within a minimum and a maximum value.
 
@@ -312,6 +318,7 @@ class Clip(Feature):
         return xp.clip(image, min, max)
 
 
+#TODO ***??*** revise NormalizeMinMax - torch, typing, docstring, unit test
 class NormalizeMinMax(Feature):
     """Image normalization.
 
@@ -421,6 +428,7 @@ class NormalizeMinMax(Feature):
         return image
 
 
+#TODO ***??*** revise NormalizeStandard - torch, typing, docstring, unit test
 class NormalizeStandard(Feature):
     """Image normalization (standardization).
 
@@ -504,6 +512,7 @@ class NormalizeStandard(Feature):
         return (image - xp.mean(image)) / xp.std(image)
 
 
+#TODO ***??*** revise NormalizeQuantile - torch, typing, docstring, unit test
 class NormalizeQuantile(Feature):
     """Image normalization.
 
@@ -601,6 +610,7 @@ class NormalizeQuantile(Feature):
         return (image - median) / (q_high - q_low)
 
 
+#TODO ***??*** revise Blur - torch, typing, docstring, unit test
 class Blur(Feature):
     """Apply a blurring filter to an image.
 
@@ -713,6 +723,7 @@ class Blur(Feature):
         return utils.safe_call(self.filter, input=image, **kwargs)
 
 
+#TODO ***??*** revise AverageBlur - torch, typing, docstring, unit test
 class AverageBlur(Blur):
     """Blur an image by computing simple means over neighbourhoods.
 
@@ -889,6 +900,7 @@ class AverageBlur(Blur):
             raise NotImplementedError(f"Backend {self.backend} not supported")
 
 
+#TODO ***??*** revise GaussianBlur - torch, typing, docstring, unit test
 class GaussianBlur(Blur):
     """Applies a Gaussian blur to images using Gaussian kernels.
 
@@ -950,6 +962,7 @@ class GaussianBlur(Blur):
         super().__init__(ndimage.gaussian_filter, sigma=sigma, **kwargs)
 
 
+#TODO ***??*** revise MedianBlur - torch, typing, docstring, unit test
 class MedianBlur(Blur):
     """Applies a median blur.
 
@@ -1019,6 +1032,7 @@ class MedianBlur(Blur):
         super().__init__(ndimage.median_filter, size=ksize, **kwargs)
 
 
+#TODO ***??*** revise Pool - torch, typing, docstring, unit test
 class Pool(Feature):
     """Downsamples the image by applying a function to local regions of the
     image.
@@ -1137,6 +1151,7 @@ class Pool(Feature):
         )
 
 
+#TODO ***??*** revise AveragePooling - torch, typing, docstring, unit test
 class AveragePooling(Pool):
     """Apply average pooling to an image.
 
@@ -1197,6 +1212,7 @@ class AveragePooling(Pool):
         super().__init__(np.mean, ksize=ksize, **kwargs)
 
 
+#TODO ***??*** revise MaxPooling - torch, typing, docstring, unit test
 class MaxPooling(Pool):
     """Apply max pooling to images.
 
@@ -1260,6 +1276,7 @@ class MaxPooling(Pool):
         super().__init__(np.max, ksize=ksize, **kwargs)
 
 
+#TODO ***??*** revise MinPooling - torch, typing, docstring, unit test
 class MinPooling(Pool):
     """Apply min pooling to images.
 
@@ -1320,6 +1337,7 @@ class MinPooling(Pool):
         super().__init__(np.min, ksize=ksize, **kwargs)
 
 
+#TODO ***??*** revise MedianPooling - torch, typing, docstring, unit test
 class MedianPooling(Pool):
     """Apply median pooling to images.
 
@@ -1389,6 +1407,7 @@ class MedianPooling(Pool):
         super().__init__(np.median, ksize=ksize, **kwargs)
 
 
+#TODO ***??*** revise Resize - torch, typing, docstring, unit test
 class Resize(Feature):
     """Resize an image to a specified size.
 
@@ -1459,6 +1478,7 @@ class Resize(Feature):
         return utils.safe_call(cv2.resize, positional_args=[image, dsize], **kwargs)
 
 
+#TODO ***??** use instead CV2_AVAILABLE?
 try:
     import cv2
 
@@ -1475,6 +1495,7 @@ except ImportError:
     IMPORTED_CV2 = False
 
 
+#TODO ***??*** revise BlurCV2 - torch, typing, docstring, unit test
 class BlurCV2(Feature):
     """Apply a blurring filter using OpenCV2.
 
@@ -1617,6 +1638,7 @@ class BlurCV2(Feature):
         return result
 
 
+#TODO ***??*** revise BilateralBlur - torch, typing, docstring, unit test
 class BilateralBlur(BlurCV2):
     """Blur an image using a bilateral filter.
 

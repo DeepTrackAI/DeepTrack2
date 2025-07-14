@@ -21,16 +21,21 @@ Functions:
     
 """
 
-from typing import Union
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT399D
+
+from __future__ import annotations
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.special import jv, h1vp, yv
 
 
+#TODO ***??*** revise besselj - torch, docstring, unit test
 def besselj(
-        l: Union[int, float],
-        x: Union[int, float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+    l: int | float,
+    x: int | float | NDArray,
+) -> float | NDArray:
     """The Bessel polynomial of the 1st kind.
 
     Parameters
@@ -50,10 +55,11 @@ def besselj(
     return jv(l, x)
 
 
+#TODO ***??*** revise dbesselj - torch, docstring, unit test
 def dbesselj(
-        l: Union[int, float],
-        x: Union[int, float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+        l: int | float,
+        x: int | float | NDArray,
+    ) -> float | NDArray:
     """The first derivative of the Bessel polynomial of the 1st kind.
 
     Parameters
@@ -73,10 +79,11 @@ def dbesselj(
     return 0.5 * (besselj(l - 1, x) - besselj(l + 1, x))
 
 
+#TODO ***??*** revise bessely - torch, docstring, unit test
 def bessely(
-        l: Union[int, float],
-        x: Union[int, float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+        l: int | float,
+        x: int | float | NDArray,
+    ) -> float | NDArray:
     """The Bessel polynomial of the 2nd kind.
 
     Parameters
@@ -96,10 +103,11 @@ def bessely(
     return yv(l, x)
 
 
+#TODO ***??*** revise dbessely - torch, docstring, unit test
 def dbessely(
-        l: Union[int, float],
-        x: Union[int, float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+        l: int | float,
+        x: int | float | NDArray,
+    ) -> float | NDArray:
     """The first derivative of the Bessel polynomial of the 2nd kind.
 
     Parameters
@@ -119,10 +127,11 @@ def dbessely(
     return 0.5 * (bessely(l - 1, x) - bessely(l + 1, x))
 
 
+#TODO ***??*** revise ricbesj - torch, docstring, unit test
 def ricbesj(
-        l: Union[int, float],
-        x: Union[int, float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+        l: int | float,
+        x: int | float | NDArray,
+    ) -> float | NDArray:
     """The Riccati-Bessel polynomial of the 1st kind.
 
     Parameters
@@ -142,10 +151,11 @@ def ricbesj(
     return np.sqrt(np.pi * x / 2) * besselj(l + 0.5, x)
 
 
+#TODO ***??*** revise dricbesj - torch, docstring, unit test
 def dricbesj(
-        l: Union[int, float],
-        x: Union[int, float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+        l: int | float,
+        x: int | float | NDArray,
+    ) -> float | NDArray:
     """The first derivative of the Riccati-Bessel polynomial of the 1st kind.
 
     Parameters
@@ -167,10 +177,11 @@ def dricbesj(
     ) * dbesselj(l + 0.5, x)
 
 
+#TODO ***??*** revise ricbesy - torch, docstring, unit test
 def ricbesy(
-        l: Union[int, float],
-        x: Union[int, float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+        l: int | float,
+        x: int | float | NDArray,
+    ) -> float | NDArray:
     """The Riccati-Bessel polynomial of the 2nd kind.
 
     Parameters
@@ -190,10 +201,11 @@ def ricbesy(
     return -np.sqrt(np.pi * x / 2) * bessely(l + 0.5, x)
 
 
+#TODO ***??*** revise dricbesy - torch, docstring, unit test
 def dricbesy(
-        l: Union[int, float],
-        x: Union[int, float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+        l: int | float,
+        x: int | float | NDArray,
+    ) -> float | NDArray:
     """The first derivative of the Riccati-Bessel polynomial of the 2nd kind.
 
     Parameters
@@ -215,10 +227,11 @@ def dricbesy(
     ) * dbessely(l + 0.5, x)
 
 
+#TODO ***??*** revise ricbesh - torch, docstring, unit test
 def ricbesh(
-        l: Union[int, float],
-        x: Union[int, float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+        l: int | float,
+        x: int | float | NDArray,
+    ) -> float | NDArray:
     """The Riccati-Bessel polynomial of the 3rd kind.
 
     Parameters
@@ -238,10 +251,11 @@ def ricbesh(
     return np.sqrt(np.pi * x / 2) * h1vp(l + 0.5, x, False)
 
 
+#TODO ***??*** revise dricbesh - torch, docstring, unit test
 def dricbesh(
-        l: Union[int, float],
-        x: Union[int, float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+        l: int | float,
+        x: int | float | NDArray,
+    ) -> float | NDArray:
     """The first derivative of the Riccati-Bessel polynomial of the 3rd kind.
 
     Parameters
