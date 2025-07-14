@@ -349,7 +349,7 @@ class Clip(Feature):
         return xp.clip(image, min, max)
 
 
-#TODO ***??*** revise NormalizeMinMax - torch, typing, docstring, unit test
+#TODO ***??*** revise NormalizeMinMax - typing, docstring
 class NormalizeMinMax(Feature):
     """Image normalization.
 
@@ -449,13 +449,16 @@ class NormalizeMinMax(Feature):
             The normalized image.
 
         """
+
         ptp = xp.max(image) - xp.min(image)
         image = image / ptp * (max - min)
         image = image - xp.min(image) + min
+
         try:
             image[xp.isnan(image)] = 0
         except TypeError:
             pass
+
         return image
 
 
