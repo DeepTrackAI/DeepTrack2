@@ -96,7 +96,8 @@ from __future__ import annotations
 from typing import Any, Callable, TYPE_CHECKING
 
 import numpy as np
-import scipy.ndimage as ndimage
+from numpy.typing import NDArray
+from scipy import ndimage
 import skimage
 import skimage.measure
 
@@ -136,18 +137,27 @@ class Average(Feature):
     """Average of input images.
 
     This class computes the average of input images along the specified axis.
-    If `features` is not None, it instead resolves all features in the list and
-    averages the result.
+    Note that `axis=0` corresponds to the batch dimension, `axis=1` corresponds
+    to the first image dimension and so on.
+
+    If `features` is not `None`, it instead resolves all features in the list
+    and averages the result.
+
+    Calling this feature returns a `np.ndarray` by default. If
+    `store_properties` is set to `True`, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
+    internally and does not affect the return type of the `get()` method.
 
     Parameters
     ----------
-    axis: int or tuple of ints
-        Axis along which to average
-    features: list of features, optional
+    axis: int or tuple[int]
+        Axis(es) along which to average.
+    features: list[Feature] or None, optional
+        List of features to be resolved and averaged. It defaults to None.
 
     Attributes
     ----------
-    __distributed__: bool
+    __distributed__: bool = False
         Determines whether `.get(image, **kwargs)` is applied to each element
         of the input list independently (`__distributed__ = True`) or to the
         list as a whole (`__distributed__ = False`).
@@ -160,24 +170,31 @@ class Average(Feature):
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create two input images:
+    >>> import numpy as np
+    >>>
     >>> input_image1 = np.random.rand(10, 30, 20)
     >>> input_image2 = np.random.rand(10, 30, 20)
 
-    Define a simple pipeline with the average feature:
+    Define a pipeline with the average feature along the batch dimension:
+    >>> average = dt.Average(axis=0)
+    >>> output_image = average([input_image1, input_image2])
+    >>> output_image.shape
+    (10, 30, 20)
+
+    Define a pipeline with the average feature along the first image
+    dimension:
     >>> average = dt.Average(axis=1)
     >>> output_image = average([input_image1, input_image2])
-    >>> print(output_image)
+    >>> output_image.shape
     (2, 30, 20)
 
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    Define a pipeline averaging each image:
+    >>> average = dt.Average(axis=(1, 2, 3))
+    >>> output_image = average([input_image1, input_image2])
+    >>> output_image.shape
+    (2,)
 
     """
 
@@ -186,21 +203,18 @@ class Average(Feature):
 
     def __init__(
         self: Average,
-        features: list[Feature] | None = None,
         axis: PropertyLike[int] = 0,
+        features: list[Feature] | None = None,
         **kwargs: Any,
     ):
         """Initialize the parameters for averaging input features.
 
-        This constructor initializes the parameters for averaging input
-        features.
-
         Parameters
         ----------
-        features: list of Feature or None, optional
-            List of features to be resolved and averaged. Defaults to None.
         axis: int or tuple[int]
-            Axis along which to compute the average. Defaults to 0.
+            Axis along which to compute the average. It defaults to 0.
+        features: list[Feature] or None, optional
+            List of features to be resolved and averaged. It defaults to None.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -215,25 +229,25 @@ class Average(Feature):
 
     def get(
         self: Average,
-        images: ArrayLike | list[ArrayLike],
-        axis: int,
+        images: list[NDArray[Any] | torch.Tensor | Image],
+        axis: int | tuple[int],
         **kwargs: Any,
-    ) -> ArrayLike:
-        """Computes the average of input images along the specified axis.
+    ) -> NDArray[Any] | torch.Tensor | Image:
+        """Compute the average of input images along the specified axis(es).
 
         This method computes the average of the input images along the
-        specified axis.
+        specified axis(es).
 
         Parameters
         ----------
-        images: np.ndarray
+        images: array
             The input images to average.
-        axis: int
-            The axis along which to average.
+        axis: int or tuple(int)
+            The axis(es) along which to average.
 
         Returns
         -------
-        np.ndarray
+        array
             The average of the input images along the specified axis.
 
         """
