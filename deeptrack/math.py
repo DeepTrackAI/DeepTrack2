@@ -132,7 +132,7 @@ if TYPE_CHECKING:
     import torch
 
 
-#TODO ***??*** revise Average - torch, typing, docstring, unit test
+#TODO ***??*** revise Average - typing, docstring
 class Average(Feature):
     """Average of input images.
 
@@ -142,11 +142,6 @@ class Average(Feature):
 
     If `features` is not `None`, it instead resolves all features in the list
     and averages the result.
-
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
 
     Parameters
     ----------
@@ -164,7 +159,7 @@ class Average(Feature):
 
     Methods
     -------
-    `get(images: np.ndarray | Image | list[Image], axis: int, **kwargs: Any) --> np.ndarray`
+    `get(images: list[array], axis: int or tuple[int], **kwargs: Any) --> array`
         Computes the average of the input images along the specified axis.
 
     Examples
@@ -259,46 +254,41 @@ class Average(Feature):
         return result
 
 
-#TODO ***??*** revise Clip - torch, typing, docstring, unit test
+#TODO ***??*** revise Clip - typing, docstring
 class Clip(Feature):
-    """Clip the input within a minimum and a maximum value.
+    """Clip the input from a minimum to a maximum value.
 
     This class clips the input values within a specified minimum and maximum
     range.
 
     Parameters
     ----------
-    min: float
-        Clip the input to be larger than this value.
-    max: float
-        Clip the input to be smaller than this value.
+    min: float, optional
+        Clip the input to be larger than this value. It defaults to `-np.inf`.
+    max: float, optional
+        Clip the input to be smaller than this value. It defaults to `+np.inf`.
 
     Methods
     -------
-    `get(image: np.ndarray | Image, min: float, max: float, **kwargs: Any) --> np.ndarray`
-        Clips the input image within the specified minimum and maximum values.
+    `get(image: array, min: float, max: float, **kwargs: Any) --> array`
+        it clips the input image within the specified minimum and maximum
+        values.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image:
-    >>> input_image = np.array([[10, 4], [4, -10]])
+    >>> import numpy as np
+    >>>
+    >>> input_image = np.asarray([[10, 4], [4, -10]])
 
     Define a clipper feature:
     >>> clipper = dt.Clip(min=0, max=5)
     >>> output_image = clipper(input_image)
-    >>> print(output_image)
-    [[5 4]
-     [4 0]]
-
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    >>> output_image
+    array([[5, 4],
+           [4, 0]])
 
     """
 
@@ -310,14 +300,17 @@ class Clip(Feature):
     ):
         """Initialize the parameters for clipping input features.
 
-        This constructor initializes the parameters for clipping input features.
+        This constructor initializes the parameters for clipping input
+        features.
 
         Parameters
         ----------
-        min: float
-            Clip the input to be larger than this value.
-        max: float
-            Clip the input to be smaller than this value.
+        min: float, optional
+            Clip the input to be larger than this value. It defaults to
+            `-np.inf`.
+        max: float, optional
+            Clip the input to be smaller than this value. It defaults to
+            `+np.inf`.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -327,11 +320,11 @@ class Clip(Feature):
 
     def get(
         self: Clip,
-        image: ArrayLike,
-        min: float = None,
-        max: float = None,
+        image: NDArray[Any] | torch.Tensor | Image,
+        min: float,
+        max: float,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> NDArray[Any] | torch.Tensor | Image:
         """Clips the input image within the specified values.
 
         This method clips the input image within the specified minimum and
@@ -339,7 +332,7 @@ class Clip(Feature):
 
         Parameters
         ----------
-        image: np.ndarray
+        image: array
             The input image to clip.
         min: float
             Clip the input to be larger than this value.
@@ -348,7 +341,7 @@ class Clip(Feature):
 
         Returns
         -------
-        np.ndarray
+        array
             The clipped image.
 
         """
