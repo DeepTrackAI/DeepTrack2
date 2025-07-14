@@ -106,6 +106,27 @@ from deeptrack.image import Image, strip
 from deeptrack.types import ArrayLike, PropertyLike
 from deeptrack.backend import xp
 
+__all__ = [
+    "Average",
+    "Clip",
+    "NormalizeMinMax",
+    "NormalizeStandard",
+    "NormalizeQuantile",
+    "Blur",
+    "AverageBlur",
+    "GaussianBlur",
+    "MedianBlur",
+    "Pool",
+    "AveragePooling",
+    "MaxPooling",
+    "MinPooling",
+    "MedianPooling",
+    "BlurCV2",
+    "BilateralBlur",
+]
+
+
+
 if TYPE_CHECKING:
     import torch
 
@@ -160,11 +181,12 @@ class Average(Feature):
 
     """
 
-    __distributed__ = False
+    __distributed__: bool = False
+    features: list[Feature] | None
 
     def __init__(
         self: Average,
-        features: PropertyLike[list[Feature] | None] = None,
+        features: list[Feature] | None = None,
         axis: PropertyLike[int] = 0,
         **kwargs: Any,
     ):
@@ -185,6 +207,7 @@ class Average(Feature):
         """
 
         super().__init__(axis=axis, **kwargs)
+
         if features is None:
             self.features = None
         else:
@@ -214,6 +237,7 @@ class Average(Feature):
             The average of the input images along the specified axis.
 
         """
+
         if self.features is not None:
             images = [feature.resolve() for feature in self.features]
         result = xp.mean(xp.stack(images), axis=axis)
