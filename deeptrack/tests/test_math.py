@@ -25,18 +25,19 @@ class TestMath_Numpy(BackendTestBase):
 
 
     def test_Clip(self):
-        input_image = xp.asarray(np.array([[10, 4], [4, -10]]))
-        expected_output_1 = xp.asarray(np.array([[5, 4], [4, -5]]))
-        expected_output_2 = xp.asarray(np.array([[5, 6], [7, 8]]))
-
+        input_image = xp.asarray([[10, 4], [4, -10]])
         feature = math.Clip(min=-5, max=5)
         clipped_feature = feature.resolve(input_image)
-        self.assertTrue(xp.all(clipped_feature == expected_output_1))
+        self.assertTrue(
+            xp.all(clipped_feature == xp.asarray([[5, 4], [4, -5]]))
+        )
 
         input_image = xp.asarray(np.array([[5, 6], [7, 8]]))
         feature = math.Clip(min=0, max=10)
         clipped_feature = feature.resolve(input_image)
-        self.assertTrue(xp.all(clipped_feature == expected_output_2))
+        self.assertTrue(
+            xp.all(clipped_feature == xp.asarray([[5, 6], [7, 8]]))
+        )
 
 
     def test_NormalizeMinMax(self):
