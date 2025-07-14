@@ -41,17 +41,17 @@ class TestMath_Numpy(BackendTestBase):
 
 
     def test_NormalizeMinMax(self):
-        input_image = xp.asarray(np.array([[10, 4], [4, -10]]))
-        expected_output = xp.asarray(np.array([[5, 2], [2, -5]]))
-
+        input_image = xp.asarray([[10, 4], [4, -10]])
         feature = math.NormalizeMinMax(min=-5, max=5)
         normalized_image = feature.resolve(input_image)
-        self.assertTrue(xp.all(normalized_image == expected_output))
+        self.assertTrue(
+            xp.all(normalized_image == xp.asarray([[5, 2], [2, -5]]))
+        )
 
 
     def test_NormalizeStandard(self):
+        input_image = xp.asarray([[1, 2], [3, 4]], dtype=float)
         feature = math.NormalizeStandard()
-        input_image = xp.asarray(np.array([[1, 2], [3, 4]], dtype=float))
         normalized_image = feature.resolve(input_image)
         self.assertEqual(xp.mean(normalized_image), 0)
         self.assertEqual(xp.std(normalized_image), 1)
