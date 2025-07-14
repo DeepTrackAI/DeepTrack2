@@ -71,17 +71,22 @@ Applying Gaussian Apodization
 
 """
 
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT325
+
 from __future__ import annotations
+
+import math
 from typing import Any
 
 import numpy as np
-import math
 
 from deeptrack.features import Feature
 from deeptrack.types import PropertyLike
 from deeptrack.utils import as_list
 
 
+#TODO ***??*** revise Aberration - torch, docstring, unit test
 class Aberration(Feature):
     """Base class for optical aberrations.
 
@@ -151,6 +156,7 @@ class Aberration(Feature):
         return new_list
 
 
+#TODO ***??*** revise GaussianApodization - torch, docstring, unit test
 class GaussianApodization(Aberration):
     """Introduces pupil apodization.
 
@@ -295,6 +301,8 @@ class GaussianApodization(Aberration):
         pupil = pupil * np.exp(-((rho / sigma) ** 2))
         return pupil
 
+
+#TODO ***??*** revise Zernike - torch, docstring, unit test
 class Zernike(Aberration):
     """Introduces a Zernike phase aberration.
 
@@ -522,6 +530,8 @@ class Zernike(Aberration):
 
         return pupil
 
+
+#TODO ***??*** revise Piston - torch, docstring, unit test
 class Piston(Zernike):
     """Zernike polynomial with n=0, m=0.
 
@@ -582,6 +592,7 @@ class Piston(Zernike):
         super().__init__(*args, n=0, m=0, coefficient=coefficient, **kwargs)
 
 
+#TODO ***??*** revise VerticalTilt - torch, docstring, unit test
 class VerticalTilt(Zernike):
     """Zernike polynomial with n=1, m=-1.
 
@@ -639,6 +650,7 @@ class VerticalTilt(Zernike):
         super().__init__(*args, n=1, m=-1, coefficient=coefficient, **kwargs)
 
 
+#TODO ***??*** revise HorizontalTilt - torch, docstring, unit test
 class HorizontalTilt(Zernike):
     """Zernike polynomial with n=1, m=1.
 
@@ -698,7 +710,7 @@ class HorizontalTilt(Zernike):
         super().__init__(*args, n=1, m=1, coefficient=coefficient, **kwargs)
 
 
-
+#TODO ***??*** revise ObliqueAstigmatism - torch, docstring, unit test
 class ObliqueAstigmatism(Zernike):
     """Zernike polynomial with n=2, m=-2.
 
@@ -759,7 +771,7 @@ class ObliqueAstigmatism(Zernike):
         super().__init__(*args, n=2, m=-2, coefficient=coefficient, **kwargs)
 
 
-
+#TODO ***??*** revise Defocus - torch, docstring, unit test
 class Defocus(Zernike):
     """Zernike polynomial with n=2, m=0.
 
@@ -818,7 +830,7 @@ class Defocus(Zernike):
         super().__init__(*args, n=2, m=0, coefficient=coefficient, **kwargs)
 
 
-
+#TODO ***??*** revise Astigmatism - torch, docstring, unit test
 class Astigmatism(Zernike):
     """Zernike polynomial with n=2, m=2.
 
@@ -877,6 +889,7 @@ class Astigmatism(Zernike):
         super().__init__(*args, n=2, m=2, coefficient=coefficient, **kwargs)
 
 
+#TODO ***??*** revise ObliqueTrefoil - torch, docstring, unit test
 class ObliqueTrefoil(Zernike):
     """Zernike polynomial with n=3, m=-3.
 
@@ -914,6 +927,7 @@ class ObliqueTrefoil(Zernike):
         super().__init__(*args, n=3, m=-3, coefficient=coefficient, **kwargs)
 
 
+#TODO ***??*** revise VerticalComa - torch, docstring, unit test
 class VerticalComa(Zernike):
     """Zernike polynomial with n=3, m=-1.
 
@@ -935,6 +949,7 @@ class VerticalComa(Zernike):
         super().__init__(*args, n=3, m=-1, coefficient=coefficient, **kwargs)
 
 
+#TODO ***??*** revise HorizontalComa - torch, docstring, unit test
 class HorizontalComa(Zernike):
     """Zernike polynomial with n=3, m=1.
 
@@ -956,6 +971,7 @@ class HorizontalComa(Zernike):
         super().__init__(*args, n=3, m=1, coefficient=coefficient, **kwargs)
 
 
+#TODO ***??*** revise Trefoil - torch, docstring, unit test
 class Trefoil(Zernike):
     """Zernike polynomial with n=3, m=3.
 
@@ -977,6 +993,7 @@ class Trefoil(Zernike):
         super().__init__(*args, n=3, m=3, coefficient=coefficient, **kwargs)
 
 
+#TODO ***??*** revise SphericalAberration - torch, docstring, unit test
 class SphericalAberration(Zernike):
     """Zernike polynomial with n=4, m=0.
 

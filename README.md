@@ -101,31 +101,27 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 These are examples of how DeepTrack2 can be used on real datasets:
 
-- DTEx211 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx211 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx211_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx211_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Training a fully connected neural network to identify handwritten digits using MNIST dataset.
 
-- DTEx212 **Single Particle Tracking**
+- DTEx212 **[Single Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-  Tracks experimental videos of a single particle. (Requires opencv-python compiled with ffmpeg)
+  Tracks experimental videos of a single particle.
 
   <!-- GH_ONLY_START -->
   <p align="left">
     <img width="300" src=/assets/SPT-ideal.gif?raw=true>
     <img width="300" src=/assets/SPT-noisy.gif?raw=true>
     <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx202_single_particle_tracking.ipynb">
+    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb">
       <img src="https://colab.research.google.com/assets/colab-badge.svg">
     </a>
     <a href="https://doi.org/10.1364/OPTICA.6.000506" alt="DeepTrack article">
       <img src="https://img.shields.io/badge/article-10.1364/OPTICA.6.000506-blue">
     </a> 
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231B_LodeSTAR_tracking_particles_of_various_shapes.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="LodeSTAR article">
-      <img src="https://img.shields.io/badge/article-10.1038%2Fs41467--022--35004--y-blue">
+    <a href="https://doi.org/10.1063/5.0034891" alt="LodeSTAR article">
+      <img src="https://img.shields.io/badge/article-10.1063/5.0034891-blue">
     </a> 
   </p>
   <!-- GH_ONLY_END -->
@@ -133,26 +129,6 @@ These are examples of how DeepTrack2 can be used on real datasets:
 - DTEx213 **Multi-Particle tracking**
 - 
   Detecting quantum dots in a low SNR image.
-
-  <!-- GH_ONLY_START -->
-  <p align="left">
-    <img width="600" src=/assets/MPT-packed.gif?raw=true>
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx203_particle_sizing.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1063/5.0034891" alt="LodeSTAR article">
-      <img src="https://img.shields.io/badge/article-10.1063/5.0034891-blue">
-    </a> 
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="Article LodeSTAR">
-      <img src="https://img.shields.io/badge/article-10.1038%2Fs41467--022--35004--y-blue">
-    </a>
-  </p>
-  <!-- GH_ONLY_END -->
 
 - DTEx214 **Particle Feature Extraction**
 - 
@@ -173,6 +149,19 @@ These are examples of how DeepTrack2 can be used on real datasets:
 Specific examples for label-free particle tracking using **LodeSTAR**:
 
 - DTEx231A **LodeSTAR Autotracker Template**
+
+  <!-- GH_ONLY_START -->
+  <p align="left">
+    <img width="600" src=/assets/MPT-packed.gif?raw=true>
+    <br/>
+    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb">
+      <img src="https://colab.research.google.com/assets/colab-badge.svg">
+    </a>
+    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="Article LodeSTAR">
+      <img src="https://img.shields.io/badge/article-10.1038%2Fs41467--022--35004--y-blue">
+    </a>
+  </p>
+  <!-- GH_ONLY_END -->
 
 - DTEx231B **LodeSTAR Detecting Particles of Various Shapes**
 
@@ -249,7 +238,9 @@ This section provides a list of advanced topic tutorials. The primary focus of t
 
 - DTAT391B **[deeptrack.sources.folder](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT391B_sources.folder.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT391B_sources.folder.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
+<!--
 - DTAT391C **[deeptrack.sources.rng](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT391C_sources.rng.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT391C_sources.rng.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+-->
 
 - DTAT393A **[deeptrack.pytorch.data](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT393A_pytorch.features.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT393A_pytorch.features.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
