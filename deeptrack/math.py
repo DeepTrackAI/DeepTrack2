@@ -647,7 +647,7 @@ class NormalizeQuantile(Feature):
         return (image - median) / (q_high - q_low) * 2.0
 
 
-#TODO ***??*** revise Blur - torch, typing, docstring, unit test
+#TODO ***JH*** revise Blur - torch, typing, docstring, unit test
 class Blur(Feature):
     """Apply a blurring filter to an image.
 
@@ -760,7 +760,7 @@ class Blur(Feature):
         return utils.safe_call(self.filter, input=image, **kwargs)
 
 
-#TODO ***??*** revise AverageBlur - torch, typing, docstring, unit test
+#TODO ***JH*** revise AverageBlur - torch, typing, docstring, unit test
 class AverageBlur(Blur):
     """Blur an image by computing simple means over neighbourhoods.
 
@@ -937,7 +937,7 @@ class AverageBlur(Blur):
             raise NotImplementedError(f"Backend {self.backend} not supported")
 
 
-#TODO ***??*** revise GaussianBlur - torch, typing, docstring, unit test
+#TODO ***JH*** revise GaussianBlur - torch, typing, docstring, unit test
 class GaussianBlur(Blur):
     """Applies a Gaussian blur to images using Gaussian kernels.
 
@@ -999,7 +999,7 @@ class GaussianBlur(Blur):
         super().__init__(ndimage.gaussian_filter, sigma=sigma, **kwargs)
 
 
-#TODO ***??*** revise MedianBlur - torch, typing, docstring, unit test
+#TODO ***JH*** revise MedianBlur - torch, typing, docstring, unit test
 class MedianBlur(Blur):
     """Applies a median blur.
 
@@ -1069,7 +1069,7 @@ class MedianBlur(Blur):
         super().__init__(ndimage.median_filter, size=ksize, **kwargs)
 
 
-#TODO ***??*** revise Pool - torch, typing, docstring, unit test
+#TODO ***AL*** revise Pool - torch, typing, docstring, unit test
 class Pool(Feature):
     """Downsamples the image by applying a function to local regions of the
     image.
@@ -1188,7 +1188,7 @@ class Pool(Feature):
         )
 
 
-#TODO ***??*** revise AveragePooling - torch, typing, docstring, unit test
+#TODO ***AL*** revise AveragePooling - torch, typing, docstring, unit test
 class AveragePooling(Pool):
     """Apply average pooling to an image.
 
@@ -1249,7 +1249,7 @@ class AveragePooling(Pool):
         super().__init__(np.mean, ksize=ksize, **kwargs)
 
 
-#TODO ***??*** revise MaxPooling - torch, typing, docstring, unit test
+#TODO ***AL*** revise MaxPooling - torch, typing, docstring, unit test
 class MaxPooling(Pool):
     """Apply max pooling to images.
 
@@ -1313,7 +1313,7 @@ class MaxPooling(Pool):
         super().__init__(np.max, ksize=ksize, **kwargs)
 
 
-#TODO ***??*** revise MinPooling - torch, typing, docstring, unit test
+#TODO ***AL*** revise MinPooling - torch, typing, docstring, unit test
 class MinPooling(Pool):
     """Apply min pooling to images.
 
@@ -1374,7 +1374,7 @@ class MinPooling(Pool):
         super().__init__(np.min, ksize=ksize, **kwargs)
 
 
-#TODO ***??*** revise MedianPooling - torch, typing, docstring, unit test
+#TODO ***AL*** revise MedianPooling - torch, typing, docstring, unit test
 class MedianPooling(Pool):
     """Apply median pooling to images.
 
@@ -1444,7 +1444,7 @@ class MedianPooling(Pool):
         super().__init__(np.median, ksize=ksize, **kwargs)
 
 
-#TODO ***??*** revise Resize - torch, typing, docstring, unit test
+#TODO ***MG*** revise Resize - torch, typing, docstring, unit test
 class Resize(Feature):
     """Resize an image to a specified size.
 
@@ -1525,7 +1525,7 @@ if OPENCV_AVAILABLE:
     }
 
 
-#TODO ***??*** revise BlurCV2 - torch, typing, docstring, unit test
+#TODO ***JH*** revise BlurCV2 - torch, typing, docstring, unit test
 class BlurCV2(Feature):
     """Apply a blurring filter using OpenCV2.
 
@@ -1671,7 +1671,7 @@ class BlurCV2(Feature):
         return result
 
 
-#TODO ***??*** revise BilateralBlur - torch, typing, docstring, unit test
+#TODO ***JH*** revise BilateralBlur - torch, typing, docstring, unit test
 class BilateralBlur(BlurCV2):
     """Blur an image using a bilateral filter.
 
