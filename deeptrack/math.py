@@ -457,7 +457,7 @@ class NormalizeStandard(Feature):
     """Image normalization using standardization.
 
     Standardizes the input image to have zero mean and unit standard
-    deviation. Uses the **population** standard deviation (divides by N).
+    deviation. Uses the population standard deviation (divides by N).
 
     Parameters
     ----------
@@ -540,7 +540,6 @@ class NormalizeStandard(Feature):
         return (image - xp.mean(image)) / xp.std(image)
 
 
-#TODO ***GV*** revise NormalizeQuantile - torch, typing, docstring, unit test
 class NormalizeQuantile(Feature):
     """Image normalization.
 
@@ -563,24 +562,18 @@ class NormalizeQuantile(Feature):
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.array([[10, 4], [4, -10]])
 
     Define a quantile normalizer:
     >>> normalizer = dt.NormalizeQuantile(quantiles=(0.25, 0.75))
     >>> output_image = normalizer(input_image)
-    >>> print(output_image)
-    [[ 1.2  0. ]
-     [ 0.  -2.8]]
-
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    >>> output_image
+    array([[ 1.2,  0. ],
+           [ 0. , -2.8]])
 
     """
 
@@ -588,8 +581,8 @@ class NormalizeQuantile(Feature):
 
     def __init__(
         self: NormalizeQuantile,
-        quantiles: tuple[float, float] = (0.25, 0.75),
-        featurewise: bool = True,
+        quantiles: PropertyLike[tuple[float, float]] = (0.25, 0.75),
+        featurewise: PropertyLike[bool] = True,
         **kwargs: Any,
     ):
         """Initialize the parameters for quantile normalization.
@@ -598,9 +591,9 @@ class NormalizeQuantile(Feature):
 
         Parameters
         ----------
-        quantiles: tuple[float, float]
+        quantiles: tuple[float, float], optional
             Quantile range to calculate scaling factor.
-        featurewise: bool
+        featurewise: bool, optional
             Whether to normalize each feature independently.
         **kwargs: Any
             Additional keyword arguments.
@@ -634,11 +627,19 @@ class NormalizeQuantile(Feature):
 
         """
 
-        if quantiles is None:
-            # Why is this here?
-            quantiles = self.quantiles
-        q_low, q_high, median = xp.quantile(image, (*quantiles, 0.5))
-        return (image - median) / (q_high - q_low)
+        if apc.is_torch_array(image):
+            q_tensor = torch.tensor(
+                [*quantiles, 0.5],
+                device=image.device,
+                dtype=image.dtype,
+            )
+            q_low, q_high, median = torch.quantile(
+                image, q_tensor, dim=None, keepdim=False,
+            )
+        else:  # NumPy
+            q_low, q_high, median = xp.quantile(image, (*quantiles, 0.5))
+
+        return (image - median) / (q_high - q_low) * 2.0
 
 
 #TODO ***??*** revise Blur - torch, typing, docstring, unit test
