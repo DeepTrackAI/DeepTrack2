@@ -101,11 +101,14 @@ from scipy import ndimage
 import skimage
 import skimage.measure
 
-from deeptrack import utils
+from deeptrack import utils, OPENCV_AVAILABLE
 from deeptrack.features import Feature
 from deeptrack.image import Image, strip
 from deeptrack.types import ArrayLike, PropertyLike
 from deeptrack.backend import xp
+
+if OPENCV_AVAILABLE:
+    import cv2
 
 __all__ = [
     "Average",
@@ -125,7 +128,6 @@ __all__ = [
     "BlurCV2",
     "BilateralBlur",
 ]
-
 
 
 if TYPE_CHECKING:
@@ -1512,12 +1514,7 @@ class Resize(Feature):
         return utils.safe_call(cv2.resize, positional_args=[image, dsize], **kwargs)
 
 
-#TODO ***??** use instead CV2_AVAILABLE?
-try:
-    import cv2
-
-    IMPORTED_CV2 = True
-
+if OPENCV_AVAILABLE:
     _map_mode_to_cv2_borderType = {
         "reflect": cv2.BORDER_REFLECT,
         "wrap": cv2.BORDER_WRAP,
@@ -1525,8 +1522,6 @@ try:
         "mirror": cv2.BORDER_REFLECT_101,
         "nearest": cv2.BORDER_REPLICATE,
     }
-except ImportError:
-    IMPORTED_CV2 = False
 
 
 #TODO ***??*** revise BlurCV2 - torch, typing, docstring, unit test
@@ -1610,12 +1605,14 @@ class BlurCV2(Feature):
 
         """
 
-        if not IMPORTED_CV2:
+        if not OPENCV_AVAILABLE:
             raise ImportError(
-                "opencv not installed on device, it is an optional "
-                "dependency of deeptrack. To use this feature, you "
-                "need to install it manually."
+                "OpenCV not installed on device. Since OpenCV is an optional "
+                f"dependency of DeepTrack2. To use {self.__classname__}, you need "
+                "to install it manually.",
+                UserWarning,
             )
+
         return super().__new__(cls)
 
     def __init__(
@@ -1754,6 +1751,7 @@ class BilateralBlur(BlurCV2):
             Additional parameters sent to the blurring function.
 
         """
+
         super().__init__(
             cv2.bilateralFilter,
             d=d,
