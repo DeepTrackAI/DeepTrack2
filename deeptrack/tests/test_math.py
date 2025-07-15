@@ -4,12 +4,16 @@
 
 import unittest
 
+import array_api_compat as apc
 import numpy as np
 from scipy.ndimage import uniform_filter
 
 from deeptrack import math
 from deeptrack.backend import OPENCV_AVAILABLE, TORCH_AVAILABLE, xp
 from deeptrack.tests import BackendTestBase
+
+if TORCH_AVAILABLE:
+    import torch
 
 
 class TestMath_Numpy(BackendTestBase):
@@ -54,7 +58,11 @@ class TestMath_Numpy(BackendTestBase):
         feature = math.NormalizeStandard()
         normalized_image = feature.resolve(input_image)
         self.assertEqual(xp.mean(normalized_image), 0)
-        self.assertEqual(xp.std(normalized_image), 1)
+        if apc.is_torch_array(normalized_image):
+            # By default, torch.std() is unbiased, i.e., divides by N-1
+            self.assertEqual(torch.std(normalized_image, unbiased=False), 1)
+        else:
+            self.assertEqual(xp.std(normalized_image), 1)
 
 
     def test_Blur(self):
