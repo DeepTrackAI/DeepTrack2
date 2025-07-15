@@ -257,25 +257,25 @@ class Average(Feature):
         return result
 
 
-#TODO ***??*** revise Clip - typing, docstring
 class Clip(Feature):
     """Clip the input from a minimum to a maximum value.
 
-    This class clips the input values within a specified minimum and maximum
-    range.
+    This feature clips all values in the input image such that they fall within
+    the specified range [`min`, `max`].
 
     Parameters
     ----------
     min: float, optional
-        Clip the input to be larger than this value. It defaults to `-np.inf`.
+        Lower bound. Values below this will be set to `min`. It defaults to
+        `-np.inf`.
     max: float, optional
-        Clip the input to be smaller than this value. It defaults to `+np.inf`.
+        Upper bound. Values above this will be set to `max`. It defaults to
+        `+np.inf`.
 
     Methods
     -------
-    `get(image: array, min: float, max: float, **kwargs: Any) --> array`
-        it clips the input image within the specified minimum and maximum
-        values.
+    get(image: array, min: float, max: float, **kwargs: Any) -> array
+        Clips the input image between `min` and `max`.
 
     Examples
     --------
@@ -301,19 +301,14 @@ class Clip(Feature):
         max: PropertyLike[float] = +np.inf,
         **kwargs: Any,
     ):
-        """Initialize the parameters for clipping input features.
-
-        This constructor initializes the parameters for clipping input
-        features.
+        """Initialize the clipping range.
 
         Parameters
         ----------
         min: float, optional
-            Clip the input to be larger than this value. It defaults to
-            `-np.inf`.
+            Minimum allowed value. It defaults to `-np.inf`.
         max: float, optional
-            Clip the input to be smaller than this value. It defaults to
-            `+np.inf`.
+            Maximum allowed value. It defaults to `+np.inf`.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -336,11 +331,11 @@ class Clip(Feature):
         Parameters
         ----------
         image: array
-            The input image to clip.
+            Input image to clip.
         min: float
-            Clip the input to be larger than this value.
+            Minimum allowed value.
         max: float
-            Clip the input to be smaller than this value.
+            Maximum allowed value.
 
         Returns
         -------
