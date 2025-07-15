@@ -1605,12 +1605,13 @@ class BlurCV2(Feature):
 
         """
 
+        print(cls.__name__)
+
         if not OPENCV_AVAILABLE:
             raise ImportError(
                 "OpenCV not installed on device. Since OpenCV is an optional "
-                f"dependency of DeepTrack2. To use {self.__classname__}, you need "
-                "to install it manually.",
-                UserWarning,
+                f"dependency of DeepTrack2. To use {cls.__name__}, "
+                "you need to install it manually."
             )
 
         return super().__new__(cls)
