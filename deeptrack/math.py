@@ -347,51 +347,50 @@ class Clip(Feature):
         return xp.clip(image, min, max)
 
 
-#TODO ***GV*** revise NormalizeMinMax - typing, docstring
 class NormalizeMinMax(Feature):
-    """Image normalization.
+    """Image normalization using min-max scaling.
 
-    Transforms the input to be between a minimum and a maximum value using
-    a linear transformation.
+    It applies a linear transformation that maps the input to the range [`min`,
+    `max`].
+
+    It uses the global minimum and maximum of the image to perform scaling.
+    If the image has no dynamic range (`ptp = 0`), the output is set to 0.
 
     Parameters
     ----------
-    min: float
-        The minimum of the transformation.
-    max: float
-        The maximum of the transformation.
+    min: float, optional
+        Lower bound of the transformation. It defaults to 0.
+    max: float, optional
+        Upper bound of the transformation. It defaults to 1.
     featurewise: bool
-        Whether to normalize each feature independently.
+        Whether to normalize each feature independently. It default to `True`,
+        which is the only behavior currently implemented.
 
     Methods
     -------
-    `get(image: np.ndarray | Image, min: float, max: float, **kwargs: Any) --> np.ndarray`
-        Normalizes the input image to be between the specified minimum and
-        maximum values.
+    get(image: array, min: float, max: float, **kwargs: Any) -> array
+        Normalizes the image to be within the specified range.
+
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.array([[10, 4], [4, -10]])
 
     Define a min-max normalizer:
     >>> normalizer = dt.NormalizeMinMax(min=-5, max=5)
     >>> output_image = normalizer(input_image)
-    >>> print(output_image)
-    [[ 5.  2.]
-     [ 2. -5.]]
-
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    >>> output_image
+    array([[ 5.,  2.],
+           [ 2., -5.]])
 
     """
+
+    #TODO ___??___ Implement the `featurewise=False` option
 
     def __init__(
         self: NormalizeMinMax,
@@ -400,16 +399,14 @@ class NormalizeMinMax(Feature):
         featurewise: bool = True,
         **kwargs: Any,
     ):
-        """Initialize the parameters for min-max normalization.
-
-        This constructor initializes the parameters for min-max normalization.
+        """Initialize the min-max normalization parameters.
 
         Parameters
         ----------
         min: float
-            The minimum of the transformation.
+            Lower bound of the output range.
         max: float
-            The maximum of the transformation.
+            Upper bound of the output range.
         featurewise: bool
             Whether to normalize each feature independently.
         **kwargs: Any
@@ -422,29 +419,25 @@ class NormalizeMinMax(Feature):
     def get(
         self: NormalizeMinMax,
         image: ArrayLike,
-        min: float = None,
-        max: float = None,
+        min: float,
+        max: float,
         **kwargs: Any,
     ) -> ArrayLike:
-        """Normalizes the input image to be between the specified minimum and
-        maximum values.
-
-        This method normalizes the input image to be between the specified
-        minimum and maximum values.
+        """Normalize the input to fall between `min` and `max`.
 
         Parameters
         ----------
-        image: np.ndarray
-            The input image to normalize.
+        image: array
+            Input image to normalize.
         min: float
-            The minimum of the transformation.
+            Lower bound of the output range.
         max: float
-            The maximum of the transformation.
+            Upper bound of the output range.
 
         Returns
         -------
-        np.ndarray
-            The normalized image.
+        array
+            Min-max normalized image.
 
         """
 
