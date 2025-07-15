@@ -541,23 +541,24 @@ class NormalizeStandard(Feature):
 
 
 class NormalizeQuantile(Feature):
-    """Image normalization.
+    """Image normalization using quantiles.
 
-    Center the image to the median, and divide by the difference between the
-    quantiles defined by `q_max` and `q_min`.
+    Centers the image at the median and scales it such that the values at the
+    specified lower and upper quantiles are mapped to −1 and +1, respectively.
 
     Parameters
     ----------
-    quantiles: tuple (q_min, q_max), 0.0 < q_min < q_max < 1.0
-       Quantile range to calculate scaling factor
-    featurewise: bool, optional
-        Whether to normalize each feature independently. It default to `True`,
-        which is the only behavior currently implemented.
+    quantiles : tuple[float, float]
+        Quantile range used to compute the scaling factor. Must satisfy
+        0.0 < q_min < q_max < 1.0.
+    featurewise : bool, optional
+        Whether to normalize each feature independently. Defaults to `True`.
+        Currently, `True` is the only supported behavior.
 
     Methods
     -------
-    `get(image: np.ndarray | Image, quantiles: tuple[float, float], **kwargs: Any) --> np.ndarray`
-        Normalizes the input image based on the specified quantiles.
+    get(image: array, quantiles: tuple[float, float], **kwargs) -> array
+        Normalizes the input based on the given quantile range.
 
     Examples
     --------
@@ -600,29 +601,33 @@ class NormalizeQuantile(Feature):
 
         """
 
-        super().__init__(quantiles=quantiles, featurewise=featurewise, **kwargs)
+        super().__init__(
+            quantiles=quantiles,
+            featurewise=featurewise,
+            **kwargs,
+        )
 
     def get(
         self: NormalizeQuantile,
-        image: ArrayLike,
+        image: NDArray[Any] | torch.Tensor | Image,
         quantiles: tuple[float, float] = None,
         **kwargs: Any,
-    ) -> ArrayLike:
-        """Normalizes the input image based on the specified quantiles.
+    ) -> NDArray[Any] | torch.Tensor | Image:
+        """Normalize the input image based on the specified quantiles.
 
         This method normalizes the input image based on the specified
         quantiles.
 
         Parameters
         ----------
-        image: np.ndarray
+        image: array
             The input image to normalize.
         quantiles: tuple[float, float]
             Quantile range to calculate scaling factor.
 
         Returns
         -------
-        np.ndarray
+        array
             The normalized image.
 
         """
