@@ -362,7 +362,7 @@ class NormalizeMinMax(Feature):
         Lower bound of the transformation. It defaults to 0.
     max: float, optional
         Upper bound of the transformation. It defaults to 1.
-    featurewise: bool
+    featurewise: bool, optional
         Whether to normalize each feature independently. It default to `True`,
         which is the only behavior currently implemented.
 
@@ -453,49 +453,45 @@ class NormalizeMinMax(Feature):
         return image
 
 
-#TODO ***GV*** revise NormalizeStandard - torch, typing, docstring, unit test
 class NormalizeStandard(Feature):
-    """Image normalization (standardization).
+    """Image normalization using standardization.
 
-    Normalize (standardize) the image to have sigma 1 and mean 0.
+    Standardizes the input image to have zero mean and unit standard
+    deviation. Uses the **population** standard deviation (divides by N).
 
     Parameters
     ----------
-    featurewise: bool
-        Whether to normalize each feature independently
+    featurewise: bool, optional
+        Whether to normalize each feature independently. It default to `True`,
+        which is the only behavior currently implemented.
 
     Methods
     -------
-    `get(image: np.ndarray | Image, **kwargs: Any) --> np.ndarray`
-        Normalizes (standardizes) the input image to have mean 0 and standard
-        deviation 1.
+    get(image: array, **kwargs: Any) -> array
+        Standardizes the input image to mean 0 and std deviation 1.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.array([[1, 2], [3, 4]], dtype=float)
 
     >>> standardizer = dt.NormalizeStandard()
     >>> output_image = standardizer(input_image)
-    >>> print(output_image)
-    [[-1.34164079 -0.4472136]
-     [ 0.4472136   1.34164079]]
-
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    >>> output_image
+    array([[-1.34164079, -0.4472136 ],
+        [ 0.4472136 ,  1.34164079]])
 
     """
 
+    #TODO ___??___ Implement the `featurewise=False` option
+
     def __init__(
         self: NormalizeStandard,
-        featurewise: bool = True,
+        featurewise: PropertyLike[bool] = True,
         **kwargs: Any,
     ):
         """Initialize the parameters for standardization.
@@ -504,19 +500,20 @@ class NormalizeStandard(Feature):
 
         Parameters
         ----------
-        featurewise: bool
+        featurewise: bool, optional
             Whether to normalize each feature independently.
         **kwargs: Any
             Additional keyword arguments.
 
         """
+
         super().__init__(featurewise=featurewise, **kwargs)
 
     def get(
         self: NormalizeStandard,
-        image: ArrayLike,
+        image: NDArray[Any] | torch.Tensor | Image,
         **kwargs: Any,
-    ) -> ArrayLike:
+    ) -> NDArray[Any] | torch.Tensor | Image:
         """Normalizes the input image to have mean 0 and standard deviation 1.
 
         This method normalizes the input image to have mean 0 and standard
@@ -524,12 +521,12 @@ class NormalizeStandard(Feature):
 
         Parameters
         ----------
-        image: np.ndarray
+        image: array
             The input image to normalize.
 
         Returns
         -------
-        np.ndarray
+        array
             The normalized image.
 
         """
@@ -554,8 +551,9 @@ class NormalizeQuantile(Feature):
     ----------
     quantiles: tuple (q_min, q_max), 0.0 < q_min < q_max < 1.0
        Quantile range to calculate scaling factor
-    featurewise: bool
-        Whether to normalize each feature independently
+    featurewise: bool, optional
+        Whether to normalize each feature independently. It default to `True`,
+        which is the only behavior currently implemented.
 
     Methods
     -------
@@ -585,6 +583,8 @@ class NormalizeQuantile(Feature):
     internally and does not affect the return type of the `get()` method.
 
     """
+
+    #TODO ___??___ Implement the `featurewise=False` option
 
     def __init__(
         self: NormalizeQuantile,
