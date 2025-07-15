@@ -347,7 +347,7 @@ class Clip(Feature):
         return xp.clip(image, min, max)
 
 
-#TODO ***??*** revise NormalizeMinMax - typing, docstring
+#TODO ***GV*** revise NormalizeMinMax - typing, docstring
 class NormalizeMinMax(Feature):
     """Image normalization.
 
@@ -460,7 +460,7 @@ class NormalizeMinMax(Feature):
         return image
 
 
-#TODO ***??*** revise NormalizeStandard - torch, typing, docstring, unit test
+#TODO ***GV*** revise NormalizeStandard - torch, typing, docstring, unit test
 class NormalizeStandard(Feature):
     """Image normalization (standardization).
 
@@ -550,7 +550,7 @@ class NormalizeStandard(Feature):
         return (image - xp.mean(image)) / xp.std(image)
 
 
-#TODO ***??*** revise NormalizeQuantile - torch, typing, docstring, unit test
+#TODO ***GV*** revise NormalizeQuantile - torch, typing, docstring, unit test
 class NormalizeQuantile(Feature):
     """Image normalization.
 
