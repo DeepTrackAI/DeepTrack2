@@ -65,6 +65,13 @@ class TestMath_Numpy(BackendTestBase):
             self.assertEqual(xp.std(normalized_image), 1)
 
 
+    def test_NormalizeQuantile(self):
+        input_image = xp.asarray([[1, 2], [3, 100]], dtype=float)
+        feature = math.NormalizeQuantile(quantiles=(0.25, 0.75))
+        output = feature.resolve(input_image)
+        self.assertAlmostEqual(xp.quantile(output, 0.5), 0, places=5)
+
+
     def test_Blur(self):
         # TODO: check this test with torch
         pass
@@ -113,12 +120,6 @@ class TestMath(unittest.TestCase):
         feature = math.MinPooling(ksize=2)
         pooled_image = feature.resolve(input_image)
         self.assertTrue(np.all(pooled_image == [[1, 3]]))
-
-    def test_NormalizeQuantile(self):
-        input_image = np.array([[1, 2], [3, 100]], dtype=float)
-        feature = math.NormalizeQuantile(quantiles=(0.25, 0.75))
-        output = feature.resolve(input_image)
-        self.assertAlmostEqual(np.median(output), 0, places=5)
 
     def test_MedianBlur(self):
         input_image = np.random.rand(32, 32)
