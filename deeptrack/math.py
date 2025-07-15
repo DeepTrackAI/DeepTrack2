@@ -95,17 +95,21 @@ from __future__ import annotations
 
 from typing import Any, Callable, TYPE_CHECKING
 
+import array_api_compat as apc
 import numpy as np
 from numpy.typing import NDArray
 from scipy import ndimage
 import skimage
 import skimage.measure
 
-from deeptrack import utils, OPENCV_AVAILABLE
+from deeptrack import utils, OPENCV_AVAILABLE, TORCH_AVAILABLE
 from deeptrack.features import Feature
 from deeptrack.image import Image, strip
 from deeptrack.types import ArrayLike, PropertyLike
 from deeptrack.backend import xp
+
+if TORCH_AVAILABLE:
+    import torch
 
 if OPENCV_AVAILABLE:
     import cv2
@@ -544,6 +548,12 @@ class NormalizeStandard(Feature):
             The normalized image.
 
         """
+
+        if apc.is_torch_array(image):
+            # By default, torch.std() is unbiased, i.e., divides by N-1
+            return (
+                (image - torch.mean(image)) / torch.std(image, unbiased=False)
+            )
 
         return (image - xp.mean(image)) / xp.std(image)
 
