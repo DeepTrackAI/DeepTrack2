@@ -138,35 +138,32 @@ if TYPE_CHECKING:
     import torch
 
 
-#TODO ***??*** revise Average - typing, docstring
 class Average(Feature):
     """Average of input images.
 
-    This class computes the average of input images along the specified axis.
-    Note that `axis=0` corresponds to the batch dimension, `axis=1` corresponds
-    to the first image dimension and so on.
+    Computes the average of input images along the specified axis or axes.
+    By default, averaging is performed along axis 0 (the batch dimension).
 
-    If `features` is not `None`, it instead resolves all features in the list
-    and averages the result.
+    If `features` is specified, each feature in the list is first resolved,
+    and their results are averaged.
 
     Parameters
     ----------
-    axis: int or tuple[int]
-        Axis(es) along which to average.
+    axis: int or tuple[int], optional
+        Axis or axes along which to compute the average. It defaults to 0.
     features: list[Feature] or None, optional
-        List of features to be resolved and averaged. It defaults to None.
+        List of features to resolve and average. It defaults to None.
 
     Attributes
     ----------
-    __distributed__: bool = False
-        Determines whether `.get(image, **kwargs)` is applied to each element
-        of the input list independently (`__distributed__ = True`) or to the
-        list as a whole (`__distributed__ = False`).
+    __distributed__ : bool = False
+        Determines whether `.get(...)` is applied to each element
+        independently (`True`) or to the list as a whole (`False`).
 
     Methods
     -------
-    `get(images: list[array], axis: int or tuple[int], **kwargs: Any) --> array`
-        Computes the average of the input images along the specified axis.
+    get(images: list[array], axis: int or tuple[int], **kwargs: Any) -> array
+        Computes the average of the input images along the given axis.
 
     Examples
     --------
@@ -213,7 +210,7 @@ class Average(Feature):
         Parameters
         ----------
         axis: int or tuple[int]
-            Axis along which to compute the average. It defaults to 0.
+            Axis or axes along which to compute the average. It defaults to 0.
         features: list[Feature] or None, optional
             List of features to be resolved and averaged. It defaults to None.
         **kwargs: Any
@@ -244,7 +241,7 @@ class Average(Feature):
         images: array
             The input images to average.
         axis: int or tuple(int)
-            The axis(es) along which to average.
+            Axis or axes along which to average.
 
         Returns
         -------
