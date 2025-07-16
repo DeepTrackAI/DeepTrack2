@@ -156,7 +156,7 @@ from deeptrack.image import Image, pad_image_to_fft, maybe_cupy
 from deeptrack.types import ArrayLike, PropertyLike
 
 from deeptrack import image
-from . import units as u
+from deeptrack import units_registry as u
 
 
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test

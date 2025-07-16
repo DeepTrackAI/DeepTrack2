@@ -6,7 +6,7 @@ from __future__ import annotations
 from numpy import ndarray
 from pint import Quantity, Unit, Context
 
-from deeptrack import units as u  # Unit Registry
+from deeptrack import units_registry as u
 
 
 __all__ = [
