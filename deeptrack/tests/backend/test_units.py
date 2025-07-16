@@ -45,11 +45,11 @@ class TestUnits(unittest.TestCase):
         with u.context(ctx):
             self.assertAlmostEqual(
                 (1 * u.simulation_xpixel).to("meter").magnitude,
-                1e-6
+                1e-6,
             )
             self.assertAlmostEqual(
                 (1 * u.simulation_ypixel).to("meter").magnitude,
-                1e-6
+                1e-6,
             )
 
 
