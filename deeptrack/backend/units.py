@@ -3,22 +3,22 @@
 This module defines tools for handling unit conversions between optical and
 simulation domains using the Pint library. It provides access to voxel sizes,
 pixel scales, unit-aware contexts, and conversion utilities for numerical
-values including NumPy arrays and torch tensors.
+values including NumPy arrays and PyTorch tensors.
 
 Key Features
 ------------
-- **Voxel and pixel scale retrieval**
+- **Voxel and Pixel Scale Retrieval**
 
     Functions to retrieve voxel size and scaling factors between optical
     pixels and simulation pixels from the active unit registry.
 
-- **Context-based unit definition**
+- **Context-based Unit Definition**
 
     Functions to create Pint contexts that dynamically map pixel and
     simulation pixel units to metric units (meters), useful in simulations
     and training pipelines.
 
-- **Flexible quantity conversion**
+- **Flexible Quantity Conversion**
 
     A class for converting dictionaries of values to desired units,
     supporting floats, arrays, lists, and torch tensors.
@@ -61,7 +61,49 @@ Classes:
 
 Examples
 --------
-TODO
+Retrieve the active voxel size in meters:
+
+>>> from deeptrack.backend import units
+>>> units.get_active_voxel_size()
+(1e-06, 1e-06, 1e-06)
+
+Retrieve the scaling factors between simulation and optical pixels:
+
+>>> units.get_active_scale()
+(1.0, 1.0, 1.0)
+
+Create a custom unit context and use it to convert simulation pixels:
+
+>>> ctx = units.create_context(
+...     xpixel=2e-6,
+...     ypixel=1e-6,
+...     zpixel=1e-6,
+...     xscale=2,
+...     yscale=1,
+...     zscale=1,
+... )
+>>> from deeptrack import units_registry as u
+>>> with u.context(ctx):
+...     print((1 * u.simulation_xpixel).to("meter"))
+1e-06 meter
+>>> print((1 * u.simulation_ypixel).to("meter"))
+1e-06 meter
+
+Use the ConversionTable to convert physical quantities to target units:
+
+>>> conversion_table = units.ConversionTable(
+...     length=(u.meter, u.micrometer),
+...     time=(u.second, u.millisecond),
+... )
+>>> conversion_table.convert(length=1.2, time=0.5)
+{'length': 1200000.0 <Unit('micrometer')>,
+ 'time': 500.0 <Unit('millisecond')>}
+
+Support for PyTorch tensors:
+
+>>> import torch
+>>> conversion_table.convert(length=torch.tensor([1.0, 2.0]))
+{'length': <Quantity([1000000. 2000000.], 'micrometer')>}
 
 """
 
