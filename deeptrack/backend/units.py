@@ -13,6 +13,9 @@ from deeptrack import units as u  # Unit Registry
 def get_active_voxel_size() -> tuple[float, float, float]:
     """Get the size of a voxel used for simulation.
 
+    This uses the DeepTrack unit registry and converts from `sxpx`, `sypx`, 
+    and `szpx` (simulation pixel units) to meters.
+
     Returns
     -------
     tuple[float, float, float]
@@ -39,10 +42,15 @@ def get_active_voxel_size() -> tuple[float, float, float]:
 def get_active_scale() -> tuple[float, float, float]:
     """Get the active scale difference between optical and simulation units.
 
+    The scale is calculated as the ratio between `xpx` and `sxpx` units,
+    and similarly for y and z. This can be used to upscale or downscale
+    values between the simulation and optical domains.
+
     Returns
     -------
     tuple[float, float, float]
-        ... TODO ...
+        The scaling factors (x, y, z) such that:
+        optical pixel = scale × simulation pixel
 
     Examples
     --------
@@ -77,10 +85,23 @@ def create_context(
 
     Parameters
     ----------
-    xpixel, ypixel, zpixel : float
-        The size of pixels in each direction in meters
-    xscale, yscale, zscale : int
-        The upscale factor for internal simulations
+    xpixel, ypixel, zpixel : float or None, optional
+        Size of a pixel in meters along x, y, and z axes. If None, current
+        registry value is used.
+    xscale, yscale, zscale : int or None, optional
+        Upscale factors for internal simulation. If `None`, current scale is
+        used.
+
+    Returns
+    -------
+    Context
+        A pint.Context object that maps pixel and simulation pixel units
+        to their physical equivalents.
+
+    Examples
+    --------
+    TODO
+
     """
 
     current_xpixel = (1 * u.xpx).to(u.meter).magnitude
