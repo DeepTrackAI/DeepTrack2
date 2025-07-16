@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from numpy import ndarray
 from pint import Quantity, Unit, Context
 
@@ -166,40 +168,49 @@ def create_context(
 
 
 class ConversionTable:
-    """Convert a dictionary of values to the desired units.
+    """Convert a dictionary of values to desired units.
 
-    The conversions are specified in the constructor. Each key in the
-    dictionary corresponds to the name of a property. The value of the key is a
-    tuple of two units:
-    - the first unit is the default unit
-    - the second unit is the desired unit.
+    The conversions are specified in the constructor with a dictionary, which
+    is saved as `self.conversions`.
+    Each key in the dictionary corresponds to the name of a property.
+    The corresponding value is a tuple of two `Unit` objects:
+    1) the default unit;
+    2) the desired unit.
 
     To convert a dictionary of values to the desired units, the `convert()`
     method is called with the dictionary as an argument. The dictionary is
-    converted to a dictionary of quantities, and the quantities are converted
-    to the desired units. If any value is not a quantity, it is assumed to be
-    in the default unit. If a value with the same key is not in
-    `self.conversions`, it is left unchanged.
+    converted to a dictionary of quantities in the desired units.
+    If any value is not a quantity, it is assumed to be in the default unit.
+    If a key is not in `self.conversions`, the corresponding value is left
+    unchanged.
 
     Parameters
     ----------
+    **conversions: dict[str, tuple[Unit, Unit]]
+        A mapping from key names to unit pairs. Each pair defines the
+        default and target units for that quantity.
+
+    Attributes
+    ----------
     conversions: dict[str, tuple[Unit, Unit]]
-        The dictionary of conversions. Each key is the name of a property, and
-        the value is a tuple of two units. The first unit is the default unit,
-        and the second is the desired unit.
+        A mapping from key names to unit pairs. Each pair defines the
+        default and target units for that quantity.    
 
     Examples
     --------
     >>> from deeptrack.backend.units import ConversionTable
 
+    Load the unit registry:
+    >>> from deeptrack import units_registry as u
+
     Create a conversion table:
-    >>> conversions = ConversionTable(
+    >>> conversion_table = ConversionTable(
     ...     length=(u.meter, u.micrometer),
     ...     time=(u.second, u.millisecond)
     ... )
 
-    Use the conversion table:
-    >>> conversions.convert(length=1.0, time=0.5)
+    Convert dictionary values:
+    >>> conversion_table.convert(length=1.0, time=0.5)
     {'length': 1000000.0 <Unit('micrometer')>,
     'time': 500.0 <Unit('millisecond')>}
 
@@ -221,28 +232,44 @@ class ConversionTable:
 
     def convert(
         self: ConversionTable,
-        **kwargs: dict,
-    ) -> dict:
-        """
+        **kwargs: Any,
+    ) -> dict[str, Quantity | Any]:
+        """Convert keyword arguments to their target units.
+
+        Each keyword argument corresponding to a key in the conversion table is
+        converted to its desired unit using Pint. Values are assumed to be in
+        the default unit unless already specified as Pint Quantities.
+
+        Parameters
+        ----------
+        **kwargs: object
+            Keyword arguments containing values to be converted.
+
+        Returns
+        -------
+        dict[str, Quantity or Any]
+            A dictionary with converted values. Keys not in the conversion
+            table or with unsupported types are returned unchanged.
+
         """
 
-        for key, val in self.conversions.items():
-
+        for key, value in self.conversions.items():
             if key not in kwargs:
                 continue
 
             quantity = kwargs[key]
 
-            if not isinstance(quantity, (int, float, list, tuple, ndarray, Quantity)):
+            if not isinstance(
+                quantity, (int, float, list, tuple, ndarray, Quantity)
+            ):
                 continue
 
-            default_unit, desired_unit = val
+            default_unit, desired_unit = value
 
             # If not quantity, assume default
             if not isinstance(quantity, Quantity):
                 quantity = quantity * default_unit
-            quantity = quantity.to(desired_unit)
-            quantity = quantity.to_reduced_units()
-            kwargs[key] = quantity
+
+            kwargs[key] = quantity.to(desired_unit).to_reduced_units()
 
         return kwargs
