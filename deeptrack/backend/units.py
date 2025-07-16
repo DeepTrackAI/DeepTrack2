@@ -159,7 +159,18 @@ class ConversionTable:
 
     Examples
     --------
-    TODO
+    >>> from deeptrack.backend.units import ConversionTable
+
+    Create a conversion table:
+    >>> conversions = ConversionTable(
+    ...     length=(u.meter, u.micrometer),
+    ...     time=(u.second, u.millisecond)
+    ... )
+
+    Use the conversion table:
+    >>> conversions.convert(length=1.0, time=0.5)
+    {'length': 1000000.0 <Unit('micrometer')>,
+    'time': 500.0 <Unit('millisecond')>}
 
     """
 
