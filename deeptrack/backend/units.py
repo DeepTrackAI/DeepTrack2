@@ -47,11 +47,12 @@ def get_active_voxel_size() -> tuple[float, float, float]:
 
 
 def get_active_scale() -> tuple[float, float, float]:
-    """Get the active scale difference between optical and simulation units.
+    """Get the active scale between optical and simulation pixel units.
 
-    The scale is calculated as the ratio between `xpx` and `sxpx` units,
-    and similarly for y and z. This can be used to upscale or downscale
-    values between the simulation and optical domains.
+    This function computes the scaling factors along the x, y, and z axes
+    that relate optical pixel units (`xpx`, `ypx`, `zpx`) to simulation
+    pixel units (`sxpx`, `sypx`, `szpx`). The result can be used to convert
+    between the two domains.
 
     Returns
     -------
@@ -63,7 +64,7 @@ def get_active_scale() -> tuple[float, float, float]:
     --------
     >>> from deeptrack.backend.units import get_active_scale
 
-    Get the active scale difference between optical and simulation units:
+    Get the scale factors from simulation to optical domain:
     >>> get_active_scale()
     (1.0, 1.0, 1.0)
 
@@ -73,7 +74,7 @@ def get_active_scale() -> tuple[float, float, float]:
     current_yscale = (1 * u.ypx / u.sypx).to_base_units().magnitude or 1
     current_zscale = (1 * u.zpx / u.szpx).to_base_units().magnitude or 1
 
-    return (current_xscale, current_yscale, current_zscale)
+    return current_xscale, current_yscale, current_zscale
 
 
 def create_context(
