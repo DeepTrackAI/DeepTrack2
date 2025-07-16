@@ -85,29 +85,53 @@ def create_context(
     yscale: int | None = None,
     zscale: int | None = None,
 ) -> Context:
-    """Create a new context for unit conversions.
+    """Create a pint context for unit conversions between pixel and simulation units.
 
-    If a value is None, the active value is used.
-    If any (xyz)scale value is not none, they are multiplied with the active scale.
+    This function returns a context mapping pixel units (`xpixel`, `ypixel`,
+    `zpixel`) and simulation pixel units (`simulation_xpixel`, etc.) to 
+    corresponding metric units (meters). If `xpixel`, `ypixel`, or `zpixel` 
+    is not provided, the active values from the unit registry are used. 
+    Likewise, if `xscale`, `yscale`, or `zscale` is provided, it multiplies
+    the current scale to yield the new simulation scale.
 
     Parameters
     ----------
     xpixel, ypixel, zpixel : float or None, optional
-        Size of a pixel in meters along x, y, and z axes. If None, current
-        registry value is used.
+        Size of a pixel in meters along x, y, and z axes. If None, the
+        currently active values are used.
     xscale, yscale, zscale : int or None, optional
-        Upscale factors for internal simulation. If `None`, current scale is
-        used.
+        Upscaling factors for internal simulation. If None, the current
+        scaling is used.
 
     Returns
     -------
     Context
-        A pint.Context object that maps pixel and simulation pixel units
-        to their physical equivalents.
+        A `pint.Context` object that defines pixel-to-meter mappings.
 
     Examples
     --------
-    TODO
+    >>> from deeptrack.backend.units import create_context
+
+    Create a context where one optical pixel is 1 µm and the
+    y-direction is upscaled by a factor of 2 in the simulation:
+    >>> ctx = create_context(
+    ...     xpixel=1e-6,
+    ...     ypixel=1e-6,
+    ...     zpixel=1e-6,
+    ...     yscale=2,
+    ... )
+
+    Load the unit registry:
+    >>> from deeptrack import units_registry as u
+
+    Use the context to convert 1 simulation y-pixel to meters:
+    >>> with u.context(ctx):
+    ...     (1 * u.simulation_ypixel).to("meter")
+    5e-07 meter
+
+    Outside the context:
+    >>> print((1 * u.simulation_ypixel).to("meter"))
+    1e-06 meter
 
     """
 
@@ -117,9 +141,9 @@ def create_context(
 
     current_xscale, current_yscale, current_zscale = get_active_scale()
 
-    xpixel = xpixel if xpixel else current_xpixel
-    ypixel = ypixel if ypixel else current_ypixel
-    zpixel = zpixel if zpixel else current_zpixel
+    xpixel = xpixel if xpixel is not None else current_xpixel
+    ypixel = ypixel if ypixel is not None else current_ypixel
+    zpixel = zpixel if zpixel is not None else current_zpixel
 
     xscale = int(xscale * current_xscale) if xscale else int(current_xscale)
     yscale = int(yscale * current_yscale) if yscale else int(current_yscale)
@@ -127,12 +151,13 @@ def create_context(
 
     ctx = Context()
 
+    # Define optical pixel sizes
     ctx.redefine(f"pixel = {xpixel} meter")
-
     ctx.redefine(f"xpixel = {xpixel} meter")
     ctx.redefine(f"ypixel = {ypixel} meter")
     ctx.redefine(f"zpixel = {zpixel} meter")
 
+    # Define simulation pixel sizes
     ctx.redefine(f"simulation_xpixel = {xpixel / xscale} meter")
     ctx.redefine(f"simulation_ypixel = {ypixel / yscale} meter")
     ctx.redefine(f"simulation_zpixel = {zpixel / zscale} meter")
