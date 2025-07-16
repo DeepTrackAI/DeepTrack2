@@ -131,7 +131,7 @@ class ConversionTable:
 
     Parameters
     ----------
-    conversions: dict[TODO, TODO]
+    conversions: dict[str, tuple[Unit, Unit]]
         The dictionary of conversions. Each key is the name of a property, and
         the value is a tuple of two units. The first unit is the default unit,
         and the second is the desired unit.
