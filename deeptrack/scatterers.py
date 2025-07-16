@@ -367,7 +367,7 @@ class PointParticle(Scatterer):
     def __init__(
         self,
         **kwargs
-    ) -> None:
+    ):
         super().__init__(upsample=1, upsample_axes=(), **kwargs)
 
     def get(
@@ -376,8 +376,9 @@ class PointParticle(Scatterer):
         **kwarg
     ) -> ArrayLike[float]:
         """Abstract method to initialize the point scatterer"""
-        
+
         scale = get_active_scale()
+
         return np.ones((1, 1, 1)) * np.prod(scale)
 
 

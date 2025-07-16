@@ -108,26 +108,24 @@ Utility Functions:
 
 Examples
 --------
-Simulating an image with the `Brightfield` class:
-
 >>> import deeptrack as dt
 
+Simulating an image with the `Brightfield` class:
 >>> scatterer = dt.PointParticle()
 >>> optics = dt.Brightfield()
 >>> image = optics(scatterer)
->>> print(image().shape)
+>>> image().shape
 (128, 128, 1)
+
 >>> image.plot(cmap="gray")
 
 Simulating an image with the `Fluorescence` class:
-
->>> import deeptrack as dt
-
 >>> scatterer = dt.PointParticle()
 >>> optics = dt.Fluorescence()
 >>> image = optics(scatterer)
->>> print(image().shape)
+>>> image().shape
 (128, 128, 1)
+
 >>> image.plot(cmap="gray")
 
 """
@@ -157,9 +155,8 @@ from deeptrack.features import DummyFeature, Feature, StructuralFeature
 from deeptrack.image import Image, pad_image_to_fft, maybe_cupy
 from deeptrack.types import ArrayLike, PropertyLike
 
-from . import units as u
-from deeptrack.backend import config
 from deeptrack import image
+from . import units as u
 
 
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test
@@ -215,7 +212,7 @@ class Microscope(StructuralFeature):
         sample: Feature,
         objective: Feature,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initialize the `Microscope` instance.
 
         Parameters
@@ -238,6 +235,7 @@ class Microscope(StructuralFeature):
         """
 
         super().__init__(**kwargs)
+
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
         self._sample.store_properties()
@@ -382,10 +380,10 @@ class Microscope(StructuralFeature):
 
     # def _no_wrap_format_input(self, *args, **kwargs) -> list:
     #     return self._image_wrapped_format_input(*args, **kwargs)
-    
+
     # def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
     #     return self._image_wrapped_process_and_get(*args, **feature_input)
-    
+
     # def _no_wrap_process_output(self, *args, **feature_input):
     #     return self._image_wrapped_process_output(*args, **feature_input)
 
