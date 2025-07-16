@@ -8,8 +8,11 @@ from typing import Any
 from numpy import ndarray
 from pint import Quantity, Unit, Context
 
+from deeptrack import TORCH_AVAILABLE
 from deeptrack import units_registry as u
 
+if TORCH_AVAILABLE:
+    import torch
 
 __all__ = [
     "get_active_voxel_size",
@@ -220,13 +223,25 @@ class ConversionTable:
         self: ConversionTable,
         **conversions: dict[str, tuple[Unit, Unit]],
     ):
+        """Initialize the conversion table with unit mappings.
+
+        Parameters
+        ----------
+        **conversions: dict[str, tuple[Unit, Unit]]
+            Keyword arguments where each key maps to a tuple of
+            (default_unit, target_unit).
+
+        """
 
         conversions: dict[str, tuple[Unit, Unit]]
 
-        for value in conversions.values():
-            assert isinstance(value, tuple), "Each element in the conversion table needs to be a tuple of two units"
-            assert (len(value) == 2), "Each element in the conversion table needs to be a tuple of two units"
-            assert isinstance(value[0], Unit) and isinstance(value[1], Unit), "Each element in the conversion table needs to be a tuple of two units"
+        for key, value in conversions.items():
+            assert isinstance(value, tuple) and len(value) == 2, (
+                f"Conversion for '{key}' must be a tuple of two units"
+            )
+            assert isinstance(value[0], Unit) and isinstance(value[1], Unit), (
+                f"Units for '{key}' must be instances of `Unit`"
+            )
 
         self.conversions = conversions
 
@@ -239,6 +254,10 @@ class ConversionTable:
         Each keyword argument corresponding to a key in the conversion table is
         converted to its desired unit using Pint. Values are assumed to be in
         the default unit unless already specified as Pint Quantities.
+
+        Values can be scalars, NumPy arrays, lists, tuples, or torch tensors.
+        All are interpreted as being in the default unit unless already a Pint
+        Quantity.
 
         Parameters
         ----------
@@ -259,17 +278,21 @@ class ConversionTable:
 
             quantity = kwargs[key]
 
-            if not isinstance(
-                quantity, (int, float, list, tuple, ndarray, Quantity)
-            ):
+            # Skip unsupported types
+            valid_types = (int, float, list, tuple, ndarray, Quantity)
+            if TORCH_AVAILABLE:
+                valid_types += (torch.Tensor,)  # type: ignore
+
+            if not isinstance(quantity, valid_types):
                 continue
 
             default_unit, desired_unit = value
 
-            # If not quantity, assume default
+            # Convert non-quantities to quantities in default units
             if not isinstance(quantity, Quantity):
                 quantity = quantity * default_unit
 
+            # Convert to desired unit, then reduce to base units
             kwargs[key] = quantity.to(desired_unit).to_reduced_units()
 
         return kwargs
