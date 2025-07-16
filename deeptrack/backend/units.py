@@ -9,7 +9,14 @@ from pint import Quantity, Unit, Context
 from deeptrack import units as u  # Unit Registry
 
 
-#TODO ***??*** revise get_active_voxel_size - torch, docstring, unit test
+__all__ ≈ [
+    "get_active_voxel_size",
+    "get_active_scale",
+    "create_context",
+    "ConversionTable",
+]
+
+
 def get_active_voxel_size() -> tuple[float, float, float]:
     """Get the size of a voxel used for simulation.
 
@@ -38,7 +45,6 @@ def get_active_voxel_size() -> tuple[float, float, float]:
     return grid_x, grid_y, grid_z
 
 
-#TODO ***??*** revise get_active_scale - torch, docstring, unit test
 def get_active_scale() -> tuple[float, float, float]:
     """Get the active scale difference between optical and simulation units.
 
@@ -69,7 +75,6 @@ def get_active_scale() -> tuple[float, float, float]:
     return (current_xscale, current_yscale, current_zscale)
 
 
-#TODO ***??*** revise create_context - torch, docstring, unit test
 def create_context(
     xpixel: float | None = None,
     ypixel: float | None = None,
@@ -133,7 +138,6 @@ def create_context(
     return ctx
 
 
-#TODO ***??*** revise ConversionTable - torch, docstring, unit test
 class ConversionTable:
     """Convert a dictionary of values to the desired units.
 
