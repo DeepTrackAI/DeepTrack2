@@ -158,7 +158,7 @@ class ConversionTable:
 
     def convert(
         self: ConversionTable,
-        **kwargs,
+        **kwargs: dict,
     ) -> dict:
         """
         """
