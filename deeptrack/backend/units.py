@@ -61,19 +61,19 @@ Classes:
 
 Examples
 --------
-Retrieve the active voxel size in meters:
-
 >>> from deeptrack.backend import units
+
+Retrieve the active voxel size in meters:
 >>> units.get_active_voxel_size()
 (1e-06, 1e-06, 1e-06)
 
 Retrieve the scaling factors between simulation and optical pixels:
-
 >>> units.get_active_scale()
 (1.0, 1.0, 1.0)
 
 Create a custom unit context and use it to convert simulation pixels:
-
+>>> from deeptrack import units_registry as u
+>>>
 >>> ctx = units.create_context(
 ...     xpixel=2e-6,
 ...     ypixel=1e-6,
@@ -82,15 +82,14 @@ Create a custom unit context and use it to convert simulation pixels:
 ...     yscale=1,
 ...     zscale=1,
 ... )
->>> from deeptrack import units_registry as u
 >>> with u.context(ctx):
 ...     print((1 * u.simulation_xpixel).to("meter"))
 1e-06 meter
+
 >>> print((1 * u.simulation_ypixel).to("meter"))
 1e-06 meter
 
 Use the ConversionTable to convert physical quantities to target units:
-
 >>> conversion_table = units.ConversionTable(
 ...     length=(u.meter, u.micrometer),
 ...     time=(u.second, u.millisecond),
@@ -100,8 +99,8 @@ Use the ConversionTable to convert physical quantities to target units:
  'time': 500.0 <Unit('millisecond')>}
 
 Support for PyTorch tensors:
-
 >>> import torch
+>>>
 >>> conversion_table.convert(length=torch.tensor([1.0, 2.0]))
 {'length': <Quantity([1000000. 2000000.], 'micrometer')>}
 
