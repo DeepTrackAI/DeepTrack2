@@ -9,7 +9,7 @@ from pint import Quantity, Unit, Context
 from deeptrack import units as u  # Unit Registry
 
 
-__all__ ≈ [
+__all__ = [
     "get_active_voxel_size",
     "get_active_scale",
     "create_context",
@@ -18,21 +18,22 @@ __all__ ≈ [
 
 
 def get_active_voxel_size() -> tuple[float, float, float]:
-    """Get the size of a voxel used for simulation.
+    """Get the active voxel size used for simulation, in meters.
 
-    This uses the DeepTrack unit registry and converts from `sxpx`, `sypx`, 
-    and `szpx` (simulation pixel units) to meters.
+    This function retrieves the size of one simulation voxel along the
+    x, y, and z axes by converting from simulation pixel units (`sxpx`,
+    `sypx`, and `szpx`) to meters using the DeepTrack unit registry.
 
     Returns
     -------
     tuple[float, float, float]
-        The x, y, z lengths of the active voxel used for simulation.
+        The voxel size in meters as (x, y, z).
 
     Examples
     --------
     >>> from deeptrack.backend.units import get_active_voxel_size
 
-    Get the standard voxel size:
+    Get the standard voxel size in meters:
     >>> get_active_voxel_size()
     (1e-06, 1e-06, 1e-06)
 
