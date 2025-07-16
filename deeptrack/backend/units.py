@@ -126,7 +126,7 @@ def create_context(
 
     Use the context to convert 1 simulation y-pixel to meters:
     >>> with u.context(ctx):
-    ...     (1 * u.simulation_ypixel).to("meter")
+    ...     print((1 * u.simulation_ypixel).to("meter"))
     5e-07 meter
 
     Outside the context:
