@@ -1,5 +1,69 @@
-#TODO ***??*** class docstring
-#TODO ***??*** revise DTAT399C
+"""Unit management and conversion utilities for DeepTrack.
+
+This module defines tools for handling unit conversions between optical and
+simulation domains using the Pint library. It provides access to voxel sizes,
+pixel scales, unit-aware contexts, and conversion utilities for numerical
+values including NumPy arrays and torch tensors.
+
+Key Features
+------------
+- **Voxel and pixel scale retrieval**
+
+    Functions to retrieve voxel size and scaling factors between optical
+    pixels and simulation pixels from the active unit registry.
+
+- **Context-based unit definition**
+
+    Functions to create Pint contexts that dynamically map pixel and
+    simulation pixel units to metric units (meters), useful in simulations
+    and training pipelines.
+
+- **Flexible quantity conversion**
+
+    A class for converting dictionaries of values to desired units,
+    supporting floats, arrays, lists, and torch tensors.
+
+Module Structure
+----------------
+Functions:
+
+- `get_active_voxel_size()`
+
+    def get_active_voxel_size() -> tuple[float, float, float]
+
+    Get the active voxel size in meters along the x, y, and z axes.
+
+- `get_active_scale()`
+
+    def get_active_scale() -> tuple[float, float, float]
+
+    Get the scaling factors between simulation and optical pixels.
+
+- `create_context(xpixel, ypixel, zpixel, xscale, yscale, zscale)`
+
+    def create_context(
+        xpixel: float | None = None,
+        ypixel: float | None = None,
+        zpixel: float | None = None,
+        xscale: int | None = None,
+        yscale: int | None = None,
+        zscale: int | None = None,
+    ) -> Context
+
+    Create a unit context that defines how pixels map to meters.
+
+Classes:
+
+- `ConversionTable`: Convert dictionary values to target units.
+
+    Utility class for converting numerical values (e.g., scalars, arrays)
+    to specified target units using a user-defined conversion mapping.
+
+Examples
+--------
+TODO
+
+"""
 
 from __future__ import annotations
 
