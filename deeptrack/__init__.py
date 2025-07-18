@@ -1,5 +1,4 @@
 # flake8: noqa
-import lazy_import
 from typing import TYPE_CHECKING
 
 from pint import UnitRegistry
@@ -46,20 +45,16 @@ from deeptrack.holography import *
 from deeptrack.image import strip
 
 
-# if not HAS_TORCH:
-pytorch = lazy_import.lazy_module("deeptrack.pytorch")
-deeplay = lazy_import.lazy_module("deeptrack.deeplay")
+if TORCH_AVAILABLE:
+    import deeptrack.pytorch
+
+if DEEPLAY_AVAILABLE:
+    import deeptrack.deeplay
 
 
 if TYPE_CHECKING:
-    from . import generators
-    from . import models
-    from . import datasets
-    from . import losses
-    from . import layers
-    from . import visualization
-    from . import pytorch
-    from . import deeplay
+    from deeptrack import pytorch
+    from deeptrack import deeplay
 
 from deeptrack import tests
 
