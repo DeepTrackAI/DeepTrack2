@@ -70,7 +70,7 @@ import numpy as np
 import scipy.signal
 
 
-#TODO ***??*** revise Aberration - torch, docstring, unit test
+#TODO ***??*** revise radialcenter - torch, docstring, unit test
 def radialcenter(
     I,
     invert_xy=False,
@@ -101,7 +101,7 @@ def radialcenter(
         Note that y increases with increasing row number (i.e. "downward")
 
     """
-  
+
     I = np.squeeze(I)
     Ny, Nx = I.shape[:2]
 
