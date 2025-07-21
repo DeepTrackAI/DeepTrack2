@@ -20,8 +20,8 @@ from deeptrack import (
     properties,
     scatterers,
     TORCH_AVAILABLE,
-    units,
 )
+from deeptrack import units_registry as u
 
 if TORCH_AVAILABLE:
     import torch
@@ -2029,7 +2029,7 @@ class TestFeatures(unittest.TestCase):
         )
 
         positions_no_unit = [1, 2]
-        positions_with_unit = [1 * units.px, 2 * units.px]
+        positions_with_unit = [1 * u.px, 2 * u.px]
 
         positions_no_unit_iter = iter(positions_no_unit)
         positions_with_unit_iter = iter(positions_with_unit)
@@ -2251,53 +2251,53 @@ class TestFeatures(unittest.TestCase):
 
         # Two spheres at the same position.
         volume_test0_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * u.px, position=(0, 0, 0) * u.px
         )()
         volume_test0_b = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * u.px, position=(0, 0, 0) * u.px
         )()
 
         # Two spheres of the same size, one under the other.
         volume_test1_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * u.px, position=(0, 0, 0) * u.px
         )()
         volume_test1_b = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 10) * units.px
+            radius=5 * u.px, position=(0, 0, 10) * u.px
         )()
 
         # Two spheres of the same size, one under the other, but with a
         # spacing of 1.
         volume_test2_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * u.px, position=(0, 0, 0) * u.px
         )()
         volume_test2_b = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 11) * units.px
+            radius=5 * u.px, position=(0, 0, 11) * u.px
         )()
 
         # Two spheres of the same size, one under the other, but with a
         # spacing of -1.
         volume_test3_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * u.px, position=(0, 0, 0) * u.px
         )()
         volume_test3_b = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 9) * units.px
+            radius=5 * u.px, position=(0, 0, 9) * u.px
         )()
 
         # Two spheres of the same size, diagonally next to each other.
         volume_test4_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * u.px, position=(0, 0, 0) * u.px
         )()
         volume_test4_b = scatterers.Sphere(
-            radius=5 * units.px, position=(6, 6, 6) * units.px
+            radius=5 * u.px, position=(6, 6, 6) * u.px
         )()
 
         # Two spheres of the same size, diagonally next to each other, but
         # with a spacing of 1.
         volume_test5_a = scatterers.Sphere(
-            radius=5 * units.px, position=(0, 0, 0) * units.px
+            radius=5 * u.px, position=(0, 0, 0) * u.px
         )()
         volume_test5_b = scatterers.Sphere(
-            radius=5 * units.px, position=(7, 7, 7) * units.px
+            radius=5 * u.px, position=(7, 7, 7) * u.px
         )()
 
         # Run tests.
@@ -2342,8 +2342,8 @@ class TestFeatures(unittest.TestCase):
         min_distance = 7  # Minimum distance in pixels
         radius = 10
         scatterer = scatterers.Ellipse(
-            radius=radius * units.pixels,
-            position=lambda: np.random.uniform(5, 115, size=2) * units.pixels,
+            radius=radius * u.pixels,
+            position=lambda: np.random.uniform(5, 115, size=2) * u.pixels,
         )
         random_scatterers = scatterer ^ 6
         fluo_optics = optics.Fluorescence()
