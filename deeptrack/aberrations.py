@@ -77,13 +77,40 @@ Applying Gaussian Apodization
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
+from numpy.typing import NDArray
 
+from deeptrack.backend import TORCH_AVAILABLE
 from deeptrack.features import Feature
+from deeptrack.image import Image
 from deeptrack.types import PropertyLike
 from deeptrack.utils import as_list
+
+if TORCH_AVAILABLE:
+    import torch
+
+__all__ = [
+    "Aberration",
+    "GaussianApodization",
+    "Zernike",
+    "Piston",
+    "VerticalTilt",
+    "HorizontalTilt",
+    "ObliqueAstigmatism",
+    "Defocus",
+    "Astigmatism",
+    "ObliqueTrefoil",
+    "VerticalComa",
+    "HorizontalComa",
+    "Trefoil",
+    "SphericalAberration",
+]
+
+
+if TYPE_CHECKING:
+    import torch
 
 
 #TODO ***??*** revise Aberration - torch, docstring, unit test
@@ -114,13 +141,14 @@ class Aberration(Feature):
         superclass method for further processing.
 
     """
+
     __distributed__: bool = True
 
     def _process_and_get(
-        self: Feature,
-        image_list: list[np.ndarray],
-        **kwargs: dict[str, np.ndarray]
-    ) -> list[np.ndarray]:
+        self: Aberration,
+        image_list: list[NDArray[Any] | torch.Tensor | Image],
+        **kwargs: Any,
+    ) -> list[NDArray[Any] | torch.Tensor | Image]:
         """Computes pupil coordinates.
         
         Computes pupil coordinates (rho and theta) for each input image and 
@@ -151,8 +179,12 @@ class Aberration(Feature):
             theta = np.arctan2(Y, X)
 
             new_list += super()._process_and_get(
-                [image], rho=rho, theta=theta, **kwargs
+                [image],
+                rho=rho,
+                theta=theta,
+                **kwargs,
             )
+
         return new_list
 
 
@@ -222,12 +254,12 @@ class GaussianApodization(Aberration):
         super().__init__(sigma=sigma, offset=offset, **kwargs)
 
     def get(
-        self: GaussianApodization, 
-        pupil: np.ndarray, 
-        offset: tuple[float, float], 
-        sigma: float, 
-        rho: np.ndarray, 
-        **kwargs: dict[str, Any]
+        self: GaussianApodization,
+        pupil: np.ndarray,
+        offset: tuple[float, float],
+        sigma: float,
+        rho: np.ndarray,
+        **kwargs: Any,
     ) -> np.ndarray:
         """Applies Gaussian apodization to the input pupil function.
 
@@ -299,6 +331,7 @@ class GaussianApodization(Aberration):
             rho[rho > 1] = np.inf
 
         pupil = pupil * np.exp(-((rho / sigma) ** 2))
+
         return pupil
 
 
