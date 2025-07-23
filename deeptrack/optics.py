@@ -1392,7 +1392,7 @@ class Brightfield(Optics):
 
         pupil_step = np.fft.fftshift(pupils[0])
 
-        light_in = image.maybe_cupy(np.ones(volume.shape[:2], dtype=complex))
+        light_in = np.ones(volume.shape[:2], dtype=complex)
         light_in = self.illumination.resolve(light_in)
         light_in = np.fft.fft2(light_in)
 
