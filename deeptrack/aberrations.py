@@ -158,7 +158,7 @@ class Aberration(Feature):
         ----------
         image_list: list[np.ndarray]
             A list of 2D input images to be processed.
-        **kwargs: dict[str, np.ndarray]
+        **kwargs: Any
             Additional parameters to be passed to the superclass's 
             `_process_and_get` method.
 
@@ -209,7 +209,7 @@ class GaussianApodization(Aberration):
 
     Methods
     -------
-    `get(pupil: np.ndarray, offset: tuple[float, float], sigma: float, rho: np.ndarray, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(pupil: np.ndarray, offset: tuple[float, float], sigma: float, rho: np.ndarray, **kwargs: Any) -> np.ndarray`
         Applies Gaussian apodization to the input pupil function.
 
     Examples
@@ -231,7 +231,7 @@ class GaussianApodization(Aberration):
         self: GaussianApodization,
         sigma: PropertyLike[float] = 1,
         offset: PropertyLike[tuple[int, int]] = (0, 0),
-        **kwargs: dict[str, Any]
+        **kwargs: Any,
     ) -> None:
         """Initializes the GaussianApodization class.
  
@@ -369,7 +369,7 @@ class Zernike(Aberration):
 
     Methods
     -------
-    `get(pupil: np.ndarray, rho: np.ndarray, theta: np.ndarray, n: int | list[int], m: int | list[int], coefficient: float | list[float], **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(pupil: np.ndarray, rho: np.ndarray, theta: np.ndarray, n: int | list[int], m: int | list[int], coefficient: float | list[float], **kwargs: str) -> np.ndarray`
         Applies the Zernike phase aberration to the input pupil function.
     
     Notes
@@ -402,7 +402,7 @@ class Zernike(Aberration):
         n: PropertyLike[int | list[int]],
         m: PropertyLike[int | list[int]],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any]
+        **kwargs: str,
     ) -> None:
         """ Initializes the Zernike class. 
         
