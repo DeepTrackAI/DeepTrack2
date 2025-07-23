@@ -174,7 +174,7 @@ from deeptrack.backend.units import (
 )
 from deeptrack.backend import mie
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
-from deeptrack.image import pad_image_to_fft, maybe_cupy, Image
+from deeptrack.image import pad_image_to_fft, Image
 from deeptrack.types import ArrayLike
 from deeptrack import units_registry as u
 
@@ -997,8 +997,6 @@ class MieScatterer(Scatterer):
         """Computes the coordinates of the plane in polar form."""
 
         X, Y = self.get_XY(shape, voxel_size)
-        X = maybe_cupy(X)
-        Y = maybe_cupy(Y)
 
         # The X, Y coordinates of the pupil relative to the particle.
         X = X + plane_position[0]
@@ -1048,7 +1046,6 @@ class MieScatterer(Scatterer):
         xSize, ySize = self.get_xy_size(output_region, padding)
         voxel_size = get_active_voxel_size()
         arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
-        arr = maybe_cupy(arr)
         position = np.array(position) * voxel_size[: len(position)]
 
         pupil_physical_size = working_distance * np.tan(collection_angle) * 2
@@ -1170,7 +1167,6 @@ class MieScatterer(Scatterer):
             ]
             mask = np.exp(-0.5 * (x ** 2 + y ** 2) / ((sigma) ** 2))
 
-            mask = maybe_cupy(mask)
             arr = arr * mask
 
         fourier_field = np.fft.fft2(arr)
