@@ -33,7 +33,7 @@ class TestAberrations(unittest.TestCase):
             im = aberrated_particle.resolve(z=z)
             self.assertIsInstance(im, np.ndarray)
             self.assertEqual(im.shape, (64, 48, 1))
-        
+
         aberrated_particle.store_properties(True)
         for z in (-100, 0, 100):
             im = aberrated_particle.resolve(z=z)
