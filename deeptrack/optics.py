@@ -152,7 +152,7 @@ from deeptrack.backend.units import (
 from deeptrack.math import AveragePooling
 from deeptrack.features import propagate_data_to_dependencies
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
-from deeptrack.image import Image, pad_image_to_fft, maybe_cupy
+from deeptrack.image import Image, pad_image_to_fft
 from deeptrack.types import ArrayLike, PropertyLike
 
 from deeptrack import image
@@ -756,8 +756,6 @@ class Optics(Feature):
         y = (np.linspace(-(shape[1] / 2), shape[1] / 2 - 1, shape[1])) / y_radius + 1e-8
 
         W, H = np.meshgrid(y, x)
-        W = maybe_cupy(W)
-        H = maybe_cupy(H)
         RHO = (W ** 2 + H ** 2).astype(complex)
         pupil_function = Image((RHO < 1) + 0.0j, copy=False)
         # Defocus
@@ -1121,7 +1119,7 @@ class Fluorescence(Optics):
         z_limits = limits[2, :]
 
         output_image = Image(
-            maybe_cupy(np.zeros((*padded_volume.shape[0:2], 1))), copy=False
+            np.zeros((*padded_volume.shape[0:2], 1)), copy=False
         )
 
         index_iterator = range(padded_volume.shape[2])
@@ -1137,7 +1135,7 @@ class Fluorescence(Optics):
         z_values = z_iterator[~zero_plane]
 
         # Further pad image to speed up fft (multiples of 2 and 3)
-        volume = maybe_cupy(pad_image_to_fft(padded_volume, axes=(0, 1)))
+        volume = pad_image_to_fft(padded_volume, axes=(0, 1))
         pupils = self._pupil(volume.shape[:2], defocus=z_values, **kwargs)
 
         z_index = 0
@@ -1355,9 +1353,9 @@ class Brightfield(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(image.maybe_cupy(
+        output_image = Image(
             np.zeros((*padded_volume.shape[0:2], 1))
-            ))
+        )
 
         index_iterator = range(padded_volume.shape[2])
         z_iterator = np.linspace(
