@@ -65,14 +65,6 @@ Methods
 
     Pads an image to optimize Fast Fourier Transform (FFT) performance.
 
-- `maybe_cupy(array)`
-
-    maybe_cupy(
-        array: np.ndarray | list | tuple,
-    ) -> cupy.ndarray | np.ndarray
-
-    Convert an array to a CuPy array if GPU is available and enabled.
-
 Examples
 --------
 Basic usage of the `Image` class:
@@ -95,15 +87,22 @@ Property tracking:
 
 """
 
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT311
+#TODO ***BM*** shall Image also support PyTorch tensors?
+
 from __future__ import annotations
+
 import operator as ops
 from typing import Any, Callable, Iterable
 
 import numpy as np
+
 from deeptrack.properties import Property
 from deeptrack.types import NumberLike
 
 
+#TODO ***??*** revise _binary_method - typing, docstring, unit test
 def _binary_method(
     op: Callable[[NumberLike, NumberLike], NumberLike],
 ) -> Callable[[Image, Image | NumberLike], Image]:
@@ -189,6 +188,7 @@ def _binary_method(
     return func
 
 
+#TODO ***??*** revise _reflected_binary_method - typing, docstring, unit test
 def _reflected_binary_method(
     op: Callable[[NumberLike, NumberLike], NumberLike],
 ) -> Callable[[Image | NumberLike, Image], Image]:
@@ -275,6 +275,7 @@ def _reflected_binary_method(
     return func
 
 
+#TODO ***??*** revise _inplace_binary_method - typing, docstring, unit test
 def _inplace_binary_method(
     op: Callable[[NumberLike, NumberLike], NumberLike],
 ) -> Callable[[Image, Image | NumberLike], Image]:
@@ -354,6 +355,7 @@ def _inplace_binary_method(
     return func
 
 
+#TODO ***??*** revise _numeric_methods - typing, docstring, unit test
 def _numeric_methods(
     op: Callable[[NumberLike, NumberLike], NumberLike],
 ) -> tuple[
@@ -428,6 +430,7 @@ def _numeric_methods(
     )
 
 
+#TODO ***??*** revise _unary_method - typing, docstring, unit test
 def _unary_method(
     op: Callable[[NumberLike], NumberLike],
 ) -> Callable[[Image], Image]:
@@ -481,6 +484,7 @@ def _unary_method(
     return func
 
 
+#TODO ***??*** revise Image - typing, docstring, unit test
 class Image:
     """Wrapper for array-like values with property tracking.
 
@@ -1004,7 +1008,7 @@ class Image:
         ufunc: np.ufunc,
         method: str,
         *inputs: tuple[Any, ...],
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> Image | tuple[Image, ...] | None:
         """Enable Image objects to use NumPy ufuncs.
 
@@ -1211,7 +1215,7 @@ class Image:
     def __array__(
         self: Image | np.ndarray,
         *args: tuple[Any, ...],
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> np.ndarray:
         """Convert the Image object to a NumPy array.
 
@@ -1571,6 +1575,7 @@ class Image:
     __invert__ = _unary_method(ops.invert)
 
 
+#TODO ***??*** revise strip - typing, docstring, unit test
 def strip(
     element: Image | np.ndarray | list | tuple | Any,
 ) -> Any:
@@ -1625,6 +1630,7 @@ def strip(
     return element
 
 
+#TODO ***??*** revise coerce - typing, docstring, unit test
 def coerce(
     images: list[Image | np.ndarray],
 ) -> list[Image]:
@@ -1688,6 +1694,7 @@ for n in range(1, 10):
 _FASTEST_SIZES = np.sort(_FASTEST_SIZES)
 
 
+#TODO ***??*** revise pad_image_to_fft - typing, docstring, unit test
 def pad_image_to_fft(
     image: Image | np.ndarray | np.ndarray,
     axes: Iterable[int] = (0, 1),
@@ -1760,54 +1767,3 @@ def pad_image_to_fft(
 
     # Pad the image using constant mode (add zeros).
     return np.pad(image, pad_width, mode="constant")
-
-
-def maybe_cupy(
-    array: np.ndarray | list | tuple,
-) -> np.ndarray:
-    """Convert an array to a CuPy array if GPU is available and enabled.
-
-    This function checks if GPU computation is enabled in the configuration.
-    If enabled, it converts the input array to a CuPy array for GPU-based
-    acceleration. Otherwise, it returns the input array unchanged.
-
-    The function relies on the `gpu_enabled` flag in the `config` module to
-    determine whether GPU acceleration should be used.
-
-    Parameters
-    ----------
-    array: np.ndarray | list | tuple
-        The input array to be potentially converted to a CuPy array.
-
-    Returns
-    -------
-    cupy.ndarray | np.ndarray
-        A CuPy array if GPU is enabled, otherwise the original array.
-
-    Raises
-    ------
-    ImportError
-        If GPU is enabled but the `cupy` library is not installed.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from deeptrack.image import maybe_cupy
-
-    If GPU is enabled:
-
-    >>> array = np.array([1, 2, 3])
-    >>> gpu_array = maybe_cupy(array)
-    >>> type(gpu_array)
-    <class cupy.ndarray>
-
-    If GPU is not enabled:
-
-    >>> array = np.array([1, 2, 3])
-    >>> numpy_array = maybe_cupy(array)
-    >>> type(numpy_array)
-    <class 'numpy.ndarray'>
-
-    """
-
-    return array

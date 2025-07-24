@@ -67,17 +67,20 @@ However, other operators can be used in this way:
 >>> correctly_summed_and_subtracted_pipline = some_feature - Sum(
 >>>  some_pipeline_of_features, axis=0
 >>> )
+
 """
 
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT385
 
-from typing import List
+from __future__ import annotations
 
 import numpy as np
 
-from deeptrack import Image
-from deeptrack import Feature
+from deeptrack import Feature, Image
 
 
+#TODO ***??*** revise Reducer - torch, typing, docstring, unit test
 class Reducer(Feature):
     """Base class of features that reduce the dimensionality of the input.
 
@@ -95,9 +98,16 @@ class Reducer(Feature):
     keepdims : bool
         Whether to keep the singleton dimensions after reducing or squeezing
         them.
+
     """
 
-    def __init__(self, function, feature=None, distributed=True, **kwargs):
+    def __init__(
+        self,
+        function,
+        feature=None,
+        distributed=True,
+        **kwargs,
+    ):
         self.function = function
 
         if feature:
@@ -105,17 +115,28 @@ class Reducer(Feature):
         else:
             super().__init__(distributed=distributed, **kwargs)
 
-    def _process_and_get(self, image_list, **feature_input) -> List[Image]:
+    def _process_and_get(
+        self,
+        image_list,
+        **feature_input,
+    ) -> list[Image]:
         self.__distributed__ = feature_input["distributed"]
         return super()._process_and_get(image_list, **feature_input)
 
-    def get(self, image, axis, keepdims=None, **kwargs):
+    def get(
+        self,
+        image,
+        axis,
+        keepdims=None,
+        **kwargs,
+    ):
         if keepdims is None:
             return self.function(image, axis=axis)
         else:
             return self.function(image, axis=axis, keepdims=keepdims)
 
 
+#TODO ***??*** revise Sum - torch, typing, docstring, unit test
 class Sum(Reducer):
     """Compute the sum along the specified axis"""
 
@@ -125,7 +146,7 @@ class Sum(Reducer):
         axis=None,
         keepdims=False,
         distributed=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             np.sum,
@@ -133,10 +154,11 @@ class Sum(Reducer):
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
 
 
+#TODO ***??*** revise Prod - torch, typing, docstring, unit test
 class Prod(Reducer):
     """Compute the product along the specified axis"""
 
@@ -146,7 +168,7 @@ class Prod(Reducer):
         axis=None,
         keepdims=False,
         distributed=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             np.prod,
@@ -154,10 +176,11 @@ class Prod(Reducer):
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
 
 
+#TODO ***??*** revise Mean - torch, typing, docstring, unit test
 class Mean(Reducer):
     """Compute the arithmetic mean along the specified axis."""
 
@@ -167,7 +190,7 @@ class Mean(Reducer):
         axis=None,
         keepdims=False,
         distributed=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             np.mean,
@@ -175,10 +198,11 @@ class Mean(Reducer):
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
 
 
+#TODO ***??*** revise Median - torch, typing, docstring, unit test
 class Median(Reducer):
     """Compute the median along the specified axis."""
 
@@ -188,7 +212,7 @@ class Median(Reducer):
         axis=None,
         keepdims=False,
         distributed=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             np.median,
@@ -196,10 +220,11 @@ class Median(Reducer):
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
 
 
+#TODO ***??*** revise Std - torch, typing, docstring, unit test
 class Std(Reducer):
     """Compute the standard deviation along the specified axis."""
 
@@ -209,7 +234,7 @@ class Std(Reducer):
         axis=None,
         keepdims=False,
         distributed=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             np.std,
@@ -217,10 +242,11 @@ class Std(Reducer):
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
 
 
+#TODO ***??*** revise Variance - torch, typing, docstring, unit test
 class Variance(Reducer):
     """Compute the variance along the specified axis."""
 
@@ -230,7 +256,7 @@ class Variance(Reducer):
         axis=None,
         keepdims=False,
         distributed=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             np.var,
@@ -238,23 +264,31 @@ class Variance(Reducer):
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
 
 
+#TODO ***??*** revise Cumsum - torch, typing, docstring, unit test
 class Cumsum(Reducer):
     """Compute the cummulative sum along the specified axis."""
 
-    def __init__(self, feature=None, axis=None, distributed=True, **kwargs):
+    def __init__(
+        self,
+        feature=None,
+        axis=None,
+        distributed=True,
+        **kwargs,
+    ):
         super().__init__(
             np.cumsum,
             feature=feature,
             axis=axis,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
 
 
+#TODO ***??*** revise Min - torch, typing, docstring, unit test
 class Min(Reducer):
     """Return the minimum of an array or minimum along an axis."""
 
@@ -264,7 +298,7 @@ class Min(Reducer):
         axis=None,
         keepdims=False,
         distributed=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             np.min,
@@ -272,10 +306,11 @@ class Min(Reducer):
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
 
 
+#TODO ***??*** revise Max - torch, typing, docstring, unit test
 class Max(Reducer):
     """Return the maximum of an array or maximum along an axis."""
 
@@ -285,7 +320,7 @@ class Max(Reducer):
         axis=None,
         keepdims=False,
         distributed=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             np.max,
@@ -293,10 +328,11 @@ class Max(Reducer):
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
 
 
+#TODO ***??*** revise PeakToPeak - torch, typing, docstring, unit test
 class PeakToPeak(Reducer):
     """Range of values (maximum - minimum) along an axis."""
 
@@ -306,7 +342,7 @@ class PeakToPeak(Reducer):
         axis=None,
         keepdims=False,
         distributed=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             np.ptp,
@@ -314,10 +350,11 @@ class PeakToPeak(Reducer):
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
 
 
+#TODO ***??*** revise Quantile - torch, typing, docstring, unit test
 class Quantile(Reducer):
     """Compute the q-th quantile of the data along the specified axis.
 
@@ -334,7 +371,7 @@ class Quantile(Reducer):
         axis=None,
         keepdims=False,
         distributed=True,
-        **kwargs
+        **kwargs,
     ):
         def quantile(image, **kwargs):
             return np.quantile(image, self.q(), **kwargs)
@@ -346,10 +383,11 @@ class Quantile(Reducer):
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
 
 
+#TODO ***??*** revise Percentile - torch, typing, docstring, unit test
 class Percentile(Reducer):
     """Compute the q-th percentile of the data along the specified axis.
 
@@ -366,7 +404,7 @@ class Percentile(Reducer):
         axis=None,
         keepdims=False,
         distributed=True,
-        **kwargs
+        **kwargs,
     ):
         def percentile(image, **kwargs):
             return np.percentile(image, self.q(), **kwargs)
@@ -378,5 +416,5 @@ class Percentile(Reducer):
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
-            **kwargs
+            **kwargs,
         )
