@@ -195,6 +195,7 @@ def hasmethod(
     False
 
     """
+
     return hasattr(obj, method_name) and callable(getattr(obj, method_name, None))
 
 
@@ -270,6 +271,7 @@ def as_list(obj: Any) -> list[Any]:
     [tensor([1, 2]), tensor([3, 4])]
 
     """
+
     if isinstance(obj, (str, bytes)):
         return [obj]
 
@@ -408,6 +410,7 @@ def kwarg_has_default(
     True
 
     """
+
     args = get_kwarg_names(function)
 
     if argument not in args:
@@ -490,6 +493,7 @@ def safe_call(
     []
 
     """
+
     if positional_args is None:
         positional_args = []
 
