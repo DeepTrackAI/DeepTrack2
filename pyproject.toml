@@ -5,6 +5,12 @@ description = "A deep learning framework to enhance microscopy, developed by Dee
 readme = "README.md"
 requires-python = ">=3.9"
 
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "deeptrack/benchmarks",
+]
+
 [[tool.uv.index]]
 name = "pytorch-cu126"
 url = "https://download.pytorch.org/whl/cu126"
