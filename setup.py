@@ -1,9 +1,9 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-with open("README-pypi.md", "r") as fh:
+with open("README-pypi.md") as fh:
     long_description = fh.read()
 
-with open("requirements.txt", "r") as fh:
+with open("requirements.txt") as fh:
     required = fh.read().splitlines()
 
 # Remove sphinx from requirements
@@ -33,6 +33,13 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    extras_requires={"tensorflow": ["tensorflow<=2.10", "tensorflow-probability", "tensorflow-datasets", "tensorflow_addons"]},
+    extras_requires={
+        "tensorflow": [
+            "tensorflow<=2.10",
+            "tensorflow-probability",
+            "tensorflow-datasets",
+            "tensorflow_addons",
+        ]
+    },
     python_requires=">=3.8",
 )
