@@ -1085,8 +1085,8 @@ class Pool(Feature):
     pooling_function: function
         A function that is applied to each local region of the image.
         DOES NOT NEED TO BE WRAPPED IN ANOTHER FUNCTION.
-        The `pooling_function` must accept the input image as a keyword argument
-        named `input`, as it is called via `utils.safe_call`.
+        The `pooling_function` must accept the input image as a keyword
+        argument named `input`, as it is called via `utils.safe_call`.
         Examples include `np.mean`, `np.max`, `np.min`, etc.
     ksize: int
         Size of the pooling kernel.
@@ -1095,7 +1095,8 @@ class Pool(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray | Image, ksize: int, **kwargs: Any) --> np.ndarray`
+    `get(image: NDArray | torch.Tensor | Image,
+         ksize: int, **kwargs: Any) --> NDArray | torch.Tensor`
         Applies the pooling function to the input image.
 
     Examples
@@ -1152,7 +1153,7 @@ class Pool(Feature):
 
     def get(
         self: Pool,
-        image: np.ndarray | Image,
+        image: NDArray | torch.Tensor | Image,
         ksize: int,
         **kwargs: Any,
     ) -> np.ndarray:
@@ -1162,7 +1163,7 @@ class Pool(Feature):
 
         Parameters
         ----------
-        image: np.ndarray
+        image: np.ndarray | torch.Tensor | Image
             The input image to pool.
         ksize: int
             Size of the pooling kernel.
@@ -1171,7 +1172,7 @@ class Pool(Feature):
 
         Returns
         -------
-        np.ndarray
+        np.ndarray | torch.Tensor
             The pooled image.
 
         """
