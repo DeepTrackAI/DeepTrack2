@@ -97,6 +97,7 @@ import operator as ops
 from typing import Any, Callable, Iterable
 
 import numpy as np
+from numpy.typing import NDArray
 
 from deeptrack.properties import Property
 from deeptrack.types import NumberLike
@@ -664,12 +665,12 @@ class Image:
 
     """
 
-    # Attributes.
-    _value: np.ndarray
+    # Attributes
+    _value: NDArray[Any]
     properties: list[dict[str, Property]]
 
     def __init__(
-        self: Image | np.ndarray,
+        self: Image,
         value: Image | np.ndarray | list | int | float | bool,
         copy: bool = True,
     ):
@@ -1538,7 +1539,7 @@ class Image:
 
         return f"Image({repr(self._value)})"
 
-    # Comparison methods.
+    # Comparison methods
     __lt__ = _binary_method(ops.lt)
     __le__ = _binary_method(ops.le)
     __eq__ = _binary_method(ops.eq)
@@ -1546,7 +1547,7 @@ class Image:
     __gt__ = _binary_method(ops.gt)
     __ge__ = _binary_method(ops.ge)
 
-    # Numeric methods.
+    # Numeric methods
     __add__, __radd__, __iadd__ = _numeric_methods(ops.add)
     __sub__, __rsub__, __isub__ = _numeric_methods(ops.sub)
     __mul__, __rmul__, __imul__ = _numeric_methods(ops.mul)
