@@ -34,23 +34,29 @@
 
 DeepTrack2 is a modular Python library for generating, manipulating, and analyzing image data pipelines for machine learning and experimental imaging.
 
-<b>TensorFlow Compatibility Notice:</b> 
+<b>TensorFlow Compatibility Notice:</b>
 DeepTrack2 version 2.0 and subsequent do not support TensorFlow. If you need TensorFlow support, please install the legacy version 1.7.
 
 The following quick start guide is intended for complete beginners to understand how to use DeepTrack2, from installation to training your first model. Let's get started!
+
+TEST
 
 # Installation
 
 DeepTrack2 2.0 requires at least python 3.9.
 
 To install DeepTrack2, open a terminal or command prompt and run:
+
 ```bash
 pip install deeptrack
 ```
+
 or
+
 ```bash
 python -m pip install deeptrack
 ```
+
 This will automatically install the required dependencies.
 
 # Getting Started
@@ -72,7 +78,7 @@ Here you find a series of notebooks that give you an overview of the core featur
 - DTGS121 **[Tracking a Point Particle with a CNN](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS121_tracking_particle_cnn.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS121_tracking_particle_cnn.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Tracking a point particle with a convolutional neural network (CNN) using simulated particles resolved through a microscope with aberrations.
-  
+
 - DTGS126 **[Characterizing Aberrations with a CNN](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS126_characterizing_aberrations_cnn.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS126_characterizing_aberrations_cnn.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Characterizing spherical aberrations of an optical device with a convolutional neural network (CNN) using simulated images in the training process.
@@ -127,12 +133,10 @@ These are examples of how DeepTrack2 can be used on real datasets:
   <!-- GH_ONLY_END -->
 
 - DTEx213 **Multi-Particle tracking**
-- 
-  Detecting quantum dots in a low SNR image.
+- Detecting quantum dots in a low SNR image.
 
 - DTEx214 **Particle Feature Extraction**
-- 
-  Extracting the radius and refractive index of particles.
+- Extracting the radius and refractive index of particles.
 
 - DTEx215 **Cell Counting**
 
@@ -170,15 +174,11 @@ Specific examples for label-free particle tracking using **LodeSTAR**:
 - DTEx231D **LodeSTAR Detecting the Cells in the BF-C2DT-HSC Dataset**
 
 - DTEx231E **LodeSTAR Detecting the Cells in the Fluo-C2DT-Huh7 Dataset**
-  
 - DTEx231F **LodeSTAR Detecting the Cells in the PhC-C2DT-PSC Dataset**
-  
 - DTEx231G **LodeSTAR Detecting Plankton**
-  
 - DTEx231H **LodeSTAR Detecting in 3D Holography**
 
 - DTEx231I **LodeSTAR Measuring the Mass of Simulated Particles**
-  
 - DTEx231J **LodeSTAR Measuring the Mass of Cells**
 
 Specific examples for graph-neural-network-based particle linking and trace characterization using **MAGIK**:
@@ -249,16 +249,11 @@ This section provides a list of advanced topic tutorials. The primary focus of t
 - DTAT395 **[deeptrack.extras.radialcenter](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT395_extras.radialcenter.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT395_extras.radialcenter.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 - DTAT399A **[deeptrack.backend.core](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399A_backend.core.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399A_backend.core.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-  
 - DTAT399B **[deeptrack.backend.pint_definition](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399B_backend.pint_definition.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399B_backend.pint_definition.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-  
 - DTAT399C **[deeptrack.backend.units](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399C_backend.units.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399C_backend.units.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-  
 - DTAT399D **[deeptrack.backend.polynomials](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399D_backend.polynomials.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399D_backend.polynomials.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-  
 - DTAT399E **[deeptrack.backend.mie](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399E_backend.mie.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399E_backend.mie.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-  
-- DTAT399F **[deeptrack.backend._config](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399F_backend._config.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399F_backend._config.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+- DTAT399F **[deeptrack.backend.\_config](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399F_backend._config.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT399F_backend._config.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 # Developer Tutorials
 
@@ -275,9 +270,11 @@ Here you find a series of notebooks tailored for DeepTrack2's developers:
 The detailed documentation of DeepTrack2 is available at the following link: [https://deeptrackai.github.io/DeepTrack2](https://deeptrackai.github.io/DeepTrack2)
 
 # Cite us!
+
 If you use DeepTrack 2.1 in your project, please cite us:
 
 <https://pubs.aip.org/aip/apr/article/8/1/011310/238663>
+
 ```
 "Quantitative Digital Microscopy with Deep Learning."
 Benjamin Midtvedt, Saga Helgadottir, Aykut Argun, Jesús Pineda, Daniel Midtvedt & Giovanni Volpe.
@@ -287,6 +284,7 @@ Applied Physics Reviews, volume 8, article number 011310 (2021).
 See also:
 
 <https://nostarch.com/deep-learning-crash-course>
+
 ```
 Deep Learning Crash Course
 Benjamin Midtvedt, Jesús Pineda, Henrik Klein Moberg, Harshith Bachimanchi, Joana B. Pereira, Carlo Manzo & Giovanni Volpe.
@@ -294,15 +292,16 @@ Benjamin Midtvedt, Jesús Pineda, Henrik Klein Moberg, Harshith Bachimanchi, Joa
 ISBN-13: 9781718503922
 ```
 
-
 <https://www.nature.com/articles/s41467-022-35004-y>
+
 ```
-"Single-shot self-supervised object detection in microscopy." 
+"Single-shot self-supervised object detection in microscopy."
 Benjamin Midtvedt, Jesús Pineda, Fredrik Skärberg, Erik Olsén, Harshith Bachimanchi, Emelie Wesén, Elin K. Esbjörner, Erik Selander, Fredrik Höök, Daniel Midtvedt & Giovanni Volpe
 Nature Communications, volume 13, article number 7492 (2022).
 ```
 
 <https://www.nature.com/articles/s42256-022-00595-0>
+
 ```
 "Geometric deep learning reveals the spatiotemporal fingerprint of microscopic motion."
 Jesús Pineda, Benjamin Midtvedt, Harshith Bachimanchi, Sergio Noé, Daniel Midtvedt, Giovanni Volpe & Carlo Manzo
@@ -310,6 +309,7 @@ Nature Machine Intelligence volume 5, pages 71–82 (2023).
 ```
 
 <https://doi.org/10.1364/OPTICA.6.000506>
+
 ```
 "Digital video microscopy enhanced by deep learning."
 Saga Helgadottir, Aykut Argun & Giovanni Volpe.
