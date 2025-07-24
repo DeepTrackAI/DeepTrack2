@@ -1595,7 +1595,7 @@ class Feature(DeepTrackNode):
 
         return feature
 
-    def  seed(
+    def seed(
         self: Feature,
         updated_seed: int | None = None,
         _ID: tuple[int, ...] = (),
