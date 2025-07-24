@@ -1,9 +1,11 @@
+from pathlib import Path
+
 from setuptools import find_packages, setup
 
-with open("README-pypi.md") as fh:
+with Path("README-pypi.md").open() as fh:
     long_description = fh.read()
 
-with open("requirements.txt") as fh:
+with Path("requirements.txt").open() as fh:
     required = fh.read().splitlines()
 
 # Remove sphinx from requirements
