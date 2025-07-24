@@ -41,7 +41,7 @@ setup(
             "tensorflow-probability",
             "tensorflow-datasets",
             "tensorflow_addons",
-        ]
+        ],
     },
     python_requires=">=3.8",
 )
