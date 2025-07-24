@@ -39,8 +39,6 @@ DeepTrack2 version 2.0 and subsequent do not support TensorFlow. If you need Ten
 
 The following quick start guide is intended for complete beginners to understand how to use DeepTrack2, from installation to training your first model. Let's get started!
 
-TEST
-
 # Installation
 
 DeepTrack2 2.0 requires at least python 3.9.
