@@ -1156,10 +1156,10 @@ class Pool(Feature):
         image: NDArray | torch.Tensor | Image,
         ksize: int,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor:
         """Applies the pooling function to the input image.
 
-        This method applies the pooling function to the input image.
+        This method applies `pooling_function` to the input image.
 
         Parameters
         ----------
