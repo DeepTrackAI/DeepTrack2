@@ -5765,10 +5765,10 @@ class Probability(StructuralFeature):
 
 
 class Repeat(StructuralFeature):
-    """Apply a feature multiple times in sequence.
+    """Apply a feature multiple times.
 
     The `Repeat` feature iteratively applies another feature, passing the 
-    output of each iteration as the input to the next. This enables chained 
+    output of each iteration as input to the next. This enables chained
     transformations, where each iteration builds upon the previous one. The 
     number of repetitions is defined by `N`.
 
@@ -5783,14 +5783,19 @@ class Repeat(StructuralFeature):
     Parameters
     ----------
     feature: Feature
-        The feature to be repeated.
+        The feature to be repeated `N` times.
     N: int
         The number of times to apply the feature in sequence.
     **kwargs: Any
 
+    Attributes
+    ----------
+    feature: Feature
+        The feature to be applied sequentially `N` times.
+
     Methods
     -------
-    `get(image: Any, N: int, _ID: tuple[int, ...], **kwargs: Any) -> Any`
+    `get(x: Any, N: int, _ID: tuple[int, ...], **kwargs: Any) -> Any`
         It applies the feature `N` times in sequence, passing the output of
         each iteration as the input to the next.
 
@@ -5799,26 +5804,28 @@ class Repeat(StructuralFeature):
     >>> import deeptrack as dt
     
     Define an `Add` feature that adds `10` to its input:
-    >>> add_ten = dt.Add(value=10)
+    >>> add_ten_feature = dt.Add(value=10)
 
     Apply this feature 3 times using `Repeat`:
-    >>> pipeline = dt.Repeat(add_ten, N=3)
+    >>> pipeline = dt.Repeat(add_ten_feature, N=3)
 
     Process an input list:
     >>> pipeline.resolve([1, 2, 3])
     [31, 32, 33]
 
     Alternative shorthand using `^` operator:
-    >>> pipeline = dt.Add(value=10) ^ 3
+    >>> pipeline = add_ten_feature ^ 3
     >>> pipeline.resolve([1, 2, 3])
     [31, 32, 33]
     
     """
 
+    feature: Feature
+
     def __init__(
         self: Repeat,
         feature: Feature,
-        N: int,
+        N: PropertyLike[int],
         **kwargs: Any,
     ):
         """Initialize the Repeat feature.
@@ -5841,12 +5848,14 @@ class Repeat(StructuralFeature):
 
         """
 
-        super().__init__(N = N, **kwargs)
+        super().__init__(N=N, **kwargs)
+
         self.feature = self.add_feature(feature)
 
     def get(
         self: Repeat,
-        image: Any,
+        x: Any,
+        *,
         N: int,
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
@@ -5863,7 +5872,7 @@ class Repeat(StructuralFeature):
   
         Parameters
         ----------
-        image: Any
+        x: Any
             The input data to be transformed by the repeated feature.
         N: int
             The number of times to sequentially apply the feature, where each 
@@ -5883,19 +5892,19 @@ class Repeat(StructuralFeature):
         """
 
         if not isinstance(N, int) or N < 0:
-            raise ValueError("N must be a non-negative integer.")
+            raise ValueError("Using Repeat, N must be a non-negative integer.")
 
         for n in range(N):
 
             index = _ID + (n,)  # Track iteration index
 
-            image = self.feature(
-                image,
+            x = self.feature(
+                x,
                 _ID=index,
                 replicate_index=index,  # Legacy property
             )
 
-        return image
+        return x
 
 
 class Combine(StructuralFeature):
