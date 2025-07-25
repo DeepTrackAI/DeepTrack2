@@ -816,11 +816,15 @@ class DeepTrackNode:
     action: Callable or Any, optional
         Action to compute this node's value. If not provided, uses a no-op 
         action (lambda: None).
-    **kwargs: dict[str, Any]
+    name: str or None, optional
+        Optional name assigned to the node. Defaults to `None`.
+    **kwargs: Any
         Additional arguments for subclasses or extended functionality.
 
     Attributes
     ----------
+    name: str or None
+        Optional name assigned to the node.
     data: DeepTrackDataDict
         Dictionary-like object for storing data, indexed by tuples of integers.
     children: WeakSet[DeepTrackNode]
@@ -910,13 +914,11 @@ class DeepTrackNode:
     >>> from deeptrack.backend.core import DeepTrackNode
 
     Create two `DeepTrackNode` objects, one as a parent and one as a child:
-
     >>> parent = DeepTrackNode(action=lambda: 10)
     >>> child = DeepTrackNode(action=lambda _ID=None: parent(_ID) * 2)
     >>> parent.add_child(child)
 
     Store and retrieve data for specific _IDs:
-
     >>> parent.store(15, _ID=(0,))
     >>> parent.store(20, _ID=(1,))
     >>> parent.current_value((0,))
@@ -1021,6 +1023,7 @@ class DeepTrackNode:
 
     """
 
+    name: str | None
     data: DeepTrackDataDict
     children: WeakSet[DeepTrackNode]
     dependencies: WeakSet[DeepTrackNode]
@@ -1067,6 +1070,7 @@ class DeepTrackNode:
     def __init__(
         self: DeepTrackNode,
         action: Callable[..., Any] | None = None,
+        name: str | None = None,
         **kwargs: Any,
     ):
         """Initialize a new DeepTrackNode.
@@ -1076,11 +1080,14 @@ class DeepTrackNode:
         action: Callable or Any, optional
             Action to compute this node's value. If not provided, uses a no-op 
             action (lambda: None).
+        name: str or None, optional
+
         **kwargs: Any
             Additional arguments for subclasses or extended functionality.
             
         """
 
+        self.name = name
         self.data = DeepTrackDataDict()
         self.children = WeakSet()
         self.dependencies = WeakSet()
@@ -1580,26 +1587,40 @@ class DeepTrackNode:
     def __repr__(self: DeepTrackNode) -> str:
         """Return a string representation of the node.
 
-        This method provides a concise textual description of the node,
-        including the type of the action it performs. It is useful for
-        debugging, logging, and displaying the structure of the computation
-        graph.
+        This method returns a concise textual description of the node for
+        debugging and introspection. The string includes:
+        
+        - The node's class name (`DeepTrackNode`)
+        - Its `name`, if provided
+        - The number of stored data entries (`len`)
+        - The name of the action function or type (`action`)
+        - The list of stored `_ID`s (excluding the root `()`), if any exist
 
         Returns
         -------
         str
             A string in the format:
-            "DeepTrackNode(action=<action_name>)", where `<action_name>` is the
-            name of the function or type used to compute the node's value.
+            "DeepTrackNode(name='<name>', len=<N>, action=<action>, IDs=[...])"
+            Fields `name=...` and `IDs=[...]` are included only if applicable.
 
         """
 
-        action_name = (
-            self._action.__name__
-            if hasattr(self._action, "__name__")
-            else type(self._action).__name__
+        action_name = getattr(
+            self._action,
+            "__name__",
+            type(self._action).__name__,
         )
-        return f"{self.__class__.__name__}(action={action_name})"
+
+        ID_list = [_ID for _ID in self.data.dict if _ID != ()]
+
+        parts = [
+            f"name='{self.name}'" if self.name else None,
+            f"len={len(self.data)}",
+            f"action={action_name}",
+            f"IDs={ID_list}" if ID_list else None,
+        ]
+
+        return f"{self.__class__.__name__}({', '.join(p for p in parts if p)})"
 
     # Node-node operators.
     # These methods define arithmetic and comparison operations for
