@@ -157,9 +157,9 @@ class DeepTrackDataObject:
 
     Attributes
     ----------
-    data: Any
+    _data: Any
         The stored data. Defaults to `None`.
-    valid: bool
+    _valid: bool
         Flag indicating whether the stored data is valid. Defaults to `False`.
 
     Methods
@@ -216,19 +216,18 @@ class DeepTrackDataObject:
 
     """
 
-    data: Any
-    valid: bool
+    _data: Any
+    _valid: bool
 
     def __init__(self: DeepTrackDataObject):
         """Initialize the container without data.
 
-        It sets the `data` and `valid` attributes to their default values
-        `None` and `False`.
+        Initializes `_data` to `None` and `_valid` to `False`.
 
         """
 
-        self.data = None
-        self.valid = False
+        self._data = None
+        self._valid = False
 
     def store(
         self: DeepTrackDataObject,
@@ -243,8 +242,8 @@ class DeepTrackDataObject:
 
         """
 
-        self.data = data
-        self.valid = True
+        self._data = data
+        self._valid = True
 
     def current_value(self: DeepTrackDataObject) -> Any:
         """Retrieve the stored data.
@@ -256,7 +255,7 @@ class DeepTrackDataObject:
 
         """
 
-        return self.data
+        return self._data
 
     def is_valid(self: DeepTrackDataObject) -> bool:
         """Return whether the stored data is valid.
@@ -268,24 +267,24 @@ class DeepTrackDataObject:
         
         """
 
-        return self.valid
+        return self._valid
 
     def invalidate(self: DeepTrackDataObject) -> None:
         """Mark the stored data as invalid."""
 
-        self.valid = False
+        self._valid = False
 
     def validate(self: DeepTrackDataObject) -> None:
         """Mark the stored data as valid."""
 
-        self.valid = True
+        self._valid = True
 
     def __repr__(self: DeepTrackDataObject) -> str:
         """Return the string representation of the object.
 
-        This method provides a concise representation of the data object,
-        including the stored data and its validity flag. It is useful for
-        debugging and logging purposes.
+        Provides a concise representation of the data object, including the
+        stored data and its validity flag. It is useful for debugging and
+        logging purposes.
 
         Returns
         -------
@@ -296,8 +295,8 @@ class DeepTrackDataObject:
         """
 
         return (
-            f"{self.__class__.__name__}(data={self.data!r}, "
-            f"valid={self.valid})"
+            f"{self.__class__.__name__}(data={self._data!r}, "
+            f"valid={self._valid})"
         )
 
 
