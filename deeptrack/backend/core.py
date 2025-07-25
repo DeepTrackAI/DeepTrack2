@@ -318,8 +318,8 @@ class DeepTrackDataDict:
     -   If an `_ID` shorter than the set key length is requested, a dictionary
         slice containing all matching entries is returned.
 
-    The `_ID`s are specifically used in the `Repeat` feature to allow it to
-    return different values without changing the input.
+    NOTE: The `_ID`s are specifically used in the `Repeat` feature to allow it
+    to return different values without changing the input.
 
     Attributes
     ----------
@@ -1019,7 +1019,6 @@ class DeepTrackNode:
 
     """
 
-    # Attributes.
     data: DeepTrackDataDict
     children: WeakSet[DeepTrackNode]
     dependencies: WeakSet[DeepTrackNode]
@@ -1347,7 +1346,6 @@ class DeepTrackNode:
             self.store(value, _ID=_ID)
 
         return self
-
 
     def recurse_children(
         self: DeepTrackNode,
@@ -1845,30 +1843,6 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__lt__, self, other)
 
-    def __rlt__(
-        self: DeepTrackNode,
-        other: DeepTrackNode | Any,
-    ) -> DeepTrackNode:
-        """Check if other value is less than node (right-hand).
-
-        Creates a new `DeepTrackNode` representing the comparison of another
-        node or value (`other`) being less than this node (`self`).
-
-        Parameters
-        ----------
-        other: DeepTrackNode or Any
-            The value or node to compare.
-
-        Returns
-        -------
-        DeepTrackNode
-            A new node that represents the comparison operation 
-            (`other < self`).
-        
-        """
-
-        return _create_node_with_operator(operator.__lt__, other, self)
-
     def __gt__(
         self: DeepTrackNode,
         other: DeepTrackNode | Any,
@@ -1892,30 +1866,6 @@ class DeepTrackNode:
         """
 
         return _create_node_with_operator(operator.__gt__, self, other)
-
-    def __rgt__(
-        self: DeepTrackNode,
-        other: DeepTrackNode | Any,
-    ) -> DeepTrackNode:
-        """Check if other value is greater than node (right-hand).
-
-        Creates a new `DeepTrackNode` representing the comparison of another
-        node or value (`other`) being greater than this node (`self`).
-
-        Parameters
-        ----------
-        other: DeepTrackNode or Any
-            The value or node to compare.
-
-        Returns
-        -------
-        DeepTrackNode
-            A new node that represents the comparison operation 
-            (`other > self`).
-        
-        """
-
-        return _create_node_with_operator(operator.__gt__, other, self)
 
     def __le__(
         self: DeepTrackNode,
@@ -1941,39 +1891,14 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__le__, self, other)
 
-    def __rle__(
-        self: DeepTrackNode,
-        other: DeepTrackNode | Any,
-    ) -> DeepTrackNode:
-        """Check if other value is less than or equal to node (right-hand).
-
-        Creates a new `DeepTrackNode` representing the comparison of another
-        node or value (`other`) being less than or equal to this node (`self`).
-
-        Parameters
-        ----------
-        other: DeepTrackNode or Any
-            The value or node to compare.
-
-        Returns
-        -------
-        DeepTrackNode
-            A new node that represents the comparison operation 
-            (`other <= self`).
-        
-        """
-
-        return _create_node_with_operator(operator.__le__, other, self)
-
     def __ge__(
         self: DeepTrackNode,
         other: DeepTrackNode | Any,
     ) -> DeepTrackNode:
         """Check if node is greater than or equal to another node or value.
 
-        Creates a new `DeepTrackNode` representing the comparison of this node
-        (`self`) being greater than or equal to another node or value 
-        (`other`).
+        Creates a new `DeepTrackNode` representing whether this node (`self`)
+        is greater than or equal to another node or value (`other`).
 
         Parameters
         ----------
@@ -1983,37 +1908,11 @@ class DeepTrackNode:
         Returns
         -------
         DeepTrackNode
-            A new node that represents the comparison operation 
-            (`self >= other`).
+            A new node that represents the comparison `self >= other`.
 
         """
 
         return _create_node_with_operator(operator.__ge__, self, other)
-
-    def __rge__(
-        self: DeepTrackNode,
-        other: DeepTrackNode | Any,
-    ) -> DeepTrackNode:
-        """Check if other value is greater than or equal to node (right-hand).
-
-        Creates a new `DeepTrackNode` representing the comparison of another
-        node or value (`other`) being greater than or equal to this node 
-        (`self`).
-
-        Parameters
-        ----------
-        other: DeepTrackNode or Any
-            The value or node to compare.
-
-        Returns
-        -------
-        DeepTrackNode
-            A new node that represents the comparison operation 
-            (`other >= self`).
-        
-        """
-
-        return _create_node_with_operator(operator.__ge__, other, self)
 
 
 def _equivalent(
@@ -2027,11 +1926,12 @@ def _equivalent(
     - If `a` and `b` are the same object (identity check), they are considered 
       equivalent.
     - If both `a` and `b` are empty lists, they are considered equivalent.
+
     Additional cases can be implemented as needed to refine this behavior.
 
-    For immutable built-in types like empty tuples, integers, and `None`, Python 
-    may reuse the same object in memory. Thus, `a is b` may return True even if 
-    the objects are created separately.
+    NOTE: For immutable built-in types like empty tuples, integers, and `None`,
+    Python may reuse the same object in memory. Thus, `a is b` may return
+    `True` even if the objects are created separately.
 
     Parameters
     ----------
