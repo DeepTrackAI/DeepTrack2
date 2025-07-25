@@ -816,15 +816,15 @@ class DeepTrackNode:
     action: Callable or Any, optional
         Action to compute this node's value. If not provided, uses a no-op 
         action (lambda: None).
-    name: str, optional
-        Optional name assigned to the node. Defaults to the class name.
+    node_name: str or None, optional
+        Optional name assigned to the node. Defaults to `None`.
     **kwargs: Any
         Additional arguments for subclasses or extended functionality.
 
     Attributes
     ----------
-    name: str
-        Optional name assigned to the node. Defaults to the class name.
+    node_name: str or None
+        Optional name assigned to the node. Defaults to `None`.
     data: DeepTrackDataDict
         Dictionary-like object for storing data, indexed by tuples of integers.
     children: WeakSet[DeepTrackNode]
@@ -1023,7 +1023,7 @@ class DeepTrackNode:
 
     """
 
-    name: str
+    node_name: str | None
     data: DeepTrackDataDict
     children: WeakSet[DeepTrackNode]
     dependencies: WeakSet[DeepTrackNode]
@@ -1070,6 +1070,7 @@ class DeepTrackNode:
     def __init__(
         self: DeepTrackNode,
         action: Callable[..., Any] | None = None,
+        node_name: str | None = None,
         **kwargs: Any,
     ):
         """Initialize a new DeepTrackNode.
@@ -1079,15 +1080,18 @@ class DeepTrackNode:
         action: Callable or Any, optional
             Action to compute this node's value. If not provided, uses a no-op 
             action (lambda: None).
-        name: str, optional
-            Optional name for the node. Defaults to the class name.
+        name: str or None, optional
+            Optional name for the node. Defaults to `None`.
         **kwargs: Any
             Additional arguments for subclasses or extended functionality.
             
         """
 
-        self.name = kwargs.get("name", self.__class__.__name__)
+        # Call super init in case of multiple inheritance.
+        super().__init__(**kwargs)
 
+        # Initialize attributes.
+        self.node_name = node_name
         self.data = DeepTrackDataDict()
         self.children = WeakSet()
         self.dependencies = WeakSet()
@@ -1104,9 +1108,6 @@ class DeepTrackNode:
 
         # Check if action accepts `_ID`.
         self._accepts_ID = "_ID" in get_kwarg_names(self.action)
-
-        # Call super init in case of multiple inheritance.
-        super().__init__(**kwargs)
 
         # Keep track of all children, including this node.
         self._all_children = set()
@@ -1614,8 +1615,7 @@ class DeepTrackNode:
         ID_list = [_ID for _ID in self.data.dict if _ID != tuple()]
 
         parts = [
-            f"name='{self.name}'"
-            if self.name != self.__class__.__name__ else None,
+            f"name='{self.node_name}'" if self.node_name else None,
             f"len={len(self.data)}",
             f"action={action_name}",
             f"IDs={ID_list}" if ID_list else None,
