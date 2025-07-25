@@ -895,10 +895,10 @@ class DeepTrackNode:
         //  Floor division (__floordiv__, __rfloordiv__)
 
     Comparison:
-        <   Less than (__lt__, __rlt__)
-        <=  Less than or equal (__le__, __rle__)
-        >   Greater than (__gt__, __rgt__)
-        >=  Greater than or equal (__ge__, __rge__)
+        <   Less than (__lt__, __gt__)
+        >   Greater than (__gt__, __lt__)
+        <=  Less than or equal (__le__, __ge__)
+        >=  Greater than or equal (__ge__, __le__)
 
     Each operation returns a new DeepTrackNode representing the
     result of the corresponding operation in the computation graph.
