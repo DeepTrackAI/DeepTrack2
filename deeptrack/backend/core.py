@@ -158,13 +158,13 @@ class DeepTrackDataObject:
     Attributes
     ----------
     data: Any
-        The stored data. Default is `None`.
+        The stored data. Defaults to `None`.
     valid: bool
-        A flag indicating whether the stored data is valid. Default is `False`.
+        Flag indicating whether the stored data is valid. Defaults to `False`.
 
     Methods
     -------
-    `store(data: Any) -> None`
+    `store(data) -> None`
         Store data in the container and mark it as valid.
     `current_value() -> Any`
         Return the currently stored data.
@@ -174,34 +174,32 @@ class DeepTrackDataObject:
         Mark the data as invalid.
     `validate() -> None`
         Mark the data as valid.
+    `__repr__() -> str`
+        Return the string representation of the object.
 
     Example
     -------
     >>> import deeptrack as dt
 
     Create a `DeepTrackDataObject`:
-
     >>> data_obj = dt.DeepTrackDataObject()
+    >>> data_obj
 
     Store a value in this container:
-
     >>> data_obj.store(42)
     >>> data_obj.current_value()
     42
 
     Check if the stored data is valid:
-
     >>> data_obj.is_valid()
     True
 
     Invalidate the stored data:
-
     >>> data_obj.invalidate()
     >>> data_obj.is_valid()
     False
 
-    Validate the data again to restore its valid status:
-
+    Validate the data to restore its valid status:
     >>> data_obj.validate()
     >>> data_obj.is_valid()
     True
@@ -272,79 +270,99 @@ class DeepTrackDataObject:
 
         self.valid = True
 
+    def __repr__(self: DeepTrackDataObject) -> str:
+        """Return the string representation of the object.
+
+        This method provides a concise representation of the data object,
+        including the stored data and its validity flag. It is useful for
+        debugging and logging purposes.
+
+        Returns
+        -------
+        str
+            A string in the format:
+            "DeepTrackDataObject(data=<data>, valid=<valid>)".
+
+        """
+
+        return (
+            f"{self.__class__.__name__}(data={self.data!r}, "
+            f"valid={self.valid})"
+        )
+
 
 class DeepTrackDataDict:
-    """Stores multiple data objects indexed by tuples of integers (_ID).
+    """Store multiple data objects indexed by tuples of integers (_ID).
 
     `DeepTrackDataDict` can store multiple `DeepTrackDataObject` instances, 
-    each associated with a unique tuple of integers (its _ID). This is 
-    particularly useful to handle sequences of data or nested structures.
+    each associated with a unique tuple of integers (its `_ID`).
 
-    The default _ID is an empty tuple, `()`. Once the first entry is created, 
-    all _IDs must match the established key length:
-    - If an _ID longer than the set length is requested, it is trimmed. 
-    - If an _ID shorter than the set length is requested, a dictionary slice 
-      containing all matching entries is returned.
+    **Use of _IDs**
+
+    The default `_ID` is an empty tuple, `_ID = ()`.
+
+    Once the first entry is created, all `_ID`s must match the set key length.
+
+    When retrieving the data associated to an `_ID`:
+    -   If an `_ID` longer than the set key length is requested, it is trimmed. 
+    -   If an `_ID` shorter than the set key length is requested, a dictionary
+        slice containing all matching entries is returned.
+
+    The `_ID`s are specifically used in the `Repeat` feature to allow it to
+    return different values without changing the input.
 
     Attributes
     ----------
     keylength: int or None
-        The length of the _IDs currently stored. Set when the first entry is 
-        created. If `None`, no entries have been created yet, and any _ID
-        length is valid.
+        The length of the `_ID`s set when the first entry is created.
+        If `None`, no entries have been created, and any `_ID` length is valid.
     dict: dict[tuple[int, ...], DeepTrackDataObject] or {}
-        A dictionary mapping tuples of integers (_IDs) to
+        A dictionary mapping tuples of integers (`_ID`s) to
         `DeepTrackDataObject` instances.
 
     Methods
     -------
+    `create_index(_ID) -> None`
+        Create an entry for the given `_ID` if it does not exist.
     `invalidate() -> None`
         Mark all stored data objects as invalid.
     `validate() -> None`
         Mark all stored data objects as valid.
-    `valid_index(_ID: tuple[int, ...]) -> bool`
+    `valid_index(_ID) -> bool`
         Check if the given _ID is valid for the current configuration.
-    `create_index(_ID: tuple[int, ...] = ()) -> None`
-        Create an entry for the given _ID if it does not exist.
-    `__getitem__(_ID: tuple[int, ...]) -> DeepTrackDataObject or dict[tuple[int, ...], DeepTrackDataObject]`
-        Retrieve data associated with the _ID. Can return a
-        `DeepTrackDataObject` or a dict of matching entries if `_ID` is shorter 
-        than `keylength`.
-    `__contains__(_ID: tuple[int, ...]) -> bool`
-        Check whether the given _ID exists in the dictionary.
+    `__getitem__(_ID) -> DeepTrackDataObject or dict[_ID, DeepTrackDataObject]`
+        Retrieve data associated with the `_ID`. Can return a
+        `DeepTrackDataObject` or a dict of `DeepTrackDataObject`s if `_ID` is
+        shorter than `keylength`.
+    `__contains__(_ID) -> bool`
+        Check whether the given `_ID` exists in the dictionary.
 
     Example
     -------
     >>> import deeptrack as dt
 
     Create a structure to store multiple, indexed instances of data:
-
     >>> data_dict = dt.DeepTrackDataDict()
 
-    Create the entries:
-    
+    Create the entries:    
     >>> data_dict.create_index((0, 0))
     >>> data_dict.create_index((0, 1))
     >>> data_dict.create_index((1, 0))
     >>> data_dict.create_index((1, 1))
 
-    Store the values associated with each _ID:
-
+    Store the values associated with each `_ID`:
     >>> data_dict[(0, 0)].store("Data at (0, 0)")
     >>> data_dict[(0, 1)].store("Data at (0, 1)")
     >>> data_dict[(1, 0)].store("Data at (1, 0)")
     >>> data_dict[(1, 1)].store("Data at (1, 1)")
 
-    Retrieve values based on their _IDs:
-
+    Retrieve values based on their `_ID`s:
     >>> data_dict[(0, 0)].current_value()
-    Data at (0, 0)
-
+    'Data at (0, 0)'
     >>> data_dict[(1, 1)].current_value()
-    Data at (1, 1)
+    'Data at (1, 1)'
 
-    If requesting a shorter _ID, it returns all matching nested entries:
-    
+    If requesting a shorter `_ID`, it returns all matching nested entries:
     >>> data_dict[(0,)]
     {
         (0, 0): <DeepTrackDataObject at ...>, 

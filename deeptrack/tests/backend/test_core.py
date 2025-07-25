@@ -25,23 +25,34 @@ class TestCore(unittest.TestCase):
             DeepTrackNode,
         )
 
+
     def test_DeepTrackDataObject(self):
         dataobj = core.DeepTrackDataObject()
 
-        # Test storing and validating data.
+        # Test default inititialization
+        self.assertEqual(dataobj.current_value(), None)
+        self.assertEqual(dataobj.is_valid(), False)
+
+        # Test storing and validating data
         dataobj.store(1)
         self.assertEqual(dataobj.current_value(), 1)
         self.assertEqual(dataobj.is_valid(), True)
 
-        # Test invalidating data.
+        # Test invalidating data
         dataobj.invalidate()
         self.assertEqual(dataobj.current_value(), 1)
         self.assertEqual(dataobj.is_valid(), False)
 
-        # Test validating data.
+        # Test validating data
         dataobj.validate()
         self.assertEqual(dataobj.current_value(), 1)
         self.assertEqual(dataobj.is_valid(), True)
+
+        # Test updateing data
+        dataobj.store(2)
+        self.assertEqual(dataobj.current_value(), 2)
+        self.assertEqual(dataobj.is_valid(), True)
+
 
     def test_DeepTrackDataDict(self):
         dataset = core.DeepTrackDataDict()
@@ -103,6 +114,7 @@ class TestCore(unittest.TestCase):
         for key, value in dataset.dict.items():
             self.assertIn(key, {(0,), (1,)})
             self.assertIsInstance(value, core.DeepTrackDataObject)
+
 
     def test_DeepTrackNode_basics(self):
         node = core.DeepTrackNode(action=lambda: 42)
@@ -329,6 +341,7 @@ class TestCore(unittest.TestCase):
                                     # 24
         self.assertEqual(C_0_1_2, 24)
 
+
     def test__equivalent(self):
         # Identity check (same object)
         a = [1, 2, 3]
@@ -355,6 +368,7 @@ class TestCore(unittest.TestCase):
 
         # One empty list, one non-list empty container
         self.assertFalse(core._equivalent([], ()))
+
 
     def test__create_node_with_operator(self):
         import operator
