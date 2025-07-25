@@ -119,6 +119,7 @@ False
 
 from __future__ import annotations
 
+from collections.abc import ItemsView, KeysView, ValuesView
 import operator  # Operator overloading for computation nodes.
 from weakref import WeakSet  # Manages relationships between nodes without
                              # creating circular dependencies.
@@ -326,7 +327,8 @@ class DeepTrackDataDict:
         The length of the `_ID`s set when the first entry is created.
         If `None`, no entries have been created, and any `_ID` length is valid.
     dict: dict[tuple[int, ...], DeepTrackDataObject] or {}
-        A dictionary mapping tuples of integers (`_ID`s) to
+        Read-only property exposing the internal dictionary of stored data,
+        `_dict`. This is a dictionary mapping tuples of integers (`_ID`s) to
         `DeepTrackDataObject` instances.
 
     Methods
@@ -345,6 +347,18 @@ class DeepTrackDataDict:
         shorter than `keylength`.
     `__contains__(_ID) -> bool`
         Check whether the given `_ID` exists in the dictionary.
+    `__len__() -> int`
+        Return the number of stored entries.
+    `__iter__() -> Iterator`
+        Iterate over the keys of the dictionary.
+    `items() -> ItemsView[tuple[int, ...], DeepTrackDataObject]`
+        Return a view of the dictionary’s (key, value) pairs.
+    `keys() -> KeysView[tuple[int, ...]]`
+        Return a view of the dictionary’s keys.
+    `values() -> ValuesView[DeepTrackDataObject]`
+        Return a view of the dictionary’s values.
+    `__repr__() -> str`
+        Return a string representation of the data dictionary.
 
     Example
     -------
@@ -352,84 +366,113 @@ class DeepTrackDataDict:
 
     Create a structure to store multiple, indexed instances of data:
     >>> data_dict = dt.DeepTrackDataDict()
+    >>> data_dict
+    DeepTrackDataDict(0 entries, keylength=None)
 
     Create the entries:    
     >>> data_dict.create_index((0, 0))
     >>> data_dict.create_index((0, 1))
     >>> data_dict.create_index((1, 0))
     >>> data_dict.create_index((1, 1))
+    data_dict
+    DeepTrackDataDict(4 entries, keylength=2)
 
     Store the values associated with each `_ID`:
     >>> data_dict[(0, 0)].store("Data at (0, 0)")
     >>> data_dict[(0, 1)].store("Data at (0, 1)")
     >>> data_dict[(1, 0)].store("Data at (1, 0)")
     >>> data_dict[(1, 1)].store("Data at (1, 1)")
+    >>> data_dict
+    DeepTrackDataDict(4 entries, keylength=2)
 
     Retrieve values based on their `_ID`s:
+    >>> data_dict[(0, 0)]
+    DeepTrackDataObject(data='Data at (0, 0)', valid=True)
+
     >>> data_dict[(0, 0)].current_value()
     'Data at (0, 0)'
+
+    >>> data_dict[(1, 1)]
+    DeepTrackDataObject(data='Data at (1, 1)', valid=True)
+
     >>> data_dict[(1, 1)].current_value()
     'Data at (1, 1)'
 
     If requesting a shorter `_ID`, it returns all matching nested entries:
     >>> data_dict[(0,)]
-    {
-        (0, 0): <DeepTrackDataObject at ...>, 
-        (0, 1): <DeepTrackDataObject at ...>,
-    }
-
+    {(0, 0): DeepTrackDataObject(data='Data at (0, 0)', valid=True),
+    (0, 1): DeepTrackDataObject(data='Data at (0, 1)', valid=True)}
+ 
     Validate and invalidate all entries at once:
-
     >>> data_dict.invalidate()
     >>> data_dict[(0, 0)].is_valid()
     False
+
     >>> data_dict[(1, 1)].is_valid()
     False
 
     >>> data_dict.validate()
     >>> data_dict[(0, 0)].is_valid()
     True
+
     >>> data_dict[(1, 1)].is_valid()
     True
 
     Invalidate and validate a single entry:
-
     >>> data_dict[(0, 1)].invalidate()
     >>> data_dict[(0, 1)].is_valid()
     False
+
     >>> data_dict[(0, 1)].validate()
     >>> data_dict[(0, 1)].is_valid()
     True
 
-    Check if a given _ID exists:
-
+    Check if a given `_ID` exists:
     >>> (1, 0) in data_dict
     True
+
     >>> (2, 2) in data_dict
     False
 
     Iterate over all entries:
-
-    >>> for key, value in data_dict.dict.items():
+    >>> for key, value in data_dict.items():
     ...     print(key, value.current_value())
-    (0, 0) Data at (0, 0)
-    (0, 1) Data at (0, 1)
-    (1, 0) Data at (1, 0)
-    (1, 1) Data at (1, 1)
+    (0, 0) DeepTrackDataObject(data='Data at (0, 0)', valid=True)
+    (0, 1) DeepTrackDataObject(data='Data at (0, 1)', valid=True)
+    (1, 0) DeepTrackDataObject(data='Data at (1, 0)', valid=True)
+    (1, 1) DeepTrackDataObject(data='Data at (1, 1)', valid=True)
+
+    >>> for key in data_dict.keys():
+    ...     print(key)
+    (0, 0)
+    (0, 1)
+    (1, 0)
+    (1, 1)
+
+    >>> for value in data_dict.values():
+    ...     print(value)
+    DeepTrackDataObject(data='Data at (0, 0)', valid=True)
+    DeepTrackDataObject(data='Data at (0, 1)', valid=True)
+    DeepTrackDataObject(data='Data at (1, 0)', valid=True)
+    DeepTrackDataObject(data='Data at (1, 1)', valid=True)
 
     Check if an _ID is valid according to current keylength:
-
     >>> data_dict.valid_index((0, 1))
     True
-    >>> data_dict.valid_index((0,))  # Shorter than keylength after creation
+
+    >>> data_dict.valid_index((0,))  # Shorter than keylength
     False
+
+    >>> data_dict.valid_index((0, 1, 2))  # Longer than keylength
+    False
+
     >>> data_dict.valid_index((2, 2))  # Valid length, even if not created yet
     True
 
     """
 
     keylength: int | None
-    dict: dict[tuple[int, ...], DeepTrackDataObject]
+    _dict: dict[tuple[int, ...], DeepTrackDataObject]
 
     def __init__(self: DeepTrackDataDict):
         """Initialize the data dictionary.
@@ -440,7 +483,7 @@ class DeepTrackDataDict:
         """
 
         self.keylength = None
-        self.dict = {}
+        self._dict = {}
 
     def invalidate(self: DeepTrackDataDict) -> None:
         """Mark all stored data objects as invalid.
@@ -450,7 +493,7 @@ class DeepTrackDataDict:
 
         """
 
-        for dataobject in self.dict.values():
+        for dataobject in self._dict.values():
             dataobject.invalidate()
 
     def validate(self: DeepTrackDataDict) -> None:
@@ -460,7 +503,7 @@ class DeepTrackDataDict:
 
         """
 
-        for dataobject in self.dict.values():
+        for dataobject in self._dict.values():
             dataobject.validate()
 
     def valid_index(
@@ -509,7 +552,7 @@ class DeepTrackDataDict:
             return True
 
         # If index is already stored, always valid.
-        if _ID in self.dict:
+        if _ID in self._dict:
             return True
 
         # Otherwise, the _ID length must match the established keylength
@@ -552,11 +595,11 @@ class DeepTrackDataDict:
         )
 
         # If `_ID` already exists, do nothing.
-        if _ID in self.dict:
+        if _ID in self._dict:
             return
 
         # Create a new DeepTrackDataObject for this _ID.
-        self.dict[_ID] = DeepTrackDataObject()
+        self._dict[_ID] = DeepTrackDataObject()
 
         # If `keylength` is not set, initialize it with current _IDs length.
         if self.keylength is None:
@@ -607,7 +650,7 @@ class DeepTrackDataDict:
 
         # If _ID matches keylength, return corresponding DeepTrackDataObject.
         if len(_ID) == self.keylength:
-            return self.dict[_ID]
+            return self._dict[_ID]
 
         # If _ID longer than keylength, trim the requested _ID
         # and return corresponding DeepTrackDataObject.
@@ -615,7 +658,7 @@ class DeepTrackDataDict:
             return self[_ID[: self.keylength]]
 
         # If _ID shorter than keylength, return a slice of all matching items.
-        return {k: v for k, v in self.dict.items() if k[: len(_ID)] == _ID}
+        return {k: v for k, v in self._dict.items() if k[: len(_ID)] == _ID}
 
     def __contains__(
         self: DeepTrackDataDict,
@@ -649,7 +692,105 @@ class DeepTrackDataDict:
             f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
         )
 
-        return _ID in self.dict
+        return _ID in self._dict
+
+    def __len__(self: DeepTrackDataDict) -> int:
+        """Return the number of stored entries.
+
+        Returns
+        -------
+        int
+            The number of `_ID` entries in the dictionary.
+
+        """
+
+        return len(self._dict)
+
+    def __iter__(self: DeepTrackDataDict) -> Iterator[tuple[int, ...]]:
+        """Iterate over the keys of the dictionary.
+
+        Returns
+        -------
+        Iterator[tuple[int, ...]]
+            An iterator over the dictionary's keys.
+
+        """
+
+        return iter(self._dict)
+
+    def items(
+        self: DeepTrackDataDict,
+    ) -> ItemsView[tuple[int, ...], DeepTrackDataObject]:
+        """Return a view of the dictionary’s (key, value) pairs.
+
+        Returns
+        -------
+        ItemsView[tuple[int, ...], DeepTrackDataObject]
+            A dynamic view of the internal dictionary’s entries.
+
+        """
+
+        return self._dict.items()
+
+    def keys(self: DeepTrackDataDict) -> KeysView[tuple[int, ...]]:
+        """Return a view of the dictionary’s keys.
+
+        Returns
+        -------
+        KeysView[tuple[int, ...]]
+            A dynamic view of the internal dictionary’s keys.
+
+        """
+
+        return self._dict.keys()
+
+    def values(self: DeepTrackDataDict) -> ValuesView[DeepTrackDataObject]:
+        """Return a view of the dictionary’s values.
+
+        Returns
+        -------
+        ValuesView[DeepTrackDataObject]
+            A dynamic view of the internal dictionary’s values.
+
+        """
+        return self._dict.values()
+
+    def __repr__(self: DeepTrackDataDict) -> str:
+        """Return a string representation of the data dictionary.
+
+        Provides a concise summary of the current `DeepTrackDataDict` instance,
+        including the number of stored entries and the current `keylength`. It
+        is useful for debugging and logging.
+
+        Returns
+        -------
+        str
+            A string in the format:
+            "DeepTrackDataDict(<number> entries, keylength=<keylength>)".
+
+        """
+
+        return (
+            f"{self.__class__.__name__}("
+            f"{len(self)} entries, keylength={self.keylength})"
+        )
+
+    @property
+    def dict(self: DeepTrackDataDict) -> dict[tuple[int, ...], DeepTrackDataObject]:
+        """Access the internal data dictionary (read-only).
+
+        This property exposes the internal `_dict` attribute as a public
+        read-only interface. It allows access to all stored data objects
+        indexed by their `_ID`.
+
+        Returns
+        -------
+        dict[tuple[int, ...], DeepTrackDataObject]
+            The mapping of `_ID`s to `DeepTrackDataObject` instances.
+
+        """
+
+        return self._dict
 
 
 class DeepTrackNode:
