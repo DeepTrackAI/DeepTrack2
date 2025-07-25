@@ -55,63 +55,70 @@ class TestCore(unittest.TestCase):
 
 
     def test_DeepTrackDataDict(self):
-        dataset = core.DeepTrackDataDict()
+        datadict = core.DeepTrackDataDict()
 
-        # Test initial state.
-        self.assertEqual(dataset.keylength, None)
-        self.assertFalse(dataset.dict)  # Empty dict, {}
+        # Test initial state
+        self.assertEqual(datadict.keylength, None)
+        self.assertFalse(datadict.dict)  # Empty dict, {}
 
-        # Create indices and store data.
-        dataset.create_index((0,))
-        dataset[(0,)].store({"image": [1, 2, 3], "label": 0})
+        # Create indices and store data
+        datadict.create_index((0,))
+        datadict[(0,)].store({"image": [1, 2, 3], "label": 0})
 
-        dataset.create_index((1,))
-        dataset[(1,)].store({"image": [4, 5, 6], "label": 1})
+        datadict.create_index((1,))
+        datadict[(1,)].store({"image": [4, 5, 6], "label": 1})
 
-        self.assertEqual(dataset.keylength, 1)
-        self.assertEqual(len(dataset.dict), 2)
-        self.assertIn((0,), dataset.dict)
-        self.assertIn((1,), dataset.dict)
+        self.assertEqual(datadict.keylength, 1)
+        self.assertEqual(len(datadict), 2)
 
-        # Test retrieving stored data.
-        self.assertEqual(dataset[(0,)].current_value(),
-                         {"image": [1, 2, 3], "label": 0})
-        self.assertEqual(dataset[(1,)].current_value(),
-                         {"image": [4, 5, 6], "label": 1})
+        self.assertIn((0,), datadict.dict)
+        self.assertIn((0,), datadict.keys())
+        self.assertIn((1,), datadict.dict)
+        self.assertIn((0,), datadict.keys())
 
-        # Test validation and invalidation - all.
-        self.assertTrue(dataset[(0,)].is_valid())
-        self.assertTrue(dataset[(1,)].is_valid())
+        # Test retrieving stored data
+        self.assertEqual(
+            datadict[(0,)].current_value(),
+            {"image": [1, 2, 3], "label": 0},
+        )
+        self.assertEqual(
+            datadict[(1,)].current_value(),
+            {"image": [4, 5, 6], "label": 1},
+        )
 
-        dataset.invalidate()
-        self.assertFalse(dataset[(0,)].is_valid())
-        self.assertFalse(dataset[(1,)].is_valid())
+        # Test validation and invalidation - all
+        self.assertTrue(datadict[(0,)].is_valid())
+        self.assertTrue(datadict[(1,)].is_valid())
 
-        dataset.validate()
-        self.assertTrue(dataset[(0,)].is_valid())
-        self.assertTrue(dataset[(1,)].is_valid())
+        datadict.invalidate()
+        self.assertFalse(datadict[(0,)].is_valid())
+        self.assertFalse(datadict[(1,)].is_valid())
 
-        # Test validation and invalidation - single node.
-        self.assertTrue(dataset[(0,)].is_valid())
+        datadict.validate()
+        self.assertTrue(datadict[(0,)].is_valid())
+        self.assertTrue(datadict[(1,)].is_valid())
 
-        dataset[(0,)].invalidate()
-        self.assertFalse(dataset[(0,)].is_valid())
-        self.assertTrue(dataset[(1,)].is_valid())
+        # Test validation and invalidation - single node
+        self.assertTrue(datadict[(0,)].is_valid())
 
-        dataset[(1,)].invalidate()
-        self.assertFalse(dataset[(0,)].is_valid())
-        self.assertFalse(dataset[(1,)].is_valid())
+        datadict[(0,)].invalidate()
+        self.assertFalse(datadict[(0,)].is_valid())
+        self.assertTrue(datadict[(1,)].is_valid())
 
-        dataset[(0,)].validate()
-        self.assertTrue(dataset[(0,)].is_valid())
-        self.assertFalse(dataset[(1,)].is_valid())
+        datadict[(1,)].invalidate()
+        self.assertFalse(datadict[(0,)].is_valid())
+        self.assertFalse(datadict[(1,)].is_valid())
 
-        dataset[(1,)].validate()
-        self.assertTrue(dataset[(0,)].is_valid())
-        self.assertTrue(dataset[(1,)].is_valid())
+        datadict[(0,)].validate()
+        self.assertTrue(datadict[(0,)].is_valid())
+        self.assertFalse(datadict[(1,)].is_valid())
 
-        # Test iteration over entries.
-        for key, value in dataset.dict.items():
+        datadict[(1,)].validate()
+        self.assertTrue(datadict[(0,)].is_valid())
+        self.assertTrue(datadict[(1,)].is_valid())
+
+        # Test iteration over entries
+        for key, value in datadict.items():
             self.assertIn(key, {(0,), (1,)})
             self.assertIsInstance(value, core.DeepTrackDataObject)
 
