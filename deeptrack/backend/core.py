@@ -1081,7 +1081,7 @@ class DeepTrackNode:
             Action to compute this node's value. If not provided, uses a no-op 
             action (lambda: None).
         name: str or None, optional
-
+            Optional name for the node. Defaults to `None`.
         **kwargs: Any
             Additional arguments for subclasses or extended functionality.
             
@@ -1599,9 +1599,9 @@ class DeepTrackNode:
         Returns
         -------
         str
-            A string in the format:
-            "DeepTrackNode(name='<name>', len=<N>, action=<action>, IDs=[...])"
-            Fields `name=...` and `IDs=[...]` are included only if applicable.
+            A string in the format: "DeepTrackNode(name='<name>', len=<N>,
+            action=<action_name>, IDs=[...])" Fields `name=...` and `IDs=[...]`
+            are included only if applicable.
 
         """
 
@@ -1611,7 +1611,7 @@ class DeepTrackNode:
             type(self._action).__name__,
         )
 
-        ID_list = [_ID for _ID in self.data.dict if _ID != ()]
+        ID_list = [_ID for _ID in self.data.dict if _ID != tuple()]
 
         parts = [
             f"name='{self.name}'" if self.name else None,
