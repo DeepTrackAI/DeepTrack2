@@ -187,6 +187,10 @@ class DeepTrackDataObject:
 
     Store a value in this container:
     >>> data_obj.store(42)
+    >>> data_obj
+    DeepTrackDataObject(data=42, valid=True)
+
+    Access the currently stored value:
     >>> data_obj.current_value()
     42
 
@@ -196,11 +200,17 @@ class DeepTrackDataObject:
 
     Invalidate the stored data:
     >>> data_obj.invalidate()
+    >>> data_obj
+    DeepTrackDataObject(data=42, valid=False)
+
     >>> data_obj.is_valid()
     False
 
     Validate the data to restore its valid status:
     >>> data_obj.validate()
+    >>> data_obj
+    DeepTrackDataObject(data=42, valid=True)
+
     >>> data_obj.is_valid()
     True
 
