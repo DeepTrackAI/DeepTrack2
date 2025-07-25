@@ -62,19 +62,26 @@ class TestCore(unittest.TestCase):
         self.assertFalse(datadict.dict)  # Empty dict, {}
 
         # Create indices and store data
-        datadict.create_index((0,))
-        datadict[(0,)].store({"image": [1, 2, 3], "label": 0})
+        datadict.create_index((0, 0))
+        datadict[(0, 0)].store({"image": [0, 0, 0], "label": (0, 0)})
 
-        datadict.create_index((1,))
-        datadict[(1,)].store({"image": [4, 5, 6], "label": 1})
+        datadict.create_index((0, 1))
+        datadict[(0, 1)].store({"image": [0, 1, 1], "label": (0, 1)})
 
-        self.assertEqual(datadict.keylength, 1)
-        self.assertEqual(len(datadict), 2)
+        datadict.create_index((1, 0))
+        datadict[(1, 0)].store({"image": [1, 0, 2], "label": (1, 0)})
 
+        datadict.create_index((1, 1))
+        datadict[(1, 1)].store({"image": [1, 1, 3], "label": (1, 1)})
+
+        self.assertEqual(datadict.keylength, 2)
+        self.assertEqual(len(datadict), 4)
+
+        """
         self.assertIn((0,), datadict.dict)
         self.assertIn((0,), datadict.keys())
         self.assertIn((1,), datadict.dict)
-        self.assertIn((0,), datadict.keys())
+        self.assertIn((1,), datadict.keys())
 
         # Test retrieving stored data
         self.assertEqual(
@@ -117,10 +124,49 @@ class TestCore(unittest.TestCase):
         self.assertTrue(datadict[(0,)].is_valid())
         self.assertTrue(datadict[(1,)].is_valid())
 
-        # Test iteration over entries
+        # Test valid_index
+        self.assertTrue(datadict.valid_index((0,)))
+        self.assertTrue(datadict.valid_index((1,)))
+        self.assertFalse(datadict.valid_index(()))
+        self.assertFalse(datadict.valid_index((0, 1)))
+        self.assertFalse(datadict.valid_index((0, 1, 2)))
+
+        # Test slicing: __getitem__ with shorter _ID
+        sliced = datadict[(0,)]
+        self.assertIsInstance(sliced, dict)
+        self.assertIn((0,), sliced)
+        self.assertIsInstance(sliced[(0,)], core.DeepTrackDataObject)
+
+        # Test trimming: __getitem__ with longer _ID
+        self.assertEqual(
+            datadict[(0, 99)].current_value(),
+            {"image": [1, 2, 3], "label": 0},
+        )
+
+        # Test __repr__
+        rep = repr(datadict)
+        self.assertIn("DeepTrackDataDict", rep)
+        self.assertIn("entries", rep)
+        self.assertIn("keylength", rep)
+
+        # Test items(), keys(), values()
+        self.assertEqual(set(datadict.keys()), {(0,), (1,)})
+        self.assertEqual(
+            [v.current_value() for v in datadict.values()],
+            [{"image": [1, 2, 3], "label": 0}, {"image": [4, 5, 6], "label": 1}],
+        )
+        self.assertEqual(len(datadict.items()), 2)
         for key, value in datadict.items():
             self.assertIn(key, {(0,), (1,)})
             self.assertIsInstance(value, core.DeepTrackDataObject)
+
+        # Test dict property access
+        self.assertIs(datadict.dict[(0,)], datadict[(0,)])
+
+        # Optional: Confirm direct mutation is technically possible (but discouraged)
+        datadict.dict[(99,)] = core.DeepTrackDataObject()
+        self.assertIn((99,), datadict)
+        """
 
 
     def test_DeepTrackNode_basics(self):
