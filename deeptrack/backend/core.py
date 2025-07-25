@@ -650,6 +650,11 @@ class DeepTrackDataDict:
 
         # If _ID matches keylength, return corresponding DeepTrackDataObject.
         if len(_ID) == self.keylength:
+            if _ID not in self._dict:
+                raise KeyError(
+                    f"The _ID {_ID} does not exist in this DeepTrackDataDict. "
+                    f"Available keys: {list(self._dict.keys())}"
+                )
             return self._dict[_ID]
 
         # If _ID longer than keylength, trim the requested _ID
