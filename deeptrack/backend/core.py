@@ -843,45 +843,47 @@ class DeepTrackNode:
     -------
     `action: property`
         Get or set the computation function for the node (stored as `_action`).
-    `add_child(child: DeepTrackNode) -> DeepTrackNode`
+    `add_child(child) -> DeepTrackNode`
         Add a child node that depends on this node.
         Also add the dependency on this node in the child node.
-    `add_dependency(parent: DeepTrackNode) -> DeepTrackNode`
+    `add_dependency(parent) -> DeepTrackNode`
         Add a dependency, making this node depend on the parent node.
         Also set this node as a child of the parent node.
-    `store(data: Any, _ID: tuple[int, ...] = ()) -> DeepTrackNode`
+    `store(data, _ID) -> DeepTrackNode`
         Store computed data for the given `_ID`.
-    `is_valid(_ID: tuple[int, ...] = ()) -> bool`
+    `is_valid(_ID) -> bool`
         Check whether the data for the given `_ID` is valid.
-    `valid_index(_ID: tuple[int, ...]) -> bool`
+    `valid_index(_ID) -> bool`
         Check whether the given `_ID` is valid for this node.
-    `invalidate(_ID: tuple[int, ...] = ()) -> DeepTrackNode`
+    `invalidate(_ID) -> DeepTrackNode`
         Invalidate the data for the given `_ID` and all child nodes.
-    `validate(_ID: tuple[int, ...] = ()) -> DeepTrackNode`
+    `validate(_ID) -> DeepTrackNode`
         Validate the data for the given `_ID`, marking it as up-to-date, but 
         not its children.
     `update() -> DeepTrackNode`
         Reset the data.
-    `set_value(value: Any, _ID: tuple[int, ...] = ()) -> DeepTrackNode`
+    `set_value(value, _ID) -> DeepTrackNode`
         Set a value for the given `_ID`. If the new value differs from the 
         current value, the node is invalidated to ensure dependencies are 
         recomputed.
-    `recurse_children(memory: set[DeepTrackNode] | None = None) -> set[DeepTrackNode]`
+    `recurse_children(memory) -> set[DeepTrackNode]`
         Return all child nodes in the dependency tree rooted at this node.
-    `recurse_dependencies(memory: list[DeepTrackNode] | None = None) -> Iterator[DeepTrackNode]`
+    `recurse_dependencies(memory) -> Iterator[DeepTrackNode]`
         Yield all nodes that this node depends on, traversing dependencies.
     `get_citations() -> set[str]`
         Return a set of citations for this node and its dependencies.
-    `__call__(_ID: tuple[int, ...] = ()) -> Any`
+    `__call__(_ID) -> Any`
         Evaluate the node's computation for the given `_ID`, recomputing if 
         necessary.
-    `current_value(_ID: tuple[int, ...] = ()) -> Any`
+    `current_value(_ID) -> Any`
         Return the currently stored value for the given `_ID` without 
         recomputation.
     `__hash__() -> int`
         Return a unique hash for this node.
-    `__getitem__(idx: Any) -> DeepTrackNode`
+    `__getitem__(idx) -> DeepTrackNode`
         Creates a new node that indexes into this node's computed data.
+    `__repr__(self) -> str:`
+        Return a string representation of the node.
 
     Supported Operators
     -------------------
@@ -1574,6 +1576,30 @@ class DeepTrackNode:
         # node.add_dependency(self)  # Already executed by add_child.
 
         return node
+
+    def __repr__(self: DeepTrackNode) -> str:
+        """Return a string representation of the node.
+
+        This method provides a concise textual description of the node,
+        including the type of the action it performs. It is useful for
+        debugging, logging, and displaying the structure of the computation
+        graph.
+
+        Returns
+        -------
+        str
+            A string in the format:
+            "DeepTrackNode(action=<action_name>)", where `<action_name>` is the
+            name of the function or type used to compute the node's value.
+
+        """
+
+        action_name = (
+            self._action.__name__
+            if hasattr(self._action, "__name__")
+            else type(self._action).__name__
+        )
+        return f"{self.__class__.__name__}(action={action_name})"
 
     # Node-node operators.
     # These methods define arithmetic and comparison operations for
