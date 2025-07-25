@@ -77,96 +77,109 @@ class TestCore(unittest.TestCase):
         self.assertEqual(datadict.keylength, 2)
         self.assertEqual(len(datadict), 4)
 
-        """
-        self.assertIn((0,), datadict.dict)
-        self.assertIn((0,), datadict.keys())
-        self.assertIn((1,), datadict.dict)
-        self.assertIn((1,), datadict.keys())
+        self.assertIn((0, 0), datadict.dict)
+        self.assertIn((0, 0), datadict.keys())
+        self.assertIn((0, 1), datadict.dict)
+        self.assertIn((0, 1), datadict.keys())
+        self.assertIn((1, 0), datadict.dict)
+        self.assertIn((1, 0), datadict.keys())
+        self.assertIn((1, 1), datadict.dict)
+        self.assertIn((1, 1), datadict.keys())
 
         # Test retrieving stored data
         self.assertEqual(
-            datadict[(0,)].current_value(),
-            {"image": [1, 2, 3], "label": 0},
+            datadict[(0, 0)].current_value(),
+            {"image": [0, 0, 0], "label": (0, 0)},
         )
         self.assertEqual(
-            datadict[(1,)].current_value(),
-            {"image": [4, 5, 6], "label": 1},
+            datadict[(0, 1)].current_value(),
+            {"image": [0, 1, 1], "label": (0, 1)},
+        )
+        self.assertEqual(
+            datadict[(1, 0)].current_value(),
+            {"image": [1, 0, 2], "label": (1, 0)},
+        )
+        self.assertEqual(
+            datadict[(1, 1)].current_value(),
+            {"image": [1, 1, 3], "label": (1, 1)},
         )
 
         # Test validation and invalidation - all
-        self.assertTrue(datadict[(0,)].is_valid())
-        self.assertTrue(datadict[(1,)].is_valid())
+        for key, value in datadict.items():
+            self.assertTrue(value.is_valid())
 
         datadict.invalidate()
-        self.assertFalse(datadict[(0,)].is_valid())
-        self.assertFalse(datadict[(1,)].is_valid())
+        for key, value in datadict.items():
+            self.assertFalse(value.is_valid())
 
         datadict.validate()
-        self.assertTrue(datadict[(0,)].is_valid())
-        self.assertTrue(datadict[(1,)].is_valid())
+        for key, value in datadict.items():
+            self.assertTrue(value.is_valid())
 
         # Test validation and invalidation - single node
-        self.assertTrue(datadict[(0,)].is_valid())
+        self.assertTrue(datadict[(0, 0)].is_valid())
 
-        datadict[(0,)].invalidate()
-        self.assertFalse(datadict[(0,)].is_valid())
-        self.assertTrue(datadict[(1,)].is_valid())
+        datadict[(0, 0)].invalidate()
+        for key, value in datadict.items():
+            if key == (0, 0):
+                self.assertFalse(value.is_valid())
+            else:
+                self.assertTrue(value.is_valid())
 
-        datadict[(1,)].invalidate()
-        self.assertFalse(datadict[(0,)].is_valid())
-        self.assertFalse(datadict[(1,)].is_valid())
+        datadict[(1, 1)].invalidate()
+        for key, value in datadict.items():
+            if key == (0, 0) or key == (1, 1):
+                self.assertFalse(value.is_valid())
+            else:
+                self.assertTrue(value.is_valid())
 
-        datadict[(0,)].validate()
-        self.assertTrue(datadict[(0,)].is_valid())
-        self.assertFalse(datadict[(1,)].is_valid())
+        datadict[(0, 0)].validate()
+        for key, value in datadict.items():
+            if key == (1, 1):
+                self.assertFalse(value.is_valid())
+            else:
+                self.assertTrue(value.is_valid())
 
-        datadict[(1,)].validate()
-        self.assertTrue(datadict[(0,)].is_valid())
-        self.assertTrue(datadict[(1,)].is_valid())
+        datadict[(1, 1)].validate()
+        for key, value in datadict.items():
+            self.assertTrue(value.is_valid())
 
         # Test valid_index
-        self.assertTrue(datadict.valid_index((0,)))
-        self.assertTrue(datadict.valid_index((1,)))
         self.assertFalse(datadict.valid_index(()))
-        self.assertFalse(datadict.valid_index((0, 1)))
+
+        self.assertFalse(datadict.valid_index((0,)))
+
+        self.assertTrue(datadict.valid_index((0, 0)))
+        self.assertTrue(datadict.valid_index((1, 1)))
+        self.assertTrue(datadict.valid_index((2, 2)))
+
         self.assertFalse(datadict.valid_index((0, 1, 2)))
 
         # Test slicing: __getitem__ with shorter _ID
         sliced = datadict[(0,)]
         self.assertIsInstance(sliced, dict)
-        self.assertIn((0,), sliced)
-        self.assertIsInstance(sliced[(0,)], core.DeepTrackDataObject)
+
+        self.assertIn((0, 0), sliced)
+        self.assertIsInstance(sliced[(0, 0)], core.DeepTrackDataObject)
+        self.assertIn((0, 1), sliced)
+        self.assertIsInstance(sliced[(0, 1)], core.DeepTrackDataObject)
 
         # Test trimming: __getitem__ with longer _ID
-        self.assertEqual(
-            datadict[(0, 99)].current_value(),
-            {"image": [1, 2, 3], "label": 0},
-        )
-
-        # Test __repr__
-        rep = repr(datadict)
-        self.assertIn("DeepTrackDataDict", rep)
-        self.assertIn("entries", rep)
-        self.assertIn("keylength", rep)
+        for key, value in datadict.items():
+            self.assertEqual(
+                datadict[key + (99,)].current_value(),
+                datadict[key].current_value(),
+            )
 
         # Test items(), keys(), values()
-        self.assertEqual(set(datadict.keys()), {(0,), (1,)})
-        self.assertEqual(
-            [v.current_value() for v in datadict.values()],
-            [{"image": [1, 2, 3], "label": 0}, {"image": [4, 5, 6], "label": 1}],
-        )
-        self.assertEqual(len(datadict.items()), 2)
-        for key, value in datadict.items():
-            self.assertIn(key, {(0,), (1,)})
-            self.assertIsInstance(value, core.DeepTrackDataObject)
+        for item, key, value in zip(
+            datadict.items(), datadict.keys(), datadict.values()
+        ):
+            self.assertEqual(item[0], key)
+            self.assertEqual(item[1], value)
 
         # Test dict property access
-        self.assertIs(datadict.dict[(0,)], datadict[(0,)])
-
-        # Optional: Confirm direct mutation is technically possible (but discouraged)
-        datadict.dict[(99,)] = core.DeepTrackDataObject()
-        self.assertIn((99,), datadict)
-        """
+        self.assertIs(datadict.dict[(0, 0)], datadict[(0, 0)])
 
 
     def test_DeepTrackNode_basics(self):
