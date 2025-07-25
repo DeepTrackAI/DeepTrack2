@@ -1022,8 +1022,10 @@ class DeepTrackNode:
     data: DeepTrackDataDict
     children: WeakSet[DeepTrackNode]
     dependencies: WeakSet[DeepTrackNode]
+
     _action: Callable[..., Any]
     _accepts_ID: bool
+
     _all_children: set[DeepTrackNode]
 
     # Citations associated with DeepTrack2.
@@ -1072,7 +1074,7 @@ class DeepTrackNode:
         action: Callable or Any, optional
             Action to compute this node's value. If not provided, uses a no-op 
             action (lambda: None).
-        **kwargs: dict[str, Any]
+        **kwargs: Any
             Additional arguments for subclasses or extended functionality.
             
         """
