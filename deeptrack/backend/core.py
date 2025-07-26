@@ -1061,8 +1061,10 @@ class DeepTrackNode:
             A function or lambda-function used for computing the node's value.
             If the function's signature includes `_ID`, this node will pass
             `_ID` when calling `action`.
-        
+
         """
+
+        print("here")
 
         self._action = _action
         self._accepts_ID = "_ID" in get_kwarg_names(_action)
@@ -1099,12 +1101,10 @@ class DeepTrackNode:
         # If action is provided, set it.
         # If it's callable, use it directly;
         # otherwise, wrap it in a lambda.
-        self._action = lambda: None  # Default no-op action
-        if action is not None:
-            if callable(action):
-                self.action = action
-            else:
-                self.action = lambda: action
+        if callable(action):
+            self._action = action
+        else:
+            self._action = lambda: action
 
         # Check if action accepts `_ID`.
         self._accepts_ID = "_ID" in get_kwarg_names(self.action)
