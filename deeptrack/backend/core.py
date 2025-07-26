@@ -1069,7 +1069,7 @@ class DeepTrackNode:
 
     def __init__(
         self: DeepTrackNode,
-        action: Callable[..., Any] | None = None,
+        action: Callable[..., Any] | Any = None,
         node_name: str | None = None,
         **kwargs: Any,
     ):
@@ -1095,11 +1095,11 @@ class DeepTrackNode:
         self.data = DeepTrackDataDict()
         self.children = WeakSet()
         self.dependencies = WeakSet()
-        self._action = lambda: None  # Default no-op action
 
         # If action is provided, set it.
         # If it's callable, use it directly;
         # otherwise, wrap it in a lambda.
+        self._action = lambda: None  # Default no-op action
         if action is not None:
             if callable(action):
                 self.action = action
