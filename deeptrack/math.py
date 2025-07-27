@@ -95,96 +95,131 @@ from __future__ import annotations
 
 from typing import Any, Callable, TYPE_CHECKING
 
+import array_api_compat as apc
 import numpy as np
-import scipy.ndimage as ndimage
+from numpy.typing import NDArray
+from scipy import ndimage
 import skimage
 import skimage.measure
 
-from deeptrack import utils
+from deeptrack import utils, OPENCV_AVAILABLE, TORCH_AVAILABLE
 from deeptrack.features import Feature
 from deeptrack.image import Image, strip
 from deeptrack.types import ArrayLike, PropertyLike
 from deeptrack.backend import xp
 
+if TORCH_AVAILABLE:
+    import torch
+
+if OPENCV_AVAILABLE:
+    import cv2
+
+__all__ = [
+    "Average",
+    "Clip",
+    "NormalizeMinMax",
+    "NormalizeStandard",
+    "NormalizeQuantile",
+    "Blur",
+    "AverageBlur",
+    "GaussianBlur",
+    "MedianBlur",
+    "Pool",
+    "AveragePooling",
+    "MaxPooling",
+    "MinPooling",
+    "MedianPooling",
+    "BlurCV2",
+    "BilateralBlur",
+]
+
+
 if TYPE_CHECKING:
     import torch
 
 
-#TODO ***??*** revise Average - torch, typing, docstring, unit test
 class Average(Feature):
     """Average of input images.
 
-    This class computes the average of input images along the specified axis.
-    If `features` is not None, it instead resolves all features in the list and
-    averages the result.
+    Computes the average of input images along the specified axis or axes.
+    By default, averaging is performed along axis 0 (the batch dimension).
+
+    If `features` is specified, each feature in the list is first resolved,
+    and their results are averaged.
 
     Parameters
     ----------
-    axis: int or tuple of ints
-        Axis along which to average
-    features: list of features, optional
+    axis: int or tuple[int], optional
+        Axis or axes along which to compute the average. It defaults to 0.
+    features: list[Feature] or None, optional
+        List of features to resolve and average. It defaults to None.
 
     Attributes
     ----------
-    __distributed__: bool
-        Determines whether `.get(image, **kwargs)` is applied to each element
-        of the input list independently (`__distributed__ = True`) or to the
-        list as a whole (`__distributed__ = False`).
+    __distributed__ : bool = False
+        Determines whether `.get(...)` is applied to each element
+        independently (`True`) or to the list as a whole (`False`).
 
     Methods
     -------
-    `get(images: np.ndarray | Image | list[Image], axis: int, **kwargs: Any) --> np.ndarray`
-        Computes the average of the input images along the specified axis.
+    get(images: list[array], axis: int or tuple[int], **kwargs: Any) -> array
+        Computes the average of the input images along the given axis.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create two input images:
+    >>> import numpy as np
+    >>>
     >>> input_image1 = np.random.rand(10, 30, 20)
     >>> input_image2 = np.random.rand(10, 30, 20)
 
-    Define a simple pipeline with the average feature:
+    Define a pipeline with the average feature along the batch dimension:
+    >>> average = dt.Average(axis=0)
+    >>> output_image = average([input_image1, input_image2])
+    >>> output_image.shape
+    (10, 30, 20)
+
+    Define a pipeline with the average feature along the first image
+    dimension:
     >>> average = dt.Average(axis=1)
     >>> output_image = average([input_image1, input_image2])
-    >>> print(output_image)
+    >>> output_image.shape
     (2, 30, 20)
 
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    Define a pipeline averaging each image:
+    >>> average = dt.Average(axis=(1, 2, 3))
+    >>> output_image = average([input_image1, input_image2])
+    >>> output_image.shape
+    (2,)
 
     """
 
-    __distributed__ = False
+    __distributed__: bool = False
+    features: list[Feature] | None
 
     def __init__(
         self: Average,
-        features: PropertyLike[list[Feature] | None] = None,
         axis: PropertyLike[int] = 0,
+        features: list[Feature] | None = None,
         **kwargs: Any,
     ):
         """Initialize the parameters for averaging input features.
 
-        This constructor initializes the parameters for averaging input
-        features.
-
         Parameters
         ----------
-        features: list of Feature or None, optional
-            List of features to be resolved and averaged. Defaults to None.
         axis: int or tuple[int]
-            Axis along which to compute the average. Defaults to 0.
+            Axis or axes along which to compute the average. It defaults to 0.
+        features: list[Feature] or None, optional
+            List of features to be resolved and averaged. It defaults to None.
         **kwargs: Any
             Additional keyword arguments.
 
         """
 
         super().__init__(axis=axis, **kwargs)
+
         if features is None:
             self.features = None
         else:
@@ -192,28 +227,29 @@ class Average(Feature):
 
     def get(
         self: Average,
-        images: ArrayLike | list[ArrayLike],
-        axis: int,
+        images: list[NDArray[Any] | torch.Tensor | Image],
+        axis: int | tuple[int],
         **kwargs: Any,
-    ) -> ArrayLike:
-        """Computes the average of input images along the specified axis.
+    ) -> NDArray[Any] | torch.Tensor | Image:
+        """Compute the average of input images along the specified axis(es).
 
         This method computes the average of the input images along the
-        specified axis.
+        specified axis(es).
 
         Parameters
         ----------
-        images: np.ndarray
+        images: array
             The input images to average.
-        axis: int
-            The axis along which to average.
+        axis: int or tuple(int)
+            Axis or axes along which to average.
 
         Returns
         -------
-        np.ndarray
+        array
             The average of the input images along the specified axis.
 
         """
+
         if self.features is not None:
             images = [feature.resolve() for feature in self.features]
         result = xp.mean(xp.stack(images), axis=axis)
@@ -221,46 +257,41 @@ class Average(Feature):
         return result
 
 
-#TODO ***??*** revise Clip - torch, typing, docstring, unit test
 class Clip(Feature):
-    """Clip the input within a minimum and a maximum value.
+    """Clip the input from a minimum to a maximum value.
 
-    This class clips the input values within a specified minimum and maximum
-    range.
+    This feature clips all values in the input image such that they fall within
+    the specified range [`min`, `max`].
 
     Parameters
     ----------
-    min: float
-        Clip the input to be larger than this value.
-    max: float
-        Clip the input to be smaller than this value.
+    min: float, optional
+        Lower bound. Values below this will be set to `min`. It defaults to
+        `-np.inf`.
+    max: float, optional
+        Upper bound. Values above this will be set to `max`. It defaults to
+        `+np.inf`.
 
     Methods
     -------
-    `get(image: np.ndarray | Image, min: float, max: float, **kwargs: Any) --> np.ndarray`
-        Clips the input image within the specified minimum and maximum values.
+    get(image: array, min: float, max: float, **kwargs: Any) -> array
+        Clips the input image between `min` and `max`.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image:
-    >>> input_image = np.array([[10, 4], [4, -10]])
+    >>> import numpy as np
+    >>>
+    >>> input_image = np.asarray([[10, 4], [4, -10]])
 
     Define a clipper feature:
     >>> clipper = dt.Clip(min=0, max=5)
     >>> output_image = clipper(input_image)
-    >>> print(output_image)
-    [[5 4]
-     [4 0]]
-
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    >>> output_image
+    array([[5, 4],
+           [4, 0]])
 
     """
 
@@ -270,16 +301,14 @@ class Clip(Feature):
         max: PropertyLike[float] = +np.inf,
         **kwargs: Any,
     ):
-        """Initialize the parameters for clipping input features.
-
-        This constructor initializes the parameters for clipping input features.
+        """Initialize the clipping range.
 
         Parameters
         ----------
-        min: float
-            Clip the input to be larger than this value.
-        max: float
-            Clip the input to be smaller than this value.
+        min: float, optional
+            Minimum allowed value. It defaults to `-np.inf`.
+        max: float, optional
+            Maximum allowed value. It defaults to `+np.inf`.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -289,11 +318,11 @@ class Clip(Feature):
 
     def get(
         self: Clip,
-        image: ArrayLike,
-        min: float = None,
-        max: float = None,
+        image: NDArray[Any] | torch.Tensor | Image,
+        min: float,
+        max: float,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> NDArray[Any] | torch.Tensor | Image:
         """Clips the input image within the specified values.
 
         This method clips the input image within the specified minimum and
@@ -301,16 +330,16 @@ class Clip(Feature):
 
         Parameters
         ----------
-        image: np.ndarray
-            The input image to clip.
+        image: array
+            Input image to clip.
         min: float
-            Clip the input to be larger than this value.
+            Minimum allowed value.
         max: float
-            Clip the input to be smaller than this value.
+            Maximum allowed value.
 
         Returns
         -------
-        np.ndarray
+        array
             The clipped image.
 
         """
@@ -318,51 +347,50 @@ class Clip(Feature):
         return xp.clip(image, min, max)
 
 
-#TODO ***??*** revise NormalizeMinMax - torch, typing, docstring, unit test
 class NormalizeMinMax(Feature):
-    """Image normalization.
+    """Image normalization using min-max scaling.
 
-    Transforms the input to be between a minimum and a maximum value using
-    a linear transformation.
+    It applies a linear transformation that maps the input to the range [`min`,
+    `max`].
+
+    It uses the global minimum and maximum of the image to perform scaling.
+    If the image has no dynamic range (`ptp = 0`), the output is set to 0.
 
     Parameters
     ----------
-    min: float
-        The minimum of the transformation.
-    max: float
-        The maximum of the transformation.
-    featurewise: bool
-        Whether to normalize each feature independently.
+    min: float, optional
+        Lower bound of the transformation. It defaults to 0.
+    max: float, optional
+        Upper bound of the transformation. It defaults to 1.
+    featurewise: bool, optional
+        Whether to normalize each feature independently. It default to `True`,
+        which is the only behavior currently implemented.
 
     Methods
     -------
-    `get(image: np.ndarray | Image, min: float, max: float, **kwargs: Any) --> np.ndarray`
-        Normalizes the input image to be between the specified minimum and
-        maximum values.
+    get(image: array, min: float, max: float, **kwargs: Any) -> array
+        Normalizes the image to be within the specified range.
+
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.array([[10, 4], [4, -10]])
 
     Define a min-max normalizer:
     >>> normalizer = dt.NormalizeMinMax(min=-5, max=5)
     >>> output_image = normalizer(input_image)
-    >>> print(output_image)
-    [[ 5.  2.]
-     [ 2. -5.]]
-
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    >>> output_image
+    array([[ 5.,  2.],
+           [ 2., -5.]])
 
     """
+
+    #TODO ___??___ Implement the `featurewise=False` option
 
     def __init__(
         self: NormalizeMinMax,
@@ -371,16 +399,14 @@ class NormalizeMinMax(Feature):
         featurewise: bool = True,
         **kwargs: Any,
     ):
-        """Initialize the parameters for min-max normalization.
-
-        This constructor initializes the parameters for min-max normalization.
+        """Initialize the min-max normalization parameters.
 
         Parameters
         ----------
         min: float
-            The minimum of the transformation.
+            Lower bound of the output range.
         max: float
-            The maximum of the transformation.
+            Upper bound of the output range.
         featurewise: bool
             Whether to normalize each feature independently.
         **kwargs: Any
@@ -393,84 +419,79 @@ class NormalizeMinMax(Feature):
     def get(
         self: NormalizeMinMax,
         image: ArrayLike,
-        min: float = None,
-        max: float = None,
+        min: float,
+        max: float,
         **kwargs: Any,
     ) -> ArrayLike:
-        """Normalizes the input image to be between the specified minimum and
-        maximum values.
-
-        This method normalizes the input image to be between the specified
-        minimum and maximum values.
+        """Normalize the input to fall between `min` and `max`.
 
         Parameters
         ----------
-        image: np.ndarray
-            The input image to normalize.
+        image: array
+            Input image to normalize.
         min: float
-            The minimum of the transformation.
+            Lower bound of the output range.
         max: float
-            The maximum of the transformation.
+            Upper bound of the output range.
 
         Returns
         -------
-        np.ndarray
-            The normalized image.
+        array
+            Min-max normalized image.
 
         """
+
         ptp = xp.max(image) - xp.min(image)
         image = image / ptp * (max - min)
         image = image - xp.min(image) + min
+
         try:
             image[xp.isnan(image)] = 0
         except TypeError:
             pass
+
         return image
 
 
-#TODO ***??*** revise NormalizeStandard - torch, typing, docstring, unit test
 class NormalizeStandard(Feature):
-    """Image normalization (standardization).
+    """Image normalization using standardization.
 
-    Normalize (standardize) the image to have sigma 1 and mean 0.
+    Standardizes the input image to have zero mean and unit standard
+    deviation. Uses the population standard deviation (divides by N).
 
     Parameters
     ----------
-    featurewise: bool
-        Whether to normalize each feature independently
+    featurewise: bool, optional
+        Whether to normalize each feature independently. It default to `True`,
+        which is the only behavior currently implemented.
 
     Methods
     -------
-    `get(image: np.ndarray | Image, **kwargs: Any) --> np.ndarray`
-        Normalizes (standardizes) the input image to have mean 0 and standard
-        deviation 1.
+    get(image: array, **kwargs: Any) -> array
+        Standardizes the input image to mean 0 and std deviation 1.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.array([[1, 2], [3, 4]], dtype=float)
 
     >>> standardizer = dt.NormalizeStandard()
     >>> output_image = standardizer(input_image)
-    >>> print(output_image)
-    [[-1.34164079 -0.4472136]
-     [ 0.4472136   1.34164079]]
-
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    >>> output_image
+    array([[-1.34164079, -0.4472136 ],
+        [ 0.4472136 ,  1.34164079]])
 
     """
 
+    #TODO ___??___ Implement the `featurewise=False` option
+
     def __init__(
         self: NormalizeStandard,
-        featurewise: bool = True,
+        featurewise: PropertyLike[bool] = True,
         **kwargs: Any,
     ):
         """Initialize the parameters for standardization.
@@ -479,19 +500,20 @@ class NormalizeStandard(Feature):
 
         Parameters
         ----------
-        featurewise: bool
+        featurewise: bool, optional
             Whether to normalize each feature independently.
         **kwargs: Any
             Additional keyword arguments.
 
         """
+
         super().__init__(featurewise=featurewise, **kwargs)
 
     def get(
         self: NormalizeStandard,
-        image: ArrayLike,
+        image: NDArray[Any] | torch.Tensor | Image,
         **kwargs: Any,
-    ) -> ArrayLike:
+    ) -> NDArray[Any] | torch.Tensor | Image:
         """Normalizes the input image to have mean 0 and standard deviation 1.
 
         This method normalizes the input image to have mean 0 and standard
@@ -499,66 +521,69 @@ class NormalizeStandard(Feature):
 
         Parameters
         ----------
-        image: np.ndarray
+        image: array
             The input image to normalize.
 
         Returns
         -------
-        np.ndarray
+        array
             The normalized image.
 
         """
 
+        if apc.is_torch_array(image):
+            # By default, torch.std() is unbiased, i.e., divides by N-1
+            return (
+                (image - torch.mean(image)) / torch.std(image, unbiased=False)
+            )
+
         return (image - xp.mean(image)) / xp.std(image)
 
 
-#TODO ***??*** revise NormalizeQuantile - torch, typing, docstring, unit test
 class NormalizeQuantile(Feature):
-    """Image normalization.
+    """Image normalization using quantiles.
 
-    Center the image to the median, and divide by the difference between the
-    quantiles defined by `q_max` and `q_min`.
+    Centers the image at the median and scales it such that the values at the
+    specified lower and upper quantiles are mapped to −1 and +1, respectively.
 
     Parameters
     ----------
-    quantiles: tuple (q_min, q_max), 0.0 < q_min < q_max < 1.0
-       Quantile range to calculate scaling factor
-    featurewise: bool
-        Whether to normalize each feature independently
+    quantiles : tuple[float, float]
+        Quantile range used to compute the scaling factor. Must satisfy
+        0.0 < q_min < q_max < 1.0.
+    featurewise : bool, optional
+        Whether to normalize each feature independently. Defaults to `True`.
+        Currently, `True` is the only supported behavior.
 
     Methods
     -------
-    `get(image: np.ndarray | Image, quantiles: tuple[float, float], **kwargs: Any) --> np.ndarray`
-        Normalizes the input image based on the specified quantiles.
+    get(image: array, quantiles: tuple[float, float], **kwargs) -> array
+        Normalizes the input based on the given quantile range.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.array([[10, 4], [4, -10]])
 
     Define a quantile normalizer:
     >>> normalizer = dt.NormalizeQuantile(quantiles=(0.25, 0.75))
     >>> output_image = normalizer(input_image)
-    >>> print(output_image)
-    [[ 1.2  0. ]
-     [ 0.  -2.8]]
-
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    >>> output_image
+    array([[ 1.2,  0. ],
+           [ 0. , -2.8]])
 
     """
 
+    #TODO ___??___ Implement the `featurewise=False` option
+
     def __init__(
         self: NormalizeQuantile,
-        quantiles: tuple[float, float] = (0.25, 0.75),
-        featurewise: bool = True,
+        quantiles: PropertyLike[tuple[float, float]] = (0.25, 0.75),
+        featurewise: PropertyLike[bool] = True,
         **kwargs: Any,
     ):
         """Initialize the parameters for quantile normalization.
@@ -567,50 +592,62 @@ class NormalizeQuantile(Feature):
 
         Parameters
         ----------
-        quantiles: tuple[float, float]
+        quantiles: tuple[float, float], optional
             Quantile range to calculate scaling factor.
-        featurewise: bool
+        featurewise: bool, optional
             Whether to normalize each feature independently.
         **kwargs: Any
             Additional keyword arguments.
 
         """
 
-        super().__init__(quantiles=quantiles, featurewise=featurewise, **kwargs)
+        super().__init__(
+            quantiles=quantiles,
+            featurewise=featurewise,
+            **kwargs,
+        )
 
     def get(
         self: NormalizeQuantile,
-        image: ArrayLike,
+        image: NDArray[Any] | torch.Tensor | Image,
         quantiles: tuple[float, float] = None,
         **kwargs: Any,
-    ) -> ArrayLike:
-        """Normalizes the input image based on the specified quantiles.
+    ) -> NDArray[Any] | torch.Tensor | Image:
+        """Normalize the input image based on the specified quantiles.
 
         This method normalizes the input image based on the specified
         quantiles.
 
         Parameters
         ----------
-        image: np.ndarray
+        image: array
             The input image to normalize.
         quantiles: tuple[float, float]
             Quantile range to calculate scaling factor.
 
         Returns
         -------
-        np.ndarray
+        array
             The normalized image.
 
         """
 
-        if quantiles is None:
-            # Why is this here?
-            quantiles = self.quantiles
-        q_low, q_high, median = xp.quantile(image, (*quantiles, 0.5))
-        return (image - median) / (q_high - q_low)
+        if apc.is_torch_array(image):
+            q_tensor = torch.tensor(
+                [*quantiles, 0.5],
+                device=image.device,
+                dtype=image.dtype,
+            )
+            q_low, q_high, median = torch.quantile(
+                image, q_tensor, dim=None, keepdim=False,
+            )
+        else:  # NumPy
+            q_low, q_high, median = xp.quantile(image, (*quantiles, 0.5))
+
+        return (image - median) / (q_high - q_low) * 2.0
 
 
-#TODO ***??*** revise Blur - torch, typing, docstring, unit test
+#TODO ***JH*** revise Blur - torch, typing, docstring, unit test
 class Blur(Feature):
     """Apply a blurring filter to an image.
 
@@ -723,7 +760,7 @@ class Blur(Feature):
         return utils.safe_call(self.filter, input=image, **kwargs)
 
 
-#TODO ***??*** revise AverageBlur - torch, typing, docstring, unit test
+#TODO ***JH*** revise AverageBlur - torch, typing, docstring, unit test
 class AverageBlur(Blur):
     """Blur an image by computing simple means over neighbourhoods.
 
@@ -900,7 +937,7 @@ class AverageBlur(Blur):
             raise NotImplementedError(f"Backend {self.backend} not supported")
 
 
-#TODO ***??*** revise GaussianBlur - torch, typing, docstring, unit test
+#TODO ***JH*** revise GaussianBlur - torch, typing, docstring, unit test
 class GaussianBlur(Blur):
     """Applies a Gaussian blur to images using Gaussian kernels.
 
@@ -962,7 +999,7 @@ class GaussianBlur(Blur):
         super().__init__(ndimage.gaussian_filter, sigma=sigma, **kwargs)
 
 
-#TODO ***??*** revise MedianBlur - torch, typing, docstring, unit test
+#TODO ***JH*** revise MedianBlur - torch, typing, docstring, unit test
 class MedianBlur(Blur):
     """Applies a median blur.
 
@@ -1032,7 +1069,7 @@ class MedianBlur(Blur):
         super().__init__(ndimage.median_filter, size=ksize, **kwargs)
 
 
-#TODO ***??*** revise Pool - torch, typing, docstring, unit test
+#TODO ***AL*** revise Pool - torch, typing, docstring, unit test
 class Pool(Feature):
     """Downsamples the image by applying a function to local regions of the
     image.
@@ -1151,7 +1188,7 @@ class Pool(Feature):
         )
 
 
-#TODO ***??*** revise AveragePooling - torch, typing, docstring, unit test
+#TODO ***AL*** revise AveragePooling - torch, typing, docstring, unit test
 class AveragePooling(Pool):
     """Apply average pooling to an image.
 
@@ -1212,7 +1249,7 @@ class AveragePooling(Pool):
         super().__init__(np.mean, ksize=ksize, **kwargs)
 
 
-#TODO ***??*** revise MaxPooling - torch, typing, docstring, unit test
+#TODO ***AL*** revise MaxPooling - torch, typing, docstring, unit test
 class MaxPooling(Pool):
     """Apply max pooling to images.
 
@@ -1276,7 +1313,7 @@ class MaxPooling(Pool):
         super().__init__(np.max, ksize=ksize, **kwargs)
 
 
-#TODO ***??*** revise MinPooling - torch, typing, docstring, unit test
+#TODO ***AL*** revise MinPooling - torch, typing, docstring, unit test
 class MinPooling(Pool):
     """Apply min pooling to images.
 
@@ -1337,7 +1374,7 @@ class MinPooling(Pool):
         super().__init__(np.min, ksize=ksize, **kwargs)
 
 
-#TODO ***??*** revise MedianPooling - torch, typing, docstring, unit test
+#TODO ***AL*** revise MedianPooling - torch, typing, docstring, unit test
 class MedianPooling(Pool):
     """Apply median pooling to images.
 
@@ -1407,7 +1444,7 @@ class MedianPooling(Pool):
         super().__init__(np.median, ksize=ksize, **kwargs)
 
 
-#TODO ***??*** revise Resize - torch, typing, docstring, unit test
+#TODO ***MG*** revise Resize - torch, typing, docstring, unit test
 class Resize(Feature):
     """Resize an image to a specified size.
 
@@ -1478,12 +1515,7 @@ class Resize(Feature):
         return utils.safe_call(cv2.resize, positional_args=[image, dsize], **kwargs)
 
 
-#TODO ***??** use instead CV2_AVAILABLE?
-try:
-    import cv2
-
-    IMPORTED_CV2 = True
-
+if OPENCV_AVAILABLE:
     _map_mode_to_cv2_borderType = {
         "reflect": cv2.BORDER_REFLECT,
         "wrap": cv2.BORDER_WRAP,
@@ -1491,11 +1523,9 @@ try:
         "mirror": cv2.BORDER_REFLECT_101,
         "nearest": cv2.BORDER_REPLICATE,
     }
-except ImportError:
-    IMPORTED_CV2 = False
 
 
-#TODO ***??*** revise BlurCV2 - torch, typing, docstring, unit test
+#TODO ***JH*** revise BlurCV2 - torch, typing, docstring, unit test
 class BlurCV2(Feature):
     """Apply a blurring filter using OpenCV2.
 
@@ -1576,12 +1606,15 @@ class BlurCV2(Feature):
 
         """
 
-        if not IMPORTED_CV2:
+        print(cls.__name__)
+
+        if not OPENCV_AVAILABLE:
             raise ImportError(
-                "opencv not installed on device, it is an optional "
-                "dependency of deeptrack. To use this feature, you "
-                "need to install it manually."
+                "OpenCV not installed on device. Since OpenCV is an optional "
+                f"dependency of DeepTrack2. To use {cls.__name__}, "
+                "you need to install it manually."
             )
+
         return super().__new__(cls)
 
     def __init__(
@@ -1638,7 +1671,7 @@ class BlurCV2(Feature):
         return result
 
 
-#TODO ***??*** revise BilateralBlur - torch, typing, docstring, unit test
+#TODO ***JH*** revise BilateralBlur - torch, typing, docstring, unit test
 class BilateralBlur(BlurCV2):
     """Blur an image using a bilateral filter.
 
@@ -1720,6 +1753,7 @@ class BilateralBlur(BlurCV2):
             Additional parameters sent to the blurring function.
 
         """
+
         super().__init__(
             cv2.bilateralFilter,
             d=d,

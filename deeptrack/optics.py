@@ -108,26 +108,24 @@ Utility Functions:
 
 Examples
 --------
-Simulating an image with the `Brightfield` class:
-
 >>> import deeptrack as dt
 
+Simulating an image with the `Brightfield` class:
 >>> scatterer = dt.PointParticle()
 >>> optics = dt.Brightfield()
 >>> image = optics(scatterer)
->>> print(image().shape)
+>>> image().shape
 (128, 128, 1)
+
 >>> image.plot(cmap="gray")
 
 Simulating an image with the `Fluorescence` class:
-
->>> import deeptrack as dt
-
 >>> scatterer = dt.PointParticle()
 >>> optics = dt.Fluorescence()
 >>> image = optics(scatterer)
->>> print(image().shape)
+>>> image().shape
 (128, 128, 1)
+
 >>> image.plot(cmap="gray")
 
 """
@@ -154,12 +152,11 @@ from deeptrack.backend.units import (
 from deeptrack.math import AveragePooling
 from deeptrack.features import propagate_data_to_dependencies
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
-from deeptrack.image import Image, pad_image_to_fft, maybe_cupy
+from deeptrack.image import Image, pad_image_to_fft
 from deeptrack.types import ArrayLike, PropertyLike
 
-from . import units as u
-from deeptrack.backend import config
 from deeptrack import image
+from deeptrack import units_registry as u
 
 
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test
@@ -215,7 +212,7 @@ class Microscope(StructuralFeature):
         sample: Feature,
         objective: Feature,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initialize the `Microscope` instance.
 
         Parameters
@@ -238,6 +235,7 @@ class Microscope(StructuralFeature):
         """
 
         super().__init__(**kwargs)
+
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
         self._sample.store_properties()
@@ -382,10 +380,10 @@ class Microscope(StructuralFeature):
 
     # def _no_wrap_format_input(self, *args, **kwargs) -> list:
     #     return self._image_wrapped_format_input(*args, **kwargs)
-    
+
     # def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
     #     return self._image_wrapped_process_and_get(*args, **feature_input)
-    
+
     # def _no_wrap_process_output(self, *args, **feature_input):
     #     return self._image_wrapped_process_output(*args, **feature_input)
 
@@ -758,8 +756,6 @@ class Optics(Feature):
         y = (np.linspace(-(shape[1] / 2), shape[1] / 2 - 1, shape[1])) / y_radius + 1e-8
 
         W, H = np.meshgrid(y, x)
-        W = maybe_cupy(W)
-        H = maybe_cupy(H)
         RHO = (W ** 2 + H ** 2).astype(complex)
         pupil_function = Image((RHO < 1) + 0.0j, copy=False)
         # Defocus
@@ -1123,7 +1119,7 @@ class Fluorescence(Optics):
         z_limits = limits[2, :]
 
         output_image = Image(
-            maybe_cupy(np.zeros((*padded_volume.shape[0:2], 1))), copy=False
+            np.zeros((*padded_volume.shape[0:2], 1)), copy=False
         )
 
         index_iterator = range(padded_volume.shape[2])
@@ -1139,7 +1135,7 @@ class Fluorescence(Optics):
         z_values = z_iterator[~zero_plane]
 
         # Further pad image to speed up fft (multiples of 2 and 3)
-        volume = maybe_cupy(pad_image_to_fft(padded_volume, axes=(0, 1)))
+        volume = pad_image_to_fft(padded_volume, axes=(0, 1))
         pupils = self._pupil(volume.shape[:2], defocus=z_values, **kwargs)
 
         z_index = 0
@@ -1357,9 +1353,9 @@ class Brightfield(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(image.maybe_cupy(
+        output_image = Image(
             np.zeros((*padded_volume.shape[0:2], 1))
-            ))
+        )
 
         index_iterator = range(padded_volume.shape[2])
         z_iterator = np.linspace(
@@ -1396,7 +1392,7 @@ class Brightfield(Optics):
 
         pupil_step = np.fft.fftshift(pupils[0])
 
-        light_in = image.maybe_cupy(np.ones(volume.shape[:2], dtype=complex))
+        light_in = np.ones(volume.shape[:2], dtype=complex)
         light_in = self.illumination.resolve(light_in)
         light_in = np.fft.fft2(light_in)
 

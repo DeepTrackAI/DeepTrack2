@@ -93,7 +93,7 @@ from typing import Any
 
 import numpy as np
 
-from deeptrack.image import maybe_cupy, Image
+from deeptrack.image import Image
 from deeptrack import Feature
 
 
@@ -150,8 +150,8 @@ def get_propagation_matrix(
     y = 2 * np.pi / pixel_size * y / yr
 
     KXk, KYk = np.meshgrid(x, y)
-    KXk = maybe_cupy(KXk.astype(complex))
-    KYk = maybe_cupy(KYk.astype(complex))
+    KXk = KXk.astype(complex)
+    KYk = KYk.astype(complex)
 
     K = np.real(np.sqrt(1 - (KXk / k) ** 2 - (KYk / k) ** 2))
     C = np.fft.fftshift(((KXk / k) ** 2 + (KYk / k) ** 2 < 1) * 1.0)

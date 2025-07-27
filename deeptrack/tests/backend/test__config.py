@@ -26,12 +26,14 @@ class TestConfig(unittest.TestCase):
     def test___all__(self):
         from deeptrack import (
             config,
+            DEEPLAY_AVAILABLE,
             OPENCV_AVAILABLE,
             TORCH_AVAILABLE,
             xp,
         )
         from deeptrack.backend import (
             config,
+            DEEPLAY_AVAILABLE,
             OPENCV_AVAILABLE,
             TORCH_AVAILABLE,
             xp,
@@ -43,6 +45,13 @@ class TestConfig(unittest.TestCase):
             self.assertTrue(_config.TORCH_AVAILABLE)
         except ImportError:
             self.assertFalse(_config.TORCH_AVAILABLE)
+
+    def test_DEEPLAY_AVAILABLE(self):
+        try:
+            import deeplay
+            self.assertTrue(_config.DEEPLAY_AVAILABLE)
+        except ImportError:
+            self.assertFalse(_config.DEEPLAY_AVAILABLE)
 
     def test_OPENCV_AVAILABLE(self):
         try:
