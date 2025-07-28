@@ -1176,17 +1176,35 @@ class Pool(Feature):
             The pooled image.
 
         """
+        image_is_torch = isinstance(image, torch.Tensor)
+
+        # Convert to numpy to use skimage.measure.block_reduce.
+        if image_is_torch:
+            device = image.device
+            dtype = image.dtype
+            image = image.detach().cpu().numpy()
 
         kwargs.pop("func", False)
         kwargs.pop("image", False)
         kwargs.pop("block_size", False)
-        return utils.safe_call(
+
+        pooled_image = utils.safe_call(
             skimage.measure.block_reduce,
             image=image,
             func=self.pooling,
             block_size=ksize,
             **kwargs,
         )
+
+        # Convert back to torch.Tensor if needed.
+        if image_is_torch:
+            return torch.tensor(
+                pooled_image,
+                dtype=dtype,
+                device=device
+            )
+        
+        return pooled_image
 
 
 #TODO ***AL*** revise AveragePooling - torch, typing, docstring, unit test
