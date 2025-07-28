@@ -1069,7 +1069,6 @@ class MedianBlur(Blur):
         super().__init__(ndimage.median_filter, size=ksize, **kwargs)
 
 
-#TODO ***AL*** revise Pool - torch, typing, docstring, unit test
 class Pool(Feature):
     """Downsamples the image by applying a function to local regions of the
     image.
@@ -1189,7 +1188,6 @@ class Pool(Feature):
         )
 
 
-#TODO ***AL*** revise AveragePooling - torch, typing, docstring, unit test
 class AveragePooling(Pool):
     # Check if numpy, call super, else use torch.AveragePooling2D
     """Apply average pooling to an image.
@@ -1255,7 +1253,7 @@ class AveragePooling(Pool):
         super().__init__(np.mean, ksize=ksize, **kwargs)
 
         def get(self, image, ksize: int, **kwargs):
-            
+
             # Check torch backend and if the type name starts with "torch".
             # Isinstance will not work when torch is not available.
             if TORCH_AVAILABLE and type(image).__module__.startswith("torch"):
