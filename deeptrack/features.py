@@ -216,7 +216,7 @@ __all__ = [
     "Merge",
     "OneOf",
     "OneOfDict",
-    "LoadImage",  # TODO ***MG***
+    "LoadImage",
     "SampleToMasks",  # TODO ***MG***
     "AsType",  # TODO ***MG***
     "ChannelFirst2d",
@@ -7236,7 +7236,7 @@ class LoadImage(Feature):
         as_list: bool,
         get_one_random: bool,
         **kwargs: Any
-    ) -> np.ndarray | torch.tensor | list`
+    ) -> NDArray | torch.Tensor | list`
         Load the image(s) from disk and process them.
 
     Raises
