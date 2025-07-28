@@ -8855,7 +8855,6 @@ class Store(Feature):
     >>> print(cached_output == value_feature())
     False
 
-
     Retrieve the stored value recomputing:
     >>> value_feature.update()
     >>> cached_output = store_feature(None, key="example", replace=True)
