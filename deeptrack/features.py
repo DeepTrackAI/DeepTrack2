@@ -9515,9 +9515,9 @@ class TakeProperties(Feature):
             The feature from which to extract properties.
         *names: str
             One or more names of the properties to extract.
-=        **kwargs: Any, optional
+        **kwargs: Any, optional
             Additional keyword arguments passed to the parent `Feature` class.
-        
+
         """
 
         super().__init__(names=names, **kwargs)
