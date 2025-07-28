@@ -1256,8 +1256,9 @@ class AveragePooling(Pool):
 
             # Check torch backend and if the type name starts with "torch".
             # Isinstance will not work when torch is not available.
-            if TORCH_AVAILABLE and type(image).__module__.startswith("torch"):
-                return torch.nn.functional.avg_pool2d(image, kernel_size=ksize)
+            if TORCH_AVAILABLE:
+                if type(image).__module__.startswith("torch"):
+                    return torch.nn.functional.avg_pool2d(image, kernel_size=ksize)
             return super().get(image, ksize=ksize, **kwargs)
 
 
