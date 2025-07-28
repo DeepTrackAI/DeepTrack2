@@ -9529,7 +9529,7 @@ class TakeProperties(Feature):
         names: tuple[str, ...],
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
-    ) -> NDArray | tuple[np.ndarray, ...]:
+    ) -> NDArray | tuple[NDArray, torch.Tensor, ...]:
         """Extract the specified properties from the feature pipeline.
 
         This method retrieves the values of the specified properties from the 
@@ -9549,7 +9549,7 @@ class TakeProperties(Feature):
 
         Returns
         -------
-        np.ndarray or tuple[np.ndarray, ...]
+        NDArray or tuple[NDArray, torch.Tensor, ...]
             If a single property name is provided, a NumPy array containing the 
             property values is returned. If multiple property names are 
             provided, a tuple of NumPy arrays is returned, where each array 
