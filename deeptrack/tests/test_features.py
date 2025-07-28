@@ -2687,14 +2687,48 @@ class TestFeatures(unittest.TestCase):
         output = take_properties.get(image=None, names=["sigma"])
         self.assertEqual(output, [12])
 
-        # with `Gaussian` feature 
-        noise_feature = Gaussian(mu=7, sigma=12)
+        # with `Gaussian` feature with float properties
+        noise_feature = Gaussian(mu=7.123, sigma=12.123)
         
         take_properties = features.TakeProperties(noise_feature)
-        output = take_properties.get(image=None, names=["mu"])
-        self.assertEqual(output, [7])
-        output = take_properties.get(image=None, names=["sigma"])
-        self.assertEqual(output, [12])
+        output = take_properties.get(image=None, names=["mu", "sigma"])
+        self.assertEqual(output, ([7.123], [12.123]))
+        self.assertEqual(output[0][0], 7.123)
+        self.assertEqual(output[1][0], 12.123)
+
+        ### Test with PyTorch tensor (if available)
+        if TORCH_AVAILABLE:
+            class ExampleFeature(features.Feature):
+                def __init__(self, my_property, **kwargs):
+                    super().__init__(my_property=my_property, **kwargs)
+
+            feature = ExampleFeature(my_property=
+                properties.Property(torch.tensor(42.123)))
+
+            take_properties = features.TakeProperties(feature)
+            take_properties = features.TakeProperties(feature)
+            output = take_properties.get(image=None, names=["my_property"])
+            torch.testing.assert_close(output[0], torch.tensor(42.123))
+
+            # with `Gaussian` feature 
+            noise_feature = Gaussian(mu=torch.tensor(7), sigma=torch.tensor(12))
+            
+            take_properties = features.TakeProperties(noise_feature)
+            output = take_properties.get(image=None, names=["mu"])
+            torch.testing.assert_close(output[0], torch.tensor(7))
+            output = take_properties.get(image=None, names=["sigma"])
+            torch.testing.assert_close(output[0], torch.tensor(12))
+
+            # with `Gaussian` feature with float properties
+            random_mu = torch.rand(1)
+            random_sigma = torch.rand(1)
+            noise_feature = Gaussian(mu=random_mu, sigma=random_sigma)
+            
+            take_properties = features.TakeProperties(noise_feature)
+            output = take_properties.get(image=None, names=["mu", "sigma"])
+            torch.testing.assert_close(output, ([random_mu], [random_sigma]))
+            torch.testing.assert_close(output[0][0], random_mu)
+            torch.testing.assert_close(output[1][0], random_sigma)
 
 
 if __name__ == "__main__":

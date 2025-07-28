@@ -230,7 +230,7 @@ __all__ = [
     "Transpose",
     "Permute",
     "OneHot",
-    "TakeProperties",  #TODO ***JH***
+    "TakeProperties",
 ]
 
 
@@ -9440,11 +9440,11 @@ class OneHot(Feature):
 class TakeProperties(Feature):
     """Extract all instances of a set of properties from a pipeline.
 
-    Only extracts the properties if the feature contains all given 
-    property-names. The order of the properties is not guaranteed to be the 
+    Only extracts the properties if the feature contains all given
+    property-names. The order of the properties is not guaranteed to be the
     same as the evaluation order.
 
-    If there is only a single property name, this will return a list of the 
+    If there is only a single property name, this will return a list of the
     property values.
 
     Parameters
@@ -9462,18 +9462,18 @@ class TakeProperties(Feature):
         Indicates whether this feature distributes computation across inputs.
         Always `False` for `TakeProperties`, as it processes sequentially.
     __list_merge_strategy__: int
-        Specifies how lists of properties are merged. Set to 
+        Specifies how lists of properties are merged. Set to
         `MERGE_STRATEGY_APPEND` to append values to the result list.
 
     Methods
     -------
     `get(image: Any, names: tuple[str, ...], **kwargs: dict[str, Any]) -> np.ndarray | tuple[np.ndarray, ...]`
         Extract the specified properties from the feature pipeline.
-    
+
     Examples
     --------
     >>> import deeptrack as dt
-    
+
     >>> class ExampleFeature(Feature):
     ...     def __init__(self, my_property, **kwargs):
     ...         super().__init__(my_property=my_property, **kwargs)
@@ -9489,7 +9489,7 @@ class TakeProperties(Feature):
 
     Create a `Gaussian` feature:
     >>> noise_feature = dt.Gaussian(mu=7, sigma=12)
-    
+
     Use `TakeProperties` to extract the property:
     >>> take_properties = dt.TakeProperties(noise_feature)
     >>> output = take_properties.get(image=None, names=["mu"])
@@ -9502,7 +9502,7 @@ class TakeProperties(Feature):
     __list_merge_strategy__: int = MERGE_STRATEGY_APPEND
 
     def __init__(
-        self: TakeProperties,
+        self: Feature,
         feature: Feature,
         *names: str,
         **kwargs: Any,
@@ -9524,12 +9524,12 @@ class TakeProperties(Feature):
         self.feature = self.add_feature(feature)
 
     def get(
-        self: TakeProperties,
+        self: Feature,
         image: Any,
         names: tuple[str, ...],
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
-    ) -> np.ndarray | tuple[np.ndarray, ...]:
+    ) -> NDArray | tuple[np.ndarray, ...]:
         """Extract the specified properties from the feature pipeline.
 
         This method retrieves the values of the specified properties from the 
@@ -9578,8 +9578,8 @@ class TakeProperties(Feature):
                         if key[:len(_ID)] == _ID:
                             res[name].append(value.current_value())
 
-        # Convert the results to NumPy arrays.
-        res = tuple([np.array(res[name]) for name in names])
+        # Convert the results to tuple.
+        res = tuple([res[name] for name in names])
 
         # Return a single array if only one property name is specified.
         if len(res) == 1:
