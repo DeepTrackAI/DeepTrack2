@@ -114,7 +114,8 @@ class TestMath(unittest.TestCase):
                                           [5.0, 6.0, 7.0, 8.0]]]])
             feature = math.AveragePooling(ksize=2)
             pooled_image = torch.tensor(feature.get(input_image, ksize=2))
-            self.assertTrue(torch.allclose(pooled_image, torch.tensor([[[[3.5, 5.5]]]])))
+            expected = torch.tensor([[[[3.5, 5.5]]]], dtype=pooled_image.dtype, device=pooled_image.device)
+            self.assertTrue(torch.allclose(pooled_image, expected))
 
     def test_MaxPooling(self):
         input_image = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
