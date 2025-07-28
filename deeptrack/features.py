@@ -8804,9 +8804,9 @@ class NonOverlapping(Feature):
 class Store(Feature):
     """Store the output of a feature for reuse.
 
-    The `Store` feature evaluates a given feature and stores its output in an 
-    internal dictionary. Subsequent calls with the same key will return the 
-    stored value unless the `replace` parameter is set to `True`. This enables 
+    The `Store` feature evaluates a given feature and stores its output in an
+    internal dictionary. Subsequent calls with the same key will return the
+    stored value unless the `replace` parameter is set to `True`. This enables
     caching and reuse of computed feature outputs.
 
     Parameters
@@ -8853,7 +8853,7 @@ class Store(Feature):
     >>> print(cached_output == output)
     True
     >>> print(cached_output == value_feature())
-    True
+    False
 
 
     Retrieve the stored value recomputing:
@@ -8862,7 +8862,7 @@ class Store(Feature):
     >>> print(cached_output == output)
     False
     >>> print(cached_output == value_feature())
-    False
+    True
 
     """
 
