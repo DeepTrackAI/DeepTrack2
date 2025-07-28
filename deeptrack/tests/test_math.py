@@ -111,7 +111,7 @@ class TestMath(unittest.TestCase):
 
         if TORCH_AVAILABLE:
             input_image = torch.tensor([[[[1.0, 2.0, 3.0, 4.0],
-                                            5.0, 6.0, 7.0, 8.0]]]])
+                                          [5.0, 6.0, 7.0, 8.0]]]])
             feature = math.AveragePooling(ksize=2)
             pooled_image = feature.resolve(input_tensor)
             self.AssertTrue(torch.all(pooled_image == torch.tensor([[[[3.5, 5.5]]]])))
