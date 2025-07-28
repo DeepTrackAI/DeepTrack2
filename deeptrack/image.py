@@ -65,14 +65,6 @@ Methods
 
     Pads an image to optimize Fast Fourier Transform (FFT) performance.
 
-- `maybe_cupy(array)`
-
-    maybe_cupy(
-        array: np.ndarray | list | tuple,
-    ) -> cupy.ndarray | np.ndarray
-
-    Convert an array to a CuPy array if GPU is available and enabled.
-
 Examples
 --------
 Basic usage of the `Image` class:
@@ -1775,55 +1767,3 @@ def pad_image_to_fft(
 
     # Pad the image using constant mode (add zeros).
     return np.pad(image, pad_width, mode="constant")
-
-
-#TODO ***BM*** can be eliminated?
-def maybe_cupy(
-    array: np.ndarray | list | tuple,
-) -> np.ndarray:
-    """Convert an array to a CuPy array if GPU is available and enabled.
-
-    This function checks if GPU computation is enabled in the configuration.
-    If enabled, it converts the input array to a CuPy array for GPU-based
-    acceleration. Otherwise, it returns the input array unchanged.
-
-    The function relies on the `gpu_enabled` flag in the `config` module to
-    determine whether GPU acceleration should be used.
-
-    Parameters
-    ----------
-    array: np.ndarray | list | tuple
-        The input array to be potentially converted to a CuPy array.
-
-    Returns
-    -------
-    cupy.ndarray | np.ndarray
-        A CuPy array if GPU is enabled, otherwise the original array.
-
-    Raises
-    ------
-    ImportError
-        If GPU is enabled but the `cupy` library is not installed.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from deeptrack.image import maybe_cupy
-
-    If GPU is enabled:
-
-    >>> array = np.array([1, 2, 3])
-    >>> gpu_array = maybe_cupy(array)
-    >>> type(gpu_array)
-    <class cupy.ndarray>
-
-    If GPU is not enabled:
-
-    >>> array = np.array([1, 2, 3])
-    >>> numpy_array = maybe_cupy(array)
-    >>> type(numpy_array)
-    <class 'numpy.ndarray'>
-
-    """
-
-    return array

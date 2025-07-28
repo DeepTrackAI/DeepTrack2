@@ -54,6 +54,11 @@ Attributes:
     True if PyTorch (torch) is available, otherwise False. Used to control
     backend switching and PyTorch-specific features.
 
+- DEEPLAY_AVAILABLE: bool
+
+    True if Deeplay (deeplay) is available, otherwise False. Used to control
+    backend switching and Deeplay-specific features.
+
 - OPENCV_AVAILABLE: bool
 
     True if OpenCV (cv2) is available, otherwise False. Used for conditional
@@ -123,6 +128,12 @@ Check PyTorch availability:
 >>>
 >>> print(TORCH_AVAILABLE)
 
+Check Deeplay availability:
+
+>>> from deeptrack.backend import DEEPLAY_AVAILABLE
+>>>
+>>> print(DEEPLAY_AVAILABLE)
+
 Check OpenCV availability:
 
 >>> from deeptrack.backend import OPENCV_AVAILABLE
@@ -144,6 +155,7 @@ import array_api_strict
 
 __all__ = [
     "config",
+    "DEEPLAY_AVAILABLE",
     "OPENCV_AVAILABLE",
     "TORCH_AVAILABLE",
     "xp",
@@ -160,6 +172,11 @@ try:
 except ImportError:
     TORCH_AVAILABLE = False
 
+try:
+    import deeplay
+    DEEPLAY_AVAILABLE = True
+except ImportError:
+    DEEPLAY_AVAILABLE = False
 
 try:
     import cv2
