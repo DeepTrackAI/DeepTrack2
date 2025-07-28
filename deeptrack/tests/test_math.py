@@ -110,11 +110,13 @@ class TestMath(unittest.TestCase):
         self.assertTrue(np.all(pooled_image == [[3.5, 5.5]]))
 
         if TORCH_AVAILABLE:
-            input_image = torch.tensor([[[[1.0, 2.0, 3.0, 4.0],
-                                          [5.0, 6.0, 7.0, 8.0]]]])
+            input_image = torch.tensor([[[ [1.0, 2.0, 3.0, 4.0],
+                                           [5.0, 6.0, 7.0, 8.0] ]]])
             feature = math.AveragePooling(ksize=2)
             pooled_image = torch.tensor(feature.get(input_image, ksize=2))
+            
             expected = torch.tensor([[[[3.5, 5.5]]]], dtype=pooled_image.dtype, device=pooled_image.device)
+            self.assertEqual(pooled_image.shape, expected.shape)
             self.assertTrue(torch.allclose(pooled_image, expected))
 
     def test_MaxPooling(self):
