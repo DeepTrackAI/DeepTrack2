@@ -1078,11 +1078,11 @@ class Pool(Feature):
     non-overlapping blocks of size `ksize` and applying the specified pooling
     function to each block. The result is a downsampled image where each pixel
     value represents the result of the pooling function applied to the
-    corresponding block.
+    corresponding block. This pooling only works with numpy functions.  
 
     Parameters
     ----------
-    pooling_function: function
+    pooling_function:  Numpy function
         A function that is applied to each local region of the image.
         DOES NOT NEED TO BE WRAPPED IN ANOTHER FUNCTION.
         The `pooling_function` must accept the input image as a keyword
@@ -1095,8 +1095,8 @@ class Pool(Feature):
 
     Methods
     -------
-    `get(image: NDArray | torch.Tensor | Image,
-         ksize: int, **kwargs: Any) --> NDArray | torch.Tensor`
+    `get(image: NDArray,
+         ksize: int, **kwargs: Any) --> NDArray`
         Applies the pooling function to the input image.
 
     Examples
@@ -1153,17 +1153,17 @@ class Pool(Feature):
 
     def get(
         self: Pool,
-        image: NDArray | torch.Tensor | Image,
+        image: NDArray,
         ksize: int,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor:
+    ) -> NDArray:
         """Applies the pooling function to the input image.
 
         This method applies `pooling_function` to the input image.
 
         Parameters
         ----------
-        image: NDArray | torch.Tensor | Image
+        image: NDArray | torch.Tensor
             The input image to pool.
         ksize: int
             Size of the pooling kernel.
@@ -1176,19 +1176,11 @@ class Pool(Feature):
             The pooled image.
 
         """
-        image_is_torch = isinstance(image, torch.Tensor)
-
-        # Convert to numpy to use skimage.measure.block_reduce.
-        if image_is_torch:
-            device = image.device
-            dtype = image.dtype
-            image = image.detach().cpu().numpy()
 
         kwargs.pop("func", False)
         kwargs.pop("image", False)
         kwargs.pop("block_size", False)
-
-        pooled_image = utils.safe_call(
+        return utils.safe_call(
             skimage.measure.block_reduce,
             image=image,
             func=self.pooling,
@@ -1196,26 +1188,18 @@ class Pool(Feature):
             **kwargs,
         )
 
-        # Convert back to torch.Tensor if needed.
-        if image_is_torch:
-            return torch.tensor(
-                pooled_image,
-                dtype=dtype,
-                device=device
-            )
-        
-        return pooled_image
-
 
 #TODO ***AL*** revise AveragePooling - torch, typing, docstring, unit test
 class AveragePooling(Pool):
+    # Check if numpy, call super, else use torch.AveragePooling2D
     """Apply average pooling to an image.
 
-    This class reduces the resolution of an image by dividing it into
-    non-overlapping blocks of size `ksize` and applying the average function to
-    each block. The result is a downsampled image where each pixel value
-    represents the average value within the corresponding block of the
-    original image.
+    This class inherits from `Pool` to reduce the resolution of an image by
+    dividing it into non-overlapping blocks of size `ksize` and applying the
+    average function to each block. The result is a downsampled image where
+    each pixel value represents the average value within the corresponding
+    block of the original image. If TORCH_AVAILABLE, it will return the output
+    of `torch.nn.functional.avg_pool2d` instead.
 
     Parameters
     ----------
@@ -1240,10 +1224,12 @@ class AveragePooling(Pool):
 
     Notes
     -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    Calling this feature returns a pooled image of the input, it will return
+    either numpy or torch depending on the `TORCH_AVAILABLE` flag. If
+    `store_properties` is set to `True` and the input is a numpy array,
+    the returned array will be automatically wrapped in an `Image` object.
+    This behavior is handled internally and does not affect the return type
+    of the `get()` method.
 
     """
 
@@ -1254,7 +1240,8 @@ class AveragePooling(Pool):
     ):
         """Initialize the parameters for average pooling.
 
-        This constructor initializes the parameters for average pooling.
+        This constructor initializes the parameters for average pooling and
+        checks whether to use the numpy or torch implementation.
 
         Parameters
         ----------
@@ -1266,6 +1253,14 @@ class AveragePooling(Pool):
         """
 
         super().__init__(np.mean, ksize=ksize, **kwargs)
+
+        def get(self, image, ksize: int, **kwargs):
+            
+            # Check torch backend and if the type name starts with "torch".
+            # Isinstance will not work when torch is not available.
+            if TORCH_AVAILABLE and type(image).__module__.startswith("torch"):
+                return torch.nn.functional.avg_pool2d(image, kernel_size=ksize)
+            return super().get(image, ksize=ksize, **kwargs)
 
 
 #TODO ***AL*** revise MaxPooling - torch, typing, docstring, unit test
