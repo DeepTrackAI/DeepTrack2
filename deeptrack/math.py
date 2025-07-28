@@ -1252,14 +1252,13 @@ class AveragePooling(Pool):
 
         super().__init__(np.mean, ksize=ksize, **kwargs)
 
-        def get(self, image, ksize: int, **kwargs):
-
-            # Check torch backend and if the type name starts with "torch".
-            # Isinstance will not work when torch is not available.
-            if TORCH_AVAILABLE:
-                if type(image).__module__.startswith("torch"):
-                    return torch.nn.functional.avg_pool2d(image, kernel_size=ksize)
-            return super().get(image, ksize=ksize, **kwargs)
+    def get(self, image, ksize: int, **kwargs):
+        # Check torch backend and if the type name starts with "torch".
+        # Isinstance will not work when torch is not available.
+        if TORCH_AVAILABLE:
+            if type(image).__module__.startswith("torch"):
+                return torch.nn.functional.avg_pool2d(image, kernel_size=ksize)
+        return super().get(image, ksize=ksize, **kwargs)
 
 
 #TODO ***AL*** revise MaxPooling - torch, typing, docstring, unit test
