@@ -115,7 +115,7 @@ class TestMath(unittest.TestCase):
             feature = math.AveragePooling(ksize=2)
             pooled_image = feature.get(input_image, ksize=2)
             
-            expected = torch.tensor([[[[3.5, 5.5]]]], dtype=pooled_image.dtype, device=pooled_image.device)
+            expected = torch.tensor([[[[3.5, 5.5]]]])
             self.assertEqual(pooled_image.shape, expected.shape)
 
             self.assertTrue(torch.allclose(pooled_image, expected))
