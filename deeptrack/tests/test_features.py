@@ -1893,6 +1893,24 @@ class TestFeatures(unittest.TestCase):
             for img in loaded_list:
                 self.assertTrue(isinstance(img, np.ndarray))
 
+            # Test loading a random image from a list of images
+            load_feature = features.LoadImage(
+                path=[temp_npy.name, temp_npy2.name],
+                ndim=4,
+                as_list=True,
+                get_one_random=True,
+            )
+            loaded_image = load_feature.resolve()
+            self.assertTrue(
+                np.allclose(
+                    loaded_image[:, :, 0, 0], test_image_array, rtol=1.e-3
+                )
+            )
+            self.assertEqual(loaded_image.shape, (50, 50, 1, 1))
+
+            import gc
+            gc.collect()
+
             # Test loading an image as a torch tensor.
             if TORCH_AVAILABLE:
                 load_feature = features.LoadImage(path=temp_png.name)
