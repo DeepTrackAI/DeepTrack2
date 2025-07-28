@@ -222,7 +222,7 @@ __all__ = [
     "ChannelFirst2d",
     "Upscale",  # TODO ***AL***
     "NonOverlapping",  # TODO ***AL***
-    "Store",  # TODO ***JH***
+    "Store",
     "Squeeze",
     "Unsqueeze",
     "ExpandDims",
@@ -230,7 +230,7 @@ __all__ = [
     "Transpose",
     "Permute",
     "OneHot",
-    "TakeProperties",
+    "TakeProperties",  #TODO ***JH***
 ]
 
 
@@ -8804,9 +8804,9 @@ class NonOverlapping(Feature):
 class Store(Feature):
     """Store the output of a feature for reuse.
 
-    The `Store` feature evaluates a given feature and stores its output in an 
-    internal dictionary. Subsequent calls with the same key will return the 
-    stored value unless the `replace` parameter is set to `True`. This enables 
+    The `Store` feature evaluates a given feature and stores its output in an
+    internal dictionary. Subsequent calls with the same key will return the
+    stored value unless the `replace` parameter is set to `True`. This enables
     caching and reuse of computed feature outputs.
 
     Parameters
@@ -8815,9 +8815,9 @@ class Store(Feature):
         The feature to evaluate and store.
     key: Any
         The key used to identify the stored output.
-    replace: bool, optional
-        If `True`, replaces the stored value with a new computation. It defaults 
-        to `False`.
+    replace: PropertyLike[bool], optional
+        If `True`, replaces the stored value with the current computation. It
+        defaults to `False`.
     **kwargs:: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
@@ -8852,22 +8852,26 @@ class Store(Feature):
     >>> cached_output = store_feature(None, key="example", replace=False)
     >>> print(cached_output == output)
     True
+    >>> print(cached_output == value_feature())
+    False
 
     Retrieve the stored value recomputing:
     >>> value_feature.update()
     >>> cached_output = store_feature(None, key="example", replace=True)
     >>> print(cached_output == output)
     False
+    >>> print(cached_output == value_feature())
+    True
 
     """
 
     __distributed__: bool = False
 
     def __init__(
-        self: Store,
+        self: Feature,
         feature: Feature,
         key: Any,
-        replace: bool = False,
+        replace: PropertyLike[bool] = False,
         **kwargs: Any,
     ):
         """Initialize the Store feature.
@@ -8878,7 +8882,7 @@ class Store(Feature):
             The feature to evaluate and store.
         key: Any
             The key used to identify the stored output.
-        replace: bool, optional
+        replace: PropertyLike[bool], optional
             If `True`, replaces the stored value with a new computation. 
             It defaults to `False`.
         **kwargs:: dict of str to Any
@@ -8891,10 +8895,10 @@ class Store(Feature):
         self._store: dict[Any, Image] = {}
 
     def get(
-        self: Store,
+        self: Feature,
         _: Any,
         key: Any,
-        replace: bool,
+        replace: PropertyLike[bool],
         **kwargs: Any,
     ) -> Any:
         """Evaluate and store the feature output, or return the cached result.
@@ -8905,7 +8909,7 @@ class Store(Feature):
             Placeholder for unused image input.
         key: Any
             The key used to identify the stored output.
-        replace: bool
+        replace: PropertyLike[bool]
             If `True`, replaces the stored value with a new computation.
         **kwargs: Any
             Additional keyword arguments passed to the feature.
@@ -9440,11 +9444,11 @@ class OneHot(Feature):
 class TakeProperties(Feature):
     """Extract all instances of a set of properties from a pipeline.
 
-    Only extracts the properties if the feature contains all given
-    property-names. The order of the properties is not guaranteed to be the
+    Only extracts the properties if the feature contains all given 
+    property-names. The order of the properties is not guaranteed to be the 
     same as the evaluation order.
 
-    If there is only a single property name, this will return a list of the
+    If there is only a single property name, this will return a list of the 
     property values.
 
     Parameters
@@ -9462,18 +9466,18 @@ class TakeProperties(Feature):
         Indicates whether this feature distributes computation across inputs.
         Always `False` for `TakeProperties`, as it processes sequentially.
     __list_merge_strategy__: int
-        Specifies how lists of properties are merged. Set to
+        Specifies how lists of properties are merged. Set to 
         `MERGE_STRATEGY_APPEND` to append values to the result list.
 
-    Methods
+    Metho    ds
     -------
-    `get(image: Any, names: tuple[str, ...], **kwargs: dict[str, Any]) -> np.ndarray | tuple[np.ndarray, ...]`
+    `get(image: Any, names: tuple[str, ...]    , **kwargs: dict[str, Any]) -> np.ndarray | tuple[np.ndarray, ...]`
         Extract the specified properties from the feature pipeline.
-
+    
     Examples
     --------
     >>> import deeptrack as dt
-
+    
     >>> class ExampleFeature(Feature):
     ...     def __init__(self, my_property, **kwargs):
     ...         super().__init__(my_property=my_property, **kwargs)
@@ -9482,14 +9486,14 @@ class TakeProperties(Feature):
     >>> feature = ExampleFeature(my_property=Property(42))
 
     Use `TakeProperties` to extract the property:
-    >>> take_properties = dt.TakeProperties(feature)
+    >>> take_properties = dt.TakePropert    ies(feature)
     >>> output = take_properties.get(image=None, names=["my_property"])
     >>> print(output)
     [42]
 
     Create a `Gaussian` feature:
     >>> noise_feature = dt.Gaussian(mu=7, sigma=12)
-
+    
     Use `TakeProperties` to extract the property:
     >>> take_properties = dt.TakeProperties(noise_feature)
     >>> output = take_properties.get(image=None, names=["mu"])
@@ -9502,7 +9506,7 @@ class TakeProperties(Feature):
     __list_merge_strategy__: int = MERGE_STRATEGY_APPEND
 
     def __init__(
-        self: Feature,
+        self: TakeProperties,
         feature: Feature,
         *names: str,
         **kwargs: Any,
@@ -9515,21 +9519,21 @@ class TakeProperties(Feature):
             The feature from which to extract properties.
         *names: str
             One or more names of the properties to extract.
-=        **kwargs: Any, optional
+        **kwargs: Any, optional
             Additional keyword arguments passed to the parent `Feature` class.
         
         """
 
-        super().__init__(names=names, **kwargs)
+        super().__init__(names=names, **np.ndarray
         self.feature = self.add_feature(feature)
 
     def get(
-        self: Feature,
+        self: TakeProperties,
         image: Any,
         names: tuple[str, ...],
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
-    ) -> NDArray | tuple[np.ndarray, ...]:
+    ) -> np.ndarray | tuple[np.ndarray, ...]:
         """Extract the specified properties from the feature pipeline.
 
         This method retrieves the values of the specified properties from the 
@@ -9578,8 +9582,8 @@ class TakeProperties(Feature):
                         if key[:len(_ID)] == _ID:
                             res[name].append(value.current_value())
 
-        # Convert the results to tuple.
-        res = tuple([res[name] for name in names])
+        # Convert the results to NumPy arrays.
+        res = tuple([np.array(res[name]) for name in names])
 
         # Return a single array if only one property name is specified.
         if len(res) == 1:
