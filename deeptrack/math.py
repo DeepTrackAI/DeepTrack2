@@ -1189,7 +1189,6 @@ class Pool(Feature):
 
 
 class AveragePooling(Pool):
-    # Check if numpy, call super, else use torch.AveragePooling2D
     """Apply average pooling to an image.
 
     This class inherits from `Pool` to reduce the resolution of an image by
@@ -1252,7 +1251,12 @@ class AveragePooling(Pool):
 
         super().__init__(np.mean, ksize=ksize, **kwargs)
 
-    def get(self, image, ksize: int, **kwargs):
+    def get(
+        self,
+        image,
+        ksize: int,
+        **kwargs
+    ):
         # Check torch backend and if the type name starts with "torch".
         # Isinstance will not work when torch is not available.
         if TORCH_AVAILABLE:
