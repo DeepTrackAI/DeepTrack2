@@ -2419,7 +2419,9 @@ class TestFeatures(unittest.TestCase):
 
             value_feature = features.Value(lambda: torch.rand(1))
 
-            store_feature = features.Store(feature=value_feature, key="example")
+            store_feature = features.Store(
+                feature=value_feature, key="example"
+            )
 
             output = store_feature(None, key="example", replace=False)
 
