@@ -9504,7 +9504,7 @@ class TakeProperties(Feature):
     def __init__(
         self: Feature,
         feature: Feature,
-        *names: str,
+        *names: PropertyLike[str],
         **kwargs: Any,
     ):
         """Initialize the TakeProperties feature.
@@ -9513,7 +9513,7 @@ class TakeProperties(Feature):
         ----------
         feature: Feature
             The feature from which to extract properties.
-        *names: str
+        *names: PropertyLike[str]
             One or more names of the properties to extract.
         **kwargs: Any, optional
             Additional keyword arguments passed to the parent `Feature` class.
