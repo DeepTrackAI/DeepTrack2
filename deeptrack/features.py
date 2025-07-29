@@ -8898,7 +8898,7 @@ class Store(Feature):
         self: Feature,
         _: Any,
         key: Any,
-        replace: PropertyLike[bool],
+        replace: bool,
         **kwargs: Any,
     ) -> Any:
         """Evaluate and store the feature output, or return the cached result.
@@ -8909,7 +8909,7 @@ class Store(Feature):
             Placeholder for unused image input.
         key: Any
             The key used to identify the stored output.
-        replace: PropertyLike[bool]
+        replace: bool
             If `True`, replaces the stored value with a new computation.
         **kwargs: Any
             Additional keyword arguments passed to the feature.
