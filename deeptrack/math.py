@@ -1254,13 +1254,26 @@ class AveragePooling(Pool):
     def _get_numpy(
         self,
         image: NDArray,
-        ksize: int=3,
+        ksize: int = 3,
+        **kwargs,
     ):
         """Method to perform average pooling with the numpy backend enabled.
 
         Returns the result of the image passed to the scikit image block_reduce
         function with `np.mean()` as the pooling function.
-        
+
+        Parameters
+        ----------
+        image: NDArray
+            Input image to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        NDArray
+            The pooled image as a `NDArray`.
+            
         """
         return utils.safe_call(
             skimage.measure.block_reduce,
@@ -1274,25 +1287,62 @@ class AveragePooling(Pool):
         self,
         image: torch.Tensor,
         ksize: int=3,
+        **kwargs,
     ):
         """Method to perform average pooling with the torch backend enabled.
         
-        Returns the result of the image passed to a torch average pooling layer.   
+        Returns the result of the image passed to a torch average
+        pooling layer.
+
+        Parameters
+        ----------
+        image: torch.Tensor
+            Input image to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        torch.Tensor
+            The pooled image as a `torch.Tensor`.
 
         """
 
-        return torch.nn.functional.avg_pool2d(image, kernel_size=ksize)
+        return torch.nn.functional.avg_pool2d(
+            image,
+            kernel_size=ksize, 
+            **kwargs,
+        )
 
-     def get(
+    def get(
         self,
-        image: torch.Tensor | NDArray,
+        image: NDArray | torch.Tensor,
         ksize: int=3,
-        **kwargs
+        **kwargs,
     ):
+        """Method to perform pooling with either torch or numpy backend.
+        
+        Checks the current backend and chooses the appropriate function to pool
+        the input image, either `_get_torch` or `_get_numpy`.
+
+        Parameters
+        ----------
+        image: NDArray | torch.Tensor
+            Input image to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        NDArray | torch.Tensor
+            The pooled image as `NDArray` or `torch.Tensor` depending on
+            the backend.
+
+        """
         if self.backend == "numpy":
-            return self._get_numpy(image, ksize, **kwargs)
+            return self._get_numpy(image, ksize, **kwargs,)
         elif self.backend == "torch":
-            return self._get_torch(image, ksize, **kwargs)
+            return self._get_torch(image, ksize, **kwargs,)
         else:
             raise NotImplementedError(f"Backend {self.backend} not supported")
 
