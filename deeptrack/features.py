@@ -8818,7 +8818,7 @@ class Store(Feature):
     replace: PropertyLike[bool], optional
         If `True`, replaces the stored value with the current computation. It
         defaults to `False`.
-    **kwargs:: dict of str to Any
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
@@ -8883,7 +8883,7 @@ class Store(Feature):
         key: Any
             The key used to identify the stored output.
         replace: PropertyLike[bool], optional
-            If `True`, replaces the stored value with a new computation. 
+            If `True`, replaces the stored value with a new computation.
             It defaults to `False`.
         **kwargs:: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
