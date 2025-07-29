@@ -217,7 +217,7 @@ __all__ = [
     "OneOf",
     "OneOfDict",
     "LoadImage",  # TODO ***MG***
-    "SampleToMasks",  # TODO ***MG***
+    "SampleToMasks",
     "AsType",  # TODO ***MG***
     "ChannelFirst2d",
     "Upscale",  # TODO ***AL***
@@ -7451,21 +7451,21 @@ class LoadImage(Feature):
 class SampleToMasks(Feature):
     """Create a mask from a list of images.
 
-    This feature applies a transformation function to each input image and 
-    merges the resulting masks into a single multi-layer image. Each input 
-    image must have a `position` property that determines its placement within 
-    the final mask. When used with scatterers, the `voxel_size` property must 
+    This feature applies a transformation function to each input image and
+    merges the resulting masks into a single multi-layer image. Each input
+    image must have a `position` property that determines its placement within
+    the final mask. When used with scatterers, the `voxel_size` property must
     be provided for correct object sizing.
 
     Parameters
     ----------
     transformation_function: Callable[[Image], Image]
-        A function that transforms each input image into a mask with 
+        A function that transforms each input image into a mask with
         `number_of_masks` layers.
     number_of_masks: PropertyLike[int], optional
         The number of mask layers to generate. Default is 1.
     output_region: PropertyLike[tuple[int, int, int, int]], optional
-        The size and position of the output mask, typically aligned with 
+        The size and position of the output mask, typically aligned with
         `optics.output_region`.
     merge_method: PropertyLike[str | Callable | list[str | Callable]], optional
         Method for merging individual masks into the final image. Can be:
@@ -7480,10 +7480,24 @@ class SampleToMasks(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray | Image, transformation_function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image`
-        Applies the transformation function to the input image.
-    `_process_and_get(images: list[np.ndarray] | np.ndarray | list[Image] | Image, **kwargs: dict[str, Any]) -> Image | np.ndarray`
-        Processes a list of images and generates a multi-layer mask.
+    `get(
+        image: np.ndarray | torch.Tensor | Image,
+        transformation_function: Callable[[Image], Image],
+        **kwargs: dict[str, Any]
+    ) -> Image`
+        Apply the transformation function to the input image.
+    `_process_and_get(
+    images: (
+        list[np.ndarray]
+        | np.ndarray
+        | list[torch.Tensor]
+        | torch.Tensor
+        | list[Image]
+        | Image
+    ),
+    **kwargs: dict[str, Any]
+    ) -> Image | np.ndarray | torch.Tensor`
+        Process a list of images and generate a multi-layer mask.
 
     Returns
     -------
@@ -7504,7 +7518,7 @@ class SampleToMasks(Feature):
 
     Define optics and particles:
     >>> import numpy as np
-    >>>    
+    >>>
     >>> optics = dt.Fluorescence(output_region=(0, 0, 64, 64))
     >>> particle = dt.PointParticle(
     >>>     position=lambda: np.random.uniform(5, 55, size=2),
@@ -7543,10 +7557,31 @@ class SampleToMasks(Feature):
 
     def __init__(
         self: Feature,
-        transformation_function: Callable[[Image], Image],
+        transformation_function: PropertyLike[
+            Callable[
+                [
+                    NDArray
+                    | list[NDArray]
+                    | torch.Tensor
+                    | list[torch.Tensor]
+                    | Image
+                    | list[Image]
+                ],
+                NDArray
+                | list[NDArray]
+                | torch.Tensor
+                | list[torch.Tensor]
+                | Image
+                | list[Image]
+            ],
+        ],
         number_of_masks: PropertyLike[int] = 1,
-        output_region: PropertyLike[tuple[int, int, int, int]] = None,
-        merge_method: PropertyLike[str | Callable | list[str | Callable]] = "add",
+        output_region: PropertyLike[tuple[int, int, int, int]] | None = None,
+        merge_method: PropertyLike[
+            str
+            | Callable[[...], ...]
+            | list[str | Callable[[...], ...]]
+        ] = "add",
         **kwargs: Any,
     ):
         """Initialize the SampleToMasks feature.
@@ -7556,14 +7591,16 @@ class SampleToMasks(Feature):
         transformation_function: Callable[[Image], Image]
             Function to transform input images into masks.
         number_of_masks: PropertyLike[int], optional
-            Number of mask layers. Default is 1.
+            Number of mask layers. It defaults to 1.
         output_region: PropertyLike[tuple[int, int, int, int]], optional
-            Output region of the mask. Default is None.
-        merge_method: PropertyLike[str | Callable | list[str | Callable]], optional
+            Output region of the mask. It defaults to `None`.
+        merge_method: PropertyLike[
+            str | Callable | list[str | Callable]
+        ], optional
             Method to merge masks. Default is "add".
         **kwargs: dict[str, Any]
             Additional keyword arguments passed to the parent class.
-        
+
         """
 
         super().__init__(
@@ -7576,7 +7613,7 @@ class SampleToMasks(Feature):
 
     def get(
         self: Feature,
-        image: np.ndarray | Image,
+        image: NDArray | torch.Tensor | Image,
         transformation_function: Callable[[Image], Image],
         **kwargs: Any,
     ) -> Image:
@@ -7602,34 +7639,45 @@ class SampleToMasks(Feature):
 
     def _process_and_get(
         self: Feature,
-        images: list[np.ndarray] | np.ndarray | list[Image] | Image,
+        images: (
+            list[NDArray]
+            | NDArray
+            | list[torch.Tensor]
+            | torch.Tensor
+            | list[Image]
+            | Image
+        ),
         **kwargs: Any,
-    ) -> Image | np.ndarray:
+    ) -> NDArray | torch.Tensor | Image:
         """Process a list of images and generate a multi-layer mask.
 
         Parameters
         ----------
-        images: np.ndarray or list[np.ndarrray] or  Image or list[Image]
+        images: np.ndarray or list[np.ndarrray] or torch.Tensor or
+            list[torch.tensor] or Image or list[Image]
             List of input images or a single image.
         **kwargs: dict[str, Any]
-            Additional parameters including `output_region`, `number_of_masks`, 
+            Additional parameters including `output_region`, `number_of_masks`,
             and `merge_method`.
 
         Returns
         -------
-        Image or np.ndarray
+        Image, np.ndarray, or torch.Tensor
             The final mask image.
-            
+
         """
 
         # Handle list of images.
         if isinstance(images, list) and len(images) != 1:
             list_of_labels = super()._process_and_get(images, **kwargs)
             if not self._wrap_array_with_image:
-                for idx, (label, image) in enumerate(zip(list_of_labels, 
-                                                         images)):
-                    list_of_labels[idx] = \
-                        Image(label, copy=False).merge_properties_from(image)
+                for idx, (label, image) in enumerate(
+                    zip(list_of_labels, images)
+                ):
+                    list_of_labels[idx] = Image(
+                        label,
+                        copy=False
+                    ).merge_properties_from(image)
         else:
             if isinstance(images, list):
                 images = images[0]
@@ -7638,7 +7686,12 @@ class SampleToMasks(Feature):
 
                 if "position" in prop:
 
-                    inp = Image(np.array(images))
+                    if apc.is_torch_array(images):
+                        inp = Image(images)
+
+                    else:
+                        inp = Image(np.array(images))
+
                     inp.append(prop)
                     out = Image(self.get(inp, **kwargs))
                     out.merge_properties_from(inp)
@@ -7646,42 +7699,77 @@ class SampleToMasks(Feature):
 
         # Create an empty output image.
         output_region = kwargs["output_region"]
-        output = np.zeros(
-            (
+        shape = (
                 output_region[2] - output_region[0],
                 output_region[3] - output_region[1],
                 kwargs["number_of_masks"],
             )
-        )
+        if apc.is_torch_array(images):
+            output = torch.zeros(shape)
+        else:
+            output = np.zeros(shape)
 
         from deeptrack.optics import _get_position
 
         # Merge masks into the output.
         for label in list_of_labels:
             position = _get_position(label)
-            p0 = np.round(position - output_region[0:2])
+            p0 = xp.round(position - output_region[0:2])
 
-            if np.any(p0 > output.shape[0:2]) or \
-                np.any(p0 + label.shape[0:2] < 0):
+            if xp.any(p0 > output.shape[0:2]) or xp.any(
+                p0 + label.shape[0:2] < 0
+            ):
                 continue
 
-            crop_x = int(-np.min([p0[0], 0]))
-            crop_y = int(-np.min([p0[1], 0]))
-            crop_x_end = int(
-                label.shape[0]
-                - np.max([p0[0] + label.shape[0] - output.shape[0], 0])
-            )
-            crop_y_end = int(
-                label.shape[1]
-                - np.max([p0[1] + label.shape[1] - output.shape[1], 0])
-            )
+            if apc.is_torch_array(images):
+                crop_x = int(
+                    -torch.minimum(p0[0], torch.tensor(0, device=p0.device))
+                )
+                crop_y = int(
+                    -torch.minimum(p0[1], torch.tensor(0, device=p0.device))
+                )
+                crop_x_end = int(
+                    label.shape[0] - torch.max(torch.stack([
+                        p0[0] + label.shape[0] - output.shape[0],
+                        torch.tensor(0)
+                    ]))
+                )
+                crop_y_end = int(
+                    label.shape[1]- torch.max(torch.stack([
+                        p0[1] + label.shape[1] - output.shape[1],
+                        torch.tensor(0)
+                    ]))
+                )
 
-            labelarg = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
+                labelarg = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
 
-            p0[0] = np.max([p0[0], 0])
-            p0[1] = np.max([p0[1], 0])
+                p0[0] = torch.max(
+                    p0[0], torch.tensor(0, dtype=p0.dtype, device=p0.device)
+                )
+                p0[1] = torch.max(
+                    p0[1], torch.tensor(0, dtype=p0.dtype, device=p0.device)
+                )
 
-            p0 = p0.astype(int)
+                p0 = p0.int()
+
+            else:
+                crop_x = int(-np.min([p0[0], 0]))
+                crop_y = int(-np.min([p0[1], 0]))
+                crop_x_end = int(
+                    label.shape[0]
+                    - np.max([p0[0] + label.shape[0] - output.shape[0], 0])
+                )
+                crop_y_end = int(
+                    label.shape[1]
+                    - np.max([p0[1] + label.shape[1] - output.shape[1], 0])
+                )
+
+                labelarg = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
+
+                p0[0] = np.max([p0[0], 0])
+                p0[1] = np.max([p0[1], 0])
+                
+                p0 = p0.astype(int)
 
             output_slice = output[
                 p0[0] : p0[0] + labelarg.shape[0],
@@ -7705,8 +7793,7 @@ class SampleToMasks(Feature):
                 elif merge == "overwrite":
                     output_slice[
                         labelarg[..., label_index] != 0, label_index
-                    ] = labelarg[labelarg[..., label_index] != 0, \
-                        label_index]
+                    ] = labelarg[labelarg[..., label_index] != 0, label_index]
                     output[
                         p0[0] : p0[0] + labelarg.shape[0],
                         p0[1] : p0[1] + labelarg.shape[1],

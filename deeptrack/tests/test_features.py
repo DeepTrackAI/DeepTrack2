@@ -1914,20 +1914,30 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(mask.shape, (64, 64, 1), "Mask shape is incorrect")
 
         # Ensure mask is binary
-        self.assertTrue(np.all(np.logical_or(mask == 0, mask == 1)), "Mask is not binary")
+        self.assertTrue(
+            np.all(np.logical_or(mask == 0, mask == 1)), "Mask is not binary"
+        )
 
         # Ensure the number of particles matches the sum of the mask
-        self.assertEqual(np.sum(mask), n_particles, "Number of particles in mask is incorrect")
+        self.assertEqual(
+            np.sum(mask),
+            n_particles,
+            "Number of particles in mask is incorrect"
+        )
 
         # Compare particle positions and mask positions
         positions = np.array(image.get_property("position", get_one=False))
         mask_positions = np.argwhere(mask.squeeze() == 1)
 
-        # Ensure each particle position has a mask pixel nearby within tolerance
+        # Ensure each particle position has a mask pixel nearby within
+        # tolerance
         for pos in positions:
             self.assertTrue(
-                any(np.linalg.norm(pos - mask_pos) <= tolerance for mask_pos in mask_positions),
-                f"Particle at position {pos} not found within tolerance in mask"
+                any(
+                    np.linalg.norm(pos - mask_pos) <= tolerance
+                    for mask_pos in mask_positions
+                ),
+                f"Particle at position {pos} not found within mask tolerance",
             )
 
 
