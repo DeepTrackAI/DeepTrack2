@@ -7474,6 +7474,8 @@ class SampleToMasks(Feature):
         - "or": Combine masks using a logical OR operation.
         - "mul": Multiply masks.
         - Function: Custom function taking two images and merging them.
+        - List: Specifies the merge method for each mask layer, where each
+            element is either a string (one of the above) or a callable.
 
     **kwargs: dict[str, Any]
         Additional keyword arguments passed to the parent `Feature` class.
@@ -7553,6 +7555,55 @@ class SampleToMasks(Feature):
     >>> plt.title("Mask")
     >>> plt.show()
 
+    Example demonstrating different merge methods:
+    >>> optics = dt.Fluorescence(output_region=(0, 0, 64, 64))
+    >>> particle = dt.Ellipse(
+    ...     position=lambda: np.random.uniform(10, 50, size=2),
+    ...     radius=2e-6
+    ... )
+    >>> particles = particle ^ 2
+    >>> sim_im_pip = optics(particles)
+
+    Define a custom mask function that generates three identical layers:
+    >>> def mask_function(obj):
+    ...     value = np.random.randint(1, 10)
+    ...     mask = np.squeeze(obj > 0) * value
+    ...     h, w = mask.shape
+    ...     masks = np.zeros((h, w, 3), dtype=np.uint8)
+    ...     masks[..., 0] = mask
+    ...     masks[..., 1] = mask
+    ...     masks[..., 2] = mask
+    ...     return masks
+
+    Create mask pipeline with different merge strategies for each layer:
+    >>> sim_mask_pip = particles >> dt.SampleToMasks(
+    ...     lambda: mask_function,
+    ...     number_of_masks=3,
+    ...     output_region=optics.output_region,
+    ...     merge_method=['add', 'or', 'overwrite']
+    ... )
+    >>> pipeline = sim_im_pip & sim_mask_pip
+    >>> pipeline.store_properties()
+
+    Generate image and mask with three channels:
+    >>> image, mask = pipeline.update()()
+
+    Visualize the image and the three mask layers:
+    >>> import matplotlib.pyplot as plt
+    >>> plt.subplot(1, 4, 1)
+    >>> plt.imshow(image, cmap='gray')
+    >>> plt.title("Image")
+    >>> plt.subplot(1, 4, 2)
+    >>> plt.imshow(mask[..., 0], cmap='gray')
+    >>> plt.title("Mask: 'add'")
+    >>> plt.subplot(1, 4, 3)
+    >>> plt.imshow(mask[..., 1], cmap='gray')
+    >>> plt.title("Mask: 'or'")
+    >>> plt.subplot(1, 4, 4)
+    >>> plt.imshow(mask[..., 2], cmap='gray')
+    >>> plt.title("Mask: 'overwrite'")
+    >>> plt.show()
+
     """
 
     def __init__(
@@ -7579,8 +7630,8 @@ class SampleToMasks(Feature):
         output_region: PropertyLike[tuple[int, int, int, int]] | None = None,
         merge_method: PropertyLike[
             str
-            | Callable[[...], ...]
-            | list[str | Callable[[...], ...]]
+            | Callable[[Any, Any], Any]
+            | list[str | Callable[[Any, Any], Any]]
         ] = "add",
         **kwargs: Any,
     ):
@@ -7621,7 +7672,7 @@ class SampleToMasks(Feature):
 
         Parameters
         ----------
-        image: np.ndarray | Image
+        image: np.ndarray | torch.Tensor | Image
             The input image.
         transformation_function: Callable[[Image], Image]
             Function to transform the image.
@@ -7731,13 +7782,13 @@ class SampleToMasks(Feature):
                 crop_x_end = int(
                     label.shape[0] - torch.max(torch.stack([
                         p0[0] + label.shape[0] - output.shape[0],
-                        torch.tensor(0)
+                        torch.tensor(0, device=p0.device)
                     ]))
                 )
                 crop_y_end = int(
                     label.shape[1]- torch.max(torch.stack([
                         p0[1] + label.shape[1] - output.shape[1],
-                        torch.tensor(0)
+                        torch.tensor(0, device=p0.device)
                     ]))
                 )
 
