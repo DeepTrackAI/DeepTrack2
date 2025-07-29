@@ -1069,7 +1069,7 @@ class MedianBlur(Blur):
         super().__init__(ndimage.median_filter, size=ksize, **kwargs)
 
 
-class Pool(Feature):
+class Pool(Feature): # Deprecated, children will be independent in the future.
     """Downsamples the image by applying a function to local regions of the
     image.
 
@@ -1251,18 +1251,50 @@ class AveragePooling(Pool):
 
         super().__init__(np.mean, ksize=ksize, **kwargs)
 
-    def get(
+    def _get_numpy(
         self,
-        image,
-        ksize: int,
+        image: NDArray,
+        ksize: int=3,
+    ):
+        """Method to perform average pooling with the numpy backend enabled.
+
+        Returns the result of the image passed to the scikit image block_reduce
+        function with `np.mean()` as the pooling function.
+        
+        """
+        return utils.safe_call(
+            skimage.measure.block_reduce,
+            image=image,
+            func=self.pooling, # This will be np.mean for this class.
+            block_size=ksize,
+            **kwargs,
+        )
+
+    def _get_torch(
+        self,
+        image: torch.Tensor,
+        ksize: int=3,
+    ):
+        """Method to perform average pooling with the torch backend enabled.
+        
+        Returns the result of the image passed to a torch average pooling layer.   
+
+        """
+
+        return torch.nn.functional.avg_pool2d(image, kernel_size=ksize)
+
+     def get(
+        self,
+        image: torch.Tensor | NDArray,
+        ksize: int=3,
         **kwargs
     ):
-        # Check torch backend and if the type name starts with "torch".
-        # Isinstance will not work when torch is not available.
-        if TORCH_AVAILABLE:
-            if type(image).__module__.startswith("torch"):
-                return torch.nn.functional.avg_pool2d(image, kernel_size=ksize)
-        return super().get(image, ksize=ksize, **kwargs)
+        if self.backend == "numpy":
+            return self._get_numpy(image, ksize, **kwargs)
+        elif self.backend == "torch":
+            return self._get_torch(image, ksize, **kwargs)
+        else:
+            raise NotImplementedError(f"Backend {self.backend} not supported")
 
 
 #TODO ***AL*** revise MaxPooling - torch, typing, docstring, unit test
