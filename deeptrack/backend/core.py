@@ -803,7 +803,7 @@ class DeepTrackNode:
 
     `DeepTrackNode` represents a node within a DeepTrack2 computation graph. 
     Each node can store data and compute new values based on its dependencies.
-    The value of a node is computed by calling its `action` method.
+    The value of a node is computed by calling its `action`.
 
     `DeepTrackNode` supports operator overloading, enabling intuitive
     construction of computation graphs using standard Python operators.
@@ -891,7 +891,7 @@ class DeepTrackNode:
 
     Supported Operators
     -------------------
-    DeepTrackNode supports the following Python operators:
+    `DeepTrackNode` supports the following Python operators:
 
     Arithmetic:
         +   Addition (__add__, __radd__)
@@ -906,11 +906,11 @@ class DeepTrackNode:
         <=  Less than or equal (__le__, __ge__)
         >=  Greater than or equal (__ge__, __le__)
 
-    Each operation returns a new DeepTrackNode representing the
-    result of the corresponding operation in the computation graph.
+    Each operation returns a new `DeepTrackNode` representing the result of the
+    corresponding operation in the computation graph.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from deeptrack.backend.core import DeepTrackNode
 
     Create two `DeepTrackNode` objects, one as a parent and one as a child:
@@ -1211,7 +1211,7 @@ class DeepTrackNode:
         self: DeepTrackNode,
         _ID: tuple[int, ...] = (),
     ) -> bool:
-        """Check if data for the given _ID is valid.
+        """Check whether data for the given _ID is valid.
 
         Parameters
         ----------
@@ -1644,7 +1644,7 @@ class DeepTrackNode:
         """Add node to another node or value.
 
         Creates a new `DeepTrackNode` representing the addition of the values
-        produced by this node (`self`) and another node or value (`other`).
+        produced by the `self` node and the `other` node or value.
 
         Parameters
         ----------
@@ -1654,7 +1654,7 @@ class DeepTrackNode:
         Returns
         -------
         DeepTrackNode
-            A new node that represents the addition operation (`self + other`).
+            A new node that represents the addition operation `self + other`.
         
         """
 
@@ -1662,12 +1662,12 @@ class DeepTrackNode:
 
     def __radd__(
         self: DeepTrackNode,
-        other: DeepTrackNode | Any,
+        other: Any,
     ) -> DeepTrackNode:
         """Add other value to node (right-hand).
 
-        Creates a new `DeepTrackNode` representing the addition of another
-        node or value (`other`) to the value produced by this node (`self`).
+        Creates a new `DeepTrackNode` representing the addition of the `other`
+        value and the `self` node.
 
         Parameters
         ----------
@@ -1677,7 +1677,7 @@ class DeepTrackNode:
         Returns
         -------
         DeepTrackNode
-            A new node that represents the addition operation (`other + self`).
+            A new node that represents the addition operation `other + self`.
         
         """
 
@@ -1687,11 +1687,10 @@ class DeepTrackNode:
         self: DeepTrackNode,
         other: DeepTrackNode | Any,
     ) -> DeepTrackNode:
-        """Subtract another node or value from node.
+        """Subtract a node from another node or value.
 
         Creates a new `DeepTrackNode` representing the subtraction of the 
-        values produced by another node or value (`other`) from this node 
-        (`self`).
+        values produced by the `self`node and the `other` node or value.
 
         Parameters
         ----------
@@ -1701,8 +1700,8 @@ class DeepTrackNode:
         Returns
         -------
         DeepTrackNode
-            A new node that represents the subtraction operation 
-            (`self - other`).
+            A new node that represents the subtraction operation
+            `self - other`.
         
         """
 
@@ -1710,23 +1709,23 @@ class DeepTrackNode:
 
     def __rsub__(
         self: DeepTrackNode,
-        other: DeepTrackNode | Any,
+        other: Any,
     ) -> DeepTrackNode:
         """Subtract node from other value (right-hand).
 
         Creates a new `DeepTrackNode` representing the subtraction of the value
-        produced by this node (`self`) from another node or value (`other`).
+        produced by the `other` value from the `self` node.
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: Any
             The value or node to subtract from.
 
         Returns
         -------
         DeepTrackNode
-            A new node that represents the subtraction operation 
-                `other - self`).
+            A new node that represents the subtraction operation
+            `other - self`.
         
         """
 
@@ -1739,8 +1738,7 @@ class DeepTrackNode:
         """Multiply node by another node or value.
 
         Creates a new `DeepTrackNode` representing the multiplication of the 
-        values produced by this node (`self`) and another node or value 
-        (`other`).
+        values produced by the `self` node and the `other` node or value.
 
         Parameters
         ----------
@@ -1751,7 +1749,7 @@ class DeepTrackNode:
         -------
         DeepTrackNode
             A new node that represents the multiplication operation 
-            (`self * other`).
+            `self * other`.
         
         """
 
@@ -1759,25 +1757,26 @@ class DeepTrackNode:
 
     def __rmul__(
         self: DeepTrackNode,
-        other: DeepTrackNode | Any,
+        other: Any,
     ) -> DeepTrackNode:
         """Multiply other value by node (right-hand).
 
-        Creates a new `DeepTrackNode` representing the multiplication of 
-        another node or value (`other`) by the value produced by this node 
-        (`self`).
+        Creates a new `DeepTrackNode` representing the multiplication of the
+        `other` value by the self node.
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: Any
             The value or node to multiply.
 
         Returns
         -------
         DeepTrackNode
-            A new node that represents the multiplication operation 
-            (`other * self`).
+            A new node that represents the multiplication operation
+            `other * self`.
+
         """
+
         return _create_node_with_operator(operator.__mul__, other, self)
 
     def __truediv__(
@@ -1787,7 +1786,7 @@ class DeepTrackNode:
         """Divide node by another node or value.
 
         Creates a new `DeepTrackNode` representing the division of the value
-        produced by this node (`self`) by another node or value (`other`).
+        produced by the `self` node by the `other` node or value.
 
         Parameters
         ----------
@@ -1805,22 +1804,22 @@ class DeepTrackNode:
 
     def __rtruediv__(
         self: DeepTrackNode,
-        other: DeepTrackNode | Any,
+        other: Any,
     ) -> DeepTrackNode:
         """Divide other value by node (right-hand).
 
-        Creates a new `DeepTrackNode` representing the division of another
-        node or value (`other`) by the value produced by this node (`self`).
+        Creates a new `DeepTrackNode` representing the division of the `other`
+        value by the `self` node.
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: Any
             The value or node to divide.
 
         Returns
         -------
         DeepTrackNode
-            A new node that represents the division operation (`other / self`).
+            A new node that represents the division operation `other / self`.
         
         """
 
@@ -1833,8 +1832,7 @@ class DeepTrackNode:
         """Perform floor division of node by another node or value.
 
         Creates a new `DeepTrackNode` representing the floor division of the
-        value produced by this node (`self`) by another node or value 
-        (`other`).
+        value produced by the `self` node by the `other` node or value.
 
         Parameters
         ----------
@@ -1845,7 +1843,7 @@ class DeepTrackNode:
         -------
         DeepTrackNode
             A new node that represents the floor division operation 
-            (`self // other`).
+            `self // other`.
         
         """
 
@@ -1853,24 +1851,23 @@ class DeepTrackNode:
 
     def __rfloordiv__(
         self: DeepTrackNode,
-        other: DeepTrackNode | Any,
+        other: Any,
     ) -> DeepTrackNode:
         """Perform floor division of other value by node (right-hand).
 
-        Creates a new `DeepTrackNode` representing the floor division of 
-        another node or value (`other`) by the value produced by this node 
-        (`self`).
+        Creates a new `DeepTrackNode` representing the floor division of the
+        other value by the `self` node.
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: Any
             The value or node to divide.
 
         Returns
         -------
         DeepTrackNode
-            A new node that represents the floor division operation 
-            (`other // self`).
+            A new node that represents the floor division operation
+            `other // self`.
         
         """
 
@@ -1880,10 +1877,10 @@ class DeepTrackNode:
         self: DeepTrackNode,
         other: DeepTrackNode | Any,
     ) -> DeepTrackNode:
-        """Check if node is less than another node or value.
+        """Check whether node is less than other node or value.
 
-        Creates a new `DeepTrackNode` representing the comparison of this node
-        (`self`) being less than another node or value (`other`).
+        Creates a new `DeepTrackNode` representing whether the `self` node is
+        less than the `other` node or value.
 
         Parameters
         ----------
@@ -1893,8 +1890,7 @@ class DeepTrackNode:
         Returns
         -------
         DeepTrackNode
-            A new node that represents the comparison operation
-            (`self < other`).
+            A new node that represents the comparison `self < other`.
         
         """
 
@@ -1904,10 +1900,10 @@ class DeepTrackNode:
         self: DeepTrackNode,
         other: DeepTrackNode | Any,
     ) -> DeepTrackNode:
-        """Check if node is greater than another node or value.
+        """Check whether node is greater than other node or value.
 
-        Creates a new `DeepTrackNode` representing the comparison of this node
-        (`self`) being greater than another node or value (`other`).
+        Creates a new `DeepTrackNode` representing whether the `self` node is
+        greater than the `other` node or value.
 
         Parameters
         ----------
@@ -1917,8 +1913,7 @@ class DeepTrackNode:
         Returns
         -------
         DeepTrackNode
-            A new node that represents the comparison operation 
-            (`self > other`).
+            A new node that represents the comparison `self > other`.
         
         """
 
@@ -1928,10 +1923,10 @@ class DeepTrackNode:
         self: DeepTrackNode,
         other: DeepTrackNode | Any,
     ) -> DeepTrackNode:
-        """Check if node is less than or equal to another node or value.
+        """Check whether node is less than or equal to other node or value.
 
-        Creates a new `DeepTrackNode` representing the comparison of this node
-        (`self`) being less than or equal to another node or value (`other`).
+        Creates a new `DeepTrackNode` representing whether the `self` node is
+        less than or equal to the `other` node or value.
 
         Parameters
         ----------
@@ -1941,8 +1936,7 @@ class DeepTrackNode:
         Returns
         -------
         DeepTrackNode
-            A new node that represents the comparison operation 
-            (`self <= other`).
+            A new node that represents the comparison `self <= other`.
         
         """
 
@@ -1952,10 +1946,10 @@ class DeepTrackNode:
         self: DeepTrackNode,
         other: DeepTrackNode | Any,
     ) -> DeepTrackNode:
-        """Check if node is greater than or equal to another node or value.
+        """Check whether node is greater than or equal to other node or value.
 
-        Creates a new `DeepTrackNode` representing whether this node (`self`)
-        is greater than or equal to another node or value (`other`).
+        Creates a new `DeepTrackNode` representing whether the `self` node is
+        greater than or equal to the `other` node or value.
 
         Parameters
         ----------
