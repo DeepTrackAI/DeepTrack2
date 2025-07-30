@@ -1238,7 +1238,8 @@ class AveragePooling(Pool):
         """Initialize the parameters for average pooling.
 
         This constructor initializes the parameters for average pooling and
-        checks whether to use the numpy or torch implementation.
+        checks whether to use the numpy or torch implementation, defaults to
+        numpy.
 
         Parameters
         ----------
