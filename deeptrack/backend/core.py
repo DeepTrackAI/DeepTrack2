@@ -1300,7 +1300,6 @@ class DeepTrackNode:
         """
 
         # Invalidate data for all children of this node.
-
         for child in self.recurse_children():
             child.data.invalidate()
 
