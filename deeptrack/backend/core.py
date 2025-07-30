@@ -828,11 +828,11 @@ class DeepTrackNode:
     data: DeepTrackDataDict
         Dictionary-like object for storing data, indexed by tuples of integers.
     children: WeakSet[DeepTrackNode]
-        Nodes that depend on this node (its children, grandchildren, etc.).
+        Nodes that depend on this node (its children).
         This is a weakref.WeakSet, so references are weak and do not prevent
         garbage collection of nodes that are no longer used.
     dependencies: WeakSet[DeepTrackNode]
-        Nodes on which this node depends (its parents, grandparents, etc.).
+        Nodes on which this node depends (its parents).
         This is a weakref.WeakSet, for efficient memory management.
     _action: Callable[..., Any]
         The function or lambda-function to compute the node value.
@@ -913,7 +913,7 @@ class DeepTrackNode:
     --------
     >>> from deeptrack.backend.core import DeepTrackNode
 
-    Create two `DeepTrackNode` objects, one as a parent and one as a child:
+    Create three `DeepTrackNode` objects, as parent, child, and gradchild:
     >>> parent = DeepTrackNode(
     ...     node_name="parent",
     ...     action=lambda: 10,
@@ -922,15 +922,26 @@ class DeepTrackNode:
     ...     node_name="child",    
     ...     action=lambda _ID=None: parent(_ID) * 2,
     ... )
+    >>> grandchild = DeepTrackNode(
+    ...     node_name="grandchild",    
+    ...     action=lambda _ID=None: child(_ID) * 3,
+    ... )
     >>> parent.add_child(child)
+    >>> child.add_child(grandchild)
 
-    Check the children of parent and child (which include the node itself):
-    >>> parent.recurse_children()
-    {DeepTrackNode(name='child', len=0, action=<lambda>),
-    DeepTrackNode(name='parent', len=0, action=<lambda>)}
+    Check all children of `parent` (includes the `parent`):
+    >>> for node in parent.recurse_children():
+    ...     print(node)
+    DeepTrackNode(name='parent', len=0, action=<lambda>)
+    DeepTrackNode(name='child', len=0, action=<lambda>)
+    DeepTrackNode(name='grandchild', len=0, action=<lambda>)
 
-    >>> child.recurse_children()
-    {DeepTrackNode(name='child', len=0, action=<lambda>)}
+    Check all dependencies of `grandchild` (includes `grandchild`):
+    >>> for node in grandchild.recurse_dependencies():
+    ...     print(node)
+    DeepTrackNode(name='grandchild', len=0, action=<lambda>)
+    DeepTrackNode(name='child', len=0, action=<lambda>)
+    DeepTrackNode(name='parent', len=0, action=<lambda>)
 
     Store and retrieve data for specific _IDs:
     >>> parent.store(15, _ID=(0,))
@@ -940,18 +951,22 @@ class DeepTrackNode:
     >>> parent.current_value((1,))
     20
 
-    Compute and retrieve the value for the child node:
-
+    Compute and retrieve the value for the child and grandchild node:
     >>> child(_ID=(0,))
     30
     >>> child(_ID=(1,))
     40
+    >>> grandchild(_ID=(0,))
+    90
+    >>> grandchild(_ID=(1,))
+    120
 
     Validation and invalidation:
-
     >>> parent.is_valid((0,))
     True
     >>> child.is_valid((0,))
+    True
+    >>> grandchild.is_valid((0,))
     True
 
     >>> parent.invalidate((0,))
@@ -959,39 +974,39 @@ class DeepTrackNode:
     False
     >>> child.is_valid((0,))
     False
+    >>> grandchild.is_valid((0,))
+    False
 
-    >>> parent.validate((0,))
+    >>> child.validate((0,))
     >>> parent.is_valid((0,))
-    True
+    False
     >>> child.is_valid((0,))
+    True
+    >>> grandchild.is_valid((0,))
     False
 
     Setting a value and automatic invalidation:
-
     >>> parent.current_value((0,))
     15
-    >>> child((1,))  # Computes and stores the value in child
-    >>> child.current_value((0,))
-    30
+    >>> grandchild((0,))  # Computes and stores the value in grabdchild
+    >>> grandchild.current_value((0,))
+    90
 
     >>> parent.set_value(42, _ID=(0,))
     >>> parent.current_value((0,))
     42
-    >>> child((0,))  # Recomputes and stores the value in child
-    >>> child.current_value((0,))
-    84
+    >>> grandchild((0,))  # Recomputes and stores the value in grandchild
+    >>> grandchild.current_value((0,))
+    252
 
     Resetting all data in the dependency tree (recomputation required):
-
     >>> parent.update()
 
     Dependency graph traversal (children and dependencies):
-
     >>> all_children = parent.recurse_children()
     >>> all_dependencies = list(child.recurse_dependencies())
 
     Operator overloading—arithmetic and comparison:
-
     >>> node_a = DeepTrackNode(lambda: 5)
     >>> node_b = DeepTrackNode(lambda: 3)
 
@@ -1024,16 +1039,14 @@ class DeepTrackNode:
     True
 
     Indexing into computed data:
-
     >>> vector_node = DeepTrackNode(lambda: [10, 20, 30])
     >>> first_element = vector_node[0]
     >>> first_element()
     10
 
     Citations for a node and its dependencies:
-
     >>> parent.get_citations()  # Set of citation strings
-    {...} 
+    {...}
 
     """
 
@@ -1154,16 +1167,16 @@ class DeepTrackNode:
 
         self.children.add(child)
         if self not in child.dependencies:
-            child.add_dependency(self)  # Ensure bidirectional relationship.
+            child.dependencies.add(self)  # Ensure bidirectional relationship
 
-        # Get all children of `child` and add `child` itself.
-        children = child._all_children.copy()
-        children.add(child)
+        # Get all children of `child`, which includes `child` itself.
+        child_all_children = child._all_children.copy()
 
         # Merge all these children into this node's subtree.
-        self._all_children = self._all_children.union(children)
+        self._all_children = self._all_children.union(child_all_children)
         for parent in self.recurse_dependencies():
-            parent._all_children = parent._all_children.union(children)
+            parent._all_children = \
+                parent._all_children.union(child_all_children)
 
         return self
 
@@ -1186,9 +1199,7 @@ class DeepTrackNode:
         
         """
 
-        self.dependencies.add(parent)
-
-        parent.add_child(self)  # Ensure the child relationship is also set.
+        parent.add_child(self)
 
         return self
 
