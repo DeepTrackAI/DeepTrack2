@@ -155,7 +155,10 @@ from deeptrack.features import DummyFeature, Feature, StructuralFeature
 from deeptrack.image import Image, pad_image_to_fft, maybe_cupy
 from deeptrack.types import ArrayLike, PropertyLike
 
-import torch
+from deeptrack.backend import config, TORCH_AVAILABLE, xp
+
+if TORCH_AVAILABLE:
+    import torch
 
 from deeptrack import image
 from deeptrack import units_registry as u
