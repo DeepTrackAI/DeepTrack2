@@ -1949,7 +1949,7 @@ class TestFeatures(unittest.TestCase):
                     np.all(output_image == np.array([1, 2, 3], dtype=dtype))
                 )
 
-        # Test for PyTorch tensors.
+        ### Test with PyTorch tensor (if available)
         if TORCH_AVAILABLE:
             input_image_torch = torch.tensor([1.5, 2.5, 3.5])
 
