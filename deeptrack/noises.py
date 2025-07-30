@@ -63,14 +63,42 @@ class Noise(Feature):
     """Base abstract noise class."""
 
 
-#TODO ***MG*** revise Background - torch, typing, docstring, unit test
 class Background(Noise):
-    """Adds a constant value to an image
+    """Adds a constant value to an image.
 
     Parameters
     ----------
     offset : float
-        The value to add to the image
+        The value to add to the image.
+    **kwargs : Any
+        Additional keyword arguments passed to the parent `Noise` class.
+
+    Methods
+    -------
+    get(
+        image: np.ndarray, torch.Tensor, or Image,
+        offset: float,
+        **kwargs,
+        ) -> np.ndarray, torch.Tensor, or Image
+        Adds the constant offset to the input image.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> import numpy as np
+
+    Create an input image with zeros:
+    >>> input_image = np.zeros((2,2))
+
+    Define the Background noise feature with offset 0.5:
+    >>> noise = dt.Background(offset=0.5)
+
+    Apply the noise to the input image and print the resulting image:
+    >>> output_image = noise.resolve(input_image)
+    >>> print(output_image)
+    [[0.5 0.5]
+    [0.5 0.5]]
+
     """
 
     def __init__(
@@ -78,6 +106,16 @@ class Background(Noise):
         offset: PropertyLike[float],
         **kwargs: Any,
     ):
+        """
+        Initialize the Background noise feature.
+
+        Parameters
+        ----------
+        offset : PropertyLike[float]
+            The constant value to be added to the image.
+        **kwargs : Any
+            Additional arguments passed to the parent `Noise` class.
+        """
         super().__init__(offset=offset, **kwargs)
 
     def get(
@@ -86,6 +124,21 @@ class Background(Noise):
         offset: float,
         **kwargs: Any,
     ) -> NDArray[Any] | torch.Tensor | Image:
+        """
+        Add the given offset to the image.
+
+        Parameters
+        ----------
+        image : np.ndarray, torch.Tensor, or Image
+            The input image.
+        offset : float
+            The value to add to the image.
+
+        Returns
+        -------
+        np.ndarray, torch.Tensor, or Image
+            The image with offset added.
+        """
 
         return image + offset
 
