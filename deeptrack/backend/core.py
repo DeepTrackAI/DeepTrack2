@@ -1045,7 +1045,7 @@ class DeepTrackNode:
     _action: Callable[..., Any]
     _accepts_ID: bool
 
-    _all_children: set[DeepTrackNode]
+    _all_children: set[DeepTrackNode]  #TODO ***GV*** Why is this a set and not a WeakSet?
 
     # Citations associated with DeepTrack2.
     _citations: list[str] = [CITATION_MIDTVEDT2021QUANTITATIVE]
