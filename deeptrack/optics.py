@@ -155,6 +155,8 @@ from deeptrack.features import DummyFeature, Feature, StructuralFeature
 from deeptrack.image import Image, pad_image_to_fft, maybe_cupy
 from deeptrack.types import ArrayLike, PropertyLike
 
+import torch
+
 from deeptrack import image
 from deeptrack import units_registry as u
 
@@ -358,6 +360,8 @@ class Microscope(StructuralFeature):
             )
 
             imaged_sample = self._objective.resolve(sample_volume)
+            if self.get_backend() == "torch": 
+                imaged_sample = torch.from_numpy(imaged_sample)
 
         # Upscale given by the optics needs to be handled separately.
         if _upscale_given_by_optics != (1, 1, 1):
