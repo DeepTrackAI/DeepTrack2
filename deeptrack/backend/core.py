@@ -1507,6 +1507,7 @@ class DeepTrackNode:
 
         """
 
+        # First try to return the already stored value, if it's valid.
         if self.is_valid(_ID):
             try:
                 return self.current_value(_ID)
@@ -1522,6 +1523,7 @@ class DeepTrackNode:
         # Store the newly computed value.
         self.store(new_value, _ID=_ID)
 
+        # Return the newly stored value.
         return self.current_value(_ID)
 
     def current_value(
