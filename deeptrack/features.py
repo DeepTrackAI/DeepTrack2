@@ -389,11 +389,12 @@ class Feature(DeepTrackNode):
         It binds another feature’s properties as arguments to this feature.
     `plot(
         input_image: (
-            np.ndarray
-            | list[np.ndarray]
+            NDArray
+            | list[NDArray]
+            | torch.Tensor
+            | list[torch.Tensor]
             | Image
             | list[Image]
-            | None
         ) = None,
         resolve_kwargs: dict | None = None,
         interval: float | None = None,
@@ -1768,25 +1769,32 @@ class Feature(DeepTrackNode):
     def plot(
         self: Feature,
         input_image: (
-            np.ndarray | list[np.ndarray] | Image | list[Image]
+            NDArray
+            | list[NDArray]
+            | torch.Tensor
+            | list[torch.Tensor]
+            | Image
+            | list[Image]
         ) = None,
         resolve_kwargs: dict = None,
         interval: float = None,
         **kwargs: Any,
     ) -> Any:
-        """Visualizes the output of the feature.
+        """Visualize the output of the feature.
 
         This method resolves the feature and visualizes the result. If the
-        output is an `Image`, it displays it using `pyplot.imshow`. If the
-        output is a list, it creates an animation. In Jupyter notebooks, the
-        animation is played inline using `to_jshtml()`. In scripts, the
-        animation is displayed using the matplotlib backend.
+        output is a single image (NumPy array, PyTorch tensor, or Image),
+        it is displayed using `pyplot.imshow`. If the output is a list, an
+        animation is created. In Jupyter notebooks, the animation is played
+        inline using `to_jshtml()`. In scripts, the animation is displayed
+        using the matplotlib backend.
 
         Any parameters in `kwargs` are passed to `pyplot.imshow`.
 
         Parameters
         ----------
-        input_image: np.ndarray or Image or list[np.ndarray or Image], optional
+        input_image: np.ndarray, torch.tensor, or Image or list[np.ndarray,
+            torch.tensor, or Image], optional
             The input image or list of images passed as an argument to the
             `resolve` call. If `None`, uses previously set input values or
             propagates properties.
@@ -1802,6 +1810,32 @@ class Feature(DeepTrackNode):
         -------
         Any
             The output of the feature or pipeline after execution.
+        
+        Examples
+        --------
+        >>> import deeptrack as dt
+        >>> import numpy as np
+
+        Create a dummy feature that returns the image:
+        >>> class DummyFeature(dt.Feature):
+        ...     def resolve(self, input_image):
+        ...         return input_image
+
+        Create an instance of the dummy feature:
+        >>> feature = DummyFeature()
+
+        Generate and plot a dummy grayscale image:
+        >>> img = np.random.randint(0, 256, (64, 64))
+        >>> feature.plot(img, cmap='gray');
+
+        Generate and plot a dummy grayscale video:
+        >>> video = [np.random.randint(0, 256, (64, 64)) for _ in range(10)]
+        >>> feature.plot(video, interval=100, cmap='gray');
+
+        Generate a dummy grayscale image using torch and plot it:
+        >>> import torch
+        >>> img = torch.randint(0, 256, size=(64, 64))
+        >>> feature.plot(img, cmap='gray');
 
         """
 
