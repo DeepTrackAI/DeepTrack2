@@ -9453,7 +9453,7 @@ class TakeProperties(Feature):
         The feature from which to extract properties.
     names: list[str]
         The names of the properties to extract
-    **kwargs:: dict of str to Any
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
