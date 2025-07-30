@@ -1832,6 +1832,13 @@ class Feature(DeepTrackNode):
         >>> img = torch.randint(0, 256, size=(64, 64))
         >>> feature.plot(img, cmap='gray');
 
+        Generate a simulated image of a point particle visualized using
+        brightfield microscopy and plot it:
+        >>> particle = dt.PointParticle()
+        >>> optics = dt.Brightfield()
+        >>> imaged_particle = optics(particle)
+        >>> imaged_particle.plot(cmap='gray');
+
         """
 
         from IPython.display import HTML, display
