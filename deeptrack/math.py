@@ -1339,9 +1339,9 @@ class AveragePooling(Pool):
             the backend.
 
         """
-        if self.backend == "numpy":
+        if self.get_backend() == "numpy":
             return self._get_numpy(image, ksize, **kwargs,)
-        elif self.backend == "torch":
+        elif self.get_backend() == "torch":
             return self._get_torch(image, ksize, **kwargs,)
         else:
             raise NotImplementedError(f"Backend {self.backend} not supported")
