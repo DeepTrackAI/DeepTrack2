@@ -82,12 +82,26 @@ class TestMath_Numpy(BackendTestBase):
         #blurred_image = feature.resolve(input_image)
         #self.assertTrue(xp.all(blurred_image == expected_output))
 
+    def test_MaxPooling(self):
+        input_image = np.array([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
+        feature = math.MaxPooling(ksize=2)
+        pooled_image = feature.resolve(input_image)
+        self.assertTrue(np.all(pooled_image == [[3.5, 5.5]]))
+
 
 # Extending the test and setting the backend to torch
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
 class TestMath_Torch(TestMath_Numpy):
     BACKEND = "torch"
-    pass
+
+    def test_MaxPooling(self):
+        input_image = torch.tensor([[[ [1.0, 2.0, 3.0, 4.0],
+                                        [5.0, 6.0, 7.0, 8.0] ]]])
+        feature = math.MaxPooling(ksize=2)
+        pooled_image = feature(input_image, ksize=2)
+        expected = torch.tensor([[[[3.5, 5.5]]]])
+        self.assertEqual(pooled_image.shape, expected.shape)
+        self.assertTrue(torch.allclose(pooled_image, expected))
 
 
 class TestMath(unittest.TestCase):
