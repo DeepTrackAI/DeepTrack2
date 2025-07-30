@@ -1195,8 +1195,8 @@ class AveragePooling(Pool):
     dividing it into non-overlapping blocks of size `ksize` and applying the
     average function to each block. The result is a downsampled image where
     each pixel value represents the average value within the corresponding
-    block of the original image. If TORCH_AVAILABLE, it will return the output
-    of `torch.nn.functional.avg_pool2d` instead.
+    block of the original image. If the backend is torch, it will return the
+    output of `torch.nn.functional.avg_pool2d` instead.
 
     Parameters
     ----------
@@ -1222,7 +1222,7 @@ class AveragePooling(Pool):
     Notes
     -----
     Calling this feature returns a pooled image of the input, it will return
-    either numpy or torch depending on the `TORCH_AVAILABLE` flag. If
+    either numpy or torch depending on the backend. If
     `store_properties` is set to `True` and the input is a numpy array,
     the returned array will be automatically wrapped in an `Image` object.
     This behavior is handled internally and does not affect the return type
