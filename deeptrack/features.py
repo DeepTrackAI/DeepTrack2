@@ -1816,23 +1816,18 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
         >>> import numpy as np
 
-        Create a dummy feature that returns the image:
-        >>> class DummyFeature(dt.Feature):
-        ...     def resolve(self, input_image):
-        ...         return input_image
+        Create an instance of a dummy feature that returns the image:
+        >>> feature = dt.DummyFeature()
 
-        Create an instance of the dummy feature:
-        >>> feature = DummyFeature()
-
-        Generate and plot a dummy grayscale image:
+        Generate and plot a grayscale image:
         >>> img = np.random.randint(0, 256, (64, 64))
         >>> feature.plot(img, cmap='gray');
 
-        Generate and plot a dummy grayscale video:
+        Generate and plot a grayscale video:
         >>> video = [np.random.randint(0, 256, (64, 64)) for _ in range(10)]
         >>> feature.plot(video, interval=100, cmap='gray');
 
-        Generate a dummy grayscale image using torch and plot it:
+        Generate a grayscale image using torch and plot it:
         >>> import torch
         >>> img = torch.randint(0, 256, size=(64, 64))
         >>> feature.plot(img, cmap='gray');
