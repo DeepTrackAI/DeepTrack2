@@ -1368,7 +1368,7 @@ class DeepTrackNode:
         -------
         self: DeepTrackNode
             Return the current node for chaining.
-        
+
         """
 
         # Check if current value is equivalent. If not, invalidate and store
