@@ -1310,8 +1310,7 @@ class AveragePooling(Pool):
 
         return torch.nn.functional.avg_pool2d(
             image,
-            kernel_size=ksize, 
-            **kwargs,
+            kernel_size=ksize,
         )
 
     def get(
