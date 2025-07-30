@@ -1444,64 +1444,83 @@ class MedianPooling(Pool):
         super().__init__(np.median, ksize=ksize, **kwargs)
 
 
-#TODO ***MG*** revise Resize - torch, typing, docstring, unit test
 class Resize(Feature):
-    """Resize an image to a specified size.
+    """
+    Resize an image to a specified size.
 
-    This class is a wrapper around cv2.resize and resizes an image to a
-    specified size. The `dsize` parameter specifies the desired output size of
-    the image.
-    Note that the order of the axes is different in cv2 and numpy. In cv2, the
-    first axis is the vertical axis, while in numpy it is the horizontal axis.
-    This is reflected in the default values of the arguments.
+    This class resizes an image to a specified size using OpenCV (`cv2.resize`)
+    for NumPy arrays or `torch.nn.functional.interpolate` for PyTorch tensors.
+    The `dsize` parameter specifies the desired output size as (width, height).
 
     Parameters
     ----------
-    dsize: tuple
-        Size to resize to.
+    dsize: PropertyLike[tuple[int, int]]
+        The target size as (width, height).
     **kwargs: Any
-        Additional parameters sent to the resizing function.
+        Additional parameters sent to the underlying resize function.
+
+    Methods
+    -------
+    get(
+        image: np.ndarray | torch.Tensor, dsize: tuple[int, int], **kwargs
+    ) -> np.ndarray | torch.Tensor
+        Resize the input image to the specified size.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> import numpy as np
+
+    Create an image:
+    >>> input_image = np.random.rand(16, 16)
+
+    Resize it to (8, 8):
+    >>> feature = dt.math.Resize(dsize=(8, 4))
+    >>> resized_image = feature.resolve(input_image)
+    >>> resized_image.shape
+    (4, 8)
 
     """
 
     def __init__(
         self: Resize,
-        dsize: PropertyLike[tuple] = (256, 256),
+        dsize: PropertyLike[tuple[int, int]] = (256, 256),
         **kwargs: Any,
     ):
-        """Initialize the parameters for resizing input features.
-
-        This constructor initializes the parameters for resizing input
-        features.
+        """
+        Initialize the parameters for the Resize feature.
 
         Parameters
         ----------
-        dsize: tuple
-            Size to resize to.
+        dsize: PropertyLike[tuple[int, int]]
+            The target size as (width, height).
         **kwargs: Any
-            Additional keyword arguments.
+            Additional arguments passed to the parent `Feature` class.
 
         """
-
         super().__init__(dsize=dsize, **kwargs)
 
-    def get(self: Resize, image: np.ndarray, dsize: tuple, **kwargs: Any) -> np.ndarray:
-        """Resize the input image to the specified size.
-
-        This method resizes the input image to the specified size.
+    def get(
+            self: Resize,
+            image: NDArray,
+            dsize: tuple[int, int],
+            **kwargs: Any
+        ) -> NDArray:
+        """
+        Resize the input image to the specified size.
 
         Parameters
         ----------
-        image: np.ndarray
+        image: np.ndarray or torch.Tensor
             The input image to resize.
-        dsize: tuple
-            Desired output size of the image.
+        dsize: tuple[int, int]
+            Desired output size of the image as (width, height).
         **kwargs: Any
-            Additional keyword arguments.
+            Additional keyword arguments passed to the resize function.
 
         Returns
         -------
-        np.ndarray
+        np.ndarray or torch.Tensor
             The resized image.
 
         """
@@ -1512,7 +1531,43 @@ class Resize(Feature):
         if self._wrap_array_with_image:
             image = strip(image)
 
-        return utils.safe_call(cv2.resize, positional_args=[image, dsize], **kwargs)
+        if apc.is_torch_array(image):
+            original_ndim = image.ndim
+
+            # Reshape input to (N, C, H, W)
+            if image.ndim == 1:
+                image = image.unsqueeze(1).unsqueeze(0).unsqueeze(0)
+            elif image.ndim == 2:
+                image = image.unsqueeze(0).unsqueeze(0)
+            elif image.ndim == 3:
+                image = image.permute(2, 0, 1).unsqueeze(0)
+                if image.shape[1] == 1:
+                    original_ndim = 2                   
+            else:
+                raise ValueError(
+                    "Resize not supported for tensor with ndim > 3"
+                )
+
+            resized = torch.nn.functional.interpolate(
+                image,
+                size=[dsize[1], dsize[0]],
+                mode='bilinear',
+                align_corners=False,
+                **kwargs,
+            )
+
+            # Restore original dimensionallity
+            if original_ndim == 1 or original_ndim == 2:
+                resized = resized.squeeze(0).squeeze(0)
+            elif original_ndim == 3:
+                resized = resized.squeeze(0).permute(1, 2, 0)
+
+            return resized
+        
+        else:
+            return utils.safe_call(
+                cv2.resize, positional_args=[image, dsize], **kwargs
+            )
 
 
 if OPENCV_AVAILABLE:

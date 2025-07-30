@@ -138,6 +138,8 @@ class TestMath(unittest.TestCase):
         input_image = np.random.rand(16, 16)
         feature = math.Resize(dsize=(8, 8))
         resized = feature.resolve(input_image)
+
+        self.assertIsInstance(resized, np.ndarray)
         self.assertEqual(resized.shape, (8, 8))
 
     @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
