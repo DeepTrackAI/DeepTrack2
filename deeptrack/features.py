@@ -387,7 +387,18 @@ class Feature(DeepTrackNode):
         behavior.
     `bind_arguments(arguments: Feature) -> Feature`
         It binds another feature’s properties as arguments to this feature.
-    `plot(input_image: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, resolve_kwargs: dict | None = None, interval: float | None = None, **kwargs: Any) -> Any`
+    `plot(
+        input_image: (
+            np.ndarray
+            | list[np.ndarray]
+            | Image
+            | list[Image]
+            | None
+        ) = None,
+        resolve_kwargs: dict | None = None,
+        interval: float | None = None,
+        **kwargs: Any,
+    ) -> Any`
         It visualizes the output of the feature.
 
     **Private and internal methods.**
@@ -1754,37 +1765,39 @@ class Feature(DeepTrackNode):
 
         return self
 
-    #TODO ***MG***
     def plot(
         self: Feature,
-        input_image: np.ndarray | list[np.ndarray] | Image | list[Image] = None,
+        input_image: (
+            np.ndarray | list[np.ndarray] | Image | list[Image]
+        ) = None,
         resolve_kwargs: dict = None,
         interval: float = None,
         **kwargs: Any,
     ) -> Any:
         """Visualizes the output of the feature.
 
-        This method resolves the feature and visualizes the result. If the output is 
-        an `Image`, it displays it using `pyplot.imshow`. If the output is a list, it 
-        creates an animation. In Jupyter notebooks, the animation is played inline 
-        using `to_jshtml()`. In scripts, the animation is displayed using the 
-        matplotlib backend.
+        This method resolves the feature and visualizes the result. If the
+        output is an `Image`, it displays it using `pyplot.imshow`. If the
+        output is a list, it creates an animation. In Jupyter notebooks, the
+        animation is played inline using `to_jshtml()`. In scripts, the
+        animation is displayed using the matplotlib backend.
 
         Any parameters in `kwargs` are passed to `pyplot.imshow`.
 
         Parameters
         ----------
         input_image: np.ndarray or Image or list[np.ndarray or Image], optional
-            The input image or list of images passed as an argument to the `resolve` 
-            call. If `None`, uses previously set input values or propagates properties.
+            The input image or list of images passed as an argument to the
+            `resolve` call. If `None`, uses previously set input values or
+            propagates properties.
         resolve_kwargs: dict, optional
             Additional keyword arguments passed to the `resolve` call.
         interval: float, optional
-            The time between frames in the animation, in milliseconds. The default 
-            value is 33 ms.
+            The time between frames in the animation, in milliseconds. The
+            default value is 33 ms.
         **kwargs: dict, optional
             Additional keyword arguments passed to `pyplot.imshow`.
-       
+
         Returns
         -------
         Any
@@ -1814,7 +1827,9 @@ class Feature(DeepTrackNode):
 
         if not interval:
             if isinstance(output_image[0], Image):
-                interval = output_image[0].get_property("interval") or (1 / 30 * 1000)
+                interval = (
+                    output_image[0].get_property("interval") or (1 / 30 * 1000)
+                )
             else:
                 interval = 1 / 30 * 1000
 
