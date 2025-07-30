@@ -645,6 +645,8 @@ class DeepTrackDataDict:
             f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
         )
 
+        print("here")
+
         if self.keylength is None:
             raise KeyError("Attempting to index an empty dict.")
 
@@ -1038,11 +1040,16 @@ class DeepTrackNode:
 
     @property
     def action(self: DeepTrackNode) -> Callable[..., Any]:
-        """Callable: The function that computes this node's value.
+        """Get the function used to compute this node's value.
 
         When accessed, it returns the current action. This is often a function
         or lambda-function that takes `_ID` as an optional parameter if 
-        `_accepts_ID` is `True`.
+        `_accepts_ID` is True.
+
+        Returns
+        -------
+        Callable[..., Any]
+            The function used to compute this node's value.
 
         """
 
@@ -1063,8 +1070,6 @@ class DeepTrackNode:
             `_ID` when calling `action`.
 
         """
-
-        print("here")
 
         self._action = _action
         self._accepts_ID = "_ID" in get_kwarg_names(_action)
@@ -1187,8 +1192,8 @@ class DeepTrackNode:
         data: Any
             The data to be stored.
         _ID: tuple[int, ...], optional
-            The index for this data. If the _ID does not exist, it creates it.
-            Default is the empty tuple (), indicating a root-level entry.
+            The index for this data. If `_ID` does not exist, it creates it.
+            Defaults to (), indicating a root-level entry.
 
         Returns
         -------
@@ -1492,13 +1497,15 @@ class DeepTrackNode:
     ) -> Any:
         """Evaluate this node at _ID.
 
-        If the data at `_ID` is valid, it returns the stored value. Otherwise, 
-        it calls `action` to compute a new value, stores it, and returns it.
+        If valid data is already stored at `_ID`, it is returned. Otherwise,
+        the node's `action` function is called to compute the value, which is
+        then stored and returned. The `_ID` is passed to `action` only if it
+        is declared to accept it.
 
         Parameters
         ----------
         _ID: tuple[int, ...], optional
-            The _ID at which to evaluate the node's action.
+            The `_ID` at which to evaluate the node's action. Defaults to `()`.
 
         Returns
         -------
@@ -1535,7 +1542,7 @@ class DeepTrackNode:
         Parameters
         ----------
         _ID: tuple[int, ...], optional
-            The _ID at which to retrieve the current value.
+            The `_ID` at which to retrieve the current value. Defaults to `()`.
 
         Returns
         -------
