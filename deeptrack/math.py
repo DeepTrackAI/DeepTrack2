@@ -1501,11 +1501,11 @@ class Resize(Feature):
         super().__init__(dsize=dsize, **kwargs)
 
     def get(
-            self: Resize,
-            image: NDArray,
-            dsize: tuple[int, int],
-            **kwargs: Any
-        ) -> NDArray:
+        self: Resize,
+        image: NDArray | torch.Tensor,
+        dsize: tuple[int, int],
+        **kwargs: Any,
+    ) -> NDArray | torch.Tensor:
         """
         Resize the input image to the specified size.
 
@@ -1542,7 +1542,7 @@ class Resize(Feature):
             elif image.ndim == 3:
                 image = image.permute(2, 0, 1).unsqueeze(0)
                 if image.shape[1] == 1:
-                    original_ndim = 2                   
+                    original_ndim = 2
             else:
                 raise ValueError(
                     "Resize not supported for tensor with ndim > 3"
@@ -1551,7 +1551,7 @@ class Resize(Feature):
             resized = torch.nn.functional.interpolate(
                 image,
                 size=[dsize[1], dsize[0]],
-                mode='bilinear',
+                mode="bilinear",
                 align_corners=False,
                 **kwargs,
             )
@@ -1563,7 +1563,7 @@ class Resize(Feature):
                 resized = resized.squeeze(0).permute(1, 2, 0)
 
             return resized
-        
+
         else:
             return utils.safe_call(
                 cv2.resize, positional_args=[image, dsize], **kwargs
