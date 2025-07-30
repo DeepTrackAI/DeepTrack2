@@ -324,8 +324,9 @@ class DeepTrackDataDict:
     Attributes
     ----------
     keylength: int or None
-        The length of the `_ID`s set when the first entry is created.
-        If `None`, no entries have been created, and any `_ID` length is valid.
+        Read-only property exposing the internal variable with the length of
+        the `_ID`s set when the first entry is created. If `None`, no entries
+        have been created, and any `_ID` length is valid.
     dict: dict[tuple[int, ...], DeepTrackDataObject] or {}
         Read-only property exposing the internal dictionary of stored data,
         `_dict`. This is a dictionary mapping tuples of integers (`_ID`s) to
@@ -471,7 +472,7 @@ class DeepTrackDataDict:
 
     """
 
-    keylength: int | None
+    _keylength: int | None
     _dict: dict[tuple[int, ...], DeepTrackDataObject]
 
     def __init__(self: DeepTrackDataDict):
@@ -482,7 +483,7 @@ class DeepTrackDataDict:
         
         """
 
-        self.keylength = None
+        self._keylength = None
         self._dict = {}
 
     def invalidate(self: DeepTrackDataDict) -> None:
@@ -548,7 +549,7 @@ class DeepTrackDataDict:
         )
 
         # If keylength has not yet been set, all indexes are valid.
-        if self.keylength is None:
+        if self._keylength is None:
             return True
 
         # If index is already stored, always valid.
@@ -557,7 +558,7 @@ class DeepTrackDataDict:
 
         # Otherwise, the _ID length must match the established keylength
         # for _ID to be valid.
-        return len(_ID) == self.keylength
+        return len(_ID) == self._keylength
 
     def create_index(
         self: DeepTrackDataDict,
@@ -602,8 +603,8 @@ class DeepTrackDataDict:
         self._dict[_ID] = DeepTrackDataObject()
 
         # If `keylength` is not set, initialize it with current _IDs length.
-        if self.keylength is None:
-            self.keylength = len(_ID)
+        if self._keylength is None:
+            self._keylength = len(_ID)
 
     def __getitem__(
         self: DeepTrackDataDict,
@@ -645,11 +646,11 @@ class DeepTrackDataDict:
             f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
         )
 
-        if self.keylength is None:
+        if self._keylength is None:
             raise KeyError("Attempting to index an empty dict.")
 
         # If _ID matches keylength, return corresponding DeepTrackDataObject.
-        if len(_ID) == self.keylength:
+        if len(_ID) == self._keylength:
             if _ID not in self._dict:
                 raise KeyError(
                     f"The _ID {_ID} does not exist in this DeepTrackDataDict. "
@@ -659,8 +660,8 @@ class DeepTrackDataDict:
 
         # If _ID longer than keylength, trim the requested _ID
         # and return corresponding DeepTrackDataObject.
-        if len(_ID) > self.keylength:
-            return self[_ID[: self.keylength]]
+        if len(_ID) > self._keylength:
+            return self[_ID[: self._keylength]]
 
         # If _ID shorter than keylength, return a slice of all matching items.
         return {k: v for k, v in self._dict.items() if k[: len(_ID)] == _ID}
@@ -781,7 +782,25 @@ class DeepTrackDataDict:
         )
 
     @property
-    def dict(self: DeepTrackDataDict) -> dict[tuple[int, ...], DeepTrackDataObject]:
+    def keylength(self: DeepTrackDataDict) -> int | None:
+        """Access the internal keylength (read-only).
+
+        This property exploses the internal `_keylength` attribute as a public
+        read-only interface.
+
+        Returns
+        -------
+        int or None
+            The key length.
+
+        """
+
+        return self._keylength
+
+    @property
+    def dict(
+        self: DeepTrackDataDict,
+    ) -> dict[tuple[int, ...], DeepTrackDataObject]:
         """Access the internal data dictionary (read-only).
 
         This property exposes the internal `_dict` attribute as a public
