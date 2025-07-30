@@ -136,11 +136,37 @@ class TestMath(unittest.TestCase):
     @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_Resize(self):
         input_image = np.random.rand(16, 16)
-        feature = math.Resize(dsize=(8, 8))
+        feature = math.Resize(dsize=(8, 4))
         resized = feature.resolve(input_image)
 
         self.assertIsInstance(resized, np.ndarray)
-        self.assertEqual(resized.shape, (8, 8))
+        self.assertEqual(resized.shape, (4, 8))
+
+        ### Test with PyTorch tensor (if available)
+        if TORCH_AVAILABLE:
+            input_shapes = [
+                (16,),
+                (16, 16),
+                (16, 16, 1),
+                (16, 16, 4),
+            ]
+
+            feature = math.Resize(dsize=(8, 4))
+
+            for shape in input_shapes:
+                with self.subTest(shape=shape):
+                    input_image = torch.rand(*shape)
+                    resized = feature.resolve(input_image)
+
+                    self.assertIsInstance(resized, torch.Tensor)
+
+                    # Compare with NumPy version:
+                    input_image_np = input_image.numpy()
+                    resized_np = feature.resolve(input_image_np)
+                    self.assertEqual(tuple(resized.shape), resized_np.shape)
+                    np.testing.assert_allclose(
+                        resized_np, resized.numpy(), rtol=1e-5, atol=1e-5
+                    )
 
     @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_BlurCV2_GaussianBlur(self):

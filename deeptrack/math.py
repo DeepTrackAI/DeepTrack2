@@ -1516,7 +1516,7 @@ class Resize(Feature):
         dsize: tuple[int, int]
             Desired output size of the image as (width, height).
         **kwargs: Any
-            Additional keyword arguments passed to the resize function.
+            Additional keyword arguments passed to `cv2.resize`.
 
         Returns
         -------
@@ -1553,7 +1553,6 @@ class Resize(Feature):
                 size=[dsize[1], dsize[0]],
                 mode="bilinear",
                 align_corners=False,
-                **kwargs,
             )
 
             # Restore original dimensionallity
