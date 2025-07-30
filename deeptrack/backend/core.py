@@ -1341,14 +1341,10 @@ class DeepTrackNode:
         
         """
 
-        # Pre-instantiate memory for optimization,
-        # used to avoid repeated processing of the same nodes.
-        child_memory = []
-
         # For each dependency, reset data in all of its children.
         for dependency in self.recurse_dependencies():
-            for dep_child in dependency.recurse_children(memory=child_memory):
-                dep_child.data = DeepTrackDataDict()
+            for dependency_child in dependency.recurse_children():
+                dependency_child.data = DeepTrackDataDict()
 
         return self
 
