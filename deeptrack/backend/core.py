@@ -645,8 +645,6 @@ class DeepTrackDataDict:
             f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
         )
 
-        print("here")
-
         if self.keylength is None:
             raise KeyError("Attempting to index an empty dict.")
 
