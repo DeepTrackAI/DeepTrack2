@@ -1816,7 +1816,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
         >>> import numpy as np
 
-        Create an instance of a dummy feature that returns the image:
+        Create an instance of a dummy feature that returns the input:
         >>> feature = dt.DummyFeature()
 
         Generate and plot a grayscale image:
