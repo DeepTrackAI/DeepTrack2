@@ -834,7 +834,7 @@ class DeepTrackNode:
     dependencies: WeakSet[DeepTrackNode]
         Nodes on which this node depends (its parents, grandparents, etc.).
         This is a weakref.WeakSet, for efficient memory management.
-    _action: Callable
+    _action: Callable[..., Any]
         The function or lambda-function to compute the node value.
     _accepts_ID: bool
         Whether `action` accepts an input _ID.
@@ -914,9 +914,23 @@ class DeepTrackNode:
     >>> from deeptrack.backend.core import DeepTrackNode
 
     Create two `DeepTrackNode` objects, one as a parent and one as a child:
-    >>> parent = DeepTrackNode(action=lambda: 10)
-    >>> child = DeepTrackNode(action=lambda _ID=None: parent(_ID) * 2)
+    >>> parent = DeepTrackNode(
+    ...     node_name="parent",
+    ...     action=lambda: 10,
+    ... )
+    >>> child = DeepTrackNode(
+    ...     node_name="child",    
+    ...     action=lambda _ID=None: parent(_ID) * 2,
+    ... )
     >>> parent.add_child(child)
+
+    Check the children of parent and child (which include the node itself):
+    >>> parent.recurse_children()
+    {DeepTrackNode(name='child', len=0, action=<lambda>),
+    DeepTrackNode(name='parent', len=0, action=<lambda>)}
+
+    >>> child.recurse_children()
+    {DeepTrackNode(name='child', len=0, action=<lambda>)}
 
     Store and retrieve data for specific _IDs:
     >>> parent.store(15, _ID=(0,))
