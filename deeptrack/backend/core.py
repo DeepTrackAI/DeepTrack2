@@ -857,6 +857,9 @@ class DeepTrackNode:
     _all_children: WeakSet[DeepTrackNode]
         All nodes in the subtree rooted at the node, including the node itself.
         This is a weakref.WeakSet, for efficient memory management.
+    _all_dependencies: WeakSet[DeepTrackNode]
+        All the dependencies for this node, including the node itself.
+        This is a weakref.WeakSet, for efficient memory management.
     _citations: list[str]
         Citations associated with this node.
     
@@ -1072,6 +1075,7 @@ class DeepTrackNode:
     _children: WeakSet[DeepTrackNode]
     _dependencies: WeakSet[DeepTrackNode]
     _all_children: WeakSet[DeepTrackNode]
+    _all_dependencies: WeakSet[DeepTrackNode]
 
     _action: Callable[..., Any]
     _accepts_ID: bool
@@ -1159,6 +1163,10 @@ class DeepTrackNode:
         self._all_children = WeakSet()  #TODO ***BM*** Ok WeakSet from set?
         self._all_children.add(self)
 
+        # Keep track of all dependencies, including this node.
+        self._all_dependencies = WeakSet()  #TODO ***BM*** Ok this addition?
+        self._all_dependencies.add(self)
+
     def add_child(
         self: DeepTrackNode,
         child: DeepTrackNode,
@@ -1166,7 +1174,8 @@ class DeepTrackNode:
         """Add a child node to the current node.
 
         Adds `child` to `self._children`, and `self` to `child._dependencies`.
-        Also updates `_all_children` for `self` and its dependencies.
+        Also updates `_all_children` for `self` and its dependencies, as well
+        as `_all_dependencies` for `self` and its children.
 
         Parameters
         ----------
@@ -1192,6 +1201,16 @@ class DeepTrackNode:
             parent._all_children = \
                 parent._all_children.union(child_all_children)
 
+        # Get all dependencies of `self`, which includes `self` itself.
+        self_all_dependencies = self._all_dependencies.copy()
+
+        # Merge all these dependencies into the child's subtree.
+        child._all_dependencies = \
+            child._all_dependencies.union(self_all_dependencies)
+        for grandchild in child.recurse_children():
+            grandchild._all_dependencies = \
+                grandchild._all_dependencies.union(self_all_dependencies)
+
         return self
 
     def add_dependency(
@@ -1201,7 +1220,8 @@ class DeepTrackNode:
         """Add a dependency, making this node depend on a parent node.
 
         Adds `parent` to `self._dependencies` and `self` to `parent._children`.
-        Also updates `_all_children` for `parent` and its dependencies.
+        Also updates `_all_children` for `parent` and its dependencies, as well
+        as `_all_dependencies` for `self` and its children.
 
         Parameters
         ----------
@@ -1402,14 +1422,9 @@ class DeepTrackNode:
     def recurse_children(self: DeepTrackNode) -> WeakSet[DeepTrackNode]:
         """Return all children of this node.
 
-        Parameters
-        ----------
-        memory: set, optional
-            Set of nodes that have already been visited (not used here).
-
         Returns
         -------
-        set
+        WeakSet[DeepTrackNode]
             All nodes in the subtree rooted at this node, including itself.
 
         """
@@ -1458,15 +1473,24 @@ class DeepTrackNode:
         for child in self._children:
             yield from child.recurse_children(memory=memory)
 
-    #TODO ***BM*** Should we also create a _all_dependencies attribute in
-    # analogy with _all_children? and update accordingly the
-    # recurse_dependencies() method?
+    def recurse_dependencies(self: DeepTrackNode) -> WeakSet[DeepTrackNode]:
+        """Return all dependencies of this node.
 
-    def recurse_dependencies(
+        Returns
+        -------
+        WeakSet[DeepTrackNode]
+            All the dependencies of this node, including itself.
+
+        """
+
+        # Simply return `_all_dependencies` as it's maintained incrementally.
+        return self._all_dependencies
+
+    def old_recurse_dependencies(
         self: DeepTrackNode,
         memory: list[DeepTrackNode] | None = None,
     ) -> Iterator[DeepTrackNode]:
-        """Yield all dependencies of this node, ensuring each is visited once.
+        """Legacy recursive method for traversing all dependencies.
 
         Parameters
         ----------
@@ -1477,7 +1501,11 @@ class DeepTrackNode:
         ------
         DeepTrackNode
             Yields this node and all nodes it depends on.
-        
+
+        Notes
+        -----
+        This method is kept for backward compatibility or debugging purposes.
+
         """
 
         # On first call, instantiate memory.
