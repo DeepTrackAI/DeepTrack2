@@ -227,37 +227,87 @@ class TestCore(unittest.TestCase):
         self.assertFalse(node.is_valid((0, 1)))
         self.assertFalse(node.is_valid((1, 0)))
         self.assertFalse(node.is_valid((1, 1)))
-        
 
     def test_DeepTrackNode_dependencies(self):
-        parent = core.DeepTrackNode(action=lambda: 10)
-        child = core.DeepTrackNode(action=lambda _ID=None: parent() * 2)
-        parent.add_child(child)  # Establish dependency.
+        parent = core.DeepTrackNode(
+            node_name="parent",
+            action=lambda: 10,
+        )
+        child = core.DeepTrackNode(
+            node_name="child",
+            action=lambda: parent() * 2,
+        )
+        grandchild = core.DeepTrackNode(
+            node_name="grandchild",
+            action=lambda: child() * 3,
+        )
+        parent.add_child(child)  # Establish dependency
+        child.add_child(grandchild)  # Establish dependency
 
-        # Check that the just create nodes are invalid as not calculated.
+        # Check that the just created nodes are invalid as not calculated
         self.assertFalse(parent.is_valid())
         self.assertFalse(child.is_valid())
+        self.assertFalse(grandchild.is_valid())
 
         # Calculate child, and therefore parent.
-        result = child()
-        self.assertEqual(result, 20)
+        self.assertEqual(grandchild(), 60)
         self.assertTrue(parent.is_valid())
         self.assertTrue(child.is_valid())
+        self.assertTrue(grandchild.is_valid())
 
         # Invalidate parent and check child validity.
         parent.invalidate()
         self.assertFalse(parent.is_valid())
         self.assertFalse(child.is_valid())
+        self.assertFalse(grandchild.is_valid())
 
         # Validate parent and ensure child is invalid until recomputation.
-        parent.validate()
-        self.assertTrue(parent.is_valid())
-        self.assertFalse(child.is_valid())
+        child.validate()
+        self.assertFalse(parent.is_valid())
+        self.assertTrue(child.is_valid())
+        self.assertFalse(grandchild.is_valid())
 
         # Recompute child and check its validity
-        child()
+        grandchild()
+        self.assertFalse(parent.is_valid())  # Not recalculated as child valid
+        self.assertTrue(child.is_valid())
+        self.assertTrue(grandchild.is_valid())
+
+        # Recompute child and check its validity
+        parent.invalidate()
+        grandchild()
         self.assertTrue(parent.is_valid())
         self.assertTrue(child.is_valid())
+        self.assertTrue(grandchild.is_valid())
+
+        # Check dependencies
+        self.assertEqual(len(parent.children), 1)
+        for node in parent.children:
+            self.assertEqual(node.node_name, "child")
+        self.assertEqual(len(child.children), 1)
+        for node in child.children:
+            self.assertEqual(node.node_name, "grandchild")
+        self.assertEqual(len(grandchild.children), 0)
+
+        self.assertEqual(len(parent.dependencies), 0)
+        self.assertEqual(len(child.dependencies), 1)
+        for node in child.dependencies:
+            self.assertEqual(node.node_name, "parent")
+        self.assertEqual(len(grandchild.dependencies), 1)
+        for node in grandchild.dependencies:
+            self.assertEqual(node.node_name, "child")
+
+        self.assertEqual(len(parent._all_children), 3)
+        self.assertEqual(len(child._all_children), 2)
+        self.assertEqual(len(grandchild._all_children), 1)
+
+        self.assertEqual(len(parent.recurse_children()), 3)
+        self.assertEqual(len(child.recurse_children()), 2)
+        self.assertEqual(len(grandchild.recurse_children()), 1)
+
+        self.assertEqual(len(list(parent.recurse_dependencies())), 1)
+        self.assertEqual(len(list(child.recurse_dependencies())), 2)
+        self.assertEqual(len(list(grandchild.recurse_dependencies())), 3)
 
     def test_DeepTrackNode_nested_dependencies(self):
         parent = core.DeepTrackNode(action=lambda: 5)
