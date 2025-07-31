@@ -1399,17 +1399,13 @@ class DeepTrackNode:
 
         return self
 
-    def recurse_children(
-        self: DeepTrackNode,
-        memory: set[DeepTrackNode] | None = None,
-    ) -> set[DeepTrackNode]:
+    def recurse_children(self: DeepTrackNode) -> WeakSet[DeepTrackNode]:
         """Return all children of this node.
 
         Parameters
         ----------
         memory: set, optional
-            Set of nodes that have already been visited (not used directly
-            here).
+            Set of nodes that have already been visited (not used here).
 
         Returns
         -------
@@ -1461,6 +1457,10 @@ class DeepTrackNode:
         # Recursively traverse children.
         for child in self._children:
             yield from child.recurse_children(memory=memory)
+
+    #TODO ***BM*** Should we also create a _all_dependencies attribute in
+    # analogy with _all_children? and update accordingly the
+    # recurse_dependencies() method?
 
     def recurse_dependencies(
         self: DeepTrackNode,
