@@ -296,8 +296,8 @@ class DeepTrackDataObject:
         """
 
         return (
-            f"{self.__class__.__name__}(data={self._data!r}, "
-            f"valid={self._valid})"
+            f"{self.__class__.__name__}"
+            f"(data={self._data!r}, valid={self._valid})"
         )
 
 
@@ -375,7 +375,7 @@ class DeepTrackDataDict:
     >>> data_dict.create_index((0, 1))
     >>> data_dict.create_index((1, 0))
     >>> data_dict.create_index((1, 1))
-    data_dict
+    >>> data_dict
     DeepTrackDataDict(4 entries, keylength=2)
 
     Store the values associated with each `_ID`:
@@ -402,7 +402,7 @@ class DeepTrackDataDict:
     If requesting a shorter `_ID`, it returns all matching nested entries:
     >>> data_dict[(0,)]
     {(0, 0): DeepTrackDataObject(data='Data at (0, 0)', valid=True),
-    (0, 1): DeepTrackDataObject(data='Data at (0, 1)', valid=True)}
+     (0, 1): DeepTrackDataObject(data='Data at (0, 1)', valid=True)}
  
     Validate and invalidate all entries at once:
     >>> data_dict.invalidate()
@@ -478,8 +478,8 @@ class DeepTrackDataDict:
     def __init__(self: DeepTrackDataDict):
         """Initialize the data dictionary.
 
-        It initializes `keylength` to `None` and `dict` to an empty dictionary,
-        indicating no data objects are currently stored.
+        Initializes `keylength` to `None` and `dict` to an empty dictionary,
+        indicating no `DeepTrackDataObject`s are currently stored.
         
         """
 
@@ -489,8 +489,11 @@ class DeepTrackDataDict:
     def invalidate(self: DeepTrackDataDict) -> None:
         """Mark all stored data objects as invalid.
 
-        It calls `invalidate()` on every `DeepTrackDataObject` in the
-        dictionary.
+        Calls `invalidate()` on every `DeepTrackDataObject` in the dictionary.
+
+        NOTE: Currently, it invalidates the data objects stored at all `_ID`s.
+        TODO: Add optional argument `_ID: tuple[int, ...] ()` and permit
+        invalidation of only specific `_ID`s.
 
         """
 
@@ -500,7 +503,11 @@ class DeepTrackDataDict:
     def validate(self: DeepTrackDataDict) -> None:
         """Mark all stored data objects as valid.
 
-        It calls `validate()` on every `DeepTrackDataObject` in the dictionary.
+        Calls `validate()` on every `DeepTrackDataObject` in the dictionary.
+
+        NOTE: Currently, it validates the data objects stored at all `_ID`s.
+        TODO: Add optional argument `_ID: tuple[int, ...] ()` and permit
+        validation of only specific `_ID`s.
 
         """
 
@@ -513,8 +520,8 @@ class DeepTrackDataDict:
     ) -> bool:
         """Check if a given _ID is valid for this data dictionary.
 
-        If `keylength` is `None`, any tuple `_ID` is considered valid since no 
-        entries have been created yet.
+        If `keylength` is `None`, any tuple `_ID` is considered valid (since
+        no entries have been created yet).
 
         If `_ID` already exists in `dict`, it is automatically valid.
         
@@ -529,8 +536,8 @@ class DeepTrackDataDict:
         Returns
         -------
         bool
-            `True` if the _ID is valid given the current configuration, `False` 
-            otherwise.
+            `True` if the `_ID` is valid given the current configuration,
+            `False` otherwise.
 
         Raises
         ------
@@ -572,13 +579,14 @@ class DeepTrackDataDict:
         If `_ID` is already in `dict`, no new entry is created.
         
         If `keylength` is `None`, it is set to the length of `_ID`. Once 
-        established, all subsequently created _IDs must have this same length.
+        established, all subsequently created `_ID`s must have this same
+        length.
 
         Parameters
         ----------
         _ID: tuple[int, ...], optional
             A tuple of integers representing the _ID for the data entry. 
-            Default is `()`, which represents a root-level data entry with no 
+            Defaults to `()`, which represents a root-level data entry with no 
             nesting.
         
         Raises
@@ -602,7 +610,7 @@ class DeepTrackDataDict:
         # Create a new DeepTrackDataObject for this _ID.
         self._dict[_ID] = DeepTrackDataObject()
 
-        # If `keylength` is not set, initialize it with current _IDs length.
+        # If `_keylength` is not set, initialize it with current _IDs length.
         if self._keylength is None:
             self._keylength = len(_ID)
 
@@ -615,25 +623,26 @@ class DeepTrackDataDict:
         Parameters
         ----------
         _ID: tuple[int, ...]
-            The _ID for the requested data.
+            The `_ID` for the requested data.
 
         Returns
         -------
-        DeepTrackDataObject or Dict[tuple[int, ...], DeepTrackDataObject]
+        DeepTrackDataObject or dict[tuple[int, ...], DeepTrackDataObject]
             If `_ID` matches `keylength`, it returns the corresponding 
             `DeepTrackDataObject`.
             If `_ID` is longer than `keylength`, the request is trimmed to 
             match `keylength` and it returns the corresponding
             `DeepTrackDataObject`.
             If `_ID` is shorter than `keylength`, it returns a dict of all
-            entries whose _IDs match the given `_ID` prefix.
+            entries whose `_ID`s match the given `_ID` prefix.
 
         Raises
         ------
         AssertionError
             If `_ID` is not a tuple of integers.
         KeyError
-            If the dictionary is empty (`keylength` is `None`).
+            If the dictionary is empty (`keylength` is `None`), or if the
+            requested `_ID` is not in the dictionary.
 
         """
 
@@ -675,28 +684,14 @@ class DeepTrackDataDict:
         Parameters
         ----------
         _ID: tuple[int, ...]
-            The _ID to check.
+            The `_ID` to check.
 
         Returns
         -------
         bool
-            `True` if the _ID exists, `False` otherwise.
-
-        Raises
-        ------
-        AssertionError
-            If `_ID` is not a tuple of integers.
+            `True` if `_ID` exists, `False` otherwise.
 
         """
-
-        # Ensure _ID is a tuple of integers.
-        assert isinstance(_ID, tuple), (
-            f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
-        )
-        assert all(isinstance(i, int) for i in _ID), (
-            f"Data index {_ID} is not a tuple of integers. "
-            f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
-        )
 
         return _ID in self._dict
 
@@ -777,8 +772,8 @@ class DeepTrackDataDict:
         """
 
         return (
-            f"{self.__class__.__name__}("
-            f"{len(self)} entries, keylength={self.keylength})"
+            f"{self.__class__.__name__}"
+            f"({len(self)} entries, keylength={self.keylength})"
         )
 
     @property
