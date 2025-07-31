@@ -344,7 +344,7 @@ class DeepTrackDataDict:
         Check if the given _ID is valid for the current configuration.
     `__getitem__(_ID) -> DeepTrackDataObject or dict[_ID, DeepTrackDataObject]`
         Retrieve data associated with the `_ID`. Can return a
-        `DeepTrackDataObject` or a dict of `DeepTrackDataObject`s if `_ID` is
+        `DeepTrackDataObject`, or a dict of `DeepTrackDataObject`s if `_ID` is
         shorter than `keylength`.
     `__contains__(_ID) -> bool`
         Check whether the given `_ID` exists in the dictionary.
@@ -457,7 +457,7 @@ class DeepTrackDataDict:
     DeepTrackDataObject(data='Data at (1, 0)', valid=True)
     DeepTrackDataObject(data='Data at (1, 1)', valid=True)
 
-    Check if an _ID is valid according to current keylength:
+    Check if an `_ID` is valid according to current keylength:
     >>> data_dict.valid_index((0, 1))
     True
 
