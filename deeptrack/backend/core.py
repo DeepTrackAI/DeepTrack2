@@ -1071,7 +1071,7 @@ class DeepTrackNode:
     data: DeepTrackDataDict
     _children: WeakSet[DeepTrackNode]
     _dependencies: WeakSet[DeepTrackNode]
-    _all_children: WeakSet[DeepTrackNode]  #TODO ***BM*** Ok WeakSet from set?
+    _all_children: WeakSet[DeepTrackNode]
 
     _action: Callable[..., Any]
     _accepts_ID: bool
@@ -1156,7 +1156,7 @@ class DeepTrackNode:
         self._accepts_ID = "_ID" in get_kwarg_names(self.action)
 
         # Keep track of all children, including this node.
-        self._all_children = set()
+        self._all_children = WeakSet()  #TODO ***BM*** Ok WeakSet from set?
         self._all_children.add(self)
 
     def add_child(
@@ -1165,9 +1165,8 @@ class DeepTrackNode:
     ) -> DeepTrackNode:
         """Add a child node to the current node.
 
-        Adding a child also updates `_all_children` for this node and all 
-        its dependencies. It also ensures that dependency and child 
-        relationships remain consistent.
+        Adds `child` to `self._children`, and `self` to `child._dependencies`.
+        Also updates `_all_children` for `self` and its dependencies.
 
         Parameters
         ----------
@@ -1182,8 +1181,7 @@ class DeepTrackNode:
         """
 
         self._children.add(child)
-        if self not in child._dependencies:
-            child._dependencies.add(self)  # Ensure bidirectional relationship
+        child._dependencies.add(self)  # Ensure bidirectional relationship
 
         # Get all children of `child`, which includes `child` itself.
         child_all_children = child._all_children.copy()
@@ -1200,13 +1198,16 @@ class DeepTrackNode:
         self: DeepTrackNode,
         parent: DeepTrackNode,
     ) -> DeepTrackNode:
-        """Adds a dependency, making this node depend on a parent node.
+        """Add a dependency, making this node depend on a parent node.
+
+        Adds `parent` to `self._dependencies` and `self` to `parent._children`.
+        Also updates `_all_children` for `parent` and its dependencies.
 
         Parameters
         ----------
         parent: DeepTrackNode
             The parent node that this node depends on. If `parent` changes, 
-            this node's data may become invalid.
+            this node's data becomes invalid.
 
         Returns
         -------
