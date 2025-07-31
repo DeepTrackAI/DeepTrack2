@@ -857,8 +857,9 @@ class DeepTrackNode:
         The function or lambda-function to compute the node value.
     _accepts_ID: bool
         Whether `action` accepts an input _ID.
-    _all_children: set[DeepTrackNode]
+    _all_children: WeakSet[DeepTrackNode]
         All nodes in the subtree rooted at the node, including the node itself.
+        This is a weakref.WeakSet, for efficient memory management.
     _citations: list[str]
         Citations associated with this node.
     
@@ -1073,11 +1074,10 @@ class DeepTrackNode:
     data: DeepTrackDataDict
     children: WeakSet[DeepTrackNode]
     dependencies: WeakSet[DeepTrackNode]
+    _all_children: WeakSet[DeepTrackNode]  #TODO ***BM*** Ok change to WeakSet from set?
 
     _action: Callable[..., Any]
     _accepts_ID: bool
-
-    _all_children: set[DeepTrackNode]  #TODO ***GV*** Why is this a set and not a WeakSet?
 
     # Citations associated with DeepTrack2.
     _citations: list[str] = [CITATION_MIDTVEDT2021QUANTITATIVE]
