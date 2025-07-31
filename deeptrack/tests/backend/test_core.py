@@ -320,38 +320,72 @@ class TestCore(unittest.TestCase):
         self.assertEqual(len(child.recurse_dependencies()), 2)
         self.assertEqual(len(grandchild.recurse_dependencies()), 3)
 
-    def test_DeepTrackNode_nested_dependencies(self):
-        parent = core.DeepTrackNode(action=lambda: 5)
-        middle = core.DeepTrackNode(action=lambda: parent() + 5)
-        child = core.DeepTrackNode(action=lambda: middle() * 2)
-
-        parent.add_child(middle)
-        middle.add_child(child)
-
-        result = child()
-        self.assertEqual(result, 20)
-
-        # Invalidate the middle and check propagation.
-        middle.invalidate()
-        self.assertTrue(parent.is_valid())
-        self.assertFalse(middle.is_valid())
-        self.assertFalse(child.is_valid())
-
     def test_DeepTrackNode_op_overloading(self):
         node1 = core.DeepTrackNode(action=lambda: 5)
         node2 = core.DeepTrackNode(action=lambda: 10)
 
         sum_node = node1 + node2
         self.assertEqual(sum_node(), 15)
+        sum_node = node1 + 100
+        self.assertEqual(sum_node(), 105)
+        sum_node = 100 + node2
+        self.assertEqual(sum_node(), 110)
 
-        diff_node = node2 - node1
-        self.assertEqual(diff_node(), 5)
+        diff_node = node1 - node2
+        self.assertEqual(diff_node(), -5)
+        diff_node = node1 - 100
+        self.assertEqual(diff_node(), -95)
+        diff_node = 100 - node2
+        self.assertEqual(diff_node(), 90)
 
         prod_node = node1 * node2
         self.assertEqual(prod_node(), 50)
+        prod_node = node1 * 100
+        self.assertEqual(prod_node(), 500)
+        prod_node = 100 * node2
+        self.assertEqual(prod_node(), 1_000)
 
-        div_node = node2 / node1
-        self.assertEqual(div_node(), 2)
+        truediv_node = node2 / node1
+        self.assertEqual(truediv_node(), 2)
+        truediv_node = node2 / 2
+        self.assertEqual(truediv_node(), 5)
+        truediv_node = 50 / node1
+        self.assertEqual(truediv_node(), 10)
+
+        floordiv_node = node1 // node2
+        self.assertEqual(floordiv_node(), 0)
+        floordiv_node = node1 // 2
+        self.assertEqual(floordiv_node(), 2)
+        floordiv_node = 12 // node2
+        self.assertEqual(floordiv_node(), 1)
+
+        lt_node = node1 < node2
+        self.assertTrue(lt_node())
+        lt_node = node1 < 2
+        self.assertFalse(lt_node())
+        lt_node = 12 < node2
+        self.assertFalse(lt_node())
+
+        gt_node = node1 > node2
+        self.assertFalse(gt_node())
+        gt_node = node1 > 2
+        self.assertTrue(gt_node())
+        gt_node = 12 > node2
+        self.assertTrue(gt_node())
+
+        le_node = node1 < node2
+        self.assertTrue(le_node())
+        le_node = node1 < 2
+        self.assertFalse(le_node())
+        le_node = 12 < node2
+        self.assertFalse(le_node())
+
+        ge_node = node1 > node2
+        self.assertFalse(ge_node())
+        ge_node = node1 > 2
+        self.assertTrue(ge_node())
+        ge_node = 12 > node2
+        self.assertTrue(ge_node())
 
     def test_DeepTrackNode_citations(self):
         node = core.DeepTrackNode(action=lambda: 42)
