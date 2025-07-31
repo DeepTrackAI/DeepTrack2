@@ -842,11 +842,13 @@ class DeepTrackNode:
     data: DeepTrackDataDict
         Dictionary-like object for storing data, indexed by tuples of integers.
     children: WeakSet[DeepTrackNode]
-        Nodes that depend on this node (its children).
+        Read-only property exposing the internal weak set `_children`
+        containing the nodes that depend on this node (its children).
         This is a weakref.WeakSet, so references are weak and do not prevent
         garbage collection of nodes that are no longer used.
     dependencies: WeakSet[DeepTrackNode]
-        Nodes on which this node depends (its parents).
+        Read-only property exposing the internal weak set `_dependencies`
+        containign the nodes on which this node depends (its parents).
         This is a weakref.WeakSet, for efficient memory management.
     _action: Callable[..., Any]
         The function or lambda-function to compute the node value.
@@ -1067,9 +1069,9 @@ class DeepTrackNode:
 
     node_name: str | None
     data: DeepTrackDataDict
-    children: WeakSet[DeepTrackNode]
-    dependencies: WeakSet[DeepTrackNode]
-    _all_children: WeakSet[DeepTrackNode]  #TODO ***BM*** Ok change to WeakSet from set?
+    _children: WeakSet[DeepTrackNode]
+    _dependencies: WeakSet[DeepTrackNode]
+    _all_children: WeakSet[DeepTrackNode]  #TODO ***BM*** Ok WeakSet from set?
 
     _action: Callable[..., Any]
     _accepts_ID: bool
@@ -1139,8 +1141,8 @@ class DeepTrackNode:
         # Initialize attributes.
         self.node_name = node_name
         self.data = DeepTrackDataDict()
-        self.children = WeakSet()
-        self.dependencies = WeakSet()
+        self._children = WeakSet()
+        self._dependencies = WeakSet()
 
         # If action is provided, set it.
         # If it's callable, use it directly;
@@ -1179,9 +1181,9 @@ class DeepTrackNode:
 
         """
 
-        self.children.add(child)
-        if self not in child.dependencies:
-            child.dependencies.add(self)  # Ensure bidirectional relationship
+        self._children.add(child)
+        if self not in child._dependencies:
+            child._dependencies.add(self)  # Ensure bidirectional relationship
 
         # Get all children of `child`, which includes `child` itself.
         child_all_children = child._all_children.copy()
@@ -1456,7 +1458,7 @@ class DeepTrackNode:
         yield self
 
         # Recursively traverse children.
-        for child in self.children:
+        for child in self._children:
             yield from child.recurse_children(memory=memory)
 
     def recurse_dependencies(
@@ -1492,7 +1494,7 @@ class DeepTrackNode:
         yield self
 
         # Recursively yield dependencies.
-        for dependency in self.dependencies:
+        for dependency in self._dependencies:
             yield from dependency.recurse_dependencies(memory=memory)
 
     def get_citations(self: DeepTrackNode) -> set[str]:
@@ -1999,6 +2001,37 @@ class DeepTrackNode:
 
         return _create_node_with_operator(operator.__ge__, self, other)
 
+    @property
+    def dependencies(self: DeepTrackNode) -> WeakSet[DeepTrackNode]:
+        """Access the dependencies of the node (read-only).
+
+        This property exploses the internal `_dependencies` attribute as a
+        public read-only interface.
+
+        Returns
+        -------
+        WeakSet[DeepTrackNode]
+            A weak set with the dependencies of this node.
+
+        """
+
+        return self._dependencies
+
+    @property
+    def children(self: DeepTrackNode) -> WeakSet[DeepTrackNode]:
+        """Access the children of the node (read-only).
+
+        This property exploses the internal `_children` attribute as a public
+        read-only interface.
+
+        Returns
+        -------
+        WeakSet[DeepTrackNode]
+            A weak set with the children of this node.
+
+        """
+
+        return self._children
 
 def _equivalent(
     a: Any,
