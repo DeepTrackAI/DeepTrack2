@@ -48,7 +48,7 @@ class TestCore(unittest.TestCase):
         self.assertEqual(dataobj.current_value(), 1)
         self.assertEqual(dataobj.is_valid(), True)
 
-        # Test updateing data
+        # Test updating data
         dataobj.store(2)
         self.assertEqual(dataobj.current_value(), 2)
         self.assertEqual(dataobj.is_valid(), True)
@@ -183,26 +183,51 @@ class TestCore(unittest.TestCase):
 
 
     def test_DeepTrackNode_basics(self):
+        ## Without _ID
         node = core.DeepTrackNode(action=lambda: 42)
 
-        # Evaluate the node.
+        # Evaluate the node
         result = node()  # Value is calculated and stored.
         self.assertEqual(result, 42)
 
-        # Store a value.
+        # Store a value
         node.store(100)  # Value is stored.
         self.assertEqual(node.current_value(), 100)
         self.assertTrue(node.is_valid())
 
-        # Invalidate the node and check the value.
+        # Invalidate the node and check the value
         node.invalidate()
         self.assertFalse(node.is_valid())
 
-        self.assertEqual(node.current_value(), 100)  # Value is retrieved.
+        self.assertEqual(node.current_value(), 100)  # Value is retrieved
         self.assertFalse(node.is_valid())
 
-        self.assertEqual(node(), 42)  # Value is calculated and stored.
+        self.assertEqual(node(), 42)  # Value is calculated and stored
         self.assertTrue(node.is_valid())
+
+        ## With _ID
+        node = core.DeepTrackNode(action=lambda _ID: _ID[0] * 10 + _ID[1])
+
+        # Store values
+        self.assertEqual(node((0, 0)), 0)
+        self.assertEqual(node((0, 1)), 1)
+        self.assertEqual(node((1, 0)), 10)
+        self.assertEqual(node((1, 1)), 11)
+
+        # Check validity
+        self.assertFalse(node.is_valid())
+        self.assertTrue(node.is_valid((0, 0)))
+        self.assertTrue(node.is_valid((0, 1)))
+        self.assertTrue(node.is_valid((1, 0)))
+        self.assertTrue(node.is_valid((1, 1)))
+
+        # Invalidate
+        node.invalidate()
+        self.assertFalse(node.is_valid((0, 0)))
+        self.assertFalse(node.is_valid((0, 1)))
+        self.assertFalse(node.is_valid((1, 0)))
+        self.assertFalse(node.is_valid((1, 1)))
+        
 
     def test_DeepTrackNode_dependencies(self):
         parent = core.DeepTrackNode(action=lambda: 10)
