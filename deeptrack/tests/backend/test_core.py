@@ -8,6 +8,8 @@
 
 import unittest
 
+import random
+
 from deeptrack.backend import core
 
 
@@ -241,8 +243,17 @@ class TestCore(unittest.TestCase):
             node_name="grandchild",
             action=lambda: child() * 3,
         )
-        parent.add_child(child)  # Establish dependency
-        child.add_child(grandchild)  # Establish dependency
+
+        # Establish dependencies
+        if random.randint(0, 1):  # Test add_child()
+            parent.add_child(child)
+        else:  # Test add_dependency()
+            child.add_dependency(parent)
+
+        if random.randint(0, 1):  # Test add_child()
+            child.add_child(grandchild)
+        else:  # Test add_dependency()
+            grandchild.add_dependency(child)
 
         # Check that the just created nodes are invalid as not calculated
         self.assertFalse(parent.is_valid())
