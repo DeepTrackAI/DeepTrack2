@@ -316,9 +316,9 @@ class TestCore(unittest.TestCase):
         self.assertEqual(len(child.recurse_children()), 2)
         self.assertEqual(len(grandchild.recurse_children()), 1)
 
-        self.assertEqual(len(list(parent.recurse_dependencies())), 1)
-        self.assertEqual(len(list(child.recurse_dependencies())), 2)
-        self.assertEqual(len(list(grandchild.recurse_dependencies())), 3)
+        self.assertEqual(len(parent.recurse_dependencies()), 1)
+        self.assertEqual(len(child.recurse_dependencies()), 2)
+        self.assertEqual(len(grandchild.recurse_dependencies()), 3)
 
     def test_DeepTrackNode_nested_dependencies(self):
         parent = core.DeepTrackNode(action=lambda: 5)
