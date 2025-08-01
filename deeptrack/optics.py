@@ -407,21 +407,21 @@ class Optics(Feature):
     magnification: float, optional
         Magnification of the optical system, by default 10.
     resolution: float or array_like[float], optional
-        Distance between pixels in the camera (meters). A third value can 
+        Distance between pixels in the camera (meters). A third value can
         define the resolution in the z-direction, by default 1e-6.
     refractive_index_medium: float, optional
         Refractive index of the medium, by default 1.33.
     padding: array_like[int, int, int, int], optional
-        Padding applied to the sample volume to avoid edge effects, 
+        Padding applied to the sample volume to avoid edge effects,
         by default (10, 10, 10, 10).
     output_region: array_like[int, int, int, int], optional
-        Region of the image to output (x, y, width, height). If None, the 
+        Region of the image to output (x, y, width, height). If None, the
         entire image is returned, by default (0, 0, 128, 128).
     pupil: Feature, optional
         Feature-set resolving the pupil function at focus. By default, no pupil
         is applied.
     illumination: Feature, optional
-        Feature-set resolving the illumination source. By default, no specific 
+        Feature-set resolving the illumination source. By default, no specific
         illumination is applied.
     upscale: int, optional
         Scaling factor for the resolution of the optical system, by default 1.
@@ -461,9 +461,23 @@ class Optics(Feature):
     -------
     `_process_properties(propertydict: dict[str, Any]) -> dict[str, Any]`
         Processes and validates the input properties.
-    `_pupil(shape:  array_like[int, int], NA: float, wavelength: float, refractive_index_medium: float, include_aberration: bool, defocus: float, **kwargs: Any) -> array_like[complex]`
+    `_pupil(
+        shape: array_like[int, int],
+        NA: float,
+        wavelength: float,
+        refractive_index_medium: float,
+        include_aberration: bool,
+        defocus: float,
+        **kwargs: Any,
+    ) -> array_like[complex]`
         Calculates the pupil function at different focal points.
-    `_pad_volume(volume: array_like[complex], limits: array_like[int, int], padding: array_like[int], output_region: array_like[int], **kwargs: Any) -> tuple`
+    `_pad_volume(
+        volume: array_like[complex],
+        limits: array_like[int, int],
+        padding: array_like[int],
+        output_region: array_like[int],
+        **kwargs: Any,
+    ) -> tuple`
         Pads the volume with zeros to avoid edge effects.
     `__call__(sample: Feature, **kwargs: Any) -> Microscope`
         Creates a Microscope instance with the given sample and optics.
@@ -853,16 +867,24 @@ class Optics(Feature):
 
         # Replace None entries with current limit
         output_region[0] = (
-            output_region[0] if not output_region[0] is None else new_limits[0, 0]
+            output_region[0]
+            if not output_region[0] is None
+            else new_limits[0, 0]
         )
         output_region[1] = (
-            output_region[1] if not output_region[1] is None else new_limits[0, 1]
+            output_region[1]
+            if not output_region[1] is None
+            else new_limits[0, 1]
         )
         output_region[2] = (
-            output_region[2] if not output_region[2] is None else new_limits[1, 0]
+            output_region[2]
+            if not output_region[2] is None
+            else new_limits[1, 0]
         )
         output_region[3] = (
-            output_region[3] if not output_region[3] is None else new_limits[1, 1]
+            output_region[3]
+            if not output_region[3] is None
+            else new_limits[1, 1]
         )
 
         for i in range(2):
