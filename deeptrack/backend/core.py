@@ -939,35 +939,47 @@ class DeepTrackNode:
     --------
     >>> from deeptrack.backend.core import DeepTrackNode
 
-    Create three `DeepTrackNode` objects, as parent, child, and gradchild:
+    Create three `DeepTrackNode` objects, as parent, child, and grandchild:
     >>> parent = DeepTrackNode(
     ...     node_name="parent",
     ...     action=lambda: 10,
     ... )
     >>> child = DeepTrackNode(
-    ...     node_name="child",    
+    ...     node_name="child",
     ...     action=lambda _ID=None: parent(_ID) * 2,
     ... )
     >>> grandchild = DeepTrackNode(
-    ...     node_name="grandchild",    
+    ...     node_name="grandchild",
     ...     action=lambda _ID=None: child(_ID) * 3,
     ... )
     >>> parent.add_child(child)
     >>> child.add_child(grandchild)
 
-    Check all children of `parent` (includes `parent`):
+    Check all children of `parent` (includes `parent` itself):
     >>> for node in parent.recurse_children():
     ...     print(node)
     DeepTrackNode(name='parent', len=0, action=<lambda>)
     DeepTrackNode(name='child', len=0, action=<lambda>)
     DeepTrackNode(name='grandchild', len=0, action=<lambda>)
 
-    Check all dependencies of `grandchild` (includes `grandchild`):
+    Print the children tree:
+    >>> parent.print_children_tree()
+    - DeepTrackNode 'parent' at 0x334202650
+        - DeepTrackNode 'child' at 0x334201cf0
+            - DeepTrackNode 'grandchild' at 0x334201ea0
+
+    Check all dependencies of `grandchild` (includes `grandchild` itself):
     >>> for node in grandchild.recurse_dependencies():
     ...     print(node)
     DeepTrackNode(name='grandchild', len=0, action=<lambda>)
     DeepTrackNode(name='child', len=0, action=<lambda>)
     DeepTrackNode(name='parent', len=0, action=<lambda>)
+
+    Print the dependency tree:
+    >>> grandchild.print_dependencies_tree()
+    - DeepTrackNode 'grandchild' at 0x334201ea0
+        - DeepTrackNode 'child' at 0x334201cf0
+            - DeepTrackNode 'parent' at 0x334202650
 
     Store and retrieve data for specific _IDs:
     >>> parent.store(15, _ID=(0,))
@@ -1014,7 +1026,7 @@ class DeepTrackNode:
     Setting a value and automatic invalidation:
     >>> parent.current_value((0,))
     15
-    >>> grandchild((0,))  # Computes and stores the value in grabdchild
+    >>> grandchild((0,))  # Computes and stores the value in grandchild
     >>> grandchild.current_value((0,))
     90
 
@@ -1026,11 +1038,13 @@ class DeepTrackNode:
     252
 
     Resetting all data in the dependency tree (recomputation required):
-    >>> parent.update()
+    >>> grandchild.update()
+    >>> grandchild()
+    60
 
-    Dependency graph traversal (children and dependencies):
-    >>> all_children = parent.recurse_children()
-    >>> all_dependencies = list(child.recurse_dependencies())
+    This is equivalent to:
+    >>> grandchild.new()
+    60
 
     Operator overloading—arithmetic and comparison:
     >>> node_a = DeepTrackNode(lambda: 5)
@@ -1069,6 +1083,20 @@ class DeepTrackNode:
     >>> first_element = vector_node[0]
     >>> first_element()
     10
+
+    Accessing a value before computing it raises an error:
+    >>> new_node = DeepTrackNode(lambda: 123)
+    >>> new_node.is_valid((42,))
+    False
+    >>> new_node.current_value((42,))
+    KeyError: 'Attempting to index an empty dict.'
+
+    Working with nested _ID slicing:
+    >>> parent = DeepTrackNode(lambda: 5)
+    >>> child = DeepTrackNode(lambda _ID=None: parent(_ID[:1]) + _ID[1])
+    >>> parent.add_child(child)
+    >>> child((0, 3))  # Equivalent to parent((0,)) + 3
+    8
 
     Citations for a node and its dependencies:
     >>> parent.get_citations()  # Set of citation strings
