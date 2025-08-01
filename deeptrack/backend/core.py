@@ -1193,7 +1193,20 @@ class DeepTrackNode:
         self: DeepTrackNode
             Return the current node for chaining.
 
+        Raises
+        ------
+        ValueError
+            If adding this child would introduce a cycle in the dependency
+            graph.
+
         """
+
+        # Check for cycle: if `self` is already in `child`'s dependency tree
+        if self in child.recurse_children():
+            raise ValueError(
+                f"Adding {child.node_name} as child to {self.node_name} "
+                f"would create a cycle."
+            )
 
         self._children.add(child)
         child._dependencies.add(self)  # Ensure bidirectional relationship
