@@ -8,9 +8,6 @@
 
 import unittest
 
-import operator
-import random
-
 from deeptrack.backend import core
 
 
@@ -231,7 +228,31 @@ class TestCore(unittest.TestCase):
         self.assertFalse(node.is_valid((1, 0)))
         self.assertFalse(node.is_valid((1, 1)))
 
+    def test_DeepTrackNode_new(self):
+        # Create a node with an action
+        node = core.DeepTrackNode(action=lambda: 42)
+
+        # Manually store a different value
+        node.store(100)
+        self.assertEqual(node.current_value(), 100)
+
+        # Call new() to reset and recompute
+        result = node.new()
+        self.assertEqual(result, 42)
+        self.assertEqual(node.current_value(), 42)
+
+        # Also test with ID
+        node = core.DeepTrackNode(action=lambda _ID=None: _ID[0] * 2)
+        node.store(123, _ID=(3,))
+        self.assertEqual(node.current_value((3,)), 123)
+
+        result = node.new((3,))
+        self.assertEqual(result, 6)
+        self.assertEqual(node.current_value((3,)), 6)
+
     def test_DeepTrackNode_dependencies(self):
+        import random
+
         parent = core.DeepTrackNode(
             node_name="parent",
             action=lambda: 10,
@@ -558,6 +579,8 @@ class TestCore(unittest.TestCase):
 
 
     def test__create_node_with_operator(self):
+        import operator
+
         # Test with integers (should be wrapped automatically)
         node = core._create_node_with_operator(operator.add, 2, 3)
         self.assertIsInstance(node, core.DeepTrackNode)
