@@ -142,6 +142,7 @@ import warnings
 
 import array_api_compat as apc
 import numpy as np
+from numpy.typing import NDArray
 from scipy.ndimage import convolve
 
 from deeptrack.backend import config, TORCH_AVAILABLE, xp
@@ -813,18 +814,18 @@ class Optics(Feature):
 
     def _pad_volume(
         self: Optics,
-        volume: ArrayLike[complex],
+        volume: NDArray | torch.Tensor,
         limits: ArrayLike[int] = None,
         padding: ArrayLike[int] = None,
         output_region: ArrayLike[int] = None,
         **kwargs: Any,
     ) -> tuple:
-        """Pad the volume with zeros to avoid edge effects.
+        """Pad the input volume with zeros to avoid edge effects.
 
         Parameters
         ----------
-        volume: array_like[complex]
-            The volume to pad.
+        volume: NDArray | torch.Tensor
+            The complex-valued volume to pad.
         limits: array_like[int, int]
             The limits of the volume.
         padding: array_like[int]
@@ -836,8 +837,8 @@ class Optics(Feature):
 
         Returns
         -------
-        new_volume: array_like[complex]
-            The padded volume.
+        new_volume: NDArray | torch.Tensor
+            The padded, complex valued volume.
         new_limits: array_like[int, int]
             The new limits of the volume.
 
@@ -965,7 +966,7 @@ class Optics(Feature):
             old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
             old_region[2, 0] : old_region[2, 0] + limits[2, 1] - limits[2, 0],
         ] = volume
-        
+
         return new_volume, new_limits
 
     def __call__(
