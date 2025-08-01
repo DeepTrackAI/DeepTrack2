@@ -1653,7 +1653,6 @@ class DeepTrackNode:
         node = DeepTrackNode(lambda _ID=None: self(_ID=_ID)[idx])
 
         self.add_child(node)
-        # node.add_dependency(self)  # Already executed by add_child.
 
         return node
 
@@ -2177,10 +2176,5 @@ def _create_node_with_operator(
     # (Also: Establish dependency relationships between the nodes.)
     a.add_child(new_node)
     b.add_child(new_node)
-
-    # Establish dependency relationships between the nodes.
-    # (Not needed because already done implicitly above.)
-    # new_node.add_dependency(a)
-    # new_node.add_dependency(b)
 
     return new_node
