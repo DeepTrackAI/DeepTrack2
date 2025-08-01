@@ -1704,7 +1704,7 @@ def pad_image_to_fft(
     image: Image | NDArray | torch.Tensor,
     axes: Iterable[int] = (0, 1),
 ) -> Image | NDArray | torch.Tensor:
-    """Pads an image to optimize Fast Fourier Transform (FFT) performance.
+    """Pad an image to optimize Fast Fourier Transform (FFT) performance.
 
     This function pads an image by adding zeros to the end of specified axes
     so that their lengths match the nearest larger size in `_FASTEST_SIZES`.
