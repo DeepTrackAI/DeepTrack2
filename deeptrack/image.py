@@ -96,10 +96,16 @@ from __future__ import annotations
 import operator as ops
 from typing import Any, Callable, Iterable
 
+import array_api_compat as apc
 import numpy as np
+from numpy.typing import NDArray
 
+from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.properties import Property
 from deeptrack.types import NumberLike
+
+if TORCH_AVAILABLE:
+    import torch
 
 
 #TODO ***??*** revise _binary_method - typing, docstring, unit test
@@ -1694,11 +1700,10 @@ for n in range(1, 10):
 _FASTEST_SIZES = np.sort(_FASTEST_SIZES)
 
 
-#TODO ***??*** revise pad_image_to_fft - typing, docstring, unit test
 def pad_image_to_fft(
-    image: Image | np.ndarray | np.ndarray,
+    image: Image | NDArray | torch.Tensor,
     axes: Iterable[int] = (0, 1),
-) -> Image | np.ndarray:
+) -> Image | NDArray | torch.Tensor:
     """Pads an image to optimize Fast Fourier Transform (FFT) performance.
 
     This function pads an image by adding zeros to the end of specified axes
@@ -1707,7 +1712,7 @@ def pad_image_to_fft(
 
     Parameters
     ----------
-    image: Image | np.ndarray
+    image: Image | np.ndarray | torch.tensor
         The input image to pad. It should be an instance of the `Image` class
         or any array-like structure compatible with FFT operations.
     axes: Iterable[int], optional
@@ -1715,7 +1720,7 @@ def pad_image_to_fft(
 
     Returns
     -------
-    Image | np.ndarray
+    Image | np.ndarray | torch.tensor
         The padded image with dimensions optimized for FFT performance.
 
     Raises
@@ -1729,18 +1734,22 @@ def pad_image_to_fft(
     >>> from deeptrack.image import Image, pad_image_to_fft
 
     Pad an Image object:
-
-    >>> img = Image(np.zeros((7, 13)))
+    >>> img = Image(np.ones((7, 13)))
     >>> padded_img = pad_image_to_fft(img)
     >>> print(padded_img.shape)
     (8, 16)
 
     Pad a NumPy array:
-
-    >>> img = np.zeros((5, 11)))
+    >>> img = np.ones((5, 11))
     >>> padded_img = pad_image_to_fft(img)
     >>> print(padded_img.shape)
     (6, 12)
+
+    Pad a PyTorch tensor:
+    >>> img = torch.ones(7, 11)
+    >>> padded_img = pad_image_to_fft(img)
+    >>> print(padded_img.shape)
+    (8, 12)
 
     """
 
@@ -1748,7 +1757,7 @@ def pad_image_to_fft(
         dim: int,
     ) -> int:
 
-        # Returns the smallest value frin _FASTEST_SIZES larger than dim.
+        # Returns the smallest value from _FASTEST_SIZES that is >= dim.
         for size in _FASTEST_SIZES:
             if size >= dim:
                 return size
@@ -1763,7 +1772,18 @@ def pad_image_to_fft(
         new_shape[axis] = _closest(new_shape[axis])
 
     # Calculate the padding for each axis.
-    pad_width = [(0, increase) for increase in np.array(new_shape) - image.shape]
+    pad_width = [
+        (0, increase)
+        for increase in np.array(new_shape) - np.array(image.shape)
+    ]
 
-    # Pad the image using constant mode (add zeros).
+    # Apply zero-padding with torch.nn.functional.pad if the input is a
+    # PyTorch tensor
+    if apc.is_torch_array(image):
+        pad = []
+        for before, after in reversed(pad_width):
+            pad.extend([before, after])
+        return torch.nn.functional.pad(image, pad, mode="constant", value=0)
+
+    # Apply zero-padding with np.pad if the input is a NumPy array or an Image
     return np.pad(image, pad_width, mode="constant")
