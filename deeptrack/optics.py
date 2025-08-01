@@ -140,9 +140,11 @@ from pint import Quantity
 from typing import Any
 import warnings
 
+import array_api_compat as apc
 import numpy as np
 from scipy.ndimage import convolve
 
+from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.units import (
     ConversionTable,
     create_context,
@@ -157,6 +159,9 @@ from deeptrack.types import ArrayLike, PropertyLike
 
 from deeptrack import image
 from deeptrack import units_registry as u
+
+if TORCH_AVAILABLE:
+    import torch
 
 
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test
@@ -814,7 +819,7 @@ class Optics(Feature):
         output_region: ArrayLike[int] = None,
         **kwargs: Any,
     ) -> tuple:
-        """Pads the volume with zeros to avoid edge effects.
+        """Pad the volume with zeros to avoid edge effects.
 
         Parameters
         ----------
@@ -847,23 +852,58 @@ class Optics(Feature):
         >>> limits = np.array([[0, 10], [0, 10], [0, 10]])
         >>> optics = dt.Optics()
         >>> padded_volume, new_limits = optics._pad_volume(
-        ...     volume, limits=limits, padding=[5, 5, 5, 5],
+        ...     volume,
+        ...     limits=limits,
+        ...     padding=[5, 5, 5, 5],
         ...     output_region=[0, 0, 10, 10],
         ... )
         >>> print(padded_volume.shape)
         (20, 20, 10)
+
         >>> print(new_limits)
         [[-5 15]
          [-5 15]
          [ 0 10]]
+
+        Padding a volume using PyTorch: 
+        >>> import torch
+        >>> from deeptrack.backend import config
+        >>> config.set_backend("torch")
+
+        >>> volume = torch.ones(10, 10, 10, dtype=complex)
+        >>> limits = torch.tensor([[0, 10], [0, 10], [0, 10]])
+        >>> optics = dt.Optics()
+        >>> padded_volume, new_limits = optics._pad_volume(
+        ...     volume,
+        ...     limits=limits,
+        ...     padding=[5, 5, 5, 5],
+        ...     output_region=[0, 0, 10, 10],
+        ... )
+        >>> print(padded_volume.shape)
+        torch.Size([20, 20, 10])
+
+        >>> print(padded_volume.dtype)
+        torch.complex128
+
+        >>> print(new_limits)
+        tensor([[-5, 15],
+        [-5, 15],
+        [ 0, 10]])
         
         """
         
         if limits is None:
-            limits = np.zeros((3, 2))
+            limits = xp.zeros((3, 2))
 
-        new_limits = np.array(limits)
-        output_region = np.array(output_region)
+        if apc.is_torch_array(volume):
+            new_limits = limits.clone()
+
+        else:
+            new_limits = np.array(limits)
+
+        if output_region is None:
+            output_region = [None] * 4
+        output_region = list(output_region)
 
         # Replace None entries with current limit
         output_region[0] = (
@@ -887,23 +927,24 @@ class Optics(Feature):
             else new_limits[1, 1]
         )
 
+        # Update the new limits based on padding and output region
         for i in range(2):
-            new_limits[i, :] = (
-                np.min([new_limits[i, 0], output_region[i] - padding[i]]),
-                np.max(
-                    [
-                        new_limits[i, 1],
-                        output_region[i + 2] + padding[i + 2],
-                    ]
-                ),
-            )
-        new_volume = np.zeros(
-            np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
-            dtype=complex,
-        )
+            new_limits[i, 0] = min(new_limits[i, 0], output_region[i] - padding[i])
+            new_limits[i, 1] = max(new_limits[i, 1], output_region[i + 2] + padding[i + 2])
 
-        old_region = (limits - new_limits).astype(np.int32)
-        limits = limits.astype(np.int32)
+        # Determine shape for the new volume
+        new_volume = xp.zeros(tuple(new_limits[:, 1] - new_limits[:, 0]), dtype=volume.dtype)
+
+        # Compute where to place the old volume in the new one
+        old_region = (limits - new_limits)
+        
+        if apc.is_torch_array(volume):
+            old_region = old_region.to(torch.int32)
+            limits = limits.to(torch.int32)
+        else:
+            old_region = old_region.astype(np.int32)
+            limits = limits.astype(np.int32)
+
         new_volume[
             old_region[0, 0] : old_region[0, 0] + limits[0, 1] - limits[0, 0],
             old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
