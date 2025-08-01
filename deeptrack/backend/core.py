@@ -1262,9 +1262,10 @@ class DeepTrackNode:
         
         """
 
-        # Create the index if necessary, then store data in it.
+        # Create the index if necessary
         self.data.create_index(_ID)
 
+        # Then store data in it
         self.data[_ID].store(data)
 
         return self
@@ -1318,6 +1319,10 @@ class DeepTrackNode:
     ) -> DeepTrackNode:
         """Mark this node's data and all its children's data as invalid.
 
+        NOTE: At the moment, the code to invalidate specific `_ID`s is not
+        implemented, so the `_ID` parameter is not effectively used.
+        TODO: Implement the invalidation of specific `_ID`s.
+
         Parameters
         ----------
         _ID: tuple[int, ...], optional
@@ -1328,11 +1333,6 @@ class DeepTrackNode:
         -------
         self: DeepTrackNode
             Return the current node for chaining.
-        
-        Note
-        ----
-        At the moment, the code to invalidate specific _IDs is not implemented, 
-        so the _ID parameter is not effectively used.
 
         """
 
@@ -1351,7 +1351,7 @@ class DeepTrackNode:
         Parameters
         ----------
         _ID: tuple[int, ...], optional
-            The _ID to validate. Default is empty tuple.
+            The _ID to validate. Defaults to empty tuple.
 
         Returns
         -------
@@ -1399,7 +1399,7 @@ class DeepTrackNode:
         value: Any
             The value to store.
         _ID: tuple[int, ...], optional
-            The _ID at which to store the value.
+            The `_ID` at which to store the value.
 
         Returns
         -------
@@ -1631,6 +1631,10 @@ class DeepTrackNode:
     ) -> DeepTrackNode:
         """Allow indexing into the node's computed data.
 
+        NOTE: This effectively creates a node that corresponds to
+        `self(...)[idx]`, allowing to select parts of the computed data
+        dynamically.
+
         Parameters
         ----------
         idx: Any
@@ -1641,11 +1645,6 @@ class DeepTrackNode:
         DeepTrackNode
             A new node that, when evaluated, applies `idx` to the result of 
             `self`.
-
-        Notes
-        -----
-        This effectively creates a node that corresponds to `self(...)[idx]`, 
-        allowing you to select parts of the computed data dynamically.
 
         """
 
