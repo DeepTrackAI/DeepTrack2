@@ -902,6 +902,8 @@ class DeepTrackNode:
     `current_value(_ID) -> Any`
         Return the currently stored value for the given `_ID` without 
         recomputation.
+    `new(_ID) -> Any`
+        Reset and recompute the value of this node at the given `_ID`.
     `__hash__() -> int`
         Return a unique hash for this node.
     `__getitem__(idx) -> DeepTrackNode`
@@ -1132,7 +1134,7 @@ class DeepTrackNode:
         action: Callable or Any, optional
             Action to compute this node's value. If not provided, uses a no-op 
             action (lambda: None).
-        name: str or None, optional
+        node_name: str or None, optional
             Optional name for the node. Defaults to `None`.
         **kwargs: Any
             Additional arguments for subclasses or extended functionality.
@@ -1616,6 +1618,30 @@ class DeepTrackNode:
 
         return self.data[_ID].current_value()
 
+    def new(
+        self: DeepTrackNode,
+        _ID: tuple[int, ...] = (),
+    ) -> Any:
+        """Reset and recompute the value of this node at the given _ID.
+
+        Clears the stored data in this node and its dependencies, then
+        immediately computes and returns the new value for the given `_ID`.
+
+        Parameters
+        ----------
+        _ID: tuple[int, ...], optional
+            The identifier for which the value should be recomputed. Defaults to
+            an empty tuple.
+
+        Returns
+        -------
+        Any
+            The newly computed value at the given `_ID`.
+
+        """
+
+        return self.update()(_ID)
+
     def __hash__(self: DeepTrackNode) -> int:
         """Return a unique hash for this node.
 
@@ -2059,6 +2085,7 @@ class DeepTrackNode:
         """
 
         return self._children
+
 
 def _equivalent(
     a: Any,
