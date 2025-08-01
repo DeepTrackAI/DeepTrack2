@@ -955,7 +955,7 @@ class DeepTrackNode:
     >>> parent.add_child(child)
     >>> child.add_child(grandchild)
 
-    Check all children of `parent` (includes the `parent`):
+    Check all children of `parent` (includes `parent`):
     >>> for node in parent.recurse_children():
     ...     print(node)
     DeepTrackNode(name='parent', len=0, action=<lambda>)
