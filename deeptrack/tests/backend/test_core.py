@@ -8,6 +8,7 @@
 
 import unittest
 
+import operator
 import random
 
 from deeptrack.backend import core
@@ -422,16 +423,16 @@ class TestCore(unittest.TestCase):
         parent.store(10, _ID=(1,))
 
         # Compute child values for nested IDs
-        child_value_0_0 = child(_ID=(0, 0))  # Uses parent(_ID=(0,)).
+        child_value_0_0 = child(_ID=(0, 0))  # Uses parent(_ID=(0,))
         self.assertEqual(child_value_0_0, 0)
 
-        child_value_0_1 = child(_ID=(0, 1))  # Uses parent(_ID=(0,)).
+        child_value_0_1 = child(_ID=(0, 1))  # Uses parent(_ID=(0,))
         self.assertEqual(child_value_0_1, 5)
 
-        child_value_1_0 = child(_ID=(1, 0))  # Uses parent(_ID=(1,)).
+        child_value_1_0 = child(_ID=(1, 0))  # Uses parent(_ID=(1,))
         self.assertEqual(child_value_1_0, 0)
 
-        child_value_1_1 = child(_ID=(1, 1))  # Uses parent(_ID=(1,)).
+        child_value_1_1 = child(_ID=(1, 1))  # Uses parent(_ID=(1,))
         self.assertEqual(child_value_1_1, 10)
 
     def test_DeepTrackNode_replicated_behavior(self):
@@ -449,7 +450,7 @@ class TestCore(unittest.TestCase):
 
     def test_DeepTrackNode_parent_id_inheritance(self):
 
-        # Children with IDs matching than parents.
+        # Children with IDs matching those of the parents.
         parent_matching = core.DeepTrackNode(action=lambda: 10)
         child_matching = core.DeepTrackNode(
             action=lambda _ID=None: parent_matching(_ID[:1]) * 2
@@ -557,8 +558,6 @@ class TestCore(unittest.TestCase):
 
 
     def test__create_node_with_operator(self):
-        import operator
-
         # Test with integers (should be wrapped automatically)
         node = core._create_node_with_operator(operator.add, 2, 3)
         self.assertIsInstance(node, core.DeepTrackNode)
