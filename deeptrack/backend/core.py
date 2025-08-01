@@ -1529,7 +1529,7 @@ class DeepTrackNode:
     def get_citations(self: DeepTrackNode) -> set[str]:
         """Get citations from this node and all its dependencies.
 
-        It gathers citations from this node and all nodes that it depends on. 
+        Gathers citations from this node and all nodes that it depends on. 
         Citations are stored as the class attribute `_citations`.
 
         Returns
