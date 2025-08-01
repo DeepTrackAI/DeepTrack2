@@ -891,14 +891,17 @@ class Optics(Feature):
         [ 0, 10]])
         
         """
-        
-        if limits is None:
-            limits = xp.zeros((3, 2))
 
         if apc.is_torch_array(volume):
+            if limits is None:
+                limits = torch.zeros(3, 2)
+
             new_limits = limits.clone()
 
         else:
+            if limits is None:
+                limits = np.zeros((3, 2))
+
             new_limits = np.array(limits)
 
         if output_region is None:
@@ -929,11 +932,23 @@ class Optics(Feature):
 
         # Update the new limits based on padding and output region
         for i in range(2):
-            new_limits[i, 0] = min(new_limits[i, 0], output_region[i] - padding[i])
-            new_limits[i, 1] = max(new_limits[i, 1], output_region[i + 2] + padding[i + 2])
+            new_limits[i, 0] = min(
+                new_limits[i, 0], output_region[i] - padding[i]
+            )
+            new_limits[i, 1] = max(
+                new_limits[i, 1], output_region[i + 2] + padding[i + 2]
+            )
 
         # Determine shape for the new volume
-        new_volume = xp.zeros(tuple(new_limits[:, 1] - new_limits[:, 0]), dtype=volume.dtype)
+        if apc.is_torch_array(volume):
+            new_volume = torch.zeros(
+                tuple(new_limits[:, 1] - new_limits[:, 0]), dtype=volume.dtype
+            )
+        else:
+            new_volume = np.zeros(
+                np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
+                dtype=complex,
+            )
 
         # Compute where to place the old volume in the new one
         old_region = (limits - new_limits)
@@ -950,6 +965,7 @@ class Optics(Feature):
             old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
             old_region[2, 0] : old_region[2, 0] + limits[2, 1] - limits[2, 0],
         ] = volume
+        
         return new_volume, new_limits
 
     def __call__(
