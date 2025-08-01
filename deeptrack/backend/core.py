@@ -890,9 +890,13 @@ class DeepTrackNode:
         Set a value for the given `_ID`. If the new value differs from the 
         current value, the node is invalidated to ensure dependencies are 
         recomputed.
-    `recurse_children(memory) -> set[DeepTrackNode]`
+    `print_children_tree(indent) -> None`
+        Print a tree of all child nodes (recursively) for debugging.
+    `recurse_children() -> set[DeepTrackNode]`
         Return all child nodes in the dependency tree rooted at this node.
-    `recurse_dependencies(memory) -> Iterator[DeepTrackNode]`
+    `print_dependencies_tree(indent) -> None`
+        Print a tree of all parent nodes (recursively) for debugging.
+    `recurse_dependencies() -> Iterator[DeepTrackNode]`
         Yield all nodes that this node depends on, traversing dependencies.
     `get_citations() -> set[str]`
         Return a set of citations for this node and its dependencies.
@@ -1421,6 +1425,23 @@ class DeepTrackNode:
 
         return self
 
+    def print_children_tree(self: DeepTrackNode, indent: int = 0) -> None:
+        """Print a tree of all child nodes (recursively) for debugging.
+
+        Parameters
+        ----------
+        indent: int, optional
+            The indentation level (used internally during recursion).
+
+        """
+
+        prefix = " " * (indent * 4)
+        name = f"{self.node_name!r}" if self.node_name else "<unnamed>"
+        print(f"{prefix}- {self.__class__.__name__} {name} at {hex(id(self))}")
+
+        for child in self._children:
+            child.print_children_tree(indent=indent + 1)
+
     def recurse_children(self: DeepTrackNode) -> WeakSet[DeepTrackNode]:
         """Return all children of this node.
 
@@ -1474,6 +1495,23 @@ class DeepTrackNode:
         # Recursively traverse children.
         for child in self._children:
             yield from child.recurse_children(memory=memory)
+
+    def print_dependencies_tree(self: DeepTrackNode, indent: int = 0) -> None:
+        """Print a tree of all parent nodes (recursively) for debugging.
+
+        Parameters
+        ----------
+        indent: int, optional
+            The indentation level (used internally during recursion).
+
+        """
+
+        prefix = " " * (indent * 4)
+        name = f"{self.node_name!r}" if self.node_name else "<unnamed>"
+        print(f"{prefix}- {self.__class__.__name__} {name} at {hex(id(self))}")
+
+        for parent in self._dependencies:
+            parent.print_dependencies_tree(indent=indent + 1)
 
     def recurse_dependencies(self: DeepTrackNode) -> WeakSet[DeepTrackNode]:
         """Return all dependencies of this node.
