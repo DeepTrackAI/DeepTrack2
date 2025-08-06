@@ -81,6 +81,13 @@ class TestMath_Numpy(BackendTestBase):
         #eature = math.Blur(filter_function=uniform_filter, size=2)
         #blurred_image = feature.resolve(input_image)
         #self.assertTrue(xp.all(blurred_image == expected_output))
+    
+    def test_MinPooling(self):
+        input_image = np.array([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
+        feature = math.MinPooling(ksize=2)
+        pooled_image = feature.resolve(input_image)
+        self.assertTrue(np.all(pooled_image == [[1.0, 3.0]]))
+        self.assertEqual(pooled_image.shape, (1, 2))
 
 
 # Extending the test and setting the backend to torch
