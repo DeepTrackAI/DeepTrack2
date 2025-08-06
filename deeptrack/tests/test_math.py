@@ -78,7 +78,7 @@ class TestMath_Numpy(BackendTestBase):
         #input_image = xp.asarray(np.array([[1, 2], [3, 4]], dtype=float))
         #expected_output = xp.asarray(np.array([[1, 1.5], [2, 2.5]]))
 
-        #eature = math.Blur(filter_function=uniform_filter, size=2)
+        #feature = math.Blur(filter_function=uniform_filter, size=2)
         #blurred_image = feature.resolve(input_image)
         #self.assertTrue(xp.all(blurred_image == expected_output))
 
@@ -87,6 +87,7 @@ class TestMath_Numpy(BackendTestBase):
         feature = math.MaxPooling(ksize=2)
         pooled_image = feature.resolve(input_image)
         self.assertTrue(np.all(pooled_image == [[6.0, 8.0]]))
+        self.assertEqual(pooled_image.shape, (1, 2))
 
 
 # Extending the test and setting the backend to torch
@@ -102,6 +103,7 @@ class TestMath_Torch(TestMath_Numpy):
         expected = torch.tensor([[[[6.0, 8.0]]]])
         self.assertEqual(pooled_image.shape, expected.shape)
         self.assertTrue(torch.allclose(pooled_image, expected))
+        self.assertTrue(isinstance(pooled_image, torch.tensor))
 
 
 class TestMath(unittest.TestCase):
