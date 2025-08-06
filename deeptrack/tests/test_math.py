@@ -87,7 +87,27 @@ class TestMath_Numpy(BackendTestBase):
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
 class TestMath_Torch(TestMath_Numpy):
     BACKEND = "torch"
-    pass
+
+        def test_MinPooling(self):
+        # (1, 1, 2, 4)
+        input_image = torch.tensor([[[ [1.0, 2.0, 3.0, 4.0],
+                                        [5.0, 6.0, 7.0, 8.0] ]]])
+        feature = math.MinPooling(ksize=2)
+        pooled_image = feature(input_image, ksize=2)
+        expected = torch.tensor([[[[1.0, 3.0]]]])
+        self.assertEqual(pooled_image.shape, expected.shape)
+        self.assertTrue(torch.allclose(pooled_image, expected))
+        self.assertTrue(isinstance(pooled_image, torch.Tensor))
+        
+        # (2, 4)
+        input_image = torch.tensor([ [1.0, 2.0, 3.0, 4.0],
+                                        [5.0, 6.0, 7.0, 8.0] ])
+        feature = math.MinPooling(ksize=2)
+        pooled_image = feature(input_image, ksize=2)
+        expected = torch.tensor([[1.0, 3.0]])
+        self.assertEqual(pooled_image.shape, expected.shape)
+        self.assertTrue(torch.allclose(pooled_image, expected))
+        self.assertTrue(isinstance(pooled_image, torch.Tensor))
 
 
 class TestMath(unittest.TestCase):
