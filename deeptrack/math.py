@@ -1193,10 +1193,15 @@ class AveragePooling(Pool):
 
     This class inherits from `Pool` to reduce the resolution of an image by
     dividing it into non-overlapping blocks of size `ksize` and applying the
-    average function to each block. The result is a downsampled image where
-    each pixel value represents the average value within the corresponding
-    block of the original image. If the backend is torch, it will return the
-    output of `torch.nn.functional.avg_pool2d` instead.
+    `max` function to each block. The result is a downsampled image where each
+    pixel value represents the maximum value within the corresponding block of
+    the original image. This is useful for reducing the size of an image while
+    retaining the most significant features.
+
+    If the backend is numpy, the downsampling is performed using
+    `skimage.measure.block_reduce`.
+    If the backend is torch, the downsampling
+    is performed using `torch.nn.functional.avg_pool2d`.
 
     Parameters
     ----------
@@ -1222,11 +1227,10 @@ class AveragePooling(Pool):
     Notes
     -----
     Calling this feature returns a pooled image of the input, it will return
-    either numpy or torch depending on the backend. If
-    `store_properties` is set to `True` and the input is a numpy array,
-    the returned array will be automatically wrapped in an `Image` object.
-    This behavior is handled internally and does not affect the return type
-    of the `get()` method.
+    either numpy or torch depending on the backend. If `store_properties` is
+    set to `True` and the input is a numpy array, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
+    internally and does not affect the return type of the `get()` method.
 
     """
 
@@ -1308,6 +1312,16 @@ class AveragePooling(Pool):
             The pooled image as a `torch.Tensor`.
 
         """
+
+        # If needed, expand tensor shape
+        if len(image.shape) == 2:
+            expanded_image = image.unsqueeze(0)
+
+            pooled_image = torch.nn.functional.avg_pool2d(
+                expanded_image, kernel_size=ksize,
+            )
+            # Remove the expanded dim.
+            return pooled_image.squeeze(0)
 
         return torch.nn.functional.avg_pool2d(
             image,
