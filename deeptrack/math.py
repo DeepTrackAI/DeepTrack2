@@ -1439,14 +1439,14 @@ class MinPooling(Pool):
         if len(image.shape) == 2:
             expanded_image = image.unsqueeze(0)
 
-            pooled_image = torch.nn.functional.min_pool2d(
-                expanded_image, kernel_size=ksize,
+            pooled_image = -torch.nn.functional.max_pool2d(
+                expanded_image*(-1), kernel_size=ksize,
             )
             # Remove the expanded dim.
             return pooled_image.squeeze(0)
 
-        return torch.nn.functional.min_pool2d(
-            image,
+        return -torch.nn.functional.max_pool2d(
+            image*(-1),
             kernel_size=ksize,
         )
 
