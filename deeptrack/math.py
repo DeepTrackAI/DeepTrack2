@@ -1254,20 +1254,24 @@ class MaxPooling(Pool):
 
     This class inherits from `Pool` to reduce the resolution of an image by
     dividing it into non-overlapping blocks of size `ksize` and applying the
-    max function to each block. The result is a downsampled image where
-    each pixel value represents the maximum value within the corresponding
-    block of the original image. If the backend is torch, it will return the
-    output of `torch.nn.functional.max_pool2d` instead.
+    `max` function to each block. The result is a downsampled image where each
+    pixel value represents the maximum value within the corresponding block of
+    the original image. This is useful for reducing the size of an image while
+    retaining the most significant features.
 
-    This is useful for reducing the size of an image while retaining the
-    most significant features.
+    If the backend is numpy, the downsampling is performed using
+    `skimage.measure.block_reduce`.
+    If the backend is torch, the downsampling
+    is performed using `torch.nn.functional.max_pool2d`.
+
+ 
+
+
 
     Parameters
     ----------
     ksize: int
         Size of the pooling kernel.
-    cval: number
-        Value to pad edges with if necessary. Default 0.
     **kwargs: dict
         Additional parameters sent to the pooling function.
 
@@ -1287,11 +1291,10 @@ class MaxPooling(Pool):
     Notes
     -----
     Calling this feature returns a pooled image of the input, it will return
-    either numpy or torch depending on the backend. If
-    `store_properties` is set to `True` and the input is a numpy array,
-    the returned array will be automatically wrapped in an `Image` object.
-    This behavior is handled internally and does not affect the return type
-    of the `get()` method.
+    either numpy or torch depending on the backend. If `store_properties` is
+    set to `True` and the input is a numpy array, the returned array will be
+    automatically wrapped in an `Image` object. This behavior is handled
+    internally and does not affect the return type of the `get()` method.
 
     """
 
@@ -1342,7 +1345,7 @@ class MaxPooling(Pool):
         return utils.safe_call(
             skimage.measure.block_reduce,
             image=image,
-            func=self.pooling, # This will be np.mean for this class.
+            func=self.pooling, # This will be np.max for this class.
             block_size=ksize,
             **kwargs,
         )
@@ -1354,9 +1357,8 @@ class MaxPooling(Pool):
         **kwargs,
     ):
         """Method to perform max pooling with the torch backend enabled.
-        
-        Returns the result of the image passed to a torch max
-        pooling layer.
+
+        Returns the result of the image passed to a torch max pooling layer.
 
         Parameters
         ----------
@@ -1384,7 +1386,7 @@ class MaxPooling(Pool):
         **kwargs,
     ):
         """Method to perform pooling with either torch or numpy backend.
-        
+
         Checks the current backend and chooses the appropriate function to pool
         the input image, either `_get_torch` or `_get_numpy`.
 
@@ -1408,7 +1410,6 @@ class MaxPooling(Pool):
             return self._get_torch(image, ksize, **kwargs,)
         else:
             raise NotImplementedError(f"Backend {self.backend} not supported")
-
 
 
 #TODO ***AL*** revise MinPooling - torch, typing, docstring, unit test
