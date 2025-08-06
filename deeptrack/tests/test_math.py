@@ -95,7 +95,7 @@ class TestMath_Numpy(BackendTestBase):
 class TestMath_Torch(TestMath_Numpy):
     BACKEND = "torch"
 
-        def test_MinPooling(self):
+    def test_MinPooling(self):
         # (1, 1, 2, 4)
         input_image = torch.tensor([[[ [1.0, 2.0, 3.0, 4.0],
                                         [5.0, 6.0, 7.0, 8.0] ]]])
