@@ -294,11 +294,11 @@ class TestCore(unittest.TestCase):
         self.assertFalse(child.is_valid())
         self.assertFalse(grandchild.is_valid())
 
-        # Validate parent and ensure child is invalid until recomputation.
+        # Recompute child and check its validity.
         child.validate()
         self.assertFalse(parent.is_valid())
         self.assertTrue(child.is_valid())
-        self.assertFalse(grandchild.is_valid())
+        self.assertFalse(grandchild.is_valid())  # Grandchild still invalid
 
         # Recompute child and check its validity
         grandchild()

@@ -1007,7 +1007,7 @@ class DeepTrackNode:
     >>> grandchild.is_valid((0,))
     True
 
-    >>> parent.invalidate((0,))
+    >>> parent.invalidate((0,))  # Also invalidate child and grandchild
     >>> parent.is_valid((0,))
     False
     >>> child.is_valid((0,))
