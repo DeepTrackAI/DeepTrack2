@@ -103,7 +103,7 @@ class TestMath_Torch(TestMath_Numpy):
         expected = torch.tensor([[[[6.0, 8.0]]]])
         self.assertEqual(pooled_image.shape, expected.shape)
         self.assertTrue(torch.allclose(pooled_image, expected))
-        self.assertTrue(isinstance(pooled_image, torch.tensor))
+        self.assertTrue(isinstance(pooled_image, torch.Tensor))
 
 
 class TestMath(unittest.TestCase):
