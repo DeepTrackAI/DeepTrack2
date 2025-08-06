@@ -1380,7 +1380,7 @@ class MinPooling(Pool):
 
         super().__init__(np.min, ksize=ksize, **kwargs)
 
-def _get_numpy(
+    def _get_numpy(
         self,
         image: NDArray,
         ksize: int=3,
@@ -1475,7 +1475,7 @@ def _get_numpy(
             the backend.
 
         """
-        
+
         if self.get_backend() == "numpy":
             return self._get_numpy(image, ksize, **kwargs,)
         elif self.get_backend() == "torch":
