@@ -1264,10 +1264,6 @@ class MaxPooling(Pool):
     If the backend is torch, the downsampling
     is performed using `torch.nn.functional.max_pool2d`.
 
- 
-
-
-
     Parameters
     ----------
     ksize: int
@@ -1286,7 +1282,7 @@ class MaxPooling(Pool):
     >>> max_pooling = dt.MaxPooling(ksize=8)
     >>> output_image = max_pooling(input_image)
     >>> print(output_image.shape)
-    (8, 8)
+    (4, 4)
 
     Notes
     -----
@@ -1373,6 +1369,15 @@ class MaxPooling(Pool):
             The pooled image as a `torch.Tensor`.
 
         """
+        # If needed, expand tensor shape
+        if len(image.shape) == 2:
+            expanded_image = image.unsqueeze(0)
+
+            pooled_image = torch.nn.functional.max_pool2d(
+                expanded_image, kernel_size=ksize,
+            )
+            # Remove the expanded dim.
+            return pooled_image.squeeze(0)
 
         return torch.nn.functional.max_pool2d(
             image,
