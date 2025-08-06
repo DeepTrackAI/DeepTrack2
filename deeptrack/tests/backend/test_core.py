@@ -29,7 +29,7 @@ class TestCore(unittest.TestCase):
     def test_DeepTrackDataObject(self):
         dataobj = core.DeepTrackDataObject()
 
-        # Test default inititialization
+        # Test default initialization
         self.assertEqual(dataobj.current_value(), None)
         self.assertEqual(dataobj.is_valid(), False)
 
