@@ -1851,6 +1851,7 @@ class Feature(DeepTrackNode):
         # If a list, assume video
         if not isinstance(output_image, list):
             # Single image
+            output_image = xp.squeeze(output_image)
             plt.imshow(output_image, **kwargs)
             return plt.gca()
 
@@ -1859,6 +1860,7 @@ class Feature(DeepTrackNode):
         images = []
         plt.axis("off")
         for image in output_image:
+            image = xp.squeeze(image)
             images.append([plt.imshow(image, **kwargs)])
 
         if not interval:
