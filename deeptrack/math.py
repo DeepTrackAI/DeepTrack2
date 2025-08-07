@@ -1325,7 +1325,8 @@ class MinPooling(Pool):
     If the backend is numpy, the downsampling is performed using
     `skimage.measure.block_reduce`.
     If the backend is torch, the downsampling
-    is performed using `torch.nn.functional.max_pool2d`.
+    is performed using the inverse of `torch.nn.functional.max_pool2d` by
+    changing the sign of the input.
 
     Parameters
     ----------
@@ -1366,7 +1367,7 @@ class MinPooling(Pool):
     ):
         """Initialize the parameters for min pooling.
 
-        This constructor initializes the parameters for max pooling and checks
+        This constructor initializes the parameters for min pooling and checks
         whether to use the numpy or torch implementation, defaults to numpy.
 
         Parameters
@@ -1418,9 +1419,10 @@ class MinPooling(Pool):
         ksize: int=3,
         **kwargs,
     ):
-        """Method to perform max pooling with the torch backend enabled.
-
-        Returns the result of the image passed to a torch min pooling layer.
+        """Method to perform min pooling with the torch backend enabled.
+        As torch does not contain a min pooling layer, in order to perform an
+        equivalent operation is to first multiply the image with `-1`,
+        perform max pooling and multiply the max pooled image with `-1`.  
 
         Parameters
         ----------
