@@ -1322,11 +1322,10 @@ class MinPooling(Pool):
     pixel value represents the minimum value within the corresponding block of
     the original image.
 
-    If the backend is numpy, the downsampling is performed using
+    If the backend is numpy, the downsampling is performed using 
     `skimage.measure.block_reduce`.
-    If the backend is torch, the downsampling
-    is performed using the inverse of `torch.nn.functional.max_pool2d` by
-    changing the sign of the input.
+    If the backend is torch, the downsampling is performed using the inverse
+    of `torch.nn.functional.max_pool2d` by changing the sign of the input.
 
     Parameters
     ----------
@@ -1356,7 +1355,6 @@ class MinPooling(Pool):
     set to `True` and the input is a numpy array, the returned array will be
     automatically wrapped in an `Image` object. This behavior is handled
     internally and does not affect the return type of the `get()` method.
-
 
     """
 
@@ -1411,7 +1409,7 @@ class MinPooling(Pool):
             func=self.pooling, # This will be np.min for this class.
             block_size=ksize,
             **kwargs,
-        )       
+        )
 
     def _get_torch(
         self,
@@ -1422,7 +1420,7 @@ class MinPooling(Pool):
         """Method to perform min pooling with the torch backend enabled.
         As torch does not contain a min pooling layer, in order to perform an
         equivalent operation is to first multiply the image with `-1`,
-        perform max pooling and multiply the max pooled image with `-1`.  
+        perform max pooling and multiply the max pooled image with `-1`.
 
         Parameters
         ----------
