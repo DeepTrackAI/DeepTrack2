@@ -7236,7 +7236,7 @@ class LoadImage(Feature):
         as_list: bool,
         get_one_random: bool,
         **kwargs: Any
-    ) -> NDArray | torch.Tensor | list`
+    ) -> NDArray | list[NDArray] | torch.Tensor | list[torch.Tensor]`
         Load the image(s) from disk and process them.
 
     Raises
@@ -7247,9 +7247,8 @@ class LoadImage(Feature):
     Notes
     ----
     By default, `LoadImage` returns a NumPy array. If you want the output as
-    a PyTorch tensor, either set the backend to `'torch'` globally using
-    `dt.backend.config.set_backend('torch')` or convert the feature by calling
-    `.torch()` before resolving.
+    a PyTorch tensor, convert the feature to torch by calling `.torch()` before
+    resolving.
 
     Examples
     --------
@@ -7291,13 +7290,6 @@ class LoadImage(Feature):
     Load an image as a PyTorch tensor by setting the backend of the feature:
     >>> load_image_feature = dt.LoadImage(path=temp_file.name)
     >>> load_image_feature.torch()
-    >>> loaded_image = load_image_feature.resolve()
-    >>> print(type(loaded_image))
-    <class 'torch.Tensor'>
-
-    Load an image as a PyTorch tensor by setting the backend globally:
-    >>> dt.backend.config.set_backend('torch')
-    >>> load_image_feature = dt.LoadImage(path=temp_file.name)
     >>> loaded_image = load_image_feature.resolve()
     >>> print(type(loaded_image))
     <class 'torch.Tensor'>
@@ -7377,8 +7369,8 @@ class LoadImage(Feature):
         images as lists.
 
         The output is returned as a NumPy array by default. If `as_list=True`,
-        the result is a Python list of arrays. If the backend is `'torch'`, the
-        image is returned as a PyTorch tensor.
+        the result is a Python list of arrays. If the backend of the feature is
+        `"torch"`, the image is returned as a PyTorch tensor.
 
         Parameters
         ----------
@@ -7405,7 +7397,7 @@ class LoadImage(Feature):
 
         Returns
         -------
-        NDArray | torch.Tensor | list
+        array
             The loaded and processed image(s). If `as_list=True`, returns a
             list of images; otherwise, returns a single NumPy array or PyTorch
             tensor.
