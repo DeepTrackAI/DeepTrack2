@@ -1418,8 +1418,8 @@ class MinPooling(Pool):
         **kwargs,
     ):
         """Method to perform min pooling with the torch backend enabled.
-        As torch does not contain a min pooling layer, in order to perform an
-        equivalent operation is to first multiply the image with `-1`,
+        As torch does not contain a min pooling layer, the equivalent
+        operation is to first multiply the input image with `-1`,
         perform max pooling and multiply the max pooled image with `-1`.
 
         Parameters
