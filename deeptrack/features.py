@@ -1814,37 +1814,36 @@ class Feature(DeepTrackNode):
         Examples
         --------
         >>> import deeptrack as dt
-        >>> import numpy as np
 
         Create an instance of a dummy feature that returns the input:
         >>> feature = dt.DummyFeature()
 
         Generate and plot a grayscale image:
+        >>> import numpy as np
+        >>>
         >>> img = np.random.randint(0, 256, (64, 64))
-        >>> feature.plot(img, cmap='gray');
+        >>> feature.plot(img, cmap="gray");
 
         Generate and plot a grayscale video:
         >>> video = [np.random.randint(0, 256, (64, 64)) for _ in range(10)]
-        >>> feature.plot(video, interval=100, cmap='gray');
+        >>> feature.plot(video, interval=100, cmap="gray");
 
         Generate a grayscale image using torch and plot it:
         >>> import torch
+        >>>
         >>> img = torch.randint(0, 256, size=(64, 64))
-        >>> feature.plot(img, cmap='gray');
+        >>> feature.plot(img, cmap="gray");
 
         Generate a simulated image of a point particle visualized using
         brightfield microscopy and plot it:
         >>> particle = dt.PointParticle()
         >>> optics = dt.Brightfield()
         >>> imaged_particle = optics(particle)
-        >>> imaged_particle.plot(cmap='gray');
+        >>> imaged_particle.plot(cmap="gray");
 
         """
 
         from IPython.display import HTML, display
-
-        # if input_image is not None:
-        #     input_image = [Image(input_image)]
 
         output_image = self.resolve(input_image, **(resolve_kwargs or {}))
 
