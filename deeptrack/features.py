@@ -7235,7 +7235,7 @@ class LoadImage(Feature):
         to_grayscale: bool,
         as_list: bool,
         get_one_random: bool,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> NDArray | list[NDArray] | torch.Tensor | list[torch.Tensor]`
         Load the image(s) from disk and process them.
 
