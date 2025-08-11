@@ -140,9 +140,12 @@ from pint import Quantity
 from typing import Any
 import warnings
 
+import array_api_compat as apc
 import numpy as np
+from numpy.typing import NDArray
 from scipy.ndimage import convolve
 
+from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.units import (
     ConversionTable,
     create_context,
@@ -157,6 +160,9 @@ from deeptrack.types import ArrayLike, PropertyLike
 
 from deeptrack import image
 from deeptrack import units_registry as u
+
+if TORCH_AVAILABLE:
+    import torch
 
 
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test
@@ -694,11 +700,11 @@ class Optics(Feature):
         NA: float,
         wavelength: float,
         refractive_index_medium: float,
-        include_aberration: bool = True,   
+        include_aberration: bool = True,
         defocus: float | ArrayLike[float] = 0,
         **kwargs: Any,
     ):
-        """Calculates the pupil function at different focal points.
+        """Calculate the pupil function at different focal points.
 
         Parameters
         ----------
@@ -739,56 +745,81 @@ class Optics(Feature):
         ... )
         >>> print(pupil.shape)
         (1, 128, 128)
-        
+
         """
 
         # Calculates the pupil at each z-position in defocus.
         voxel_size = get_active_voxel_size()
-        shape = np.array(shape)
 
-        # Pupil radius
-        R = NA / wavelength * np.array(voxel_size)[:2]
+        if config.get_backend() == "numpy":
+            shape = np.array(shape)
+
+            # Pupil radius
+            R = NA / wavelength * np.array(voxel_size)[:2]
+
+        elif config.get_backend() == "torch":
+            shape = torch.tensor(shape)
+
+            # Pupil radius
+            R = NA / wavelength * torch.tensor(voxel_size)[:2]
+
+        else:
+            raise ValueError(f"Unsupported backend: {config.get_backend()}")
+
 
         x_radius = R[0] * shape[0]
         y_radius = R[1] * shape[1]
 
-        x = (np.linspace(-(shape[0] / 2), shape[0] / 2 - 1, shape[0])) / x_radius + 1e-8
-        y = (np.linspace(-(shape[1] / 2), shape[1] / 2 - 1, shape[1])) / y_radius + 1e-8
+        x = (
+            xp.linspace(-(shape[0] / 2), shape[0] / 2 - 1, shape[0])
+        ) / x_radius + 1e-8
+        y = (
+            xp.linspace(-(shape[1] / 2), shape[1] / 2 - 1, shape[1])
+        ) / y_radius + 1e-8
 
-        W, H = np.meshgrid(y, x)
-        RHO = (W ** 2 + H ** 2).astype(complex)
-        pupil_function = Image((RHO < 1) + 0.0j, copy=False)
+        W, H = xp.meshgrid(y, x, indexing='xy')
+        
+        if config.get_backend() == "numpy":
+            RHO = (W ** 2 + H ** 2).astype(complex)
+        else:
+            RHO = (W ** 2 + H ** 2).to(dtype=torch.complex64)
+            RHO = RHO.numpy()                                       # not to be kept, only to make it compatible with Image at the moment
+
+        pupil_function = Image((RHO < 1) + 0.0j, copy=False)        # what should we do about this?
         # Defocus
         z_shift = Image(
             2
-            * np.pi
+            * np.pi                                     # should be xp.pi
             * refractive_index_medium
             / wavelength
             * voxel_size[2]
-            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO),
+            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO),   # should be xp.sqrt
             copy=False,
         )
 
         z_shift._value[z_shift._value.imag != 0] = 0
 
         try:
-            z_shift = np.nan_to_num(z_shift, False, 0, 0, 0)
+            z_shift = np.nan_to_num(z_shift, False, 0, 0, 0)    # should be xp.nan_to_num
         except TypeError:
-            np.nan_to_num(z_shift, z_shift)
-
-        defocus = np.reshape(defocus, (-1, 1, 1))
-        z_shift = defocus * np.expand_dims(z_shift, axis=0)
+            np.nan_to_num(z_shift, z_shift)                     # should be xp.nan_to_num
         
+        defocus = np.reshape(defocus, (-1, 1, 1))               # should be xp.reshape
+        # if config.get_backend() == "numpy":
+        z_shift = defocus * np.expand_dims(z_shift, axis=0)
+        # else:
+        #     z_shift = defocus * torch.unsqueeze(z_shift, dim=0)
+
         if include_aberration:
             pupil = self.pupil
             if isinstance(pupil, Feature):
 
                 pupil_function = pupil(pupil_function)
 
-            elif isinstance(pupil, np.ndarray):
+            elif isinstance(pupil, np.ndarray) or torch.is_tensor(pupil):
                 pupil_function *= pupil
 
-        pupil_functions = pupil_function * np.exp(1j * z_shift)
+        pupil_functions = pupil_function * np.exp(1j * z_shift)     # should be xp.exp
 
         return pupil_functions
 
