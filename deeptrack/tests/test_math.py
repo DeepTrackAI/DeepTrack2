@@ -152,13 +152,14 @@ class TestMath(unittest.TestCase):
         self.assertIsInstance(resized, torch.Tensor)
         self.assertEqual(tuple(resized.shape), (4, 8))
 
-        # Compare with NumPy version:
-        feature_np = math.Resize(dsize=(8, 4))
-        input_image_np = input_image.numpy()
-        resized_np = feature_np.resolve(input_image_np)
-        np.testing.assert_allclose(
-                    resized_np, resized.numpy(), rtol=1e-5, atol=1e-5
-                )
+        if OPENCV_AVAILABLE:
+            # Compare with NumPy version:
+            feature_np = math.Resize(dsize=(8, 4))
+            input_image_np = input_image.numpy()
+            resized_np = feature_np.resolve(input_image_np)
+            np.testing.assert_allclose(
+                        resized_np, resized.numpy(), rtol=1e-5, atol=1e-5
+                    )
 
         input_image = torch.rand(3, 16, 16)
         resized = feature.resolve(input_image)
