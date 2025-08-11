@@ -1448,16 +1448,26 @@ class Resize(Feature):
     """
     Resize an image to a specified size.
 
-    This class resizes an image to a specified size using OpenCV (`cv2.resize`)
-    for NumPy arrays or `torch.nn.functional.interpolate` for PyTorch tensors.
-    The `dsize` parameter specifies the desired output size as (width, height).
+    This class resizes an image using:
+      - OpenCV (`cv2.resize`) for NumPy arrays.
+      - PyTorch (`torch.nn.functional.interpolate`) for PyTorch tensors.
+
+    The interpretation of the `dsize` parameter follows the convention 
+    of the underlying backend:
+      - **NumPy (OpenCV)**: ``dsize`` is given as ``(width, height)`` to match
+        OpenCV’s default.
+      - **PyTorch**: ``dsize`` is given as ``(height, width)``.
+
 
     Parameters
     ----------
     dsize: PropertyLike[tuple[int, int]]
-        The target size as (width, height).
+        The target size. Format depends on backend: ``(width, height)`` for
+        NumPy, ``(height, width)`` for PyTorch.
     **kwargs: Any
-        Additional parameters sent to the underlying resize function.
+        Additional parameters sent to the underlying resize function:
+          - NumPy: passed to ``cv2.resize``.
+          - PyTorch: passed to ``torch.nn.functional.interpolate``.
 
     Methods
     -------
@@ -1469,16 +1479,22 @@ class Resize(Feature):
     Examples
     --------
     >>> import deeptrack as dt
+
+    Numpy example:
     >>> import numpy as np
-
-    Create an image:
-    >>> input_image = np.random.rand(16, 16)
-
-    Resize it to (8, 8):
-    >>> feature = dt.math.Resize(dsize=(8, 4))
-    >>> resized_image = feature.resolve(input_image)
-    >>> resized_image.shape
+    >>> input_image = np.random.rand(16, 16)            # Create image
+    >>> feature = dt.math.Resize(dsize=(8, 4))          # (width=8, height=4)
+    >>> resized_image = feature.resolve(input_image)    # Resize it to (4, 8)
+    >>> print(resized_image.shape)
     (4, 8)
+
+    PyTorch example:
+    >>> import torch
+    >>> input_image = torch.rand(1, 1, 16, 16)          # Create image
+    >>> feature = dt.math.Resize(dsize=(4, 8))          # (height=4, width=8)
+    >>> resized_image = feature.resolve(input_image)    # Resize it to (4, 8)
+    >>> print(resized_image.shape)
+    torch.Size([1, 1, 4, 8])
 
     """
 
@@ -1493,7 +1509,8 @@ class Resize(Feature):
         Parameters
         ----------
         dsize: PropertyLike[tuple[int, int]]
-            The target size as (width, height).
+            The target size. Format depends on backend: ``(width, height)`` for
+            NumPy, ``(height, width)`` for PyTorch. Default is (256, 256).
         **kwargs: Any
             Additional arguments passed to the parent `Feature` class.
 
@@ -1513,15 +1530,30 @@ class Resize(Feature):
         ----------
         image: np.ndarray or torch.Tensor
             The input image to resize.
+            - NumPy arrays may be grayscale (H, W) or color (H, W, C).
+            - Torch tensors are expected to be (N, C, H, W), but (C, H, W) or
+              (H, W) are also accepted.
         dsize: tuple[int, int]
-            Desired output size of the image as (width, height).
+            Desired output size of the image.
+            - NumPy: (width, height)
+            - PyTorch: (height, width)
         **kwargs: Any
-            Additional keyword arguments passed to `cv2.resize`.
+            Additional keyword arguments passed to the underlying resize 
+            function (`cv2.resize` or `torch.nn.functional.interpolate`).
 
         Returns
         -------
         np.ndarray or torch.Tensor
-            The resized image.
+            The resized image in the same type and dimensionality format as
+            input.
+
+        Notes
+        -----
+        - For PyTorch tensors, resizing uses bilinear interpolation with
+          `align_corners=False`. This choice is made to match the default
+          behavior of OpenCV’s `cv2.resize` when working with NumPy arrays, so
+          that resizing the same image with either backend produces as close to
+          identical results as possible.
 
         """
 
@@ -1532,34 +1564,31 @@ class Resize(Feature):
             image = strip(image)
 
         if apc.is_torch_array(image):
-            original_ndim = image.ndim
+            original_shape = image.shape
 
             # Reshape input to (N, C, H, W)
-            if image.ndim == 1:
-                image = image.unsqueeze(1).unsqueeze(0).unsqueeze(0)
-            elif image.ndim == 2:
+            if image.ndim == 2:     # (H, W)
                 image = image.unsqueeze(0).unsqueeze(0)
-            elif image.ndim == 3:
-                image = image.permute(2, 0, 1).unsqueeze(0)
-                if image.shape[1] == 1:
-                    original_ndim = 2
-            else:
+            elif image.ndim == 3:   # (C, H, W)
+                image = image.unsqueeze(0)
+            elif image.ndim != 4:
                 raise ValueError(
-                    "Resize not supported for tensor with ndim > 3"
+                    "Resize only supported for tensor of shape (N, C, H, W), "
+                    "(C, H, W), or (H, W)."
                 )
 
             resized = torch.nn.functional.interpolate(
                 image,
-                size=[dsize[1], dsize[0]],
+                size=dsize,
                 mode="bilinear",
                 align_corners=False,
             )
 
-            # Restore original dimensionallity
-            if original_ndim == 1 or original_ndim == 2:
+            # Restore original dimensionality
+            if len(original_shape) == 2:
                 resized = resized.squeeze(0).squeeze(0)
-            elif original_ndim == 3:
-                resized = resized.squeeze(0).permute(1, 2, 0)
+            elif len(original_shape) == 3:
+                resized = resized.squeeze(0)
 
             return resized
 
