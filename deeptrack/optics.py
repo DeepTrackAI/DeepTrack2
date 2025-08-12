@@ -844,11 +844,11 @@ class Optics(Feature):
 
         Examples
         --------
-        Padding a volume:
-
         >>> import deeptrack as dt
-        >>> import numpy as np
 
+        Padding a volume:        
+        >>> import numpy as np
+        >>>
         >>> volume = np.ones((10, 10, 10), dtype=complex)
         >>> limits = np.array([[0, 10], [0, 10], [0, 10]])
         >>> optics = dt.Optics()
@@ -868,9 +868,7 @@ class Optics(Feature):
 
         Padding a volume using PyTorch: 
         >>> import torch
-        >>> from deeptrack.backend import config
-        >>> config.set_backend("torch")
-
+        >>>
         >>> volume = torch.ones(10, 10, 10, dtype=complex)
         >>> limits = torch.tensor([[0, 10], [0, 10], [0, 10]])
         >>> optics = dt.Optics()
