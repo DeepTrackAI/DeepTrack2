@@ -1454,20 +1454,20 @@ class Resize(Feature):
 
     The interpretation of the `dsize` parameter follows the convention 
     of the underlying backend:
-      - **NumPy (OpenCV)**: ``dsize`` is given as ``(width, height)`` to match
+      - **NumPy (OpenCV)**: `dsize` is given as `(width, height)` to match
         OpenCV’s default.
-      - **PyTorch**: ``dsize`` is given as ``(height, width)``.
+      - **PyTorch**: `dsize` is given as `(height, width)`.
 
 
     Parameters
     ----------
     dsize: PropertyLike[tuple[int, int]]
-        The target size. Format depends on backend: ``(width, height)`` for
-        NumPy, ``(height, width)`` for PyTorch.
+        The target size. Format depends on backend: `(width, height)` for
+        NumPy, `(height, width)` for PyTorch.
     **kwargs: Any
         Additional parameters sent to the underlying resize function:
-          - NumPy: passed to ``cv2.resize``.
-          - PyTorch: passed to ``torch.nn.functional.interpolate``.
+          - NumPy: passed to `cv2.resize`.
+          - PyTorch: passed to `torch.nn.functional.interpolate`.
 
     Methods
     -------
@@ -1482,6 +1482,7 @@ class Resize(Feature):
 
     Numpy example:
     >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(16, 16)            # Create image
     >>> feature = dt.math.Resize(dsize=(8, 4))          # (width=8, height=4)
     >>> resized_image = feature.resolve(input_image)    # Resize it to (4, 8)
@@ -1490,6 +1491,7 @@ class Resize(Feature):
 
     PyTorch example:
     >>> import torch
+    >>>
     >>> input_image = torch.rand(1, 1, 16, 16)          # Create image
     >>> feature = dt.math.Resize(dsize=(4, 8))          # (height=4, width=8)
     >>> resized_image = feature.resolve(input_image)    # Resize it to (4, 8)
@@ -1509,8 +1511,8 @@ class Resize(Feature):
         Parameters
         ----------
         dsize: PropertyLike[tuple[int, int]]
-            The target size. Format depends on backend: ``(width, height)`` for
-            NumPy, ``(height, width)`` for PyTorch. Default is (256, 256).
+            The target size. Format depends on backend: `(width, height)` for
+            NumPy, `(height, width)` for PyTorch. Default is (256, 256).
         **kwargs: Any
             Additional arguments passed to the parent `Feature` class.
 
@@ -1531,8 +1533,8 @@ class Resize(Feature):
         image: np.ndarray or torch.Tensor
             The input image to resize.
             - NumPy arrays may be grayscale (H, W) or color (H, W, C).
-            - Torch tensors are expected to be (N, C, H, W), but (C, H, W) or
-              (H, W) are also accepted.
+            - Torch tensors are expected in one of the following formats:
+              (N, C, H, W), (C, H, W), or (H, W).
         dsize: tuple[int, int]
             Desired output size of the image.
             - NumPy: (width, height)
@@ -1550,10 +1552,9 @@ class Resize(Feature):
         Notes
         -----
         - For PyTorch tensors, resizing uses bilinear interpolation with
-          `align_corners=False`. This choice is made to match the default
-          behavior of OpenCV’s `cv2.resize` when working with NumPy arrays, so
-          that resizing the same image with either backend produces as close to
-          identical results as possible.
+          `align_corners=False`. This choice matches OpenCV’s `cv2.resize`
+          default behavior when resizing NumPy arrays, aiming to produce nearly
+          identical results between both backends.
 
         """
 
@@ -1570,7 +1571,7 @@ class Resize(Feature):
                 image = image.unsqueeze(0)
             elif image.ndim != 4:
                 raise ValueError(
-                    "Resize only supported for tensor of shape (N, C, H, W), "
+                    "Resize only supports tensors with shape (N, C, H, W), "
                     "(C, H, W), or (H, W)."
                 )
 
