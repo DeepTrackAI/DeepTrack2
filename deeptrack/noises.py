@@ -64,13 +64,13 @@ class Noise(Feature):
 
 
 class Background(Noise):
-    """Adds a constant value to an image.
+    """Add a constant value to an image.
 
     Parameters
     ----------
-    offset : float
+    offset: float
         The value to add to the image.
-    **kwargs : Any
+    **kwargs: Any
         Additional keyword arguments passed to the parent `Noise` class.
 
     Methods
@@ -85,9 +85,10 @@ class Background(Noise):
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image with zeros:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.zeros((2,2))
 
     Define the Background noise feature with offset 0.5:
@@ -106,14 +107,13 @@ class Background(Noise):
         offset: PropertyLike[float],
         **kwargs: Any,
     ):
-        """
-        Initialize the Background noise feature.
+        """Initialize the Background noise feature.
 
         Parameters
         ----------
-        offset : PropertyLike[float]
+        offset: PropertyLike[float]
             The constant value to be added to the image.
-        **kwargs : Any
+        **kwargs: Any
             Additional arguments passed to the parent `Noise` class.
         """
         super().__init__(offset=offset, **kwargs)
@@ -124,14 +124,13 @@ class Background(Noise):
         offset: float,
         **kwargs: Any,
     ) -> NDArray[Any] | torch.Tensor | Image:
-        """
-        Add the given offset to the image.
+        """Add the given offset to the image.
 
         Parameters
         ----------
-        image : np.ndarray, torch.Tensor, or Image
+        image: np.ndarray, torch.Tensor, or Image
             The input image.
-        offset : float
+        offset: float
             The value to add to the image.
 
         Returns
