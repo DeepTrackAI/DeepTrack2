@@ -7753,7 +7753,7 @@ class AsType(Feature):
 
     This feature changes the data type (`dtype`) of input images to a specified
     type. The accepted types are standard NumPy or PyTorch data types (e.g.,
-    'float64', 'int32', `uint8`, `int8`, and 'torch.float32').
+    `"float64"`, `"int32"`, `"uint8"`, `"int8"`, and `"torch.float32"`).
 
     Parameters
     ----------
@@ -7776,7 +7776,7 @@ class AsType(Feature):
     >>>
     >>> input_image = np.array([1.5, 2.5, 3.5])
 
-    Apply an AsType feature to convert to `int32`:
+    Apply an AsType feature to convert to "`int32"`:
     >>> astype_feature = dt.AsType(dtype="int32")
     >>> output_image = astype_feature.get(input_image, dtype="int32")
     >>> output_image
@@ -7852,8 +7852,8 @@ class AsType(Feature):
                 "complex128": torch.complex128,
             }
 
-            # Ensure 'torch.float32' and 'float32' are treated the same by
-            # normalizing the string
+            # Ensure `"torch.float32"` and `"float32"` are treated the same by
+            # removing the `torch.` prefix if present
             dtype_str = str(dtype).replace("torch.", "")
             torch_dtype = torch_dtypes.get(dtype_str)
 
