@@ -1730,10 +1730,11 @@ def pad_image_to_fft(
 
     Examples
     --------
-    >>> import numpy as np
     >>> from deeptrack.image import Image, pad_image_to_fft
 
     Pad an Image object:
+    >>> import numpy as np
+    >>>
     >>> img = Image(np.ones((7, 13)))
     >>> padded_img = pad_image_to_fft(img)
     >>> print(padded_img.shape)
@@ -1746,6 +1747,8 @@ def pad_image_to_fft(
     (6, 12)
 
     Pad a PyTorch tensor:
+    >>> import torch
+    >>>
     >>> img = torch.ones(7, 11)
     >>> padded_img = pad_image_to_fft(img)
     >>> print(padded_img.shape)
@@ -1757,7 +1760,7 @@ def pad_image_to_fft(
         dim: int,
     ) -> int:
 
-        # Returns the smallest value from _FASTEST_SIZES that is >= dim.
+        # Return the smallest value from _FASTEST_SIZES that is >= dim.
         for size in _FASTEST_SIZES:
             if size >= dim:
                 return size
