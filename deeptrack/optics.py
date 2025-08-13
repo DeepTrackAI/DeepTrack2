@@ -758,7 +758,7 @@ class Optics(Feature):
             R = NA / wavelength * np.array(voxel_size)[:2]
 
         elif self.get_backend() == "torch":
-            shape = torch.tensor(shape)
+            shape = torch.tensor(shape, dtype=torch.float64)
 
             # Pupil radius
             R = NA / wavelength * torch.tensor(voxel_size)[:2]
@@ -771,10 +771,10 @@ class Optics(Feature):
         y_radius = R[1] * shape[1]
 
         x = (
-            xp.linspace(-(shape[0] / 2), shape[0] / 2 - 1, shape[0])
+            xp.linspace(-(shape[0] / 2), shape[0] / 2 - 1, int(shape[0]))
         ) / x_radius + 1e-8
         y = (
-            xp.linspace(-(shape[1] / 2), shape[1] / 2 - 1, shape[1])
+            xp.linspace(-(shape[1] / 2), shape[1] / 2 - 1, int(shape[1]))
         ) / y_radius + 1e-8
 
         W, H = xp.meshgrid(y, x, indexing='xy')
@@ -784,8 +784,8 @@ class Optics(Feature):
             pupil_function = (RHO < 1) + 0.0j
         else:
             RHO = (W ** 2 + H ** 2)
-            pupil_function = (RHO < 1).to(dtype=torch.complex64) + 0.0j
-            RHO = RHO.to(dtype=torch.complex64)
+            pupil_function = (RHO < 1).to(dtype=torch.complex128) + 0.0j
+            RHO = RHO.to(dtype=torch.complex128)
 
         # Defocus
         z_shift = (
