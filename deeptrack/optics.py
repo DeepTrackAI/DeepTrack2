@@ -798,23 +798,37 @@ class Optics(Feature):
 
         if self.get_backend() == "numpy":
             RHO = (W**2 + H**2).astype(complex)
-            pupil_function = (RHO < 1) + 0.0j
+            pupil_function = Image((RHO < 1) + 0.0j, copy=False)
+
+            # Defocus
+            z_shift = Image(
+                2
+                * np.pi
+                * refractive_index_medium
+                / wavelength
+                * voxel_size[2]
+                * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO),
+                copy=False,
+            )
+
+            z_shift._value[z_shift._value.imag != 0] = 0
+
         else:
             RHO = W**2 + H**2
             pupil_function = (RHO < 1).to(dtype=torch.complex128) + 0.0j
             RHO = RHO.to(dtype=torch.complex128)
 
-        # Defocus
-        z_shift = (
-            2
-            * xp.pi
-            * refractive_index_medium
-            / wavelength
-            * voxel_size[2]
-            * xp.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO)
-        )
+            # Defocus
+            z_shift = (
+                2
+                * xp.pi
+                * refractive_index_medium
+                / wavelength
+                * voxel_size[2]
+                * xp.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO)
+            )
 
-        z_shift[z_shift.imag != 0] = 0
+            z_shift[z_shift.imag != 0] = 0
 
         try:
             z_shift = xp.nan_to_num(z_shift, nan=0.0, posinf=None, neginf=None)
