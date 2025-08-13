@@ -702,8 +702,9 @@ class Optics(Feature):
         refractive_index_medium: float,
         include_aberration: bool = True,
         defocus: float | ArrayLike[float] = 0,
+        **kwargs: Any,
     ) -> NDArray | torch.Tensor:
-        """Calculate the pupil function at different focal points.
+        """Calculate the complex pupil function at one or more focal points.
 
         Parameters
         ----------
@@ -716,16 +717,23 @@ class Optics(Feature):
         refractive_index_medium: float
             The refractive index of the medium.
         include_aberration: bool
-            If True, the aberration is included in the pupil function. Default is `True`.
+            If True, the aberration is included in the pupil function. Default
+            is `True`.
         defocus: float or list[float]
             The defocus of the system. If a list is given, the pupil is
-            calculated for each focal point. Defocus is given in meters. Default is `0`.
+            calculated for each focal point. Defocus is given in meters.
+            Default is `0`.
 
         Returns
         -------
         pupil: array_like[complex]
             The complex pupil function(s) at the specified defocus positions.
             Shape is (z, y, x).
+
+        Notes
+        -----
+        The backend (NumPy or PyTorch) is determined by `self.get_backend()`
+        and can be switched using the global backend configuration.
 
         Examples
         --------
@@ -744,7 +752,7 @@ class Optics(Feature):
 
         Calculating the pupil function with a PyTorch backend:
         >>> from deeptrack.backend import config
-        >>> config.set_backend('torch')
+        >>> config.set_backend("torch")
         >>>
         >>> optics = dt.Optics()
         >>> pupil = optics._pupil(
@@ -758,7 +766,7 @@ class Optics(Feature):
 
         """
 
-        # Calculates the pupil at each z-position in defocus.
+        # Calculate the pupil at each z-position in defocus.
         voxel_size = get_active_voxel_size()
 
         if self.get_backend() == "numpy":
