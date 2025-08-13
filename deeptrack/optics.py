@@ -766,7 +766,6 @@ class Optics(Feature):
         else:
             raise ValueError(f"Unsupported backend: {self.get_backend()}")
 
-
         x_radius = R[0] * shape[0]
         y_radius = R[1] * shape[1]
 
@@ -777,13 +776,13 @@ class Optics(Feature):
             xp.linspace(-(shape[1] / 2), shape[1] / 2 - 1, int(shape[1]))
         ) / y_radius + 1e-8
 
-        W, H = xp.meshgrid(y, x, indexing='xy')
+        W, H = xp.meshgrid(y, x, indexing="xy")
 
         if self.get_backend() == "numpy":
-            RHO = (W ** 2 + H ** 2).astype(complex)
+            RHO = (W**2 + H**2).astype(complex)
             pupil_function = (RHO < 1) + 0.0j
         else:
-            RHO = (W ** 2 + H ** 2)
+            RHO = W**2 + H**2
             pupil_function = (RHO < 1).to(dtype=torch.complex128) + 0.0j
             RHO = RHO.to(dtype=torch.complex128)
 
