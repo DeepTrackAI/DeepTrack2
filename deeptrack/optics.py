@@ -751,20 +751,20 @@ class Optics(Feature):
         # Calculates the pupil at each z-position in defocus.
         voxel_size = get_active_voxel_size()
 
-        if config.get_backend() == "numpy":
+        if self.get_backend() == "numpy":
             shape = np.array(shape)
 
             # Pupil radius
             R = NA / wavelength * np.array(voxel_size)[:2]
 
-        elif config.get_backend() == "torch":
+        elif self.get_backend() == "torch":
             shape = torch.tensor(shape)
 
             # Pupil radius
             R = NA / wavelength * torch.tensor(voxel_size)[:2]
 
         else:
-            raise ValueError(f"Unsupported backend: {config.get_backend()}")
+            raise ValueError(f"Unsupported backend: {self.get_backend()}")
 
 
         x_radius = R[0] * shape[0]
@@ -778,37 +778,38 @@ class Optics(Feature):
         ) / y_radius + 1e-8
 
         W, H = xp.meshgrid(y, x, indexing='xy')
-        
-        if config.get_backend() == "numpy":
-            RHO = (W ** 2 + H ** 2).astype(complex)
-        else:
-            RHO = (W ** 2 + H ** 2).to(dtype=torch.complex64)
-            RHO = RHO.numpy()                                       # not to be kept, only to make it compatible with Image at the moment
 
-        pupil_function = Image((RHO < 1) + 0.0j, copy=False)        # what should we do about this?
+        if self.get_backend() == "numpy":
+            RHO = (W ** 2 + H ** 2).astype(complex)
+            pupil_function = (RHO < 1) + 0.0j
+        else:
+            RHO = (W ** 2 + H ** 2)
+            pupil_function = (RHO < 1).to(dtype=torch.complex64) + 0.0j
+            RHO = RHO.to(dtype=torch.complex64)
+
         # Defocus
-        z_shift = Image(
+        z_shift = (
             2
-            * np.pi                                     # should be xp.pi
+            * xp.pi
             * refractive_index_medium
             / wavelength
             * voxel_size[2]
-            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO),   # should be xp.sqrt
-            copy=False,
+            * xp.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO)
         )
 
-        z_shift._value[z_shift._value.imag != 0] = 0
+        z_shift[z_shift.imag != 0] = 0
 
         try:
-            z_shift = np.nan_to_num(z_shift, False, 0, 0, 0)    # should be xp.nan_to_num
+            z_shift = xp.nan_to_num(z_shift, nan=0.0, posinf=None, neginf=None)
         except TypeError:
-            np.nan_to_num(z_shift, z_shift)                     # should be xp.nan_to_num
-        
-        defocus = np.reshape(defocus, (-1, 1, 1))               # should be xp.reshape
-        # if config.get_backend() == "numpy":
-        z_shift = defocus * np.expand_dims(z_shift, axis=0)
-        # else:
-        #     z_shift = defocus * torch.unsqueeze(z_shift, dim=0)
+            xp.nan_to_num(z_shift, z_shift)
+
+        if self.get_backend() == "numpy":
+            defocus = np.reshape(defocus, (-1, 1, 1))
+            z_shift = defocus * np.expand_dims(z_shift, axis=0)
+        else:
+            defocus = torch.reshape(torch.as_tensor(defocus), (-1, 1, 1))
+            z_shift = defocus * torch.unsqueeze(z_shift, dim=0)
 
         if include_aberration:
             pupil = self.pupil
@@ -819,7 +820,7 @@ class Optics(Feature):
             elif isinstance(pupil, np.ndarray) or torch.is_tensor(pupil):
                 pupil_function *= pupil
 
-        pupil_functions = pupil_function * np.exp(1j * z_shift)     # should be xp.exp
+        pupil_functions = pupil_function * xp.exp(1j * z_shift)
 
         return pupil_functions
 
