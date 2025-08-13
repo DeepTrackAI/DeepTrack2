@@ -702,8 +702,7 @@ class Optics(Feature):
         refractive_index_medium: float,
         include_aberration: bool = True,
         defocus: float | ArrayLike[float] = 0,
-        **kwargs: Any,
-    ):
+    ) -> NDArray | torch.Tensor:
         """Calculate the pupil function at different focal points.
 
         Parameters
@@ -716,26 +715,23 @@ class Optics(Feature):
             The wavelength of the scattered light in meters.
         refractive_index_medium: float
             The refractive index of the medium.
-        voxel_size: array_like[float (, float, float)]
-            The distance between pixels in the camera. A third value can be
-            included to define the resolution in the z-direction.
         include_aberration: bool
-            If True, the aberration is included in the pupil function.
+            If True, the aberration is included in the pupil function. Default is `True`.
         defocus: float or list[float]
             The defocus of the system. If a list is given, the pupil is
-            calculated for each focal point. Defocus is given in meters.
+            calculated for each focal point. Defocus is given in meters. Default is `0`.
 
         Returns
         -------
         pupil: array_like[complex]
-            The pupil function. Shape is (z, y, x).
+            The complex pupil function(s) at the specified defocus positions.
+            Shape is (z, y, x).
 
         Examples
         --------
-        Calculating the pupil function:
-
         >>> import deeptrack as dt
 
+        Calculating the pupil function:
         >>> optics = dt.Optics()
         >>> pupil = optics._pupil(
         ...     shape=(128, 128),
@@ -743,8 +739,22 @@ class Optics(Feature):
         ...     wavelength=0.55e-6,
         ...     refractive_index_medium=1.33,
         ... )
-        >>> print(pupil.shape)
-        (1, 128, 128)
+        >>> print(pupil.shape, pupil.dtype)
+        (1, 128, 128) complex128
+
+        Calculating the pupil function with a PyTorch backend:
+        >>> from deeptrack.backend import config
+        >>> config.set_backend('torch')
+        >>>
+        >>> optics = dt.Optics()
+        >>> pupil = optics._pupil(
+        ...     shape=(128, 128),
+        ...     NA=0.8,
+        ...     wavelength=0.55e-6,
+        ...     refractive_index_medium=1.33,
+        ... )
+        >>> print(pupil.shape, pupil.dtype)
+        torch.Size([1, 128, 128]) torch.complex128
 
         """
 
