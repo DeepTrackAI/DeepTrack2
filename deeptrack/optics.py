@@ -140,9 +140,12 @@ from pint import Quantity
 from typing import Any
 import warnings
 
+import array_api_compat as apc
 import numpy as np
+from numpy.typing import NDArray
 from scipy.ndimage import convolve
 
+from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.units import (
     ConversionTable,
     create_context,
@@ -158,6 +161,8 @@ from deeptrack.types import ArrayLike, PropertyLike
 from deeptrack import image
 from deeptrack import units_registry as u
 
+if TORCH_AVAILABLE:
+    import torch
 
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test
 class Microscope(StructuralFeature):
@@ -1007,7 +1012,11 @@ class Fluorescence(Optics):
 
     Methods
     -------
-    `get(illuminated_volume: array_like[complex], limits: array_like[int, int], **kwargs: Any) -> Image`
+    `get(
+        illuminated_volume: array_like[complex],
+        limits: array_like[int, int],
+        **kwargs: Any,
+    ) -> Image`
         Simulates the imaging process using a fluorescence microscope.
 
     Examples
@@ -1087,7 +1096,8 @@ class Fluorescence(Optics):
 
         # Extract indexes of the output region
         pad = kwargs.get("padding", (0, 0, 0, 0))
-        output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+        # output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+        output_region = list(kwargs.get("output_region", (None, None, None, None)))
 
         # Calculate the how much to crop from the volume
         output_region[0] = (
@@ -1118,20 +1128,34 @@ class Fluorescence(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(
-            np.zeros((*padded_volume.shape[0:2], 1)), copy=False
-        )
+        if self.get_backend() == "numpy":
+            output_image = Image(
+                np.zeros((*padded_volume.shape[0:2], 1)), copy=False
+            )
+        elif self.get_backend() == "torch":
+            output_image = torch.zeros((*padded_volume.shape[0:2], 1))
+        else:
+            raise ValueError(f"Unsupported backend: {self.get_backend()}")
 
         index_iterator = range(padded_volume.shape[2])
 
         # Find planes that are not empty for optimization
-        z_iterator = np.linspace(
-            z_limits[0],
-            z_limits[1],
-            num=padded_volume.shape[2],
-            endpoint=False,
-        )
-        zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+        if self.get_backend() == "torch":
+            z_iterator = torch.linspace(
+                z_limits[0],
+                z_limits[1],
+                steps=padded_volume.shape[2] + 1,
+            )[:-1]                                  # exclude endpoint
+            zero_plane = torch.all(padded_volume == 0, dim=(0, 1))
+        else:
+            z_iterator = np.linspace(
+                z_limits[0],
+                z_limits[1],
+                num=padded_volume.shape[2],
+                endpoint=False,
+            )
+            zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+
         z_values = z_iterator[~zero_plane]
 
         # Further pad image to speed up fft (multiples of 2 and 3)
