@@ -948,8 +948,8 @@ class Fluorescence(Optics):
     """Optical device for fluorescent imaging.
 
     The `Fluorescence` class simulates the imaging process in fluorescence
-    microscopy by creating a discretized volume where each pixel represents 
-    the intensity of light emitted by fluorophores in the sample. It extends 
+    microscopy by creating a discretized volume where each pixel represents
+    the intensity of light emitted by fluorophores in the sample. It extends
     the `Optics` class to include fluorescence-specific functionalities.
 
     Parameters
@@ -967,10 +967,10 @@ class Fluorescence(Optics):
     padding: array_like[int, int, int, int]
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int, int, int, int], optional
-        Region of the output image to extract (x, y, width, height). If None, 
+        Region of the output image to extract (x, y, width, height). If None,
         returns the full image.
     pupil: Feature, optional
-        A feature set defining the pupil function at focus. The input is 
+        A feature set defining the pupil function at focus. The input is
         the unaberrated pupil.
     illumination: Feature, optional
         A feature set defining the illumination source.
@@ -994,7 +994,7 @@ class Fluorescence(Optics):
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int, int, int, int]
         Region of the output image to extract (x, y, width, height).
-    voxel_size: function
+    voxel_size: function                                            # Do we want the user to be able to set the voxel size here? If so, we would have to modify the super().__init__ of Optics 
         Function returning the voxel size of the optical system.
     pixel_size: function
         Function returning the pixel size of the optical system.
@@ -1032,7 +1032,7 @@ class Fluorescence(Optics):
     ) -> Image:
         """Simulates the imaging process using a fluorescence microscope.
 
-        This method convolves the 3D illuminated volume with a pupil function 
+        This method convolves the 3D illuminated volume with a pupil function
         to generate a 2D image projection.
 
         Parameters
@@ -1070,14 +1070,14 @@ class Fluorescence(Optics):
         >>> limits = np.array([[0, 128], [0, 128], [0, 10]])
         >>> properties = optics.properties()
         >>> filtered_properties = {
-        ...     k: v for k, v in properties.items() 
-        ...     if k in {"padding", "output_region", "NA", 
+        ...     k: v for k, v in properties.items()
+        ...     if k in {"padding", "output_region", "NA",
         ...              "wavelength", "refractive_index_medium"}
         ... }
         >>> image = optics.get(volume, limits, **filtered_properties)
         >>> print(image.shape)
         (128, 128, 1)
-        
+
         """
 
         # Pad volume
