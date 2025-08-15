@@ -1131,7 +1131,7 @@ class Fluorescence(Optics):
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int, int, int, int]
         Region of the output image to extract (x, y, width, height).
-    voxel_size: function                                            # Do we want the user to be able to set the voxel size here? If so, we would have to modify the super().__init__ of Optics
+    voxel_size: function           # TODO Do we want the user to be able to set the voxel size here? If so, we would have to modify the super().__init__ of Optics
         Function returning the voxel size of the optical system.
     pixel_size: function
         Function returning the pixel size of the optical system.
@@ -1199,11 +1199,11 @@ class Fluorescence(Optics):
 
         Examples
         --------
-        Simulate imaging a volume:
-
         >>> import deeptrack as dt
+        
+        Simulate imaging a volume:
         >>> import numpy as np
-
+        >>>
         >>> optics = dt.Fluorescence(
         ...     NA=1.4, wavelength=0.52e-6, magnification=60,
         ... )
@@ -1218,6 +1218,26 @@ class Fluorescence(Optics):
         >>> image = optics.get(volume, limits, **filtered_properties)
         >>> print(image.shape)
         (128, 128, 1)
+
+        Simulate imaging a volume using torch backend:
+        >>> from deeptrack.backend import config
+        >>> config.set_backend("torch")
+        >>> import torch
+        >>>
+        >>> optics = dt.Fluorescence(
+        ...     NA=1.4, wavelength=0.52e-6, magnification=60,
+        ... )
+        >>> volume = torch.ones((128, 128, 10), dtype=torch.complex128)
+        >>> limits = torch.tensor([[0, 128], [0, 128], [0, 10]])
+        >>> properties = optics.properties()
+        >>> filtered_properties = {
+        ...     k: v for k, v in properties.items()
+        ...     if k in {"padding", "output_region", "NA",
+        ...              "wavelength", "refractive_index_medium"}
+        ... }
+        >>> image = optics.get(volume, limits, **filtered_properties)
+        >>> print(image.shape)
+        torch.Size([128, 128, 1])
 
         """
 
