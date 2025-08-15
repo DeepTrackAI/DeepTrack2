@@ -1131,7 +1131,7 @@ class Fluorescence(Optics):
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int, int, int, int]
         Region of the output image to extract (x, y, width, height).
-    voxel_size: function                                            # Do we want the user to be able to set the voxel size here? If so, we would have to modify the super().__init__ of Optics 
+    voxel_size: function                                            # Do we want the user to be able to set the voxel size here? If so, we would have to modify the super().__init__ of Optics
         Function returning the voxel size of the optical system.
     pixel_size: function
         Function returning the pixel size of the optical system.
@@ -1166,7 +1166,7 @@ class Fluorescence(Optics):
     """
 
     def get(
-        self:  Fluorescence,
+        self: Fluorescence,
         illuminated_volume: ArrayLike[complex],
         limits: ArrayLike[int],
         **kwargs: Any,
@@ -1280,7 +1280,7 @@ class Fluorescence(Optics):
                 z_limits[0],
                 z_limits[1],
                 steps=padded_volume.shape[2] + 1,
-            )[:-1]                                  # exclude endpoint
+            )[:-1]  # exclude endpoint
             zero_plane = torch.all(padded_volume == 0, dim=(0, 1))
         else:
             z_iterator = np.linspace(
@@ -1314,17 +1314,23 @@ class Fluorescence(Optics):
                 psf = np.square(np.abs(np.fft.ifft2(np.fft.fftshift(pupil))))
                 optical_transfer_function = np.fft.fft2(psf)
                 fourier_field = np.fft.fft2(volume[:, :, i])
-                convolved_fourier_field = fourier_field * optical_transfer_function
+                convolved_fourier_field = (
+                    fourier_field * optical_transfer_function
+                )
                 field = np.fft.ifft2(convolved_fourier_field)
-                # Discard remaining imaginary part (should be 0 up to rounding error)
+                # Drop remaining imag part (should be 0 up to rounding error)
                 field = np.real(field)
             else:
-                psf = torch.square(torch.abs(torch.fft.ifft2(torch.fft.fftshift(pupil))))
+                psf = torch.square(
+                    torch.abs(torch.fft.ifft2(torch.fft.fftshift(pupil)))
+                )
                 optical_transfer_function = torch.fft.fft2(psf)
                 fourier_field = torch.fft.fft2(volume[:, :, i])
-                convolved_fourier_field = fourier_field * optical_transfer_function
-                field = torch.fft.ifft2(convolved_fourier_field) #check
-                # Discard remaining imaginary part (should be 0 up to rounding error)
+                convolved_fourier_field = (
+                    fourier_field * optical_transfer_function
+                )
+                field = torch.fft.ifft2(convolved_fourier_field)
+                # Drop remaining imag part (should be 0 up to rounding error)
                 field = torch.real(field)
 
             output_image._value[:, :, 0] += field[
@@ -1334,8 +1340,10 @@ class Fluorescence(Optics):
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
 
         if self.get_backend() == "numpy":
-            output_image.properties = illuminated_volume.properties + pupils.properties
-        
+            output_image.properties = (
+                illuminated_volume.properties + pupils.properties
+            )
+
         # TODO: handle the properties also when using torch backend
 
         return output_image
