@@ -97,12 +97,12 @@ Utility Functions:
 - `_pad_volume(volume, limits, padding, output_region, **kwargs)`
 
     def _pad_volume(
-        volume: np.ndarray,
-        limits: np.ndarray,
+        volume: np.ndarray | torch.tensor,
+        limits: np.ndarray | torch.tensor,
         padding: tuple[int, int, int, int],
         output_region: tuple[int, int, int, int],
         **kwargs: Any,
-    ) -> tuple[np.ndarray, np.ndarray]
+    ) -> tuple[np.ndarray, np.ndarray] | tuple[torch.tensor, torch.tensor]
 
     Pads a volume with zeros to avoid edge effects during imaging.
 
@@ -475,7 +475,7 @@ class Optics(Feature):
         defocus: float,
         **kwargs: Any,
     ) -> array_like[complex]`
-        Calculates the pupil function at different focal points.
+        Calculate the complex pupil function at one or more focal points.
     `_pad_volume(
         volume: array_like[complex],
         limits: array_like[int, int],
@@ -483,7 +483,7 @@ class Optics(Feature):
         output_region: array_like[int],
         **kwargs: Any,
     ) -> tuple`
-        Pads the volume with zeros to avoid edge effects.
+        Pad the volume with zeros to avoid edge effects.
     `__call__(sample: Feature, **kwargs: Any) -> Microscope`
         Creates a Microscope instance with the given sample and optics.
 

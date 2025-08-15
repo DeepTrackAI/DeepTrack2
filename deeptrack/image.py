@@ -59,11 +59,11 @@ Methods
 - `pad_image_to_fft(image, axes)`
 
     pad_image_to_fft(
-        image: Image | np.ndarray,
+        image: Image | np.ndarray | torch.tensor,
         axes: Iterable[int] = (0, 1),
-    ) -> Image | np.ndarray
+    ) -> Image | np.ndarray | torch.tensor
 
-    Pads an image to optimize Fast Fourier Transform (FFT) performance.
+    Pad an image to optimize Fast Fourier Transform (FFT) performance.
 
 Examples
 --------
