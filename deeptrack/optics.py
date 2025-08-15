@@ -164,7 +164,6 @@ from deeptrack import units_registry as u
 if TORCH_AVAILABLE:
     import torch
 
-
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test
 class Microscope(StructuralFeature):
     """Simulates imaging of a sample using an optical system.
@@ -1026,8 +1025,8 @@ class Fluorescence(Optics):
     """Optical device for fluorescent imaging.
 
     The `Fluorescence` class simulates the imaging process in fluorescence
-    microscopy by creating a discretized volume where each pixel represents 
-    the intensity of light emitted by fluorophores in the sample. It extends 
+    microscopy by creating a discretized volume where each pixel represents
+    the intensity of light emitted by fluorophores in the sample. It extends
     the `Optics` class to include fluorescence-specific functionalities.
 
     Parameters
@@ -1045,10 +1044,10 @@ class Fluorescence(Optics):
     padding: array_like[int, int, int, int]
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int, int, int, int], optional
-        Region of the output image to extract (x, y, width, height). If None, 
+        Region of the output image to extract (x, y, width, height). If None,
         returns the full image.
     pupil: Feature, optional
-        A feature set defining the pupil function at focus. The input is 
+        A feature set defining the pupil function at focus. The input is
         the unaberrated pupil.
     illumination: Feature, optional
         A feature set defining the illumination source.
@@ -1072,7 +1071,7 @@ class Fluorescence(Optics):
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int, int, int, int]
         Region of the output image to extract (x, y, width, height).
-    voxel_size: function
+    voxel_size: function                                            # Do we want the user to be able to set the voxel size here? If so, we would have to modify the super().__init__ of Optics 
         Function returning the voxel size of the optical system.
     pixel_size: function
         Function returning the pixel size of the optical system.
@@ -1085,7 +1084,11 @@ class Fluorescence(Optics):
 
     Methods
     -------
-    `get(illuminated_volume: array_like[complex], limits: array_like[int, int], **kwargs: Any) -> Image`
+    `get(
+        illuminated_volume: array_like[complex],
+        limits: array_like[int, int],
+        **kwargs: Any,
+    ) -> Image`
         Simulates the imaging process using a fluorescence microscope.
 
     Examples
@@ -1110,7 +1113,7 @@ class Fluorescence(Optics):
     ) -> Image:
         """Simulates the imaging process using a fluorescence microscope.
 
-        This method convolves the 3D illuminated volume with a pupil function 
+        This method convolves the 3D illuminated volume with a pupil function
         to generate a 2D image projection.
 
         Parameters
@@ -1148,14 +1151,14 @@ class Fluorescence(Optics):
         >>> limits = np.array([[0, 128], [0, 128], [0, 10]])
         >>> properties = optics.properties()
         >>> filtered_properties = {
-        ...     k: v for k, v in properties.items() 
-        ...     if k in {"padding", "output_region", "NA", 
+        ...     k: v for k, v in properties.items()
+        ...     if k in {"padding", "output_region", "NA",
         ...              "wavelength", "refractive_index_medium"}
         ... }
         >>> image = optics.get(volume, limits, **filtered_properties)
         >>> print(image.shape)
         (128, 128, 1)
-        
+
         """
 
         # Pad volume
@@ -1165,7 +1168,8 @@ class Fluorescence(Optics):
 
         # Extract indexes of the output region
         pad = kwargs.get("padding", (0, 0, 0, 0))
-        output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+        # output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+        output_region = list(kwargs.get("output_region", (None, None, None, None)))
 
         # Calculate the how much to crop from the volume
         output_region[0] = (
@@ -1196,20 +1200,34 @@ class Fluorescence(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(
-            np.zeros((*padded_volume.shape[0:2], 1)), copy=False
-        )
+        if self.get_backend() == "numpy":
+            output_image = Image(
+                np.zeros((*padded_volume.shape[0:2], 1)), copy=False
+            )
+        elif self.get_backend() == "torch":
+            output_image = torch.zeros((*padded_volume.shape[0:2], 1))
+        else:
+            raise ValueError(f"Unsupported backend: {self.get_backend()}")
 
         index_iterator = range(padded_volume.shape[2])
 
         # Find planes that are not empty for optimization
-        z_iterator = np.linspace(
-            z_limits[0],
-            z_limits[1],
-            num=padded_volume.shape[2],
-            endpoint=False,
-        )
-        zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+        if self.get_backend() == "torch":
+            z_iterator = torch.linspace(
+                z_limits[0],
+                z_limits[1],
+                steps=padded_volume.shape[2] + 1,
+            )[:-1]                                  # exclude endpoint
+            zero_plane = torch.all(padded_volume == 0, dim=(0, 1))
+        else:
+            z_iterator = np.linspace(
+                z_limits[0],
+                z_limits[1],
+                num=padded_volume.shape[2],
+                endpoint=False,
+            )
+            zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+
         z_values = z_iterator[~zero_plane]
 
         # Further pad image to speed up fft (multiples of 2 and 3)
