@@ -947,17 +947,20 @@ class Optics(Feature):
         
         """
 
-        if apc.is_torch_array(volume):
+        if self.get_backend() == "torch":
             if limits is None:
                 limits = torch.zeros(3, 2)
 
             new_limits = limits.clone()
 
-        else:
+        elif self.get_backend() == "numpy":
             if limits is None:
                 limits = np.zeros((3, 2))
 
             new_limits = np.array(limits)
+
+        else:
+            raise ValueError(f"Unsupported backend: {self.get_backend()}")
 
         if output_region is None:
             output_region = [None] * 4
@@ -995,7 +998,7 @@ class Optics(Feature):
             )
 
         # Determine shape for the new volume
-        if apc.is_torch_array(volume):
+        if self.get_backend() == "torch":
             new_volume = torch.zeros(
                 tuple(new_limits[:, 1] - new_limits[:, 0]), dtype=volume.dtype
             )
@@ -1008,7 +1011,7 @@ class Optics(Feature):
         # Compute where to place the old volume in the new one
         old_region = (limits - new_limits)
         
-        if apc.is_torch_array(volume):
+        if self.get_backend() == "torch":
             old_region = old_region.to(torch.int32)
             limits = limits.to(torch.int32)
         else:
@@ -1225,8 +1228,9 @@ class Fluorescence(Optics):
 
         # Extract indexes of the output region
         pad = kwargs.get("padding", (0, 0, 0, 0))
-        # output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
-        output_region = list(kwargs.get("output_region", (None, None, None, None)))
+        output_region = list(
+            kwargs.get("output_region", (None, None, None, None))
+        )
 
         # Calculate the how much to crop from the volume
         output_region[0] = (
@@ -1262,7 +1266,9 @@ class Fluorescence(Optics):
                 np.zeros((*padded_volume.shape[0:2], 1)), copy=False
             )
         elif self.get_backend() == "torch":
-            output_image = torch.zeros((*padded_volume.shape[0:2], 1))
+            output_image = Image(
+                torch.zeros((*padded_volume.shape[0:2], 1)), copy=False
+            )
         else:
             raise ValueError(f"Unsupported backend: {self.get_backend()}")
 
@@ -1283,7 +1289,9 @@ class Fluorescence(Optics):
                 num=padded_volume.shape[2],
                 endpoint=False,
             )
-            zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+            zero_plane = np.all(
+                padded_volume == 0, axis=(0, 1), keepdims=False
+            )
 
         z_values = z_iterator[~zero_plane]
 
@@ -1302,19 +1310,33 @@ class Fluorescence(Optics):
             pupil = pupils[z_index]
             z_index += 1
 
-            psf = np.square(np.abs(np.fft.ifft2(np.fft.fftshift(pupil))))
-            optical_transfer_function = np.fft.fft2(psf)
-            fourier_field = np.fft.fft2(volume[:, :, i])
-            convolved_fourier_field = fourier_field * optical_transfer_function
-            field = np.fft.ifft2(convolved_fourier_field)
-            # # Discard remaining imaginary part (should be 0 up to rounding error)
-            field = np.real(field)
+            if self.get_backend() == "numpy":
+                psf = np.square(np.abs(np.fft.ifft2(np.fft.fftshift(pupil))))
+                optical_transfer_function = np.fft.fft2(psf)
+                fourier_field = np.fft.fft2(volume[:, :, i])
+                convolved_fourier_field = fourier_field * optical_transfer_function
+                field = np.fft.ifft2(convolved_fourier_field)
+                # Discard remaining imaginary part (should be 0 up to rounding error)
+                field = np.real(field)
+            else:
+                psf = torch.square(torch.abs(torch.fft.ifft2(torch.fft.fftshift(pupil))))
+                optical_transfer_function = torch.fft.fft2(psf)
+                fourier_field = torch.fft.fft2(volume[:, :, i])
+                convolved_fourier_field = fourier_field * optical_transfer_function
+                field = torch.fft.ifft2(convolved_fourier_field) #check
+                # Discard remaining imaginary part (should be 0 up to rounding error)
+                field = torch.real(field)
+
             output_image._value[:, :, 0] += field[
                 : padded_volume.shape[0], : padded_volume.shape[1]
             ]
 
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
-        output_image.properties = illuminated_volume.properties + pupils.properties
+
+        if self.get_backend() == "numpy":
+            output_image.properties = illuminated_volume.properties + pupils.properties
+        
+        # TODO: handle the properties also when using torch backend
 
         return output_image
 
