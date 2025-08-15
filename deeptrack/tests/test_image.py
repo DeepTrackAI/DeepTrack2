@@ -12,7 +12,10 @@ import unittest
 
 import numpy as np
 
-from deeptrack import features, image
+from deeptrack import features, image, TORCH_AVAILABLE
+
+if TORCH_AVAILABLE:
+    import torch
 
 
 class TestImage(unittest.TestCase):
@@ -389,6 +392,7 @@ class TestImage(unittest.TestCase):
 
     def test_pad_image_to_fft(self):
 
+        # Test with dt.Image
         input_image = image.Image(np.zeros((7, 25)))
         padded_image = image.pad_image_to_fft(input_image)
         self.assertEqual(padded_image.shape, (8, 27))
@@ -400,6 +404,33 @@ class TestImage(unittest.TestCase):
         input_image = image.Image(np.zeros((300, 400)))
         padded_image = image.pad_image_to_fft(input_image)
         self.assertEqual(padded_image.shape, (324, 432))
+
+        # Test with NumPy array
+        input_image = np.ones((7, 13))
+        padded_image = image.pad_image_to_fft(input_image)
+        self.assertEqual(padded_image.shape, (8, 16))
+
+        input_image = np.ones((5,))
+        padded_image = image.pad_image_to_fft(input_image, axes=(0,))
+        self.assertEqual(padded_image.shape, (6,))
+
+        ### Test with PyTorch tensor (if available)
+        if TORCH_AVAILABLE:
+            input_image = torch.ones(3, 5)
+            padded_image = image.pad_image_to_fft(input_image)
+            self.assertEqual(padded_image.shape, (3, 6))
+            self.assertIsInstance(padded_image, torch.Tensor)
+
+            input_image = torch.ones(5, 7, 11, 13)
+            padded_image = image.pad_image_to_fft(input_image, axes=(0, 1, 3))
+            padded_image_np = image.pad_image_to_fft(
+                input_image.numpy(), axes=(0, 1, 3)
+            )
+            self.assertEqual(padded_image.shape, (6, 8, 11, 16))
+            self.assertIsInstance(padded_image, torch.Tensor)
+            np.testing.assert_allclose(
+                padded_image.numpy(), padded_image_np, atol=1e-6
+            )
 
 
 if __name__ == "__main__":
