@@ -164,7 +164,6 @@ from deeptrack import units_registry as u
 if TORCH_AVAILABLE:
     import torch
 
-
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test
 class Microscope(StructuralFeature):
     """Simulates imaging of a sample using an optical system.
@@ -413,21 +412,21 @@ class Optics(Feature):
     magnification: float, optional
         Magnification of the optical system, by default 10.
     resolution: float or array_like[float], optional
-        Distance between pixels in the camera (meters). A third value can 
+        Distance between pixels in the camera (meters). A third value can
         define the resolution in the z-direction, by default 1e-6.
     refractive_index_medium: float, optional
         Refractive index of the medium, by default 1.33.
     padding: array_like[int, int, int, int], optional
-        Padding applied to the sample volume to avoid edge effects, 
+        Padding applied to the sample volume to avoid edge effects,
         by default (10, 10, 10, 10).
     output_region: array_like[int, int, int, int], optional
-        Region of the image to output (x, y, width, height). If None, the 
+        Region of the image to output (x, y, width, height). If None, the
         entire image is returned, by default (0, 0, 128, 128).
     pupil: Feature, optional
         Feature-set resolving the pupil function at focus. By default, no pupil
         is applied.
     illumination: Feature, optional
-        Feature-set resolving the illumination source. By default, no specific 
+        Feature-set resolving the illumination source. By default, no specific
         illumination is applied.
     upscale: int, optional
         Scaling factor for the resolution of the optical system, by default 1.
@@ -467,9 +466,23 @@ class Optics(Feature):
     -------
     `_process_properties(propertydict: dict[str, Any]) -> dict[str, Any]`
         Processes and validates the input properties.
-    `_pupil(shape:  array_like[int, int], NA: float, wavelength: float, refractive_index_medium: float, include_aberration: bool, defocus: float, **kwargs: Any) -> array_like[complex]`
+    `_pupil(
+        shape: array_like[int, int],
+        NA: float,
+        wavelength: float,
+        refractive_index_medium: float,
+        include_aberration: bool,
+        defocus: float,
+        **kwargs: Any,
+    ) -> array_like[complex]`
         Calculates the pupil function at different focal points.
-    `_pad_volume(volume: array_like[complex], limits: array_like[int, int], padding: array_like[int], output_region: array_like[int], **kwargs: Any) -> tuple`
+    `_pad_volume(
+        volume: array_like[complex],
+        limits: array_like[int, int],
+        padding: array_like[int],
+        output_region: array_like[int],
+        **kwargs: Any,
+    ) -> tuple`
         Pads the volume with zeros to avoid edge effects.
     `__call__(sample: Feature, **kwargs: Any) -> Microscope`
         Creates a Microscope instance with the given sample and optics.
@@ -857,18 +870,18 @@ class Optics(Feature):
 
     def _pad_volume(
         self: Optics,
-        volume: ArrayLike[complex],
+        volume: NDArray | torch.Tensor,
         limits: ArrayLike[int] = None,
         padding: ArrayLike[int] = None,
         output_region: ArrayLike[int] = None,
         **kwargs: Any,
     ) -> tuple:
-        """Pads the volume with zeros to avoid edge effects.
+        """Pad the input volume with zeros to avoid edge effects.
 
         Parameters
         ----------
-        volume: array_like[complex]
-            The volume to pad.
+        volume: NDArray | torch.Tensor
+            The complex-valued volume to pad.
         limits: array_like[int, int]
             The limits of the volume.
         padding: array_like[int]
@@ -880,76 +893,134 @@ class Optics(Feature):
 
         Returns
         -------
-        new_volume: array_like[complex]
-            The padded volume.
+        new_volume: NDArray | torch.Tensor
+            The padded, complex valued volume.
         new_limits: array_like[int, int]
             The new limits of the volume.
 
         Examples
         --------
-        Padding a volume:
-
         >>> import deeptrack as dt
-        >>> import numpy as np
 
+        Padding a volume:        
+        >>> import numpy as np
+        >>>
         >>> volume = np.ones((10, 10, 10), dtype=complex)
         >>> limits = np.array([[0, 10], [0, 10], [0, 10]])
         >>> optics = dt.Optics()
         >>> padded_volume, new_limits = optics._pad_volume(
-        ...     volume, limits=limits, padding=[5, 5, 5, 5],
+        ...     volume,
+        ...     limits=limits,
+        ...     padding=[5, 5, 5, 5],
         ...     output_region=[0, 0, 10, 10],
         ... )
         >>> print(padded_volume.shape)
         (20, 20, 10)
+
         >>> print(new_limits)
         [[-5 15]
          [-5 15]
          [ 0 10]]
+
+        Padding a volume using PyTorch: 
+        >>> import torch
+        >>>
+        >>> volume = torch.ones(10, 10, 10, dtype=complex)
+        >>> limits = torch.tensor([[0, 10], [0, 10], [0, 10]])
+        >>> optics = dt.Optics()
+        >>> padded_volume, new_limits = optics._pad_volume(
+        ...     volume,
+        ...     limits=limits,
+        ...     padding=[5, 5, 5, 5],
+        ...     output_region=[0, 0, 10, 10],
+        ... )
+        >>> print(padded_volume.shape)
+        torch.Size([20, 20, 10])
+
+        >>> print(padded_volume.dtype)
+        torch.complex128
+
+        >>> print(new_limits)
+        tensor([[-5, 15],
+        [-5, 15],
+        [ 0, 10]])
         
         """
-        
-        if limits is None:
-            limits = np.zeros((3, 2))
 
-        new_limits = np.array(limits)
-        output_region = np.array(output_region)
+        if apc.is_torch_array(volume):
+            if limits is None:
+                limits = torch.zeros(3, 2)
+
+            new_limits = limits.clone()
+
+        else:
+            if limits is None:
+                limits = np.zeros((3, 2))
+
+            new_limits = np.array(limits)
+
+        if output_region is None:
+            output_region = [None] * 4
+        output_region = list(output_region)
 
         # Replace None entries with current limit
         output_region[0] = (
-            output_region[0] if not output_region[0] is None else new_limits[0, 0]
+            output_region[0]
+            if not output_region[0] is None
+            else new_limits[0, 0]
         )
         output_region[1] = (
-            output_region[1] if not output_region[1] is None else new_limits[0, 1]
+            output_region[1]
+            if not output_region[1] is None
+            else new_limits[0, 1]
         )
         output_region[2] = (
-            output_region[2] if not output_region[2] is None else new_limits[1, 0]
+            output_region[2]
+            if not output_region[2] is None
+            else new_limits[1, 0]
         )
         output_region[3] = (
-            output_region[3] if not output_region[3] is None else new_limits[1, 1]
+            output_region[3]
+            if not output_region[3] is None
+            else new_limits[1, 1]
         )
 
+        # Update the new limits based on padding and output region
         for i in range(2):
-            new_limits[i, :] = (
-                np.min([new_limits[i, 0], output_region[i] - padding[i]]),
-                np.max(
-                    [
-                        new_limits[i, 1],
-                        output_region[i + 2] + padding[i + 2],
-                    ]
-                ),
+            new_limits[i, 0] = min(
+                new_limits[i, 0], output_region[i] - padding[i]
             )
-        new_volume = np.zeros(
-            np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
-            dtype=complex,
-        )
+            new_limits[i, 1] = max(
+                new_limits[i, 1], output_region[i + 2] + padding[i + 2]
+            )
 
-        old_region = (limits - new_limits).astype(np.int32)
-        limits = limits.astype(np.int32)
+        # Determine shape for the new volume
+        if apc.is_torch_array(volume):
+            new_volume = torch.zeros(
+                tuple(new_limits[:, 1] - new_limits[:, 0]), dtype=volume.dtype
+            )
+        else:
+            new_volume = np.zeros(
+                np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
+                dtype=complex,
+            )
+
+        # Compute where to place the old volume in the new one
+        old_region = (limits - new_limits)
+        
+        if apc.is_torch_array(volume):
+            old_region = old_region.to(torch.int32)
+            limits = limits.to(torch.int32)
+        else:
+            old_region = old_region.astype(np.int32)
+            limits = limits.astype(np.int32)
+
         new_volume[
             old_region[0, 0] : old_region[0, 0] + limits[0, 1] - limits[0, 0],
             old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
             old_region[2, 0] : old_region[2, 0] + limits[2, 1] - limits[2, 0],
         ] = volume
+
         return new_volume, new_limits
 
     def __call__(
@@ -1011,8 +1082,8 @@ class Fluorescence(Optics):
     """Optical device for fluorescent imaging.
 
     The `Fluorescence` class simulates the imaging process in fluorescence
-    microscopy by creating a discretized volume where each pixel represents 
-    the intensity of light emitted by fluorophores in the sample. It extends 
+    microscopy by creating a discretized volume where each pixel represents
+    the intensity of light emitted by fluorophores in the sample. It extends
     the `Optics` class to include fluorescence-specific functionalities.
 
     Parameters
@@ -1030,10 +1101,10 @@ class Fluorescence(Optics):
     padding: array_like[int, int, int, int]
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int, int, int, int], optional
-        Region of the output image to extract (x, y, width, height). If None, 
+        Region of the output image to extract (x, y, width, height). If None,
         returns the full image.
     pupil: Feature, optional
-        A feature set defining the pupil function at focus. The input is 
+        A feature set defining the pupil function at focus. The input is
         the unaberrated pupil.
     illumination: Feature, optional
         A feature set defining the illumination source.
@@ -1057,7 +1128,7 @@ class Fluorescence(Optics):
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int, int, int, int]
         Region of the output image to extract (x, y, width, height).
-    voxel_size: function
+    voxel_size: function                                            # Do we want the user to be able to set the voxel size here? If so, we would have to modify the super().__init__ of Optics 
         Function returning the voxel size of the optical system.
     pixel_size: function
         Function returning the pixel size of the optical system.
@@ -1070,7 +1141,11 @@ class Fluorescence(Optics):
 
     Methods
     -------
-    `get(illuminated_volume: array_like[complex], limits: array_like[int, int], **kwargs: Any) -> Image`
+    `get(
+        illuminated_volume: array_like[complex],
+        limits: array_like[int, int],
+        **kwargs: Any,
+    ) -> Image`
         Simulates the imaging process using a fluorescence microscope.
 
     Examples
@@ -1095,7 +1170,7 @@ class Fluorescence(Optics):
     ) -> Image:
         """Simulates the imaging process using a fluorescence microscope.
 
-        This method convolves the 3D illuminated volume with a pupil function 
+        This method convolves the 3D illuminated volume with a pupil function
         to generate a 2D image projection.
 
         Parameters
@@ -1133,14 +1208,14 @@ class Fluorescence(Optics):
         >>> limits = np.array([[0, 128], [0, 128], [0, 10]])
         >>> properties = optics.properties()
         >>> filtered_properties = {
-        ...     k: v for k, v in properties.items() 
-        ...     if k in {"padding", "output_region", "NA", 
+        ...     k: v for k, v in properties.items()
+        ...     if k in {"padding", "output_region", "NA",
         ...              "wavelength", "refractive_index_medium"}
         ... }
         >>> image = optics.get(volume, limits, **filtered_properties)
         >>> print(image.shape)
         (128, 128, 1)
-        
+
         """
 
         # Pad volume
@@ -1150,7 +1225,8 @@ class Fluorescence(Optics):
 
         # Extract indexes of the output region
         pad = kwargs.get("padding", (0, 0, 0, 0))
-        output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+        # output_region = np.array(kwargs.get("output_region", (None, None, None, None)))
+        output_region = list(kwargs.get("output_region", (None, None, None, None)))
 
         # Calculate the how much to crop from the volume
         output_region[0] = (
@@ -1181,20 +1257,34 @@ class Fluorescence(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(
-            np.zeros((*padded_volume.shape[0:2], 1)), copy=False
-        )
+        if self.get_backend() == "numpy":
+            output_image = Image(
+                np.zeros((*padded_volume.shape[0:2], 1)), copy=False
+            )
+        elif self.get_backend() == "torch":
+            output_image = torch.zeros((*padded_volume.shape[0:2], 1))
+        else:
+            raise ValueError(f"Unsupported backend: {self.get_backend()}")
 
         index_iterator = range(padded_volume.shape[2])
 
         # Find planes that are not empty for optimization
-        z_iterator = np.linspace(
-            z_limits[0],
-            z_limits[1],
-            num=padded_volume.shape[2],
-            endpoint=False,
-        )
-        zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+        if self.get_backend() == "torch":
+            z_iterator = torch.linspace(
+                z_limits[0],
+                z_limits[1],
+                steps=padded_volume.shape[2] + 1,
+            )[:-1]                                  # exclude endpoint
+            zero_plane = torch.all(padded_volume == 0, dim=(0, 1))
+        else:
+            z_iterator = np.linspace(
+                z_limits[0],
+                z_limits[1],
+                num=padded_volume.shape[2],
+                endpoint=False,
+            )
+            zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+
         z_values = z_iterator[~zero_plane]
 
         # Further pad image to speed up fft (multiples of 2 and 3)
