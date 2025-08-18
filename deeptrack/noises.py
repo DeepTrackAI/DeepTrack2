@@ -168,7 +168,9 @@ class Poisson(Noise):
 
     Poisson noise is sampled and added pixel-wise depending on the
     intensity of the pixel in the original image to achieve a desired
-    signal-to-noise ratio `snr`.
+    signal-to-noise ratio `snr`. 
+    Depending on the backend it will return either an `Image` object for Numpy
+    or a `torch.Tensor` for Torch.
 
     Parameters
     ----------
@@ -208,13 +210,16 @@ class Poisson(Noise):
         max_val: float,
         **kwargs: Any,
     ) -> NDArray[Any] | Image:
+    """`Get` method for a numpy backend"""
 
         image[image < 0] = 0
         image_max = np.max(image)
         peak = np.abs(image_max - background)
 
         rescale = snr ** 2 / peak ** 2
-        rescale = np.clip(rescale, 1e-10, max_val / np.abs(image_max))
+        rescale = np.clip(
+            rescale, 1e-10, max_val / np.abs(image_max)
+        )
         try:
             noisy_image = Image(np.random.poisson(image * rescale) / rescale)
             noisy_image.merge_properties_from(image)
@@ -233,13 +238,16 @@ class Poisson(Noise):
         max_val: float,
         **kwargs: Any,
     ) -> torch.Tensor | Image:
+    """`Get` method for a torch backend"""
 
         image = torch.clamp(image, min=0)
         image_max = torch.max(image)
         peak = torch.abs(image_max - background)
 
         rescale = snr ** 2 / peak ** 2
-        rescale = torch.clamp(rescale, min=1e-10, max=max_val / torch.abs(image_max))
+        rescale = torch.clamp(
+            rescale, min=1e-10, max=max_val / torch.abs(image_max)
+        )
         try:
             noisy_image = torch.poisson(image * rescale) / rescale
             return noisy_image
@@ -262,4 +270,3 @@ class Poisson(Noise):
             return self._get_numpy(image, snr, background, max_val, **kwargs,)
         elif self.get_backend() == "torch":
             return self._get_torch(image, snr, background, max_val, **kwargs,)
-    
