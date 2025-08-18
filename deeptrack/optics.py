@@ -951,6 +951,12 @@ class Optics(Feature):
             if limits is None:
                 limits = torch.zeros(3, 2)
 
+            if isinstance(limits, np.ndarray):     # quick fix to make it work with scatterers that are not
+                limits = torch.tensor(limits)      # implemented with a torch backend (to be removed later)
+
+            # quick fix to make it work with scatterers that are not implemented with a torch backend (to be removed later)
+            volume = torch.tensor(volume)
+
             new_limits = limits.clone()
 
         elif self.get_backend() == "numpy":
