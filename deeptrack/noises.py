@@ -227,7 +227,7 @@ class Poisson(Noise):
 
     def _get_torch(
         self: Poisson,
-        image: torch.Tensor | Image,
+        image: torch.Tensor,
         snr: float,
         background: float,
         max_val: float,
@@ -241,8 +241,7 @@ class Poisson(Noise):
         rescale = snr ** 2 / peak ** 2
         rescale = torch.clamp(rescale, min=1e-10, max=max_val / torch.abs(image_max))
         try:
-            noisy_image = Image(torch.poisson(image * rescale) / rescale)
-            noisy_image.merge_properties_from(image)
+            noisy_image = torch.poisson(image * rescale) / rescale
             return noisy_image
         except ValueError:
             raise ValueError(
