@@ -63,7 +63,7 @@ class TestMath_Torch(TestMath_Numpy):
     BACKEND = "torch"
     def test_Poisson(self):
         noise = noises.Poisson(snr=20)
-        input_image = Image(torch.ones((256, 256)) * 0.1)
+        input_image = torch.ones((256, 256)) * 0.1
         output_image = noise.resolve(input_image)
 
         self.assertIsInstance(output_image, torch.Tensor)
