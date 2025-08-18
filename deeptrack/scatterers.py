@@ -155,7 +155,11 @@ Create a stratified Mie sphere and resolve it through a microscope:
 
 """
 
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT321
+
 from __future__ import annotations
+
 from typing import Callable 
 import warnings
 
@@ -170,10 +174,12 @@ from deeptrack.backend.units import (
 )
 from deeptrack.backend import mie
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
-from deeptrack.image import pad_image_to_fft, maybe_cupy, Image
+from deeptrack.image import pad_image_to_fft, Image
 from deeptrack.types import ArrayLike
-from deeptrack import units as u
+from deeptrack import units_registry as u
 
+
+#TODO ***??*** revise Scatterer - torch, typing, docstring, unit test
 class Scatterer(Feature):
     """Base abstract class for scatterers.
 
@@ -332,6 +338,8 @@ class Scatterer(Feature):
     ) -> list:
         return self._image_wrapped_process_output(*args, **feature_input)
 
+
+#TODO ***??*** revise PointParticle - torch, typing, docstring, unit test
 class PointParticle(Scatterer):
     """Generates a point particle
 
@@ -359,7 +367,7 @@ class PointParticle(Scatterer):
     def __init__(
         self,
         **kwargs
-    ) -> None:
+    ):
         super().__init__(upsample=1, upsample_axes=(), **kwargs)
 
     def get(
@@ -368,11 +376,13 @@ class PointParticle(Scatterer):
         **kwarg
     ) -> ArrayLike[float]:
         """Abstract method to initialize the point scatterer"""
-        
+
         scale = get_active_scale()
+
         return np.ones((1, 1, 1)) * np.prod(scale)
 
 
+#TODO ***??*** revise Ellipse - torch, typing, docstring, unit test
 class Ellipse(Scatterer):
     """Generates an elliptical disk scatterer
 
@@ -486,6 +496,7 @@ class Ellipse(Scatterer):
         return mask
 
 
+#TODO ***??*** revise Sphere - torch, typing, docstring, unit test
 class Sphere(Scatterer):
     """Generates a spherical scatterer
 
@@ -550,6 +561,7 @@ class Sphere(Scatterer):
         return mask
 
 
+#TODO ***??*** revise Ellipsoid - torch, typing, docstring, unit test
 class Ellipsoid(Scatterer):
     """Generates an ellipsoidal scatterer
 
@@ -706,6 +718,7 @@ class Ellipsoid(Scatterer):
         return mask
 
 
+#TODO ***??*** revise MieScatterer - torch, typing, docstring, unit test
 class MieScatterer(Scatterer):
     """Base implementation of a Mie particle.
 
@@ -790,8 +803,6 @@ class MieScatterer(Scatterer):
         arr*=np.exp(1j * k * z + 1j * np.pi / 2)
         
     """
-
-    __gpu_compatible__ = True
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
@@ -986,8 +997,6 @@ class MieScatterer(Scatterer):
         """Computes the coordinates of the plane in polar form."""
 
         X, Y = self.get_XY(shape, voxel_size)
-        X = maybe_cupy(X)
-        Y = maybe_cupy(Y)
 
         # The X, Y coordinates of the pupil relative to the particle.
         X = X + plane_position[0]
@@ -1037,7 +1046,6 @@ class MieScatterer(Scatterer):
         xSize, ySize = self.get_xy_size(output_region, padding)
         voxel_size = get_active_voxel_size()
         arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
-        arr = maybe_cupy(arr)
         position = np.array(position) * voxel_size[: len(position)]
 
         pupil_physical_size = working_distance * np.tan(collection_angle) * 2
@@ -1159,7 +1167,6 @@ class MieScatterer(Scatterer):
             ]
             mask = np.exp(-0.5 * (x ** 2 + y ** 2) / ((sigma) ** 2))
 
-            mask = maybe_cupy(mask)
             arr = arr * mask
 
         fourier_field = np.fft.fft2(arr)
@@ -1190,6 +1197,7 @@ class MieScatterer(Scatterer):
             return np.fft.ifft2(fourier_field)[..., np.newaxis]
 
 
+#TODO ***??*** revise MieSphere - torch, typing, docstring, unit test
 class MieSphere(MieScatterer):
     """Scattered field by a sphere
 
@@ -1280,6 +1288,7 @@ class MieSphere(MieScatterer):
         )
 
 
+#TODO ***??*** revise MieStratifiedSphere - torch, typing, docstring, unit test
 class MieStratifiedSphere(MieScatterer):
     """Scattered field by a stratified sphere
 

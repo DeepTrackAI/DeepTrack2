@@ -30,17 +30,40 @@ Add Poisson noise with a specified signal-to-noise ratio:
 
 """
 
-import numpy as np
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT327
 
-from .features import Feature
-from .image import Image
-from .types import PropertyLike
+from __future__ import annotations
+
+from typing import Any, TYPE_CHECKING
+
+import numpy as np
+from numpy.typing import NDArray
+
+from deeptrack import Feature, Image, PropertyLike, TORCH_AVAILABLE
+
+if TORCH_AVAILABLE:
+    import torch
+
+__all__ = [
+    "Noise",
+    "Background",
+    "Offset",
+    "Gaussian",
+    "ComplexGaussian",
+    "Poisson",
+]
+
+
+if TYPE_CHECKING:
+    import torch
 
 
 class Noise(Feature):
     """Base abstract noise class."""
 
 
+#TODO ***MG*** revise Background - torch, typing, docstring, unit test
 class Background(Noise):
     """Adds a constant value to an image
 
@@ -50,17 +73,27 @@ class Background(Noise):
         The value to add to the image
     """
 
-    def __init__(self, offset: PropertyLike[float], **kwargs):
+    def __init__(
+        self: Background,
+        offset: PropertyLike[float],
+        **kwargs: Any,
+    ):
         super().__init__(offset=offset, **kwargs)
 
-    def get(self, image, offset, **kwargs):
+    def get(
+        self: Background,
+        image: NDArray[Any] | torch.Tensor | Image,
+        offset: float,
+        **kwargs: Any,
+    ) -> NDArray[Any] | torch.Tensor | Image:
+
         return image + offset
 
 
-# ALIASES
 Offset = Background
 
 
+#TODO ***JH*** revise Gaussian - torch, typing, docstring, unit test
 class Gaussian(Noise):
     """Adds IID Gaussian noise to an image.
 
@@ -73,18 +106,28 @@ class Gaussian(Noise):
     """
 
     def __init__(
-        self,
+        self: Gaussian,
         mu: PropertyLike[float] = 0,
         sigma: PropertyLike[float] = 1,
-        **kwargs
+        **kwargs: Any,
     ):
+
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
-    def get(self, image, mu, sigma, **kwargs):
+    def get(
+        self: Gaussian,
+        image: NDArray[Any] | torch.Tensor | Image,
+        mu: float,
+        sigma: float,
+        **kwargs: Any,
+    ) -> NDArray[Any] | torch.Tensor | Image:
+
         noisy_image = mu + image + np.random.randn(*image.shape) * sigma
+
         return noisy_image
 
 
+#TODO ***JH*** revise ComplexGaussian - torch, typing, docstring, unit test
 class ComplexGaussian(Noise):
     """Adds complex-valued IID Gaussian noise to an image.
 
@@ -97,20 +140,30 @@ class ComplexGaussian(Noise):
     """
 
     def __init__(
-        self,
+        self: ComplexGaussian,
         mu: PropertyLike[float] = 0,
         sigma: PropertyLike[float] = 1,
-        **kwargs
+        **kwargs: Any,
     ):
+
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
-    def get(self, image, mu, sigma, **kwargs):
+    def get(
+        self: ComplexGaussian,
+        image: NDArray[Any] | torch.Tensor | Image,
+        mu: float,
+        sigma: float,
+        **kwargs: Any,
+    ) -> NDArray[Any] | torch.Tensor | Image:
+
         real_noise = np.random.randn(*image.shape)
         imag_noise = np.random.randn(*image.shape) * 1j
         noisy_image = mu + image + (real_noise + imag_noise) * sigma
+ 
         return noisy_image
 
 
+#TODO ***AL*** revise Poisson - torch, typing, docstring, unit test
 class Poisson(Noise):
     """Adds Poisson-distributed noise to an image.
 
@@ -128,30 +181,43 @@ class Poisson(Noise):
     """
 
     def __init__(
-        self,
-        *args,
+        self: Poisson,
+        *args: Any,
         snr: PropertyLike[float] = 100,
         background: PropertyLike[float] = 0,
-        max_val=1e8,
-        **kwargs
+        max_val: PropertyLike[float] = 1e8,
+        **kwargs,
     ):
+
         super().__init__(
-            *args, snr=snr, background=background, max_val=max_val, **kwargs
+            *args,
+            snr=snr,
+            background=background,
+            max_val=max_val,
+            **kwargs,
         )
 
-    def get(self, image, snr, background, max_val, **kwargs):
+    def get(
+        self: Poisson,
+        image: NDArray[Any] | torch.Tensor | Image,
+        snr: float,
+        background: float,
+        max_val: float,
+        **kwargs: Any,
+    ) -> NDArray[Any] | torch.Tensor | Image:
+
         image[image < 0] = 0
-        immax = np.max(image)
-        peak = np.abs(immax - background)
+        image_max = np.max(image)
+        peak = np.abs(image_max - background)
 
         rescale = snr ** 2 / peak ** 2
-        rescale = np.clip(rescale, 1e-10, max_val / np.abs(immax))
+        rescale = np.clip(rescale, 1e-10, max_val / np.abs(image_max))
         try:
             noisy_image = Image(np.random.poisson(image * rescale) / rescale)
-            noisy_image.merge_properties_from(image)
+            noisy_image.merge_properties_from(image)  # TODO Should only be done if input is Image!
             return noisy_image
         except ValueError:
             raise ValueError(
-                "Numpy poisson function errored due to too large value. "
+                "NumPy poisson function errored due to too large value. "
                 "Set max_val in dt.Poisson to a lower value to fix."
             )

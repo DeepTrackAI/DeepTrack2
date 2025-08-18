@@ -55,7 +55,6 @@ To create a unit registry with custom pixel-related units:
 
 """
 
-
 __all__ = [
     "pint_constants",
     "pint_definitions",

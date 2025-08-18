@@ -84,13 +84,20 @@ Reconstruct the field using the inverse Fourier transform:
 
 """
 
+#TODO ***??*** revise class docstring
+#TODO ***??*** revise DTAT324
+
 from __future__ import annotations
+
 from typing import Any
-from deeptrack.image import maybe_cupy, Image
-from deeptrack import Feature
+
 import numpy as np
 
+from deeptrack.image import Image
+from deeptrack import Feature
 
+
+#TODO ***??*** revise get_propagation_matrix - torch, typing, docstring, unit test
 def get_propagation_matrix(
     shape: tuple[int, int],
     to_z: float,
@@ -143,8 +150,8 @@ def get_propagation_matrix(
     y = 2 * np.pi / pixel_size * y / yr
 
     KXk, KYk = np.meshgrid(x, y)
-    KXk = maybe_cupy(KXk.astype(complex))
-    KYk = maybe_cupy(KYk.astype(complex))
+    KXk = KXk.astype(complex)
+    KYk = KYk.astype(complex)
 
     K = np.real(np.sqrt(1 - (KXk / k) ** 2 - (KYk / k) ** 2))
     C = np.fft.fftshift(((KXk / k) ** 2 + (KYk / k) ** 2 < 1) * 1.0)
@@ -154,6 +161,7 @@ def get_propagation_matrix(
     )
 
 
+#TODO ***??*** revise Rescale - torch, typing, docstring, unit test
 class Rescale(Feature):
     """Rescales an optical field by modifying its real and imaginary 
     components.
@@ -188,7 +196,7 @@ class Rescale(Feature):
         self: Rescale, 
         image: Image | np.ndarray, 
         rescale: float, 
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> Image | np.ndarray:
         """Rescales the image by subtracting the real part of the field before
         multiplication.
@@ -199,7 +207,7 @@ class Rescale(Feature):
             The image to rescale.
         rescale: float
             The rescaling factor.
-        **kwargs: dict of str to Any
+        **kwargs: Any
             Additional keyword arguments.
 
         Returns
@@ -216,6 +224,7 @@ class Rescale(Feature):
         return image
 
 
+#TODO ***??*** revise FourierTransform - torch, typing, docstring, unit test
 class FourierTransform(Feature):
     """Computes the Fourier transform of an optical field with optional 
     symmetric padding.
@@ -253,7 +262,7 @@ class FourierTransform(Feature):
         self: FourierTransform,
         image: Image | np.ndarray,
         padding: int = 32,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> np.ndarray: 
         """Computes the Fourier transform of the image.
 
@@ -263,7 +272,7 @@ class FourierTransform(Feature):
             The image to transform.
         padding: int, optional
             Number of pixels to pad symmetrically around the image (default is 32).
-        **kwargs: dict of str to Any
+        **kwargs: Any
 
         Returns
         -------
@@ -282,6 +291,7 @@ class FourierTransform(Feature):
         return f1
 
 
+#TODO ***??*** revise InverseFourierTransform - torch, typing, docstring, unit test
 class InverseFourierTransform(Feature):
     """Applies a power of the forward or inverse propagation matrix to an 
     optical field.
@@ -329,7 +339,7 @@ class InverseFourierTransform(Feature):
         self: InverseFourierTransform,
         image: Image | np.ndarray,
         padding: int = 32,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> Image | np.ndarray:
         """Computes the inverse Fourier transform and removes padding.
 
@@ -340,7 +350,7 @@ class InverseFourierTransform(Feature):
         padding: int, optional
             Number of pixels removed symmetrically after inverse transformation
             (default is 32).
-        **kwargs: dict of str to Any
+        **kwargs: Any
 
         Returns
         -------
@@ -358,6 +368,7 @@ class InverseFourierTransform(Feature):
         return imnew
 
 
+#TODO ***??*** revise FourierTransformTransformation - torch, typing, docstring, unit test
 class FourierTransformTransformation(Feature):
     """Applies a power of the forward or inverse propagation matrix to an 
     optical field.
@@ -404,7 +415,7 @@ class FourierTransformTransformation(Feature):
         Tz: np.ndarray,
         Tzinv: np.ndarray,
         i: int,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> Image | np.ndarray:
         """Applies the power of the propagation matrix to the image.
 
@@ -419,7 +430,7 @@ class FourierTransformTransformation(Feature):
         i: int
             Power of the propagation matrix to apply. Negative values apply the
             inverse.
-        **kwargs: dict of str to Any
+        **kwargs: Any
             Additional keyword arguments.
         
         Returns
