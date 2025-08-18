@@ -210,7 +210,7 @@ class Poisson(Noise):
         max_val: float,
         **kwargs: Any,
     ) -> NDArray[Any] | Image:
-    """`Get` method for a numpy backend"""
+        """`Get` method for a numpy backend"""
 
         image[image < 0] = 0
         image_max = np.max(image)
@@ -238,7 +238,7 @@ class Poisson(Noise):
         max_val: float,
         **kwargs: Any,
     ) -> torch.Tensor | Image:
-    """`Get` method for a torch backend"""
+        """`Get` method for a torch backend"""
 
         image = torch.clamp(image, min=0)
         image_max = torch.max(image)
