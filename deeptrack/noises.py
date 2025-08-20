@@ -141,20 +141,55 @@ class Background(Noise):
 
         return image + offset
 
-
 Offset = Background
 
-
-#TODO ***JH*** revise Gaussian - torch, typing, docstring, unit test
 class Gaussian(Noise):
     """Adds IID Gaussian noise to an image.
 
+    Gaussian noise is sampled from a Gaussian distribution and added pixel-wise 
+    to the input image. Depending on the backend it will return either an
+    `Image` object for Numpy or a `torch.Tensor` for Torch.
+
     Parameters
     ----------
-    mu : float
-        The mean of the Gaussian distribution.
-    sigma : float
-        The standard deviation of the Gaussian distribution.
+    mu: float
+        the mean of the Gaussian distribution.
+    sigma: float
+        The standard deviation of the Gaussian distribution
+
+    Methods
+    -------
+
+    get(
+        image: torch.Tensor,
+        snr: float,
+        background: float,
+        max_val: float, optional,
+        **kwargs,
+        ) -> NDArray, Image, or torch.Tensor
+        Depending on the backend will perform either the numpy or torch 
+        implementation and return an image with Gaussian noise added.
+
+    Examples
+    --------
+    Add Gaussian noise to an image.
+
+    >>> import deeptrack as dt
+
+    Create an input image with constant values:
+    >>> import numpy as np
+    >>>
+    >>> input_image = np.ones((2,2)) * 3
+    
+    Define the Gaussian noise feature with a standard deviation of 0.1:
+    >>> noise = dt.Gaussian(mu=1, sigma=0.1)
+
+    Apply the noise to the input image and print the resulting image:
+    >>> output_image = noise.resolve(input_image)
+    >>> print(output_image)
+    [[4.01965863 4.20688642]
+    [4.02184982 3.87875873]]
+
     """
 
     def __init__(
@@ -163,7 +198,6 @@ class Gaussian(Noise):
         sigma: PropertyLike[float] = 1,
         **kwargs: Any,
     ):
-
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
     def get(
@@ -174,21 +208,62 @@ class Gaussian(Noise):
         **kwargs: Any,
     ) -> NDArray[Any] | torch.Tensor | Image:
 
-        noisy_image = mu + image + np.random.randn(*image.shape) * sigma
+        # For a Numpy backend.
+        if self.get_backend() == "numpy":
+            noisy_image = mu + image + np.random.randn(*image.shape) * sigma
+        # For a Torch backend.
+        elif self.get_backend() == "torch":
+            noisy image = mu + image + torch.randn(*image.shape) * sigma
 
         return noisy_image
 
-
-#TODO ***JH*** revise ComplexGaussian - torch, typing, docstring, unit test
 class ComplexGaussian(Noise):
     """Adds complex-valued IID Gaussian noise to an image.
 
+    Gaussian noise is sampled from a Gaussian distribution and added pixel-wise 
+    to the input image. Depending on the backend it will return either an
+    `Image` object for Numpy or a `torch.Tensor` for Torch.
+
     Parameters
     ----------
-    mu : float
-        The mean of the Gaussian distribution.
-    sigma : float
-        The standard deviation of the Gaussian distribution.
+    mu: float
+        the mean of the Gaussian distribution.
+    sigma: float
+        The standard deviation of the Gaussian distribution
+
+    Methods
+    -------
+
+    get(
+        image: torch.Tensor,
+        snr: float,
+        background: float,
+        max_val: float, optional,
+        **kwargs,
+        ) -> NDArray, Image, or torch.Tensor
+        Depending on the backend will perform either the numpy or torch 
+        implementation and return an image with complex Gaussian noise added.
+
+    Examples
+    --------
+    Add complex Gaussian noise to an image.
+
+    >>> import deeptrack as dt
+
+    Create an input image with constant values:
+    >>> import numpy as np
+    >>>
+    >>> input_image = np.ones((2,2)) * 3
+    
+    Define the Gaussian noise feature with a standard deviation of 0.1:
+    >>> noise = dt.ComplexGaussian(mu=1, sigma=0.1)
+
+    Apply the noise to the input image and print the resulting image:
+    >>> output_image = noise.resolve(input_image)
+    >>> print(output_image)
+    [[3.79975648-0.06967551j 4.09943404+0.06499738j]
+    [3.99886747-0.23549974j 4.15725117-0.07847024j]]
+
     """
 
     def __init__(
@@ -197,7 +272,6 @@ class ComplexGaussian(Noise):
         sigma: PropertyLike[float] = 1,
         **kwargs: Any,
     ):
-
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
     def get(
@@ -208,10 +282,16 @@ class ComplexGaussian(Noise):
         **kwargs: Any,
     ) -> NDArray[Any] | torch.Tensor | Image:
 
-        real_noise = np.random.randn(*image.shape)
-        imag_noise = np.random.randn(*image.shape) * 1j
-        noisy_image = mu + image + (real_noise + imag_noise) * sigma
- 
+        if self.get_backend() == "numpy":
+            real_noise = np.random.randn(*image.shape)
+            imag_noise = np.random.randn(*image.shape) * 1j
+            noisy_image = mu + image + (real_noise + imag_noise) * sigma
+
+        elif self.get_backend() == "torch":
+            real_noise = torch.randn(*image.shape)
+            imag_noise = torch.randn(*image.shape) * 1j
+            noisy_image = mu + image + (real_noise + imag_noise) * sigma
+
         return noisy_image
 
 
@@ -279,7 +359,6 @@ class Poisson(Noise):
         max_val: PropertyLike[float] = 1e8,
         **kwargs,
     ):
-
         super().__init__(
             *args,
             snr=snr,
