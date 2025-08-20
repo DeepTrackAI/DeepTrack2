@@ -220,7 +220,8 @@ class Gaussian(Noise):
 class ComplexGaussian(Noise):
     """Adds complex-valued IID Gaussian noise to an image.
 
-    Gaussian noise is sampled from a Gaussian distribution and added pixel-wise 
+    Complex Gaussian noise is sampled by combining two independent Gaussian
+    distributions for real and imaginary values and is then added pixel-wise
     to the input image. Depending on the backend it will return either an
     `Image` object for Numpy or a `torch.Tensor` for Torch.
 
@@ -282,11 +283,12 @@ class ComplexGaussian(Noise):
         **kwargs: Any,
     ) -> NDArray[Any] | torch.Tensor | Image:
 
+        # For a Numpy backend.
         if self.get_backend() == "numpy":
             real_noise = np.random.randn(*image.shape)
             imag_noise = np.random.randn(*image.shape) * 1j
             noisy_image = mu + image + (real_noise + imag_noise) * sigma
-
+        # For a Torch backend.
         elif self.get_backend() == "torch":
             real_noise = torch.randn(*image.shape)
             imag_noise = torch.randn(*image.shape) * 1j
