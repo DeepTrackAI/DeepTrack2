@@ -238,25 +238,6 @@ class Poisson(Noise):
 
     Methods
     -------
-    _get_numpy(
-        image: np.ndarray or Image,
-        snr: float,
-        background: float,
-        max_val: float, optional,
-        **kwargs,
-        ) -> np.ndarray or Image
-        Internal function to add the Poisson noise to the image as a
-        numpy array or Image.
-
-    _get_torch(
-        image: torch.Tensor,
-        snr: float,
-        background: float,
-        max_val: float, optional,
-        **kwargs,
-        ) -> torch.Tensor, np.ndarray, or Image
-        Internal function to add the Poisson noise to the image as a
-        torch.Tensor.
 
     get(
         image: torch.Tensor,
@@ -264,9 +245,9 @@ class Poisson(Noise):
         background: float,
         max_val: float, optional,
         **kwargs,
-        ) -> torch.Tensor
-        Depending on the backend will call either `_get_numpy` or `_get_torch`
-        and return an image with Poisson noise added.
+        ) -> NDArray, Image, or torch.Tensor
+        Depending on the backend will perform either the numpy or torch 
+        implementationo and return an image with Poisson noise added.
 
     Examples
     --------
@@ -307,61 +288,6 @@ class Poisson(Noise):
             **kwargs,
         )
 
-    def _get_numpy(
-        self: Poisson,
-        image: NDArray[Any] | Image,
-        snr: float,
-        background: float,
-        max_val: float,
-        **kwargs: Any,
-    ) -> NDArray[Any] | Image:
-        """`Get` method for a numpy backend"""
-
-        image[image < 0] = 0
-        image_max = np.max(image)
-        peak = np.abs(image_max - background)
-
-        rescale = snr ** 2 / peak ** 2
-        rescale = np.clip(
-            rescale, 1e-10, max_val / np.abs(image_max)
-        )
-        try:
-            noisy_image = Image(np.random.poisson(image * rescale) / rescale)
-            noisy_image.merge_properties_from(image)
-            return noisy_image
-        except ValueError:
-            raise ValueError(
-                "NumPy poisson function errored due to too large value. "
-                "Set max_val in dt.Poisson to a lower value to fix."
-            )
-
-    def _get_torch(
-        self: Poisson,
-        image: torch.Tensor,
-        snr: float,
-        background: float,
-        max_val: float,
-        **kwargs: Any,
-    ) -> torch.Tensor | Image:
-        """`Get` method for a torch backend"""
-
-        image = torch.clamp(image, min=0)
-        image_max = torch.max(image)
-        peak = torch.abs(image_max - background)
-
-        rescale = snr ** 2 / peak ** 2
-        rescale = torch.clamp(
-            rescale, min=1e-10, max=max_val / torch.abs(image_max)
-        )
-        try:
-            noisy_image = torch.poisson(image * rescale) / rescale
-            return noisy_image
-        except ValueError:
-            raise ValueError(
-                "Torch Poisson function errored due to too large value. "
-                "Set max_val in dt.Poisson to a lower value to fix."
-            )
-
     def get(
         self: Poisson,
         image: NDArray[Any] | torch.Tensor | Image,
@@ -372,6 +298,38 @@ class Poisson(Noise):
     ) -> NDArray[Any] | torch.Tensor | Image:
 
         if self.get_backend() == "numpy":
-            return self._get_numpy(image, snr, background, max_val, **kwargs,)
+            image[image < 0] = 0
+            image_max = np.max(image)
+            peak = np.abs(image_max - background)
+
+            rescale = snr ** 2 / peak ** 2
+            rescale = np.clip(
+                rescale, 1e-10, max_val / np.abs(image_max)
+            )
+            try:
+                noisy_image = Image(np.random.poisson(image * rescale) / rescale)
+                noisy_image.merge_properties_from(image)
+                return noisy_image
+            except ValueError:
+                raise ValueError(
+                    "NumPy poisson function errored due to too large value. "
+                    "Set max_val in dt.Poisson to a lower value to fix."
+                )
+
         elif self.get_backend() == "torch":
-            return self._get_torch(image, snr, background, max_val, **kwargs,)
+            image = torch.clamp(image, min=0)
+            image_max = torch.max(image)
+            peak = torch.abs(image_max - background)
+
+            rescale = snr ** 2 / peak ** 2
+            rescale = torch.clamp(
+                rescale, min=1e-10, max=max_val / torch.abs(image_max)
+            )
+            try:
+                noisy_image = torch.poisson(image * rescale) / rescale
+                return noisy_image
+            except ValueError:
+                raise ValueError(
+                    "Torch Poisson function errored due to too large value. "
+                    "Set max_val in dt.Poisson to a lower value to fix."
+                )
