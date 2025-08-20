@@ -247,7 +247,7 @@ class Poisson(Noise):
         **kwargs,
         ) -> NDArray, Image, or torch.Tensor
         Depending on the backend will perform either the numpy or torch 
-        implementationo and return an image with Poisson noise added.
+        implementation and return an image with Poisson noise added.
 
     Examples
     --------
@@ -297,6 +297,7 @@ class Poisson(Noise):
         **kwargs: Any,
     ) -> NDArray[Any] | torch.Tensor | Image:
 
+        # For a numpy backend.
         if self.get_backend() == "numpy":
             image[image < 0] = 0
             image_max = np.max(image)
@@ -316,6 +317,7 @@ class Poisson(Noise):
                     "Set max_val in dt.Poisson to a lower value to fix."
                 )
 
+        # For a Torch backend.
         elif self.get_backend() == "torch":
             image = torch.clamp(image, min=0)
             image_max = torch.max(image)
