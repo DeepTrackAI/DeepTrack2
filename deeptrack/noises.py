@@ -213,7 +213,7 @@ class Gaussian(Noise):
             noisy_image = mu + image + np.random.randn(*image.shape) * sigma
         # For a Torch backend.
         elif self.get_backend() == "torch":
-            noisy image = mu + image + torch.randn(*image.shape) * sigma
+            noisy_image = mu + image + torch.randn(*image.shape) * sigma
 
         return noisy_image
 
