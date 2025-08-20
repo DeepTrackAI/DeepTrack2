@@ -80,6 +80,21 @@ class TestNoises_Torch(TestNoises_Numpy):
         self.assertIsInstance(output_image, torch.Tensor)
         self.assertEqual(output_image.shape, (5,5))
         self.assertTrue(torch.all(output_image == 0.25).item())
+
+    def test_Gaussian(self):
+        noise = noises.Gaussian(mu=0.1, sigma=0.05)
+        input_image = torch.zeros((256, 256))
+        output_image = noise.resolve(input_image)
+        self.assertIsInstance(output_image, torch.Tensor)
+        self.assertEqual(output_image.shape, (256, 256))
+
+    def test_ComplexGaussian(self):
+        noise = noises.ComplexGaussian(mu=0.1, sigma=0.05)
+        input_image = torch.zeros((256, 256))
+        output_image = noise.resolve(input_image)
+        self.assertIsInstance(output_image, torch.Tensor)
+        self.assertEqual(output_image.shape, (256, 256))
+        self.assertTrue(torch.is_complex(output_image))
         
     def test_Poisson(self):
         noise = noises.Poisson(snr=20)
