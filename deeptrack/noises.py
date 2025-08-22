@@ -1,5 +1,4 @@
-"""
-Features for introducing noise to images.
+"""Features for introducing noise to images.
 
 This module provides classes to add various types of noise to images, 
 including constant offsets, Gaussian noise, and Poisson-distributed noise.
@@ -144,36 +143,40 @@ class Background(Noise):
 Offset = Background
 
 class Gaussian(Noise):
-    """Adds IID Gaussian noise to an image.
+    """Add IID Gaussian noise to an image.
 
-    Gaussian noise is sampled from a Gaussian distribution and added pixel-wise 
+    Gaussian noise is sampled from a Gaussian distribution and added pixel-wise
     to the input image. Depending on the backend it will return either an
     `Image` object for Numpy or a `torch.Tensor` for Torch.
 
     Parameters
     ----------
     mu: float
-        the mean of the Gaussian distribution.
+        The mean of the Gaussian distribution.
     sigma: float
-        The standard deviation of the Gaussian distribution
+        The standard deviation of the Gaussian distribution.
+    
+    Notes
+    -----
+    If the backend is NumPy, the calculations use NumPy-compatible functions,
+    and the output will be a np.array. If the backend is PyTorch, the
+    calculations use PyTorch-compatible functions, and the output will be a
+    torch.Tensor."
 
     Methods
     -------
-
     get(
-        image: torch.Tensor,
+        image: np.ndarray, torch.Tensor, or Image,
         snr: float,
         background: float,
         max_val: float, optional,
         **kwargs,
-        ) -> NDArray, Image, or torch.Tensor
-        Depending on the backend will perform either the numpy or torch 
-        implementation and return an image with Gaussian noise added.
+        ) -> np.ndarray, torch.Tensor, or Image
+        Returns an image with Gaussian noise added.
 
     Examples
     --------
     Add Gaussian noise to an image.
-
     >>> import deeptrack as dt
 
     Create an input image with constant values:
@@ -181,7 +184,7 @@ class Gaussian(Noise):
     >>>
     >>> input_image = np.ones((2,2)) * 3
     
-    Define the Gaussian noise feature with a standard deviation of 0.1:
+    Define the Gaussian noise feature with mean 1 and standard deviation 0.1:
     >>> noise = dt.Gaussian(mu=1, sigma=0.1)
 
     Apply the noise to the input image and print the resulting image:
@@ -211,6 +214,7 @@ class Gaussian(Noise):
         # For a Numpy backend.
         if self.get_backend() == "numpy":
             noisy_image = mu + image + np.random.randn(*image.shape) * sigma
+
         # For a Torch backend.
         elif self.get_backend() == "torch":
             noisy_image = mu + image + torch.randn(*image.shape) * sigma
@@ -218,7 +222,7 @@ class Gaussian(Noise):
         return noisy_image
 
 class ComplexGaussian(Noise):
-    """Adds complex-valued IID Gaussian noise to an image.
+    """Add complex-valued IID Gaussian noise to an image.
 
     Complex Gaussian noise is sampled by combining two independent Gaussian
     distributions for real and imaginary values and is then added pixel-wise
@@ -230,20 +234,25 @@ class ComplexGaussian(Noise):
     mu: float
         the mean of the Gaussian distribution.
     sigma: float
-        The standard deviation of the Gaussian distribution
+        The standard deviation of the Gaussian distribution.
+
+    Notes
+    -----
+    If the backend is NumPy, the calculations use NumPy-compatible functions,
+    and the output will be a np.array. If the backend is PyTorch, the
+    calculations use PyTorch-compatible functions, and the output will be a
+    torch.Tensor."
 
     Methods
     -------
-
     get(
-        image: torch.Tensor,
+        image: np.ndarray, torch.Tensor, or Image,
         snr: float,
         background: float,
         max_val: float, optional,
         **kwargs,
-        ) -> NDArray, Image, or torch.Tensor
-        Depending on the backend will perform either the numpy or torch 
-        implementation and return an image with complex Gaussian noise added.
+        ) -> np.ndarray, torch.Tensor, or Image
+        Returns an image with complex Gaussian noise added.
 
     Examples
     --------
@@ -256,7 +265,7 @@ class ComplexGaussian(Noise):
     >>>
     >>> input_image = np.ones((2,2)) * 3
     
-    Define the Gaussian noise feature with a standard deviation of 0.1:
+    Define the Gaussian noise feature with mean 1 and standard deviation 0.1:
     >>> noise = dt.ComplexGaussian(mu=1, sigma=0.1)
 
     Apply the noise to the input image and print the resulting image:
@@ -288,6 +297,7 @@ class ComplexGaussian(Noise):
             real_noise = np.random.randn(*image.shape)
             imag_noise = np.random.randn(*image.shape) * 1j
             noisy_image = mu + image + (real_noise + imag_noise) * sigma
+
         # For a Torch backend.
         elif self.get_backend() == "torch":
             real_noise = torch.randn(*image.shape)
@@ -298,7 +308,7 @@ class ComplexGaussian(Noise):
 
 
 class Poisson(Noise):
-    """Adds Poisson-distributed noise to an image.
+    """Add Poisson-distributed noise to an image.
 
     Poisson noise is sampled and added pixel-wise depending on the
     intensity of the pixel in the original image to achieve a desired
@@ -318,18 +328,23 @@ class Poisson(Noise):
         Maximum allowable value to prevent overflow in noise computation.
         Default is 1e8.
 
+    Notes
+    -----
+    If the backend is NumPy, the calculations use NumPy-compatible functions,
+    and the output will be a np.array. If the backend is PyTorch, the
+    calculations use PyTorch-compatible functions, and the output will be a
+    torch.Tensor."
+
     Methods
     -------
-
     get(
-        image: torch.Tensor,
+        image: np.ndarray, torch.Tensor, or Image,
         snr: float,
         background: float,
         max_val: float, optional,
         **kwargs,
-        ) -> NDArray, Image, or torch.Tensor
-        Depending on the backend will perform either the numpy or torch 
-        implementation and return an image with Poisson noise added.
+        ) -> np.ndarray, torch.Tensor, or Image
+        Returns an image with Poisson noise added.
 
     Examples
     --------
