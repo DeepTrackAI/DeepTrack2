@@ -155,7 +155,7 @@ class Gaussian(Noise):
         The mean of the Gaussian distribution.
     sigma: float
         The standard deviation of the Gaussian distribution.
-    
+
     Notes
     -----
     If the backend is NumPy, the calculations use NumPy-compatible functions,
@@ -404,7 +404,9 @@ class Poisson(Noise):
                 rescale, 1e-10, max_val / np.abs(image_max)
             )
             try:
-                noisy_image = Image(np.random.poisson(image * rescale) / rescale)
+                noisy_image = Image(
+                    np.random.poisson(image * rescale) / rescale
+                )
                 noisy_image.merge_properties_from(image)
                 return noisy_image
             except ValueError:
