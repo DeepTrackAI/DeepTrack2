@@ -142,6 +142,7 @@ class Background(Noise):
 
 Offset = Background
 
+
 class Gaussian(Noise):
     """Add IID Gaussian noise to an image.
 
@@ -219,6 +220,7 @@ class Gaussian(Noise):
             noisy_image = mu + image + torch.randn(*image.shape) * sigma
 
         return noisy_image
+
 
 class ComplexGaussian(Noise):
     """Add complex-valued IID Gaussian noise to an image.
