@@ -79,7 +79,7 @@ class Background(Noise):
         image: np.ndarray, torch.Tensor, or Image,
         offset: float,
         **kwargs,
-        ) -> np.ndarray, torch.Tensor, or Image
+    ) -> np.ndarray, torch.Tensor, or Image
         Adds the constant offset to the input image.
 
     Examples
