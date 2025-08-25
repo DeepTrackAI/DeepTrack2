@@ -78,7 +78,7 @@ class Background(Noise):
         image: np.ndarray, torch.Tensor, or Image,
         offset: float,
         **kwargs,
-        ) -> np.ndarray, torch.Tensor, or Image
+    ) -> np.ndarray, torch.Tensor, or Image
         Adds the constant offset to the input image.
 
     Examples
@@ -146,8 +146,7 @@ class Gaussian(Noise):
     """Add IID Gaussian noise to an image.
 
     Gaussian noise is sampled from a Gaussian distribution and added pixel-wise
-    to the input image. Depending on the backend it will return either an
-    `Image` object for Numpy or a `torch.Tensor` for Torch.
+    to the input image.
 
     Parameters
     ----------
@@ -161,7 +160,7 @@ class Gaussian(Noise):
     If the backend is NumPy, the calculations use NumPy-compatible functions,
     and the output will be a np.array. If the backend is PyTorch, the
     calculations use PyTorch-compatible functions, and the output will be a
-    torch.Tensor."
+    torch.Tensor.
 
     Methods
     -------
@@ -171,7 +170,7 @@ class Gaussian(Noise):
         background: float,
         max_val: float, optional,
         **kwargs,
-        ) -> np.ndarray, torch.Tensor, or Image
+    ) -> np.ndarray, torch.Tensor, or Image
         Returns an image with Gaussian noise added.
 
     Examples
@@ -226,13 +225,12 @@ class ComplexGaussian(Noise):
 
     Complex Gaussian noise is sampled by combining two independent Gaussian
     distributions for real and imaginary values and is then added pixel-wise
-    to the input image. Depending on the backend it will return either an
-    `Image` object for Numpy or a `torch.Tensor` for Torch.
+    to the input image.
 
     Parameters
     ----------
     mu: float
-        the mean of the Gaussian distribution.
+        The mean of the Gaussian distribution.
     sigma: float
         The standard deviation of the Gaussian distribution.
 
@@ -241,7 +239,7 @@ class ComplexGaussian(Noise):
     If the backend is NumPy, the calculations use NumPy-compatible functions,
     and the output will be a np.array. If the backend is PyTorch, the
     calculations use PyTorch-compatible functions, and the output will be a
-    torch.Tensor."
+    torch.Tensor.
 
     Methods
     -------
@@ -251,7 +249,7 @@ class ComplexGaussian(Noise):
         background: float,
         max_val: float, optional,
         **kwargs,
-        ) -> np.ndarray, torch.Tensor, or Image
+    ) -> np.ndarray, torch.Tensor, or Image
         Returns an image with complex Gaussian noise added.
 
     Examples
@@ -313,8 +311,6 @@ class Poisson(Noise):
     Poisson noise is sampled and added pixel-wise depending on the
     intensity of the pixel in the original image to achieve a desired
     signal-to-noise ratio `snr`. 
-    Depending on the backend it will return either an `Image` object for Numpy
-    or a `torch.Tensor` for Torch.
 
     Parameters
     ----------
@@ -333,7 +329,7 @@ class Poisson(Noise):
     If the backend is NumPy, the calculations use NumPy-compatible functions,
     and the output will be a np.array. If the backend is PyTorch, the
     calculations use PyTorch-compatible functions, and the output will be a
-    torch.Tensor."
+    torch.Tensor.
 
     Methods
     -------
@@ -343,7 +339,7 @@ class Poisson(Noise):
         background: float,
         max_val: float, optional,
         **kwargs,
-        ) -> np.ndarray, torch.Tensor, or Image
+    ) -> np.ndarray, torch.Tensor, or Image
         Returns an image with Poisson noise added.
 
     Examples
