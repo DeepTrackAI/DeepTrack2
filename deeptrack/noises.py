@@ -1,5 +1,4 @@
-"""
-Features for introducing noise to images.
+"""Features for introducing noise to images.
 
 This module provides classes to add various types of noise to images, 
 including constant offsets, Gaussian noise, and Poisson-distributed noise.
@@ -141,20 +140,58 @@ class Background(Noise):
 
         return image + offset
 
-
 Offset = Background
 
-
-#TODO ***JH*** revise Gaussian - torch, typing, docstring, unit test
 class Gaussian(Noise):
-    """Adds IID Gaussian noise to an image.
+    """Add IID Gaussian noise to an image.
+
+    Gaussian noise is sampled from a Gaussian distribution and added pixel-wise
+    to the input image.
 
     Parameters
     ----------
-    mu : float
+    mu: float
         The mean of the Gaussian distribution.
-    sigma : float
+    sigma: float
         The standard deviation of the Gaussian distribution.
+
+    Notes
+    -----
+    If the backend is NumPy, the calculations use NumPy-compatible functions,
+    and the output will be a np.array. If the backend is PyTorch, the
+    calculations use PyTorch-compatible functions, and the output will be a
+    torch.Tensor.
+
+    Methods
+    -------
+    get(
+        image: np.ndarray, torch.Tensor, or Image,
+        snr: float,
+        background: float,
+        max_val: float, optional,
+        **kwargs,
+    ) -> np.ndarray, torch.Tensor, or Image
+        Returns an image with Gaussian noise added.
+
+    Examples
+    --------
+    Add Gaussian noise to an image.
+    >>> import deeptrack as dt
+
+    Create an input image with constant values:
+    >>> import numpy as np
+    >>>
+    >>> input_image = np.ones((2,2)) * 3
+    
+    Define the Gaussian noise feature with mean 1 and standard deviation 0.1:
+    >>> noise = dt.Gaussian(mu=1, sigma=0.1)
+
+    Apply the noise to the input image and print the resulting image:
+    >>> output_image = noise.resolve(input_image)
+    >>> print(output_image)
+    [[4.01965863 4.20688642]
+    [4.02184982 3.87875873]]
+
     """
 
     def __init__(
@@ -163,7 +200,6 @@ class Gaussian(Noise):
         sigma: PropertyLike[float] = 1,
         **kwargs: Any,
     ):
-
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
     def get(
@@ -174,21 +210,68 @@ class Gaussian(Noise):
         **kwargs: Any,
     ) -> NDArray[Any] | torch.Tensor | Image:
 
-        noisy_image = mu + image + np.random.randn(*image.shape) * sigma
+        # For a Numpy backend.
+        if self.get_backend() == "numpy":
+            noisy_image = mu + image + np.random.randn(*image.shape) * sigma
+
+        # For a Torch backend.
+        elif self.get_backend() == "torch":
+            noisy_image = mu + image + torch.randn(*image.shape) * sigma
 
         return noisy_image
 
-
-#TODO ***JH*** revise ComplexGaussian - torch, typing, docstring, unit test
 class ComplexGaussian(Noise):
-    """Adds complex-valued IID Gaussian noise to an image.
+    """Add complex-valued IID Gaussian noise to an image.
+
+    Complex Gaussian noise is sampled by combining two independent Gaussian
+    distributions for real and imaginary values and is then added pixel-wise
+    to the input image.
 
     Parameters
     ----------
-    mu : float
+    mu: float
         The mean of the Gaussian distribution.
-    sigma : float
+    sigma: float
         The standard deviation of the Gaussian distribution.
+
+    Notes
+    -----
+    If the backend is NumPy, the calculations use NumPy-compatible functions,
+    and the output will be a np.array. If the backend is PyTorch, the
+    calculations use PyTorch-compatible functions, and the output will be a
+    torch.Tensor.
+
+    Methods
+    -------
+    get(
+        image: np.ndarray, torch.Tensor, or Image,
+        snr: float,
+        background: float,
+        max_val: float, optional,
+        **kwargs,
+    ) -> np.ndarray, torch.Tensor, or Image
+        Returns an image with complex Gaussian noise added.
+
+    Examples
+    --------
+    Add complex Gaussian noise to an image.
+
+    >>> import deeptrack as dt
+
+    Create an input image with constant values:
+    >>> import numpy as np
+    >>>
+    >>> input_image = np.ones((2,2)) * 3
+    
+    Define the Gaussian noise feature with mean 1 and standard deviation 0.1:
+    >>> noise = dt.ComplexGaussian(mu=1, sigma=0.1)
+
+    Apply the noise to the input image and print the resulting image:
+    >>> output_image = noise.resolve(input_image)
+    >>> print(output_image)
+    [[3.79975648-0.06967551j 4.09943404+0.06499738j]
+    [3.99886747-0.23549974j 4.15725117-0.07847024j]]
+
     """
 
     def __init__(
@@ -197,7 +280,6 @@ class ComplexGaussian(Noise):
         sigma: PropertyLike[float] = 1,
         **kwargs: Any,
     ):
-
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
     def get(
@@ -208,28 +290,78 @@ class ComplexGaussian(Noise):
         **kwargs: Any,
     ) -> NDArray[Any] | torch.Tensor | Image:
 
-        real_noise = np.random.randn(*image.shape)
-        imag_noise = np.random.randn(*image.shape) * 1j
-        noisy_image = mu + image + (real_noise + imag_noise) * sigma
- 
+        # For a Numpy backend.
+        if self.get_backend() == "numpy":
+            real_noise = np.random.randn(*image.shape)
+            imag_noise = np.random.randn(*image.shape) * 1j
+            noisy_image = mu + image + (real_noise + imag_noise) * sigma
+
+        # For a Torch backend.
+        elif self.get_backend() == "torch":
+            real_noise = torch.randn(*image.shape)
+            imag_noise = torch.randn(*image.shape) * 1j
+            noisy_image = mu + image + (real_noise + imag_noise) * sigma
+
         return noisy_image
 
 
-#TODO ***AL*** revise Poisson - torch, typing, docstring, unit test
 class Poisson(Noise):
-    """Adds Poisson-distributed noise to an image.
+    """Add Poisson-distributed noise to an image.
+
+    Poisson noise is sampled and added pixel-wise depending on the
+    intensity of the pixel in the original image to achieve a desired
+    signal-to-noise ratio `snr`. 
 
     Parameters
     ----------
-    snr : float
+    snr: float
         Signal-to-noise ratio of the final image. The signal is determined
         by the peak value of the image.
-    background : float
+    background: float
         Value to be be used as the background. This is used to calculate the
         signal of the image.
-    max_val : float, optional
+    max_val: float, optional
         Maximum allowable value to prevent overflow in noise computation.
         Default is 1e8.
+
+    Notes
+    -----
+    If the backend is NumPy, the calculations use NumPy-compatible functions,
+    and the output will be a np.array. If the backend is PyTorch, the
+    calculations use PyTorch-compatible functions, and the output will be a
+    torch.Tensor.
+
+    Methods
+    -------
+    get(
+        image: np.ndarray, torch.Tensor, or Image,
+        snr: float,
+        background: float,
+        max_val: float, optional,
+        **kwargs,
+    ) -> np.ndarray, torch.Tensor, or Image
+        Returns an image with Poisson noise added.
+
+    Examples
+    --------
+    Add Poisson noise to an image.
+
+    >>> import deeptrack as dt
+
+    Create an input image with ones:
+    >>> import numpy as np
+    >>>
+    >>> input_image = np.ones((2,2))
+    
+    Define the Poisson noise feature with a low SNR:
+    >>> noise = dt.Poisson(snr=1)
+
+    Apply the noise to the input image and print the resulting image:
+    >>> output_image = noise.resolve(input_image)
+    >>> print(output_image)
+    [[2. 1.]
+    [0. 4.]]
+
     """
 
     def __init__(
@@ -240,7 +372,6 @@ class Poisson(Noise):
         max_val: PropertyLike[float] = 1e8,
         **kwargs,
     ):
-
         super().__init__(
             *args,
             snr=snr,
@@ -258,18 +389,43 @@ class Poisson(Noise):
         **kwargs: Any,
     ) -> NDArray[Any] | torch.Tensor | Image:
 
-        image[image < 0] = 0
-        image_max = np.max(image)
-        peak = np.abs(image_max - background)
+        # For a numpy backend.
+        if self.get_backend() == "numpy":
+            image[image < 0] = 0
+            image_max = np.max(image)
+            peak = np.abs(image_max - background)
 
-        rescale = snr ** 2 / peak ** 2
-        rescale = np.clip(rescale, 1e-10, max_val / np.abs(image_max))
-        try:
-            noisy_image = Image(np.random.poisson(image * rescale) / rescale)
-            noisy_image.merge_properties_from(image)  # TODO Should only be done if input is Image!
-            return noisy_image
-        except ValueError:
-            raise ValueError(
-                "NumPy poisson function errored due to too large value. "
-                "Set max_val in dt.Poisson to a lower value to fix."
+            rescale = snr ** 2 / peak ** 2
+            rescale = np.clip(
+                rescale, 1e-10, max_val / np.abs(image_max)
             )
+            try:
+                noisy_image = Image(
+                    np.random.poisson(image * rescale) / rescale
+                )
+                noisy_image.merge_properties_from(image)
+                return noisy_image
+            except ValueError:
+                raise ValueError(
+                    "NumPy poisson function errored due to too large value. "
+                    "Set max_val in dt.Poisson to a lower value to fix."
+                )
+
+        # For a Torch backend.
+        elif self.get_backend() == "torch":
+            image = torch.clamp(image, min=0)
+            image_max = torch.max(image)
+            peak = torch.abs(image_max - background)
+
+            rescale = snr ** 2 / peak ** 2
+            rescale = torch.clamp(
+                rescale, min=1e-10, max=max_val / torch.abs(image_max)
+            )
+            try:
+                noisy_image = torch.poisson(image * rescale) / rescale
+                return noisy_image
+            except ValueError:
+                raise ValueError(
+                    "Torch Poisson function errored due to too large value. "
+                    "Set max_val in dt.Poisson to a lower value to fix."
+                )
