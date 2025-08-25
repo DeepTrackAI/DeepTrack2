@@ -138,7 +138,7 @@ def choice(
             ), dtype=dtype, device=device
         )
     )
-    
+
 
 def multinomial(
     n: int,
@@ -158,7 +158,7 @@ def randint(
     device: torch.device | str = torch.device("cpu"),
 ) -> torch.Tensor:
     return torch.randint(low, high, size, dtype=dtype, device=device)
-    
+
 
 def shuffle(x: torch.Tensor) -> torch.Tensor:
     return x[torch.randperm(x.shape[0], device=x.device)]
