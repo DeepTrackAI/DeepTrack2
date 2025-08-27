@@ -852,12 +852,15 @@ class Optics(Feature):
             defocus = np.reshape(defocus, (-1, 1, 1))
             z_shift = defocus * np.expand_dims(z_shift, axis=0)
         else:
-            defocus = torch.reshape(torch.as_tensor(defocus), (-1, 1, 1))
-            z_shift = defocus * torch.unsqueeze(z_shift, dim=0)
+            device = config.get_device()  # could be 'cuda' or 'cpu'
+            
+            defocus = torch.reshape(torch.as_tensor(defocus), (-1, 1, 1)).to(device)
+            z_shift = defocus * torch.unsqueeze(z_shift.to(device), dim=0)
 
         if include_aberration:
             pupil = self.pupil
             if isinstance(pupil, Feature):
+                pupil_function = pupil_function.to(device)
 
                 pupil_function = pupil(pupil_function)
 
@@ -1292,9 +1295,12 @@ class Fluorescence(Optics):
                 np.zeros((*padded_volume.shape[0:2], 1)), copy=False
             )
         elif self.get_backend() == "torch":
+            device = config.get_device()
+            padded_volume = padded_volume.to(device)
             output_image = Image(
                 torch.zeros((*padded_volume.shape[0:2], 1)), copy=False
             )
+            output_image._value = output_image._value.to(device)
         else:
             raise ValueError(f"Unsupported backend: {self.get_backend()}")
 
@@ -1308,6 +1314,9 @@ class Fluorescence(Optics):
                 steps=padded_volume.shape[2] + 1,
             )[:-1]  # exclude endpoint
             zero_plane = torch.all(padded_volume == 0, dim=(0, 1))
+
+            z_iterator = z_iterator.to(device)
+            zero_plane = zero_plane.to(device)
         else:
             z_iterator = np.linspace(
                 z_limits[0],
