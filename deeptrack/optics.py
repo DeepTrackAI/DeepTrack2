@@ -829,6 +829,7 @@ class Optics(Feature):
         else:
             RHO = W**2 + H**2
             pupil_function = (RHO < 1).to(dtype=torch.complex128) + 0.0j
+            pupil_function = pupil_function.to(device)
             RHO = RHO.to(dtype=torch.complex128)
 
             # Defocus
@@ -860,7 +861,6 @@ class Optics(Feature):
         if include_aberration:
             pupil = self.pupil
             if isinstance(pupil, Feature):
-                pupil_function = pupil_function.to(device)
 
                 pupil_function = pupil(pupil_function)
 
