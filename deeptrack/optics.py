@@ -794,6 +794,8 @@ class Optics(Feature):
             # Pupil radius
             R = NA / wavelength * torch.tensor(voxel_size)[:2]
 
+            device = config.get_device()  # could be 'cuda' or 'cpu'
+
         else:
             raise ValueError(f"Unsupported backend: {self.get_backend()}")
 
@@ -852,9 +854,7 @@ class Optics(Feature):
         if self.get_backend() == "numpy":
             defocus = np.reshape(defocus, (-1, 1, 1))
             z_shift = defocus * np.expand_dims(z_shift, axis=0)
-        else:
-            device = config.get_device()  # could be 'cuda' or 'cpu'
-            
+        else:            
             defocus = torch.reshape(torch.as_tensor(defocus), (-1, 1, 1)).to(device)
             z_shift = defocus * torch.unsqueeze(z_shift.to(device), dim=0)
 
