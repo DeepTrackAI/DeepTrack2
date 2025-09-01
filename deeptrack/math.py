@@ -1380,11 +1380,11 @@ class MinPooling(Pool):
         super().__init__(np.min, ksize=ksize, **kwargs)
 
     def _get_numpy(
-        self,
-        image: NDArray,
+        self: MinPooling,
+        image: NDArray[Any],
         ksize: int=3,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> NDArray[Any]:
         """Method to perform average pooling with the numpy backend enabled.
 
         Returns the result of the image passed to the scikit image block_reduce
@@ -1412,11 +1412,11 @@ class MinPooling(Pool):
         )
 
     def _get_torch(
-        self,
+        self: MinPooling,
         image: torch.Tensor,
         ksize: int=3,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> torch.Tensor:
         """Method to perform min pooling with the torch backend enabled.
         As torch does not contain a min pooling layer, the equivalent
         operation is to first multiply the input image with `-1`,
@@ -1455,7 +1455,7 @@ class MinPooling(Pool):
         image: NDArray | torch.Tensor,
         ksize: int=3,
         **kwargs,
-    ):
+    ) -> NDArray | torch.Tensor:
         """Method to perform pooling with either torch or numpy backend.
 
         Checks the current backend and chooses the appropriate function to pool
