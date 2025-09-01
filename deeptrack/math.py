@@ -1268,7 +1268,7 @@ class MaxPooling(Pool):
     ----------
     ksize: int
         Size of the pooling kernel.
-    **kwargs: dict
+    **kwargs: Any
         Additional parameters sent to the pooling function.
 
     Examples
@@ -1315,11 +1315,11 @@ class MaxPooling(Pool):
         super().__init__(np.max, ksize=ksize, **kwargs)
 
     def _get_numpy(
-        self,
-        image: NDArray,
+        self: MaxPooling,
+        image: NDArray[Any],
         ksize: int=3,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> NDArray[Any]:
         """Method to perform average pooling with the numpy backend enabled.
 
         Returns the result of the image passed to the scikit image block_reduce
@@ -1347,11 +1347,11 @@ class MaxPooling(Pool):
         )
 
     def _get_torch(
-        self,
+        self: MaxPooling,
         image: torch.Tensor,
         ksize: int=3,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> torch.Tensor:
         """Method to perform max pooling with the torch backend enabled.
 
         Returns the result of the image passed to a torch max pooling layer.
@@ -1385,11 +1385,11 @@ class MaxPooling(Pool):
         )
 
     def get(
-        self,
-        image: NDArray | torch.Tensor,
+        self: MaxPooling,
+        image: NDArray[Any] | torch.Tensor,
         ksize: int=3,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> NDArray[Any] | torch.Tensor:
         """Method to perform pooling with either torch or numpy backend.
 
         Checks the current backend and chooses the appropriate function to pool
