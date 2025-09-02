@@ -9467,7 +9467,8 @@ class TakeProperties(Feature):
 
     Methods
     -------
-    `get(image: Any, names: tuple[str, ...], **kwargs: dict[str, Any]) -> np.ndarray | tuple[np.ndarray, ...]`
+    `get(image: Any, names: tuple[str, ...], **kwargs: dict[str, Any])
+        -> np.ndarray | tuple[np.ndarray, torch.Tensor, ...]`
         Extract the specified properties from the feature pipeline.
 
     Examples
@@ -9532,7 +9533,7 @@ class TakeProperties(Feature):
     ) -> NDArray | tuple[NDArray, torch.Tensor, ...]:
         """Extract the specified properties from the feature pipeline.
 
-        This method retrieves the values of the specified properties from the 
+        This method retrieves the values of the specified properties from the
         feature's dependency graph and returns them as NumPy arrays.
 
         Parameters
@@ -9542,7 +9543,7 @@ class TakeProperties(Feature):
         names: tuple[str, ...]
             The names of the properties to extract.
         _ID: tuple[int, ...], optional
-            A unique identifier for the current computation, ensuring that 
+            A unique identifier for the current computation, ensuring that
             dependencies are correctly matched. It defaults to an empty tuple.
         **kwargs: Any, optional
             Additional keyword arguments (unused in this method).
@@ -9550,9 +9551,9 @@ class TakeProperties(Feature):
         Returns
         -------
         NDArray or tuple[NDArray, torch.Tensor, ...]
-            If a single property name is provided, a NumPy array containing the 
-            property values is returned. If multiple property names are 
-            provided, a tuple of NumPy arrays is returned, where each array 
+            If a single property name is provided, a NumPy array containing the
+            property values is returned. If multiple property names are
+            provided, a tuple of NumPy arrays is returned, where each array
             corresponds to a property.
 
         """

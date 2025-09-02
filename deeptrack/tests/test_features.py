@@ -2674,7 +2674,6 @@ class TestFeatures(unittest.TestCase):
         feature = ExampleFeature(my_property=properties.Property(42))
 
         take_properties = features.TakeProperties(feature)
-        take_properties = features.TakeProperties(feature)
         output = take_properties.get(image=None, names=["my_property"])
         self.assertEqual(output, [42])
 
@@ -2705,7 +2704,6 @@ class TestFeatures(unittest.TestCase):
             feature = ExampleFeature(my_property=
                 properties.Property(torch.tensor(42.123)))
 
-            take_properties = features.TakeProperties(feature)
             take_properties = features.TakeProperties(feature)
             output = take_properties.get(image=None, names=["my_property"])
             torch.testing.assert_close(output[0], torch.tensor(42.123))
