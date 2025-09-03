@@ -98,9 +98,8 @@ class TestMath_Numpy(BackendTestBase):
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
 class TestMath_Torch(TestMath_Numpy):
     BACKEND = "torch"
-   # input_image = torch.tensor([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
     pass
-    
+    # Old tests commented out
     #def test_MinPooling(self):
         # input shape (1, 1, 2, 4)
     #    input_image = torch.tensor([[[ [1.0, 2.0, 3.0, 4.0],
