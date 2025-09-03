@@ -83,7 +83,11 @@ class TestMath_Numpy(BackendTestBase):
         #self.assertTrue(xp.all(blurred_image == expected_output))
     
     def test_MinPooling(self):
-        input_image = xp.array([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
+        if BACKEND == "torch":
+            input_image = xp.tensor([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
+        else:
+            input_image = xp.array([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
+            
         feature = math.MinPooling(ksize=2)
         pooled_image = feature.resolve(input_image)
         self.assertTrue(xp.all(pooled_image == [[1.0, 3.0]]))
