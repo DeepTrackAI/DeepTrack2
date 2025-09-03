@@ -87,7 +87,10 @@ class TestMath_Numpy(BackendTestBase):
         input_image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
         feature = math.MinPooling(ksize=2)
         pooled_image = feature.resolve(input_image)
-        self.assertTrue(xp.all(pooled_image == [[1.0, 3.0]]))
+
+        expected = xp.asarray([[1.0, 3.0]], dtype=float)
+
+        self.assertTrue(xp.all(pooled_image == expected)
         self.assertEqual(pooled_image.shape, (1, 2))
 
 
