@@ -90,7 +90,7 @@ class TestMath_Numpy(BackendTestBase):
 
         expected = xp.asarray([[1.0, 3.0]], dtype=float)
 
-        self.assertTrue(xp.all(pooled_image == expected)
+        self.assertTrue(xp.all(pooled_image == expected))
         self.assertEqual(pooled_image.shape, (1, 2))
 
 
