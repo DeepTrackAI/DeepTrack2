@@ -84,7 +84,7 @@ class TestMath_Numpy(BackendTestBase):
     
     def test_MinPooling(self):
 
-        input_image = np.array([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
+        input_image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
         feature = math.MinPooling(ksize=2)
         pooled_image = feature.resolve(input_image)
         self.assertTrue(xp.all(pooled_image == [[1.0, 3.0]]))
@@ -95,7 +95,7 @@ class TestMath_Numpy(BackendTestBase):
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
 class TestMath_Torch(TestMath_Numpy):
     BACKEND = "torch"
-    input_image = torch.tensor([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
+   # input_image = torch.tensor([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
     pass
     
     #def test_MinPooling(self):
