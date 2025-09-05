@@ -2408,10 +2408,35 @@ class TestFeatures(unittest.TestCase):
         value_feature.update()
         cached_output = store_feature(None, key="example", replace=False)
         self.assertEqual(cached_output, output)
+        self.assertNotEqual(cached_output, value_feature())
 
         value_feature.update()
         cached_output = store_feature(None, key="example", replace=True)
         self.assertNotEqual(cached_output, output)
+        self.assertEqual(cached_output, value_feature())
+
+        if TORCH_AVAILABLE:
+
+            value_feature = features.Value(lambda: torch.rand(1))
+
+            store_feature = features.Store(
+                feature=value_feature, key="example"
+            )
+
+            output = store_feature(None, key="example", replace=False)
+
+            value_feature.update()
+            cached_output = store_feature(None, key="example", replace=False)
+            torch.testing.assert_close(cached_output, output)
+            with self.assertRaises(AssertionError):
+                torch.testing.assert_close(cached_output, value_feature())
+
+            value_feature.update()
+            cached_output = store_feature(None, key="example", replace=True)
+            with self.assertRaises(AssertionError):
+                torch.testing.assert_close(cached_output, output)
+            torch.testing.assert_close(cached_output, value_feature())
+
 
 
     def test_Squeeze(self):

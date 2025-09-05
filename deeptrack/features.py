@@ -222,7 +222,7 @@ __all__ = [
     "ChannelFirst2d",
     "Upscale",  # TODO ***AL***
     "NonOverlapping",  # TODO ***AL***
-    "Store",  # TODO ***JH***
+    "Store",
     "Squeeze",
     "Unsqueeze",
     "ExpandDims",
@@ -8804,9 +8804,9 @@ class NonOverlapping(Feature):
 class Store(Feature):
     """Store the output of a feature for reuse.
 
-    The `Store` feature evaluates a given feature and stores its output in an 
-    internal dictionary. Subsequent calls with the same key will return the 
-    stored value unless the `replace` parameter is set to `True`. This enables 
+    The `Store` feature evaluates a given feature and stores its output in an
+    internal dictionary. Subsequent calls with the same key will return the
+    stored value unless the `replace` parameter is set to `True`. This enables
     caching and reuse of computed feature outputs.
 
     Parameters
@@ -8815,10 +8815,10 @@ class Store(Feature):
         The feature to evaluate and store.
     key: Any
         The key used to identify the stored output.
-    replace: bool, optional
-        If `True`, replaces the stored value with a new computation. It defaults 
-        to `False`.
-    **kwargs:: dict of str to Any
+    replace: PropertyLike[bool], optional
+        If `True`, replaces the stored value with the current computation. It
+        defaults to `False`.
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
@@ -8852,12 +8852,16 @@ class Store(Feature):
     >>> cached_output = store_feature(None, key="example", replace=False)
     >>> print(cached_output == output)
     True
+    >>> print(cached_output == value_feature())
+    False
 
     Retrieve the stored value recomputing:
     >>> value_feature.update()
     >>> cached_output = store_feature(None, key="example", replace=True)
     >>> print(cached_output == output)
     False
+    >>> print(cached_output == value_feature())
+    True
 
     """
 
@@ -8867,7 +8871,7 @@ class Store(Feature):
         self: Store,
         feature: Feature,
         key: Any,
-        replace: bool = False,
+        replace: PropertyLike[bool] = False,
         **kwargs: Any,
     ):
         """Initialize the Store feature.
@@ -8878,8 +8882,8 @@ class Store(Feature):
             The feature to evaluate and store.
         key: Any
             The key used to identify the stored output.
-        replace: bool, optional
-            If `True`, replaces the stored value with a new computation. 
+        replace: PropertyLike[bool], optional
+            If `True`, replaces the stored value with a new computation.
             It defaults to `False`.
         **kwargs:: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
@@ -8918,7 +8922,7 @@ class Store(Feature):
         """
 
         # Check if the value should be recomputed or retrieved from the store
-        if replace or not (key in self._store):
+        if replace or not key in self._store:
             self._store[key] = self.feature()
 
         # Return the stored or newly computed result
