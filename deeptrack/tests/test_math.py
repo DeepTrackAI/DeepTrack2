@@ -81,17 +81,16 @@ class TestMath_Numpy(BackendTestBase):
         #eature = math.Blur(filter_function=uniform_filter, size=2)
         #blurred_image = feature.resolve(input_image)
         #self.assertTrue(xp.all(blurred_image == expected_output))
-    
-    def test_MinPooling(self):
 
+    def test_MinPooling(self):
         input_image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
         feature = math.MinPooling(ksize=2)
         pooled_image = feature.resolve(input_image)
 
         expected = xp.asarray([[1.0, 3.0]], dtype=float)
 
-        self.assertTrue(xp.all(pooled_image == expected))
         self.assertEqual(pooled_image.shape, (1, 2))
+        self.assertTrue(xp.all(pooled_image == expected))
 
 
 # Extending the test and setting the backend to torch
@@ -99,27 +98,6 @@ class TestMath_Numpy(BackendTestBase):
 class TestMath_Torch(TestMath_Numpy):
     BACKEND = "torch"
     pass
-    # Old tests commented out
-    #def test_MinPooling(self):
-        # input shape (1, 1, 2, 4)
-    #    input_image = torch.tensor([[[ [1.0, 2.0, 3.0, 4.0],
-    #                                    [5.0, 6.0, 7.0, 8.0] ]]])
-    #    feature = math.MinPooling(ksize=2)
-    #    pooled_image = feature(input_image, ksize=2)
-    #    expected = torch.tensor([[[[1.0, 3.0]]]])
-    #    self.assertEqual(pooled_image.shape, expected.shape)
-    #    self.assertTrue(torch.allclose(pooled_image, expected))
-    #    self.assertTrue(isinstance(pooled_image, torch.Tensor))
-        
-        # input shape (2, 4)
-     #   input_image = torch.tensor([ [1.0, 2.0, 3.0, 4.0],
-    #                                    [5.0, 6.0, 7.0, 8.0] ])
-     #   feature = math.MinPooling(ksize=2)
-     #   pooled_image = feature(input_image, ksize=2)
-     #   expected = torch.tensor([[1.0, 3.0]])
-     #   self.assertEqual(pooled_image.shape, expected.shape)
-     #   self.assertTrue(torch.allclose(pooled_image, expected))
-     #   self.assertTrue(isinstance(pooled_image, torch.Tensor))
 
 
 class TestMath(unittest.TestCase):
