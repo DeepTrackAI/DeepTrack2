@@ -1295,7 +1295,6 @@ class MaxPooling(Pool):
     ):
         """Initialize the parameters for max-pooling.
 
-
         This constructor initializes the parameters for max-pooling.
 
         Parameters
@@ -1306,6 +1305,7 @@ class MaxPooling(Pool):
             Additional keyword arguments.
 
         """
+        
         super().__init__(np.max, ksize=ksize, **kwargs)
 
     
@@ -1330,7 +1330,7 @@ class MaxPooling(Pool):
         Returns
         -------
         array or tensor
-            The pooled image as `NDArray` or `torch.Tensor` depending on
+            The pooled input as `NDArray` or `torch.Tensor` depending on
             the backend.
 
         """
@@ -1356,7 +1356,7 @@ class MaxPooling(Pool):
         Parameters
         ----------
         image: NDArray
-            Input image to be pooled.
+            Input array to be pooled.
         ksize: int
             Kernel size of the pooling operation.
 
@@ -1383,7 +1383,8 @@ class MaxPooling(Pool):
         """Perform max pooling with the PyTorch backend enabled.
 
 
-        Returns the result of the tensor passed to a PyTorch max pooling layer.
+        Returns the result of the tensor passed to a PyTorch max
+        pooling layer.
 
         Parameters
         ----------
