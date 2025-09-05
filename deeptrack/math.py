@@ -1191,46 +1191,38 @@ class Pool(Feature): # Deprecated, children will be independent in the future.
 class AveragePooling(Pool):
     """Apply average pooling to an image.
 
-    This class inherits from `Pool` to reduce the resolution of an image by
-    dividing it into non-overlapping blocks of size `ksize` and applying the
-    `max` function to each block. The result is a downsampled image where each
-    pixel value represents the maximum value within the corresponding block of
-    the original image. This is useful for reducing the size of an image while
+    `AveragePooling` reduces the resolution of an image by dividing it into
+    non-overlapping blocks of size `ksize` and applying the `average` function
+    to each block. The result is a downsampled image where each pixel value
+    represents the average value within the corresponding block of the
+    original image. This is useful for reducing the size of an image while
     retaining the most significant features.
 
-    If the backend is numpy, the downsampling is performed using
+    If the backend is NumPy, the downsampling is performed using
     `skimage.measure.block_reduce`.
-    If the backend is torch, the downsampling
+    If the backend is PyTorch, the downsampling
     is performed using `torch.nn.functional.avg_pool2d`.
 
     Parameters
     ----------
     ksize: int
         Size of the pooling kernel.
-    **kwargs: dict
+    **kwargs: any
         Additional parameters sent to the pooling function.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
-
     Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(32, 32)
 
-    Define an average pooling feature:
+    Define and use a average pooling feature:
     >>> average_pooling = dt.AveragePooling(ksize=4)
     >>> output_image = average_pooling(input_image)
     >>> print(output_image.shape)
     (8, 8)
-
-    Notes
-    -----
-    Calling this feature returns a pooled image of the input, it will return
-    either numpy or torch depending on the backend. If `store_properties` is
-    set to `True` and the input is a numpy array, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
 
     """
 
@@ -1241,9 +1233,7 @@ class AveragePooling(Pool):
     ):
         """Initialize the parameters for average pooling.
 
-        This constructor initializes the parameters for average pooling and
-        checks whether to use the numpy or torch implementation, defaults to
-        numpy.
+        This constructor initializes the parameters for average pooling.
 
         Parameters
         ----------
@@ -1255,14 +1245,47 @@ class AveragePooling(Pool):
         """
 
         super().__init__(np.mean, ksize=ksize, **kwargs)
+        
+        
+    def get(
+        self: AveragePooling,
+        image: NDArray[Any] | torch.Tensor,
+        ksize: int=3,
+        **kwargs: Any,
+    ) -> NDArray[Any] | torch.Tensor:
+        """Average pooling of input.
+        
+        Checks the current backend and chooses the appropriate function to pool
+        the input image, either `._get_torch()` or `._get_numpy()`.
+
+        Parameters
+        ----------
+        image: array or tensor
+            Input array or tensor to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        array or tensor
+            The pooled input as `NDArray` or `torch.Tensor` depending on
+            the backend.
+
+        """
+        if self.get_backend() == "numpy":
+            return self._get_numpy(image, ksize, **kwargs)
+        elif self.get_backend() == "torch":
+            return self._get_torch(image, ksize, **kwargs)
+        else:
+            raise NotImplementedError(f"Backend {self.backend} not supported")
 
     def _get_numpy(
-        self,
-        image: NDArray,
+        self: AveragePooling,
+        image: NDArray[Any],
         ksize: int = 3,
-        **kwargs,
-    ):
-        """Method to perform average pooling with the numpy backend enabled.
+        **kwargs: Any,
+    ) -> NDArray[Any]:
+        """Average pooling with the NumPy backend enabled.
 
         Returns the result of the image passed to the scikit image block_reduce
         function with `np.mean()` as the pooling function.
@@ -1270,7 +1293,7 @@ class AveragePooling(Pool):
         Parameters
         ----------
         image: NDArray
-            Input image to be pooled.
+            Input array to be pooled.
         ksize: int
             Kernel size of the pooling operation.
 
@@ -1283,26 +1306,26 @@ class AveragePooling(Pool):
         return utils.safe_call(
             skimage.measure.block_reduce,
             image=image,
-            func=self.pooling, # This will be np.mean for this class.
+            func=np.average,
             block_size=ksize,
             **kwargs,
         )
 
     def _get_torch(
-        self,
+        self: AveragePooling,
         image: torch.Tensor,
         ksize: int=3,
-        **kwargs,
-    ):
-        """Method to perform average pooling with the torch backend enabled.
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """Perform average pooling with the PyTorch backend enabled.
         
-        Returns the result of the image passed to a torch average
+        Returns the result of the image passed to a Pytorch average
         pooling layer.
 
         Parameters
         ----------
         image: torch.Tensor
-            Input image to be pooled.
+            Input tensor to be pooled.
         ksize: int
             Kernel size of the pooling operation.
 
@@ -1313,8 +1336,9 @@ class AveragePooling(Pool):
 
         """
 
-        # If needed, expand tensor shape
+        # If input tensor is 2D
         if len(image.shape) == 2:
+            # Add batch dimension for max pooling.
             expanded_image = image.unsqueeze(0)
 
             pooled_image = torch.nn.functional.avg_pool2d(
@@ -1327,38 +1351,6 @@ class AveragePooling(Pool):
             image,
             kernel_size=ksize,
         )
-
-    def get(
-        self,
-        image: NDArray | torch.Tensor,
-        ksize: int=3,
-        **kwargs,
-    ):
-        """Method to perform pooling with either torch or numpy backend.
-        
-        Checks the current backend and chooses the appropriate function to pool
-        the input image, either `_get_torch` or `_get_numpy`.
-
-        Parameters
-        ----------
-        image: NDArray | torch.Tensor
-            Input image to be pooled.
-        ksize: int
-            Kernel size of the pooling operation.
-
-        Returns
-        -------
-        NDArray | torch.Tensor
-            The pooled image as `NDArray` or `torch.Tensor` depending on
-            the backend.
-
-        """
-        if self.get_backend() == "numpy":
-            return self._get_numpy(image, ksize, **kwargs,)
-        elif self.get_backend() == "torch":
-            return self._get_torch(image, ksize, **kwargs,)
-        else:
-            raise NotImplementedError(f"Backend {self.backend} not supported")
 
 
 #TODO ***AL*** revise MaxPooling - torch, typing, docstring, unit test
