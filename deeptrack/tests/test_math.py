@@ -134,7 +134,7 @@ class TestMath(unittest.TestCase):
         input_image = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         feature = math.MaxPooling(ksize=2)
         pooled_image = feature.resolve(input_image)
-        self.assertTrue(np.all(pooled_image == np.array([[5, 6], [8, 9]])))
+        self.assertTrue(xp.all(pooled_image == xp.asarray([[5, 6], [8, 9]]) ) )
 
     def test_MinPooling(self):
         input_image = np.array([[1, 2, 3, 4], [5, 6, 7, 8]])
