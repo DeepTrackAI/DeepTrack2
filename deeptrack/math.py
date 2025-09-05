@@ -55,9 +55,9 @@ Classes:
 
 - `AveragePooling`: Apply average pooling to the image.
 
-- `MaxPooling`: Apply max pooling to the image.
+- `MaxPooling`: Apply max-pooling to the image.
 
-- `MinPooling`: Apply min pooling to the image.
+- `MinPooling`: Apply min-pooling to the image.
 
 - `MedianPooling`: Apply median pooling to the image.
 
@@ -1251,7 +1251,7 @@ class AveragePooling(Pool):
 
 #TODO ***AL*** revise MaxPooling - torch, typing, docstring, unit test
 class MaxPooling(Pool):
-    """Apply max pooling to images.
+    """Apply max-pooling to images.
 
     This class reduces the resolution of an image by dividing it into
     non-overlapping blocks of size `ksize` and applying the max function to
@@ -1277,7 +1277,7 @@ class MaxPooling(Pool):
     Create an input image:
     >>> input_image = np.random.rand(32, 32)
 
-    Define a max pooling feature:
+    Define a max-pooling feature:
     >>> max_pooling = dt.MaxPooling(ksize=8)
     >>> output_image = max_pooling(input_image)
     >>> print(output_image.shape)
@@ -1297,9 +1297,9 @@ class MaxPooling(Pool):
         ksize: PropertyLike[int] = 3,
         **kwargs: Any,
     ):
-        """Initialize the parameters for max pooling.
+        """Initialize the parameters for max-pooling.
 
-        This constructor initializes the parameters for max pooling.
+        This constructor initializes the parameters for max-pooling.
 
         Parameters
         ----------
@@ -1314,47 +1314,41 @@ class MaxPooling(Pool):
 
 
 class MinPooling(Pool):
-    """Apply min pooling to images.
+    """Apply min-pooling to images.
 
-    This class inherits from `Pool` to reduce the resolution of an image by
-    dividing it into non-overlapping blocks of size `ksize` and applying the
-    `min` function to each block. The result is a downsampled image where each
-    pixel value represents the minimum value within the corresponding block of
-    the original image.
+    `MinPooling` reduces the resolution of an image by dividing it into
+    non-overlapping blocks of size `ksize` and applying the `min` function to
+    each block. The result is a downsampled image where each pixel value
+    represents the minimum value within the corresponding block of the original
+    image.
 
-    If the backend is numpy, the downsampling is performed using 
+    If the backend is NumPy, the downsampling is performed using 
     `skimage.measure.block_reduce`.
-    If the backend is torch, the downsampling is performed using the inverse
+
+    If the backend is PyTorch, the downsampling is performed using the inverse
     of `torch.nn.functional.max_pool2d` by changing the sign of the input.
 
     Parameters
     ----------
     ksize: int
         Size of the pooling kernel.
-    **kwargs: dict
+    **kwargs: Any
         Additional parameters sent to the pooling function.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(32, 32)
 
-    Define a min pooling feature:
+    Define and use a min-pooling feature:
     >>> min_pooling = dt.MinPooling(ksize=4)
     >>> output_image = min_pooling(input_image)
-    >>> print(output_image.shape)
+    >>> output_image.shape
     (8, 8)
-
-    Notes
-    -----
-    Calling this feature returns a pooled image of the input, it will return
-    either numpy or torch depending on the backend. If `store_properties` is
-    set to `True` and the input is a numpy array, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
 
     """
 
@@ -1363,10 +1357,10 @@ class MinPooling(Pool):
         ksize: PropertyLike[int] = 3,
         **kwargs: Any,
     ):
-        """Initialize the parameters for min pooling.
+        """Initialize the parameters for min-pooling.
 
-        This constructor initializes the parameters for min pooling and checks
-        whether to use the numpy or torch implementation, defaults to numpy.
+        This constructor initializes the parameters for min-pooling and checks
+        whether to use the NumPy or PyTorch implementation, defaults to NumPy.
 
         Parameters
         ----------
@@ -1379,16 +1373,51 @@ class MinPooling(Pool):
 
         super().__init__(np.min, ksize=ksize, **kwargs)
 
+    def get(
+        self: MinPooling,
+        image: NDArray[Any] | torch.Tensor,
+        ksize: int=3,
+        **kwargs: Any,
+    ) -> NDArray[Any] | torch.Tensor:
+        """Min pooling of input.
+
+        Checks the current backend and chooses the appropriate function to pool
+        the input image, either `._get_torch()` or `._get_numpy()`.
+
+        Parameters
+        ----------
+        image: array or tensor
+            Input array or tensor to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        array or tensor
+            The pooled image as `NDArray` or `torch.Tensor` depending on the
+            backend.
+
+        """
+
+        if self.get_backend() == "numpy":
+            return self._get_numpy(image, ksize, **kwargs)
+
+        if self.get_backend() == "torch":
+            return self._get_torch(image, ksize, **kwargs)
+
+        raise NotImplementedError(f"Backend {self.backend} not supported")
+
     def _get_numpy(
         self: MinPooling,
         image: NDArray[Any],
         ksize: int=3,
         **kwargs: Any,
     ) -> NDArray[Any]:
-        """Method to perform average pooling with the numpy backend enabled.
+        """Min-pooling with the NumPy backend.
 
-        Returns the result of the image passed to the scikit image block_reduce
-        function with `np.min` as the pooling function.
+        Returns the result of the input array passed to the scikit
+        `image block_reduce()` function with `np.min()` as the pooling
+        function.
 
         Parameters
         ----------
@@ -1401,12 +1430,13 @@ class MinPooling(Pool):
         -------
         NDArray
             The pooled image as a `NDArray`.
-            
+
         """
+
         return utils.safe_call(
             skimage.measure.block_reduce,
             image=image,
-            func=self.pooling, # This will be np.min for this class.
+            func=np.min,
             block_size=ksize,
             **kwargs,
         )
@@ -1417,15 +1447,16 @@ class MinPooling(Pool):
         ksize: int=3,
         **kwargs: Any,
     ) -> torch.Tensor:
-        """Method to perform min pooling with the torch backend enabled.
-        As torch does not contain a min pooling layer, the equivalent
-        operation is to first multiply the input image with `-1`,
-        perform max pooling and multiply the max pooled image with `-1`.
+        """Min-pooling with the PyTorch backend.
+
+        As PyTorch does not have a min-pooling layer, the equivalent operation
+        is to first multiply the input tensor with `-1`, then perform
+        max-pooling, and finally multiply the max pooled tensor with `-1`.
 
         Parameters
         ----------
         image: torch.Tensor
-            Input image to be pooled.
+            Input tensor to be pooled.
         ksize: int
             Kernel size of the pooling operation.
 
@@ -1435,53 +1466,25 @@ class MinPooling(Pool):
             The pooled image as a `torch.Tensor`.
 
         """
-        # If needed, expand tensor shape
+
+        # If input tensor is 2D
         if len(image.shape) == 2:
+            # Add batch dimension for min-pooling
             expanded_image = image.unsqueeze(0)
 
-            pooled_image = -torch.nn.functional.max_pool2d(
-                expanded_image*(-1), kernel_size=ksize,
+            pooled_image = - torch.nn.functional.max_pool2d(
+                expanded_image * (-1),
+                kernel_size=ksize,
             )
-            # Remove the expanded dim.
+
+            # Remove the expanded dim
             return pooled_image.squeeze(0)
 
         return -torch.nn.functional.max_pool2d(
-            image*(-1),
+            image * (-1),
             kernel_size=ksize,
         )
 
-    def get(
-        self,
-        image: NDArray | torch.Tensor,
-        ksize: int=3,
-        **kwargs,
-    ) -> NDArray | torch.Tensor:
-        """Method to perform pooling with either torch or numpy backend.
-
-        Checks the current backend and chooses the appropriate function to pool
-        the input image, either `_get_torch` or `_get_numpy`.
-
-        Parameters
-        ----------
-        image: NDArray | torch.Tensor
-            Input image to be pooled.
-        ksize: int
-            Kernel size of the pooling operation.
-
-        Returns
-        -------
-        NDArray | torch.Tensor
-            The pooled image as `NDArray` or `torch.Tensor` depending on
-            the backend.
-
-        """
-
-        if self.get_backend() == "numpy":
-            return self._get_numpy(image, ksize, **kwargs,)
-        elif self.get_backend() == "torch":
-            return self._get_torch(image, ksize, **kwargs,)
-        else:
-            raise NotImplementedError(f"Backend {self.backend} not supported")
 
 #TODO ***AL*** revise MedianPooling - torch, typing, docstring, unit test
 class MedianPooling(Pool):
