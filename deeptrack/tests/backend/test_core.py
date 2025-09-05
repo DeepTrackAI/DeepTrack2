@@ -25,153 +25,322 @@ class TestCore(unittest.TestCase):
             DeepTrackNode,
         )
 
+
     def test_DeepTrackDataObject(self):
         dataobj = core.DeepTrackDataObject()
 
-        # Test storing and validating data.
+        # Test default initialization
+        self.assertEqual(dataobj.current_value(), None)
+        self.assertEqual(dataobj.is_valid(), False)
+
+        # Test storing and validating data
         dataobj.store(1)
         self.assertEqual(dataobj.current_value(), 1)
         self.assertEqual(dataobj.is_valid(), True)
 
-        # Test invalidating data.
+        # Test invalidating data
         dataobj.invalidate()
         self.assertEqual(dataobj.current_value(), 1)
         self.assertEqual(dataobj.is_valid(), False)
 
-        # Test validating data.
+        # Test validating data
         dataobj.validate()
         self.assertEqual(dataobj.current_value(), 1)
         self.assertEqual(dataobj.is_valid(), True)
 
+        # Test updating data
+        dataobj.store(2)
+        self.assertEqual(dataobj.current_value(), 2)
+        self.assertEqual(dataobj.is_valid(), True)
+
+
     def test_DeepTrackDataDict(self):
-        dataset = core.DeepTrackDataDict()
+        datadict = core.DeepTrackDataDict()
 
-        # Test initial state.
-        self.assertEqual(dataset.keylength, None)
-        self.assertFalse(dataset.dict)  # Empty dict, {}
+        # Test initial state
+        self.assertEqual(datadict.keylength, None)
+        self.assertFalse(datadict.dict)  # Empty dict, {}
 
-        # Create indices and store data.
-        dataset.create_index((0,))
-        dataset[(0,)].store({"image": [1, 2, 3], "label": 0})
+        # Create indices and store data
+        datadict.create_index((0, 0))
+        datadict[(0, 0)].store({"image": [0, 0, 0], "label": (0, 0)})
 
-        dataset.create_index((1,))
-        dataset[(1,)].store({"image": [4, 5, 6], "label": 1})
+        datadict.create_index((0, 1))
+        datadict[(0, 1)].store({"image": [0, 1, 1], "label": (0, 1)})
 
-        self.assertEqual(dataset.keylength, 1)
-        self.assertEqual(len(dataset.dict), 2)
-        self.assertIn((0,), dataset.dict)
-        self.assertIn((1,), dataset.dict)
+        datadict.create_index((1, 0))
+        datadict[(1, 0)].store({"image": [1, 0, 2], "label": (1, 0)})
 
-        # Test retrieving stored data.
-        self.assertEqual(dataset[(0,)].current_value(),
-                         {"image": [1, 2, 3], "label": 0})
-        self.assertEqual(dataset[(1,)].current_value(),
-                         {"image": [4, 5, 6], "label": 1})
+        datadict.create_index((1, 1))
+        datadict[(1, 1)].store({"image": [1, 1, 3], "label": (1, 1)})
 
-        # Test validation and invalidation - all.
-        self.assertTrue(dataset[(0,)].is_valid())
-        self.assertTrue(dataset[(1,)].is_valid())
+        self.assertEqual(datadict.keylength, 2)
+        self.assertEqual(len(datadict), 4)
 
-        dataset.invalidate()
-        self.assertFalse(dataset[(0,)].is_valid())
-        self.assertFalse(dataset[(1,)].is_valid())
+        self.assertIn((0, 0), datadict.dict)
+        self.assertIn((0, 0), datadict.keys())
+        self.assertIn((0, 1), datadict.dict)
+        self.assertIn((0, 1), datadict.keys())
+        self.assertIn((1, 0), datadict.dict)
+        self.assertIn((1, 0), datadict.keys())
+        self.assertIn((1, 1), datadict.dict)
+        self.assertIn((1, 1), datadict.keys())
 
-        dataset.validate()
-        self.assertTrue(dataset[(0,)].is_valid())
-        self.assertTrue(dataset[(1,)].is_valid())
+        # Test retrieving stored data
+        self.assertEqual(
+            datadict[(0, 0)].current_value(),
+            {"image": [0, 0, 0], "label": (0, 0)},
+        )
+        self.assertEqual(
+            datadict[(0, 1)].current_value(),
+            {"image": [0, 1, 1], "label": (0, 1)},
+        )
+        self.assertEqual(
+            datadict[(1, 0)].current_value(),
+            {"image": [1, 0, 2], "label": (1, 0)},
+        )
+        self.assertEqual(
+            datadict[(1, 1)].current_value(),
+            {"image": [1, 1, 3], "label": (1, 1)},
+        )
 
-        # Test validation and invalidation - single node.
-        self.assertTrue(dataset[(0,)].is_valid())
+        # Test validation and invalidation - all
+        for key, value in datadict.items():
+            self.assertTrue(value.is_valid())
 
-        dataset[(0,)].invalidate()
-        self.assertFalse(dataset[(0,)].is_valid())
-        self.assertTrue(dataset[(1,)].is_valid())
+        datadict.invalidate()
+        for key, value in datadict.items():
+            self.assertFalse(value.is_valid())
 
-        dataset[(1,)].invalidate()
-        self.assertFalse(dataset[(0,)].is_valid())
-        self.assertFalse(dataset[(1,)].is_valid())
+        datadict.validate()
+        for key, value in datadict.items():
+            self.assertTrue(value.is_valid())
 
-        dataset[(0,)].validate()
-        self.assertTrue(dataset[(0,)].is_valid())
-        self.assertFalse(dataset[(1,)].is_valid())
+        # Test validation and invalidation - single node
+        self.assertTrue(datadict[(0, 0)].is_valid())
 
-        dataset[(1,)].validate()
-        self.assertTrue(dataset[(0,)].is_valid())
-        self.assertTrue(dataset[(1,)].is_valid())
+        datadict[(0, 0)].invalidate()
+        for key, value in datadict.items():
+            if key == (0, 0):
+                self.assertFalse(value.is_valid())
+            else:
+                self.assertTrue(value.is_valid())
 
-        # Test iteration over entries.
-        for key, value in dataset.dict.items():
-            self.assertIn(key, {(0,), (1,)})
-            self.assertIsInstance(value, core.DeepTrackDataObject)
+        datadict[(1, 1)].invalidate()
+        for key, value in datadict.items():
+            if key == (0, 0) or key == (1, 1):
+                self.assertFalse(value.is_valid())
+            else:
+                self.assertTrue(value.is_valid())
+
+        datadict[(0, 0)].validate()
+        for key, value in datadict.items():
+            if key == (1, 1):
+                self.assertFalse(value.is_valid())
+            else:
+                self.assertTrue(value.is_valid())
+
+        datadict[(1, 1)].validate()
+        for key, value in datadict.items():
+            self.assertTrue(value.is_valid())
+
+        # Test valid_index
+        self.assertFalse(datadict.valid_index(()))
+
+        self.assertFalse(datadict.valid_index((0,)))
+
+        self.assertTrue(datadict.valid_index((0, 0)))
+        self.assertTrue(datadict.valid_index((1, 1)))
+        self.assertTrue(datadict.valid_index((2, 2)))
+
+        self.assertFalse(datadict.valid_index((0, 1, 2)))
+
+        # Test slicing: __getitem__ with shorter _ID
+        sliced = datadict[(0,)]
+        self.assertIsInstance(sliced, dict)
+
+        self.assertIn((0, 0), sliced)
+        self.assertIsInstance(sliced[(0, 0)], core.DeepTrackDataObject)
+        self.assertIn((0, 1), sliced)
+        self.assertIsInstance(sliced[(0, 1)], core.DeepTrackDataObject)
+
+        # Test trimming: __getitem__ with longer _ID
+        for key, value in datadict.items():
+            self.assertEqual(
+                datadict[key + (99,)].current_value(),
+                datadict[key].current_value(),
+            )
+
+        # Test items(), keys(), values()
+        for item, key, value in zip(
+            datadict.items(), datadict.keys(), datadict.values()
+        ):
+            self.assertEqual(item[0], key)
+            self.assertEqual(item[1], value)
+
+        # Test dict property access
+        self.assertIs(datadict.dict[(0, 0)], datadict[(0, 0)])
+
 
     def test_DeepTrackNode_basics(self):
+        ## Without _ID
         node = core.DeepTrackNode(action=lambda: 42)
 
-        # Evaluate the node.
+        # Evaluate the node
         result = node()  # Value is calculated and stored.
         self.assertEqual(result, 42)
 
-        # Store a value.
+        # Store a value
         node.store(100)  # Value is stored.
         self.assertEqual(node.current_value(), 100)
         self.assertTrue(node.is_valid())
 
-        # Invalidate the node and check the value.
+        # Invalidate the node and check the value
         node.invalidate()
         self.assertFalse(node.is_valid())
 
-        self.assertEqual(node.current_value(), 100)  # Value is retrieved.
+        self.assertEqual(node.current_value(), 100)  # Value is retrieved
         self.assertFalse(node.is_valid())
 
-        self.assertEqual(node(), 42)  # Value is calculated and stored.
+        self.assertEqual(node(), 42)  # Value is calculated and stored
         self.assertTrue(node.is_valid())
 
-    def test_DeepTrackNode_dependencies(self):
-        parent = core.DeepTrackNode(action=lambda: 10)
-        child = core.DeepTrackNode(action=lambda _ID=None: parent() * 2)
-        parent.add_child(child)  # Establish dependency.
+        ## With _ID
+        node = core.DeepTrackNode(action=lambda _ID: _ID[0] * 10 + _ID[1])
 
-        # Check that the just create nodes are invalid as not calculated.
+        # Store values
+        self.assertEqual(node((0, 0)), 0)
+        self.assertEqual(node((0, 1)), 1)
+        self.assertEqual(node((1, 0)), 10)
+        self.assertEqual(node((1, 1)), 11)
+
+        # Check validity
+        self.assertFalse(node.is_valid())
+        self.assertTrue(node.is_valid((0, 0)))
+        self.assertTrue(node.is_valid((0, 1)))
+        self.assertTrue(node.is_valid((1, 0)))
+        self.assertTrue(node.is_valid((1, 1)))
+
+        # Invalidate
+        node.invalidate()
+        self.assertFalse(node.is_valid((0, 0)))
+        self.assertFalse(node.is_valid((0, 1)))
+        self.assertFalse(node.is_valid((1, 0)))
+        self.assertFalse(node.is_valid((1, 1)))
+
+    def test_DeepTrackNode_new(self):
+        # Create a node with an action
+        node = core.DeepTrackNode(action=lambda: 42)
+
+        # Manually store a different value
+        node.store(100)
+        self.assertEqual(node.current_value(), 100)
+
+        # Call new() to reset and recompute
+        result = node.new()
+        self.assertEqual(result, 42)
+        self.assertEqual(node.current_value(), 42)
+
+        # Also test with ID
+        node = core.DeepTrackNode(action=lambda _ID=None: _ID[0] * 2)
+        node.store(123, _ID=(3,))
+        self.assertEqual(node.current_value((3,)), 123)
+
+        result = node.new((3,))
+        self.assertEqual(result, 6)
+        self.assertEqual(node.current_value((3,)), 6)
+
+    def test_DeepTrackNode_dependencies(self):
+        import random
+
+        parent = core.DeepTrackNode(
+            node_name="parent",
+            action=lambda: 10,
+        )
+        child = core.DeepTrackNode(
+            node_name="child",
+            action=lambda: parent() * 2,
+        )
+        grandchild = core.DeepTrackNode(
+            node_name="grandchild",
+            action=lambda: child() * 3,
+        )
+
+        # Establish dependencies
+        if random.randint(0, 1):  # Test add_child()
+            parent.add_child(child)
+        else:  # Test add_dependency()
+            child.add_dependency(parent)
+
+        if random.randint(0, 1):  # Test add_child()
+            child.add_child(grandchild)
+        else:  # Test add_dependency()
+            grandchild.add_dependency(child)
+
+        # Check that the just created nodes are invalid as not calculated
         self.assertFalse(parent.is_valid())
         self.assertFalse(child.is_valid())
+        self.assertFalse(grandchild.is_valid())
 
         # Calculate child, and therefore parent.
-        result = child()
-        self.assertEqual(result, 20)
+        self.assertEqual(grandchild(), 60)
         self.assertTrue(parent.is_valid())
         self.assertTrue(child.is_valid())
+        self.assertTrue(grandchild.is_valid())
 
         # Invalidate parent and check child validity.
         parent.invalidate()
         self.assertFalse(parent.is_valid())
         self.assertFalse(child.is_valid())
+        self.assertFalse(grandchild.is_valid())
 
-        # Validate parent and ensure child is invalid until recomputation.
-        parent.validate()
-        self.assertTrue(parent.is_valid())
-        self.assertFalse(child.is_valid())
+        # Recompute child and check its validity.
+        child.validate()
+        self.assertFalse(parent.is_valid())
+        self.assertTrue(child.is_valid())
+        self.assertFalse(grandchild.is_valid())  # Grandchild still invalid
 
         # Recompute child and check its validity
-        child()
+        grandchild()
+        self.assertFalse(parent.is_valid())  # Not recalculated as child valid
+        self.assertTrue(child.is_valid())
+        self.assertTrue(grandchild.is_valid())
+
+        # Recompute child and check its validity
+        parent.invalidate()
+        grandchild()
         self.assertTrue(parent.is_valid())
         self.assertTrue(child.is_valid())
+        self.assertTrue(grandchild.is_valid())
 
-    def test_DeepTrackNode_nested_dependencies(self):
-        parent = core.DeepTrackNode(action=lambda: 5)
-        middle = core.DeepTrackNode(action=lambda: parent() + 5)
-        child = core.DeepTrackNode(action=lambda: middle() * 2)
+        # Check dependencies
+        self.assertEqual(len(parent.children), 1)
+        for node in parent.children:
+            self.assertEqual(node.node_name, "child")
+        self.assertEqual(len(child.children), 1)
+        for node in child.children:
+            self.assertEqual(node.node_name, "grandchild")
+        self.assertEqual(len(grandchild.children), 0)
 
-        parent.add_child(middle)
-        middle.add_child(child)
+        self.assertEqual(len(parent.dependencies), 0)
+        self.assertEqual(len(child.dependencies), 1)
+        for node in child.dependencies:
+            self.assertEqual(node.node_name, "parent")
+        self.assertEqual(len(grandchild.dependencies), 1)
+        for node in grandchild.dependencies:
+            self.assertEqual(node.node_name, "child")
 
-        result = child()
-        self.assertEqual(result, 20)
+        self.assertEqual(len(parent._all_children), 3)
+        self.assertEqual(len(child._all_children), 2)
+        self.assertEqual(len(grandchild._all_children), 1)
 
-        # Invalidate the middle and check propagation.
-        middle.invalidate()
-        self.assertTrue(parent.is_valid())
-        self.assertFalse(middle.is_valid())
-        self.assertFalse(child.is_valid())
+        self.assertEqual(len(parent.recurse_children()), 3)
+        self.assertEqual(len(child.recurse_children()), 2)
+        self.assertEqual(len(grandchild.recurse_children()), 1)
+
+        self.assertEqual(len(parent.recurse_dependencies()), 1)
+        self.assertEqual(len(child.recurse_dependencies()), 2)
+        self.assertEqual(len(grandchild.recurse_dependencies()), 3)
 
     def test_DeepTrackNode_op_overloading(self):
         node1 = core.DeepTrackNode(action=lambda: 5)
@@ -179,15 +348,66 @@ class TestCore(unittest.TestCase):
 
         sum_node = node1 + node2
         self.assertEqual(sum_node(), 15)
+        sum_node = node1 + 100
+        self.assertEqual(sum_node(), 105)
+        sum_node = 100 + node2
+        self.assertEqual(sum_node(), 110)
 
-        diff_node = node2 - node1
-        self.assertEqual(diff_node(), 5)
+        diff_node = node1 - node2
+        self.assertEqual(diff_node(), -5)
+        diff_node = node1 - 100
+        self.assertEqual(diff_node(), -95)
+        diff_node = 100 - node2
+        self.assertEqual(diff_node(), 90)
 
         prod_node = node1 * node2
         self.assertEqual(prod_node(), 50)
+        prod_node = node1 * 100
+        self.assertEqual(prod_node(), 500)
+        prod_node = 100 * node2
+        self.assertEqual(prod_node(), 1_000)
 
-        div_node = node2 / node1
-        self.assertEqual(div_node(), 2)
+        truediv_node = node2 / node1
+        self.assertEqual(truediv_node(), 2)
+        truediv_node = node2 / 2
+        self.assertEqual(truediv_node(), 5)
+        truediv_node = 50 / node1
+        self.assertEqual(truediv_node(), 10)
+
+        floordiv_node = node1 // node2
+        self.assertEqual(floordiv_node(), 0)
+        floordiv_node = node1 // 2
+        self.assertEqual(floordiv_node(), 2)
+        floordiv_node = 12 // node2
+        self.assertEqual(floordiv_node(), 1)
+
+        lt_node = node1 < node2
+        self.assertTrue(lt_node())
+        lt_node = node1 < 2
+        self.assertFalse(lt_node())
+        lt_node = 12 < node2
+        self.assertFalse(lt_node())
+
+        gt_node = node1 > node2
+        self.assertFalse(gt_node())
+        gt_node = node1 > 2
+        self.assertTrue(gt_node())
+        gt_node = 12 > node2
+        self.assertTrue(gt_node())
+
+        le_node = node1 < node2
+        self.assertTrue(le_node())
+        le_node = node1 < 2
+        self.assertFalse(le_node())
+        le_node = 12 < node2
+        self.assertFalse(le_node())
+
+        ge_node = node1 > node2
+        self.assertFalse(ge_node())
+        ge_node = node1 > 2
+        self.assertTrue(ge_node())
+        ge_node = 12 > node2
+        self.assertTrue(ge_node())
 
     def test_DeepTrackNode_citations(self):
         node = core.DeepTrackNode(action=lambda: 42)
@@ -224,16 +444,16 @@ class TestCore(unittest.TestCase):
         parent.store(10, _ID=(1,))
 
         # Compute child values for nested IDs
-        child_value_0_0 = child(_ID=(0, 0))  # Uses parent(_ID=(0,)).
+        child_value_0_0 = child(_ID=(0, 0))  # Uses parent(_ID=(0,))
         self.assertEqual(child_value_0_0, 0)
 
-        child_value_0_1 = child(_ID=(0, 1))  # Uses parent(_ID=(0,)).
+        child_value_0_1 = child(_ID=(0, 1))  # Uses parent(_ID=(0,))
         self.assertEqual(child_value_0_1, 5)
 
-        child_value_1_0 = child(_ID=(1, 0))  # Uses parent(_ID=(1,)).
+        child_value_1_0 = child(_ID=(1, 0))  # Uses parent(_ID=(1,))
         self.assertEqual(child_value_1_0, 0)
 
-        child_value_1_1 = child(_ID=(1, 1))  # Uses parent(_ID=(1,)).
+        child_value_1_1 = child(_ID=(1, 1))  # Uses parent(_ID=(1,))
         self.assertEqual(child_value_1_1, 10)
 
     def test_DeepTrackNode_replicated_behavior(self):
@@ -251,7 +471,7 @@ class TestCore(unittest.TestCase):
 
     def test_DeepTrackNode_parent_id_inheritance(self):
 
-        # Children with IDs matching than parents.
+        # Children with IDs matching those of the parents.
         parent_matching = core.DeepTrackNode(action=lambda: 10)
         child_matching = core.DeepTrackNode(
             action=lambda _ID=None: parent_matching(_ID[:1]) * 2
@@ -329,6 +549,7 @@ class TestCore(unittest.TestCase):
                                     # 24
         self.assertEqual(C_0_1_2, 24)
 
+
     def test__equivalent(self):
         # Identity check (same object)
         a = [1, 2, 3]
@@ -355,6 +576,7 @@ class TestCore(unittest.TestCase):
 
         # One empty list, one non-list empty container
         self.assertFalse(core._equivalent([], ()))
+
 
     def test__create_node_with_operator(self):
         import operator

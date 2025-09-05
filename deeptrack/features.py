@@ -364,7 +364,7 @@ class Feature(DeepTrackNode):
     `store_properties(toggle: bool, recursive: bool) -> Feature`
         It controls whether the properties are stored in the output `Image`
         object.
-    `torch(device: torch.device or None, recursive: bool) -> 'Feature'`
+    `torch(device: torch.device or None, recursive: bool) -> Feature`
         It sets the backend to torch.
     `numpy(recursice: bool) -> Feature`
         It set the backend to numpy.
