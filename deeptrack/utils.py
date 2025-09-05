@@ -7,7 +7,7 @@ when working with functions, methods, and callables in Python.
 Key Features
 ------------
 - **Method Detection**
-  
+
     Check if an object has a callable method with a given name.
 
 - **List Conversion**
@@ -122,11 +122,10 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable
 
-
 __all__ = [
-    "hasmethod",
     "as_list",
     "get_kwarg_names",
+    "hasmethod",
     "kwarg_has_default",
     "safe_call",
 ]
@@ -138,7 +137,7 @@ def hasmethod(
 ) -> bool:
     """Check if an object has a callable method named `method_name`.
 
-    It returns `True` if the object has a field named `method_name` that is 
+    It returns `True` if the object has a field named `method_name` that is
     callable. Otherwise, returns `False`.
 
     Parameters
@@ -151,7 +150,7 @@ def hasmethod(
     Returns
     -------
     bool
-        True if the object has an attribute named `method_name` that is 
+        True if the object has an attribute named `method_name` that is
         callable.
 
     Examples
@@ -197,8 +196,7 @@ def hasmethod(
 
     """
 
-    return (hasattr(obj, method_name)
-            and callable(getattr(obj, method_name, None)))
+    return hasattr(obj, method_name) and callable(getattr(obj, method_name, None))
 
 
 def as_list(obj: Any) -> list[Any]:
@@ -285,7 +283,7 @@ def as_list(obj: Any) -> list[Any]:
 
 def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
     """Retrieve the names of the keyword arguments accepted by a function.
-    
+
     It retrieves the names of the keyword arguments accepted by `function` as a
     list of strings.
 
@@ -341,7 +339,6 @@ def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
     ['self', 'a', 'b']
 
     """
-
     try:
         argspec = inspect.getfullargspec(function)
     except TypeError:
@@ -349,8 +346,7 @@ def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
 
     if argspec.varargs:
         return argspec.kwonlyargs or []
-    else:
-        return argspec.args or []
+    return argspec.args or []
 
 
 def kwarg_has_default(
@@ -431,7 +427,7 @@ def safe_call(
     **kwargs: Any,
 ) -> Any:
     """Calls a function with valid arguments from a dictionary of arguments.
-    
+
     It filters `kwargs` to include only arguments accepted by the function,
     ensuring that no invalid arguments are passed. This function also supports
     positional arguments.
@@ -448,7 +444,7 @@ def safe_call(
     Returns
     -------
     Any
-        The result of calling the function with the filtered arguments.   
+        The result of calling the function with the filtered arguments.
 
     Examples
     --------
