@@ -8868,7 +8868,7 @@ class Store(Feature):
     __distributed__: bool = False
 
     def __init__(
-        self: Feature,
+        self: Store,
         feature: Feature,
         key: Any,
         replace: PropertyLike[bool] = False,
@@ -8895,7 +8895,7 @@ class Store(Feature):
         self._store: dict[Any, Image] = {}
 
     def get(
-        self: Feature,
+        self: Store,
         _: Any,
         key: Any,
         replace: bool,
@@ -8922,7 +8922,7 @@ class Store(Feature):
         """
 
         # Check if the value should be recomputed or retrieved from the store
-        if replace or not (key in self._store):
+        if replace or not key in self._store:
             self._store[key] = self.feature()
 
         # Return the stored or newly computed result
