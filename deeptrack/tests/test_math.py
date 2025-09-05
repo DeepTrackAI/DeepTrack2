@@ -78,17 +78,31 @@ class TestMath_Numpy(BackendTestBase):
         #input_image = xp.asarray(np.array([[1, 2], [3, 4]], dtype=float))
         #expected_output = xp.asarray(np.array([[1, 1.5], [2, 2.5]]))
 
-        #eature = math.Blur(filter_function=uniform_filter, size=2)
+        #feature = math.Blur(filter_function=uniform_filter, size=2)
         #blurred_image = feature.resolve(input_image)
         #self.assertTrue(xp.all(blurred_image == expected_output))
+
 
 
     def test_AveragePooling(self):
         input_image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
         feature = math.AveragePooling(ksize=2)
         pooled_image = feature.resolve(input_image)
+        
         expected = xp.asarray([[3.5, 5.5]])
+        
         self.assertTrue(xp.all(pooled_image == expected))
+        self.assertEqual(pooled_image.shape, (1, 2))
+
+    def test_MaxPooling(self):
+        input_image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
+        feature = math.MaxPooling(ksize=2)
+        pooled_image = feature.resolve(input_image)
+
+        expected = xp.asarray([[6.0, 8.0]], dtype=float)
+
+        self.assertTrue(xp.all(pooled_image == expected))
+        self.assertEqual(pooled_image.shape, (1, 2))
 
     def test_MinPooling(self):
         input_image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
@@ -131,7 +145,7 @@ class TestMath(unittest.TestCase):
         input_image = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         feature = math.MaxPooling(ksize=2)
         pooled_image = feature.resolve(input_image)
-        self.assertTrue(np.all(pooled_image == [[5, 6], [8, 9]]))
+        self.assertTrue(xp.all(pooled_image == xp.asarray([[5, 6], [8, 9]]) ) )
 
     def test_MinPooling(self):
         input_image = np.array([[1, 2, 3, 4], [5, 6, 7, 8]])

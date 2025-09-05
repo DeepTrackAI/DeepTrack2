@@ -1353,46 +1353,44 @@ class AveragePooling(Pool):
         )
 
 
-#TODO ***AL*** revise MaxPooling - torch, typing, docstring, unit test
 class MaxPooling(Pool):
     """Apply max-pooling to images.
 
-    This class reduces the resolution of an image by dividing it into
-    non-overlapping blocks of size `ksize` and applying the max function to
-    each block. The result is a downsampled image where each pixel value
+    `MaxPooling` reduces the resolution of an image by dividing it into
+    non-overlapping blocks of size `ksize` and applying the `max` function
+    to each block. The result is a downsampled image where each pixel value
     represents the maximum value within the corresponding block of the
-    original image.
-    This is useful for reducing the size of an image while retaining the
-    most significant features.
+    original image. This is useful for reducing the size of an image while
+    retaining the most significant features.
+
+    If the backend is NumPy, the downsampling is performed using
+    `skimage.measure.block_reduce`.
+
+    If the backend is PyTorch, the downsampling is performed using
+    `torch.nn.functional.max_pool2d`.
 
     Parameters
     ----------
     ksize: int
         Size of the pooling kernel.
-    cval: number
-        Value to pad edges with if necessary. Default 0.
-    func_kwargs: dict
+    **kwargs: Any
         Additional parameters sent to the pooling function.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
+
     Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(32, 32)
 
-    Define a max-pooling feature:
+    Define and use a max-pooling feature:
+
     >>> max_pooling = dt.MaxPooling(ksize=8)
     >>> output_image = max_pooling(input_image)
-    >>> print(output_image.shape)
-    (8, 8)
-
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    >>> output_image.shape
+    (4, 4)
 
     """
 
@@ -1415,6 +1413,115 @@ class MaxPooling(Pool):
         """
 
         super().__init__(np.max, ksize=ksize, **kwargs)
+
+    def get(
+        self: MaxPooling,
+        image: NDArray[Any] | torch.Tensor,
+        ksize: int=3,
+        **kwargs: Any,
+    ) -> NDArray[Any] | torch.Tensor:
+        """Max-pooling of input.
+
+        Checks the current backend and chooses the appropriate function to pool
+        the input image, either `._get_torch()` or `._get_numpy()`.
+
+        Parameters
+        ----------
+        image: array or tensor
+            Input array or tensor be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        array or tensor
+            The pooled input as `NDArray` or `torch.Tensor` depending on
+            the backend.
+
+        """
+
+        if self.get_backend() == "numpy":
+            return self._get_numpy(image, ksize, **kwargs)
+
+        if self.get_backend() == "torch":
+            return self._get_torch(image, ksize, **kwargs)
+
+        raise NotImplementedError(f"Backend {self.backend} not supported")
+
+    def _get_numpy(
+        self: MaxPooling,
+        image: NDArray[Any],
+        ksize: int=3,
+        **kwargs: Any,
+    ) -> NDArray[Any]:
+        """Max-pooling pooling with the NumPy backend enabled.
+
+        Returns the result of the input array passed to the scikit image
+        `block_reduce()` function with `np.max()` as the pooling function.
+
+        Parameters
+        ----------
+        image: array
+            Input array to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        array
+            The pooled image as a NumPy array.
+            
+        """
+
+        return utils.safe_call(
+            skimage.measure.block_reduce,
+            image=image,
+            func=np.max,
+            block_size=ksize,
+            **kwargs,
+        )
+
+    def _get_torch(
+        self: MaxPooling,
+        image: torch.Tensor,
+        ksize: int=3,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """Max-pooling with the PyTorch backend enabled.
+
+
+        Returns the result of the tensor passed to a PyTorch max
+        pooling layer.
+
+        Parameters
+        ----------
+        image: torch.Tensor
+            Input tensor to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        torch.Tensor
+            The pooled image as a `torch.Tensor`.
+
+        """
+
+        # If input tensor is 2D
+        if len(image.shape) == 2:
+            # Add batch dimension for max-pooling
+            expanded_image = image.unsqueeze(0)
+
+            pooled_image = torch.nn.functional.max_pool2d(
+                expanded_image, kernel_size=ksize,
+            )
+            # Remove the expanded dim
+            return pooled_image.squeeze(0)
+
+        return torch.nn.functional.max_pool2d(
+            image,
+            kernel_size=ksize,
+        )
 
 
 class MinPooling(Pool):
