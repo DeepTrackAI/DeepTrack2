@@ -7195,7 +7195,7 @@ class OneOfDict(Feature):
 class LoadImage(Feature):
     """Load an image from disk and preprocess it.
 
-    This feature loads an image file using multiple fallback file readers
+    `LoadImage` loads an image file using multiple fallback file readers
     (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a suitable reader is
     found. The image can be optionally converted to grayscale, reshaped to
     ensure a minimum number of dimensions, or treated as a list of images if
@@ -7291,7 +7291,7 @@ class LoadImage(Feature):
     >>> load_image_feature = dt.LoadImage(path=temp_file.name)
     >>> load_image_feature.torch()
     >>> loaded_image = load_image_feature.resolve()
-    >>> print(type(loaded_image))
+    >>> type(loaded_image)
     <class 'torch.Tensor'>
 
     Cleanup the temporary file:
@@ -7359,7 +7359,7 @@ class LoadImage(Feature):
         as_list: bool,
         get_one_random: bool,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor | list:
+    ) -> NDArray[Any] | torch.Tensor | list:
         """Load and process an image or a list of images from disk.
 
         This method attempts to load an image using multiple file readers
