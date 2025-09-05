@@ -1368,7 +1368,7 @@ class MaxPooling(Pool):
         return utils.safe_call(
             skimage.measure.block_reduce,
             image=image,
-            func=np.min
+            func=np.min,
             block_size=ksize,
             **kwargs,
         )
