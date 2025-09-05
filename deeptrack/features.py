@@ -9503,7 +9503,7 @@ class TakeProperties(Feature):
     __list_merge_strategy__: int = MERGE_STRATEGY_APPEND
 
     def __init__(
-        self: Feature,
+        self: TakeProperties,
         feature: Feature,
         *names: PropertyLike[str],
         **kwargs: Any,
