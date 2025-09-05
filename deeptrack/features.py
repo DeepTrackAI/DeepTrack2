@@ -9526,11 +9526,11 @@ class TakeProperties(Feature):
 
     def get(
         self: Feature,
-        image: Any,
+        image: NDArray[Any] | torch.Tensor,
         names: tuple[str, ...],
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
-    ) -> NDArray | tuple[NDArray, torch.Tensor, ...]:
+    ) -> NDArray[Any] | tuple[NDArray[Any], torch.Tensor, ...]:
         """Extract the specified properties from the feature pipeline.
 
         This method retrieves the values of the specified properties from the
@@ -9538,7 +9538,7 @@ class TakeProperties(Feature):
 
         Parameters
         ----------
-        image: Any
+        image: NDArray[Any] | torch.Tensor
             The input image (unused in this method).
         names: tuple[str, ...]
             The names of the properties to extract.
@@ -9550,7 +9550,7 @@ class TakeProperties(Feature):
 
         Returns
         -------
-        NDArray or tuple[NDArray, torch.Tensor, ...]
+        NDArray[Any] or tuple[NDArray[Any], torch.Tensor, ...]
             If a single property name is provided, a NumPy array containing the
             property values is returned. If multiple property names are
             provided, a tuple of NumPy arrays is returned, where each array
