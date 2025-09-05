@@ -82,6 +82,7 @@ class TestMath_Numpy(BackendTestBase):
         #blurred_image = feature.resolve(input_image)
         #self.assertTrue(xp.all(blurred_image == expected_output))
 
+
     def test_MaxPooling(self):
         input_image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
         feature = math.MaxPooling(ksize=2)
@@ -91,6 +92,16 @@ class TestMath_Numpy(BackendTestBase):
 
         self.assertTrue(xp.all(pooled_image == expected))
         self.assertEqual(pooled_image.shape, (1, 2))
+
+    def test_MinPooling(self):
+        input_image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
+        feature = math.MinPooling(ksize=2)
+        pooled_image = feature.resolve(input_image)
+
+        expected = xp.asarray([[1.0, 3.0]], dtype=float)
+
+        self.assertEqual(pooled_image.shape, (1, 2))
+        self.assertTrue(xp.all(pooled_image == expected))
 
 
 # Extending the test and setting the backend to torch
