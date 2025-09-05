@@ -1305,10 +1305,9 @@ class MaxPooling(Pool):
             Additional keyword arguments.
 
         """
-        
+
         super().__init__(np.max, ksize=ksize, **kwargs)
 
-    
     def get(
         self: MaxPooling,
         image: NDArray[Any] | torch.Tensor,
@@ -1340,7 +1339,6 @@ class MaxPooling(Pool):
             return self._get_torch(image, ksize, **kwargs)
         else:
             raise NotImplementedError(f"Backend {self.backend} not supported")
-
 
     def _get_numpy(
         self: MaxPooling,
