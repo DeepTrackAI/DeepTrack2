@@ -1,21 +1,21 @@
 """Core data structures for DeepTrack2.
 
-This module defines the foundational data structures used throughout
-DeepTrack2 for constructing, managing, and evaluating computational graphs
-with flexible data storage and dependency management.
+This module defines the foundational data structures used throughout DeepTrack2
+for constructing, managing, and evaluating computational graphs with flexible
+data storage and dependency management.
 
 Key Features
 ------------
 - **Hierarchical Data Management**
 
-    Provides validated, hierarchical data containers (`DeepTrackDataObject`
-    and `DeepTrackDataDict`) for storing data and managing complex, nested
-    data structures. Supports dependency tracking and flexible indexing.
+    Provides validated, hierarchical data containers (`DeepTrackDataObject` and
+    `DeepTrackDataDict`) for storing data and managing complex, nested data
+    structures. Supports dependency tracking and flexible indexing.
 
 - **Computation Graphs with Lazy Evaluation**
 
-    Implements the `DeepTrackNode` class, the core abstraction for nodes in
-    a computational graph. Supports lazy evaluation, caching, dependency
+    Implements the `DeepTrackNode` class, the core abstraction for nodes in a
+    computational graph. Supports lazy evaluation, caching, dependency
     tracking, and operator overloading for intuitive composition of complex
     computational pipelines.
 
@@ -40,28 +40,20 @@ Classes:
 
 - `DeepTrackNode`: Node in a computation graph with operator overloading.
 
-    Represents a node in a computation graph, capable of storing and
-    computing values based on dependencies, with full support for lazy
-    evaluation, dependency tracking, and operator overloading.
+    Represents a node in a computation graph, capable of storing and computing
+    values based on dependencies, with full support for lazy evaluation,
+    dependency tracking, and operator overloading.
 
 Functions:
 
-- `_equivalent(a, b)`
+- `_equivalent(a, b) -> bool`
 
-      def _equivalent(a: Any, b: Any) -> bool
+    Determines whether two objects should be considered equivalent, according
+    to DeepTrack2's internal rules (identity, empty lists, etc).
 
-    Determines whether two objects should be considered equivalent,
-    according to DeepTrack2's internal rules (identity, empty lists, etc).
+- `_create_node_with_operator(op, a, b) -> DeepTrackNode`
 
-- `_create_node_with_operator(op, a, b)`
-
-      def _create_node_with_operator(
-          op: Callable,
-          a: Any,
-          b: Any,
-      ) -> DeepTrackNode
-
-    Internal helper to create a new computation node by applying a
+    Internal helper function to create a new computation node by applying a
     specified operator to two operands, establishing correct graph
     relationships and supporting operator overloading.
 
@@ -120,9 +112,9 @@ False
 from __future__ import annotations
 
 from collections.abc import ItemsView, KeysView, ValuesView
-import operator  # Operator overloading for computation nodes.
-from weakref import WeakSet  # Manages relationships between nodes without
-                             # creating circular dependencies.
+import operator  # Operator overloading for computation nodes
+from weakref import WeakSet  # To manage relationships between nodes without
+                             # creating circular dependencies
 from typing import Any, Callable, Iterator
 
 from deeptrack.utils import get_kwarg_names
@@ -183,23 +175,29 @@ class DeepTrackDataObject:
     >>> import deeptrack as dt
 
     Create a `DeepTrackDataObject`:
+
     >>> data_obj = dt.DeepTrackDataObject()
     >>> data_obj
+    DeepTrackDataObject(data=None, valid=False)
 
     Store a value in this container:
+
     >>> data_obj.store(42)
     >>> data_obj
     DeepTrackDataObject(data=42, valid=True)
 
     Access the currently stored value:
+
     >>> data_obj.current_value()
     42
 
     Check if the stored data is valid:
+
     >>> data_obj.is_valid()
     True
 
     Invalidate the stored data:
+
     >>> data_obj.invalidate()
     >>> data_obj
     DeepTrackDataObject(data=42, valid=False)
@@ -208,6 +206,7 @@ class DeepTrackDataObject:
     False
 
     Validate the data to restore its valid status:
+
     >>> data_obj.validate()
     >>> data_obj
     DeepTrackDataObject(data=42, valid=True)
@@ -284,8 +283,7 @@ class DeepTrackDataObject:
         """Return the string representation of the object.
 
         Provides a concise representation of the data object, including the
-        stored data and its validity flag. It is useful for debugging and
-        logging purposes.
+        stored data and its validity flag. Useful for debugging and logging.
 
         Returns
         -------
@@ -307,15 +305,13 @@ class DeepTrackDataDict:
     `DeepTrackDataDict` can store multiple `DeepTrackDataObject` instances,
     each associated with a unique tuple of integers (its `_ID`).
 
-    **Use of _IDs**
-
     The default `_ID` is an empty tuple, `_ID = ()`.
 
-    Once the first entry is created, all `_ID`s must match the set key length.
+    Once the first entry is created, all `_ID`s must match the set key-length.
 
     When retrieving the data associated to an `_ID`:
-    -   If an `_ID` longer than the set key length is requested, it is trimmed.
-    -   If an `_ID` shorter than the set key length is requested, a dictionary
+    -   If an `_ID` longer than the set key-length is requested, it is trimmed.
+    -   If an `_ID` shorter than the set key-length is requested, a dictionary
         slice containing all matching entries is returned.
 
     NOTE: The `_ID`s are specifically used in the `Repeat` feature to allow it
@@ -325,8 +321,8 @@ class DeepTrackDataDict:
     ----------
     keylength: int or None
         Read-only property exposing the internal variable with the length of
-        the `_ID`s set when the first entry is created. If `None`, no entries
-        have been created, and any `_ID` length is valid.
+        the `_ID`s set when the first entry is created. If `None`, no entry has
+        been created, and any `_ID` length is valid.
     dict: dict[tuple[int, ...], DeepTrackDataObject] or {}
         Read-only property exposing the internal dictionary of stored data,
         `_dict`. This is a dictionary mapping tuples of integers (`_ID`s) to
@@ -341,7 +337,7 @@ class DeepTrackDataDict:
     `validate() -> None`
         Mark all stored data objects as valid.
     `valid_index(_ID) -> bool`
-        Check if the given _ID is valid for the current configuration.
+        Check if the given `_ID` is valid for the current configuration.
     `__getitem__(_ID) -> DeepTrackDataObject or dict[_ID, DeepTrackDataObject]`
         Retrieve data associated with the `_ID`. Can return a
         `DeepTrackDataObject`, or a dict of `DeepTrackDataObject`s if `_ID` is
@@ -366,11 +362,13 @@ class DeepTrackDataDict:
     >>> import deeptrack as dt
 
     Create a structure to store multiple, indexed instances of data:
+
     >>> data_dict = dt.DeepTrackDataDict()
     >>> data_dict
     DeepTrackDataDict(0 entries, keylength=None)
 
     Create the entries:
+
     >>> data_dict.create_index((0, 0))
     >>> data_dict.create_index((0, 1))
     >>> data_dict.create_index((1, 0))
@@ -379,6 +377,7 @@ class DeepTrackDataDict:
     DeepTrackDataDict(4 entries, keylength=2)
 
     Store the values associated with each `_ID`:
+
     >>> data_dict[(0, 0)].store("Data at (0, 0)")
     >>> data_dict[(0, 1)].store("Data at (0, 1)")
     >>> data_dict[(1, 0)].store("Data at (1, 0)")
@@ -387,6 +386,7 @@ class DeepTrackDataDict:
     DeepTrackDataDict(4 entries, keylength=2)
 
     Retrieve values based on their `_ID`s:
+
     >>> data_dict[(0, 0)]
     DeepTrackDataObject(data='Data at (0, 0)', valid=True)
 
@@ -394,17 +394,21 @@ class DeepTrackDataDict:
     'Data at (0, 0)'
 
     >>> data_dict[(1, 1)]
+
     DeepTrackDataObject(data='Data at (1, 1)', valid=True)
 
     >>> data_dict[(1, 1)].current_value()
+
     'Data at (1, 1)'
 
     If requesting a shorter `_ID`, it returns all matching nested entries:
+
     >>> data_dict[(0,)]
     {(0, 0): DeepTrackDataObject(data='Data at (0, 0)', valid=True),
      (0, 1): DeepTrackDataObject(data='Data at (0, 1)', valid=True)}
 
     Validate and invalidate all entries at once:
+
     >>> data_dict.invalidate()
     >>> data_dict[(0, 0)].is_valid()
     False
@@ -420,6 +424,7 @@ class DeepTrackDataDict:
     True
 
     Invalidate and validate a single entry:
+
     >>> data_dict[(0, 1)].invalidate()
     >>> data_dict[(0, 1)].is_valid()
     False
@@ -429,6 +434,7 @@ class DeepTrackDataDict:
     True
 
     Check if a given `_ID` exists:
+
     >>> (1, 0) in data_dict
     True
 
@@ -436,12 +442,13 @@ class DeepTrackDataDict:
     False
 
     Iterate over all entries:
+
     >>> for key, value in data_dict.items():
     ...     print(key, value.current_value())
-    (0, 0) DeepTrackDataObject(data='Data at (0, 0)', valid=True)
-    (0, 1) DeepTrackDataObject(data='Data at (0, 1)', valid=True)
-    (1, 0) DeepTrackDataObject(data='Data at (1, 0)', valid=True)
-    (1, 1) DeepTrackDataObject(data='Data at (1, 1)', valid=True)
+    (0, 0) Data at (0, 0)
+    (0, 1) Data at (0, 1)
+    (1, 0) Data at (1, 0)
+    (1, 1) Data at (1, 1)
 
     >>> for key in data_dict.keys():
     ...     print(key)
@@ -458,6 +465,7 @@ class DeepTrackDataDict:
     DeepTrackDataObject(data='Data at (1, 1)', valid=True)
 
     Check if an `_ID` is valid according to current keylength:
+
     >>> data_dict.valid_index((0, 1))
     True
 
@@ -848,7 +856,7 @@ class DeepTrackNode:
         garbage collection of nodes that are no longer used.
     dependencies: WeakSet[DeepTrackNode]
         Read-only property exposing the internal weak set `_dependencies`
-        containign the nodes on which this node depends (its parents).
+        containing the nodes on which this node depends (its parents).
         This is a weakref.WeakSet, for efficient memory management.
     _action: Callable[..., Any]
         The function or lambda-function to compute the node value.
@@ -940,6 +948,7 @@ class DeepTrackNode:
     >>> from deeptrack.backend.core import DeepTrackNode
 
     Create three `DeepTrackNode` objects, as parent, child, and grandchild:
+
     >>> parent = DeepTrackNode(
     ...     node_name="parent",
     ...     action=lambda: 10,
@@ -956,6 +965,7 @@ class DeepTrackNode:
     >>> child.add_child(grandchild)
 
     Check all children of `parent` (includes `parent` itself):
+
     >>> for node in parent.recurse_children():
     ...     print(node)
     DeepTrackNode(name='parent', len=0, action=<lambda>)
@@ -963,12 +973,14 @@ class DeepTrackNode:
     DeepTrackNode(name='grandchild', len=0, action=<lambda>)
 
     Print the children tree:
+
     >>> parent.print_children_tree()
     - DeepTrackNode 'parent' at 0x334202650
         - DeepTrackNode 'child' at 0x334201cf0
             - DeepTrackNode 'grandchild' at 0x334201ea0
 
     Check all dependencies of `grandchild` (includes `grandchild` itself):
+
     >>> for node in grandchild.recurse_dependencies():
     ...     print(node)
     DeepTrackNode(name='grandchild', len=0, action=<lambda>)
