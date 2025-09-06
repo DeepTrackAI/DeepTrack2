@@ -160,11 +160,12 @@ Create a stratified Mie sphere and resolve it through a microscope:
 
 from __future__ import annotations
 
-from typing import Callable 
+from typing import Any, TYPE_CHECKING
 import warnings
 
-from pint import Quantity
 import numpy as np
+from numpy.typing import NDArray
+from pint import Quantity
 
 from deeptrack.holography import get_propagation_matrix
 from deeptrack.backend.units import (
@@ -177,6 +178,22 @@ from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
 from deeptrack.image import pad_image_to_fft, Image
 from deeptrack.types import ArrayLike
 from deeptrack import units_registry as u
+
+
+__all__ = [
+    "Scatterer",
+    "PointParticle",
+    "Ellipse",
+    "Sphere",
+    "Ellipsoid",
+    "MieScatterer",
+    "MieSphere",
+    "MieStratifiedSphere",
+]
+
+
+if TYPE_CHECKING:
+    import torch
 
 
 #TODO ***??*** revise Scatterer - torch, typing, docstring, unit test
@@ -248,6 +265,7 @@ class Scatterer(Feature):
             )
 
         self._processed_properties = False
+
         super().__init__(
             position=position,
             z=z,
@@ -264,7 +282,7 @@ class Scatterer(Feature):
         self,
         properties: dict
     ) -> dict:
-        
+
         # Rescales the position property.
         properties = super()._process_properties(properties)
         self._processed_properties = True
@@ -323,14 +341,14 @@ class Scatterer(Feature):
         **kwargs
     ) -> list:
         return self._image_wrapped_format_input(*args, **kwargs)
-    
+
     def _no_wrap_process_and_get(
         self,
         *args,
         **feature_input
     ) -> list:
         return self._image_wrapped_process_and_get(*args, **feature_input)
-    
+
     def _no_wrap_process_output(
         self,
         *args,
@@ -341,15 +359,15 @@ class Scatterer(Feature):
 
 #TODO ***??*** revise PointParticle - torch, typing, docstring, unit test
 class PointParticle(Scatterer):
-    """Generates a point particle
+    """Generate a diffraction-limited point particle.
 
-    A point particle is approximated by the size of a pixel. For subpixel
-    positioning, the position is interpolated linearly.
+    A point particle is approximated by the size of a single pixel or voxel.
+    For subpixel positioning, the position is interpolated linearly.
 
     Parameters
     ----------
     position:  ArrayLike[float, float (, float)]
-        The position of the particle, length 2 or 3. Third index is optional,
+        Particle position in 2D or 3D. Third index is optional,
         and represents the position in the direction normal to the
         camera plane.
         
@@ -365,17 +383,21 @@ class PointParticle(Scatterer):
     """
 
     def __init__(
-        self,
-        **kwargs
+        self: PointParticle,
+        **kwargs: Any,
     ):
+        """
+
+        """
+
         super().__init__(upsample=1, upsample_axes=(), **kwargs)
 
     def get(
-        self,
+        self: PointParticle,
         image: Image | np.ndarray,
-        **kwarg
-    ) -> ArrayLike[float]:
-        """Abstract method to initialize the point scatterer"""
+        **kwarg: Any,
+    ) -> NDArray[Any] | torch.Tensor:
+        """Evaluate and return the scatterer volume."""
 
         scale = get_active_scale()
 
