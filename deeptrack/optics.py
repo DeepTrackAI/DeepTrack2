@@ -285,6 +285,8 @@ class Microscope(StructuralFeature):
         # Grab objective properties to pass to sample
         objective_properties = self._objective.properties()
 
+        #TODO: TBE
+        """
         # Calculate required output image for the given upscale.
         # This upscale way will be deprecated in favor of dt.Upscale().
         _upscale_given_by_optics = objective_properties["upscale"]
@@ -296,79 +298,110 @@ class Microscope(StructuralFeature):
                 *objective_properties["voxel_size"], *_upscale_given_by_optics
             )
         ):
+        """
+
+        with u.context(create_context(*objective_properties["voxel_size"])):
 
             upscale = np.round(get_active_scale())
 
+            def _scale_region_2d(
+                region: list[int],
+                upscale: tuple[float, float, float],
+            ) -> list[int]:
+                """Scale a 4-tuple region (x_min, y_min, x_max, y_max) or
+                padding using the lateral upscale factors (ux, uy)."""
+                ux, uy, _ = upscale
+                return [int(v * f) for v, f in zip(region, (ux, uy, ux, uy))]
+
+            # Scale output region from optics into sample voxel units.
             output_region = objective_properties.pop("output_region")
-            objective_properties["output_region"] = [
-                int(o * upsc)
-                for o, upsc in zip(
-                    output_region, (upscale[0], upscale[1], upscale[0], upscale[1])
-                )
-            ]
-
-            padding = objective_properties.pop("padding")
-            objective_properties["padding"] = [
-                int(p * upsc)
-                for p, upsc in zip(
-                    padding, (upscale[0], upscale[1], upscale[0], upscale[1])
-                )
-            ]
-
+            objective_properties["output_region"] = _scale_region_2d(
+                output_region,
+                upscale,
+            )
             self._objective.output_region.set_value(
                 objective_properties["output_region"]
             )
+
+            # Scale padding region in the same way (left, top, right, bottom).
+            padding = objective_properties.pop("padding")
+            objective_properties["padding"] = _scale_region_2d(
+                padding,
+                upscale,
+            )
             self._objective.padding.set_value(objective_properties["padding"])
 
+            # Propagate all relevant properties from the objective to the
+            # sample graph. This ensures scatterers are evaluated in the
+            # same voxel size, output region, and padding as the optics.
+            # The extra flag `return_fft=True` is forced here because most
+            # objectives (e.g., Brightfield, Holography) operate in Fourier
+            # space, and they require scatterers to provide Fourier-domain
+            # data in addition to real-space volumes.
             propagate_data_to_dependencies(
-                self._sample, **{"return_fft": True, **objective_properties}
+                self._sample,
+                **{"return_fft": True, **objective_properties},
             )
 
+            # Evaluate the sample feature to obtain scatterers.
+            # The result may be a single scatterer or a list of them.
             list_of_scatterers = self._sample()
-
             if not isinstance(list_of_scatterers, list):
                 list_of_scatterers = [list_of_scatterers]
 
             # All scatterers that are defined as volumes.
-            volume_samples = [
+            # Volume scatterers occupy voxels in 3D (e.g. PointParticle).
+            volume_scatterers = [
                 scatterer
                 for scatterer in list_of_scatterers
                 if not scatterer.get_property("is_field", default=False)
             ]
 
             # All scatterers that are defined as fields.
-            field_samples = [
+            # Field scatterers provide a complex field directly,
+            # bypassing volume merge.
+            field_scatterers = [
                 scatterer
                 for scatterer in list_of_scatterers
                 if scatterer.get_property("is_field", default=False)
             ]
 
+
+
+
+
+
+
+
             # Merge all volumes into a single volume.
             sample_volume, limits = _create_volume(
-                volume_samples,
+                volume_scatterers,
                 **objective_properties,
             )
             sample_volume = Image(sample_volume)
 
             # Merge all properties into the volume.
-            for scatterer in volume_samples + field_samples:
+            for scatterer in volume_scatterers + field_scatterers:
                 sample_volume.merge_properties_from(scatterer)
 
             # Let the objective know about the limits of the volume and all the fields.
             propagate_data_to_dependencies(
                 self._objective,
                 limits=limits,
-                fields=field_samples,
+                fields=field_scatterers,
             )
 
             imaged_sample = self._objective.resolve(sample_volume)
 
+        #TODO: TBE
+        """
         # Handling separately upscale given by optics.
         # This upscale way will be deprecated in favor of dt.Upscale().        
         if _upscale_given_by_optics != (1, 1, 1):
             imaged_sample = AveragePooling((*_upscale_given_by_optics[:2], 1))(
                 imaged_sample
             )
+        """
 
         return imaged_sample
 
