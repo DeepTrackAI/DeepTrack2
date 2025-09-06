@@ -988,12 +988,14 @@ class DeepTrackNode:
     DeepTrackNode(name='parent', len=0, action=<lambda>)
 
     Print the dependency tree:
+
     >>> grandchild.print_dependencies_tree()
     - DeepTrackNode 'grandchild' at 0x334201ea0
         - DeepTrackNode 'child' at 0x334201cf0
             - DeepTrackNode 'parent' at 0x334202650
 
     Store and retrieve data for specific _IDs:
+
     >>> parent.store(15, _ID=(0,))
     >>> parent.store(20, _ID=(1,))
     >>> parent.current_value((0,))
@@ -1002,6 +1004,7 @@ class DeepTrackNode:
     20
 
     Compute and retrieve the value for the child and grandchild node:
+
     >>> child(_ID=(0,))
     30
     >>> child(_ID=(1,))
@@ -1012,6 +1015,7 @@ class DeepTrackNode:
     120
 
     Validation and invalidation:
+
     >>> parent.is_valid((0,))
     True
     >>> child.is_valid((0,))
@@ -1036,6 +1040,7 @@ class DeepTrackNode:
     False
 
     Setting a value and automatic invalidation:
+
     >>> parent.current_value((0,))
     15
     >>> grandchild((0,))  # Computes and stores the value in grandchild
@@ -1050,6 +1055,7 @@ class DeepTrackNode:
     252
 
     Resetting all data in the dependency tree (recomputation required):
+
     >>> grandchild.update()
     >>> grandchild()
     60
@@ -1059,6 +1065,7 @@ class DeepTrackNode:
     60
 
     Operator overloading—arithmetic and comparison:
+
     >>> node_a = DeepTrackNode(lambda: 5)
     >>> node_b = DeepTrackNode(lambda: 3)
 
@@ -1091,19 +1098,23 @@ class DeepTrackNode:
     True
 
     Indexing into computed data:
+
     >>> vector_node = DeepTrackNode(lambda: [10, 20, 30])
     >>> first_element = vector_node[0]
     >>> first_element()
     10
 
     Accessing a value before computing it raises an error:
+
     >>> new_node = DeepTrackNode(lambda: 123)
     >>> new_node.is_valid((42,))
     False
+
     >>> new_node.current_value((42,))
     KeyError: 'Attempting to index an empty dict.'
 
     Working with nested _ID slicing:
+
     >>> parent = DeepTrackNode(lambda: 5)
     >>> child = DeepTrackNode(lambda _ID=None: parent(_ID[:1]) + _ID[1])
     >>> parent.add_child(child)
@@ -1111,6 +1122,7 @@ class DeepTrackNode:
     8
 
     Citations for a node and its dependencies:
+
     >>> parent.get_citations()  # Set of citation strings
     {...}
 
