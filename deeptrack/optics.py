@@ -137,10 +137,11 @@ Simulating an image with the `Fluorescence` class:
 from __future__ import annotations
 
 from pint import Quantity
-from typing import Any
+from typing import Any, TYPE_CHECKING
 import warnings
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.ndimage import convolve
 
 from deeptrack.backend.units import (
@@ -157,6 +158,9 @@ from deeptrack.types import ArrayLike, PropertyLike
 
 from deeptrack import image
 from deeptrack import units_registry as u
+
+if TYPE_CHECKING:
+    import torch
 
 
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test
@@ -207,30 +211,32 @@ class Microscope(StructuralFeature):
 
     __distributed__ = False
 
+    _sample: Feature
+    _objective: Feature
+
     def __init__(
         self:  Microscope,
         sample: Feature,
         objective: Feature,
         **kwargs: Any,
     ):
-        """Initialize the `Microscope` instance.
+        """Initialize a microscope feature combining sample and optics.
+
+        This constructor attaches a sample feature (typically a combination of
+        scatterers) and an objective feature (optical system) to the
+        microscope.
 
         Parameters
         ----------
         sample: Feature
-            A feature-set resolving a list of images describing the sample to be
-            imaged.
+            Feature that resolves one or more scatterer volumes or fields
+            representing the sample to be imaged.
         objective: Feature
-            A feature-set defining the optical device that images the sample.
+            Feature describing the optical system used to image the sample
+            (e.g., brightfield, fluorescence).
         **kwargs: Any
-            Additional parameters passed to the base `StructuralFeature` class.
-
-        Attributes
-        ----------
-        _sample: Feature
-            The feature-set defining the sample to be imaged.
-        _objective: Feature
-            The feature-set defining the optical system imaging the sample.
+            Additional keyword arguments passed to the base `StructuralFeature`
+            class.
 
         """
 
@@ -238,28 +244,27 @@ class Microscope(StructuralFeature):
 
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
+
+        #TODO: erase following line when rid of Image
         self._sample.store_properties()
 
     def get(
         self: Microscope,
-        image: Image | None,
+        input: Any = None,  # Ignored, kept for API compatibility
         **kwargs: Any,
-    ) -> Image:
+    ) -> NDArray[Any] | torch.Tensor:
         """Generate an image of the sample using the defined optical system.
-
-        This method processes the sample through the optical system to
-        produce a simulated image.
 
         Parameters
         ----------
-        image: Image | None
-            The input image to be processed. If None, a new image is created.
+        image: Any, optional
+            Ignored. Kept for API compatibility. Defaults to None.
         **kwargs: Any
             Additional parameters for the imaging process.
 
         Returns
         -------
-        Image: Image
+        array or tensor
             The processed image after applying the optical system.
 
         Examples
@@ -277,34 +282,33 @@ class Microscope(StructuralFeature):
 
         """
 
-        # Grab properties from the objective to pass to the sample
-        additional_sample_kwargs = self._objective.properties()
+        # Grab objective properties to pass to sample
+        objective_properties = self._objective.properties()
 
-        # Calculate required output image for the given upscale
-        # This way of providing the upscale will be deprecated in the future
-        # in favor of dt.Upscale().
-        _upscale_given_by_optics = additional_sample_kwargs["upscale"]
+        # Calculate required output image for the given upscale.
+        # This upscale way will be deprecated in favor of dt.Upscale().
+        _upscale_given_by_optics = objective_properties["upscale"]
         if np.array(_upscale_given_by_optics).size == 1:
             _upscale_given_by_optics = (_upscale_given_by_optics,) * 3
 
         with u.context(
             create_context(
-                *additional_sample_kwargs["voxel_size"], *_upscale_given_by_optics
+                *objective_properties["voxel_size"], *_upscale_given_by_optics
             )
         ):
 
             upscale = np.round(get_active_scale())
 
-            output_region = additional_sample_kwargs.pop("output_region")
-            additional_sample_kwargs["output_region"] = [
+            output_region = objective_properties.pop("output_region")
+            objective_properties["output_region"] = [
                 int(o * upsc)
                 for o, upsc in zip(
                     output_region, (upscale[0], upscale[1], upscale[0], upscale[1])
                 )
             ]
 
-            padding = additional_sample_kwargs.pop("padding")
-            additional_sample_kwargs["padding"] = [
+            padding = objective_properties.pop("padding")
+            objective_properties["padding"] = [
                 int(p * upsc)
                 for p, upsc in zip(
                     padding, (upscale[0], upscale[1], upscale[0], upscale[1])
@@ -312,12 +316,12 @@ class Microscope(StructuralFeature):
             ]
 
             self._objective.output_region.set_value(
-                additional_sample_kwargs["output_region"]
+                objective_properties["output_region"]
             )
-            self._objective.padding.set_value(additional_sample_kwargs["padding"])
+            self._objective.padding.set_value(objective_properties["padding"])
 
             propagate_data_to_dependencies(
-                self._sample, **{"return_fft": True, **additional_sample_kwargs}
+                self._sample, **{"return_fft": True, **objective_properties}
             )
 
             list_of_scatterers = self._sample()
@@ -342,7 +346,7 @@ class Microscope(StructuralFeature):
             # Merge all volumes into a single volume.
             sample_volume, limits = _create_volume(
                 volume_samples,
-                **additional_sample_kwargs,
+                **objective_properties,
             )
             sample_volume = Image(sample_volume)
 
@@ -359,12 +363,16 @@ class Microscope(StructuralFeature):
 
             imaged_sample = self._objective.resolve(sample_volume)
 
-        # Upscale given by the optics needs to be handled separately.
+        # Handling separately upscale given by optics.
+        # This upscale way will be deprecated in favor of dt.Upscale().        
         if _upscale_given_by_optics != (1, 1, 1):
             imaged_sample = AveragePooling((*_upscale_given_by_optics[:2], 1))(
                 imaged_sample
             )
 
+        return imaged_sample
+
+        #TODO: erase rest of the method
         # Merge with input
         if not image:
             if not self._wrap_array_with_image and isinstance(imaged_sample, Image):
