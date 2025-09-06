@@ -43,17 +43,20 @@ Examples
 >>> import deeptrack as dt
 
 Create and use a constant property:
+
 >>> const_prop = dt.Property(42)
 >>> const_prop()
 42
 
 Define a dynamic property dependent on another:
+
 >>> const_prop = dt.Property(5)
 >>> dynamic_prop = dt.Property(lambda x: x * 2, x=const_prop)
 >>> dynamic_prop()
 10
 
 Create a dictionary of properties:
+
 >>> import numpy as np
 >>>
 >>> prop_dict = dt.PropertyDict(
@@ -63,12 +66,15 @@ Create a dictionary of properties:
 ... )
 >>> prop_dict["constant"]()
 42
+
 >>> prop_dict["dependent"]()
 52
+
 >>> prop_dict["random"]()
 52.35065943710633
 
 Handle sequential properties:
+
 >>> seq_prop = dt.SequentialProperty(
 ...     sampling_rule=lambda: np.random.randint(10, 20),
 ... )
@@ -136,7 +142,7 @@ class Property(DeepTrackNode):
     sampling_rule: Any
         The rule for sampling values. Can be a constant, function, list, 
         dictionary, iterator, tuple, NumPy array, PyTorch tensor, slice,
-        or DeepTrackNode.
+        or `DeepTrackNode`.
     **dependencies: Property
         Additional dependencies passed as named arguments. These dependencies 
         can be used as inputs to functions or other dynamic components of the 
@@ -144,7 +150,7 @@ class Property(DeepTrackNode):
 
     Methods
     -------
-    create_action(sampling_rule: Any, **dependencies: Property) -> Callable[..., Any]
+    `create_action(sampling_rule, **dependencies) -> Callable[..., Any]`
         Creates an action that defines how the property is evaluated. The 
         behavior of the action depends on the type of `sampling_rule`.
 
@@ -189,6 +195,8 @@ class Property(DeepTrackNode):
     >>> dynamic_prop.update()  # Updates the value
     >>> dynamic_prop()  # Returns different random value
     0.5862725216547282
+    >>> dynamic_prop.new()  # Returns different random value
+    0.36122033451938484
 
     >>> const_prop = dt.Property(5)
     >>> dynamic_prop = dt.Property(lambda x: 2 * x, x=const_prop)
@@ -216,14 +224,11 @@ class Property(DeepTrackNode):
     >>> iter_prop = dt.Property(iter([1, 2, 3]))
     >>> iter_prop()
     1
-    >>> iter_prop.update()
-    >>> iter_prop()
+    >>> iter_prop.new()  # equivalent to iter_prop.update()()
     2
-    >>> iter_prop.update()
-    >>> iter_prop()
+    >>> iter_prop.new()
     3
-    >>> iter_prop.update()
-    >>> iter_prop()  # Last value repeats
+    >>> iter_prop.new()  # Last value repeats
     3
 
     Lists and dictionaries can contain properties, functions, or constants:
@@ -252,7 +257,7 @@ class Property(DeepTrackNode):
     100
 
     >>> node = dt.DeepTrackNode(lambda _ID=(): np.random.rand())
-    >>> node_prop = Property(node)
+    >>> node_prop = dt.Property(node)
     >>> node_prop()
     0.5065650298607408
 
@@ -362,7 +367,7 @@ class Property(DeepTrackNode):
                        or tuple or np.ndarray or torch.Tensor or slice
                        or DeepTrackNode or Any
             The rule to sample values for the property.
-        **dependencies: dict[str, Property]
+        **dependencies: Property
             Dependencies to be used in the sampling rule.
 
         Returns
@@ -479,7 +484,7 @@ class PropertyDict(DeepTrackNode, dict):
 
     Methods
     -------
-    __getitem__(key: str) -> Any
+    `__getitem__(key) -> Any`
         Retrieves a value from the dictionary using a key.
 
     Examples
@@ -487,6 +492,7 @@ class PropertyDict(DeepTrackNode, dict):
     >>> import deeptrack as dt
 
     Initialize a `PropertyDict` with different types of properties:
+
     >>> import numpy as np
     >>>
     >>> prop_dict = dt.PropertyDict(
@@ -496,10 +502,13 @@ class PropertyDict(DeepTrackNode, dict):
     ... )
 
     Access the properties:
+
     >>> prop_dict["constant"]()
     42
+
     >>> prop_dict["dependent"]()
     52
+
     >>> prop_dict["random"]()
     0.33112452108057056
     
@@ -536,8 +545,10 @@ class PropertyDict(DeepTrackNode, dict):
                 try:
                     # Create a Property instance for the key,
                     # resolving dependencies.
-                    dependencies[key] = Property(value,
-                                                 **{**dependencies, **kwargs})
+                    dependencies[key] = Property(
+                        value,
+                        **{**dependencies, **kwargs},
+                    )
                     # Remove the key from the input dictionary once resolved.
                     kwargs.pop(key)
                 except AttributeError:
