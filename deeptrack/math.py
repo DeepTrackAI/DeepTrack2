@@ -1207,18 +1207,20 @@ class AveragePooling(Pool):
     ----------
     ksize: int
         Size of the pooling kernel.
-    **kwargs: any
+    **kwargs: Any
         Additional parameters sent to the pooling function.
 
     Examples
     --------
     >>> import deeptrack as dt
+
     Create an input image:
     >>> import numpy as np
     >>>
     >>> input_image = np.random.rand(32, 32)
 
-    Define and use a average pooling feature:
+    Define and use a average-pooling feature:
+
     >>> average_pooling = dt.AveragePooling(ksize=4)
     >>> output_image = average_pooling(input_image)
     >>> print(output_image.shape)
@@ -1227,13 +1229,13 @@ class AveragePooling(Pool):
     """
 
     def __init__(
-        self: Pool,
+        self: AveragePooling,
         ksize: PropertyLike[int] = 3,
         **kwargs: Any,
     ):
         """Initialize the parameters for average pooling.
 
-        This constructor initializes the parameters for average pooling.
+        This constructor initializes the parameters for average-pooling.
 
         Parameters
         ----------
@@ -1245,8 +1247,7 @@ class AveragePooling(Pool):
         """
 
         super().__init__(np.mean, ksize=ksize, **kwargs)
-        
-        
+
     def get(
         self: AveragePooling,
         image: NDArray[Any] | torch.Tensor,
@@ -1254,7 +1255,7 @@ class AveragePooling(Pool):
         **kwargs: Any,
     ) -> NDArray[Any] | torch.Tensor:
         """Average pooling of input.
-        
+
         Checks the current backend and chooses the appropriate function to pool
         the input image, either `._get_torch()` or `._get_numpy()`.
 
@@ -1272,12 +1273,14 @@ class AveragePooling(Pool):
             the backend.
 
         """
+
         if self.get_backend() == "numpy":
             return self._get_numpy(image, ksize, **kwargs)
-        elif self.get_backend() == "torch":
+
+        if self.get_backend() == "torch":
             return self._get_torch(image, ksize, **kwargs)
-        else:
-            raise NotImplementedError(f"Backend {self.backend} not supported")
+
+        raise NotImplementedError(f"Backend {self.backend} not supported")
 
     def _get_numpy(
         self: AveragePooling,
@@ -1287,8 +1290,8 @@ class AveragePooling(Pool):
     ) -> NDArray[Any]:
         """Average pooling with the NumPy backend enabled.
 
-        Returns the result of the image passed to the scikit image block_reduce
-        function with `np.mean()` as the pooling function.
+        Returns the result of the image passed to the scikit image
+        `block_reduce()` function with `np.mean()` as the pooling function.
 
         Parameters
         ----------
@@ -1299,10 +1302,11 @@ class AveragePooling(Pool):
 
         Returns
         -------
-        NDArray
-            The pooled image as a `NDArray`.
-            
+        array
+            The pooled image as a NumPy array.
+
         """
+
         return utils.safe_call(
             skimage.measure.block_reduce,
             image=image,
@@ -1317,10 +1321,10 @@ class AveragePooling(Pool):
         ksize: int=3,
         **kwargs: Any,
     ) -> torch.Tensor:
-        """Perform average pooling with the PyTorch backend enabled.
+        """Average pooling with the PyTorch backend enabled.
         
-        Returns the result of the image passed to a Pytorch average
-        pooling layer.
+        Returns the result of the image passed to a Pytorch average pooling
+        layer.
 
         Parameters
         ----------
