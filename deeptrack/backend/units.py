@@ -27,28 +27,15 @@ Module Structure
 ----------------
 Functions:
 
-- `get_active_voxel_size()`
-
-    def get_active_voxel_size() -> tuple[float, float, float]
+- `get_active_voxel_size() -> tuple[float, float, float]`
 
     Get the active voxel size in meters along the x, y, and z axes.
 
-- `get_active_scale()`
-
-    def get_active_scale() -> tuple[float, float, float]
+- `get_active_scale() -> tuple[float, float, float]`
 
     Get the scaling factors between simulation and optical pixels.
 
-- `create_context(xpixel, ypixel, zpixel, xscale, yscale, zscale)`
-
-    def create_context(
-        xpixel: float | None = None,
-        ypixel: float | None = None,
-        zpixel: float | None = None,
-        xscale: int | None = None,
-        yscale: int | None = None,
-        zscale: int | None = None,
-    ) -> Context
+- `create_context(xpixel, ypixel, zpixel, xscale, yscale, zscale) -> Context`
 
     Create a unit context that defines how pixels map to meters.
 
@@ -64,14 +51,17 @@ Examples
 >>> from deeptrack.backend import units
 
 Retrieve the active voxel size in meters:
+
 >>> units.get_active_voxel_size()
 (1e-06, 1e-06, 1e-06)
 
 Retrieve the scaling factors between simulation and optical pixels:
+
 >>> units.get_active_scale()
 (1.0, 1.0, 1.0)
 
 Create a custom unit context and use it to convert simulation pixels:
+
 >>> from deeptrack import units_registry as u
 >>>
 >>> ctx = units.create_context(
@@ -90,6 +80,7 @@ Create a custom unit context and use it to convert simulation pixels:
 1e-06 meter
 
 Use the ConversionTable to convert physical quantities to target units:
+
 >>> conversion_table = units.ConversionTable(
 ...     length=(u.meter, u.micrometer),
 ...     time=(u.second, u.millisecond),
@@ -99,12 +90,14 @@ Use the ConversionTable to convert physical quantities to target units:
  'time': 500.0 <Unit('millisecond')>}
 
 Support for PyTorch tensors:
+
 >>> import torch
 >>>
 >>> conversion_table.convert(length=torch.tensor([1.0, 2.0]))
 {'length': <Quantity([1000000. 2000000.], 'micrometer')>}
 
 """
+
 
 from __future__ import annotations
 
