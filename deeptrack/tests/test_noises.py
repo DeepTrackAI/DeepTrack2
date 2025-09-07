@@ -4,12 +4,13 @@
 
 import unittest
 
+import array_api_compat as apc
 import numpy as np
 
 from deeptrack.image import Image
 from deeptrack import noises
 
-from deeptrack.backend import TORCH_AVAILABLE
+from deeptrack.backend import OPENCV_AVAILABLE, TORCH_AVAILABLE, xp
 from deeptrack.tests import BackendTestBase
 
 if TORCH_AVAILABLE:
