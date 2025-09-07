@@ -63,7 +63,7 @@ class TestNoises_Numpy(BackendTestBase):
         #self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (256, 256))
         #TODO: Add xp function to check complex values
-        #self.assertTrue(xp.any(xp.is_complex(output_image)))
+        self.assertTrue(xp.any(output_image.imag != 0))
 
     def test_Poisson(self):
         noise = noises.Poisson(snr=20)
