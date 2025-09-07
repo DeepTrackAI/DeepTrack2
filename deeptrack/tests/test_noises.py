@@ -36,7 +36,7 @@ class TestNoises_Numpy(BackendTestBase):
         
         #self.assertIsInstance(output_image, input_image)
         self.assertEqual(output_image.shape, (256, 256))
-        self.assertTrue(xp.all(xp.array(output_image) == 0.5))
+        self.assertTrue(xp.all(xp.asarray(output_image) == 0.5))
 
         # Test with arrays
         noise = noises.Background(offset=0.5)
@@ -45,7 +45,7 @@ class TestNoises_Numpy(BackendTestBase):
         
         #self.assertIsInstance(output_image, input_image)
         self.assertEqual(output_image.shape, (10, 10))
-        self.assertTrue(xp.all(xp.array(output_image) == 1.5))
+        self.assertTrue(xp.all(xp.asarray(output_image) == 1.5))
 
     def test_Gaussian(self):
         noise = noises.Gaussian(mu=0.1, sigma=0.05)
