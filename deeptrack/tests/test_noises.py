@@ -30,20 +30,20 @@ class TestNoises_Numpy(BackendTestBase):
     def test_Background(self):
         # Test with DeepTrack Image
         noise = noises.Background(offset=0.5)
-        input_image = Image(np.zeros((256, 256)))
+        input_image = Image(xp.zeros((256, 256)))
         output_image = noise.resolve(input_image)
 
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, xp.ndarray)
         self.assertEqual(output_image.shape, (256, 256))
-        self.assertTrue(np.all(np.array(output_image) == 0.5))
+        self.assertTrue(xp.all(xp.array(output_image) == 0.5))
 
         # Test with NumPy array
         noise = noises.Background(offset=0.5)
-        input_image = np.ones((10, 10))
+        input_image = xp.ones((10, 10))
         output_image = noise.resolve(input_image)
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, xp.ndarray)
         self.assertEqual(output_image.shape, (10, 10))
-        self.assertTrue(np.all(np.array(output_image) == 1.5))
+        self.assertTrue(xp.all(xp.array(output_image) == 1.5))
 
     def test_Gaussian(self):
         noise = noises.Gaussian(mu=0.1, sigma=0.05)
@@ -71,15 +71,8 @@ class TestNoises_Numpy(BackendTestBase):
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
 class TestNoises_Torch(TestNoises_Numpy):
     BACKEND = "torch"
-    
-    def test_Backgroud(self):
-        noise = noises.Background(offset=0.25)
-        input_image = torch.zeros(5,5)
-        output_image = noise.resolve(input_image)
-        
-        self.assertIsInstance(output_image, torch.Tensor)
-        self.assertEqual(output_image.shape, (5,5))
-        self.assertTrue(torch.all(output_image == 0.25).item())
+    pass
+
 
     def test_Gaussian(self):
         noise = noises.Gaussian(mu=0.1, sigma=0.05)
