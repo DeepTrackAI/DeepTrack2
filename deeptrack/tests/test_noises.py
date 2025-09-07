@@ -66,7 +66,7 @@ class TestNoises_Numpy(BackendTestBase):
 
     def test_Poisson(self):
         noise = noises.Poisson(snr=20)
-        input_image = Image(xp.ones((256, 256)) * 0.1)
+        input_image = xp.ones((256, 256)) * 0.1
         output_image = noise.resolve(input_image)
         
         #self.assertIsInstance(output_image, np.ndarray)
