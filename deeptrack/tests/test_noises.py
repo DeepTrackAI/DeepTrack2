@@ -59,7 +59,7 @@ class TestNoises_Numpy(BackendTestBase):
         noise = noises.ComplexGaussian(mu=0.1, sigma=0.05)
         input_image = Image(xp.zeros((256, 256)))
         output_image = noise.resolve(input_image)
-        
+
         #self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (256, 256))
         #TODO: Add xp function to check complex values
@@ -69,7 +69,7 @@ class TestNoises_Numpy(BackendTestBase):
         noise = noises.Poisson(snr=20)
         input_image = xp.ones((256, 256)) * 0.1
         output_image = noise.resolve(input_image)
-        
+
         #self.assertIsInstance(output_image, np.ndarray)
         self.assertEqual(output_image.shape, (256, 256))
 
