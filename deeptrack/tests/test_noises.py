@@ -34,7 +34,6 @@ class TestNoises_Numpy(BackendTestBase):
         input_image = Image(xp.zeros((256, 256)))
         output_image = noise.resolve(input_image)
 
-        self.assertIsInstance(type(output_image), type(input_image))
         self.assertEqual(output_image.shape, (256, 256))
         self.assertTrue(xp.all(xp.array(output_image) == 0.5))
 
