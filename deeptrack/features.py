@@ -216,7 +216,7 @@ __all__ = [
     "Merge",
     "OneOf",
     "OneOfDict",
-    "LoadImage",  # TODO ***MG***
+    "LoadImage",
     "SampleToMasks",  # TODO ***MG***
     "AsType",  # TODO ***MG***
     "ChannelFirst2d",
@@ -7195,21 +7195,21 @@ class OneOfDict(Feature):
 class LoadImage(Feature):
     """Load an image from disk and preprocess it.
 
-    This feature loads an image file using multiple fallback file readers 
-    (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a suitable reader is 
-    found. The image can be optionally converted to grayscale, reshaped to 
-    ensure a minimum number of dimensions, or treated as a list of images if 
+    `LoadImage` loads an image file using multiple fallback file readers
+    (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a suitable reader is
+    found. The image can be optionally converted to grayscale, reshaped to
+    ensure a minimum number of dimensions, or treated as a list of images if
     multiple paths are provided.
 
     Parameters
     ----------
     path: PropertyLike[str or list[str]]
-        The path(s) to the image(s) to load. Can be a single string or a list 
+        The path(s) to the image(s) to load. Can be a single string or a list
         of strings.
     load_options: PropertyLike[dict[str, Any]], optional
         Additional options passed to the file reader. It defaults to `None`.
     as_list: PropertyLike[bool], optional
-        If `True`, the first dimension of the image will be treated as a list. 
+        If `True`, the first dimension of the image will be treated as a list.
         It defaults to `False`.
     ndim: PropertyLike[int], optional
         Ensures the image has at least this many dimensions. It defaults to
@@ -7217,7 +7217,7 @@ class LoadImage(Feature):
     to_grayscale: PropertyLike[bool], optional
         If `True`, converts the image to grayscale. It defaults to `False`.
     get_one_random: PropertyLike[bool], optional
-        If `True`, extracts a single random image from a stack of images. Only 
+        If `True`, extracts a single random image from a stack of images. Only
         used when `as_list` is `True`. It defaults to `False`.
 
     Attributes
@@ -7228,13 +7228,27 @@ class LoadImage(Feature):
 
     Methods
     -------
-    `get(image: Any, path: str or list[str], load_options: dict[str, Any] | None, ndim: int, to_grayscale: bool, as_list: bool, get_one_random: bool, **kwargs: Any) -> array`
+    `get(
+        path: str | list[str],
+        load_options: dict[str, Any] | None,
+        ndim: int,
+        to_grayscale: bool,
+        as_list: bool,
+        get_one_random: bool,
+        **kwargs: Any,
+    ) -> NDArray | list[NDArray] | torch.Tensor | list[torch.Tensor]`
         Load the image(s) from disk and process them.
 
     Raises
     ------
     IOError
         If no file reader could parse the file or the file does not exist.
+
+    Notes
+    ----
+    By default, `LoadImage` returns a NumPy array. If you want the output as
+    a PyTorch tensor, convert the feature to torch by calling `.torch()` before
+    resolving.
 
     Examples
     --------
@@ -7243,7 +7257,7 @@ class LoadImage(Feature):
     Create a temporary image file:
     >>> import numpy as np
     >>> import os, tempfile
-    >>> 
+    >>>
     >>> temp_file = tempfile.NamedTemporaryFile(suffix=".npy", delete=False)
     >>> np.save(temp_file.name, np.random.rand(100, 100, 3))
 
@@ -7271,7 +7285,14 @@ class LoadImage(Feature):
     ... )
     >>> loaded_image = load_image_feature.resolve()
     >>> loaded_image.shape
-    (2, 2, 3, 1)
+    (100, 100, 3, 1)
+
+    Load an image as a PyTorch tensor by setting the backend of the feature:
+    >>> load_image_feature = dt.LoadImage(path=temp_file.name)
+    >>> load_image_feature.torch()
+    >>> loaded_image = load_image_feature.resolve()
+    >>> type(loaded_image)
+    <class 'torch.Tensor'>
 
     Cleanup the temporary file:
     >>> os.remove(temp_file.name)
@@ -7313,7 +7334,7 @@ class LoadImage(Feature):
             If `True`, selects a single random image from a stack when
             `as_list=True`. It defaults to `False`.
         **kwargs: Any
-            Additional keyword arguments passed to the parent `Feature` class, 
+            Additional keyword arguments passed to the parent `Feature` class,
             allowing further customization.
 
         """
@@ -7338,31 +7359,36 @@ class LoadImage(Feature):
         as_list: bool,
         get_one_random: bool,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor:
+    ) -> NDArray[Any] | torch.Tensor | list:
         """Load and process an image or a list of images from disk.
 
-        This method attempts to load an image using multiple file readers 
-        (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a valid format is 
+        This method attempts to load an image using multiple file readers
+        (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a valid format is
         found. It supports optional processing steps such as ensuring a minimum
-        number of dimensions, grayscale conversion, and treating multi-frame 
+        number of dimensions, grayscale conversion, and treating multi-frame
         images as lists.
+
+        The output is returned as a NumPy array by default. If `as_list=True`,
+        the result is a Python list of arrays. If the backend of the feature is
+        `"torch"`, the image is returned as a PyTorch tensor.
 
         Parameters
         ----------
         path: str or list[str]
-            The file path(s) to the image(s) to be loaded. A single string 
+            The file path(s) to the image(s) to be loaded. A single string
             loads one image, while a list of paths loads multiple images.
         load_options: dict of str to Any, optional
-            Additional options passed to the file reader (e.g., `allow_pickle` 
+            Additional options passed to the file reader (e.g., `allow_pickle`
             for NumPy, `mode` for OpenCV). It defaults to `None`.
         ndim: int
-            Ensures the image has at least this many dimensions. If the loaded 
-            image has fewer dimensions, extra dimensions are added.
+            Ensures the image has at least this many dimensions. If the loaded
+            image has fewer dimensions, extra dimensions are added. It defaults
+            to `3`.
         to_grayscale: bool
             If `True`, converts the image to grayscale. It defaults to `False`.
         as_list: bool
-            If `True`, treats the first dimension as a list of images instead 
-            of stacking them into a NumPy array.
+            If `True`, treats the first dimension as a list of images instead
+            of stacking them into a NumPy array. It defaults to `False`.
         get_one_random: bool
             If `True`, selects a single random image from a multi-frame stack
             when `as_list=True`. It defaults to `False`.
@@ -7372,14 +7398,14 @@ class LoadImage(Feature):
         Returns
         -------
         array
-            The loaded and processed image(s). If `as_list=True`, returns a 
+            The loaded and processed image(s). If `as_list=True`, returns a
             list of images; otherwise, returns a single NumPy array or PyTorch
             tensor.
 
         Raises
         ------
         IOError
-            If no valid file reader is found or if the specified file does not 
+            If no valid file reader is found or if the specified file does not
             exist.
 
         """
@@ -7402,8 +7428,9 @@ class LoadImage(Feature):
                 try:
                     import PIL.Image
 
-                    image = [PIL.Image.open(file, **load_options)
-                             for file in path]
+                    image = [
+                        PIL.Image.open(file, **load_options) for file in path
+                    ]
                 except (IOError, ImportError):
                     import cv2
 
@@ -7439,11 +7466,18 @@ class LoadImage(Feature):
                 )
 
         # Ensure the image has at least `ndim` dimensions.
-        while ndim and image.ndim < ndim:
-            image = np.expand_dims(image, axis=-1)
+        if not isinstance(image, list) and ndim:
+            while image.ndim < ndim:
+                image = np.expand_dims(image, axis=-1)
 
         # Convert to PyTorch tensor if needed.
-        #TODO
+        if self.get_backend() == "torch":
+
+            # Convert to stack if needed.
+            if isinstance(image, list):
+                image = np.stack(image, axis=0)
+
+            image = torch.from_numpy(image)
 
         return image
 
