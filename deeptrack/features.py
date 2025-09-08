@@ -1782,12 +1782,12 @@ class Feature(DeepTrackNode):
     ) -> Any:
         """Visualize the output of the feature.
 
-        This method resolves the feature and visualizes the result. If the
-        output is a single image (NumPy array, PyTorch tensor, or Image),
-        it is displayed using `pyplot.imshow`. If the output is a list, an
-        animation is created. In Jupyter notebooks, the animation is played
-        inline using `to_jshtml()`. In scripts, the animation is displayed
-        using the matplotlib backend.
+        `plot()` resolves the feature and visualizes the result. If the output
+        is a single image (NumPy array, PyTorch tensor, or Image), it is
+        displayed using `pyplot.imshow`. If the output is a list, an animation
+        is created. In Jupyter notebooks, the animation is played inline using
+        `to_jshtml()`. In scripts, the animation is displayed using the
+        matplotlib backend.
 
         Any parameters in `kwargs` are passed to `pyplot.imshow`.
 
