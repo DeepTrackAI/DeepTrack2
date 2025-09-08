@@ -1,17 +1,33 @@
-import sys
-
-sys.path.append(".")  # Adds the module to path
+# Use this only when running the test locally.
+# import sys
+# sys.path.append(".")  # Adds the module to path
 
 import unittest
 
+import numpy as np
+
+from deeptrack.optics import Fluorescence, Brightfield
 from deeptrack import scatterers
 
-import numpy as np
-from deeptrack.optics import Fluorescence, Brightfield
-from deeptrack.image import Image
+from deeptrack.backend import TORCH_AVAILABLE, xp
+from deeptrack.tests import BackendTestBase
+
+if TORCH_AVAILABLE:
+    import torch
 
 
-class TestScatterers(unittest.TestCase):
+class TestScatterers_NumPy(BackendTestBase):
+    BACKEND = "numpy"
+
+    @property
+    def array_type(self):
+        if self.BACKEND == "numpy":
+            return np.ndarray
+        elif self.BACKEND == "torch":
+            return torch.Tensor
+        else:
+            raise ValueError(f"Unsupported backend: {self.BACKEND}")
+
     def test_PointParticle(self):
         optics = Fluorescence(
             NA=0.7,
@@ -27,7 +43,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_Ellipse(self):
@@ -48,7 +64,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_EllipseUpscale(self):
@@ -146,7 +162,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_SphereUpscale(self):
@@ -188,7 +204,7 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer = optics(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_EllipsoidUpscale(self):
@@ -342,6 +358,12 @@ class TestScatterers(unittest.TestCase):
         )
         imaged_scatterer_1 = optics_1(scatterer)
         imaged_scatterer_1.update().resolve()
+
+# TODO: Extending the test and setting the backend to torch
+# @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
+# class TestScatterers_PyTorch(TestScatterers_NumPy):
+#     BACKEND = "torch"
+#     pass
 
 
 if __name__ == "__main__":
