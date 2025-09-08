@@ -4,27 +4,35 @@
 
 import unittest
 
-import array_api_compat as apc
 import numpy as np
 
 from deeptrack.image import Image
 from deeptrack import noises
 
-from deeptrack.backend import OPENCV_AVAILABLE, TORCH_AVAILABLE, xp
+from deeptrack.backend import TORCH_AVAILABLE, xp
 from deeptrack.tests import BackendTestBase
 
 if TORCH_AVAILABLE:
     import torch
 
-class TestNoises_Numpy(BackendTestBase):
+class TestNoises_NumPy(BackendTestBase):
     BACKEND = "numpy"
+
+    @property
+    def array_type(self):
+        if self.BACKEND == "numpy":
+            return np.ndarray
+        elif self.BACKEND == "torch":
+            return torch.Tensor
+        else:
+            raise ValueError(f"Unsupported backend: {self.BACKEND}")
 
     def test_Offset(self):
         noise = noises.Offset(offset=0.5)
         input_image = Image(xp.zeros((256, 256)))
         output_image = noise.resolve(input_image)
 
-        #self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (256, 256))
         self.assertTrue(xp.all(xp.asarray(output_image) == 0.5))
 
@@ -34,7 +42,7 @@ class TestNoises_Numpy(BackendTestBase):
         input_image = Image(xp.zeros((256, 256)))
         output_image = noise.resolve(input_image)
 
-        #self.assertIsInstance(output_image, input_image)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (256, 256))
         self.assertTrue(xp.all(xp.asarray(output_image) == 0.5))
 
@@ -43,7 +51,7 @@ class TestNoises_Numpy(BackendTestBase):
         input_image = xp.ones((10, 10))
         output_image = noise.resolve(input_image)
 
-        #self.assertIsInstance(output_image, input_image)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (10, 10))
         self.assertTrue(xp.all(xp.asarray(output_image) == 1.5))
 
@@ -52,7 +60,7 @@ class TestNoises_Numpy(BackendTestBase):
         input_image = Image(xp.zeros((256, 256)))
         output_image = noise.resolve(input_image)
         
-        #self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (256, 256))
 
     def test_ComplexGaussian(self):
@@ -60,23 +68,27 @@ class TestNoises_Numpy(BackendTestBase):
         input_image = Image(xp.zeros((256, 256)))
         output_image = noise.resolve(input_image)
 
-        #self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (256, 256))
-        #TODO: Add xp function to check complex values
         self.assertTrue(xp.any(output_image.imag != 0))
+
+        if self.BACKEND == "numpy":
+            self.assertTrue(np.iscomplexobj(output_image))
+        elif self.BACKEND == "torch":
+            self.assertTrue(torch.is_complex(output_image))
 
     def test_Poisson(self):
         noise = noises.Poisson(snr=20)
         input_image = xp.ones((256, 256)) * 0.1
         output_image = noise.resolve(input_image)
 
-        #self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (256, 256))
 
 
 # Extending the test and setting the backend to torch
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
-class TestNoises_Torch(TestNoises_Numpy):
+class TestNoises_PyTorch(TestNoises_NumPy):
     BACKEND = "torch"
     pass
 
