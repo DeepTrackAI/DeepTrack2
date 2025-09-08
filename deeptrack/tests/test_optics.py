@@ -1,21 +1,34 @@
-import sys
-
+# Use this only when running the test locally.
+# import sys
 # sys.path.append(".")  # Adds the module to path
 
 import unittest
 
-from deeptrack import features
-from deeptrack import units_registry as u
-from deeptrack import optics
-
-from deeptrack.scatterers import PointParticle, Sphere
-from deeptrack.image import Image
-
-
 import numpy as np
 
+from deeptrack import optics
+from deeptrack.scatterers import PointParticle, Sphere
+from deeptrack import units_registry as u
 
-class TestOptics(unittest.TestCase):
+from deeptrack.backend import TORCH_AVAILABLE, xp
+from deeptrack.tests import BackendTestBase
+
+if TORCH_AVAILABLE:
+    import torch
+
+
+class TestOptics_NumPy(BackendTestBase):
+    BACKEND = "numpy"
+
+    @property
+    def array_type(self):
+        if self.BACKEND == "numpy":
+            return np.ndarray
+        elif self.BACKEND == "torch":
+            return torch.Tensor
+        else:
+            raise ValueError(f"Unsupported backend: {self.BACKEND}")
+
     def test_Microscope(self):
         microscope_type = optics.Fluorescence()
         scatterer = PointParticle()
@@ -23,7 +36,7 @@ class TestOptics(unittest.TestCase):
             sample=scatterer, objective=microscope_type,
         )
         output_image = microscope.get(None)
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (128, 128, 1))
     
     def test_Optics(self):
@@ -51,7 +64,7 @@ class TestOptics(unittest.TestCase):
         )
         imaged_scatterer = microscope(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(microscope.NA(), 0.7)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
@@ -74,7 +87,7 @@ class TestOptics(unittest.TestCase):
         )
         imaged_scatterer = microscope(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_Holography(self):
@@ -96,7 +109,7 @@ class TestOptics(unittest.TestCase):
         )
         imaged_scatterer = microscope(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_ISCAT(self):
@@ -119,7 +132,7 @@ class TestOptics(unittest.TestCase):
         imaged_scatterer = microscope(scatterer)
         output_image = imaged_scatterer.resolve()
         self.assertEqual(microscope.illumination_angle(), 3.141592653589793)
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_Darkfield(self):
@@ -142,7 +155,7 @@ class TestOptics(unittest.TestCase):
         imaged_scatterer = microscope(scatterer)
         output_image = imaged_scatterer.resolve()
         self.assertEqual(microscope.illumination_angle(), 1.5707963267948966)
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_IlluminationGradient(self):
@@ -166,7 +179,7 @@ class TestOptics(unittest.TestCase):
         )
         imaged_scatterer = microscope(scatterer)
         output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, np.ndarray)
+        self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_upscale_fluorescence(self):
@@ -237,6 +250,11 @@ class TestOptics(unittest.TestCase):
         ).mean()  # Mean absolute error
         self.assertLess(error, 0.01)
 
+# TODO: Extending the test and setting the backend to torch
+# @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
+# class TestOptics_PyTorch(TestOptics_NumPy):
+#     BACKEND = "torch"
+#     pass
 
 if __name__ == "__main__":
     unittest.main()
