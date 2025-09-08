@@ -216,13 +216,13 @@ __all__ = [
     "Merge",
     "OneOf",
     "OneOfDict",
-    "LoadImage",  # TODO ***MG***
+    "LoadImage",
     "SampleToMasks",  # TODO ***MG***
-    "AsType",  # TODO ***MG***
+    "AsType",
     "ChannelFirst2d",
     "Upscale",  # TODO ***AL***
     "NonOverlapping",  # TODO ***AL***
-    "Store",  # TODO ***JH***
+    "Store",
     "Squeeze",
     "Unsqueeze",
     "ExpandDims",
@@ -230,7 +230,7 @@ __all__ = [
     "Transpose",
     "Permute",
     "OneHot",
-    "TakeProperties",  #TODO ***JH***
+    "TakeProperties",
 ]
 
 
@@ -364,7 +364,7 @@ class Feature(DeepTrackNode):
     `store_properties(toggle: bool, recursive: bool) -> Feature`
         It controls whether the properties are stored in the output `Image`
         object.
-    `torch(device: torch.device or None, recursive: bool) -> 'Feature'`
+    `torch(device: torch.device or None, recursive: bool) -> Feature`
         It sets the backend to torch.
     `numpy(recursice: bool) -> Feature`
         It set the backend to numpy.
@@ -387,7 +387,19 @@ class Feature(DeepTrackNode):
         behavior.
     `bind_arguments(arguments: Feature) -> Feature`
         It binds another feature’s properties as arguments to this feature.
-    `plot(input_image: np.ndarray | list[np.ndarray] | Image | list[Image] | None = None, resolve_kwargs: dict | None = None, interval: float | None = None, **kwargs: Any) -> Any`
+    `plot(
+        input_image: (
+            NDArray
+            | list[NDArray]
+            | torch.Tensor
+            | list[torch.Tensor]
+            | Image
+            | list[Image]
+        ) = None,
+        resolve_kwargs: dict | None = None,
+        interval: float | None = None,
+        **kwargs: Any,
+    ) -> Any`
         It visualizes the output of the feature.
 
     **Private and internal methods.**
@@ -1754,54 +1766,91 @@ class Feature(DeepTrackNode):
 
         return self
 
-    #TODO ***MG***
     def plot(
         self: Feature,
-        input_image: np.ndarray | list[np.ndarray] | Image | list[Image] = None,
+        input_image: (
+            NDArray
+            | list[NDArray]
+            | torch.Tensor
+            | list[torch.Tensor]
+            | Image
+            | list[Image]
+        ) = None,
         resolve_kwargs: dict = None,
         interval: float = None,
         **kwargs: Any,
     ) -> Any:
-        """Visualizes the output of the feature.
+        """Visualize the output of the feature.
 
-        This method resolves the feature and visualizes the result. If the output is 
-        an `Image`, it displays it using `pyplot.imshow`. If the output is a list, it 
-        creates an animation. In Jupyter notebooks, the animation is played inline 
-        using `to_jshtml()`. In scripts, the animation is displayed using the 
+        `plot()` resolves the feature and visualizes the result. If the output
+        is a single image (NumPy array, PyTorch tensor, or Image), it is
+        displayed using `pyplot.imshow`. If the output is a list, an animation
+        is created. In Jupyter notebooks, the animation is played inline using
+        `to_jshtml()`. In scripts, the animation is displayed using the
         matplotlib backend.
 
         Any parameters in `kwargs` are passed to `pyplot.imshow`.
 
         Parameters
         ----------
-        input_image: np.ndarray or Image or list[np.ndarray or Image], optional
-            The input image or list of images passed as an argument to the `resolve` 
-            call. If `None`, uses previously set input values or propagates properties.
+        input_image: np.ndarray, torch.tensor, or Image or list[np.ndarray,
+            torch.tensor, or Image], optional
+            The input image or list of images passed as an argument to the
+            `resolve` call. If `None`, uses previously set input values or
+            propagates properties.
         resolve_kwargs: dict, optional
             Additional keyword arguments passed to the `resolve` call.
         interval: float, optional
-            The time between frames in the animation, in milliseconds. The default 
-            value is 33 ms.
+            The time between frames in the animation, in milliseconds. The
+            default value is 33 ms.
         **kwargs: dict, optional
             Additional keyword arguments passed to `pyplot.imshow`.
-       
+
         Returns
         -------
         Any
             The output of the feature or pipeline after execution.
+        
+        Examples
+        --------
+        >>> import deeptrack as dt
+
+        Create an instance of a dummy feature that returns the input:
+        >>> feature = dt.DummyFeature()
+
+        Generate and plot a grayscale image:
+        >>> import numpy as np
+        >>>
+        >>> img = np.random.randint(0, 256, (64, 64))
+        >>> feature.plot(img, cmap="gray");
+
+        Generate and plot a grayscale video:
+        >>> video = [np.random.randint(0, 256, (64, 64)) for _ in range(10)]
+        >>> feature.plot(video, interval=100, cmap="gray");
+
+        Generate a grayscale image using torch and plot it:
+        >>> import torch
+        >>>
+        >>> img = torch.randint(0, 256, size=(64, 64))
+        >>> feature.plot(img, cmap="gray");
+
+        Generate a simulated image of a point particle visualized using
+        brightfield microscopy and plot it:
+        >>> particle = dt.PointParticle()
+        >>> optics = dt.Brightfield()
+        >>> imaged_particle = optics(particle)
+        >>> imaged_particle.plot(cmap="gray");
 
         """
 
         from IPython.display import HTML, display
-
-        # if input_image is not None:
-        #     input_image = [Image(input_image)]
 
         output_image = self.resolve(input_image, **(resolve_kwargs or {}))
 
         # If a list, assume video
         if not isinstance(output_image, list):
             # Single image
+            output_image = xp.squeeze(output_image)
             plt.imshow(output_image, **kwargs)
             return plt.gca()
 
@@ -1810,11 +1859,14 @@ class Feature(DeepTrackNode):
         images = []
         plt.axis("off")
         for image in output_image:
+            image = xp.squeeze(image)
             images.append([plt.imshow(image, **kwargs)])
 
         if not interval:
             if isinstance(output_image[0], Image):
-                interval = output_image[0].get_property("interval") or (1 / 30 * 1000)
+                interval = (
+                    output_image[0].get_property("interval") or (1 / 30 * 1000)
+                )
             else:
                 interval = 1 / 30 * 1000
 
@@ -7195,21 +7247,21 @@ class OneOfDict(Feature):
 class LoadImage(Feature):
     """Load an image from disk and preprocess it.
 
-    This feature loads an image file using multiple fallback file readers 
-    (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a suitable reader is 
-    found. The image can be optionally converted to grayscale, reshaped to 
-    ensure a minimum number of dimensions, or treated as a list of images if 
+    `LoadImage` loads an image file using multiple fallback file readers
+    (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a suitable reader is
+    found. The image can be optionally converted to grayscale, reshaped to
+    ensure a minimum number of dimensions, or treated as a list of images if
     multiple paths are provided.
 
     Parameters
     ----------
     path: PropertyLike[str or list[str]]
-        The path(s) to the image(s) to load. Can be a single string or a list 
+        The path(s) to the image(s) to load. Can be a single string or a list
         of strings.
     load_options: PropertyLike[dict[str, Any]], optional
         Additional options passed to the file reader. It defaults to `None`.
     as_list: PropertyLike[bool], optional
-        If `True`, the first dimension of the image will be treated as a list. 
+        If `True`, the first dimension of the image will be treated as a list.
         It defaults to `False`.
     ndim: PropertyLike[int], optional
         Ensures the image has at least this many dimensions. It defaults to
@@ -7217,7 +7269,7 @@ class LoadImage(Feature):
     to_grayscale: PropertyLike[bool], optional
         If `True`, converts the image to grayscale. It defaults to `False`.
     get_one_random: PropertyLike[bool], optional
-        If `True`, extracts a single random image from a stack of images. Only 
+        If `True`, extracts a single random image from a stack of images. Only
         used when `as_list` is `True`. It defaults to `False`.
 
     Attributes
@@ -7228,13 +7280,27 @@ class LoadImage(Feature):
 
     Methods
     -------
-    `get(image: Any, path: str or list[str], load_options: dict[str, Any] | None, ndim: int, to_grayscale: bool, as_list: bool, get_one_random: bool, **kwargs: Any) -> array`
+    `get(
+        path: str | list[str],
+        load_options: dict[str, Any] | None,
+        ndim: int,
+        to_grayscale: bool,
+        as_list: bool,
+        get_one_random: bool,
+        **kwargs: Any,
+    ) -> NDArray | list[NDArray] | torch.Tensor | list[torch.Tensor]`
         Load the image(s) from disk and process them.
 
     Raises
     ------
     IOError
         If no file reader could parse the file or the file does not exist.
+
+    Notes
+    ----
+    By default, `LoadImage` returns a NumPy array. If you want the output as
+    a PyTorch tensor, convert the feature to torch by calling `.torch()` before
+    resolving.
 
     Examples
     --------
@@ -7243,7 +7309,7 @@ class LoadImage(Feature):
     Create a temporary image file:
     >>> import numpy as np
     >>> import os, tempfile
-    >>> 
+    >>>
     >>> temp_file = tempfile.NamedTemporaryFile(suffix=".npy", delete=False)
     >>> np.save(temp_file.name, np.random.rand(100, 100, 3))
 
@@ -7271,7 +7337,14 @@ class LoadImage(Feature):
     ... )
     >>> loaded_image = load_image_feature.resolve()
     >>> loaded_image.shape
-    (2, 2, 3, 1)
+    (100, 100, 3, 1)
+
+    Load an image as a PyTorch tensor by setting the backend of the feature:
+    >>> load_image_feature = dt.LoadImage(path=temp_file.name)
+    >>> load_image_feature.torch()
+    >>> loaded_image = load_image_feature.resolve()
+    >>> type(loaded_image)
+    <class 'torch.Tensor'>
 
     Cleanup the temporary file:
     >>> os.remove(temp_file.name)
@@ -7313,7 +7386,7 @@ class LoadImage(Feature):
             If `True`, selects a single random image from a stack when
             `as_list=True`. It defaults to `False`.
         **kwargs: Any
-            Additional keyword arguments passed to the parent `Feature` class, 
+            Additional keyword arguments passed to the parent `Feature` class,
             allowing further customization.
 
         """
@@ -7338,31 +7411,36 @@ class LoadImage(Feature):
         as_list: bool,
         get_one_random: bool,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor:
+    ) -> NDArray[Any] | torch.Tensor | list:
         """Load and process an image or a list of images from disk.
 
-        This method attempts to load an image using multiple file readers 
-        (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a valid format is 
+        This method attempts to load an image using multiple file readers
+        (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a valid format is
         found. It supports optional processing steps such as ensuring a minimum
-        number of dimensions, grayscale conversion, and treating multi-frame 
+        number of dimensions, grayscale conversion, and treating multi-frame
         images as lists.
+
+        The output is returned as a NumPy array by default. If `as_list=True`,
+        the result is a Python list of arrays. If the backend of the feature is
+        `"torch"`, the image is returned as a PyTorch tensor.
 
         Parameters
         ----------
         path: str or list[str]
-            The file path(s) to the image(s) to be loaded. A single string 
+            The file path(s) to the image(s) to be loaded. A single string
             loads one image, while a list of paths loads multiple images.
         load_options: dict of str to Any, optional
-            Additional options passed to the file reader (e.g., `allow_pickle` 
+            Additional options passed to the file reader (e.g., `allow_pickle`
             for NumPy, `mode` for OpenCV). It defaults to `None`.
         ndim: int
-            Ensures the image has at least this many dimensions. If the loaded 
-            image has fewer dimensions, extra dimensions are added.
+            Ensures the image has at least this many dimensions. If the loaded
+            image has fewer dimensions, extra dimensions are added. It defaults
+            to `3`.
         to_grayscale: bool
             If `True`, converts the image to grayscale. It defaults to `False`.
         as_list: bool
-            If `True`, treats the first dimension as a list of images instead 
-            of stacking them into a NumPy array.
+            If `True`, treats the first dimension as a list of images instead
+            of stacking them into a NumPy array. It defaults to `False`.
         get_one_random: bool
             If `True`, selects a single random image from a multi-frame stack
             when `as_list=True`. It defaults to `False`.
@@ -7372,14 +7450,14 @@ class LoadImage(Feature):
         Returns
         -------
         array
-            The loaded and processed image(s). If `as_list=True`, returns a 
+            The loaded and processed image(s). If `as_list=True`, returns a
             list of images; otherwise, returns a single NumPy array or PyTorch
             tensor.
 
         Raises
         ------
         IOError
-            If no valid file reader is found or if the specified file does not 
+            If no valid file reader is found or if the specified file does not
             exist.
 
         """
@@ -7402,8 +7480,9 @@ class LoadImage(Feature):
                 try:
                     import PIL.Image
 
-                    image = [PIL.Image.open(file, **load_options)
-                             for file in path]
+                    image = [
+                        PIL.Image.open(file, **load_options) for file in path
+                    ]
                 except (IOError, ImportError):
                     import cv2
 
@@ -7439,11 +7518,18 @@ class LoadImage(Feature):
                 )
 
         # Ensure the image has at least `ndim` dimensions.
-        while ndim and image.ndim < ndim:
-            image = np.expand_dims(image, axis=-1)
+        if not isinstance(image, list) and ndim:
+            while image.ndim < ndim:
+                image = np.expand_dims(image, axis=-1)
 
         # Convert to PyTorch tensor if needed.
-        #TODO
+        if self.get_backend() == "torch":
+
+            # Convert to stack if needed.
+            if isinstance(image, list):
+                image = np.stack(image, axis=0)
+
+            image = torch.from_numpy(image)
 
         return image
 
@@ -7751,9 +7837,9 @@ class SampleToMasks(Feature):
 class AsType(Feature):
     """Convert the data type of images.
 
-    This feature changes the data type (`dtype`) of input images to a specified 
-    type. The accepted types are the same as those used by NumPy arrays, such 
-    as `float64`, `int32`, `uint16`, `int16`, `uint8`, and `int8`.
+    `Astype` changes the data type (`dtype`) of input images to a specified
+    type. The accepted types are standard NumPy or PyTorch data types (e.g.,
+    `"float64"`, `"int32"`, `"uint8"`, `"int8"`, and `"torch.float32"`).
 
     Parameters
     ----------
@@ -7776,7 +7862,7 @@ class AsType(Feature):
     >>>
     >>> input_image = np.array([1.5, 2.5, 3.5])
 
-    Apply an AsType feature to convert to `int32`:
+    Apply an AsType feature to convert to "`int32"`:
     >>> astype_feature = dt.AsType(dtype="int32")
     >>> output_image = astype_feature.get(input_image, dtype="int32")
     >>> output_image
@@ -7793,8 +7879,7 @@ class AsType(Feature):
         dtype: PropertyLike[str] = "float64",
         **kwargs: Any,
     ):
-        """
-        Initialize the AsType feature.
+        """Initialize the AsType feature.
 
         Parameters
         ----------
@@ -7833,7 +7918,39 @@ class AsType(Feature):
 
         """
 
-        return image.astype(dtype)
+        if apc.is_torch_array(image):
+            # Mapping from string to torch dtype
+            torch_dtypes = {
+                "float64": torch.float64,
+                "double": torch.float64,
+                "float32": torch.float32,
+                "float": torch.float32,
+                "float16": torch.float16,
+                "half": torch.float16,
+                "int64": torch.int64,
+                "int32": torch.int32,
+                "int16": torch.int16,
+                "int8": torch.int8,
+                "uint8": torch.uint8,
+                "bool": torch.bool,
+                "complex64": torch.complex64,
+                "complex128": torch.complex128,
+            }
+
+            # Ensure `"torch.float32"` and `"float32"` are treated the same by
+            # removing the `torch.` prefix if present
+            dtype_str = str(dtype).replace("torch.", "")
+            torch_dtype = torch_dtypes.get(dtype_str)
+
+            if torch_dtype is None:
+                raise ValueError(
+                    f"Unsupported dtype for torch.Tensor: {dtype}"
+                )
+            
+            return image.to(dtype=torch_dtype)
+
+        else:
+            return image.astype(dtype)
 
 
 class ChannelFirst2d(Feature):  # DEPRECATED
@@ -8804,9 +8921,9 @@ class NonOverlapping(Feature):
 class Store(Feature):
     """Store the output of a feature for reuse.
 
-    The `Store` feature evaluates a given feature and stores its output in an 
-    internal dictionary. Subsequent calls with the same key will return the 
-    stored value unless the `replace` parameter is set to `True`. This enables 
+    The `Store` feature evaluates a given feature and stores its output in an
+    internal dictionary. Subsequent calls with the same key will return the
+    stored value unless the `replace` parameter is set to `True`. This enables
     caching and reuse of computed feature outputs.
 
     Parameters
@@ -8815,10 +8932,10 @@ class Store(Feature):
         The feature to evaluate and store.
     key: Any
         The key used to identify the stored output.
-    replace: bool, optional
-        If `True`, replaces the stored value with a new computation. It defaults 
-        to `False`.
-    **kwargs:: dict of str to Any
+    replace: PropertyLike[bool], optional
+        If `True`, replaces the stored value with the current computation. It
+        defaults to `False`.
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
@@ -8852,12 +8969,16 @@ class Store(Feature):
     >>> cached_output = store_feature(None, key="example", replace=False)
     >>> print(cached_output == output)
     True
+    >>> print(cached_output == value_feature())
+    False
 
     Retrieve the stored value recomputing:
     >>> value_feature.update()
     >>> cached_output = store_feature(None, key="example", replace=True)
     >>> print(cached_output == output)
     False
+    >>> print(cached_output == value_feature())
+    True
 
     """
 
@@ -8867,7 +8988,7 @@ class Store(Feature):
         self: Store,
         feature: Feature,
         key: Any,
-        replace: bool = False,
+        replace: PropertyLike[bool] = False,
         **kwargs: Any,
     ):
         """Initialize the Store feature.
@@ -8878,8 +8999,8 @@ class Store(Feature):
             The feature to evaluate and store.
         key: Any
             The key used to identify the stored output.
-        replace: bool, optional
-            If `True`, replaces the stored value with a new computation. 
+        replace: PropertyLike[bool], optional
+            If `True`, replaces the stored value with a new computation.
             It defaults to `False`.
         **kwargs:: dict of str to Any
             Additional keyword arguments passed to the parent `Feature` class.
@@ -8918,7 +9039,7 @@ class Store(Feature):
         """
 
         # Check if the value should be recomputed or retrieved from the store
-        if replace or not (key in self._store):
+        if replace or not key in self._store:
             self._store[key] = self.feature()
 
         # Return the stored or newly computed result
@@ -9440,11 +9561,11 @@ class OneHot(Feature):
 class TakeProperties(Feature):
     """Extract all instances of a set of properties from a pipeline.
 
-    Only extracts the properties if the feature contains all given 
-    property-names. The order of the properties is not guaranteed to be the 
+    Only extracts the properties if the feature contains all given
+    property-names. The order of the properties is not guaranteed to be the
     same as the evaluation order.
 
-    If there is only a single property name, this will return a list of the 
+    If there is only a single property name, this will return a list of the
     property values.
 
     Parameters
@@ -9453,7 +9574,7 @@ class TakeProperties(Feature):
         The feature from which to extract properties.
     names: list[str]
         The names of the properties to extract
-    **kwargs:: dict of str to Any
+    **kwargs: dict of str to Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
@@ -9462,18 +9583,19 @@ class TakeProperties(Feature):
         Indicates whether this feature distributes computation across inputs.
         Always `False` for `TakeProperties`, as it processes sequentially.
     __list_merge_strategy__: int
-        Specifies how lists of properties are merged. Set to 
+        Specifies how lists of properties are merged. Set to
         `MERGE_STRATEGY_APPEND` to append values to the result list.
 
     Methods
     -------
-    `get(image: Any, names: tuple[str, ...], **kwargs: dict[str, Any]) -> np.ndarray | tuple[np.ndarray, ...]`
+    `get(image: Any, names: tuple[str, ...], **kwargs: dict[str, Any])
+        -> np.ndarray | tuple[np.ndarray, torch.Tensor, ...]`
         Extract the specified properties from the feature pipeline.
-    
+
     Examples
     --------
     >>> import deeptrack as dt
-    
+
     >>> class ExampleFeature(Feature):
     ...     def __init__(self, my_property, **kwargs):
     ...         super().__init__(my_property=my_property, **kwargs)
@@ -9489,7 +9611,7 @@ class TakeProperties(Feature):
 
     Create a `Gaussian` feature:
     >>> noise_feature = dt.Gaussian(mu=7, sigma=12)
-    
+
     Use `TakeProperties` to extract the property:
     >>> take_properties = dt.TakeProperties(noise_feature)
     >>> output = take_properties.get(image=None, names=["mu"])
@@ -9504,7 +9626,7 @@ class TakeProperties(Feature):
     def __init__(
         self: TakeProperties,
         feature: Feature,
-        *names: str,
+        *names: PropertyLike[str],
         **kwargs: Any,
     ):
         """Initialize the TakeProperties feature.
@@ -9513,46 +9635,46 @@ class TakeProperties(Feature):
         ----------
         feature: Feature
             The feature from which to extract properties.
-        *names: str
+        *names: PropertyLike[str]
             One or more names of the properties to extract.
-=        **kwargs: Any, optional
+        **kwargs: Any, optional
             Additional keyword arguments passed to the parent `Feature` class.
-        
+
         """
 
         super().__init__(names=names, **kwargs)
         self.feature = self.add_feature(feature)
 
     def get(
-        self: TakeProperties,
-        image: Any,
+        self: Feature,
+        image: NDArray[Any] | torch.Tensor,
         names: tuple[str, ...],
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
-    ) -> np.ndarray | tuple[np.ndarray, ...]:
+    ) -> NDArray[Any] | tuple[NDArray[Any], torch.Tensor, ...]:
         """Extract the specified properties from the feature pipeline.
 
-        This method retrieves the values of the specified properties from the 
+        This method retrieves the values of the specified properties from the
         feature's dependency graph and returns them as NumPy arrays.
 
         Parameters
         ----------
-        image: Any
+        image: NDArray[Any] | torch.Tensor
             The input image (unused in this method).
         names: tuple[str, ...]
             The names of the properties to extract.
         _ID: tuple[int, ...], optional
-            A unique identifier for the current computation, ensuring that 
+            A unique identifier for the current computation, ensuring that
             dependencies are correctly matched. It defaults to an empty tuple.
         **kwargs: Any, optional
             Additional keyword arguments (unused in this method).
 
         Returns
         -------
-        np.ndarray or tuple[np.ndarray, ...]
-            If a single property name is provided, a NumPy array containing the 
-            property values is returned. If multiple property names are 
-            provided, a tuple of NumPy arrays is returned, where each array 
+        NDArray[Any] or tuple[NDArray[Any], torch.Tensor, ...]
+            If a single property name is provided, a NumPy array containing the
+            property values is returned. If multiple property names are
+            provided, a tuple of NumPy arrays is returned, where each array
             corresponds to a property.
 
         """
@@ -9578,8 +9700,8 @@ class TakeProperties(Feature):
                         if key[:len(_ID)] == _ID:
                             res[name].append(value.current_value())
 
-        # Convert the results to NumPy arrays.
-        res = tuple([np.array(res[name]) for name in names])
+        # Convert the results to tuple.
+        res = tuple([res[name] for name in names])
 
         # Return a single array if only one property name is specified.
         if len(res) == 1:

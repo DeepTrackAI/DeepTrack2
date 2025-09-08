@@ -55,9 +55,9 @@ Classes:
 
 - `AveragePooling`: Apply average pooling to the image.
 
-- `MaxPooling`: Apply max pooling to the image.
+- `MaxPooling`: Apply max-pooling to the image.
 
-- `MinPooling`: Apply min pooling to the image.
+- `MinPooling`: Apply min-pooling to the image.
 
 - `MedianPooling`: Apply median pooling to the image.
 
@@ -1249,46 +1249,44 @@ class AveragePooling(Pool):
         super().__init__(np.mean, ksize=ksize, **kwargs)
 
 
-#TODO ***AL*** revise MaxPooling - torch, typing, docstring, unit test
 class MaxPooling(Pool):
-    """Apply max pooling to images.
+    """Apply max-pooling to images.
 
-    This class reduces the resolution of an image by dividing it into
-    non-overlapping blocks of size `ksize` and applying the max function to
-    each block. The result is a downsampled image where each pixel value
+    `MaxPooling` reduces the resolution of an image by dividing it into
+    non-overlapping blocks of size `ksize` and applying the `max` function
+    to each block. The result is a downsampled image where each pixel value
     represents the maximum value within the corresponding block of the
-    original image.
-    This is useful for reducing the size of an image while retaining the
-    most significant features.
+    original image. This is useful for reducing the size of an image while
+    retaining the most significant features.
+
+    If the backend is NumPy, the downsampling is performed using
+    `skimage.measure.block_reduce`.
+
+    If the backend is PyTorch, the downsampling is performed using
+    `torch.nn.functional.max_pool2d`.
 
     Parameters
     ----------
     ksize: int
         Size of the pooling kernel.
-    cval: number
-        Value to pad edges with if necessary. Default 0.
-    func_kwargs: dict
+    **kwargs: Any
         Additional parameters sent to the pooling function.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
+
     Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(32, 32)
 
-    Define a max pooling feature:
+    Define and use a max-pooling feature:
+
     >>> max_pooling = dt.MaxPooling(ksize=8)
     >>> output_image = max_pooling(input_image)
-    >>> print(output_image.shape)
-    (8, 8)
-
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    >>> output_image.shape
+    (4, 4)
 
     """
 
@@ -1297,9 +1295,9 @@ class MaxPooling(Pool):
         ksize: PropertyLike[int] = 3,
         **kwargs: Any,
     ):
-        """Initialize the parameters for max pooling.
+        """Initialize the parameters for max-pooling.
 
-        This constructor initializes the parameters for max pooling.
+        This constructor initializes the parameters for max-pooling.
 
         Parameters
         ----------
@@ -1312,44 +1310,152 @@ class MaxPooling(Pool):
 
         super().__init__(np.max, ksize=ksize, **kwargs)
 
+    def get(
+        self: MaxPooling,
+        image: NDArray[Any] | torch.Tensor,
+        ksize: int=3,
+        **kwargs: Any,
+    ) -> NDArray[Any] | torch.Tensor:
+        """Max-pooling of input.
 
-#TODO ***AL*** revise MinPooling - torch, typing, docstring, unit test
+        Checks the current backend and chooses the appropriate function to pool
+        the input image, either `._get_torch()` or `._get_numpy()`.
+
+        Parameters
+        ----------
+        image: array or tensor
+            Input array or tensor be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        array or tensor
+            The pooled input as `NDArray` or `torch.Tensor` depending on
+            the backend.
+
+        """
+
+        if self.get_backend() == "numpy":
+            return self._get_numpy(image, ksize, **kwargs)
+
+        if self.get_backend() == "torch":
+            return self._get_torch(image, ksize, **kwargs)
+
+        raise NotImplementedError(f"Backend {self.backend} not supported")
+
+    def _get_numpy(
+        self: MaxPooling,
+        image: NDArray[Any],
+        ksize: int=3,
+        **kwargs: Any,
+    ) -> NDArray[Any]:
+        """Max-pooling pooling with the NumPy backend enabled.
+
+        Returns the result of the input array passed to the scikit image
+        `block_reduce()` function with `np.max()` as the pooling function.
+
+        Parameters
+        ----------
+        image: array
+            Input array to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        array
+            The pooled image as a NumPy array.
+            
+        """
+
+        return utils.safe_call(
+            skimage.measure.block_reduce,
+            image=image,
+            func=np.max,
+            block_size=ksize,
+            **kwargs,
+        )
+
+    def _get_torch(
+        self: MaxPooling,
+        image: torch.Tensor,
+        ksize: int=3,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """Max-pooling with the PyTorch backend enabled.
+
+
+        Returns the result of the tensor passed to a PyTorch max
+        pooling layer.
+
+        Parameters
+        ----------
+        image: torch.Tensor
+            Input tensor to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        torch.Tensor
+            The pooled image as a `torch.Tensor`.
+
+        """
+
+        # If input tensor is 2D
+        if len(image.shape) == 2:
+            # Add batch dimension for max-pooling
+            expanded_image = image.unsqueeze(0)
+
+            pooled_image = torch.nn.functional.max_pool2d(
+                expanded_image, kernel_size=ksize,
+            )
+            # Remove the expanded dim
+            return pooled_image.squeeze(0)
+
+        return torch.nn.functional.max_pool2d(
+            image,
+            kernel_size=ksize,
+        )
+
+
 class MinPooling(Pool):
-    """Apply min pooling to images.
+    """Apply min-pooling to images.
 
-    This class reduces the resolution of an image by dividing it into
-    non-overlapping blocks of size `ksize` and applying the min function to
+    `MinPooling` reduces the resolution of an image by dividing it into
+    non-overlapping blocks of size `ksize` and applying the `min` function to
     each block. The result is a downsampled image where each pixel value
-    represents the minimum value within the corresponding block of the
-    original image.
+    represents the minimum value within the corresponding block of the original
+    image.
+
+    If the backend is NumPy, the downsampling is performed using 
+    `skimage.measure.block_reduce`.
+
+    If the backend is PyTorch, the downsampling is performed using the inverse
+    of `torch.nn.functional.max_pool2d` by changing the sign of the input.
 
     Parameters
     ----------
     ksize: int
         Size of the pooling kernel.
-    **kwargs: dict
+    **kwargs: Any
         Additional parameters sent to the pooling function.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image:
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(32, 32)
 
-    Define a min pooling feature:
-    >>> min_pooling = dt.MinPooling(ksize=3)
+    Define and use a min-pooling feature:
+    >>> min_pooling = dt.MinPooling(ksize=4)
     >>> output_image = min_pooling(input_image)
-    >>> print(output_image.shape)
-    (32, 32)
-
-    Notes
-    -----
-    Calling this feature returns a `np.ndarray` by default. If
-    `store_properties` is set to `True`, the returned array will be
-    automatically wrapped in an `Image` object. This behavior is handled
-    internally and does not affect the return type of the `get()` method.
+    >>> output_image.shape
+    (8, 8)
 
     """
 
@@ -1358,9 +1464,10 @@ class MinPooling(Pool):
         ksize: PropertyLike[int] = 3,
         **kwargs: Any,
     ):
-        """Initialize the parameters for min pooling.
+        """Initialize the parameters for min-pooling.
 
-        This constructor initializes the parameters for min pooling.
+        This constructor initializes the parameters for min-pooling and checks
+        whether to use the NumPy or PyTorch implementation, defaults to NumPy.
 
         Parameters
         ----------
@@ -1372,6 +1479,118 @@ class MinPooling(Pool):
         """
 
         super().__init__(np.min, ksize=ksize, **kwargs)
+
+    def get(
+        self: MinPooling,
+        image: NDArray[Any] | torch.Tensor,
+        ksize: int=3,
+        **kwargs: Any,
+    ) -> NDArray[Any] | torch.Tensor:
+        """Min pooling of input.
+
+        Checks the current backend and chooses the appropriate function to pool
+        the input image, either `._get_torch()` or `._get_numpy()`.
+
+        Parameters
+        ----------
+        image: array or tensor
+            Input array or tensor to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        array or tensor
+            The pooled image as `NDArray` or `torch.Tensor` depending on the
+            backend.
+
+        """
+
+        if self.get_backend() == "numpy":
+            return self._get_numpy(image, ksize, **kwargs)
+
+        if self.get_backend() == "torch":
+            return self._get_torch(image, ksize, **kwargs)
+
+        raise NotImplementedError(f"Backend {self.backend} not supported")
+
+    def _get_numpy(
+        self: MinPooling,
+        image: NDArray[Any],
+        ksize: int=3,
+        **kwargs: Any,
+    ) -> NDArray[Any]:
+        """Min-pooling with the NumPy backend.
+
+        Returns the result of the input array passed to the scikit
+        `image block_reduce()` function with `np.min()` as the pooling
+        function.
+
+        Parameters
+        ----------
+        image: NDArray
+            Input image to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        NDArray
+            The pooled image as a `NDArray`.
+
+        """
+
+        return utils.safe_call(
+            skimage.measure.block_reduce,
+            image=image,
+            func=np.min,
+            block_size=ksize,
+            **kwargs,
+        )
+
+    def _get_torch(
+        self: MinPooling,
+        image: torch.Tensor,
+        ksize: int=3,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """Min-pooling with the PyTorch backend.
+
+        As PyTorch does not have a min-pooling layer, the equivalent operation
+        is to first multiply the input tensor with `-1`, then perform
+        max-pooling, and finally multiply the max pooled tensor with `-1`.
+
+        Parameters
+        ----------
+        image: torch.Tensor
+            Input tensor to be pooled.
+        ksize: int
+            Kernel size of the pooling operation.
+
+        Returns
+        -------
+        torch.Tensor
+            The pooled image as a `torch.Tensor`.
+
+        """
+
+        # If input tensor is 2D
+        if len(image.shape) == 2:
+            # Add batch dimension for min-pooling
+            expanded_image = image.unsqueeze(0)
+
+            pooled_image = - torch.nn.functional.max_pool2d(
+                expanded_image * (-1),
+                kernel_size=ksize,
+            )
+
+            # Remove the expanded dim
+            return pooled_image.squeeze(0)
+
+        return -torch.nn.functional.max_pool2d(
+            image * (-1),
+            kernel_size=ksize,
+        )
 
 
 #TODO ***AL*** revise MedianPooling - torch, typing, docstring, unit test
@@ -1444,75 +1663,154 @@ class MedianPooling(Pool):
         super().__init__(np.median, ksize=ksize, **kwargs)
 
 
-#TODO ***MG*** revise Resize - torch, typing, docstring, unit test
 class Resize(Feature):
     """Resize an image to a specified size.
 
-    This class is a wrapper around cv2.resize and resizes an image to a
-    specified size. The `dsize` parameter specifies the desired output size of
-    the image.
-    Note that the order of the axes is different in cv2 and numpy. In cv2, the
-    first axis is the vertical axis, while in numpy it is the horizontal axis.
-    This is reflected in the default values of the arguments.
+    `Resize` resizes an image using:
+      - OpenCV (`cv2.resize`) for NumPy arrays.
+      - PyTorch (`torch.nn.functional.interpolate`) for PyTorch tensors.
+
+    The interpretation of the `dsize` parameter follows the convention 
+    of the underlying backend:
+      - **NumPy (OpenCV)**: `dsize` is given as `(width, height)` to match
+        OpenCV’s default.
+      - **PyTorch**: `dsize` is given as `(height, width)`.
 
     Parameters
     ----------
-    dsize: tuple
-        Size to resize to.
+    dsize: PropertyLike[tuple[int, int]]
+        The target size. Format depends on backend: `(width, height)` for
+        NumPy, `(height, width)` for PyTorch.
     **kwargs: Any
-        Additional parameters sent to the resizing function.
+        Additional parameters sent to the underlying resize function:
+          - NumPy: passed to `cv2.resize`.
+          - PyTorch: passed to `torch.nn.functional.interpolate`.
+
+    Methods
+    -------
+    get(
+        image: np.ndarray | torch.Tensor, dsize: tuple[int, int], **kwargs
+    ) -> np.ndarray | torch.Tensor
+        Resize the input image to the specified size.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+
+    Numpy example:
+    >>> import numpy as np
+    >>>
+    >>> input_image = np.random.rand(16, 16)            # Create image
+    >>> feature = dt.math.Resize(dsize=(8, 4))          # (width=8, height=4)
+    >>> resized_image = feature.resolve(input_image)    # Resize it to (4, 8)
+    >>> print(resized_image.shape)
+    (4, 8)
+
+    PyTorch example:
+    >>> import torch
+    >>>
+    >>> input_image = torch.rand(1, 1, 16, 16)          # Create image
+    >>> feature = dt.math.Resize(dsize=(4, 8))          # (height=4, width=8)
+    >>> resized_image = feature.resolve(input_image)    # Resize it to (4, 8)
+    >>> print(resized_image.shape)
+    torch.Size([1, 1, 4, 8])
 
     """
 
     def __init__(
         self: Resize,
-        dsize: PropertyLike[tuple] = (256, 256),
+        dsize: PropertyLike[tuple[int, int]] = (256, 256),
         **kwargs: Any,
     ):
-        """Initialize the parameters for resizing input features.
-
-        This constructor initializes the parameters for resizing input
-        features.
+        """Initialize the parameters for the Resize feature.
 
         Parameters
         ----------
-        dsize: tuple
-            Size to resize to.
+        dsize: PropertyLike[tuple[int, int]]
+            The target size. Format depends on backend: `(width, height)` for
+            NumPy, `(height, width)` for PyTorch. Default is (256, 256).
         **kwargs: Any
-            Additional keyword arguments.
+            Additional arguments passed to the parent `Feature` class.
 
         """
 
         super().__init__(dsize=dsize, **kwargs)
 
-    def get(self: Resize, image: np.ndarray, dsize: tuple, **kwargs: Any) -> np.ndarray:
+    def get(
+        self: Resize,
+        image: NDArray | torch.Tensor,
+        dsize: tuple[int, int],
+        **kwargs: Any,
+    ) -> NDArray | torch.Tensor:
         """Resize the input image to the specified size.
-
-        This method resizes the input image to the specified size.
 
         Parameters
         ----------
-        image: np.ndarray
+        image: np.ndarray or torch.Tensor
             The input image to resize.
-        dsize: tuple
+            - NumPy arrays may be grayscale (H, W) or color (H, W, C).
+            - Torch tensors are expected in one of the following formats:
+              (N, C, H, W), (C, H, W), or (H, W).
+        dsize: tuple[int, int]
             Desired output size of the image.
+            - NumPy: (width, height)
+            - PyTorch: (height, width)
         **kwargs: Any
-            Additional keyword arguments.
+            Additional keyword arguments passed to the underlying resize 
+            function (`cv2.resize` or `torch.nn.functional.interpolate`).
 
         Returns
         -------
-        np.ndarray
-            The resized image.
+        np.ndarray or torch.Tensor
+            The resized image in the same type and dimensionality format as
+            input.
+
+        Notes
+        -----
+        - For PyTorch tensors, resizing uses bilinear interpolation with
+          `align_corners=False`. This choice matches OpenCV’s `cv2.resize`
+          default behavior when resizing NumPy arrays, aiming to produce nearly
+          identical results between both backends.
 
         """
-
-        import cv2
-        from deeptrack import config
 
         if self._wrap_array_with_image:
             image = strip(image)
 
-        return utils.safe_call(cv2.resize, positional_args=[image, dsize], **kwargs)
+        if apc.is_torch_array(image):
+            original_shape = image.shape
+
+            # Reshape input to (N, C, H, W)
+            if image.ndim == 2:     # (H, W)
+                image = image.unsqueeze(0).unsqueeze(0)
+            elif image.ndim == 3:   # (C, H, W)
+                image = image.unsqueeze(0)
+            elif image.ndim != 4:
+                raise ValueError(
+                    "Resize only supports tensors with shape (N, C, H, W), "
+                    "(C, H, W), or (H, W)."
+                )
+
+            resized = torch.nn.functional.interpolate(
+                image,
+                size=dsize,
+                mode="bilinear",
+                align_corners=False,
+            )
+
+            # Restore original dimensionality
+            if len(original_shape) == 2:
+                resized = resized.squeeze(0).squeeze(0)
+            elif len(original_shape) == 3:
+                resized = resized.squeeze(0)
+
+            return resized
+
+        else:
+            import cv2
+            return utils.safe_call(
+                cv2.resize, positional_args=[image, dsize], **kwargs
+            )
 
 
 if OPENCV_AVAILABLE:

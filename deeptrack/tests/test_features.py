@@ -1836,8 +1836,13 @@ class TestFeatures(unittest.TestCase):
 
         try:
             with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy:
-                np.save(temp_npy.name, test_image_array)
+                pass
+            np.save(temp_npy.name, test_image_array)
                 # npy_filename = temp_npy.name
+
+            with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy2:
+                pass
+            np.save(temp_npy2.name, test_image_array)
 
             with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
                 PIL_Image.fromarray(test_image_array).save(temp_png.name)
@@ -1877,11 +1882,60 @@ class TestFeatures(unittest.TestCase):
             loaded_image = load_feature.resolve()
             self.assertGreaterEqual(len(loaded_image.shape), 4)
 
-        finally:
-            for file in [temp_npy.name, temp_png.name, temp_jpg.name]:
-                os.remove(file)
+            # Test loading a list of images
+            load_feature = features.LoadImage(
+                path=[temp_npy.name, temp_npy2.name], as_list=True
+            )
+            loaded_list = load_feature.resolve()
+            self.assertIsInstance(loaded_list, list)
+            self.assertEqual(len(loaded_list), 2)
+            
+            for img in loaded_list:
+                self.assertTrue(isinstance(img, np.ndarray))
 
-        #TODO: Add a test for loading a list of images.
+            # Test loading a random image from a list of images
+            load_feature = features.LoadImage(
+                path=[temp_npy.name, temp_npy2.name],
+                ndim=4,
+                as_list=True,
+                get_one_random=True,
+            )
+            loaded_image = load_feature.resolve()
+            self.assertTrue(
+                np.allclose(
+                    loaded_image[:, :, 0, 0], test_image_array, rtol=1.e-3
+                )
+            )
+            self.assertEqual(loaded_image.shape, (50, 50, 1, 1))
+
+            import gc
+            gc.collect()
+
+            # Test loading an image as a torch tensor.
+            if TORCH_AVAILABLE:
+                load_feature = features.LoadImage(path=temp_png.name)
+                load_feature.torch()
+                loaded_image = load_feature.resolve()
+                self.assertIsInstance(loaded_image, torch.Tensor)
+                self.assertEqual(
+                    loaded_image.shape[:2], test_image_array.shape
+                )
+
+                loaded_image_np = loaded_image.numpy()
+                self.assertTrue(
+                    np.allclose(
+                        test_image_array, loaded_image_np[:, :, 0], rtol=1.e-3
+                    )
+                )
+
+        finally:
+            for file in [
+                temp_npy.name,
+                temp_png.name,
+                temp_jpg.name,
+                temp_npy2.name
+            ]:
+                os.remove(file)
 
 
     def test_SampleToMasks(self):
@@ -1949,11 +2003,48 @@ class TestFeatures(unittest.TestCase):
                     np.all(output_image == np.array([1, 2, 3], dtype=dtype))
                 )
 
-        # Test for Image.
-        #TODO
+        ### Test with PyTorch tensor (if available)
+        if TORCH_AVAILABLE:
+            input_image_torch = torch.tensor([1.5, 2.5, 3.5])
 
-        # Test for PyTorch tensors.
-        #TODO
+            data_types_torch = [
+                "float64",
+                "int32",
+                "int16",
+                "uint8",
+                "int8",
+                "torch.float64",
+                "torch.int32",
+            ]
+
+            torch_dtypes_map = {
+                "float64": torch.float64,
+                "int32": torch.int32,
+                "int16": torch.int16,
+                "uint8": torch.uint8,
+                "int8": torch.int8,
+                "torch.float64": torch.float64,
+                "torch.int32": torch.int32,
+            }
+
+            for dtype in data_types_torch:
+                astype_feature = features.AsType(dtype=dtype)
+                output_image = astype_feature.get(
+                    input_image_torch, dtype=dtype
+                )
+                expected_dtype = torch_dtypes_map[dtype]
+                self.assertEqual(output_image.dtype, expected_dtype)
+
+                # Additional check for specific behavior of integers.
+                if expected_dtype in [
+                    torch.int8,
+                    torch.int16,
+                    torch.int32,
+                    torch.uint8,
+                ]:
+                    # Verify that fractional parts are truncated
+                    expected = torch.tensor([1, 2, 3], dtype=expected_dtype)
+                    self.assertTrue(torch.equal(output_image, expected))
 
 
     def test_ChannelFirst2d(self):
@@ -2408,10 +2499,35 @@ class TestFeatures(unittest.TestCase):
         value_feature.update()
         cached_output = store_feature(None, key="example", replace=False)
         self.assertEqual(cached_output, output)
+        self.assertNotEqual(cached_output, value_feature())
 
         value_feature.update()
         cached_output = store_feature(None, key="example", replace=True)
         self.assertNotEqual(cached_output, output)
+        self.assertEqual(cached_output, value_feature())
+
+        if TORCH_AVAILABLE:
+
+            value_feature = features.Value(lambda: torch.rand(1))
+
+            store_feature = features.Store(
+                feature=value_feature, key="example"
+            )
+
+            output = store_feature(None, key="example", replace=False)
+
+            value_feature.update()
+            cached_output = store_feature(None, key="example", replace=False)
+            torch.testing.assert_close(cached_output, output)
+            with self.assertRaises(AssertionError):
+                torch.testing.assert_close(cached_output, value_feature())
+
+            value_feature.update()
+            cached_output = store_feature(None, key="example", replace=True)
+            with self.assertRaises(AssertionError):
+                torch.testing.assert_close(cached_output, output)
+            torch.testing.assert_close(cached_output, value_feature())
+
 
 
     def test_Squeeze(self):
@@ -2674,27 +2790,61 @@ class TestFeatures(unittest.TestCase):
         feature = ExampleFeature(my_property=properties.Property(42))
 
         take_properties = features.TakeProperties(feature)
-        take_properties = features.TakeProperties(feature)
         output = take_properties.get(image=None, names=["my_property"])
         self.assertEqual(output, [42])
 
-        # with `Gaussian` feature 
+        # with `Gaussian` feature
         noise_feature = Gaussian(mu=7, sigma=12)
-        
+
         take_properties = features.TakeProperties(noise_feature)
         output = take_properties.get(image=None, names=["mu"])
         self.assertEqual(output, [7])
         output = take_properties.get(image=None, names=["sigma"])
         self.assertEqual(output, [12])
 
-        # with `Gaussian` feature 
-        noise_feature = Gaussian(mu=7, sigma=12)
-        
+        # with `Gaussian` feature with float properties
+        noise_feature = Gaussian(mu=7.123, sigma=12.123)
+
         take_properties = features.TakeProperties(noise_feature)
-        output = take_properties.get(image=None, names=["mu"])
-        self.assertEqual(output, [7])
-        output = take_properties.get(image=None, names=["sigma"])
-        self.assertEqual(output, [12])
+        output = take_properties.get(image=None, names=["mu", "sigma"])
+        self.assertEqual(output, ([7.123], [12.123]))
+        self.assertEqual(output[0][0], 7.123)
+        self.assertEqual(output[1][0], 12.123)
+
+        ### Test with PyTorch tensor (if available)
+        if TORCH_AVAILABLE:
+            class ExampleFeature(features.Feature):
+                def __init__(self, my_property, **kwargs):
+                    super().__init__(my_property=my_property, **kwargs)
+
+            feature = ExampleFeature(my_property=
+                properties.Property(torch.tensor(42.123)))
+
+            take_properties = features.TakeProperties(feature)
+            output = take_properties.get(image=None, names=["my_property"])
+            torch.testing.assert_close(output[0], torch.tensor(42.123))
+
+            # with `Gaussian` feature
+            noise_feature = Gaussian(
+                mu=torch.tensor(7), sigma=torch.tensor(12)
+            )
+
+            take_properties = features.TakeProperties(noise_feature)
+            output = take_properties.get(image=None, names=["mu"])
+            torch.testing.assert_close(output[0], torch.tensor(7))
+            output = take_properties.get(image=None, names=["sigma"])
+            torch.testing.assert_close(output[0], torch.tensor(12))
+
+            # with `Gaussian` feature with float properties
+            random_mu = torch.rand(1)
+            random_sigma = torch.rand(1)
+            noise_feature = Gaussian(mu=random_mu, sigma=random_sigma)
+
+            take_properties = features.TakeProperties(noise_feature)
+            output = take_properties.get(image=None, names=["mu", "sigma"])
+            torch.testing.assert_close(output, ([random_mu], [random_sigma]))
+            torch.testing.assert_close(output[0][0], random_mu)
+            torch.testing.assert_close(output[1][0], random_sigma)
 
 
 if __name__ == "__main__":
