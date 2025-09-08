@@ -1445,10 +1445,9 @@ class MedianPooling(Pool):
 
 
 class Resize(Feature):
-    """
-    Resize an image to a specified size.
+    """Resize an image to a specified size.
 
-    This class resizes an image using:
+    `Resize` resizes an image using:
       - OpenCV (`cv2.resize`) for NumPy arrays.
       - PyTorch (`torch.nn.functional.interpolate`) for PyTorch tensors.
 
@@ -1457,7 +1456,6 @@ class Resize(Feature):
       - **NumPy (OpenCV)**: `dsize` is given as `(width, height)` to match
         OpenCV’s default.
       - **PyTorch**: `dsize` is given as `(height, width)`.
-
 
     Parameters
     ----------
@@ -1505,8 +1503,7 @@ class Resize(Feature):
         dsize: PropertyLike[tuple[int, int]] = (256, 256),
         **kwargs: Any,
     ):
-        """
-        Initialize the parameters for the Resize feature.
+        """Initialize the parameters for the Resize feature.
 
         Parameters
         ----------
@@ -1517,6 +1514,7 @@ class Resize(Feature):
             Additional arguments passed to the parent `Feature` class.
 
         """
+
         super().__init__(dsize=dsize, **kwargs)
 
     def get(
@@ -1525,8 +1523,7 @@ class Resize(Feature):
         dsize: tuple[int, int],
         **kwargs: Any,
     ) -> NDArray | torch.Tensor:
-        """
-        Resize the input image to the specified size.
+        """Resize the input image to the specified size.
 
         Parameters
         ----------
