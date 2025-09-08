@@ -218,7 +218,7 @@ __all__ = [
     "OneOfDict",
     "LoadImage",
     "SampleToMasks",  # TODO ***MG***
-    "AsType",  # TODO ***MG***
+    "AsType",
     "ChannelFirst2d",
     "Upscale",  # TODO ***AL***
     "NonOverlapping",  # TODO ***AL***
@@ -7785,9 +7785,9 @@ class SampleToMasks(Feature):
 class AsType(Feature):
     """Convert the data type of images.
 
-    This feature changes the data type (`dtype`) of input images to a specified 
-    type. The accepted types are the same as those used by NumPy arrays, such 
-    as `float64`, `int32`, `uint16`, `int16`, `uint8`, and `int8`.
+    `Astype` changes the data type (`dtype`) of input images to a specified
+    type. The accepted types are standard NumPy or PyTorch data types (e.g.,
+    `"float64"`, `"int32"`, `"uint8"`, `"int8"`, and `"torch.float32"`).
 
     Parameters
     ----------
@@ -7810,7 +7810,7 @@ class AsType(Feature):
     >>>
     >>> input_image = np.array([1.5, 2.5, 3.5])
 
-    Apply an AsType feature to convert to `int32`:
+    Apply an AsType feature to convert to "`int32"`:
     >>> astype_feature = dt.AsType(dtype="int32")
     >>> output_image = astype_feature.get(input_image, dtype="int32")
     >>> output_image
@@ -7827,8 +7827,7 @@ class AsType(Feature):
         dtype: PropertyLike[str] = "float64",
         **kwargs: Any,
     ):
-        """
-        Initialize the AsType feature.
+        """Initialize the AsType feature.
 
         Parameters
         ----------
@@ -7867,7 +7866,39 @@ class AsType(Feature):
 
         """
 
-        return image.astype(dtype)
+        if apc.is_torch_array(image):
+            # Mapping from string to torch dtype
+            torch_dtypes = {
+                "float64": torch.float64,
+                "double": torch.float64,
+                "float32": torch.float32,
+                "float": torch.float32,
+                "float16": torch.float16,
+                "half": torch.float16,
+                "int64": torch.int64,
+                "int32": torch.int32,
+                "int16": torch.int16,
+                "int8": torch.int8,
+                "uint8": torch.uint8,
+                "bool": torch.bool,
+                "complex64": torch.complex64,
+                "complex128": torch.complex128,
+            }
+
+            # Ensure `"torch.float32"` and `"float32"` are treated the same by
+            # removing the `torch.` prefix if present
+            dtype_str = str(dtype).replace("torch.", "")
+            torch_dtype = torch_dtypes.get(dtype_str)
+
+            if torch_dtype is None:
+                raise ValueError(
+                    f"Unsupported dtype for torch.Tensor: {dtype}"
+                )
+            
+            return image.to(dtype=torch_dtype)
+
+        else:
+            return image.astype(dtype)
 
 
 class ChannelFirst2d(Feature):  # DEPRECATED

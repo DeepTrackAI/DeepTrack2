@@ -2003,11 +2003,48 @@ class TestFeatures(unittest.TestCase):
                     np.all(output_image == np.array([1, 2, 3], dtype=dtype))
                 )
 
-        # Test for Image.
-        #TODO
+        ### Test with PyTorch tensor (if available)
+        if TORCH_AVAILABLE:
+            input_image_torch = torch.tensor([1.5, 2.5, 3.5])
 
-        # Test for PyTorch tensors.
-        #TODO
+            data_types_torch = [
+                "float64",
+                "int32",
+                "int16",
+                "uint8",
+                "int8",
+                "torch.float64",
+                "torch.int32",
+            ]
+
+            torch_dtypes_map = {
+                "float64": torch.float64,
+                "int32": torch.int32,
+                "int16": torch.int16,
+                "uint8": torch.uint8,
+                "int8": torch.int8,
+                "torch.float64": torch.float64,
+                "torch.int32": torch.int32,
+            }
+
+            for dtype in data_types_torch:
+                astype_feature = features.AsType(dtype=dtype)
+                output_image = astype_feature.get(
+                    input_image_torch, dtype=dtype
+                )
+                expected_dtype = torch_dtypes_map[dtype]
+                self.assertEqual(output_image.dtype, expected_dtype)
+
+                # Additional check for specific behavior of integers.
+                if expected_dtype in [
+                    torch.int8,
+                    torch.int16,
+                    torch.int32,
+                    torch.uint8,
+                ]:
+                    # Verify that fractional parts are truncated
+                    expected = torch.tensor([1, 2, 3], dtype=expected_dtype)
+                    self.assertTrue(torch.equal(output_image, expected))
 
 
     def test_ChannelFirst2d(self):
