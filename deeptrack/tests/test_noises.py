@@ -15,7 +15,7 @@ from deeptrack.tests import BackendTestBase
 if TORCH_AVAILABLE:
     import torch
 
-class TestNoises_Numpy(BackendTestBase):
+class TestNoises_NumPy(BackendTestBase):
     BACKEND = "numpy"
 
     @property
@@ -88,7 +88,7 @@ class TestNoises_Numpy(BackendTestBase):
 
 # Extending the test and setting the backend to torch
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
-class TestNoises_Torch(TestNoises_Numpy):
+class TestNoises_PyTorch(TestNoises_NumPy):
     BACKEND = "torch"
     pass
 
