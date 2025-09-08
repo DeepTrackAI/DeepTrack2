@@ -7751,7 +7751,7 @@ class SampleToMasks(Feature):
 class AsType(Feature):
     """Convert the data type of images.
 
-    This feature changes the data type (`dtype`) of input images to a specified
+    `Astype` changes the data type (`dtype`) of input images to a specified
     type. The accepted types are standard NumPy or PyTorch data types (e.g.,
     `"float64"`, `"int32"`, `"uint8"`, `"int8"`, and `"torch.float32"`).
 
@@ -7793,8 +7793,7 @@ class AsType(Feature):
         dtype: PropertyLike[str] = "float64",
         **kwargs: Any,
     ):
-        """
-        Initialize the AsType feature.
+        """Initialize the AsType feature.
 
         Parameters
         ----------
