@@ -405,6 +405,7 @@ class Microscope(StructuralFeature):
 
         return imaged_sample
 
+        """
         #TODO: erase rest of the method
         # Merge with input
         if not image:
@@ -418,6 +419,7 @@ class Microscope(StructuralFeature):
         for i in range(len(image)):
             image[i].merge_properties_from(imaged_sample)
         return image
+        """
 
     # def _no_wrap_format_input(self, *args, **kwargs) -> list:
     #     return self._image_wrapped_format_input(*args, **kwargs)
