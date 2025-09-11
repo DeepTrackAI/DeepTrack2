@@ -136,28 +136,26 @@ Simulating an image with the `Fluorescence` class:
 
 from __future__ import annotations
 
-from pint import Quantity
-from typing import Any, TYPE_CHECKING
 import warnings
+from typing import TYPE_CHECKING, Any, Sequence
 
 import numpy as np
+import torch
+import torch.nn.functional as F
 from numpy.typing import NDArray
+from pint import Quantity
 from scipy.ndimage import convolve
 
-from deeptrack.backend.units import (
-    ConversionTable,
-    create_context,
-    get_active_scale,
-    get_active_voxel_size,
-)
-from deeptrack.math import AveragePooling
-from deeptrack.features import propagate_data_to_dependencies
-from deeptrack.features import DummyFeature, Feature, StructuralFeature
-from deeptrack.image import Image, pad_image_to_fft
-from deeptrack.types import ArrayLike, PropertyLike
-
+import deeptrack.xp as xp
 from deeptrack import image
 from deeptrack import units_registry as u
+from deeptrack.backend.units import (ConversionTable, create_context,
+                                     get_active_scale, get_active_voxel_size)
+from deeptrack.features import (DummyFeature, Feature, StructuralFeature,
+                                propagate_data_to_dependencies)
+from deeptrack.image import Image, pad_image_to_fft
+from deeptrack.math import AveragePooling
+from deeptrack.types import ArrayLike, PropertyLike
 
 if TYPE_CHECKING:
     import torch
@@ -964,7 +962,8 @@ class Optics(Feature):
         True
 
         """
-        from deeptrack.scatterers import MieScatterer # Temporary place for this import.
+        from deeptrack.scatterers import \
+            MieScatterer  # Temporary place for this import.
 
         if isinstance(self, (Darkfield, ISCAT, Holography)) and not isinstance(sample, MieScatterer):
             warnings.warn(
@@ -1911,40 +1910,112 @@ def _get_position(
     return position
 
 
+def _bilinear_interpolate_numpy(
+    scatterer: np.ndarray, x_off: float, y_off: float
+) -> np.ndarray:
+    """Apply bilinear subpixel interpolation in the x–y plane (NumPy)."""
+    kernel = np.array(
+        [
+            [0.0, 0.0, 0.0],
+            [0.0, (1 - x_off) * (1 - y_off), (1 - x_off) * y_off],
+            [0.0, x_off * (1 - y_off), x_off * y_off],
+        ]
+    )
+    out = np.zeros_like(scatterer)
+    for z in range(scatterer.shape[2]):
+        if np.iscomplexobj(scatterer):
+            out[:, :, z] = (
+                convolve(np.real(scatterer[:, :, z]), kernel, mode="constant")
+                + 1j
+                * convolve(np.imag(scatterer[:, :, z]), kernel, mode="constant")
+            )
+        else:
+            out[:, :, z] = convolve(scatterer[:, :, z], kernel, mode="constant")
+    return out
+
+
+def _bilinear_interpolate_torch(
+    scatterer: torch.Tensor, x_off: float, y_off: float
+) -> torch.Tensor:
+    """Apply bilinear subpixel interpolation in the x–y plane (Torch).
+
+    Uses grid_sample for autograd-friendly interpolation.
+    """
+    H, W, D = scatterer.shape
+
+    # Normalized shifts in [-1,1]
+    x_shift = 2 * x_off / (W - 1)
+    y_shift = 2 * y_off / (H - 1)
+
+    yy, xx = torch.meshgrid(
+        torch.linspace(-1, 1, H, device=scatterer.device, dtype=scatterer.dtype),
+        torch.linspace(-1, 1, W, device=scatterer.device, dtype=scatterer.dtype),
+        indexing="ij",
+    )
+    grid = torch.stack((xx + x_shift, yy + y_shift), dim=-1)  # (H,W,2)
+    grid = grid.unsqueeze(0).repeat(D, 1, 1, 1)               # (D,H,W,2)
+
+    inp = scatterer.permute(2, 0, 1).unsqueeze(1)             # (D,1,H,W)
+
+    out = F.grid_sample(inp, grid, mode="bilinear",
+                        padding_mode="zeros", align_corners=True)
+    return out.squeeze(1).permute(1, 2, 0)                    # (H,W,D)
+
+
 #TODO ***??*** revise _create_volume - torch, typing, docstring, unit test
 def _create_volume(
-    list_of_scatterers: list,
-    pad: tuple = (0, 0, 0, 0),
-    output_region: tuple = (None, None, None, None),
+    list_of_scatterers: ArrayLike | Sequence[ArrayLike],
+    pad: tuple[int, int, int, int] = (0, 0, 0, 0),
+    output_region: tuple[int | None, int | None, int | None, int | None] = (None, None, None, None),
     refractive_index_medium: float = 1.33,
     **kwargs: Any,
-) -> tuple:
-    """Converts a list of scatterers into a volumetric representation.
+) -> tuple[ArrayLike, np.ndarray]:
+    """Assemble a volumetric representation from a list of scatterers.
+
+    Each scatterer is represented as an ND array (numpy or torch), with 
+    associated properties such as ``position``, ``intensity``, 
+    ``refractive_index``, or ``value``. Scatterers are inserted into a common 
+    3D volume with optional padding, output region cropping, and subpixel 
+    interpolation.
 
     Parameters
     ----------
-    list_of_scatterers: list or single scatterer
-        List of scatterers to include in the volume.
-    pad: tuple of int, optional
-        Padding for the volume in the format (left, right, top, bottom).
-        Default is (0, 0, 0, 0).
-    output_region: tuple of int, optional
-        Region to output, defined as (x_min, y_min, x_max, y_max). Default is 
-        None.
-    refractive_index_medium: float, optional
-        Refractive index of the medium surrounding the scatterers. Default is 
-        1.33.
-    **kwargs: Any
-        Additional arguments for customization.
+    list_of_scatterers : ArrayLike or Sequence[ArrayLike]
+        Single scatterer or sequence of scatterers to include in the volume.
+        Each scatterer must be an ``ndarray`` or ``torch.Tensor`` with
+        shape ``(nx, ny, nz)`` (or compatible) and carry a ``.properties``
+        dictionary including at least ``"position"``.
+    pad : tuple of int, optional
+        Padding for the volume in the format ``(left, right, top, bottom)``.
+        Default is ``(0, 0, 0, 0)``.
+    output_region : tuple of int or None, optional
+        Region to output, defined as ``(x_min, y_min, x_max, y_max)``.
+        Default is ``(None, None, None, None)``, meaning unbounded.
+    refractive_index_medium : float, optional
+        Refractive index of the surrounding medium. Default is ``1.33``.
+    **kwargs : Any
+        Additional keyword arguments for customization.
 
     Returns
     -------
-    tuple
-        - volume: numpy.ndarray
-            The generated volume containing the scatterers.
-        - limits: numpy.ndarray
-            Spatial limits of the volume.
+    volume : ArrayLike
+        The generated 3D volume containing all scatterers.
+        Type matches the input backend: ``numpy.ndarray`` or ``torch.Tensor``.
+    limits : numpy.ndarray of shape (3, 2)
+        Spatial limits of the volume along each axis, as integers.
+        ``limits[:, 0]`` are the minima, ``limits[:, 1]`` the maxima.
 
+    Raises
+    ------
+    UserWarning
+        If a scatterer does not define a valid ``position`` property.
+
+    Notes
+    -----
+    - Subpixel positioning is handled by bilinear interpolation
+      (NumPy: convolution, Torch: grid_sample).
+    - Overlapping scatterers are **added** together in the volume.
+   
     """
 
     if not isinstance(list_of_scatterers, list):
@@ -1953,7 +2024,7 @@ def _create_volume(
     volume = np.zeros((1, 1, 1), dtype=complex)
     limits = None
     OR = np.zeros((4,))
-    OR[0] = np.inf if output_region[0] is None else int(
+    OR[0] =-np.inf if output_region[0] is None else int(
         output_region[0] - pad[0]
     )
     OR[1] = -np.inf if output_region[1] is None else int(
@@ -1962,7 +2033,7 @@ def _create_volume(
     OR[2] = np.inf if output_region[2] is None else int(
         output_region[2] + pad[2]
     )
-    OR[3] = -np.inf if output_region[3] is None else int(
+    OR[3] = np.inf if output_region[3] is None else int(
         output_region[3] + pad[3]
     )
 
@@ -1973,7 +2044,7 @@ def _create_volume(
     fudge_factor = scale[0] * scale[1] / scale[2]
 
     for scatterer in list_of_scatterers:
-
+        props = getattr(scatterer, "properties", {})
         position = _get_position(scatterer, mode="corner", return_z=True)
 
         if scatterer.get_property("intensity", None) is not None:
