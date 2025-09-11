@@ -2137,7 +2137,7 @@ def _create_volume(
                 )
 
         scatterer = splined_scatterer
-        position = np.floor(position)
+        position = np.floor(position) # check or change name, this is position on the grid
         new_limits = np.zeros(limits.shape, dtype=np.int32)
         for i in range(3):
             new_limits[i, :] = (
@@ -2165,7 +2165,8 @@ def _create_volume(
 
         within_volume_position = position - limits[:, 0]
 
-        # NOTE: Maybe shouldn't be additive.
+        # NOTE: Maybe shouldn't be additive
+        # give options: sum default, but also sum, mean, max, min
         volume[
             int(within_volume_position[0]) : 
             int(within_volume_position[0] + shape[0]),
