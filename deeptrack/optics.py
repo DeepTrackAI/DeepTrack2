@@ -146,9 +146,9 @@ from numpy.typing import NDArray
 from pint import Quantity
 from scipy.ndimage import convolve
 
-import deeptrack.xp as xp
-from deeptrack import image
+from deeptrack import TORCH_AVAILABLE, image
 from deeptrack import units_registry as u
+from deeptrack.backend import xp
 from deeptrack.backend.units import (ConversionTable, create_context,
                                      get_active_scale, get_active_voxel_size)
 from deeptrack.features import (DummyFeature, Feature, StructuralFeature,
@@ -156,6 +156,9 @@ from deeptrack.features import (DummyFeature, Feature, StructuralFeature,
 from deeptrack.image import Image, pad_image_to_fft
 from deeptrack.math import AveragePooling
 from deeptrack.types import ArrayLike, PropertyLike
+
+if TORCH_AVAILABLE:
+    import torch
 
 if TYPE_CHECKING:
     import torch
@@ -240,11 +243,13 @@ class Microscope(StructuralFeature):
 
         super().__init__(**kwargs)
 
+        print(">>> creating Microscope", type(sample), type(objective))
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
 
         #TODO: erase following line when rid of Image
-        self._sample.store_properties()
+        # self._sample.store_properties()
+        print(">>> creating Microscope", type(sample()))
 
     def get(
         self: Microscope,
@@ -369,7 +374,8 @@ class Microscope(StructuralFeature):
 
 
 
-
+            print(">>> scatterer props:", volume_scatterers[0].get_property("radius"))
+            print(">>> obj props:", *objective_properties.values())
 
             # Merge all volumes into a single volume.
             sample_volume, limits = _create_volume(
@@ -2042,10 +2048,17 @@ def _create_volume(
     # This accounts for upscale doing AveragePool instead of SumPool. This is
     # a bit of a hack, but it works for now.
     fudge_factor = scale[0] * scale[1] / scale[2]
+    print(">>> fudge factor:", fudge_factor)
+
 
     for scatterer in list_of_scatterers:
-        props = getattr(scatterer, "properties", {})
+
+        print(">>> scatterer type:", type(scatterer))
+        print(">>> scatterer properties:", scatterer.get_property("radius", None))
+
         position = _get_position(scatterer, mode="corner", return_z=True)
+
+        print(position)
 
         if scatterer.get_property("intensity", None) is not None:
             intensity = scatterer.get_property("intensity")
