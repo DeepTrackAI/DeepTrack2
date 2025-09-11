@@ -1345,28 +1345,14 @@ class Fluorescence(Optics):
             pupil = pupils[z_index]
             z_index += 1
 
-            if self.get_backend() == "numpy":
-                psf = np.square(np.abs(np.fft.ifft2(np.fft.fftshift(pupil))))
-                optical_transfer_function = np.fft.fft2(psf)
-                fourier_field = np.fft.fft2(volume[:, :, i])
-                convolved_fourier_field = (
+            psf = xp.square(xp.abs(xp.fft.ifft2(xp.fft.fftshift(pupil))))
+            optical_transfer_function = xp.fft.fft2(psf)
+            fourier_field = xp.fft.fft2(volume[:, :, i])
+            convolved_fourier_field = (
                     fourier_field * optical_transfer_function
                 )
-                field = np.fft.ifft2(convolved_fourier_field)
-                # Drop remaining imag part (should be 0 up to rounding error)
-                field = np.real(field)
-            else:
-                psf = torch.square(
-                    torch.abs(torch.fft.ifft2(torch.fft.fftshift(pupil)))
-                )
-                optical_transfer_function = torch.fft.fft2(psf)
-                fourier_field = torch.fft.fft2(volume[:, :, i])
-                convolved_fourier_field = (
-                    fourier_field * optical_transfer_function
-                )
-                field = torch.fft.ifft2(convolved_fourier_field)
-                # Drop remaining imag part (should be 0 up to rounding error)
-                field = torch.real(field)
+            field = xp.fft.ifft2(convolved_fourier_field)
+            field = xp.real(field)
 
             output_image._value[:, :, 0] += field[
                 : padded_volume.shape[0], : padded_volume.shape[1]
