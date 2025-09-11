@@ -155,6 +155,7 @@ from deeptrack.features import (DummyFeature, Feature, StructuralFeature,
                                 propagate_data_to_dependencies)
 from deeptrack.image import Image, pad_image_to_fft
 from deeptrack.math import AveragePooling
+from deeptrack.scatterers import VolumeScatterer
 from deeptrack.types import ArrayLike, PropertyLike
 
 if TORCH_AVAILABLE:
@@ -249,7 +250,7 @@ class Microscope(StructuralFeature):
 
         #TODO: erase following line when rid of Image
         # self._sample.store_properties()
-        print(">>> creating Microscope", type(sample()))
+        print(">>> creating Microscope", type(self._sample))
 
     def get(
         self: Microscope,
@@ -368,11 +369,6 @@ class Microscope(StructuralFeature):
                 for scatterer in list_of_scatterers
                 if scatterer.get_property("is_field", default=False)
             ]
-
-
-
-
-
 
             print(">>> scatterer props:", volume_scatterers[0].get_property("radius"))
             print(">>> obj props:", *objective_properties.values())
@@ -1850,7 +1846,7 @@ class IlluminationGradient(Feature):
 
 #TODO ***??*** revise _get_position - torch, typing, docstring, unit test
 def _get_position(
-    image: Image,
+    scatterer: VolumeScatterer,
     mode: str = "corner",
     return_z: bool = False,
 ) -> np.ndarray:
@@ -1873,38 +1869,38 @@ def _get_position(
     """
 
     num_outputs = 2 + return_z
-
-    if mode == "corner" and image.size > 0:
+    if mode == "corner" and scatterer.array.size > 0:
         import scipy.ndimage
 
-        image = image.to_numpy()
-
-        shift = scipy.ndimage.center_of_mass(np.abs(image))
+        shift = scipy.ndimage.center_of_mass(np.abs(scatterer.array))
 
         if np.isnan(shift).any():
-            shift = np.array(image.shape) / 2
+            shift = np.array(scatterer.array.shape) / 2
 
     else:
         shift = np.zeros((num_outputs))
 
-    position = np.array(image.get_property("position", default=None))
+    position = np.array(scatterer.get_property("position", default=None))
 
     if position is None:
         return position
 
     scale = np.array(get_active_scale())
-
+    print("image size", scatterer.get_property("z", default=0))
+    print(scale)
+    print(shift)
+    print(np.array([position[0], position[1], scatterer.get_property("z", default=0)]))
     if len(position) == 3:
         position = position * scale + 0.5 * (scale - 1)
         if return_z:
             return position * scale - shift
         else:
             return position[0:2] - shift[0:2]
-
+    
     elif len(position) == 2:
         if return_z:
             outp = (
-                np.array([position[0], position[1], image.get_property("z", default=0)])
+                np.array([position[0], position[1], scatterer.get_property("z", default=0)])
                 * scale
                 - shift
                 + 0.5 * (scale - 1)
@@ -1968,6 +1964,35 @@ def _bilinear_interpolate_torch(
     return out.squeeze(1).permute(1, 2, 0)                    # (H,W,D)
 
 
+# temporary to check the new class volumescatterer
+
+def convert_to_volume_scatterer(scatterer) -> VolumeScatterer:
+    """Convert a DeepTrack Image into a VolumeScatterer."""
+    arr = np.asarray(scatterer)  # raw array
+    position = scatterer.get_property("position", None)
+    z = scatterer.get_property("z", 0)
+    if isinstance(z, (list, np.ndarray)):
+        z = float(np.atleast_1d(z).squeeze())
+    intensity = scatterer.get_property("intensity", None)
+    if isinstance(intensity, (list, np.ndarray)):
+        intensity = float(np.atleast_1d(intensity).squeeze())
+    refractive_index = scatterer.get_property("refractive_index", None)
+    if isinstance(refractive_index, (list, np.ndarray)):
+        refractive_index = float(np.atleast_1d(refractive_index).squeeze())
+    value = (np.atleast_1d(scatterer.get_property("value", None)).squeeze())
+    if isinstance(value, (list, np.ndarray)):
+        value = float(np.atleast_1d(value).squeeze())
+
+    return VolumeScatterer(
+        array=arr,
+        position=position,
+        z=z,
+        intensity=intensity,
+        refractive_index=refractive_index,
+        value=value,
+    )
+
+
 #TODO ***??*** revise _create_volume - torch, typing, docstring, unit test
 def _create_volume(
     list_of_scatterers: ArrayLike | Sequence[ArrayLike],
@@ -2027,6 +2052,12 @@ def _create_volume(
     if not isinstance(list_of_scatterers, list):
         list_of_scatterers = [list_of_scatterers]
 
+    # make scatterer numpy to test function for Image removal
+    # list_of_scatterers = [np.asarray(scatterer) for scatterer in list_of_scatterers]
+    list_of_scatterers = [convert_to_volume_scatterer(sc) for sc in list_of_scatterers]
+
+    print(">>> type of scatterers:", [type(s) for s in list_of_scatterers])
+
     volume = np.zeros((1, 1, 1), dtype=complex)
     limits = None
     OR = np.zeros((4,))
@@ -2054,14 +2085,16 @@ def _create_volume(
     for scatterer in list_of_scatterers:
 
         print(">>> scatterer type:", type(scatterer))
-        print(">>> scatterer properties:", scatterer.get_property("radius", None))
+        # print(">>> scatterer properties:", scatterer.get_property("radius", None))
 
         position = _get_position(scatterer, mode="corner", return_z=True)
 
         print(position)
 
+        # momentarily off, first check working with numpy
         if scatterer.get_property("intensity", None) is not None:
             intensity = scatterer.get_property("intensity")
+            print("intensity:", intensity)
             scatterer_value = intensity * fudge_factor
         elif scatterer.get_property("refractive_index", None) is not None:
             refractive_index = scatterer.get_property("refractive_index")
@@ -2071,7 +2104,7 @@ def _create_volume(
         else:
             scatterer_value = scatterer.get_property("value")
 
-        scatterer = scatterer * scatterer_value
+        scatterer.array = scatterer.array * scatterer_value
 
         if limits is None:
             limits = np.zeros((3, 2), dtype=np.int32)
@@ -2079,26 +2112,25 @@ def _create_volume(
             limits[:, 1] = np.floor(position).astype(np.int32) + 1
 
         if (
-            position[0] + scatterer.shape[0] < OR[0]
+            position[0] + scatterer.array.shape[0] < OR[0]
             or position[0] > OR[2]
-            or position[1] + scatterer.shape[1] < OR[1]
+            or position[1] + scatterer.array.shape[1] < OR[1]
             or position[1] > OR[3]
         ):
             continue
 
-        padded_scatterer = Image(
-            np.pad(
-                scatterer,
-                [(2, 2), (2, 2), (2, 2)],
-                "constant",
-                constant_values=0,
-            )
+        padded_scatterer = np.pad(
+            scatterer.array,
+            [(2, 2), (2, 2), (2, 2)],
+            "constant",
+            constant_values=0,
         )
-        padded_scatterer.merge_properties_from(scatterer)
+        
+        # padded_scatterer.merge_properties_from(scatterer)
 
-        scatterer = padded_scatterer
+        # scatterer = padded_scatterer
         position = _get_position(scatterer, mode="corner", return_z=True)
-        shape = np.array(scatterer.shape)
+        shape = np.array(padded_scatterer.shape)
 
         if position is None:
             RuntimeWarning(
@@ -2107,7 +2139,7 @@ def _create_volume(
             )
             continue
 
-        splined_scatterer = np.zeros_like(scatterer)
+        splined_scatterer = np.zeros_like(padded_scatterer)
 
         x_off = position[0] - np.floor(position[0])
         y_off = position[1] - np.floor(position[1])
@@ -2120,23 +2152,23 @@ def _create_volume(
             ]
         )
 
-        for z in range(scatterer.shape[2]):
+        for z in range(padded_scatterer.shape[2]):
             if splined_scatterer.dtype == complex:
                 splined_scatterer[:, :, z] = (
                     convolve(
-                        np.real(scatterer[:, :, z]), kernel, mode="constant"
+                        np.real(padded_scatterer[:, :, z]), kernel, mode="constant"
                     )
                     + convolve(
-                        np.imag(scatterer[:, :, z]), kernel, mode="constant"
+                        np.imag(padded_scatterer[:, :, z]), kernel, mode="constant"
                     )
                     * 1j
                 )
             else:
                 splined_scatterer[:, :, z] = convolve(
-                    scatterer[:, :, z], kernel, mode="constant"
+                    padded_scatterer[:, :, z], kernel, mode="constant"
                 )
 
-        scatterer = splined_scatterer
+        # scatterer = splined_scatterer
         position = np.floor(position) # check or change name, this is position on the grid
         new_limits = np.zeros(limits.shape, dtype=np.int32)
         for i in range(3):
@@ -2176,5 +2208,5 @@ def _create_volume(
 
             int(within_volume_position[2]) : 
             int(within_volume_position[2] + shape[2]),
-        ] += scatterer
+        ] += splined_scatterer
     return volume, limits

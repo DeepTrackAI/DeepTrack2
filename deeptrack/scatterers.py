@@ -160,25 +160,22 @@ Create a stratified Mie sphere and resolve it through a microscope:
 
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
 import warnings
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Union
 
 import numpy as np
 from numpy.typing import NDArray
 from pint import Quantity
 
-from deeptrack.holography import get_propagation_matrix
-from deeptrack.backend.units import (
-    ConversionTable,
-    get_active_scale,
-    get_active_voxel_size,
-)
-from deeptrack.backend import mie
-from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
-from deeptrack.image import pad_image_to_fft, Image
-from deeptrack.types import ArrayLike
 from deeptrack import units_registry as u
-
+from deeptrack.backend import mie
+from deeptrack.backend.units import (ConversionTable, get_active_scale,
+                                     get_active_voxel_size)
+from deeptrack.features import MERGE_STRATEGY_APPEND, Feature
+from deeptrack.holography import get_propagation_matrix
+from deeptrack.image import Image, pad_image_to_fft
+from deeptrack.types import ArrayLike
 
 __all__ = [
     "Scatterer",
@@ -1412,3 +1409,27 @@ class MieStratifiedSphere(MieScatterer):
             refractive_index=refractive_index,
             **kwargs,
         )
+
+@dataclass
+class VolumeScatterer:
+    """Container for a scatterer array and its fundamental optical properties."""
+
+    array: np.ndarray | torch.Tensor
+    position: np.ndarray  # [x, y] in pixels or physical units
+    z: float = 0
+    intensity: float | None = None
+    refractive_index: float | None = None
+    value: float | None = None
+    properties: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        # Ensure position is a numpy array of length 3
+        self.position = np.array(self.position, dtype=float).reshape(-1)[:3]
+
+    def as_array(self) -> ArrayLike:
+        """Return the scatterer as a raw array."""
+        return self.array
+
+    def get_property(self, key: str, default: Any = None) -> Any:
+        """Get a property with fallback to dict."""
+        return getattr(self, key, self.properties.get(key, default))
