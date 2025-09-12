@@ -9703,9 +9703,8 @@ class TakeProperties(Feature):
         # Convert the results to tuple.
         res = tuple([res[name] for name in names])
 
-        # Return a single array if only one property name is specified.
+               # Return a single array if only one property name is specified.
         if len(res) == 1:
             res = res[0]
 
         return res
-        
