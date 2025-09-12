@@ -4019,9 +4019,25 @@ class Feature(DeepTrackNode):
             # corresponding image.
 
             results = []
+            # from deeptrack.scatterers import (
+            #     PointParticle, ScatteredVolume, Sphere)
 
             for image in image_list:
                 output = self.get(image, **feature_input)
+                
+                # # New: special case for scatterers
+                # if isinstance(self, (PointParticle, Sphere)):
+                #     print('got here!')
+                #     output = ScatteredVolume(
+                #         array=output,
+                #         position=self.get_property("position", feature_input),
+                #         z=self.get_property("z", 0),
+                #         intensity=self.get_property("intensity", None),
+                #         refractive_index=self.get_property("refractive_index", None),
+                #         properties=self.properties.copy(),
+                #     )
+                
+                # elif not isinstance(output, Image):
                 if not isinstance(output, Image):
                     output = Image(output)
 
@@ -9707,4 +9723,5 @@ class TakeProperties(Feature):
         if len(res) == 1:
             res = res[0]
 
+        return res
         return res

@@ -307,6 +307,7 @@ class Scatterer(Feature):
         voxel_size = get_active_voxel_size()
 
         # Calls parent _process_and_get.
+        # Scatterer has no_wrap but wants wrapping, that's why methods are redefined below.
         new_image = super()._process_and_get(
             *args,
             voxel_size=voxel_size,
@@ -330,28 +331,42 @@ class Scatterer(Feature):
             new_image = new_image[:, ~np.all(new_image == 0, axis=(0, 2))]
             new_image = new_image[:, :, ~np.all(new_image == 0, axis=(0, 1))]
 
-        return [Image(new_image)]
+        # Copy properties
+        props = kwargs.copy()
 
-    def _no_wrap_format_input(
-        self,
-        *args,
-        **kwargs
-    ) -> list:
-        return self._image_wrapped_format_input(*args, **kwargs)
+        if isinstance(self, (PointParticle, Sphere)):
+            return [ScatteredVolume(
+                array=new_image,
+                position=props.get("position", (0, 0)),
+                z=props.get("z", 0.0),
+                value=props.get("value", 1.0),
+                intensity=props.get("intensity", None),
+                refractive_index=props.get("refractive_index", None),
+                properties=props.copy(),
+            )]
 
-    def _no_wrap_process_and_get(
-        self,
-        *args,
-        **feature_input
-    ) -> list:
-        return self._image_wrapped_process_and_get(*args, **feature_input)
+        # return [Image(new_image)]
 
-    def _no_wrap_process_output(
-        self,
-        *args,
-        **feature_input
-    ) -> list:
-        return self._image_wrapped_process_output(*args, **feature_input)
+    # def _no_wrap_format_input(
+    #     self,
+    #     *args,
+    #     **kwargs
+    # ) -> list:
+    #     return self._image_wrapped_format_input(*args, **kwargs)
+
+    # def _no_wrap_process_and_get(
+    #     self,
+    #     *args,
+    #     **feature_input
+    # ) -> list:
+    #     return self._image_wrapped_process_and_get(*args, **feature_input)
+
+    # def _no_wrap_process_output(
+    #     self,
+    #     *args,
+    #     **feature_input
+    # ) -> list:
+    #     return self._image_wrapped_process_output(*args, **feature_input)
 
 
 #TODO ***??*** revise PointParticle - torch, typing, docstring, unit test
@@ -1410,26 +1425,51 @@ class MieStratifiedSphere(MieScatterer):
             **kwargs,
         )
 
-@dataclass
-class VolumeScatterer:
-    """Container for a scatterer array and its fundamental optical properties."""
 
-    array: np.ndarray | torch.Tensor
-    position: np.ndarray  # [x, y] in pixels or physical units
-    z: float = 0
-    intensity: float | None = None
-    refractive_index: float | None = None
-    value: float | None = None
+@dataclass
+class ScatteredBase:
+    """Base class for scatterers (volumes and fields)."""
+
+    array: ArrayLike
+    position: np.ndarray
+    z: float = 0.0
     properties: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
-        # Ensure position is a numpy array of length 3
-        self.position = np.array(self.position, dtype=float).reshape(-1)[:3]
+        self.position = np.array(self.position, dtype=float).reshape(-1)[:2]
+        self.z = float(np.atleast_1d(self.z).squeeze())
+
+    @property
+    def pos3d(self) -> np.ndarray:
+        return np.array([*self.position, self.z], dtype=float)
 
     def as_array(self) -> ArrayLike:
-        """Return the scatterer as a raw array."""
+        """Return the underlying array.
+
+        Notes
+        -----
+        The raw array is also directly available as ``scatterer.array``.
+        This method exists mainly for API compatibility and clarity.
+
+        """
+        
         return self.array
 
     def get_property(self, key: str, default: Any = None) -> Any:
-        """Get a property with fallback to dict."""
         return getattr(self, key, self.properties.get(key, default))
+
+
+@dataclass
+class ScatteredVolume(ScatteredBase):
+    """Volumetric object: intensity sources or refractive index contrasts."""
+
+    refractive_index: float | None = None
+    intensity: float | None = None
+    value: float | None = None
+
+
+@dataclass
+class ScatteredField(ScatteredBase):
+    """Complex wavefield (already propagated or emitted)."""
+
+    wavelength: float = 500e-9
