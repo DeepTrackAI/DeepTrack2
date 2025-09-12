@@ -160,22 +160,26 @@ Create a stratified Mie sphere and resolve it through a microscope:
 
 from __future__ import annotations
 
+from typing import Any, TYPE_CHECKING
 import warnings
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Union
 
 import numpy as np
 from numpy.typing import NDArray
 from pint import Quantity
+from dataclasses import dataclass, field
 
-from deeptrack import units_registry as u
-from deeptrack.backend import mie
-from deeptrack.backend.units import (ConversionTable, get_active_scale,
-                                     get_active_voxel_size)
-from deeptrack.features import MERGE_STRATEGY_APPEND, Feature
 from deeptrack.holography import get_propagation_matrix
-from deeptrack.image import Image, pad_image_to_fft
+from deeptrack.backend.units import (
+    ConversionTable,
+    get_active_scale,
+    get_active_voxel_size,
+)
+from deeptrack.backend import mie
+from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
+from deeptrack.image import pad_image_to_fft, Image
 from deeptrack.types import ArrayLike
+from deeptrack import units_registry as u
+
 
 __all__ = [
     "Scatterer",
