@@ -136,32 +136,39 @@ Simulating an image with the `Fluorescence` class:
 
 from __future__ import annotations
 
+from pint import Quantity
+from typing import Any, TYPE_CHECKING
 import warnings
-from typing import TYPE_CHECKING, Any, Sequence
 
 import numpy as np
+from numpy.typing import NDArray
+from scipy.ndimage import convolve #check if still necessary
 import torch
 import torch.nn.functional as F
-from numpy.typing import NDArray
-from pint import Quantity
-from scipy.ndimage import convolve
 
-from deeptrack import TORCH_AVAILABLE, image
-from deeptrack import units_registry as u
-from deeptrack.backend import xp
-from deeptrack.backend.units import (ConversionTable, create_context,
-                                     get_active_scale, get_active_voxel_size)
-from deeptrack.features import (DummyFeature, Feature, StructuralFeature,
-                                propagate_data_to_dependencies)
-from deeptrack.image import Image, pad_image_to_fft
+from deeptrack.backend.units import (
+    ConversionTable,
+    create_context,
+    get_active_scale,
+    get_active_voxel_size,
+)
 from deeptrack.math import AveragePooling
-from deeptrack.scatterers import ScatteredVolume, ScatteredField
+from deeptrack.features import propagate_data_to_dependencies
+from deeptrack.features import DummyFeature, Feature, StructuralFeature
+from deeptrack.image import Image, pad_image_to_fft
 from deeptrack.types import ArrayLike, PropertyLike
 
-if TORCH_AVAILABLE:
-    import torch
+from deeptrack import image
+from deeptrack import units_registry as u
 
 if TYPE_CHECKING:
+    import torch
+
+from deeptrack import TORCH_AVAILABLE, image
+from deeptrack.backend import xp
+from deeptrack.scatterers import ScatteredVolume, ScatteredField
+
+if TORCH_AVAILABLE:
     import torch
 
 
@@ -2103,34 +2110,37 @@ def _create_volume(
             )
             continue
 
-        splined_scatterer = np.zeros_like(padded_scatterer)
+        # splined_scatterer = np.zeros_like(padded_scatterer)
 
         x_off = position[0] - np.floor(position[0])
         y_off = position[1] - np.floor(position[1])
 
-        kernel = np.array(
-            [
-                [0, 0, 0],
-                [0, (1 - x_off) * (1 - y_off), (1 - x_off) * y_off],
-                [0, x_off * (1 - y_off), x_off * y_off],
-            ]
-        )
+        # add case for including torch tensors
+        splined_scatterer = _bilinear_interpolate_numpy(padded_scatterer, x_off, y_off)
 
-        for z in range(padded_scatterer.shape[2]):
-            if splined_scatterer.dtype == complex:
-                splined_scatterer[:, :, z] = (
-                    convolve(
-                        np.real(padded_scatterer[:, :, z]), kernel, mode="constant"
-                    )
-                    + convolve(
-                        np.imag(padded_scatterer[:, :, z]), kernel, mode="constant"
-                    )
-                    * 1j
-                )
-            else:
-                splined_scatterer[:, :, z] = convolve(
-                    padded_scatterer[:, :, z], kernel, mode="constant"
-                )
+        # kernel = np.array(
+        #     [
+        #         [0, 0, 0],
+        #         [0, (1 - x_off) * (1 - y_off), (1 - x_off) * y_off],
+        #         [0, x_off * (1 - y_off), x_off * y_off],
+        #     ]
+        # )
+
+        # for z in range(padded_scatterer.shape[2]):
+        #     if splined_scatterer.dtype == complex:
+        #         splined_scatterer[:, :, z] = (
+        #             convolve(
+        #                 np.real(padded_scatterer[:, :, z]), kernel, mode="constant"
+        #             )
+        #             + convolve(
+        #                 np.imag(padded_scatterer[:, :, z]), kernel, mode="constant"
+        #             )
+        #             * 1j
+        #         )
+        #     else:
+        #         splined_scatterer[:, :, z] = convolve(
+        #             padded_scatterer[:, :, z], kernel, mode="constant"
+        #         )
 
         # scatterer = splined_scatterer
         position = np.floor(position) # check or change name, this is position on the grid
