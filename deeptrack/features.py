@@ -160,9 +160,9 @@ import random
 from typing import Any, Callable, Iterable, Literal, TYPE_CHECKING
 
 import array_api_compat as apc
-import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
+import matplotlib.pyplot as plt
 from matplotlib import animation
 from pint import Quantity
 from scipy.spatial.distance import cdist
