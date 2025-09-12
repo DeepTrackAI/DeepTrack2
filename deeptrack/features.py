@@ -9708,3 +9708,4 @@ class TakeProperties(Feature):
             res = res[0]
 
         return res
+        
