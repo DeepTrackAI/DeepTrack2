@@ -307,7 +307,6 @@ class Scatterer(Feature):
         voxel_size = get_active_voxel_size()
 
         # Calls parent _process_and_get.
-        # Scatterer has no_wrap but wants wrapping, that's why methods are redefined below.
         new_image = super()._process_and_get(
             *args,
             voxel_size=voxel_size,
