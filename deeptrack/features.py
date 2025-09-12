@@ -157,18 +157,18 @@ from __future__ import annotations
 import itertools
 import operator
 import random
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Literal
+from typing import Any, Callable, Iterable, Literal, TYPE_CHECKING
 
 import array_api_compat as apc
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import animation
 from numpy.typing import NDArray
+from matplotlib import animation
 from pint import Quantity
 from scipy.spatial.distance import cdist
 
 from deeptrack import units_registry as units
-from deeptrack.backend import TORCH_AVAILABLE, config, xp
+from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
 from deeptrack.image import Image
@@ -8549,7 +8549,7 @@ class NonOverlapping(Feature):
 
         """
 
-        from skimage.morphology import isotropic_dilation, isotropic_erosion
+        from skimage.morphology import isotropic_erosion, isotropic_dilation
 
         from deeptrack.augmentations import CropTight, Pad
         from deeptrack.optics import _get_position
@@ -9707,5 +9707,4 @@ class TakeProperties(Feature):
         if len(res) == 1:
             res = res[0]
 
-        return res
         return res
