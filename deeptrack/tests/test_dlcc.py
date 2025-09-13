@@ -11,10 +11,11 @@ import unittest
 import deeptrack as dt
 import numpy as np
 from numpy.random import Generator, PCG64
+import torch
 
 class TestDLCC(unittest.TestCase):
 
-    def test_3B(self):
+    def test_3_B(self):
         ## PART 1
         # Image pipeline with reproducible randomness.
         rng = Generator(PCG64(42))
@@ -119,6 +120,159 @@ class TestDLCC(unittest.TestCase):
         np.testing.assert_allclose(actual_position_second,
                                    expected_position_second,
                                    rtol=1e-7, atol=1e-7)
+
+    def test_4_1(self):
+        ## PART 1
+        # Deterministic pipeline.
+
+        particle = dt.Sphere(
+            position=np.array([0.5, 0.5]) * 4,
+            position_unit="pixel",
+            radius=500 * dt.units.nm,
+            refractive_index=1.45 + 0.02j,
+        )
+
+        brightfield_microscope = dt.Brightfield(
+            wavelength=500 * dt.units.nm,
+            NA=1.0,
+            resolution=1 * dt.units.um,
+            magnification=10,
+            refractive_index_medium=1.33,
+            output_region=(0, 0, 4, 4),
+        )
+
+        illuminated_sample = brightfield_microscope(particle)
+
+        # First resolve
+        expected_first = np.array(
+            [[[0.55382582], [0.55944586], [0.54341977], [0.55944587]],
+            [[0.55944586], [0.48773998], [0.43907532], [0.48773999]],
+            [[0.54341977], [0.43907532], [0.37978135], [0.43907532]],
+            [[0.55944587], [0.48773999], [0.43907532], [0.48773999]]]
+        )
+        actual_first = illuminated_sample()
+        np.testing.assert_allclose(actual_first, expected_first,
+                                   rtol=1e-7, atol=1e-7)
+
+        # No change when resolving again
+        np.testing.assert_allclose(illuminated_sample(), expected_first,
+                                   rtol=1e-7, atol=1e-7)
+
+        # No change also after update (deterministic pipeline)
+        np.testing.assert_allclose(illuminated_sample.update()(),
+                                   expected_first,
+                                   rtol=1e-7, atol=1e-7)
+
+        ## PART 2
+        # Non-reproducible randomness for noisy_particle.
+
+        clean_particle = (
+            illuminated_sample
+            >> dt.NormalizeMinMax()
+            >> dt.MoveAxis(2, 0)
+            >> dt.pytorch.ToTensor(dtype=torch.float)
+        )
+
+        noise = dt.Poisson(snr=lambda: 2.0 + np.random.rand())
+
+        noisy_particle = (
+            illuminated_sample >> noise
+            >> dt.NormalizeMinMax()
+            >> dt.MoveAxis(2, 0)
+            >> dt.pytorch.ToTensor(dtype=torch.float)
+        )
+
+        pip = noisy_particle & clean_particle
+
+        # First resolve
+        expected_clean_first = torch.tensor(
+            [[[0.9687, 1.0000, 0.9108, 1.0000],
+            [1.0000, 0.6009, 0.3300, 0.6009],
+            [0.9108, 0.3300, 0.0000, 0.3300],
+            [1.0000, 0.6009, 0.3300, 0.6009]]]
+        )
+        actual_noisy_first, actual_clean_first = pip()
+        torch.testing.assert_close(actual_clean_first, expected_clean_first,
+                                   rtol=1e-7, atol=1e-4)
+
+        # No change after resolving again
+        actual_noisy_first_2, actual_clean_first_2 = pip()
+        torch.testing.assert_close(actual_clean_first_2, expected_clean_first,
+                                   rtol=1e-7, atol=1e-4)
+        torch.testing.assert_close(actual_noisy_first_2, actual_noisy_first,
+                                   rtol=1e-7, atol=1e-4)
+
+        # No change for clean also after update (deterministic pipeline),
+        # but change for noisy
+        actual_noisy_second, actual_clean_second = pip.update().resolve()
+        torch.testing.assert_close(actual_clean_second, expected_clean_first,
+                                   rtol=1e-7, atol=1e-4)
+        assert not torch.allclose(
+            actual_noisy_first, actual_noisy_second, rtol=1e-7, atol=1e-4
+        )
+
+        ## PART 3
+        # Verify generation of blank image.
+
+        blank = brightfield_microscope(particle ^ 0)
+        blank_pip = (
+            blank # >> noise >> dt.NormalizeMinMax()
+            >> dt.MoveAxis(2, 0)
+            >> dt.pytorch.ToTensor(dtype=torch.float)
+        )
+
+        expected = torch.tensor(
+            [[[1., 1., 1., 1.],
+            [1., 1., 1., 1.],
+            [1., 1., 1., 1.],
+            [1., 1., 1., 1.]]]
+        )
+        torch.testing.assert_close(blank_pip(), expected,
+                                   rtol=1e-7, atol=1e-4)
+
+        ## PART 4
+        # Check diverse particle pipeline.
+
+        diverse_particle = dt.Sphere(
+            position=lambda: np.array([.2, .2] + np.random.rand(2) * .6) * 4,
+            radius=lambda: 500 * dt.units.nm * (1 + np.random.rand()),
+            position_unit="pixel",
+            refractive_index=1.45 + 0.02j,
+        )
+        diverse_illuminated_sample = brightfield_microscope(diverse_particle)
+        diverse_clean_particle = (
+            diverse_illuminated_sample
+            >> dt.NormalizeMinMax()
+            >> dt.MoveAxis(2, 0)
+            >> dt.pytorch.ToTensor(dtype=torch.float)
+        )
+        diverse_noisy_particle = (
+            diverse_illuminated_sample
+            >> noise
+            >> dt.NormalizeMinMax()
+            >> dt.MoveAxis(2, 0)
+            >> dt.pytorch.ToTensor(dtype=torch.float)
+        )
+        diverse_pip = diverse_noisy_particle & diverse_clean_particle
+
+        # First resolve
+        diverse_noisy_first, diverse_clean_first = diverse_pip()
+
+        # Idempotent without update()
+        diverse_noisy_first_2, diverse_clean_first_2 = diverse_pip()
+        torch.testing.assert_close(diverse_clean_first_2, diverse_clean_first,
+                                   rtol=1e-7, atol=1e-4)
+        torch.testing.assert_close(diverse_noisy_first_2, diverse_noisy_first,
+                                   rtol=1e-7, atol=1e-4)
+
+        # After update(), BOTH should change (geometry + noise)
+        diverse_noisy_second, diverse_clean_second = \
+            diverse_pip.update().resolve()
+        assert not torch.allclose(diverse_clean_second, diverse_clean_first,
+                                  rtol=1e-7, atol=1e-4)
+        assert not torch.allclose(diverse_noisy_second, diverse_noisy_first,
+                                  rtol=1e-7, atol=1e-4)
+
 
 if __name__ == "__main__":
     unittest.main()
