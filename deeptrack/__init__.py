@@ -24,7 +24,6 @@ if tensorflow_installed:
 
 # Create a unit registry with custom pixel-related units.
 units_registry = UnitRegistry(pint_definitions.split("\n"))
-units = units_registry  # Alias for backward compatibility
 
 
 from deeptrack.backend import *
