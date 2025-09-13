@@ -188,6 +188,7 @@ class TestDLCC(unittest.TestCase):
             pip = noisy_particle & clean_particle
 
             # First resolve
+            actual_noisy_first, actual_clean_first = pip()
             expected_clean_first = torch.tensor(
                 [[[0.9687, 1.0000, 0.9108, 1.0000],
                 [1.0000, 0.6009, 0.3300, 0.6009],
@@ -195,7 +196,6 @@ class TestDLCC(unittest.TestCase):
                 [1.0000, 0.6009, 0.3300, 0.6009]]]
             ).to(device=actual_clean_first.device,
                  dtype=actual_clean_first.dtype)
-            actual_noisy_first, actual_clean_first = pip()
             torch.testing.assert_close(actual_clean_first,
                                        expected_clean_first,
                                        rtol=1e-7, atol=1e-4)
