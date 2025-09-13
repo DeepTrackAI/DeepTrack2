@@ -193,7 +193,8 @@ class TestDLCC(unittest.TestCase):
                 [1.0000, 0.6009, 0.3300, 0.6009],
                 [0.9108, 0.3300, 0.0000, 0.3300],
                 [1.0000, 0.6009, 0.3300, 0.6009]]]
-            )
+            ).to(device=actual_clean_first.device,
+                 dtype=actual_clean_first.dtype)
             actual_noisy_first, actual_clean_first = pip()
             torch.testing.assert_close(actual_clean_first,
                                        expected_clean_first,
@@ -214,9 +215,9 @@ class TestDLCC(unittest.TestCase):
             torch.testing.assert_close(actual_clean_second,
                                        expected_clean_first,
                                        rtol=1e-7, atol=1e-4)
-            assert not torch.allclose(
+            self.assertFalse(torch.allclose(
                 actual_noisy_first, actual_noisy_second, rtol=1e-7, atol=1e-4
-            )
+            ))
 
         ## PART 3
         # Verify generation of blank image.
@@ -279,12 +280,15 @@ class TestDLCC(unittest.TestCase):
             # After update(), BOTH should change (geometry + noise)
             diverse_noisy_second, diverse_clean_second = \
                 diverse_pip.update().resolve()
-            assert not torch.allclose(diverse_clean_second,
-                                      diverse_clean_first,
-                                      rtol=1e-7, atol=1e-4)
-            assert not torch.allclose(diverse_noisy_second,
-                                      diverse_noisy_first,
-                                      rtol=1e-7, atol=1e-4)
+            self.assertFalse(torch.allclose(
+                diverse_clean_second, diverse_clean_first, rtol=1e-7, atol=1e-4
+            ))
+            self.assertFalse(torch.allclose(
+                diverse_noisy_second, diverse_noisy_first, rtol=1e-7, atol=1e-4
+            ))
+
+    def test_4_A(self):
+        pass
 
 
 if __name__ == "__main__":
