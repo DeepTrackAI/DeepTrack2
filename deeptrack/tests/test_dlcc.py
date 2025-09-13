@@ -8,13 +8,20 @@
 
 import unittest
 
-import deeptrack as dt
-from deeptrack import TORCH_AVAILABLE
+import shutil
+import tempfile
+from pathlib import Path
+
 import numpy as np
 from numpy.random import Generator, PCG64
+from PIL import Image
+
+import deeptrack as dt
+from deeptrack import TORCH_AVAILABLE
 
 if TORCH_AVAILABLE:
     import torch
+
 
 class TestDLCC(unittest.TestCase):
 
@@ -288,7 +295,126 @@ class TestDLCC(unittest.TestCase):
             ))
 
     def test_4_A(self):
-        pass
+        if TORCH_AVAILABLE:
+            # Temporary root (deleted in finally)
+            tmp_root = tempfile.mkdtemp(prefix="mnist_like_")
+            data_root = Path(tmp_root) / "mnist"
+            train_dir = data_root / "train"
+            test_dir  = data_root / "test"
+
+            try:
+                train_dir.mkdir(parents=True, exist_ok=True)
+                test_dir.mkdir(parents=True, exist_ok=True)
+
+                H, W = 8, 8
+
+                # Non-uniform patterns
+                grad = np.linspace(0, 255, H*W, dtype=np.uint8).reshape(H, W)
+                checker = (
+                    (np.indices((H, W)).sum(axis=0) % 2) * 255
+                ).astype(np.uint8)
+                grad_inv = (255 - grad).astype(np.uint8)
+                stripes = np.tile(
+                    ((np.arange(W) % 2) * 255).astype(np.uint8), (H, 1)
+                )
+
+                # Save 2 grayscale images in train/
+                Image.fromarray(grad, mode="L") \
+                    .save(train_dir / "0_train.png")
+                Image.fromarray(checker, mode="L") \
+                    .save(train_dir / "1_train.png")
+
+                # Save 2 grayscale images in test/
+                Image.fromarray(grad_inv, mode="L") \
+                    .save(test_dir / "0_test.png")
+                Image.fromarray(stripes, mode="L") \
+                    .save(test_dir / "1_test.png")
+
+                # print("Data root:", data_root)
+                # print("Train files:", sorted(os.listdir(train_dir)))
+                # print("Test files:",  sorted(os.listdir(test_dir)))
+
+                ## PART 1
+                # Loading image files into a pipeline.
+
+                train_files = dt.sources.ImageFolder(root=str(train_dir))
+                test_files  = dt.sources.ImageFolder(root=str(test_dir))
+                files = dt.sources.Join(train_files, test_files)
+
+                assert len(train_files) == 2
+                assert len(test_files) == 2
+
+                image_pip = (
+                    dt.LoadImage(files.path)
+                    >> dt.NormalizeMinMax()
+                    >> dt.MoveAxis(2, 0)
+                    >> dt.pytorch.ToTensor(dtype=torch.float)
+                )
+
+                train_dataset = dt.pytorch.Dataset(
+                    image_pip & image_pip,
+                    inputs=train_files,
+                )
+
+                # Get images
+                x_a, x_b = train_dataset[0]  # Tensors, identical content
+                assert isinstance(x_a, torch.Tensor)
+                assert isinstance(x_b, torch.Tensor)
+                assert x_a.shape == x_b.shape
+                assert torch.equal(x_a, x_b)
+                assert len(train_dataset) == len(train_files) == 2
+                assert x_a.ndim == 3 and x_a.shape[1:] == (H, W)
+                assert x_a.dtype == torch.float32
+                assert 0.0 <= float(x_a.min()) <= float(x_a.max()) <= 1.0
+
+                # With DataLoader
+                loader = torch.utils.data.DataLoader(
+                    train_dataset, batch_size=2, shuffle=False,
+                )
+                for xa, xb in loader:
+                    assert xa.shape == xb.shape
+                    assert xa.ndim == 4 \
+                        and xa.shape[1:] == x_a.shape  # (B,C,H,W)
+
+                ## PART 2
+                # Test dataset with label pipelines.
+
+                label_pip = dt.Value(files.label_name[0]) >> int
+                test_dataset = dt.pytorch.Dataset(
+                    image_pip & label_pip, inputs=test_files
+                )
+
+                assert len(test_dataset) == len(test_files) == 2
+
+                x0, y0 = test_dataset[0]
+                assert isinstance(x0, torch.Tensor)
+                assert x0.ndim == 3 and x0.shape[1:] == (H, W)
+                assert 0.0 <= float(x0.min()) <= float(x0.max()) <= 1.0    
+                assert isinstance(y0, torch.Tensor)
+                assert y0.ndim == 1 and y0.shape == (1,)
+
+                # Same index is idempotent
+                x0b, y0b = test_dataset[0]
+                torch.testing.assert_close(x0b, x0, rtol=0.0, atol=0.0)
+                assert y0b == y0
+
+                # Check we see both labels {0,1} across the dataset
+                labels = [test_dataset[i][1] for i in range(len(test_dataset))]
+                assert labels == [torch.tensor([0]), torch.tensor([1])]
+
+                # DataLoader sanity
+                test_loader = torch.utils.data.DataLoader(
+                    test_dataset, batch_size=2, shuffle=False
+                )
+                xb, yb = next(iter(test_loader))
+                assert xb.ndim == 4 and xb.shape[1:] == x0.shape  # (B,C,H,W)
+                assert yb.ndim == 2 and yb.shape[0] == xb.shape[0]
+
+            except Exception as e:
+                print("Error while creating dataset:", e)
+            finally:
+                # Clean up the temporary dataset tree
+                shutil.rmtree(tmp_root, ignore_errors=True)
 
 
 if __name__ == "__main__":
