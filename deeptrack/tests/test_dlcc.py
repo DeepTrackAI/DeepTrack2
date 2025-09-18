@@ -416,6 +416,81 @@ class TestDLCC(unittest.TestCase):
                 # Clean up the temporary dataset tree
                 shutil.rmtree(tmp_root, ignore_errors=True)
 
+    def test_4_B(self):
+        pass  # Essentially same code as test_4_A
+
+    def test_4_C(self):
+        if TORCH_AVAILABLE:
+            ## PART 1
+            # Load dataframe.
+            from io import StringIO
+            import pandas as pd
+
+            csv_data = (
+                "-0.1,-2.8,-3.7,-4.3,-4.3,-3.4,-2.1,-1.8,-1.2,-0.2,-0.3,1.0\n"
+                "-1.1,-3.9,-4.2,-4.5,-4.0,-3.2,-1.5,-0.9,0.04,0.26,0.64,0.0\n"
+                "-0.5,-2.5,-3.8,-4.5,-4.1,-3.1,-1.7,-1.1,-0.3,-0.0,-0.0,1.0\n"
+                "0.49,-1.9,-3.6,-4.3,-4.2,-3.8,-1.6,-1.3,-0.9,-0.6,-0.4,0.0\n"
+                "0.80,-0.8,-2.3,-3.9,-4.3,-2.5,-1.7,-1.5,-0.7,-0.5,-0.3,1.0\n"
+                "0.80,-0.8,-2.3,-3.9,-3.8,-2.5,-1.7,-1.5,-0.7,-0.5,-0.3,0.0\n"
+                "-0.1,-2.8,-3.7,-4.3,-3.4,-2.1,-1.8,-1.2,-0.4,-0.2,-0.3,1.0\n"
+                "-1.1,-3.9,-4.5,-4.0,-3.2,-1.5,-0.9,-0.7,0.04,0.26,0.64,0.0\n"
+                "-0.5,-3.8,-4.5,-4.1,-3.1,-1.7,-1.4,-1.1,-0.3,-0.0,-0.0,1.0\n"
+                "-1.9,-3.6,-4.3,-4.2,-3.8,-2.9,-1.6,-1.3,-0.9,-0.6,-0.4,0.0"
+            )
+
+            dataframe = pd.read_csv(StringIO(csv_data), header=None)
+            raw_data = dataframe.values
+            ecgs = raw_data[:, 1:-2]
+            labels = raw_data[:, -1].astype(bool)
+
+            sources = dt.sources.Source(ecg=ecgs, is_normal=labels)
+            train_sources, test_sources = \
+                dt.sources.random_split(sources, [0.8, 0.2])
+            normal_sources = \
+                train_sources.filter(lambda ecg, is_normal: is_normal)
+
+            assert len(sources) == 10
+            assert len(train_sources) == 8
+            assert len(test_sources) == 2
+
+            ## PART 2
+            # Instantiate and use pipeline.
+            min_normal = np.min([source["ecg"] for source in normal_sources])
+            max_normal = np.max([source["ecg"] for source in normal_sources])
+
+            ecg_pip = (
+                dt.Value(sources.ecg - min_normal) / (max_normal - min_normal)
+                >> dt.Unsqueeze(axis=0)
+                >> dt.pytorch.ToTensor(dtype=torch.float)
+            )
+            label_pip = dt.Value(sources.is_normal)
+
+            # All normalized values should be between 0 and 1
+            for i in range(len(sources)):
+                ecg = ecg_pip(sources[i])
+                assert isinstance(ecg, torch.Tensor)
+                assert 0 <= ecg.min() <= 1
+
+            # All labels should be bool
+            for i in range(len(sources)):
+                label = label_pip(sources[i])
+                assert not isinstance(label, torch.Tensor)
+                assert isinstance(label, (bool, np.bool_))
+
+            for source in sources:
+                ecg, label = (ecg_pip & label_pip)(source)
+                assert 0 <= ecg.min() <= 1
+                assert isinstance(label, (bool, np.bool_))
+
+            # PART 3
+            train_dataset = dt.pytorch.Dataset(ecg_pip & ecg_pip,
+                                               inputs=normal_sources)
+            loader = torch.utils.data.DataLoader(train_dataset, batch_size=2)
+
+            for ecg_in, ecg_out in loader:
+                assert torch.equal(ecg_in, ecg_out)
+
 
 if __name__ == "__main__":
     unittest.main()
