@@ -8251,6 +8251,10 @@ class Upscale(Feature):
         with units.context(ctx):
             image = self.feature(image)
 
+
+        # NOTE: The downscaling step is disabled and taken care in 
+        # deeptrack.optics since it now depends on scatter.main_property
+        
         # # Downscale the result to the original resolution.        
         # import skimage.measure
 
