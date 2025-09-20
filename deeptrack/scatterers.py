@@ -247,6 +247,9 @@ class Scatterer(Feature):
         voxel_size=(u.meter, u.meter),
     )
 
+    #: Default property name (subclasses override this)
+    main_property: str = "value"
+
     def __init__(
         self,
         position: ArrayLike[float] = (32, 32),
@@ -311,7 +314,7 @@ class Scatterer(Feature):
         voxel_size = get_active_voxel_size()
 
         # Calls parent _process_and_get.
-        new_image = super()._process_and_get(
+        new_image = super(Scatterer, self)._process_and_get(
             *args,
             voxel_size=voxel_size,
             upsample=upsample,
@@ -334,46 +337,41 @@ class Scatterer(Feature):
             new_image = new_image[:, ~np.all(new_image == 0, axis=(0, 2))]
             new_image = new_image[:, :, ~np.all(new_image == 0, axis=(0, 1))]
 
-        # Copy properties
-        props = kwargs.copy()
+        # # Copy properties
+        # props = kwargs.copy()
+        return [self._wrap_output(new_image, kwargs)]
 
-        if isinstance(self, (PointParticle, Sphere)):
-            return [ScatteredVolume(
-                array=new_image,
-                position=props.get("position", (0, 0)),
-                z=props.get("z", 0.0),
-                value=props.get("value", 1.0),
-                intensity=props.get("intensity", None),
-                refractive_index=props.get("refractive_index", None),
-                properties=props.copy(),
-            )]
+    def _wrap_output(self, array, props) -> ScatteredBase:
+        """Must be overridden in subclasses to wrap output correctly."""
+        raise NotImplementedError
 
-        # return [Image(new_image)]
+class VolumeScatterer(Scatterer):
+    """Abstract scatterer producing ScatteredVolume outputs."""
+    def _wrap_output(self, array, props) -> ScatteredVolume:
+        return [ScatteredVolume(
+            array=array,
+            position=props.get("position", (0, 0)),
+            z=props.get("z", 0.0),
+            value=props.get("value", 1.0),
+            intensity=props.get("intensity", None),
+            refractive_index=props.get("refractive_index", None),
+            properties=props.copy(),
+            main_property=self.main_property,
+        )]
 
-    # def _no_wrap_format_input(
-    #     self,
-    #     *args,
-    #     **kwargs
-    # ) -> list:
-    #     return self._image_wrapped_format_input(*args, **kwargs)
-
-    # def _no_wrap_process_and_get(
-    #     self,
-    #     *args,
-    #     **feature_input
-    # ) -> list:
-    #     return self._image_wrapped_process_and_get(*args, **feature_input)
-
-    # def _no_wrap_process_output(
-    #     self,
-    #     *args,
-    #     **feature_input
-    # ) -> list:
-    #     return self._image_wrapped_process_output(*args, **feature_input)
+class FieldScatterer(Scatterer):
+    def _wrap_output(self, array, props) -> ScatteredField:
+        return ScatteredField(
+            array=array,
+            position=props.get("position", (0, 0)),
+            wavelength=props.get("wavelength", 0.0),
+            properties=props.copy(),
+            main_property=self.main_property,
+        )
 
 
 #TODO ***??*** revise PointParticle - torch, typing, docstring, unit test
-class PointParticle(Scatterer):
+class PointParticle(VolumeScatterer):
     """Generate a diffraction-limited point particle.
 
     A point particle is approximated by the size of a single pixel or voxel.
@@ -397,6 +395,8 @@ class PointParticle(Scatterer):
         
     """
 
+    main_property = "intensity"
+    
     def __init__(
         self: PointParticle,
         **kwargs: Any,
@@ -420,7 +420,7 @@ class PointParticle(Scatterer):
 
 
 #TODO ***??*** revise Ellipse - torch, typing, docstring, unit test
-class Ellipse(Scatterer):
+class Ellipse(VolumeScatterer):
     """Generates an elliptical disk scatterer
 
     Parameters
@@ -460,6 +460,8 @@ class Ellipse(Scatterer):
         radius=(u.meter, u.meter),
         rotation=(u.radian, u.radian),
     )
+
+    main_property = "refractive_index"
 
     def __init__(
         self,
@@ -534,7 +536,7 @@ class Ellipse(Scatterer):
 
 
 #TODO ***??*** revise Sphere - torch, typing, docstring, unit test
-class Sphere(Scatterer):
+class Sphere(VolumeScatterer):
     """Generates a spherical scatterer
 
     Parameters
@@ -564,6 +566,8 @@ class Sphere(Scatterer):
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
     )
+
+    main_property = "refractive_index"
 
     def __init__(
         self,
@@ -756,7 +760,7 @@ class Ellipsoid(Scatterer):
 
 
 #TODO ***??*** revise MieScatterer - torch, typing, docstring, unit test
-class MieScatterer(Scatterer):
+class MieScatterer(FieldScatterer):
     """Base implementation of a Mie particle.
 
     New Mie-theory scatterers can be implemented by extending this class, and
@@ -879,11 +883,11 @@ class MieScatterer(Scatterer):
                 "Please use input_polarization instead"
             )
             input_polarization = polarization_angle
-        kwargs.pop("is_field", None)
+        kwargs.pop("is_field", None) # remove
         kwargs.pop("crop_empty", None)
 
         super().__init__(
-            is_field=True,
+            is_field=True, # remove
             crop_empty=False,
             L=L,
             offset_z=offset_z,
@@ -1437,7 +1441,8 @@ class ScatteredBase:
     position: np.ndarray
     z: float = 0.0
     properties: dict[str, Any] = field(default_factory=dict)
-
+    main_property: str = None
+    
     def __post_init__(self):
         self.position = np.array(self.position, dtype=float).reshape(-1)[:2]
         self.z = float(np.atleast_1d(self.z).squeeze())

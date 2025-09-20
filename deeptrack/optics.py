@@ -152,7 +152,7 @@ from deeptrack.backend.units import (
     get_active_scale,
     get_active_voxel_size,
 )
-from deeptrack.math import AveragePooling
+# from deeptrack.math import AveragePooling
 from deeptrack.features import propagate_data_to_dependencies
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
 from deeptrack.image import Image, pad_image_to_fft
@@ -161,9 +161,6 @@ from deeptrack.types import ArrayLike, PropertyLike
 from deeptrack import image
 from deeptrack import units_registry as u
 
-if TYPE_CHECKING:
-    import torch
-
 from deeptrack import TORCH_AVAILABLE, image
 from deeptrack.backend import xp
 from deeptrack.scatterers import ScatteredVolume, ScatteredField
@@ -171,6 +168,8 @@ from deeptrack.scatterers import ScatteredVolume, ScatteredField
 if TORCH_AVAILABLE:
     import torch
 
+if TYPE_CHECKING:
+    import torch
 
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test
 class Microscope(StructuralFeature):
@@ -313,7 +312,11 @@ class Microscope(StructuralFeature):
 
         with u.context(create_context(*objective_properties["voxel_size"])):
 
+            # Following code does nothing is upscale is (1, 1, 1).
+            # It is needed if dt.Upscale is used
+
             upscale = np.round(get_active_scale())
+            print(">>> upscale", upscale)
 
             def _scale_region_2d(
                 region: list[int],
@@ -399,6 +402,12 @@ class Microscope(StructuralFeature):
 
             imaged_sample = self._objective.resolve(sample_volume)
 
+        
+        # Handling upscale from dt.Upscale() here to eliminate Image
+        # wrapping issues.
+        if np.any(np.array(upscale) != 1):
+            imaged_sample = _downscale_scatterer(imaged_sample, upscale[:2], scatterer.main_property)
+            
         #TODO: TBE
         """
         # Handling separately upscale given by optics.
@@ -546,7 +555,7 @@ class Optics(Feature):
         output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
         pupil: Feature = None,
         illumination: Feature = None,
-        upscale: int = 1,
+        upscale: int = 1,  # to be deprecated in favor of dt.Upscale()
         **kwargs: Any,
     ):
         """Initialize the `Optics` instance.
@@ -2049,9 +2058,7 @@ def _create_volume(
 
     # This accounts for upscale doing AveragePool instead of SumPool. This is
     # a bit of a hack, but it works for now.
-    fudge_factor = scale[0] * scale[1] / scale[2]
-    print(">>> fudge factor:", fudge_factor)
-
+    # fudge_factor = scale[0] * scale[1] / scale[2]
 
     for scatterer in list_of_scatterers:
 
@@ -2060,20 +2067,14 @@ def _create_volume(
 
         position = _get_position(scatterer, mode="corner", return_z=True)
 
-        # this might generate error. Suppose that you define a scatterer
-        # with both intensity and refractive index in brightfield, the
-        # intensity overrules the refractive index
-        if scatterer.get_property("intensity", None) is not None:
-            intensity = scatterer.get_property("intensity")
-            scatterer_value = intensity * fudge_factor
-        elif scatterer.get_property("refractive_index", None) is not None:
-            refractive_index = scatterer.get_property("refractive_index")
-            scatterer_value = (
-                refractive_index - refractive_index_medium
-            )
-        else:
+        if scatterer.main_property == "intensity":
+            scatterer_value = scatterer.get_property("intensity") #* fudge_factor
+        elif scatterer.main_property == "refractive_index":
+            scatterer_value = scatterer.get_property("refractive_index") - refractive_index_medium
+        else:  # fallback to generic value
             scatterer_value = scatterer.get_property("value")
 
+        # Scale the array accordingly
         scatterer.array = scatterer.array * scatterer_value
 
         if limits is None:
@@ -2114,35 +2115,17 @@ def _create_volume(
 
         x_off = position[0] - np.floor(position[0])
         y_off = position[1] - np.floor(position[1])
+ 
+        if isinstance(padded_scatterer, np.ndarray): # get_backend is a method of Features and not exposed 
+            splined_scatterer = _bilinear_interpolate_numpy(padded_scatterer, x_off, y_off)
+        elif isinstance(padded_scatterer, torch.Tensor):
+            splined_scatterer = _bilinear_interpolate_torch(padded_scatterer, x_off, y_off)
+        else:
+            raise TypeError(
+                f"Unsupported array type {type(padded_scatterer)}. "
+                "Expected np.ndarray or torch.Tensor."
+            )
 
-        # add case for including torch tensors
-        splined_scatterer = _bilinear_interpolate_numpy(padded_scatterer, x_off, y_off)
-
-        # kernel = np.array(
-        #     [
-        #         [0, 0, 0],
-        #         [0, (1 - x_off) * (1 - y_off), (1 - x_off) * y_off],
-        #         [0, x_off * (1 - y_off), x_off * y_off],
-        #     ]
-        # )
-
-        # for z in range(padded_scatterer.shape[2]):
-        #     if splined_scatterer.dtype == complex:
-        #         splined_scatterer[:, :, z] = (
-        #             convolve(
-        #                 np.real(padded_scatterer[:, :, z]), kernel, mode="constant"
-        #             )
-        #             + convolve(
-        #                 np.imag(padded_scatterer[:, :, z]), kernel, mode="constant"
-        #             )
-        #             * 1j
-        #         )
-        #     else:
-        #         splined_scatterer[:, :, z] = convolve(
-        #             padded_scatterer[:, :, z], kernel, mode="constant"
-        #         )
-
-        # scatterer = splined_scatterer
         position = np.floor(position) # check or change name, this is position on the grid
         new_limits = np.zeros(limits.shape, dtype=np.int32)
         for i in range(3):
@@ -2184,3 +2167,67 @@ def _create_volume(
             int(within_volume_position[2] + shape[2]),
         ] += splined_scatterer
     return volume, limits
+
+# TODO: replace the inner part of this function with AveragePooling from math when
+# implemented with torch
+def _downscale_scatterer(array, factor, main_property="value"):
+    """Downscale scatterer array by sum or average pooling depending on property.
+
+    Parameters
+    ----------
+    array : np.ndarray or torch.Tensor
+        The scatterer array.
+    factor : tuple[int, int]
+        Downscale factor (ux, uy).
+    main_property : str
+        Determines pooling strategy:
+        - "intensity" → sum pooling
+        - else → average pooling
+
+    Returns
+    -------
+    np.ndarray or torch.Tensor
+        Downscaled array in the same backend as input.
+    """
+
+    # Decide pooling op
+    is_sum = main_property == "intensity"
+
+    # Ensure factor is integer
+    factor = tuple(int(f) for f in factor)
+
+
+    # Case 1: NumPy backend
+    if isinstance(array, np.ndarray):
+        import skimage.measure
+
+        pool_shape = (factor[0], factor[1]) + (1,) * (array.ndim - 2)
+        func = np.sum if is_sum else np.mean
+        return skimage.measure.block_reduce(array, pool_shape, func)
+
+    # Case 2: Torch backend
+    elif isinstance(array, torch.Tensor):
+        if array.ndim < 2:
+            raise ValueError("Torch pooling requires at least 2D input.")
+
+        # spatial pooling only
+        kernel = (factor[0], factor[1])
+        stride = kernel
+
+        # Flatten extra dims as channels for pooling
+        b, c = 1, int(np.prod(array.shape[2:])) if array.ndim > 2 else 1
+        h, w = array.shape[0], array.shape[1]
+        x = array.reshape(1, c, h, w)
+
+        if is_sum:
+            pooled = torch.nn.functional.avg_pool2d(x, kernel, stride) * (kernel[0] * kernel[1])
+        else:
+            pooled = torch.nn.functional.avg_pool2d(x, kernel, stride)
+
+        # Reshape back
+        new_shape = (pooled.shape[2], pooled.shape[3]) + tuple(array.shape[2:])
+        return pooled.reshape(new_shape)
+
+    else:
+        raise TypeError("Unsupported array type: expected np.ndarray or torch.Tensor.")
+

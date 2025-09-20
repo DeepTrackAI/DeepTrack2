@@ -8231,10 +8231,16 @@ class Upscale(Feature):
             If the input `factor` is not a valid integer or tuple of integers.
 
         """
-
+        # TBE: this seems to create an issue with image normalization when 
+        # only one number is give. IT automatically replicate this value in the
+        # 3D but pooling is actually only done in 2D. I suggest if only `factor` 
+        # is given to transform it into (facto, factor, 1) by default.
+        # This should also ensure backcompatibility.
+        
         # Ensure factor is a tuple of three integers.
         if np.size(factor) == 1:
-            factor = (factor,) * 3
+            # factor = (factor,) * 3
+            factor = (factor, factor, 1)
         elif len(factor) != 3:
             raise ValueError(
                 "Factor must be an integer or a tuple of three integers."
@@ -8245,12 +8251,12 @@ class Upscale(Feature):
         with units.context(ctx):
             image = self.feature(image)
 
-        # Downscale the result to the original resolution.        
-        import skimage.measure
+        # # Downscale the result to the original resolution.        
+        # import skimage.measure
 
-        image = skimage.measure.block_reduce(
-            image, (factor[0], factor[1]) + (1,) * (image.ndim - 2), np.mean
-        )
+        # image = skimage.measure.block_reduce(
+        #     image, (factor[0], factor[1]) + (1,) * (image.ndim - 2), np.mean
+        # )
 
         return image
 
