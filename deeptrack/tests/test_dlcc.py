@@ -757,6 +757,33 @@ class TestDLCC(unittest.TestCase):
 
             im, mask = train_dataset[0]
 
+            # Dataset length honored
+            assert len(train_dataset) == 320
+
+            # Types and shapes
+            assert isinstance(im, torch.Tensor)
+            assert isinstance(mask, torch.Tensor)
+            assert im.ndim == 3 and mask.ndim == 3
+            assert im.shape[0] == 1  # single image channel
+            assert mask.shape[0] == 2  # one-hot: bg=0, fg=1
+            assert im.shape[1:] == mask.shape[1:]
+
+            # Mask must be one-hot per pixel and binary {0,1}
+            u = set(mask.unique().tolist())
+            assert u.issubset({0.0, 1.0})
+            assert torch.allclose(mask.sum(dim=0), torch.ones_like(mask[0]))
+
+            # Both background and foreground should be present
+            fg_sum = int(mask[1].sum().item())
+            bg_sum = int(mask[0].sum().item())
+            assert fg_sum > 0 and bg_sum > 0
+
+            # Foreground pixels should be brighter than background on average
+            im2d = im[0]                              # (H, W)
+            fg_mean = float(im2d[mask[1].bool()].mean())
+            bg_mean = float(im2d[mask[0].bool()].mean())
+            assert fg_mean > bg_mean
+
 
 if __name__ == "__main__":
     unittest.main()
