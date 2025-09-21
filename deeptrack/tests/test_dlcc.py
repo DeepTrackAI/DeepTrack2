@@ -788,7 +788,81 @@ class TestDLCC(unittest.TestCase):
         pass
 
     def test_6_1(self):
-        pass
+        if TORCH_AVAILABLE:
+            np.random.seed(123)  # Note that this seeding is not warratied
+                                 # to give reproducible results across
+                                 # platforms so the subsequent test might fail
+
+            image_size = 5
+
+            particle = dt.PointParticle(
+                position=lambda: np.random.uniform(
+                    image_size / 2 - 1,
+                    image_size / 2 + 1,
+                    size=2,
+                ),
+            )
+
+            optics = dt.Fluorescence(
+                output_region=(0, 0, image_size, image_size),
+            )
+
+            simulation = (
+                optics(particle)
+                >> dt.NormalizeMinMax()
+                >> dt.Gaussian(sigma=0.1)
+                >> dt.MoveAxis(-1, 0)
+                >> dt.pytorch.ToTensor(dtype=torch.float32)
+            )
+
+            train_dataset = dt.pytorch.Dataset(simulation, length=2)
+            test_dataset = dt.pytorch.Dataset(simulation & particle.position,
+                                              length=10)
+
+            # Test train dataset
+            expected_image = torch.tensor(
+                [[[ 0.0283,  0.0107,  0.1774,  0.3429, -0.2191],
+                [ 0.2039,  0.6161,  0.5111,  0.4461,  0.2739],
+                [ 0.6096,  0.7009,  0.8545,  0.7519,  0.7275],
+                [ 0.7522,  0.9581,  1.0386,  0.9639,  0.7323],
+                [ 0.3325,  0.8383,  0.7252,  0.6865,  0.5617]]],
+                dtype=torch.float32
+            )
+            image = train_dataset[0]
+            assert torch.allclose(image[0], expected_image,
+                                  rtol=1e-4, atol=1e-4)
+
+            assert len(train_dataset) == 2
+            for image in train_dataset:
+                image = image[0]
+                assert isinstance(image, torch.Tensor)
+                assert image.dtype == torch.float32
+                assert image.shape == torch.Size([1, image_size, image_size])
+
+            # Test test dataset
+            expected_image = torch.tensor(
+                [[[0.0891, 0.3012, 0.3664, 0.3260, 0.0537],
+                [0.2549, 0.4170, 0.3974, 0.6752, 0.4747],
+                [0.3636, 0.6197, 0.7136, 0.8578, 0.7010],
+                [0.3770, 0.8978, 0.8853, 0.7877, 0.8980],
+                [0.3827, 0.7186, 0.8527, 0.7807, 0.8687]]],
+                dtype=torch.float32
+            )
+            expected_position = torch.tensor([3.2509, 2.5208])
+            image, position = test_dataset[0]
+            assert torch.allclose(image, expected_image,
+                                  rtol=1e-4, atol=1e-4)
+            assert torch.allclose(position, expected_position,
+                                  rtol=1e-4, atol=1e-4)
+
+            assert len(test_dataset) == 10
+            for image, position in test_dataset:
+                assert isinstance(image, torch.Tensor)
+                assert image.shape == torch.Size([1, image_size, image_size])
+                assert image.dtype == torch.float32
+
+                assert isinstance(position, torch.Tensor)
+                assert position.shape == (2,)  # (x, y) particle position
 
     def test_6_A(self):
         pass
@@ -835,33 +909,38 @@ class TestDLCC(unittest.TestCase):
         train_std = np.std([src["inputs"] for src in train_sources],
                            axis=(0, 1))
 
-        inputs_pipeline = (
-            dt.Value(sources.inputs - train_mean) / train_std
-            >> dt.pytorch.ToTensor(dtype=torch.float)
-        )
-        targets_pipeline = (
-            dt.Value(sources.targets - train_mean[temp_idx])
-            / train_std[temp_idx]
-        )
+        if TORCH_AVAILABLE:
+            inputs_pipeline = (
+                dt.Value(sources.inputs - train_mean) / train_std
+                >> dt.pytorch.ToTensor(dtype=torch.float)
+            )
+            targets_pipeline = (
+                dt.Value(sources.targets - train_mean[temp_idx])
+                / train_std[temp_idx]
+            )
 
-        train_dataset = dt.pytorch.Dataset(inputs_pipeline & targets_pipeline,
-                                        inputs=train_sources)
-        val_dataset = dt.pytorch.Dataset(inputs_pipeline & targets_pipeline,
-                                        inputs=val_sources)
+            train_dataset = dt.pytorch.Dataset(
+                inputs_pipeline & targets_pipeline,
+                inputs=train_sources,
+            )
+            val_dataset = dt.pytorch.Dataset(
+                inputs_pipeline & targets_pipeline,
+                inputs=val_sources,
+            )
 
-        assert len(train_dataset) == 4
-        for inputs, target in train_dataset:
-            assert isinstance(inputs, torch.Tensor)
-            assert isinstance(target, torch.Tensor)
-            assert inputs.shape == torch.Size([3, 2])
-            assert target.shape == torch.Size([1])
-            assert inputs.dtype == torch.float32
-            assert target.dtype == torch.float32
+            assert len(train_dataset) == 4
+            for inputs, target in train_dataset:
+                assert isinstance(inputs, torch.Tensor)
+                assert isinstance(target, torch.Tensor)
+                assert inputs.shape == torch.Size([3, 2])
+                assert target.shape == torch.Size([1])
+                assert inputs.dtype == torch.float32
+                assert target.dtype == torch.float32
 
-        assert len(val_dataset) == 1
-        for inputs, target in val_dataset:
-            assert inputs.shape == torch.Size([3, 2])
-            assert target.shape == torch.Size([1])
+            assert len(val_dataset) == 1
+            for inputs, target in val_dataset:
+                assert inputs.shape == torch.Size([3, 2])
+                assert target.shape == torch.Size([1])
 
     def test_7_A(self):
         if TORCH_AVAILABLE:
