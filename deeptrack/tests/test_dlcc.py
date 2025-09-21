@@ -626,24 +626,32 @@ class TestDLCC(unittest.TestCase):
             >> dt.Add(82)
         )
 
-        expected = np.array([
-            [[ 7.01659596], [16.36273566], [21.04978789]],
-            [[16.36273566], [32.64875852], [40.41116424]],
-            [[21.04978789], [40.41116424], [49.51533565]]
-        ]) + 30 + 82
+        expected = np.array(
+            [[[ 7.01659596], [16.36273566], [21.04978789]],
+             [[16.36273566], [32.64875852], [40.41116424]],
+             [[21.04978789], [40.41116424], [49.51533565]]]
+        ) + 30 + 82
         np.testing.assert_allclose(sim_im_pip(), expected,
                                    rtol=1e-7, atol=1e-7)
         np.testing.assert_allclose(sim_im_pip.update()(), expected,
                                    rtol=1e-7, atol=1e-7)
 
-        np.random.seed(123)
+        np.random.seed(123)  # Note that this seeding is not warratied
+                             # to give reproducible results across platforms
+                             # so the subsequent test might fail
         sim_im_pip = (
             optics(particle)
             >> dt.Add(30)
             >> np.random.poisson
             >> dt.Add(82)
         )
-        assert np.random.poisson(100) == 106
+        expected = np.array(
+            [[[123], [122],[138]],
+            [[128], [141], [151]],
+            [[131], [144], [162]]]
+        )
+        # This test might fail (see above)
+        np.testing.assert_array_equal(sim_im_pip(), expected)
 
 
 if __name__ == "__main__":
