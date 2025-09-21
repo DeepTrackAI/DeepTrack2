@@ -8,6 +8,7 @@
 
 import unittest
 
+import glob
 import shutil
 import tempfile
 from pathlib import Path
@@ -329,10 +330,6 @@ class TestDLCC(unittest.TestCase):
                     .save(test_dir / "0_test.png")
                 Image.fromarray(stripes, mode="L") \
                     .save(test_dir / "1_test.png")
-
-                # print("Data root:", data_root)
-                # print("Train files:", sorted(os.listdir(train_dir)))
-                # print("Test files:",  sorted(os.listdir(test_dir)))
 
                 ## PART 1
                 # Loading image files into a pipeline.
@@ -865,7 +862,137 @@ class TestDLCC(unittest.TestCase):
                 assert position.shape == (2,)  # (x, y) particle position
 
     def test_6_A(self):
-        pass
+        # Temporary root (deleted in finally)
+        tmp_root = tempfile.mkdtemp(prefix="cells_like_")
+        data_root = Path(tmp_root) / "02"
+        image_dir = data_root / "image"
+        label_dir  = data_root / "label"
+
+        try:
+            image_dir.mkdir(parents=True, exist_ok=True)
+            label_dir.mkdir(parents=True, exist_ok=True)
+
+            # Synthetic image (grayscale with some blobs)
+            image = np.zeros((8, 12), dtype=np.uint8)
+            image[1:3, 2:4] = 128   # blob 1
+            image[4:6, 6:8] = 200  # blob 2
+            image[6:8, 4:6] = 255  # blob 3
+
+            # Synthetic label mask (integer IDs for blobs)
+            label = np.zeros_like(image, dtype=np.uint8)
+            label[1:3, 2:4] = 1
+            label[4:6, 6:8] = 2
+            label[6:8, 4:6] = 3
+
+            # Save images
+            Image.fromarray(image, mode="L").save(image_dir / "image_0.png")
+            for i in range(1, 5):
+                Image.fromarray(np.zeros_like(image), mode="L") \
+                    .save(image_dir / f"image_{i}.png")
+
+            # Save labels
+            Image.fromarray(label, mode="L").save(label_dir / "label_0.png")
+            for i in range(1, 5):
+                Image.fromarray(np.zeros_like(label), mode="L") \
+                    .save(label_dir / f"label_{i}.png")
+
+            ## PART 1
+            # Loading and analyzing the image and segmentaions.
+            from skimage.measure import regionprops
+
+            sources = dt.sources.Source(
+                image_path=sorted(glob.glob(str(image_dir / "*.png"))),
+                label_path=sorted(glob.glob(str(label_dir / "*.png"))),
+            )
+
+            image_pip = dt.LoadImage(sources.image_path)[1:, 2:-4] / 256
+            props_pip = (
+                dt.LoadImage(sources.label_path)[1:, 2:-4]
+                >> regionprops
+            )
+
+            pip = image_pip & props_pip
+
+            image, *props = pip()
+
+            # The combined output should flatten to 1 image + 3 props = 4 items
+            assert len(pip()) == 4
+
+            assert isinstance(image, np.ndarray)
+            expected_image = np.array(
+                [[0.5, 0.5, 0.0, 0.0, 0.0, 0.0],
+                [0.5, 0.5, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.78125, 0.78125],
+                [0.0, 0.0, 0.0, 0.0, 0.78125, 0.78125],
+                [0.0, 0.0, 0.99609375, 0.99609375, 0.0, 0.0],
+                [0.0, 0.0, 0.99609375, 0.99609375, 0.0, 0.0]],
+                dtype=np.float32,
+            )
+            assert np.allclose(image.squeeze(), expected_image, atol=1e-8)
+
+            assert sorted([p.label for p in props]) == [1, 2, 3]
+
+            ## PART 2
+            # Cropping.
+            crop_frame_index = 0
+            crop_size = 2
+            crop_x0 = 1
+            crop_y0 = 1
+
+            image, *props = pip(sources[crop_frame_index])
+            crop = image[crop_x0:crop_x0 + crop_size,
+                         crop_y0:crop_y0 + crop_size]
+
+            expected_crop = np.array(
+                [[0.5, 0.0],
+                [0.0, 0.0]],
+                dtype=np.float32,
+            )
+            assert np.allclose(crop.squeeze(), expected_crop, atol=1e-8)
+
+            ## PART 3
+            # Training pipeline.
+            if TORCH_AVAILABLE:
+                np.random.seed(123)  # Note that this seeding is not warratied
+                                     # to give reproducible results across
+                                     # platforms so the subsequent test might
+                                     # fail
+
+                train_pip = (
+                    dt.Value(crop)
+                    >> dt.Multiply(lambda: np.random.uniform(0.9, 1.1))
+                    >> dt.Add(lambda: np.random.uniform(-0.1, 0.1))
+                    >> dt.MoveAxis(-1, 0)
+                    >> dt.pytorch.ToTensor(dtype=torch.float32)
+                )
+
+                train_dataset = \
+                    dt.pytorch.Dataset(train_pip, length=40, replace=False)
+
+                assert len(train_dataset) == 40
+
+                expected_tensor_0 = torch.tensor(
+                    [[[ 0.4769, -0.0428],
+                     [-0.0428, -0.0428]]],
+                )
+                sample = train_dataset[0]
+                assert torch.allclose(sample[0], expected_tensor_0,
+                                      rtol=1e-4, atol=1e-4)
+
+                expected_tensor_39 = torch.tensor(
+                    [[[0.4829, 0.0103],
+                     [0.0103, 0.0103]]],
+                )
+                sample = train_dataset[39]
+                assert torch.allclose(sample[0], expected_tensor_39,
+                                      rtol=1e-4, atol=1e-4)
+
+        except Exception:
+            raise
+        finally:
+            # Clean up the temporary dataset tree
+            shutil.rmtree(tmp_root, ignore_errors=True)
 
     def test_7_1(self):
         # Small toy dataset
