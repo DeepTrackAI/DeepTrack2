@@ -467,10 +467,9 @@ class TestDLCC(unittest.TestCase):
             label_pip = dt.Value(sources.is_normal)
 
             # All normalized values should be between 0 and 1
-            for i in range(len(sources)):
-                ecg = ecg_pip(sources[i])
+            for i in range(len(normal_sources)):
+                ecg = ecg_pip(normal_sources[i])
                 assert isinstance(ecg, torch.Tensor)
-                print(ecg.min())
                 assert 0 <= ecg.min() <= 1
 
             # All labels should be bool
