@@ -470,6 +470,7 @@ class TestDLCC(unittest.TestCase):
             for i in range(len(sources)):
                 ecg = ecg_pip(sources[i])
                 assert isinstance(ecg, torch.Tensor)
+                print(ecg.min())
                 assert 0 <= ecg.min() <= 1
 
             # All labels should be bool
