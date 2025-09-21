@@ -733,6 +733,30 @@ class TestDLCC(unittest.TestCase):
         np.testing.assert_allclose(sim_im_pip.update()(), expected_2,
                                    rtol=1e-7, atol=1e-7)
 
+        ## PART 3
+        # Complete pipeline.
+        sim_mask_pip = (
+            particles
+            >> dt.SampleToMasks(lambda: lambda particle: particle > 0,
+                                output_region=optics.output_region,
+                                merge_method="or")
+            >> dt.AsType("int")
+            >> dt.OneHot(num_classes=2)
+        )
+
+        if TORCH_AVAILABLE:
+            sim_im_mask_pip = (
+                (sim_im_pip & sim_mask_pip)
+                >> dt.MoveAxis(2, 0)
+                >> dt.pytorch.ToTensor(dtype=torch.float)
+            )
+
+            train_dataset = dt.pytorch.Dataset(
+                sim_im_mask_pip, length=320, replace=.1,
+            )
+
+            im, mask = train_dataset[0]
+
 
 if __name__ == "__main__":
     unittest.main()
