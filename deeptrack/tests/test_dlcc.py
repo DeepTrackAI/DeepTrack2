@@ -604,6 +604,47 @@ class TestDLCC(unittest.TestCase):
                 # Clean up the temporary dataset tree
                 shutil.rmtree(tmp_root, ignore_errors=True)
 
+    def test_5_A(self):
+        ## PART 1
+        # Single quantum dot.
+
+        optics = dt.Fluorescence(
+            wavelength=600 * dt.units.nm,
+            NA=0.9,
+            magnification=1,
+            resolution=0.1 * dt.units.um,
+            output_region=(0, 0, 3, 3),
+        )
+        particle = dt.PointParticle(
+            position=(2, 2),
+            intensity=1.2e4,
+            z=0,
+        )
+        sim_im_pip = (
+            optics(particle)
+            >> dt.Add(30)
+            >> dt.Add(82)
+        )
+
+        expected = np.array([
+            [[ 7.01659596], [16.36273566], [21.04978789]],
+            [[16.36273566], [32.64875852], [40.41116424]],
+            [[21.04978789], [40.41116424], [49.51533565]]
+        ]) + 30 + 82
+        np.testing.assert_allclose(sim_im_pip(), expected,
+                                   rtol=1e-7, atol=1e-7)
+        np.testing.assert_allclose(sim_im_pip.update()(), expected,
+                                   rtol=1e-7, atol=1e-7)
+
+        np.random.seed(123)
+        sim_im_pip = (
+            optics(particle)
+            >> dt.Add(30)
+            >> np.random.poisson
+            >> dt.Add(82)
+        )
+        assert np.random.poisson(100) == 106
+
 
 if __name__ == "__main__":
     unittest.main()
