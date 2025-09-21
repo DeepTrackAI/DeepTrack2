@@ -784,6 +784,96 @@ class TestDLCC(unittest.TestCase):
             bg_mean = float(im2d[mask[0].bool()].mean())
             assert fg_mean > bg_mean
 
+    def test_5_B(self):
+        pass
+
+    def test_6_1(self):
+        pass
+
+    def test_6_A(self):
+        pass
+
+    def test_7_1(self):
+        pass
+
+    def test_7_A(self):
+        if TORCH_AVAILABLE:
+            # Hardcoded sequences: shape (num_samples=10, seq_len=4)
+            in_sequences = np.array([
+                [1, 2, 3, 0],
+                [4, 5, 6, 0],
+                [7, 8, 9, 0],
+                [10, 11, 12, 0],
+                [13, 14, 15, 0],
+                [16, 17, 18, 0],
+                [19, 20, 21, 0],
+                [22, 23, 24, 0],
+                [25, 26, 27, 0],
+                [28, 29, 30, 0],
+            ])
+
+            out_sequences = np.array([
+                [101, 102, 103, 0],
+                [104, 105, 106, 0],
+                [107, 108, 109, 0],
+                [110, 111, 112, 0],
+                [113, 114, 115, 0],
+                [116, 117, 118, 0],
+                [119, 120, 121, 0],
+                [122, 123, 124, 0],
+                [125, 126, 127, 0],
+                [128, 129, 130, 0],
+            ])
+
+            sources = dt.sources.Source(
+                inputs=in_sequences,
+                targets=out_sequences,
+            )
+            train_sources, test_sources = \
+                dt.sources.random_split(sources, [.8, .2])
+
+            assert len(train_sources) == 8
+            assert len(test_sources) == 2
+
+            inputs_pip = (
+                dt.Value(sources.inputs)
+                >> dt.pytorch.ToTensor(dtype=torch.int)
+            )
+            outputs_pip = (
+                dt.Value(sources.targets)
+                >> dt.pytorch.ToTensor(dtype=torch.int)
+            )
+
+            train_dataset = dt.pytorch.Dataset(
+                inputs_pip & outputs_pip,
+                inputs=train_sources,
+            )
+            test_dataset = dt.pytorch.Dataset(
+                inputs_pip & outputs_pip,
+                inputs=test_sources,
+            )
+
+            assert len(train_dataset) == 8
+            for input, output in train_dataset:
+                assert isinstance(input, torch.Tensor)
+                assert isinstance(output, torch.Tensor)
+                assert input.shape == torch.Size([4])
+                assert output.shape == torch.Size([4])
+                assert input.dtype == torch.int64
+                assert output.dtype == torch.int64
+
+            assert len(test_dataset) == 2
+            for input, output in test_dataset:
+                assert isinstance(input, torch.Tensor)
+                assert isinstance(output, torch.Tensor)
+                assert input.shape == torch.Size([4])
+                assert output.shape == torch.Size([4])
+                assert input.dtype == torch.int64
+                assert output.dtype == torch.int64
+
+    def test_8_A(self):
+        pass  # Essentially same code as test_7_A
+
 
 if __name__ == "__main__":
     unittest.main()
