@@ -296,7 +296,7 @@ class TestDLCC(unittest.TestCase):
 
     def test_4_A(self):
         if TORCH_AVAILABLE:
-            # Temporary root (deleted finally)
+            # Temporary root (deleted in finally)
             tmp_root = tempfile.mkdtemp(prefix="mnist_like_")
             data_root = Path(tmp_root) / "mnist"
             train_dir = data_root / "train"
@@ -492,7 +492,117 @@ class TestDLCC(unittest.TestCase):
                 assert torch.equal(ecg_in, ecg_out)
 
     def test_5_1(self):
-        pass
+        def select_labels(class_labels):
+            """Create a function to filter and remap labels in ..."""
+            def inner(segmentation):
+                seg = segmentation.copy()
+                mask = seg * np.isin(seg, class_labels).astype(np.uint8)
+                new_seg = (np.select([mask == c for c in class_labels],
+                                        np.arange(len(class_labels)) + 1)
+                            .astype(np.uint8).squeeze())
+                one_hot_encoded_seg = np.eye(len(class_labels) + 1)[new_seg]
+                return one_hot_encoded_seg        
+            return inner
+
+        if TORCH_AVAILABLE:
+            # Temporary root (deleted in finally)
+            tmp_root = tempfile.mkdtemp(prefix="tissue_images_like_")
+            data_root = Path(tmp_root) / "stack1"
+            raw_dir = data_root / "raw"
+            labels_dir  = data_root / "label"
+
+            try:
+                raw_dir.mkdir(parents=True, exist_ok=True)
+                labels_dir.mkdir(parents=True, exist_ok=True)
+
+                H, W = 8, 12
+                values = np.array([0, 50, 100, 191, 200, 255], dtype=np.uint8)
+
+                # Save 5 RGB images in raw/
+                for i in range(5):
+                    # Simple non-uniform pattern for RGB channels
+                    r = np.tile(np.linspace(0, 255, W, dtype=np.uint8), (H, 1))
+                    g = np.tile(np.linspace(255, 0, W, dtype=np.uint8), (H, 1))
+                    b = np.full((H, W), i * 50, dtype=np.uint8)
+                    img_rgb = np.stack([r, g, b], axis=-1)
+                    Image.fromarray(img_rgb, mode="RGB") \
+                        .save(raw_dir / f"rgb_{i}.png")
+
+                # Save 5 grayscale images in raw/
+                for i in range(5):
+                    # Fill image cycling through values, then shift by i
+                    arr = np.tile(values, H * W // len(values) + 1)[: H * W]
+                    arr = np.roll(arr, i)  # shift pattern
+                    arr = arr.reshape(H, W)
+                    Image.fromarray(arr, mode="L") \
+                        .save(labels_dir / f"gray_{i}.png")
+
+                raw_path = str(raw_dir)
+                seg_path = str(labels_dir)    
+
+                ## PART 1
+                # Loading image files into a pipeline.
+                raw_paths = dt.sources.ImageFolder(root=raw_path)
+                seg_paths = dt.sources.ImageFolder(root=seg_path)
+                paths = dt.sources.Source(raw=raw_paths, label=seg_paths)
+                train_paths, val_paths, test_paths = \
+                    dt.sources.random_split(paths, [0.6, 0.2, 0.2])
+
+                assert len(raw_paths) == 5
+                assert len(seg_paths) == 5
+                assert len(train_paths) == 3
+                assert len(val_paths) == 1
+                assert len(test_paths) == 1
+
+                train_srcs = train_paths.product(
+                    flip_ud=[True, False], flip_lr=[True, False],
+                )
+                val_srcs = val_paths.constants(flip_ud=False, flip_lr=False)
+                test_srcs = test_paths.constants(flip_ud=False, flip_lr=False)
+
+                sources = dt.sources.Join(train_srcs, val_srcs, test_srcs)
+
+                ## PART 2
+                # Testing pipelines and select_labels function.
+                im_pip = dt.LoadImage(sources.raw.path) >> dt.NormalizeMinMax()
+                seg_pip = (dt.LoadImage(sources.label.path)
+                        >> dt.Lambda(select_labels, class_labels=[255, 191]))
+                pip = ((im_pip & seg_pip) >> dt.FlipLR(sources.flip_lr)
+                    >> dt.FlipUD(sources.flip_ud) >> dt.MoveAxis(2, 0)
+                    >> dt.pytorch.ToTensor(dtype=torch.float))
+
+                train_dataset = dt.pytorch.Dataset(pip, train_srcs)
+                val_dataset = dt.pytorch.Dataset(pip, val_srcs)
+                test_dataset = dt.pytorch.Dataset(pip, test_srcs)
+
+                assert len(train_dataset) == 12  # 3 images * 4 augmentations
+                assert len(val_dataset) == 1  # No augmentations
+                assert len(test_dataset) == 1  # No augmentations
+
+                for i in range(12):
+                    im, seg = train_dataset[i]
+                    assert im.min() >= 0.0 and im.max() <= 1.0
+                    assert seg.ndim == 3  # (num_classes, H, W)
+                    assert seg.shape[0] == 3  # 3 channels
+                    assert set(np.unique(seg)).issubset({0, 1})
+
+                im, seg = val_dataset[0]
+                assert im.min() >= 0.0 and im.max() <= 1.0
+                assert seg.ndim == 3  # (num_classes, H, W)
+                assert seg.shape[0] == 3  # 3 channels
+                assert set(np.unique(seg)).issubset({0, 1})
+
+                im, seg = test_dataset[0]
+                assert im.min() >= 0.0 and im.max() <= 1.0
+                assert seg.ndim == 3  # (num_classes, H, W)
+                assert seg.shape[0] == 3  # 3 channels
+                assert set(np.unique(seg)).issubset({0, 1})
+
+            except Exception:
+                raise
+            finally:
+                # Clean up the temporary dataset tree
+                shutil.rmtree(tmp_root, ignore_errors=True)
 
 
 if __name__ == "__main__":
