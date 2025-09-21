@@ -782,7 +782,65 @@ class TestDLCC(unittest.TestCase):
             assert fg_mean > bg_mean
 
     def test_5_B(self):
-        pass
+        ## PART 1
+        # Loading data images and masks from files.
+        
+        # Temporary root (deleted in finally)
+        tmp_root = tempfile.mkdtemp(prefix="cell_counting_like_")
+        data_root = Path(tmp_root) / "base"
+        images_dir = data_root / "images"
+        masks_dir  = data_root / "masks"
+
+        try:
+            images_dir.mkdir(parents=True, exist_ok=True)
+            masks_dir.mkdir(parents=True, exist_ok=True)
+
+            # Synthetic image (grayscale with some blobs)
+            image = np.zeros((8, 12), dtype=np.uint8)
+            image[1:3, 2:4] = 128   # blob 1
+            image[4:6, 6:8] = 200   # blob 2
+            image[6:8, 4:6] = 255   # blob 3
+
+            # Synthetic label mask (integer IDs for blobs in red channel)
+            mask_gray = np.zeros_like(image, dtype=np.uint8)
+            mask_gray[1:3, 2:4] = 1
+            mask_gray[4:6, 6:8] = 1
+            mask_gray[6:8, 4:6] = 1
+
+            # Expand to RGB, putting data in channel 0, zeros in channels 1 & 2
+            mask_rgb = np.stack(
+                [mask_gray,
+                np.zeros_like(mask_gray),
+                np.zeros_like(mask_gray)],
+                axis=-1,
+            )
+
+            # Save images
+            Image.fromarray(image, mode="L").save(images_dir / "image_0.png")
+            for i in range(1, 5):
+                Image.fromarray(np.zeros_like(image), mode="L") \
+                    .save(images_dir / f"image_{i}.png")
+
+            # Save labels
+            Image.fromarray(mask_rgb, mode="RGB") \
+                .save(masks_dir / "mask_0.png")
+            for i in range(1, 5):
+                Image.fromarray(np.zeros_like(mask_rgb), mode="RGB") \
+                    .save(masks_dir / f"mask_{i}.png")
+
+
+            #TODO
+
+        except Exception:
+            raise
+        finally:
+            # Clean up the temporary dataset tree
+            shutil.rmtree(tmp_root, ignore_errors=True)
+
+        ## PART 2
+        # Simulation pipeline.
+
+        #TODO
 
     def test_6_1(self):
         if TORCH_AVAILABLE:
