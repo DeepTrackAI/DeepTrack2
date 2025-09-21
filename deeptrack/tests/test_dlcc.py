@@ -296,7 +296,7 @@ class TestDLCC(unittest.TestCase):
 
     def test_4_A(self):
         if TORCH_AVAILABLE:
-            # Temporary root (deleted in finally)
+            # Temporary root (deleted finally)
             tmp_root = tempfile.mkdtemp(prefix="mnist_like_")
             data_root = Path(tmp_root) / "mnist"
             train_dir = data_root / "train"
@@ -410,8 +410,8 @@ class TestDLCC(unittest.TestCase):
                 assert xb.ndim == 4 and xb.shape[1:] == x0.shape  # (B,C,H,W)
                 assert yb.ndim == 2 and yb.shape[0] == xb.shape[0]
 
-            except Exception as e:
-                print("Error while creating dataset:", e)
+            except Exception:
+                raise
             finally:
                 # Clean up the temporary dataset tree
                 shutil.rmtree(tmp_root, ignore_errors=True)
@@ -490,6 +490,9 @@ class TestDLCC(unittest.TestCase):
 
             for ecg_in, ecg_out in loader:
                 assert torch.equal(ecg_in, ecg_out)
+
+    def test_5_1(self):
+        pass
 
 
 if __name__ == "__main__":
