@@ -794,7 +794,74 @@ class TestDLCC(unittest.TestCase):
         pass
 
     def test_7_1(self):
-        pass
+        # Small toy dataset
+        # Shape: (num_samples=5, seq_len=3, num_features=2)
+        in_sequences = np.array([
+            [[1.0, 10.0], [2.0, 11.0], [3.0, 12.0]],
+            [[4.0, 20.0], [5.0, 21.0], [6.0, 22.0]],
+            [[7.0, 30.0], [8.0, 31.0], [9.0, 32.0]],
+            [[10.0, 40.0], [11.0, 41.0], [12.0, 42.0]],
+            [[13.0, 50.0], [14.0, 51.0], [15.0, 52.0]],
+        ])
+
+        # Targets: one value per sample (e.g., "temperature")
+        # Shape: (num_samples=5, 1)
+        targets = np.array([
+            [100.0],
+            [200.0],
+            [300.0],
+            [400.0],
+            [500.0],
+        ])
+
+        temp_idx = 0
+
+        sources = dt.sources.Source(inputs=in_sequences, targets=targets)
+        train_sources, val_sources = \
+            dt.sources.random_split(sources, [0.8, 0.2])
+
+        assert len(train_sources) == 4
+        assert len(val_sources) == 1
+
+        mean = np.mean([src["inputs"] for src in sources], axis=(0, 1))
+        std = np.std([src["inputs"] for src in sources], axis=(0, 1))
+        np.testing.assert_allclose(mean, np.array([ 8., 31.]),
+                                   rtol=1e-7, atol=1e-7)
+        np.testing.assert_allclose(std, np.array([ 4.3204938 , 14.16568624]),
+                                   rtol=1e-7, atol=1e-7)
+
+        train_mean = np.mean([src["inputs"] for src in train_sources],
+                             axis=(0, 1))
+        train_std = np.std([src["inputs"] for src in train_sources],
+                           axis=(0, 1))
+
+        inputs_pipeline = (
+            dt.Value(sources.inputs - train_mean) / train_std
+            >> dt.pytorch.ToTensor(dtype=torch.float)
+        )
+        targets_pipeline = (
+            dt.Value(sources.targets - train_mean[temp_idx])
+            / train_std[temp_idx]
+        )
+
+        train_dataset = dt.pytorch.Dataset(inputs_pipeline & targets_pipeline,
+                                        inputs=train_sources)
+        val_dataset = dt.pytorch.Dataset(inputs_pipeline & targets_pipeline,
+                                        inputs=val_sources)
+
+        assert len(train_dataset) == 4
+        for inputs, target in train_dataset:
+            assert isinstance(inputs, torch.Tensor)
+            assert isinstance(target, torch.Tensor)
+            assert inputs.shape == torch.Size([3, 2])
+            assert target.shape == torch.Size([1])
+            assert inputs.dtype == torch.float32
+            assert target.dtype == torch.float32
+
+        assert len(val_dataset) == 1
+        for inputs, target in val_dataset:
+            assert inputs.shape == torch.Size([3, 2])
+            assert target.shape == torch.Size([1])
 
     def test_7_A(self):
         if TORCH_AVAILABLE:
