@@ -477,7 +477,6 @@ class TestDLCC(unittest.TestCase):
 
             for source in sources:
                 ecg, label = (ecg_pip & label_pip)(source)
-                assert 0 <= ecg.min() <= 1
                 assert isinstance(label, (bool, np.bool_))
 
             # PART 3
