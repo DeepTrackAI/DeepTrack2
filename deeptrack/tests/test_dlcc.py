@@ -783,7 +783,7 @@ class TestDLCC(unittest.TestCase):
     def test_5_B(self):
         ## PART 1
         # Loading data images and masks from files.
-        
+
         # Temporary root (deleted in finally)
         tmp_root = tempfile.mkdtemp(prefix="cell_counting_like_")
         data_root = Path(tmp_root) / "base"
@@ -827,8 +827,48 @@ class TestDLCC(unittest.TestCase):
                 Image.fromarray(np.zeros_like(mask_rgb), mode="RGB") \
                     .save(masks_dir / f"mask_{i}.png")
 
+            ## PART 1.1
+            # Loading image files into a pipeline.
+            image_paths = dt.sources.ImageFolder(root=str(images_dir))
+            mask_paths = dt.sources.ImageFolder(root=str(masks_dir))
+            sources = dt.sources.Source(image=image_paths, label=mask_paths)
 
-            #TODO
+            assert len(image_paths) == 5
+            assert len(mask_paths) == 5
+
+            ## PART 2.2
+            # Pipelines.
+            image_pip = (
+                dt.LoadImage(sources.image.path)
+                >> dt.Divide(3000)
+                >> dt.Clip(0, 1)
+                >> dt.AsType("float")
+            )
+            mask_pip = (
+                dt.LoadImage(sources.label.path)[..., :1]
+                >> dt.AsType("float")
+            )
+            pip = (
+                (image_pip & mask_pip)
+                >> dt.Crop(crop=(4, 6, None), corner=(0, 0))
+                >> dt.MoveAxis(2, 0)
+                >> dt.pytorch.ToTensor(dtype=torch.float)
+            )
+            test_dataset = dt.pytorch.Dataset(pip, sources)
+
+            assert len(test_dataset) == 5
+
+            for i in range(5):
+                image, mask = test_dataset[i]
+
+                assert isinstance(image, torch.Tensor)
+                assert image.shape == torch.Size([1, 4, 6])
+                assert image.dtype == torch.float32
+                assert torch.all(image >= 0) and torch.all(image <= 1)
+
+                assert isinstance(mask, torch.Tensor)
+                assert mask.shape == torch.Size([1, 4, 6])
+                assert mask.dtype == torch.float32
 
         except Exception:
             raise
@@ -839,7 +879,340 @@ class TestDLCC(unittest.TestCase):
         ## PART 2
         # Simulation pipeline.
 
-        #TODO
+        train_image_size = 6
+
+        def random_ellipse_axes():
+            """Return the three axes of an ellipse."""
+            ellipse_area = (np.random.uniform(.5, 1)) ** 2
+            radius_ratio = np.random.uniform(1, 1.5)
+            major_axis = np.sqrt(ellipse_area) * radius_ratio
+            minor_axis = np.sqrt(ellipse_area) / radius_ratio
+            z_axis = np.sqrt(ellipse_area) * np.random.uniform(0.2, 0.4)
+            return (major_axis, minor_axis, z_axis) * dt.units.um
+
+        ## PART 2.1
+        np.random.seed(123)  # Note that this seeding is not warratied
+                            # to give reproducible results across
+                            # platforms so the subsequent test might fail
+
+
+        ellipse = dt.Ellipsoid(
+            radius = random_ellipse_axes,
+            intensity=lambda: np.random.uniform(0.5, 1.5),
+            position=lambda: np.random.uniform(2, train_image_size - 2, 
+                                               size=2),
+            rotation=lambda: np.random.uniform(0, 2 * np.pi),
+        )
+        optics = dt.Fluorescence(
+            resolution=1e-6,
+            magnification=6,
+            wavelength=400e-9,
+            NA=lambda: np.random.uniform(0.9, 1.1),
+            output_region=(0, 0, train_image_size, train_image_size),
+        )
+        sim_im_pip = optics(ellipse)
+
+        # Checks
+        expected_image = np.array(
+            [[[0.62670365], [0.95904265], [1.15064654],
+              [1.17296235], [1.13969792], [0.9095519 ]],
+             [[1.21126057], [1.51766064], [1.7455454 ],
+              [1.76889047], [1.72424965], [1.43000316]],
+             [[1.72652512], [1.83151886], [1.8833134 ],
+              [1.88750391], [1.85299175], [1.74551291]],
+             [[1.77112966], [1.86331109], [1.89386948],
+              [1.88816495], [1.83622286], [1.73540255]],
+             [[1.53751879], [1.75932587], [1.7955828 ],
+              [1.77051135], [1.5555698 ], [1.31219839]],
+             [[1.03047638], [1.27223149], [1.30437236],
+              [1.27309201], [1.00711876], [0.66359776]]]
+        )
+        image = sim_im_pip()
+        assert np.allclose(image, expected_image, atol=1e-8)
+        image = sim_im_pip()
+        assert np.allclose(image, expected_image, atol=1e-8)
+        image = sim_im_pip.update()()
+        assert not np.allclose(image, expected_image, atol=1e-8)
+
+        ## PART 2.2
+        import random
+
+        np.random.seed(123)  # Note that this seeding is not warratied
+        random.seed(123)     # to give reproducible results across
+                            # platforms so the subsequent test might fail
+
+        ellipse = dt.Ellipsoid(
+            radius = random_ellipse_axes,
+            intensity=lambda: np.random.uniform(0.5, 1.5),
+            position=lambda: np.random.uniform(2, train_image_size - 2,
+                                               size=2),
+            rotation=lambda: np.random.uniform(0, 2 * np.pi),
+        )
+        synthetic_nuclei = (
+            (ellipse ^ (lambda: np.random.randint(5, 10)))
+            >> dt.Pad(px=(10, 10, 10, 10), keep_size=False)
+            >> dt.ElasticTransformation(alpha=100, sigma=10, order=1)
+            >> dt.CropTight()
+        )
+        optics = dt.Fluorescence(
+            resolution=1e-6,
+            magnification=6,
+            wavelength=400e-9,
+            NA=lambda: np.random.uniform(0.9, 1.1),
+            output_region=(0, 0, train_image_size, train_image_size),
+        )
+        sim_im_pip = optics(synthetic_nuclei)
+
+        # Checks
+        expected_image = np.array(
+            [[[4.43875833], [5.61812011], [6.83467141],
+              [7.40197432], [7.15789432], [6.20212177]],
+             [[5.51601744], [6.96215298], [8.16738992],
+              [8.58847899], [8.18056869], [7.01360971]],
+             [[6.42507353], [8.20975942], [9.19766098],
+              [9.33420367], [8.80069871], [7.65615641]],
+             [[6.83698176], [8.57520423], [9.37970662],
+              [9.53241571], [8.91761343], [7.31147681]],
+             [[6.36655984], [8.14023641], [8.99595646],
+              [9.09135127], [8.37544931], [6.49717015]],
+             [[5.39208396], [7.11757634], [7.86945558],
+              [7.70038503], [6.95412321], [5.66020874]]])
+        image = sim_im_pip()
+        assert np.allclose(image, expected_image, atol=1e-8)
+        image = sim_im_pip()
+        assert np.allclose(image, expected_image, atol=1e-8)
+        image = sim_im_pip.update()()
+        assert not np.allclose(image, expected_image, atol=1e-8)
+
+        ## PART 2.3
+        np.random.seed(123)  # Note that this seeding is not warratied
+        random.seed(123)     # to give reproducible results across
+                            # platforms so the subsequent test might fail
+
+        ellipse = dt.Ellipsoid(
+            radius = random_ellipse_axes,
+            intensity=lambda: np.random.uniform(0.5, 1.5),
+            position=lambda: np.random.uniform(2, train_image_size - 2,
+                                               size=2),
+            rotation=lambda: np.random.uniform(0, 2 * np.pi),
+        )
+        synthetic_nuclei = (
+            (ellipse ^ (lambda: np.random.randint(5, 10)))
+            >> dt.Pad(px=(10, 10, 10, 10), keep_size=False)
+            >> dt.ElasticTransformation(alpha=100, sigma=10, order=1)
+            >> dt.CropTight()
+        )
+        synthetic_nuclei_mask = synthetic_nuclei > 0
+        long_range_noise = (
+            synthetic_nuclei
+            >> dt.Poisson(snr=0.2)
+            >> dt.GaussianBlur(sigma=3.5)
+        )
+        short_range_noise = (
+            synthetic_nuclei
+            >> dt.Poisson(snr=1.0)
+            >> dt.GaussianBlur(sigma=1.5)
+        )
+        random_range_noise = (
+            synthetic_nuclei
+            >> dt.Poisson(snr=lambda: np.random.uniform(0.5, 1.5))
+            >> dt.GaussianBlur(sigma=lambda: np.random.uniform(0.75, 1.5))
+        )
+        noisy_synthetic_nuclei = (
+            synthetic_nuclei_mask
+            * (long_range_noise + short_range_noise + random_range_noise) / 3
+        )
+
+        optics = dt.Fluorescence(
+            resolution=1e-6,
+            magnification=6,
+            wavelength=400e-9,
+            NA=lambda: np.random.uniform(0.9, 1.1),
+            output_region=(0, 0, train_image_size, train_image_size),
+        )
+        sim_im_pip = optics(noisy_synthetic_nuclei)
+
+        # Checks
+        expected_image = np.array(
+            [[[2.70782737], [3.72377004], [4.7502782 ],
+              [5.21564371], [5.0711578 ], [4.39744194]],
+             [[3.74048155], [5.03468761], [5.86563705],
+              [5.95210827], [5.4688792 ], [4.64597443]],
+             [[4.3493022 ], [5.54970338], [6.28803747],
+              [6.30392203], [5.74445854], [4.7577248 ]],
+             [[4.44427776], [5.76434851], [6.54332137],
+              [6.65343518], [6.08066042], [4.8567884 ]],
+             [[4.24868926], [5.43328388], [6.21579624],
+              [6.50448421], [6.06196237], [4.61607002]],
+             [[3.82922766], [4.86706357], [5.50472639],
+              [5.59237713], [5.03817596], [3.71460963]]]
+        )
+        image = sim_im_pip()
+        assert np.allclose(image, expected_image, atol=1e-8)
+        image = sim_im_pip()
+        assert np.allclose(image, expected_image, atol=1e-8)
+        image = sim_im_pip.update()()
+        assert not np.allclose(image, expected_image, atol=1e-8)
+
+        ## PART 2.4
+        np.random.seed(123)  # Note that this seeding is not warratied
+        random.seed(123)     # to give reproducible results across
+                            # platforms so the subsequent test might fail
+
+        ellipse = dt.Ellipsoid(
+            radius = random_ellipse_axes,
+            intensity=lambda: np.random.uniform(0.5, 1.5),
+            position=lambda: np.random.uniform(2, train_image_size - 2,
+                                               size=2),
+            rotation=lambda: np.random.uniform(0, 2 * np.pi),
+        )
+        synthetic_nuclei = (
+            (ellipse ^ (lambda: np.random.randint(1, 2)))
+            >> dt.Pad(px=(10, 10, 10, 10), keep_size=False)
+            >> dt.ElasticTransformation(alpha=100, sigma=10, order=1)
+            >> dt.CropTight()
+        )
+
+        long_range_noise = (synthetic_nuclei >> dt.Poisson(snr=0.2)
+                            >> dt.GaussianBlur(sigma=3.5))
+        short_range_noise = (synthetic_nuclei >> dt.Poisson(snr=1.0)
+                            >> dt.GaussianBlur(sigma=1.5))
+        random_range_noise = (
+            synthetic_nuclei
+            >> dt.Poisson(snr=lambda: np.random.uniform(0.5, 1.5))
+            >> dt.GaussianBlur(sigma=lambda: np.random.uniform(0.75, 1.5))
+        )
+        noisy_synthetic_nuclei = (
+            synthetic_nuclei
+            * (long_range_noise + short_range_noise + random_range_noise) / 3
+        )
+
+        non_overlap_nuclei = dt.NonOverlapping(
+            noisy_synthetic_nuclei, min_distance=6,
+        )
+
+        optics = dt.Fluorescence(
+            resolution=1e-6, magnification=6, wavelength=400e-9,
+            NA=lambda: np.random.uniform(0.9, 1.1),
+            output_region=(0, 0, train_image_size, train_image_size),
+        )
+        sim_im_pip = (
+            optics(non_overlap_nuclei)
+            >> dt.Gaussian(sigma=lambda: np.random.uniform(0, 0.1))
+            >> dt.Divide(lambda: np.random.uniform(14, 20))
+            >> dt.Add(lambda: np.random.uniform(-0.05, 0.15))
+            >> dt.Clip(0, 1) >> dt.AsType("float")
+        )
+
+        sim_im_pip()
+
+        # Checks
+        expected_image = np.array(
+            [[[0.12398151], [0.14209154], [0.15910754],
+              [0.15518798], [0.14829296], [0.12743581]],
+             [[0.15065696], [0.1624304 ], [0.18212656],
+              [0.18492249], [0.17675485], [0.14808888]],
+             [[0.16032724], [0.17263786], [0.19540503],
+              [0.19553262], [0.17960588], [0.15236758]],
+             [[0.16342678], [0.17271644], [0.18141046],
+              [0.17859922], [0.16860212], [0.14591775]],
+             [[0.14388377], [0.16010432], [0.16078891],
+              [0.15686093], [0.13163569], [0.11720937]],
+             [[0.12653167], [0.1265491 ], [0.12649258],
+              [0.12450134], [0.11387853], [0.10064209]]]
+        )
+        image = sim_im_pip()
+        assert np.allclose(image, expected_image, atol=1e-8)
+        image = sim_im_pip()
+        assert np.allclose(image, expected_image, atol=1e-8)
+        image = sim_im_pip.update()()
+        assert not np.allclose(image, expected_image, atol=1e-8)
+
+        if TORCH_AVAILABLE:
+            ## PART 2.5
+            import warnings
+
+            from skimage import morphology as skmorph
+
+            np.random.seed(123)  # Note that this seeding is not warratied
+            random.seed(123)     # to give reproducible results across
+                                # platforms so the subsequent test might fail
+
+            def get_mask(radius):
+                """Apply isotropic erosion to a binary mask."""
+                def inner(mask):
+                    mask = np.sum(mask, -1, keepdims=True) > 0
+                    mask = np.pad(mask, [(1, 1), (1, 1), (0, 0)],
+                                  mode="constant")
+                    mask = skmorph.isotropic_erosion(mask, radius=radius)
+                    return mask[1:-1, 1:-1]
+                return inner
+
+            sim_mask_pip = (
+                non_overlap_nuclei
+                >> dt.SampleToMasks(
+                    get_mask,
+                    radius=1,
+                    output_region=optics.output_region,
+                    merge_method="or",
+                )
+                >> dt.AsType("float")
+            )
+
+            # Checks
+            expected_mask = np.array(
+                [[[1.], [1.], [1.], [1.], [0.], [0.]],
+                [[1.], [1.], [1.], [1.], [1.], [0.]],
+                [[1.], [1.], [1.], [1.], [1.], [1.]],
+                [[0.], [1.], [1.], [1.], [1.], [1.]],
+                [[0.], [1.], [1.], [1.], [1.], [1.]],
+                [[0.], [0.], [1.], [1.], [1.], [0.]]]
+            )
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+
+                mask = sim_mask_pip()
+                assert np.allclose(mask, expected_mask, atol=1e-8)
+                mask = sim_mask_pip()
+                assert np.allclose(mask, expected_mask, atol=1e-8)
+                mask = sim_mask_pip.update()()
+                assert not np.allclose(mask, expected_mask, atol=1e-8)
+
+            ## PART 2.6
+            np.random.seed(123)  # Note that this seeding is not warratied
+            random.seed(123)     # to give reproducible results across
+                                # platforms so the subsequent test might fail
+
+            sim_im_mask_pip = (
+                (sim_im_pip & sim_mask_pip)
+                >> dt.MoveAxis(2, 0)
+                >> dt.pytorch.ToTensor(dtype=torch.float)
+            )
+            train_dataset = dt.pytorch.Dataset(
+                sim_im_mask_pip, length=640, replace=0.01,
+            )
+
+            assert len(train_dataset) == 640
+
+            image, mask = train_dataset[639]
+            expected_image = torch.tensor(
+                [[[0.1240, 0.1421, 0.1591, 0.1552, 0.1483, 0.1274],
+                [0.1507, 0.1624, 0.1821, 0.1849, 0.1768, 0.1481],
+                [0.1603, 0.1726, 0.1954, 0.1955, 0.1796, 0.1524],
+                [0.1634, 0.1727, 0.1814, 0.1786, 0.1686, 0.1459],
+                [0.1439, 0.1601, 0.1608, 0.1569, 0.1316, 0.1172],
+                [0.1265, 0.1265, 0.1265, 0.1245, 0.1139, 0.1006]]]
+            )
+            expected_mask = torch.tensor(
+                [[[1., 1., 1., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 0.],
+                [1., 1., 1., 1., 0., 0.]]]
+            )
+            assert torch.allclose(image, expected_image, rtol=1e-7, atol=1e-4)
+            assert torch.allclose(mask, expected_mask, rtol=1e-7, atol=1e-4)
 
     def test_6_1(self):
         if TORCH_AVAILABLE:
