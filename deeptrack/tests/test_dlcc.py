@@ -838,37 +838,38 @@ class TestDLCC(unittest.TestCase):
 
             ## PART 2.2
             # Pipelines.
-            image_pip = (
-                dt.LoadImage(sources.image.path)
-                >> dt.Divide(3000)
-                >> dt.Clip(0, 1)
-                >> dt.AsType("float")
-            )
-            mask_pip = (
-                dt.LoadImage(sources.label.path)[..., :1]
-                >> dt.AsType("float")
-            )
-            pip = (
-                (image_pip & mask_pip)
-                >> dt.Crop(crop=(4, 6, None), corner=(0, 0))
-                >> dt.MoveAxis(2, 0)
-                >> dt.pytorch.ToTensor(dtype=torch.float)
-            )
-            test_dataset = dt.pytorch.Dataset(pip, sources)
+            if TORCH_AVAILABLE:
+                image_pip = (
+                    dt.LoadImage(sources.image.path)
+                    >> dt.Divide(3000)
+                    >> dt.Clip(0, 1)
+                    >> dt.AsType("float")
+                )
+                mask_pip = (
+                    dt.LoadImage(sources.label.path)[..., :1]
+                    >> dt.AsType("float")
+                )
+                pip = (
+                    (image_pip & mask_pip)
+                    >> dt.Crop(crop=(4, 6, None), corner=(0, 0))
+                    >> dt.MoveAxis(2, 0)
+                    >> dt.pytorch.ToTensor(dtype=torch.float)
+                )
+                test_dataset = dt.pytorch.Dataset(pip, sources)
 
-            assert len(test_dataset) == 5
+                assert len(test_dataset) == 5
 
-            for i in range(5):
-                image, mask = test_dataset[i]
+                for i in range(5):
+                    image, mask = test_dataset[i]
 
-                assert isinstance(image, torch.Tensor)
-                assert image.shape == torch.Size([1, 4, 6])
-                assert image.dtype == torch.float32
-                assert torch.all(image >= 0) and torch.all(image <= 1)
+                    assert isinstance(image, torch.Tensor)
+                    assert image.shape == torch.Size([1, 4, 6])
+                    assert image.dtype == torch.float32
+                    assert torch.all(image >= 0) and torch.all(image <= 1)
 
-                assert isinstance(mask, torch.Tensor)
-                assert mask.shape == torch.Size([1, 4, 6])
-                assert mask.dtype == torch.float32
+                    assert isinstance(mask, torch.Tensor)
+                    assert mask.shape == torch.Size([1, 4, 6])
+                    assert mask.dtype == torch.float32
 
         except Exception:
             raise
