@@ -167,9 +167,9 @@ Specific examples for label-free particle tracking using **LodeSTAR**:
 
 - DTEx231C **LodeSTAR Measuring the Mass of Particles in Holography**
 
-- DTEx231D **LodeSTAR Detecting the Cells in the BF-C2DT-HSC Dataset**
+- DTEx231D **[LodeSTAR Detecting the Cells in the BF-C2DT-HSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DL-HSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DL-HSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTEx231E **LodeSTAR Detecting the Cells in the Fluo-C2DT-Huh7 Dataset**
+- DTEx231E **[LodeSTAR Detecting the Cells in the Fluo-C2DT-Huh7 Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
   
 - DTEx231F **LodeSTAR Detecting the Cells in the PhC-C2DT-PSC Dataset**
   
