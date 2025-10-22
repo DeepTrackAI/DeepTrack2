@@ -126,12 +126,12 @@ These are examples of how DeepTrack2 can be used on real datasets:
   </p>
   <!-- GH_ONLY_END -->
 
-- DTEx213 **Multi-Particle tracking**
-- 
+- DTEx213 **[Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx213_multi_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx213_multi_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+  
   Detecting quantum dots in a low SNR image.
 
 - DTEx214 **Particle Feature Extraction**
-- 
+ 
   Extracting the radius and refractive index of particles.
 
 - DTEx215 **Cell Counting**
