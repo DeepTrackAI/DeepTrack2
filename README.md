@@ -99,11 +99,11 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 - DTGS171A  **[Creating Custom Scatterers](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171A_custom_scatterers.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171A_custom_scatterers.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-Creating custom scatterers of arbitrary shapes.
+  Creating custom scatterers of arbitrary shapes.
 
 - DTGS171B  **[Creating Custom Scatterers: Bacteria](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171B_custom_scatterers_bacteria.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171B_custom_scatterers_bacteria.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-Creating custom scatterers in the shape of bacteria.
+  Creating custom scatterers in the shape of bacteria.
 
 # Examples
 
