@@ -111,6 +111,8 @@ These are examples of how DeepTrack2 can be used on real datasets:
   
   Detecting quantum dots in a low SNR image.
 
+    
+
 - DTEx214 **Particle Feature Extraction**
  
   Extracting the radius and refractive index of particles.
