@@ -690,9 +690,13 @@ class TestFeatures(unittest.TestCase):
             self.assertTrue(torch.equal(value_tensor.value(), tensor))
             # Override with a new tensor
             override_tensor = torch.tensor([10., 20., 30.])
-            self.assertTrue(torch.equal(value_tensor(value=override_tensor), override_tensor))
+            self.assertTrue(torch.equal(
+                value_tensor(value=override_tensor), override_tensor
+            ))
             self.assertTrue(torch.equal(value_tensor(), override_tensor))
-            self.assertTrue(torch.equal(value_tensor.value(), override_tensor))
+            self.assertTrue(torch.equal(
+                value_tensor.value(), override_tensor
+            ))
 
 
     def test_ArithmeticOperationFeature(self):
