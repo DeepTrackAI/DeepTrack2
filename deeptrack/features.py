@@ -4421,49 +4421,49 @@ class DummyFeature(Feature):
 
 
 class Value(Feature):
-    """Represent a constant (per evaluation) value in a DeepTrack pipeline.
+    """Represent a constant value in a DeepTrack2 pipeline.
 
     This feature holds a constant value (e.g., a scalar or array) and supplies 
     it on demand to other parts of the pipeline.
     
-    Wen called with an image, it does not transform the input image but instead
-    returns the stored value.
+    If called with an input, it ignores it and still returns the stored value.
 
     Parameters
     ----------
-    value: PropertyLike[float or array], optional
-        The numerical value to store. It defaults to 0.
-        If an `Image` is provided, a warning is issued recommending conversion
-        to a NumPy array or a PyTorch tensor for performance reasons.
+    value: PropertyLike[Any], optional
+        The value to store. Defaults to 0.
     **kwargs: Any
         Additional named properties passed to the `Feature` constructor.
 
     Attributes
     ----------
     __distributed__: bool
-        Set to `False`, indicating that this feature’s `get(...)` method 
-        processes the entire list of images (or data) at once, rather than 
-        distributing calls for each item.
+        Set to `False`, indicating that this feature’s `.get()` method
+        processes the entire input at once even if it is a list, rather than 
+        distributing calls for each item of the list.
 
     Methods
     -------
-    `get(image: Any, value: float, **kwargs: Any) -> float or array`
-        Returns the stored value, ignoring the input image.
+    `get(input, value, **kwargs) -> Any`
+        Returns the stored value, ignoring the input.
 
     Examples
     --------
     >>> import deeptrack as dt
 
     Initialize a constant value and retrieve it:
+
     >>> value = dt.Value(42)
     >>> value()
     42
 
     Override the value at call time:
+
     >>> value(value=100)
     100
 
     Initialize a constant array value and retrieve it:
+
     >>> import numpy as np
     >>>
     >>> arr_value = dt.Value(np.arange(4))
@@ -4471,10 +4471,12 @@ class Value(Feature):
     array([0, 1, 2, 3])
 
     Override the array value at call time:
+
     >>> arr_value(value=np.array([10, 20, 30, 40]))
     array([10, 20, 30, 40])
 
     Initialize a constant PyTorch tensor value and retrieve it:
+
     >>> import torch
     >>>
     >>> tensor_value = dt.Value(torch.tensor([1., 2., 3.]))
@@ -4482,77 +4484,60 @@ class Value(Feature):
     tensor([1., 2., 3.])
 
     Override the tensor value at call time:
+
     >>> tensor_value(value=torch.tensor([10., 20., 30.]))
     tensor([10., 20., 30.])
 
     """
 
-    __distributed__: bool = False  # Process as a single batch.
+    __distributed__: bool = False  # Process as a single batch
 
     def __init__(
         self: Value,
-        value: PropertyLike[float | ArrayLike] = 0,
+        value: PropertyLike[Any],
         **kwargs: Any,
     ):
-        """Initialize the `Value` feature to store a constant value.
+        """Initialize the feature to store a constant value.
 
-        This feature holds a constant numerical value and provides it to the 
-        pipeline as needed.
-        
-        If an `Image` object is supplied, a warning is issued to encourage
-        converting it to a NumPy array or a PyTorch tensor for performance
-        optimization.
+        `Value` holds a constant value and returns it as needed.
 
         Parameters
         ----------
-        value: PropertyLike[float or array], optional
-            The initial value to store. If an `Image` is provided, a warning is
-            raised. It defaults to 0.
+        value: Any, optional
+            The initial value to store. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments passed to the `Feature` constructor, 
             such as custom properties or the feature name.
 
         """
 
-        if isinstance(value, Image):
-            import warnings
-
-            warnings.warn(
-                "Passing an Image object as the value to dt.Value may lead to "
-                "performance deterioration. Consider converting the Image to "
-                "a NumPy array with np.array(image), or to a PyTorch tensor "
-                "with torch.tensor(np.array(image)).",
-                DeprecationWarning,
-            )
-
         super().__init__(value=value, **kwargs)
 
     def get(
         self: Value,
-        image: Any,
-        value: float | ArrayLike[Any],
+        input: Any,
+        value: Any,
         **kwargs: Any,
-    ) -> float | ArrayLike[Any]:
-        """Return the stored value, ignoring the input image.
+    ) -> Any:
+        """Return the stored value, ignoring the input.
 
-        The `get` method simply returns the stored numerical value, allowing 
+        The `.get()` method simply returns the stored numerical value, allowing 
         for dynamic overrides when the feature is called.
 
         Parameters
         ----------
-        image: Any
-            Input data typically processed by features. For `Value`, this is 
-            ignored and does not affect the output.
-        value: float or array
+        input: Any
+            `Value` ignores its input data.
+        value: Any
             The current value to return. This may be the initial value or an 
             overridden value supplied during the method call.
         **kwargs: Any
             Additional keyword arguments, which are ignored but included for 
-            consistency with the feature interface.
+            consistency with the `Feature` interface.
 
         Returns
         -------
-        float or array
+        Any
             The stored or overridden `value`, returned unchanged.
 
         """
