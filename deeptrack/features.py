@@ -152,6 +152,7 @@ Process an input image:
 
 """
 
+
 from __future__ import annotations
 
 import itertools
@@ -178,6 +179,7 @@ from deeptrack.types import ArrayLike, PropertyLike
 
 if TORCH_AVAILABLE:
     import torch
+
 
 __all__ = [
     "Feature",
@@ -4332,7 +4334,7 @@ class Chain(StructuralFeature):
         return image
 
 
-Branch = Chain  # Alias for backwards compatibility.
+Branch = Chain  # Alias for backwards compatibility
 
 
 class DummyFeature(Feature):
@@ -4349,48 +4351,51 @@ class DummyFeature(Feature):
     Parameters
     ----------
     _input: Any, optional
-        An optional input (typically an image or list of images) that can be
-        set for the feature. It defaults to an empty list [].
+        Optional input for the feature. Defaults to an empty list [].
     **kwargs: Any
         Additional keyword arguments are wrapped as `Property` instances and 
         stored in `self.properties`.
 
     Methods
     -------
-    `get(image: Any, **kwargs: Any) -> Any`
-        It simply returns the input image(s) unchanged.
+    `get(input, **kwargs) -> Any`
+        It simply returns the input(s) unchanged.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
-    Create an image and pass it through a `DummyFeature` to demonstrate 
-    no changes to the input data:
-    >>> dummy_image = np.ones((60, 80))
+    Pass some input through a `DummyFeature` to demonstrate no changes.
 
-    Initialize the DummyFeature:
-    >>> dummy_feature = dt.DummyFeature(value=42)
+    Create the input:
 
-    Pass the image through the DummyFeature:
-    >>> output_image = dummy_feature(dummy_image)
+    >>> dummy_input = [1, 2, 3, 4, 5]
 
-    Verify the output is identical to the input:
-    >>> np.array_equal(dummy_image, output_image)
-    True
+    Initialize the DummyFeature with two property:
 
-    Access the properties stored in DummyFeature:
-    >>> dummy_feature.properties["value"]()
+    >>> dummy_feature = dt.DummyFeature(prop1=42, prop2=3.14)
+
+    Pass the input image through the DummyFeature:
+
+    >>> dummy_output = dummy_feature(dummy_input)
+    >>> dummy_output
+    [1, 2, 3, 4, 5]
+
+    The output is identical to the input.
+
+    Access a property stored in DummyFeature:
+
+    >>> dummy_feature.properties["prop1"]()
     42
 
     """
 
     def get(
         self: DummyFeature,
-        image: Any,
+        input: Any,
         **kwargs: Any,
     ) -> Any:
-        """Return the input image or list of images unchanged.
+        """Return the input unchanged.
 
         This method simply returns the input without any transformation. 
         It adheres to the `Feature` interface by accepting additional keyword 
@@ -4398,9 +4403,8 @@ class DummyFeature(Feature):
 
         Parameters
         ----------
-        image: Any
-            The input (typically an image or list of images) to pass through
-            without modification.
+        input: Any
+            The input to pass through without modification.
         **kwargs: Any
             Additional properties sampled from `self.properties` or passed 
             externally. These are unused here but provided for consistency 
@@ -4409,12 +4413,11 @@ class DummyFeature(Feature):
         Returns
         -------
         Any
-            The same input that was passed in (typically an image or list of
-            images).
+            The input without modifications.
 
         """
 
-        return image
+        return input
 
 
 class Value(Feature):
