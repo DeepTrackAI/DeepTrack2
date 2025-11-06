@@ -1,8 +1,8 @@
 """Core data structures for DeepTrack2.
 
-This module defines the foundational data structures used throughout DeepTrack2
-for constructing, managing, and evaluating computational graphs with flexible
-data storage and dependency management.
+This module defines the data structures used throughout DeepTrack2 to
+construct, manage, and evaluate computational graphs with flexible data storage
+and dependency management.
 
 Key Features
 ------------
@@ -41,8 +41,8 @@ Classes:
 - `DeepTrackNode`: Node in a computation graph with operator overloading.
 
     Represents a node in a computation graph, capable of storing and computing
-    values based on dependencies, with full support for lazy evaluation,
-    dependency tracking, and operator overloading.
+    values based on dependencies, with support for lazy evaluation, dependency
+    tracking, and operator overloading.
 
 Functions:
 
