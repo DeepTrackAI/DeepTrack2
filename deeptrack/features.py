@@ -158,6 +158,7 @@ from __future__ import annotations
 import itertools
 import operator
 import random
+import warnings
 from typing import Any, Callable, Iterable, Literal, TYPE_CHECKING
 
 import array_api_compat as apc
@@ -1536,8 +1537,6 @@ class Feature(DeepTrackNode):
         """
 
         if global_arguments:
-            import warnings
-
             # Deprecated, but not necessary to raise hard error.
             warnings.warn(
                 "Passing information through .update is no longer supported. "
@@ -4546,13 +4545,13 @@ class Value(Feature):
 
 
 class ArithmeticOperationFeature(Feature):
-    """Apply an arithmetic operation element-wise to inputs.
+    """Apply an arithmetic operation element-wise to the inputs.
 
     This feature performs an arithmetic operation (e.g., addition, subtraction,
-    multiplication) on the input data. The inputs can be single values or lists
-    of values.
+    multiplication) on the input data. The input can be a single value or a
+    list of values.
 
-    If a list is passed, the operation is applied to each element. 
+    If a list is passed, the operation is applied to each element.
 
     If both inputs are lists of different lengths, the shorter list is cycled.
 
@@ -4561,8 +4560,8 @@ class ArithmeticOperationFeature(Feature):
     op: Callable[[Any, Any], Any]
         The arithmetic operation to apply, such as a built-in operator 
         (`operator.add`, `operator.mul`) or a custom callable.
-    value: float or int or list[float or int], optional
-        The second operand for the operation. It defaults to 0. If a list is 
+    b: Any or list[Any], optional
+        The second operand for the operation. Defaults to 0. If a list is
         provided, the operation will apply element-wise.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature`.
@@ -4570,28 +4569,33 @@ class ArithmeticOperationFeature(Feature):
     Attributes
     ----------
     __distributed__: bool
-        Indicates that this feature’s `get(...)` method processes the input as 
-        a whole (`False`) rather than distributing calls for individual items.
+        Set to `False`, indicating that this feature’s `.get()` method
+        processes the entire input at once even if it is a list, rather than 
+        distributing calls for each item of the list.
 
     Methods
     -------
-    `get(image: Any, value: float or int or list[float or int], **kwargs: Any) -> list[Any]`
+    `get(a, b, **kwargs) -> list[Any]`
         Apply the arithmetic operation element-wise to the input data.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import operator
 
     Define a simple addition operation:
-    >>> addition = dt.ArithmeticOperationFeature(operator.add, value=10)
+
+    >>> import operator
+    >>>
+    >>> addition = dt.ArithmeticOperationFeature(operator.add, b=10)
 
     Create a list of input values:
+
     >>> input_values = [1, 2, 3, 4]
 
     Apply the operation:
+
     >>> output_values = addition(input_values)
-    >>> print(output_values)
+    >>> output_values
     [11, 12, 13, 14]
 
     """
@@ -4601,15 +4605,10 @@ class ArithmeticOperationFeature(Feature):
     def __init__(
         self: ArithmeticOperationFeature,
         op: Callable[[Any, Any], Any],
-        value: PropertyLike[
-            float
-            | int
-            | ArrayLike
-            | list[float | int | ArrayLike]
-        ] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
-        """Initialize the ArithmeticOperationFeature.
+        """Initialize the base class for arithmetic operations.
 
         Parameters
         ----------
@@ -4617,33 +4616,43 @@ class ArithmeticOperationFeature(Feature):
             The arithmetic operation to apply, such as `operator.add`,
             `operator.mul`, or any custom callable that takes two arguments and
             returns a single output value.
-        value: PropertyLike[float or int or array or list[float or int or array]], optional
-            The second operand(s) for the operation. If a list is provided, the 
-            operation is applied element-wise. It defaults to 0.
+        b: PropertyLike[Any or list[Any]], optional
+            The second operand(s) for the operation. Typically, it is a number
+            or an array. If a list is provided, the  operation is applied
+            element-wise. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature`
             constructor.
 
         """
 
-        super().__init__(value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(b=b, **kwargs)
 
         self.op = op
 
     def get(
         self: ArithmeticOperationFeature,
-        image: Any,
-        value: float | int | ArrayLike | list[float | int | ArrayLike],
+        a: Any,
+        b: Any or list[Any],
         **kwargs: Any,
     ) -> list[Any]:
         """Apply the operation element-wise to the input data.
 
         Parameters
         ----------
-        image: Any or list[Any]
+        a: Any or list[Any]
             The input data, either a single value or a list of values, to be 
             transformed by the arithmetic operation.
-        value: float or int or array or list[float or int or array]
+        b: Any or list[Any]
             The second operand(s) for the operation. If a single value is 
             provided, it is broadcast to match the input size. If a list is 
             provided, it will be cycled to match the length of the input list.
@@ -4660,18 +4669,18 @@ class ArithmeticOperationFeature(Feature):
             
         """
 
-        # If value is a scalar, wrap it in a list for uniform processing.
-        if not isinstance(value, (list, tuple)):
-            value = [value]
+        # If b is a scalar, wrap it in a list for uniform processing.
+        if not isinstance(b, (list, tuple)):
+            b = [b]
 
         # Cycle the shorter list to match the length of the longer list.
-        if len(image) < len(value):
-            image = itertools.cycle(image)
-        elif len(value) < len(image):
-            value = itertools.cycle(value)
+        if len(a) < len(b):
+            a = itertools.cycle(a)
+        elif len(b) < len(a):
+            b = itertools.cycle(b)
 
         # Apply the operation element-wise.
-        return [self.op(a, b) for a, b in zip(image, value)]
+        return [self.op(x, y) for x, y in zip(a, b)]
 
 
 class Add(ArithmeticOperationFeature):
@@ -4681,8 +4690,8 @@ class Add(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array or list[int or floar or array]], optional
-        The value to add to the input. It defaults to 0.
+    b: PropertyLike[Any or list[Any]], optional
+        The value to add to the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
@@ -4691,23 +4700,27 @@ class Add(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Create a pipeline using `Add`:
-    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Add(value=5)
+
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Add(b=5)
     >>> pipeline.resolve()
     [6, 7, 8]
     
     Alternatively, the pipeline can be created using operator overloading:
+
     >>> pipeline = dt.Value([1, 2, 3]) + 5
     >>> pipeline.resolve()
     [6, 7, 8]    
     
     Or:
+
     >>> pipeline = 5 + dt.Value([1, 2, 3])
     >>> pipeline.resolve()
     [6, 7, 8]
     
     Or, more explicitly:
+
     >>> input_value = dt.Value([1, 2, 3])
-    >>> sum_feature = dt.Add(value=5)
+    >>> sum_feature = dt.Add(b=5)
     >>> pipeline = sum_feature(input_value)
     >>> pipeline.resolve()
     [6, 7, 8]
@@ -4716,26 +4729,30 @@ class Add(ArithmeticOperationFeature):
 
     def __init__(
         self: Add,
-        value: PropertyLike[
-            float
-            | int
-            | ArrayLike[Any]
-            | list[float | int | ArrayLike[Any]]
-        ] = 0,
+        b: PropertyLike[Any or list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the Add feature.
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array or list[float or int or array]], optional
-            The value to add to the input. It defaults to 0.
+        value: PropertyLike[Any or list[Any]], optional
+            The value to add to the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature`.
 
         """
 
-        super().__init__(operator.add, value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(operator.add, b=b, **kwargs)
 
 
 class Subtract(ArithmeticOperationFeature):
@@ -4780,7 +4797,7 @@ class Subtract(ArithmeticOperationFeature):
 
     def __init__(
         self: Subtract,
-        value: PropertyLike[
+        b: PropertyLike[
             float
             | int
             | ArrayLike[Any]
@@ -4799,7 +4816,25 @@ class Subtract(ArithmeticOperationFeature):
        
         """
 
-        super().__init__(operator.sub, value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(operator.sub, b=b, **kwargs)
 
 
 class Multiply(ArithmeticOperationFeature):
@@ -4844,7 +4879,7 @@ class Multiply(ArithmeticOperationFeature):
 
     def __init__(
         self: Multiply,
-        value: PropertyLike[
+        b: PropertyLike[
             float
             | int
             | ArrayLike[Any]
@@ -4863,7 +4898,16 @@ class Multiply(ArithmeticOperationFeature):
 
         """
 
-        super().__init__(operator.mul, value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(operator.mul, b=b, **kwargs)
 
 
 class Divide(ArithmeticOperationFeature):
@@ -4908,7 +4952,7 @@ class Divide(ArithmeticOperationFeature):
 
     def __init__(
         self: Divide,
-        value: PropertyLike[
+        b: PropertyLike[
             float
             | int
             | ArrayLike[Any]
@@ -4927,7 +4971,16 @@ class Divide(ArithmeticOperationFeature):
 
         """
 
-        super().__init__(operator.truediv, value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(operator.truediv, b=b, **kwargs)
 
 
 class FloorDivide(ArithmeticOperationFeature):
@@ -4976,7 +5029,7 @@ class FloorDivide(ArithmeticOperationFeature):
 
     def __init__(
         self: FloorDivide,
-        value: PropertyLike[
+        b: PropertyLike[
             float
             | int
             | ArrayLike[Any]
@@ -4995,7 +5048,16 @@ class FloorDivide(ArithmeticOperationFeature):
 
         """
 
-        super().__init__(operator.floordiv, value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(operator.floordiv, b=b, **kwargs)
 
 
 class Power(ArithmeticOperationFeature):
@@ -5040,7 +5102,7 @@ class Power(ArithmeticOperationFeature):
 
     def __init__(
         self: Power,
-        value: PropertyLike[
+        b: PropertyLike[
             float
             | int
             | ArrayLike[Any]
@@ -5059,7 +5121,16 @@ class Power(ArithmeticOperationFeature):
 
         """
 
-        super().__init__(operator.pow, value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(operator.pow, b=b, **kwargs)
 
 
 class LessThan(ArithmeticOperationFeature):
@@ -5104,7 +5175,7 @@ class LessThan(ArithmeticOperationFeature):
 
     def __init__(
         self: LessThan,
-        value: PropertyLike[
+        b: PropertyLike[
             float
             | int
             | ArrayLike[Any]
@@ -5123,7 +5194,16 @@ class LessThan(ArithmeticOperationFeature):
 
         """
 
-        super().__init__(operator.lt, value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(operator.lt, b=b, **kwargs)
 
 
 class LessThanOrEquals(ArithmeticOperationFeature):
@@ -5168,7 +5248,7 @@ class LessThanOrEquals(ArithmeticOperationFeature):
 
     def __init__(
         self: LessThanOrEquals,
-        value: PropertyLike[
+        b: PropertyLike[
             float
             | int
             | ArrayLike[Any]
@@ -5187,7 +5267,16 @@ class LessThanOrEquals(ArithmeticOperationFeature):
 
         """
 
-        super().__init__(operator.le, value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(operator.le, b=b, **kwargs)
 
 
 LessThanOrEqual = LessThanOrEquals
@@ -5235,7 +5324,7 @@ class GreaterThan(ArithmeticOperationFeature):
 
     def __init__(
         self: GreaterThan,
-        value: PropertyLike[
+        b: PropertyLike[
             float
             | int
             | ArrayLike[Any]
@@ -5254,7 +5343,16 @@ class GreaterThan(ArithmeticOperationFeature):
 
         """
 
-        super().__init__(operator.gt, value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(operator.gt, b=b, **kwargs)
 
 
 class GreaterThanOrEquals(ArithmeticOperationFeature):
@@ -5299,7 +5397,7 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
 
     def __init__(
         self: GreaterThanOrEquals,
-        value: PropertyLike[
+        b: PropertyLike[
             float
             | int
             | ArrayLike[Any]
@@ -5318,7 +5416,16 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
 
         """
 
-        super().__init__(operator.ge, value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(operator.ge, b=b, **kwargs)
 
 
 GreaterThanOrEqual = GreaterThanOrEquals
@@ -5383,7 +5490,7 @@ class Equals(ArithmeticOperationFeature):
 
     def __init__(
         self: Equals,
-        value: PropertyLike[
+        b: PropertyLike[
             float
             | int
             | ArrayLike[Any]
@@ -5402,7 +5509,16 @@ class Equals(ArithmeticOperationFeature):
 
         """
 
-        super().__init__(operator.eq, value=value, **kwargs)
+        # Backward compatibility with deprecated 'value' parameter
+        if "value" in kwargs:
+            b = kwargs.pop("value")
+            warnings.warn(
+                "The 'value' parameter is deprecated and will be removed"
+                "in a future version. Use 'b' instead.",
+                DeprecationWarning,
+            )
+
+        super().__init__(operator.eq, b=b, **kwargs)
 
 
 Equal = Equals
@@ -6312,8 +6428,6 @@ class BindUpdate(StructuralFeature):  # DEPRECATED
 
         """
 
-        import warnings
-
         warnings.warn(
             "BindUpdate is deprecated and may be removed in a future release. "
             "The current implementation is not guaranteed to be exactly "
@@ -6460,8 +6574,6 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
             `True`.
 
         """
-
-        import warnings
 
         warnings.warn(
             "ConditionalSetFeature is deprecated and may be removed in a "
@@ -6635,8 +6747,6 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
             Additional keyword arguments for the parent `StructuralFeature`.
 
         """
-
-        import warnings
 
         warnings.warn(
             "ConditionalSetFeature is deprecated and may be removed in a "
@@ -7498,8 +7608,6 @@ class LoadImage(Feature):
 
                 image = skimage.color.rgb2gray(image)
             except ValueError:
-                import warnings
-
                 warnings.warn(
                     "Non-rgb image, ignoring to_grayscale",
                     UserWarning,
@@ -8007,8 +8115,6 @@ class ChannelFirst2d(Feature):  # DEPRECATED
 
         """
 
-        import warnings
-
         warnings.warn(
             "ChannelFirst2d is deprecated and may be removed in a "
             "future release. The current implementation is not guaranteed "
@@ -8081,6 +8187,7 @@ class ChannelFirst2d(Feature):  # DEPRECATED
             return Image(array)
 
         return array
+
 
 class Upscale(Feature):
     """Simulate a pipeline at a higher resolution.
@@ -8490,8 +8597,6 @@ class NonOverlapping(Feature):
 
             # Generate a new list of volumes if max_attempts is exceeded.
             self.feature.update()
-
-        import warnings
 
         warnings.warn(
             "Non-overlapping placement could not be achieved. Consider "
