@@ -419,7 +419,7 @@ class TestFeatures(unittest.TestCase):
     def test_Feature_repeat_random(self):
 
         feature = features.Value(value=0) >> (
-            features.Add(value=lambda: np.random.randint(100)) ^ 100
+            features.Add(b=lambda: np.random.randint(100)) ^ 100
         )
         feature.store_properties()  # Return an Image containing properties.
         feature.update()
@@ -549,7 +549,7 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_backend_switching(self):
-        f = features.Add(value=5)
+        f = features.Add(b=5)
 
         f.numpy()
         self.assertEqual(f.get_backend(), "numpy")
@@ -694,7 +694,7 @@ class TestFeatures(unittest.TestCase):
     def test_ArithmeticOperationFeature(self):
         # Basic addition with lists
         addition_feature = \
-            features.ArithmeticOperationFeature(operator.add, value=10)
+            features.ArithmeticOperationFeature(operator.add, b=10)
         input_values = [1, 2, 3, 4]
         expected_output = [11, 12, 13, 14]
         output = addition_feature(input_values)
@@ -711,14 +711,14 @@ class TestFeatures(unittest.TestCase):
 
         # List input, list value (same length)
         addition_feature = features.ArithmeticOperationFeature(
-            operator.add, value=[1, 2, 3],
+            operator.add, b=[1, 2, 3],
         )
         input_values = [10, 20, 30]
         self.assertEqual(addition_feature(input_values), [11, 22, 33])
 
         # List input, list value (different lengths, value list cycles)
         addition_feature = features.ArithmeticOperationFeature(
-            operator.add, value=[1, 2],
+            operator.add, b=[1, 2],
         )
         input_values = [10, 20, 30, 40, 50]
         # value cycles as 1,2,1,2,1
@@ -726,14 +726,14 @@ class TestFeatures(unittest.TestCase):
 
         # NumPy array input, scalar value
         addition_feature = features.ArithmeticOperationFeature(
-            operator.add, value=5,
+            operator.add, b=5,
         )
         arr = np.array([1, 2, 3])
         self.assertEqual(addition_feature(arr.tolist()), [6, 7, 8])
 
         # NumPy array input, NumPy array value
         addition_feature = features.ArithmeticOperationFeature(
-            operator.add, value=[4, 5, 6],
+            operator.add, b=[4, 5, 6],
         )
         arr_input = [
             np.array([1, 2]), np.array([3, 4]), np.array([5, 6]),
@@ -742,7 +742,7 @@ class TestFeatures(unittest.TestCase):
             np.array([10, 20]), np.array([30, 40]), np.array([50, 60]),
         ]
         feature = features.ArithmeticOperationFeature(
-            lambda a, b: np.add(a, b), value=arr_value,
+            lambda a, b: np.add(a, b), b=arr_value,
         )
         for output, expected in zip(
             feature(arr_input),
@@ -753,7 +753,7 @@ class TestFeatures(unittest.TestCase):
         # PyTorch tensor input (if available)
         if TORCH_AVAILABLE:
             addition_feature = features.ArithmeticOperationFeature(
-                lambda a, b: a + b, value=5,
+                lambda a, b: a + b, b=5,
             )
             tensors = [torch.tensor(1), torch.tensor(2), torch.tensor(3)]
             expected = [torch.tensor(6), torch.tensor(7), torch.tensor(8)]
@@ -765,7 +765,7 @@ class TestFeatures(unittest.TestCase):
             t_input = [torch.tensor([1.0, 2.0]), torch.tensor([3.0, 4.0])]
             t_value = [torch.tensor([10.0, 20.0]), torch.tensor([30.0, 40.0])]
             feature = features.ArithmeticOperationFeature(
-                lambda a, b: a + b, value=t_value,
+                lambda a, b: a + b, b=t_value,
             )
             for output, expected in zip(
                 feature(t_input),
@@ -827,7 +827,7 @@ class TestFeatures(unittest.TestCase):
         - Always use `>>` to apply `Equals` correctly in a feature chain.
         """
 
-        equals_feature = features.Equals(value=2)
+        equals_feature = features.Equals(b=2)
         input_values = np.array([1, 2, 3])
         output_values = equals_feature(input_values)
         self.assertTrue(np.array_equal(output_values, [False, True, False]))
@@ -1084,7 +1084,7 @@ class TestFeatures(unittest.TestCase):
         # Create a simple pipeline: Value(100) + x + 1
         pipeline = (
             features.Value(100)
-            >> features.Add(value=arguments.x)
+            >> features.Add(b=arguments.x)
             >> features.Add(1)
         )
 
@@ -1108,7 +1108,7 @@ class TestFeatures(unittest.TestCase):
         np.random.seed(42)
 
         input_image = np.ones((5, 5))
-        add_feature = features.Add(value=2)
+        add_feature = features.Add(b=2)
 
         # Helper: Check if feature was applied
         def is_transformed(output):
@@ -1167,7 +1167,7 @@ class TestFeatures(unittest.TestCase):
 
     def test_Repeat(self):
         # Define a simple feature and pipeline
-        add_ten = features.Add(value=10)
+        add_ten = features.Add(b=10)
         pipeline = features.Repeat(add_ten, N=3)
 
         input_data = [1, 2, 3]
@@ -1178,7 +1178,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(output_data, expected_output)
 
         # Test shorthand syntax (^) produces same result
-        pipeline_shorthand = features.Add(value=10) ^ 3
+        pipeline_shorthand = features.Add(b=10) ^ 3
         output_data_shorthand = pipeline_shorthand.resolve(input_data)
         self.assertEqual(output_data_shorthand, expected_output)
 
@@ -1190,7 +1190,7 @@ class TestFeatures(unittest.TestCase):
     def test_Combine(self):
 
         noise_feature = Gaussian(mu=0, sigma=2)
-        add_feature = features.Add(value=10)
+        add_feature = features.Add(b=10)
         combined_feature = features.Combine([noise_feature, add_feature])
 
         input_image = np.ones((10, 10))
@@ -1609,8 +1609,8 @@ class TestFeatures(unittest.TestCase):
 
     def test_OneOf(self):
         # Set up the features and input image for testing.
-        feature_1 = features.Add(value=10)
-        feature_2 = features.Multiply(value=2)
+        feature_1 = features.Add(b=10)
+        feature_2 = features.Multiply(b=2)
         input_image = np.array([1, 2, 3])
 
         # Test that OneOf applies one of the features randomly.
@@ -1764,8 +1764,8 @@ class TestFeatures(unittest.TestCase):
 
     def test_OneOfDict(self):
         features_dict = {
-            "add": features.Add(value=10),
-            "multiply": features.Multiply(value=2),
+            "add": features.Add(b=10),
+            "multiply": features.Multiply(b=2),
         }
         one_of_dict_feature = features.OneOfDict(features_dict)
 
