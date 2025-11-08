@@ -4641,15 +4641,15 @@ class ArithmeticOperationFeature(Feature):
 
     def get(
         self: ArithmeticOperationFeature,
-        a: Any,
-        b: Any or list[Any],
+        a: list[Any],
+        b: Any | list[Any],
         **kwargs: Any,
     ) -> list[Any]:
         """Apply the operation element-wise to the input data.
 
         Parameters
         ----------
-        a: Any or list[Any]
+        a: list[Any]
             The input data, either a single value or a list of values, to be 
             transformed by the arithmetic operation.
         b: Any or list[Any]
@@ -4668,6 +4668,8 @@ class ArithmeticOperationFeature(Feature):
             input data element-wise.
             
         """
+
+        # Note that a is ensured to be a list by the parent class.
 
         # If b is a scalar, wrap it in a list for uniform processing.
         if not isinstance(b, (list, tuple)):
@@ -4729,28 +4731,22 @@ class Add(ArithmeticOperationFeature):
 
     def __init__(
         self: Add,
-        b: PropertyLike[Any or list[Any]] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the Add feature.
 
         Parameters
         ----------
-        value: PropertyLike[Any or list[Any]], optional
+        b: PropertyLike[Any or list[Any]], optional
             The value to add to the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature`.
 
         """
 
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
+        # Backward compatibility with deprecated 'value' parameter taken care
+        # of in ArithmeticOperationFeature
 
         super().__init__(operator.add, b=b, **kwargs)
 
@@ -4762,8 +4758,8 @@ class Subtract(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    value: PropertyLike[int or float or array or list[int or floar or array]], optional
-        The value to subtract from the input. It defaults to 0.
+    b: PropertyLike[Any or list[Any]], optional
+        The value to subtract from the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
@@ -4772,23 +4768,27 @@ class Subtract(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Create a pipeline using `Subtract`:
-    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Subtract(value=2)
+
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Subtract(b=2)
     >>> pipeline.resolve()
     [-1, 0, 1]
     
     Alternatively, the pipeline can be created using operator overloading:
+
     >>> pipeline = dt.Value([1, 2, 3]) - 2
     >>> pipeline.resolve()
     [-1, 0, 1]
     
     Or:
+
     >>> pipeline = -2 + dt.Value([1, 2, 3])
     >>> pipeline.resolve()
     [-1, 0, 1]
     
     Or, more explicitly:
+
     >>> input_value = dt.Value([1, 2, 3])
-    >>> sub_feature = dt.Subtract(value=2)
+    >>> sub_feature = dt.Subtract(b=2)
     >>> pipeline = sub_feature(input_value)
     >>> pipeline.resolve()
     [-1, 0, 1]
@@ -4797,42 +4797,22 @@ class Subtract(ArithmeticOperationFeature):
 
     def __init__(
         self: Subtract,
-        b: PropertyLike[
-            float
-            | int
-            | ArrayLike[Any]
-            | list[float | int | ArrayLike[Any]]
-        ] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the Subtract feature.
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array or list[float or int or array]], optional
-            The value to subtract from the input. it defaults to 0.
+        b: PropertyLike[Any or list[Any]], optional
+            The value to subtract from the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature`.
        
         """
 
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
-
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
+        # Backward compatibility with deprecated 'value' parameter taken care
+        # of in ArithmeticOperationFeature
 
         super().__init__(operator.sub, b=b, **kwargs)
 
@@ -4844,8 +4824,8 @@ class Multiply(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    value: PropertyLike[int or float or array or list[int or floar or array]], optional
-        The value to multiply the input. It defaults to 0.
+    b: PropertyLike[Any or list[Any]], optional
+        The value to multiply the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
@@ -4854,23 +4834,27 @@ class Multiply(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Start by creating a pipeline using `Multiply`:
-    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Multiply(value=5)
+
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Multiply(b=5)
     >>> pipeline.resolve()
     [5, 10, 15]
     
     Alternatively, this pipeline can be created using:
+
     >>> pipeline = dt.Value([1, 2, 3]) * 5
     >>> pipeline.resolve()
     [5, 10, 15]
 
     Or:
+
     >>> pipeline = 5 * dt.Value([1, 2, 3])
     >>> pipeline.resolve()
     [5, 10, 15]
     
     Or, more explicitly:
+
     >>> input_value = dt.Value([1, 2, 3])
-    >>> mul_feature = dt.Multiply(value=5)
+    >>> mul_feature = dt.Multiply(b=5)
     >>> pipeline = mul_feature(input_value)
     >>> pipeline.resolve()
     [5, 10, 15]
@@ -4879,33 +4863,22 @@ class Multiply(ArithmeticOperationFeature):
 
     def __init__(
         self: Multiply,
-        b: PropertyLike[
-            float
-            | int
-            | ArrayLike[Any]
-            | list[float | int | ArrayLike[Any]]
-        ] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the Multiply feature.
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array or list[float or int or array]], optional
-            The value to multiply the input. It defaults to 0.
+        b: PropertyLike[Any or list[Any]], optional
+            The value to multiply the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
 
         """
 
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
+        # Backward compatibility with deprecated 'value' parameter taken care
+        # of in ArithmeticOperationFeature
 
         super().__init__(operator.mul, b=b, **kwargs)
 
@@ -4917,8 +4890,8 @@ class Divide(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    value: PropertyLike[int or float or array or list[int or floar or array]], optional
-        The value to divide the input. It defaults to 0.
+    b: PropertyLike[Any or list[Any]], optional
+        The value to divide the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
@@ -4927,23 +4900,27 @@ class Divide(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Start by creating a pipeline using `Divide`:
-    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Divide(value=5)
+
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Divide(b=5)
     >>> pipeline.resolve()
     [0.2 0.4 0.6]
     
     Equivalently, this pipeline can be created using:
+
     >>> pipeline = dt.Value([1, 2, 3]) / 5
     >>> pipeline.resolve()
     [0.2 0.4 0.6]
     
     Which is not equivalent to:
+
     >>> pipeline = 5 / dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [5.0, 2.5, 1.6666666666666667]
     
     Or, more explicitly:
+
     >>> input_value = dt.Value([1, 2, 3])
-    >>> truediv_feature = dt.Divide(value=5)
+    >>> truediv_feature = dt.Divide(b=5)
     >>> pipeline = truediv_feature(input_value)
     >>> pipeline.resolve()
     [0.2 0.4 0.6]
@@ -4952,33 +4929,22 @@ class Divide(ArithmeticOperationFeature):
 
     def __init__(
         self: Divide,
-        b: PropertyLike[
-            float
-            | int
-            | ArrayLike[Any]
-            | list[float | int | ArrayLike[Any]]
-        ] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the Divide feature.
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array or list[float or int or array]], optional
-            The value to divide the input. It defaults to 0.
+        b: PropertyLike[Any or list[Any]], optional
+            The value to divide the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
 
         """
 
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
+        # Backward compatibility with deprecated 'value' parameter taken care
+        # of in ArithmeticOperationFeature
 
         super().__init__(operator.truediv, b=b, **kwargs)
 
@@ -5048,14 +5014,8 @@ class FloorDivide(ArithmeticOperationFeature):
 
         """
 
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
+        # Backward compatibility with deprecated 'value' parameter taken care
+        # of in ArithmeticOperationFeature
 
         super().__init__(operator.floordiv, b=b, **kwargs)
 
@@ -5121,14 +5081,8 @@ class Power(ArithmeticOperationFeature):
 
         """
 
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
+        # Backward compatibility with deprecated 'value' parameter taken care
+        # of in ArithmeticOperationFeature
 
         super().__init__(operator.pow, b=b, **kwargs)
 
@@ -5194,14 +5148,8 @@ class LessThan(ArithmeticOperationFeature):
 
         """
 
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
+        # Backward compatibility with deprecated 'value' parameter taken care
+        # of in ArithmeticOperationFeature
 
         super().__init__(operator.lt, b=b, **kwargs)
 
@@ -5267,14 +5215,8 @@ class LessThanOrEquals(ArithmeticOperationFeature):
 
         """
 
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
+        # Backward compatibility with deprecated 'value' parameter taken care
+        # of in ArithmeticOperationFeature
 
         super().__init__(operator.le, b=b, **kwargs)
 
@@ -5343,14 +5285,8 @@ class GreaterThan(ArithmeticOperationFeature):
 
         """
 
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
+        # Backward compatibility with deprecated 'value' parameter taken care
+        # of in ArithmeticOperationFeature
 
         super().__init__(operator.gt, b=b, **kwargs)
 
@@ -5416,14 +5352,8 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
 
         """
 
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
+        # Backward compatibility with deprecated 'value' parameter taken care
+        # of in ArithmeticOperationFeature
 
         super().__init__(operator.ge, b=b, **kwargs)
 
@@ -5509,14 +5439,8 @@ class Equals(ArithmeticOperationFeature):
 
         """
 
-        # Backward compatibility with deprecated 'value' parameter
-        if "value" in kwargs:
-            b = kwargs.pop("value")
-            warnings.warn(
-                "The 'value' parameter is deprecated and will be removed"
-                "in a future version. Use 'b' instead.",
-                DeprecationWarning,
-            )
+        # Backward compatibility with deprecated 'value' parameter taken care
+        # of in ArithmeticOperationFeature
 
         super().__init__(operator.eq, b=b, **kwargs)
 
