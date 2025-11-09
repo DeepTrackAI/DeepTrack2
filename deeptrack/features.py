@@ -4960,8 +4960,8 @@ class FloorDivide(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    value: PropertyLike[int or float or array or list[int or floar or array]], optional
-        The value to floor-divide the input. It defaults to 0.
+    b: PropertyLike[Any or list[Any]], optional
+        The value to floor-divide the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
@@ -4970,23 +4970,27 @@ class FloorDivide(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Start by creating a pipeline using `FloorDivide`:
-    >>> pipeline = dt.Value([-3, 3, 6]) >> dt.FloorDivide(value=5)
+
+    >>> pipeline = dt.Value([-3, 3, 6]) >> dt.FloorDivide(b=5)
     >>> pipeline.resolve()
     [-1, 0, 1]
     
     Equivalently, this pipeline can be created using:
+
     >>> pipeline = dt.Value([-3, 3, 6]) // 5
     >>> pipeline.resolve()
     [-1, 0, 1]
     
     Which is not equivalent to:
+
     >>> pipeline = 5 // dt.Value([-3, 3, 6])  # Different result
     >>> pipeline.resolve()
     [-2, 1, 0]
     
     Or, more explicitly:
+
     >>> input_value = dt.Value([-3, 3, 6])
-    >>> floordiv_feature = dt.FloorDivide(value=5)
+    >>> floordiv_feature = dt.FloorDivide(b=5)
     >>> pipeline = floordiv_feature(input_value)
     >>> pipeline.resolve()
     [-1, 0, 1]
@@ -4995,20 +4999,15 @@ class FloorDivide(ArithmeticOperationFeature):
 
     def __init__(
         self: FloorDivide,
-        b: PropertyLike[
-            float
-            | int
-            | ArrayLike[Any]
-            | list[float | int | ArrayLike[Any]]
-        ] = 0,
+        b: PropertyLike[Any |list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the FloorDivide feature.
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array or list[float or int or array]], optional
-            The value to fllor-divide the input. It defaults to 0.
+        b: PropertyLike[any or list[Any]], optional
+            The value to fllor-divide the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -5027,8 +5026,8 @@ class Power(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array or list[int or floar or array]], optional
-        The value to take the power of the input. It defaults to 0.
+    b: PropertyLike[Any or list[Any]], optional
+        The value to take the power of the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
@@ -5037,23 +5036,27 @@ class Power(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Start by creating a pipeline using `Power`:
-    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Power(value=3)
+
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Power(b=3)
     >>> pipeline.resolve()
     [1, 8, 27]
     
     Equivalently, this pipeline can be created using:
+
     >>> pipeline = dt.Value([1, 2, 3]) ** 3
     >>> pipeline.resolve()
     [1, 8, 27]
     
     Which is not equivalent to:
+
     >>> pipeline = 3 ** dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [3, 9, 27]
     
     Or, more explicitly:
+
     >>> input_value = dt.Value([1, 2, 3])
-    >>> pow_feature = dt.Power(value=3)
+    >>> pow_feature = dt.Power(b=3)
     >>> pipeline = pow_feature(input_value)
     >>> pipeline.resolve()
     [1, 8, 27]
@@ -5062,20 +5065,15 @@ class Power(ArithmeticOperationFeature):
 
     def __init__(
         self: Power,
-        b: PropertyLike[
-            float
-            | int
-            | ArrayLike[Any]
-            | list[float | int | ArrayLike[Any]]
-        ] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the Power feature.
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array or list[float or int or array]], optional
-            The value to take the power of the input. It defaults to 0.
+        b: PropertyLike[Any or list[Any]], optional
+            The value to take the power of the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -5094,8 +5092,8 @@ class LessThan(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array or list[int or floar or array]], optional
-        The value to compare (<) with the input. It defaults to 0.
+    b: PropertyLike[Any or list[Any]], optional
+        The value to compare (<) with the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
@@ -5104,23 +5102,27 @@ class LessThan(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Start by creating a pipeline using `LessThan`:
-    >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThan(value=2)
+
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThan(b=2)
     >>> pipeline.resolve()
     [True, False, False]
     
     Equivalently, this pipeline can be created using:
+
     >>> pipeline = dt.Value([1, 2, 3]) < 2
     >>> pipeline.resolve()
     [True, False, False]
     
     Which is not equivalent to:
+
     >>> pipeline = 2 < dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [False, False, True]
     
     Or, more explicitly:
+
     >>> input_value = dt.Value([1, 2, 3])
-    >>> lt_feature = dt.LessThan(value=2)
+    >>> lt_feature = dt.LessThan(b=2)
     >>> pipeline = lt_feature(input_value)
     >>> pipeline.resolve()
     [True, False, False]
@@ -5129,20 +5131,15 @@ class LessThan(ArithmeticOperationFeature):
 
     def __init__(
         self: LessThan,
-        b: PropertyLike[
-            float
-            | int
-            | ArrayLike[Any]
-            | list[float | int | ArrayLike[Any]]
-        ] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the LessThan feature.
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array or list[float or int or array]], optional
-            The value to compare (<) with the input. It defaults to 0.
+        b: PropertyLike[Any or list[Any]], optional
+            The value to compare (<) with the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -5161,8 +5158,8 @@ class LessThanOrEquals(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array or list[int or floar or array]], optional
-        The value to compare (<=) with the input. It defaults to 0.
+    b: PropertyLike[Any or list[Any]], optional
+        The value to compare (<=) with the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
@@ -5171,23 +5168,27 @@ class LessThanOrEquals(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Start by creating a pipeline using `LessThanOrEquals`:
-    >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThanOrEquals(value=2)
+
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThanOrEquals(b=2)
     >>> pipeline.resolve()
     [True, True, False]
     
     Equivalently, this pipeline can be created using:
+
     >>> pipeline = dt.Value([1, 2, 3]) <= 2
     >>> pipeline.resolve()
     [True, True, False]
     
     Which is not equivalent to:
+
     >>> pipeline = 2 <= dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [False, True, True]
     
     Or, more explicitly:
+
     >>> input_value = dt.Value([1, 2, 3])
-    >>> le_feature = dt.LessThanOrEquals(value=2)
+    >>> le_feature = dt.LessThanOrEquals(b=2)
     >>> pipeline = le_feature(input_value)
     >>> pipeline.resolve()
     [True, True, False]
@@ -5196,12 +5197,7 @@ class LessThanOrEquals(ArithmeticOperationFeature):
 
     def __init__(
         self: LessThanOrEquals,
-        b: PropertyLike[
-            float
-            | int
-            | ArrayLike[Any]
-            | list[float | int | ArrayLike[Any]]
-        ] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the LessThanOrEquals feature.
@@ -5231,8 +5227,8 @@ class GreaterThan(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array or list[int or floar or array]], optional
-        The value to compare (>) with the input. It defaults to 0.
+    b: PropertyLike[Any or list[Any]], optional
+        The value to compare (>) with the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
@@ -5241,23 +5237,27 @@ class GreaterThan(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Start by creating a pipeline using `GreaterThan`:
-    >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThan(value=2)
+
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThan(b=2)
     >>> pipeline.resolve()
     [False, False, True]
     
     Equivalently, this pipeline can be created using:
+
     >>> pipeline = dt.Value([1, 2, 3]) > 2
     >>> pipeline.resolve()
     [False, False, True]
 
     Which is not equivalent to:
+
     >>> pipeline = 2 > dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [True, False, False]
     
     Or, most explicitly:
+
     >>> input_value = dt.Value([1, 2, 3])
-    >>> gt_feature = dt.GreaterThan(value=2)
+    >>> gt_feature = dt.GreaterThan(b=2)
     >>> pipeline = gt_feature(input_value)
     >>> pipeline.resolve()
     [False, False, True]
@@ -5266,20 +5266,15 @@ class GreaterThan(ArithmeticOperationFeature):
 
     def __init__(
         self: GreaterThan,
-        b: PropertyLike[
-            float
-            | int
-            | ArrayLike[Any]
-            | list[float | int | ArrayLike[Any]]
-        ] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the GreaterThan feature.
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array or list[float or int or array]], optional
-            The value to compare (>) with the input. It defaults to 0.
+        b: PropertyLike[Any or list[Any]], optional
+            The value to compare (>) with the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -5298,8 +5293,8 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array or list[int or floar or array]], optional
-        The value to compare (<=) with the input. It defaults to 0.
+    b: PropertyLike[Any or list[Any]], optional
+        The value to compare (<=) with the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
 
@@ -5308,23 +5303,27 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Start by creating a pipeline using `GreaterThanOrEquals`:
-    >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThanOrEquals(value=2)
+
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThanOrEquals(b=2)
     >>> pipeline.resolve()
     [False, True, True]
     
     Equivalently, this pipeline can be created using:
+
     >>> pipeline = dt.Value([1, 2, 3]) >= 2
     >>> pipeline.resolve()
     [False, True, True]
 
     Which is not equivalent to:
+
     >>> pipeline = 2 >= dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [True, True, False]
     
     Or, more explicitly:
+
     >>> input_value = dt.Value([1, 2, 3])
-    >>> ge_feature = dt.GreaterThanOrEquals(value=2)
+    >>> ge_feature = dt.GreaterThanOrEquals(b=2)
     >>> pipeline = ge_feature(input_value)
     >>> pipeline.resolve()
     [False, True, True]
@@ -5333,20 +5332,15 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
 
     def __init__(
         self: GreaterThanOrEquals,
-        b: PropertyLike[
-            float
-            | int
-            | ArrayLike[Any]
-            | list[float | int | ArrayLike[Any]]
-        ] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the GreaterThanOrEquals feature.
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array or list[float or int or array]], optional
-            The value to compare (>=) with the input. It defaults to 0.
+        b: PropertyLike[Any or list[Any]], optional
+            The value to compare (>=) with the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -5379,8 +5373,8 @@ class Equals(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    value: PropertyLike[int or float or array or list[int or floar or array]], optional
-        The value to compare (==) with the input. It defaults to 0.
+    b: PropertyLike[Any or list[Any]], optional
+        The value to compare (==) with the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
     
@@ -5389,30 +5383,34 @@ class Equals(ArithmeticOperationFeature):
     >>> import deeptrack as dt
 
     Start by creating a pipeline using `Equals`:
-    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Equals(value=2)
+
+    >>> pipeline = dt.Value([1, 2, 3]) >> dt.Equals(b=2)
     >>> pipeline.resolve()
     [False, True, False]
     
     Or:
+
     >>> input_values = [1, 2, 3]
     >>> eq_feature = dt.Equals(value=2)
     >>> output_values = eq_feature(input_values)
-    >>> print(output_values)
+    >>> output_values
     [False, True, False]    
     
-    These are the **only correct ways** to apply `Equals` in a pipeline.
+    These are the only correct ways to apply `Equals` in a pipeline.
     
-    The following approaches are **incorrect**:
+    The following approaches are incorrect:
     
-    Using `==` directly on a `Feature` instance **does not work** because 
-    `Feature` does not override `__eq__`:
+    Using `==` directly on a `Feature` instance does not work because `Feature`
+    does not override `__eq__`:
+
     >>> pipeline = dt.Value([1, 2, 3]) == 2  # Incorrect
-    >>> pipeline.resolve()  
+    >>> pipeline.resolve()
     AttributeError: 'bool' object has no attribute 'resolve'
 
-    Similarly, directly calling `Equals` on an input feature **immediately 
-    evaluates the comparison**, returning a boolean instead of a `Feature`:
-    >>> pipeline = dt.Equals(value=2)(dt.Value([1, 2, 3]))  # Incorrect
+    Similarly, directly calling `Equals` on an input feature immediately 
+    evaluates the comparison, returning a boolean instead of a `Feature`:
+
+    >>> pipeline = dt.Equals(b=2)(dt.Value([1, 2, 3]))  # Incorrect
     >>> pipeline.resolve()
     AttributeError: 'bool' object has no attribute 'resolve'
 
@@ -5420,20 +5418,15 @@ class Equals(ArithmeticOperationFeature):
 
     def __init__(
         self: Equals,
-        b: PropertyLike[
-            float
-            | int
-            | ArrayLike[Any]
-            | list[float | int | ArrayLike[Any]]
-        ] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the Equals feature.
 
         Parameters
         ----------
-        value: PropertyLike[float or int or array or list[float or int or array]], optional
-            The value to compare with the input. It defaults to 0.
+        b: PropertyLike[Any or list[Any]], optional
+            The value to compare with the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments.
 
