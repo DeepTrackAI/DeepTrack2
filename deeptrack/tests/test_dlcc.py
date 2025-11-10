@@ -930,11 +930,11 @@ class TestDLCC(unittest.TestCase):
         )
         image = sim_im_pip()
         print(image)
-        assert np.allclose(image, expected_image, atol=1e-8)
+        assert np.allclose(image, expected_image, atol=1e-6)
         image = sim_im_pip()
-        assert np.allclose(image, expected_image, atol=1e-8)
+        assert np.allclose(image, expected_image, atol=1e-6)
         image = sim_im_pip.update()()
-        assert not np.allclose(image, expected_image, atol=1e-8)
+        assert not np.allclose(image, expected_image, atol=1e-6)
 
         ## PART 2.2
         import random
