@@ -2449,10 +2449,11 @@ class TestFeatures(unittest.TestCase):
         # print(f"Min distance after: {min_distance_after}, should be larger \
         #     than {2*radius + min_distance} with some tolerance")
 
-        # Assert that the non-overlapping case respects min_distance (with 
+        # Assert that the non-overlapping case respects min_distance (with
         # slight rounding tolerance)
-        self.assertLess(min_distance_before, 2*radius + min_distance)  
-        self.assertGreaterEqual(min_distance_after,2*radius + min_distance - 2)  
+        self.assertLess(min_distance_before, 2 * radius + min_distance)
+        self.assertGreaterEqual(min_distance_after,
+                                2 * radius + min_distance - 2)
 
 
     def test_Store(self):
