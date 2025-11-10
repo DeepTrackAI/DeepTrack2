@@ -893,12 +893,12 @@ class TestDLCC(unittest.TestCase):
 
         ## PART 2.1
         np.random.seed(123)  # Note that this seeding is not warratied
-                            # to give reproducible results across
-                            # platforms so the subsequent test might fail
+                             # to give reproducible results across
+                             # platforms so the subsequent test might fail
 
 
         ellipse = dt.Ellipsoid(
-            radius = random_ellipse_axes,
+            radius=random_ellipse_axes,
             intensity=lambda: np.random.uniform(0.5, 1.5),
             position=lambda: np.random.uniform(2, train_image_size - 2, 
                                                size=2),
@@ -929,6 +929,7 @@ class TestDLCC(unittest.TestCase):
               [1.27309201], [1.00711876], [0.66359776]]]
         )
         image = sim_im_pip()
+        print(image)
         assert np.allclose(image, expected_image, atol=1e-8)
         image = sim_im_pip()
         assert np.allclose(image, expected_image, atol=1e-8)
@@ -943,7 +944,7 @@ class TestDLCC(unittest.TestCase):
                             # platforms so the subsequent test might fail
 
         ellipse = dt.Ellipsoid(
-            radius = random_ellipse_axes,
+            radius=random_ellipse_axes,
             intensity=lambda: np.random.uniform(0.5, 1.5),
             position=lambda: np.random.uniform(2, train_image_size - 2,
                                                size=2),
@@ -991,7 +992,7 @@ class TestDLCC(unittest.TestCase):
                             # platforms so the subsequent test might fail
 
         ellipse = dt.Ellipsoid(
-            radius = random_ellipse_axes,
+            radius=random_ellipse_axes,
             intensity=lambda: np.random.uniform(0.5, 1.5),
             position=lambda: np.random.uniform(2, train_image_size - 2,
                                                size=2),
@@ -1061,7 +1062,7 @@ class TestDLCC(unittest.TestCase):
                             # platforms so the subsequent test might fail
 
         ellipse = dt.Ellipsoid(
-            radius = random_ellipse_axes,
+            radius=random_ellipse_axes,
             intensity=lambda: np.random.uniform(0.5, 1.5),
             position=lambda: np.random.uniform(2, train_image_size - 2,
                                                size=2),
