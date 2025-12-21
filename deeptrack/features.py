@@ -15,16 +15,16 @@ Key Features
 
 - **Structural Features**
 
-    Structural features extend the basic `Feature` class by adding hierarchical
-    or logical structures, such as chains, branches, or probabilistic choices. 
-    They enable the construction of pipelines with advanced data flow 
-    requirements.
+    Structural features extend the basic `StructuralFeature` class by adding
+    hierarchical or logical structures, such as chains, branches, or
+    probabilistic choices. They enable the construction of pipelines with
+    advanced data flow requirements.
 
 - **Feature Properties**
 
-    Features in DeepTrack2 can have dynamically sampled properties, enabling 
-    parameterization of transformations. These properties are defined at 
-    initialization and can be updated during pipeline execution.
+    Features can have dynamically sampled properties, enabling parameterization
+    of transformations. These properties are defined at initialization and can
+    be updated during pipeline execution.
 
 - **Pipeline Composition**
 
@@ -43,13 +43,14 @@ Key Classes:
 
 - `Feature`: Base class for all features in DeepTrack2.
 
-    It represents a modular data transformation with properties and methods for
-    customization.
+    In general, a feature represents a modular data transformation with
+    properties and methods for customization.
 
-- `StructuralFeature`: Provide structure without input transformations.
+- `StructuralFeature`: Base class for features providing structure.
 
-    A specialized feature for organizing and managing hierarchical or logical 
-    structures in the pipeline.
+    Base class for specialized features for organizing and managing
+    hierarchical or logical structures in the pipeline without input
+    transformations.
 
 - `ArithmeticOperationFeature`: Apply arithmetic operation element-wise.
 
@@ -73,23 +74,23 @@ Other Feature Classes:
 - `Value`: Store a constant value as a feature.
 - `Stack`: Stack the input and the value.
 - `Arguments`: A convenience container for pipeline arguments.
-- `Slice`: Dynamically applies array indexing to inputs.
+- `Slice`: Dynamically apply array indexing to inputs.
 - `Lambda`: Apply a user-defined function to the input.
 - `Merge`: Apply a custom function to a list of inputs.
 - `OneOf`: Resolve one feature from a given collection.
 - `OneOfDict`: Resolve one feature from a dictionary and apply it to an input.
 - `LoadImage`: Load an image from disk and preprocess it.
 - `SampleToMasks`: Create a mask from a list of images.
-- `AsType`: Convert the data type of images.
+- `AsType`: Convert the data type of the input.
 - `ChannelFirst2d`: DEPRECATED Convert an image to a channel-first format.
 - `Upscale`: Simulate a pipeline at a higher resolution.
 - `NonOverlapping`: Ensure volumes are placed non-overlapping in a 3D space.
 - `Store`: Store the output of a feature for reuse.
-- `Squeeze`: Squeeze the input image to the smallest possible dimension.
-- `Unsqueeze`: Unsqueeze the input image to the smallest possible dimension.
+- `Squeeze`: Squeeze the input to the smallest possible dimension.
+- `Unsqueeze`: Unsqueeze the input.
 - `ExpandDims`: Alias of `Unsqueeze`.
-- `MoveAxis`: Moves the axis of the input image.
-- `Transpose`: Transpose the input image.
+- `MoveAxis`: Move the axis of the input.
+- `Transpose`: Transpose the input.
 - `Permute`: Alias of `Transpose`.
 - `OneHot`: Convert the input to a one-hot encoded array.
 - `TakeProperties`: Extract all instances of properties from a pipeline.
@@ -98,8 +99,8 @@ Arithmetic Feature Classes:
 - `Add`: Add a value to the input.
 - `Subtract`: Subtract a value from the input.
 - `Multiply`: Multiply the input by a value.
-- `Divide`: Divide the input with a value.
-- `FloorDivide`: Divide the input with a value.
+- `Divide`: Divide the input by a value.
+- `FloorDivide`: Divide the input by a value.
 - `Power`: Raise the input to a power.
 - `LessThan`: Determine if input is less than value.
 - `LessThanOrEquals`: Determine if input is less than or equal to value.
@@ -112,14 +113,9 @@ Arithmetic Feature Classes:
 
 Functions:
 
-- `propagate_data_to_dependencies`:
+- `propagate_data_to_dependencies(feature, **kwargs) -> None`
 
-    def propagate_data_to_dependencies(
-        feature: Feature,
-        **kwargs: Any
-    ) -> None
-
-    Propagates data to all dependencies of a feature, updating their properties
+    Propagate data to all dependencies of a feature, updating their properties
     with the provided values.
 
 Examples
