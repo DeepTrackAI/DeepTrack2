@@ -126,8 +126,8 @@ Define a simple pipeline with features:
 
 Create a basic addition feature:
 >>> class BasicAdd(dt.Feature):
-...     def get(self, image, value, **kwargs):
-...         return image + value
+...     def get(self, input, value, **kwargs):
+...         return input + value
 
 Create two features:
 >>> add_five = BasicAdd(value=5)
@@ -140,9 +140,9 @@ Or equivalently:
 >>> pipeline = add_five >> add_ten
 
 Process an input image:
->>> input_image = np.array([[1, 2, 3], [4, 5, 6]])
->>> output_image = pipeline(input_image)
->>> print(output_image)
+>>> input = np.array([[1, 2, 3], [4, 5, 6]])
+>>> output = pipeline(input)
+>>> print(output)
 [[16 17 18]
  [19 20 21]]
 
@@ -151,10 +151,7 @@ Process an input image:
 
 from __future__ import annotations
 
-import itertools
-import operator
-import random
-import warnings
+import itertools, operator, random, warnings
 from typing import Any, Callable, Iterable, Literal, TYPE_CHECKING
 
 import array_api_compat as apc
@@ -237,7 +234,10 @@ if TYPE_CHECKING:
     import torch
 
 
+# Return the newly generated outputs, discarding the existing list of inputs.
 MERGE_STRATEGY_OVERRIDE: int = 0
+
+# Append newly generated outputs to the existing list of inputs.
 MERGE_STRATEGY_APPEND: int = 1
 
 
