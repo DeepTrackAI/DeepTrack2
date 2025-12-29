@@ -4181,9 +4181,9 @@ def propagate_data_to_dependencies(feature: Feature, **kwargs: dict[str, Any]) -
 class StructuralFeature(Feature):
     """Provide the structure of a feature set without input transformations.
 
-    A `StructuralFeature` does not modify the input data or introduce new
-    properties. Instead, it serves as a logical and organizational tool for
-    grouping, chaining, or structuring pipelines.
+    A `StructuralFeature` serves as a logical and organizational tool for
+    grouping, chaining, or structuring pipelines. It does not modify the input
+    data or introduce new properties.
 
     This feature is typically used to:
     - group or chain sub-features (e.g., `Chain`)
@@ -4191,17 +4191,16 @@ class StructuralFeature(Feature):
     - organize pipelines without affecting data flow (e.g., `Combine`)
 
     `StructuralFeature` inherits all behavior from `Feature`, without
-    overriding `__init__` or `get`.
+    overriding the `.__init__()` or `.get()` methods.
 
     Attributes
     ----------
-    __property_verbosity__ : int
-        Controls whether this feature's properties appear in the output image's
-        property list. A value of `2` hides them from output.
-    __distributed__ : bool
-        If `True`, applies `get` to each element in a list individually.
-        If `False`, processes the entire list as a single unit. It defaults to
-        `False`.
+    __property_verbosity__: int
+        Controls whether this feature's properties appear in the output
+        property list. A value of `2` hides them from the output.
+    __distributed__: bool
+        If `True`, applies `.get()` to each element in a list individually.
+        If `False` (default), processes the entire list as a single unit.
 
     """
 
@@ -4212,29 +4211,39 @@ class StructuralFeature(Feature):
 class Chain(StructuralFeature):
     """Resolve two features sequentially.
 
-    Applies two features sequentially: the output of `feature_1` is passed as
-    input to `feature_2`. This allows combining simple operations into complex
+    Applies two features sequentially: the outputs of `feature_1` are passed as
+    inputs to `feature_2`. This allows combining simple operations into complex
     pipelines.
 
-    This is equivalent to using the `>>` operator:
+    The use of `Chain`
 
-    >>> dt.Chain(A, B) ≡ A >> B
+    >>> dt.Chain(A, B)
+
+    is equivalent to using the `>>` operator
+
+    >>> A >> B
 
     Parameters
     ----------
     feature_1: Feature
-        The first feature in the chain. Its output is passed to `feature_2`.
+        The first feature in the chain. Its outputs are passed to `feature_2`.
     feature_2: Feature
-        The second feature in the chain, which processes the output from 
-        `feature_1`.
+        The second feature in the chain proceses the outputs from `feature_1`.
     **kwargs: Any, optional
-        Additional keyword arguments passed to the parent `StructuralFeature` 
+        Additional keyword arguments passed to the parent `StructuralFeature`
         (and, therefore, `Feature`).
+
+    Attributes
+    ----------
+    feature_1: Feature
+        The first feature in the chain. Its outputs are passed to `feature_2`.
+    feature_2: Feature
+        The second feature in the chain processes the outputs from `feature_1`.
 
     Methods
     -------
-    `get(image: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
-        Apply the two features in sequence on the given input image.
+    `get(inputs, _ID, **kwargs) -> Any`
+        Apply the two features in sequence on the given inputs.
 
     Examples
     --------
@@ -4258,9 +4267,12 @@ class Chain(StructuralFeature):
     Apply the chained features:
     >>> chain(dummy_image)
     array([[5., 5., 5., 5.],
-        [5., 5., 5., 5.]])
+           [5., 5., 5., 5.]])
 
     """
+
+    feature_1: Feature
+    feature_2: Feature
 
     def __init__(
         self: Chain,
@@ -4270,17 +4282,17 @@ class Chain(StructuralFeature):
     ):
         """Initialize the chain with two sub-features.
 
-        This constructor initializes the feature chain by setting `feature_1` 
-        and `feature_2` as dependencies. Updates to these sub-features 
-        automatically propagate through the DeepTrack computation graph, 
-        ensuring consistent evaluation and execution.
+        Initializes the feature chain by setting `feature_1` and `feature_2`
+        as dependencies. Updates to these sub-features automatically propagate
+        through the DeepTrack2 computation graph, ensuring consistent
+        evaluation and execution.
 
         Parameters
         ----------
         feature_1: Feature
             The first feature to be applied.
         feature_2: Feature
-            The second feature, applied to the result of `feature_1`.
+            The second feature, applied to the outputs of `feature_1`.
         **kwargs: Any
             Additional keyword arguments passed to the parent constructor
             (e.g., name, properties).
@@ -4294,39 +4306,39 @@ class Chain(StructuralFeature):
 
     def get(
         self: Feature,
-        image: Any,
+        inputs: Any,
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
     ) -> Any:
-        """Apply the two features sequentially to the given input image(s).
+        """Apply the two features sequentially to the given inputs.
 
-        This method first applies `feature_1` to the input image(s) and then
-        passes the output through `feature_2`.
+        This method first applies `feature_1` to the inputs and then passes
+        the outputs through `feature_2`.
 
         Parameters
         ----------
-        image: Any
+        inputs: Any
             The input data to transform sequentially. Most typically, this is
-            a NumPy array, a PyTorch tensor, or an Image.
+            a NumPy array or a PyTorch tensor.
         _ID: tuple[int, ...], optional
             A unique identifier for caching or parallel execution. It defaults
             to an empty tuple.
         **kwargs: Any
             Additional parameters passed to or sampled by the features. These
-            are generally unused here, as each sub-feature fetches its required
+            are unused here, as each sub-feature fetches its required
             properties internally.
 
         Returns
         -------
         Any
-            The final output after `feature_1` and then `feature_2` have
-            processed the input.
+            The final outputs after `feature_1` and then `feature_2` have
+            processed the inputs.
 
         """
 
-        image = self.feature_1(image, _ID=_ID)
-        image = self.feature_2(image, _ID=_ID)
-        return image
+        outputs = self.feature_1(inputs, _ID=_ID)
+        outputs = self.feature_2(outputs, _ID=_ID)
+        return outputs
 
 
 Branch = Chain  # Alias for backwards compatibility

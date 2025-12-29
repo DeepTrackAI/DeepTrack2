@@ -580,18 +580,32 @@ class TestFeatures(unittest.TestCase):
         input_image = np.ones((2, 3))
 
         chain_AM = features.Chain(A, M)
-        self.assertTrue(np.array_equal(
-            chain_AM(input_image),
-            (np.ones((2, 3)) + A.properties["addend"]())
-            * M.properties["multiplier"](),
+        self.assertTrue(
+            np.array_equal(
+                chain_AM(input_image),
+                (np.ones((2, 3)) + A.properties["addend"]())
+                * M.properties["multiplier"](),
+            )
+        )
+        self.assertTrue(
+            np.array_equal(
+                chain_AM(input_image),
+                (A >> M)(input_image),
             )
         )
 
         chain_MA = features.Chain(M, A)
-        self.assertTrue(np.array_equal(
-            chain_MA(input_image),
-            (np.ones((2, 3)) * M.properties["multiplier"]()
-            + A.properties["addend"]()),
+        self.assertTrue(
+            np.array_equal(
+                chain_MA(input_image),
+                (np.ones((2, 3)) * M.properties["multiplier"]()
+                + A.properties["addend"]()),
+            )
+        )
+        self.assertTrue(
+            np.array_equal(
+                chain_MA(input_image),
+                (M >> A)(input_image),
             )
         )
 
