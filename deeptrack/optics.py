@@ -375,8 +375,11 @@ class Microscope(StructuralFeature):
             # All scatterers that are defined as fields.
             # Field scatterers provide a complex field directly,
             # bypassing volume merge.
+            
+
+
             field_scatterers = [
-                scatterer
+                scatterer.as_array()
                 for scatterer in list_of_scatterers
                 if isinstance(scatterer, ScatteredField)
                 # if scatterer.get_property("is_field", default=False)
@@ -387,11 +390,11 @@ class Microscope(StructuralFeature):
                 volume_scatterers,
                 **objective_properties,
             )
-            sample_volume = Image(sample_volume)
+            # sample_volume = Image(sample_volume)
 
-            # Merge all properties into the volume.
-            for scatterer in volume_scatterers + field_scatterers:
-                sample_volume.merge_properties_from(scatterer)
+            # # Merge all properties into the volume.
+            # for scatterer in volume_scatterers + field_scatterers:
+            #     sample_volume.merge_properties_from(scatterer)
 
             # Let the objective know about the limits of the volume and all the fields.
             propagate_data_to_dependencies(
@@ -403,10 +406,24 @@ class Microscope(StructuralFeature):
             imaged_sample = self._objective.resolve(sample_volume)
 
         
+        # Collect main_property from scatterers
+        main_properties = {
+            s.main_property
+            for s in list_of_scatterers
+            if hasattr(s, "main_property")
+        }
+
+        if len(main_properties) != 1:
+            raise ValueError(
+                f"Inconsistent main_property across scatterers: {main_properties}"
+            )
+
+        main_property = main_properties.pop()
+
         # Handling upscale from dt.Upscale() here to eliminate Image
         # wrapping issues.
         if np.any(np.array(upscale) != 1):
-            imaged_sample = _downscale_scatterer(imaged_sample, upscale[:2], scatterer.main_property)
+            imaged_sample = _downscale_scatterer(imaged_sample, upscale[:2], main_property)
             
         #TODO: TBE
         """
@@ -1495,7 +1512,7 @@ class Brightfield(Optics):
         # output_image = output_image * np.exp(1j * -np.pi / 4)
         # output_image = output_image + 1
 
-        output_image.properties = illuminated_volume.properties
+        # output_image.properties = illuminated_volume.properties
 
         return output_image
 
@@ -2168,8 +2185,8 @@ def _create_volume(
         ] += splined_scatterer
     return volume, limits
 
-# TODO: replace the inner part of this function with AveragePooling from math when
-# implemented with torch
+# TODO: replace the inner part of this function with AveragePooling from 
+# deeptrack.math when implemented with torch
 def _downscale_scatterer(array, factor, main_property="value"):
     """Downscale scatterer array by sum or average pooling depending on property.
 
