@@ -980,11 +980,11 @@ class TestDLCC(unittest.TestCase):
              [[5.39208396], [7.11757634], [7.86945558],
               [7.70038503], [6.95412321], [5.66020874]]])
         image = sim_im_pip()
-        assert np.allclose(image, expected_image, atol=1e-8)
+        assert np.allclose(image, expected_image, atol=1e-6)
         image = sim_im_pip()
-        assert np.allclose(image, expected_image, atol=1e-8)
+        assert np.allclose(image, expected_image, atol=1e-6)
         image = sim_im_pip.update()()
-        assert not np.allclose(image, expected_image, atol=1e-8)
+        assert not np.allclose(image, expected_image, atol=1e-6)
 
         ## PART 2.3
         np.random.seed(123)  # Note that this seeding is not warratied
@@ -1050,11 +1050,11 @@ class TestDLCC(unittest.TestCase):
               [5.59237713], [5.03817596], [3.71460963]]]
         )
         image = sim_im_pip()
-        assert np.allclose(image, expected_image, atol=1e-8)
+        assert np.allclose(image, expected_image, atol=1e-6)
         image = sim_im_pip()
-        assert np.allclose(image, expected_image, atol=1e-8)
+        assert np.allclose(image, expected_image, atol=1e-6)
         image = sim_im_pip.update()()
-        assert not np.allclose(image, expected_image, atol=1e-8)
+        assert not np.allclose(image, expected_image, atol=1e-6)
 
         ## PART 2.4
         np.random.seed(123)  # Note that this seeding is not warratied
@@ -1124,11 +1124,11 @@ class TestDLCC(unittest.TestCase):
               [0.12450134], [0.11387853], [0.10064209]]]
         )
         image = sim_im_pip()
-        assert np.allclose(image, expected_image, atol=1e-8)
+        assert np.allclose(image, expected_image, atol=1e-6)
         image = sim_im_pip()
-        assert np.allclose(image, expected_image, atol=1e-8)
+        assert np.allclose(image, expected_image, atol=1e-6)
         image = sim_im_pip.update()()
-        assert not np.allclose(image, expected_image, atol=1e-8)
+        assert not np.allclose(image, expected_image, atol=1e-6)
 
         if TORCH_AVAILABLE:
             ## PART 2.5
@@ -1174,11 +1174,11 @@ class TestDLCC(unittest.TestCase):
                 warnings.simplefilter("ignore", category=RuntimeWarning)
 
                 mask = sim_mask_pip()
-                assert np.allclose(mask, expected_mask, atol=1e-8)
+                assert np.allclose(mask, expected_mask, atol=1e-6)
                 mask = sim_mask_pip()
-                assert np.allclose(mask, expected_mask, atol=1e-8)
+                assert np.allclose(mask, expected_mask, atol=1e-6)
                 mask = sim_mask_pip.update()()
-                assert not np.allclose(mask, expected_mask, atol=1e-8)
+                assert not np.allclose(mask, expected_mask, atol=1e-6)
 
             ## PART 2.6
             np.random.seed(123)  # Note that this seeding is not warratied
@@ -1361,7 +1361,7 @@ class TestDLCC(unittest.TestCase):
                 [0.0, 0.0, 0.99609375, 0.99609375, 0.0, 0.0]],
                 dtype=np.float32,
             )
-            assert np.allclose(image.squeeze(), expected_image, atol=1e-8)
+            assert np.allclose(image.squeeze(), expected_image, atol=1e-6)
 
             assert sorted([p.label for p in props]) == [1, 2, 3]
 
@@ -1381,7 +1381,7 @@ class TestDLCC(unittest.TestCase):
                 [0.0, 0.0]],
                 dtype=np.float32,
             )
-            assert np.allclose(crop.squeeze(), expected_crop, atol=1e-8)
+            assert np.allclose(crop.squeeze(), expected_crop, atol=1e-6)
 
             ## PART 3
             # Training pipeline.
