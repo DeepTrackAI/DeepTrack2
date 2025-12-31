@@ -5456,17 +5456,17 @@ Equal = Equals
 class Stack(Feature):
     """Stack the input and the value.
     
-    This feature combines the output of the input data (`image`) and the 
+    This feature combines the output of the input data (`inputs`) and the 
     value produced by the specified feature (`value`). The resulting output 
-    is a list where the elements of the `image` and `value` are concatenated.
-
-    If either the input (`image`) or the `value` is a single `Image` object, 
-    it is automatically converted into a list to maintain consistency in the 
-    output format.
+    is a list where the elements of the `inputs` and `value` are concatenated.
 
     If B is a feature, `Stack` can be visualized as:
 
     >>>   A >> Stack(B) = [*A(), *B()]
+
+    It is equivalent to using the `&` operator:
+
+    >>> A & B
 
     Parameters
     ----------
@@ -5478,29 +5478,33 @@ class Stack(Feature):
     Attributes
     ----------
     __distributed__: bool
-        Indicates whether this feature distributes computation across inputs. 
-        Always `False` for `Stack`, as it processes all inputs at once.
+        Set to `False`, indicating that this feature’s `.get()` method
+        processes the entire input at once even if it is a list, rather than 
+        distributing calls for each item of the list.
 
     Methods
     -------
-    `get(image: Any, value: Any, **kwargs: Any) -> list[Any]`
-        Concatenate the input with the value.
+    `get(inputs, value, **kwargs) -> list[Any]`
+        Concatenate the inputs with the value.
 
     Examples
     --------
     >>> import deeptrack as dt
 
     Start by creating a pipeline using `Stack`:
+
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Stack(value=[4, 5])
     >>> pipeline.resolve()
     [1, 2, 3, 4, 5]
 
     Equivalently, this pipeline can be created using:
+
     >>> pipeline = dt.Value([1, 2, 3]) & [4, 5]
     >>> pipeline.resolve()
     [1, 2, 3, 4, 5]
 
     Or:
+
     >>> pipeline = [4, 5] & dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [4, 5, 1, 2, 3]
@@ -5508,7 +5512,8 @@ class Stack(Feature):
     Note
     ----
     If a feature is called directly, its result is cached internally. This can
-    affect how it behaves when reused in chained pipelines. For exmaple:
+    affect how it behaves when reused in chained pipelines. For example:
+
     >>> stack_feature = dt.Stack(value=2)
     >>> _ = stack_feature(1)  # Evaluate the feature and cache the output
     >>> (1 & stack_feature)()
@@ -5516,6 +5521,7 @@ class Stack(Feature):
 
     To ensure consistent behavior when reusing a feature after calling it,
     reset its state using instead:
+
     >>> stack_feature = dt.Stack(value=2)
     >>> _ = stack_feature(1)
     >>> stack_feature.update()  # clear cached state
@@ -5546,18 +5552,18 @@ class Stack(Feature):
 
     def get(
         self: Stack,
-        image: Any | list[Any],
+        inputs: Any | list[Any],
         value: Any | list[Any],
         **kwargs: Any,
     ) -> list[Any]:
         """Concatenate the input with the value.
 
-        It ensures that both the input (`image`) and the value (`value`) are 
+        It ensures that both the input (`inputs`) and the value (`value`) are 
         treated as lists before concatenation.
 
         Parameters
         ----------
-        image: Any or list[Any]
+        inputs: Any or list[Any]
             The input data to stack. Can be a single element or a list.
         value: Any or list[Any]
             The feature or data to stack with the input. Can be a single 
@@ -5573,15 +5579,15 @@ class Stack(Feature):
         """
 
         # Ensure the input is treated as a list.
-        if not isinstance(image, list):
-            image = [image]
+        if not isinstance(inputs, list):
+            inputs = [inputs]
 
         # Ensure the value is treated as a list.
         if not isinstance(value, list):
             value = [value]
 
         # Concatenate and return the lists.
-        return [*image, *value]
+        return [*inputs, *value]
 
 
 class Arguments(Feature):
