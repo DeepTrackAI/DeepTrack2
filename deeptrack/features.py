@@ -6887,9 +6887,9 @@ class Merge(Feature):
     This feature allows applying a user-defined function to a list of inputs. 
     The `function` parameter must be a callable that returns another function, 
     where:
-      - The **outer function** can depend on other properties in the pipeline.
-      - The **inner function** takes a list of inputs and returns a single 
-      outputs or a list of outputs.
+      - The outer function can depend on other properties in the pipeline.
+      - The inner function takes a list of inputs and returns a single outputs
+      or a list of outputs.
     
     The function must be wrapped in an outer layer to enable dependencies on
     other properties while ensuring correct execution.
@@ -6906,12 +6906,13 @@ class Merge(Feature):
     Attributes
     ----------
     __distributed__: bool
-        Indicates whether this feature distributes computation across inputs.
-        It defaults to `False`.
+        Set to `False`, indicating that this feature’s `.get()` method
+        processes the entire input at once even if it is a list, rather than 
+        distributing calls for each item of the list.
 
     Methods
     -------
-    `get(list_of_images: list[Any], function: Callable[[list[Any]], Any or list[Any]], **kwargs: Any) -> Any or list[Any]`
+    `get(list_of_inputs, function, **kwargs) -> Any or list[Any]`
         Applies the custom function to the list of inputs.
 
     Examples
@@ -6919,25 +6920,29 @@ class Merge(Feature):
     >>> import deeptrack as dt
 
     Define a merge function that averages multiple images:
+
+    >>> import numpy as np
+    >>>
     >>> def merge_function_factory():
     ...     def merge_function(images):
     ...         return np.mean(np.stack(images), axis=0)
     ...     return merge_function
 
     Create a Merge feature:
+
     >>> merge_feature = dt.Merge(function=merge_function_factory)
 
     Create some images:
-    >>> import numpy as np
-    >>>
+
     >>> image_1 = np.ones((2, 3)) * 2
     >>> image_2 = np.ones((2, 3)) * 4
 
     Apply the feature to a list of images:
+
     >>> output_image = merge_feature([image_1, image_2])
     >>> output_image
     array([[3., 3., 3.],
-        [3., 3., 3.]])
+           [3., 3., 3.]])
 
     """
 
@@ -6945,15 +6950,14 @@ class Merge(Feature):
 
     def __init__(
         self: Feature,
-        function: Callable[..., 
-                           Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]]],
-        **kwargs: dict[str, Any]
+        function: Callable[..., Callable[[list[Any]], Any | list[Any]]],
+        **kwargs: Any,
     ):
         """Initialize the Merge feature.
 
         Parameters
         ----------
-        function: Callable[..., Callable[list[Any]], Any or list[Any]]
+        function: Callable[..., Callable[[list[Any]], Any or list[Any]]
             A callable that returns a function for processing a list of images.
             The outer function can depend on other properties in the pipeline.
             The inner function takes a list of inputs and returns either a
@@ -6967,30 +6971,30 @@ class Merge(Feature):
 
     def get(
         self: Feature,
-        list_of_images: list[np.ndarray] | list[Image],
-        function: Callable[[list[np.ndarray] | list[Image]], np.ndarray | list[np.ndarray] | Image | list[Image]],
+        list_of_inputs: list[Any],
+        function: Callable[[list[Any]], Any | list[Any]],
         **kwargs: Any,
     ) -> Image | list[Image]:
         """Apply the custom function to a list of inputs.
 
         Parameters
         ----------
-        list_of_images: list[Any]
+        list_of_inputs: list[Any]
             A list of inputs to be processed by the function.
-        function: Callable[[list[Any]], Any | list[Any]]
-            The function that processes the list of images and returns either a
+        function: Callable[[list[Any]], Any or list[Any]]
+            The function that processes the list of inputs and returns either a
             single transformed input or a list of transformed inputs.
         **kwargs: Any
             Additional arguments (unused in this implementation).
 
         Returns
         -------
-        Image | list[Image]
-            The processed image(s) after applying the function.
+        Any or list[Any]
+            The processed inputs after applying the function.
 
         """
 
-        return function(list_of_images)
+        return function(list_of_inputs)
 
 
 class OneOf(Feature):

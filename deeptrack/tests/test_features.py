@@ -1609,7 +1609,7 @@ class TestFeatures(unittest.TestCase):
         )
 
         image_1 = np.ones((5, 5)) * 2
-        image_2 = np.ones((3, 3)) * 4 
+        image_2 = np.ones((3, 3)) * 4
         with self.assertRaises(ValueError):
             merge_feature.resolve([image_1, image_2])
 
