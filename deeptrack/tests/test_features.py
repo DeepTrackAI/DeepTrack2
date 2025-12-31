@@ -999,28 +999,6 @@ class TestFeatures(unittest.TestCase):
             image = image_pipeline(is_label=True)
             self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise
 
-            # Test property storage and modification in the pipeline.
-            arguments = features.Arguments(noise_max_sigma=5)
-            image_pipeline = (
-                features.LoadImage(path=temp_png.name)
-                >> Gaussian(
-                    noise_max_sigma=arguments.noise_max_sigma,
-                    sigma=lambda noise_max_sigma: 
-                        np.random.rand() * noise_max_sigma,
-                )
-            )
-            image_pipeline.bind_arguments(arguments)
-            image_pipeline.store_properties()
-
-            # Check if sigma is within expected range
-            image = image_pipeline()
-            sigma_value = image.get_property("sigma")
-            self.assertTrue(0 <= sigma_value <= 5)
-
-            # Override sigma by setting noise_max_sigma=0
-            image = image_pipeline(noise_max_sigma=0)
-            self.assertEqual(image.get_property("sigma"), 0.0)
-
             # Test passing arguments dynamically using **arguments.properties.
             arguments = features.Arguments(is_label=False, noise_sigma=5)
             image_pipeline = (

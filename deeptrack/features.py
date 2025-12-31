@@ -5593,23 +5593,23 @@ class Stack(Feature):
 class Arguments(Feature):
     """A convenience container for pipeline arguments.
 
-    The `Arguments` feature allows dynamic control of pipeline behavior by
-    providing a container for arguments that can be modified or overridden at
-    runtime. This is particularly useful when working with parametrized
-    pipelines, such as toggling behaviors based on whether an image is a label
-    or a raw input.
+    `Arguments` allows dynamic control of pipeline behavior by providing a
+    container for arguments that can be modified or overridden at runtime. This
+    is particularly useful when working with parametrized pipelines, such as
+    toggling behaviors based on whether an image is a label or a raw input.
 
     Methods
     -------
-    `get(image: Any, **kwargs: Any) -> Any`
-        It passes the input image through unchanged, while allowing for
-        property overrides.
+    `get(inputs, **kwargs) -> Any`
+        It passes the inputs through unchanged, while allowing for property
+        overrides.
 
     Examples
     --------
     >>> import deeptrack as dt
 
     Create a temporary image file:
+
     >>> import numpy as np
     >>> import PIL, tempfile
     >>>
@@ -5618,6 +5618,7 @@ class Arguments(Feature):
     >>> PIL.Image.fromarray(test_image_array).save(temp_png.name)
 
     A typical use-case is:
+
     >>> arguments = dt.Arguments(is_label=False)
     >>> image_pipeline = (
     ...     dt.LoadImage(path=temp_png.name)
@@ -5630,17 +5631,20 @@ class Arguments(Feature):
     0.0
 
     Change the argument:
+
     >>> image = image_pipeline(is_label=True)  # Image with added noise
     >>> image.std()
     1.0104364326447652
 
     Remove the temporary image:
+
     >>> import os
     >>>
     >>> os.remove(temp_png.name)
 
     For a non-mathematical dependence, create a local link to the property as 
     follows:
+
     >>> arguments = dt.Arguments(is_label=False)
     >>> image_pipeline = (
     ...     dt.LoadImage(path=temp_png.name)
@@ -5651,29 +5655,9 @@ class Arguments(Feature):
     ... )
     >>> image_pipeline.bind_arguments(arguments)
 
-    Keep in mind that, if any dependent property is non-deterministic, it may 
-    permanently change:
-    >>> arguments = dt.Arguments(noise_max=1)
-    >>> image_pipeline = (
-    ...     dt.LoadImage(path=temp_png.name)
-    ...     >> dt.Gaussian(
-    ...         noise_max=arguments.noise_max,
-    ...         sigma=lambda noise_max: np.random.rand() * noise_max,
-    ...     )
-    ... )
-    >>> image_pipeline.bind_arguments(arguments)
-    >>> image_pipeline.store_properties()  # Store image properties
-    >>>
-    >>> image = image_pipeline()
-    >>> image.std(), image.get_property("sigma")
-    (0.8464173007136401, 0.8423390304699889)
-
-    >>> image = image_pipeline(noise_max=0)
-    >>> image.std(), image.get_property("sigma")
-    (0.0, 0.0)
-
     As with any feature, all arguments can be passed by deconstructing the 
     properties dict:
+
     >>> arguments = dt.Arguments(is_label=False, noise_sigma=5)
     >>> image_pipeline = (
     ...     dt.LoadImage(path=temp_png.name)
@@ -5698,30 +5682,30 @@ class Arguments(Feature):
 
     def get(
         self: Arguments,
-        image: Any,
+        inputs: Any,
         **kwargs: Any,
     ) -> Any:
 
-        """Return the input image and allow property overrides.
+        """Return the inputs and allow property overrides.
 
-        This method does not modify the input image but provides a mechanism
-        for overriding arguments dynamically during pipeline execution.
+        This method does not modify the inputs but provides a mechanism for
+        overriding arguments dynamically during pipeline execution.
 
         Parameters
         ----------
-        image: Any
-            The input image to be passed through unchanged.
+        inputs: Any
+            The inputs to be passed through unchanged.
         **kwargs: Any
             Key-value pairs for overriding pipeline properties.
 
         Returns
         -------
         Any
-            The unchanged input image.
+            The unchanged inputs.
 
         """
 
-        return image
+        return inputs
 
 
 class Probability(StructuralFeature):
