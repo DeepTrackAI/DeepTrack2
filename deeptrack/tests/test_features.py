@@ -1027,7 +1027,6 @@ class TestFeatures(unittest.TestCase):
 
     def test_Arguments_feature_passing(self):
         # Tests that arguments are correctly passed and updated.
-        # 
 
         # Define Arguments with static and dynamic values
         arguments = features.Arguments(

@@ -5723,7 +5723,7 @@ class Probability(StructuralFeature):
     feature: Feature
         The feature to resolve conditionally.
     probability: PropertyLike[float]
-        The probability (between 0 and 1) of resolving the feature.
+        The probability (from 0 to 1) of resolving the feature.
     *args: Any
         Positional arguments passed to the parent `StructuralFeature` class.
     **kwargs: Any
@@ -5732,7 +5732,7 @@ class Probability(StructuralFeature):
 
     Methods
     -------
-    `get(image: Any, probability: float, random_number: float, **kwargs: Any) -> Any`
+    `get(inputs, probability, random_number, **kwargs) -> Any`
         Resolves the feature if the sampled random number is less than the 
         specified probability.
 
@@ -5744,25 +5744,30 @@ class Probability(StructuralFeature):
     chance.
 
     Define a feature and wrap it with `Probability`:
+
     >>> add_feature = dt.Add(value=2)
     >>> probabilistic_feature = dt.Probability(add_feature, probability=0.7)
 
-    Define an input image:
+    Define inputs:
+
     >>> import numpy as np
     >>>
-    >>> input_image = np.zeros((2, 3))
+    >>> inputs = np.zeros((2, 3))
 
     Apply the feature:
+
     >>> probabilistic_feature.update()  # Update the random number
-    >>> output_image = probabilistic_feature(input_image)
+    >>> outputs = probabilistic_feature(inputs)
 
     With 70% probability, the output is:
-    >>> output_image
+
+    >>> outputs
     array([[2., 2., 2.],
         [2., 2., 2.]])
 
     With 30% probability, it remains:
-    >>> output_image
+
+    >>> outputs
     array([[0., 0., 0.],
         [0., 0., 0.]])
 
@@ -5778,7 +5783,7 @@ class Probability(StructuralFeature):
         """Initialize the Probability feature.
 
         The random number is initialized when this feature is initialized.
-        It can be updated using the `update()` method.
+        It can be updated using the `.update()` method.
 
         Parameters
         ----------
@@ -5805,7 +5810,7 @@ class Probability(StructuralFeature):
 
     def get(
         self: Probability,
-        image: Any,
+        inputs: Any,
         probability: float,
         random_number: float,
         **kwargs: Any,
@@ -5814,8 +5819,8 @@ class Probability(StructuralFeature):
 
         Parameters
         ----------
-        image: Any or list[Any]
-            The input to process.
+        inputs: Any or list[Any]
+            The inputs to process.
         probability: float
             The probability (between 0 and 1) of resolving the feature.
         random_number: float
@@ -5828,15 +5833,16 @@ class Probability(StructuralFeature):
         Returns
         -------
         Any
-            The processed image. If the feature is resolved, this is the output
-            of the feature; otherwise, it is the unchanged input image.
+            The processed outputs. If the feature is resolved, this is the
+            output of the feature; otherwise, it is the unchanged inputs.
 
         """
 
         if random_number < probability:
-            image = self.feature.resolve(image, **kwargs)
+            outputs = self.feature.resolve(inputs, **kwargs)
+            return outputs
 
-        return image
+        return inputs
 
 
 class Repeat(StructuralFeature):
