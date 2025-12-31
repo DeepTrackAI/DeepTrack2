@@ -980,6 +980,7 @@ class TestDLCC(unittest.TestCase):
              [[5.39208396], [7.11757634], [7.86945558],
               [7.70038503], [6.95412321], [5.66020874]]])
         image = sim_im_pip()
+        print(f"{image}\n{expected_image}")
         assert np.allclose(image, expected_image, atol=1e-6)
         image = sim_im_pip()
         assert np.allclose(image, expected_image, atol=1e-6)
