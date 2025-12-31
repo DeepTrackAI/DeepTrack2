@@ -4428,7 +4428,7 @@ class DummyFeature(Feature):
 
         """
 
-        return input
+        return inputs
 
 
 class Value(Feature):
