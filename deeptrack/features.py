@@ -5848,19 +5848,23 @@ class Probability(StructuralFeature):
 class Repeat(StructuralFeature):
     """Apply a feature multiple times.
 
-    The `Repeat` feature iteratively applies another feature, passing the 
-    output of each iteration as input to the next. This enables chained
-    transformations, where each iteration builds upon the previous one. The 
-    number of repetitions is defined by `N`.
+    `Repeat` iteratively applies another feature, passing the output of each
+    iteration as input to the next. This enables chained transformations,
+    where each iteration builds upon the previous one. The number of
+    repetitions is defined by `N`.
 
     Each iteration operates with its own set of properties, and the index of 
     the current iteration is accessible via `_ID`. `_ID` is extended to include
     the current iteration index, ensuring deterministic behavior when needed.
 
-    This is equivalent to using the `^` operator:
+    The use of `Repeat`
 
-    >>> dt.Repeat(A, 3) ≡ A ^ 3
+    >>> dt.Repeat(A, 3)
 
+    is equivalent to using the `^` operator:
+
+    >>> A ^ 3
+    
     Parameters
     ----------
     feature: Feature
@@ -5876,7 +5880,7 @@ class Repeat(StructuralFeature):
 
     Methods
     -------
-    `get(x: Any, N: int, _ID: tuple[int, ...], **kwargs: Any) -> Any`
+    `get(x, N, _ID, **kwargs) -> Any`
         It applies the feature `N` times in sequence, passing the output of
         each iteration as the input to the next.
 
@@ -5885,16 +5889,20 @@ class Repeat(StructuralFeature):
     >>> import deeptrack as dt
     
     Define an `Add` feature that adds `10` to its input:
+
     >>> add_ten_feature = dt.Add(value=10)
 
     Apply this feature 3 times using `Repeat`:
+
     >>> pipeline = dt.Repeat(add_ten_feature, N=3)
 
     Process an input list:
+
     >>> pipeline.resolve([1, 2, 3])
     [31, 32, 33]
 
     Alternative shorthand using `^` operator:
+
     >>> pipeline = add_ten_feature ^ 3
     >>> pipeline.resolve([1, 2, 3])
     [31, 32, 33]
