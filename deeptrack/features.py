@@ -5969,6 +5969,7 @@ class Repeat(StructuralFeature):
         _ID: tuple[int, ...], optional
             A unique identifier for tracking the iteration index, ensuring 
             reproducibility, caching, and dynamic property updates.
+            Defaults to ().
         **kwargs: Any
             Additional keyword arguments passed to the feature.
 
