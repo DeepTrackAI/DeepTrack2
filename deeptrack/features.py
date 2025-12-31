@@ -6437,7 +6437,7 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
     ----------
     feature: Feature
         The child feature whose properties will be modified conditionally.
-    condition: PropertyLike[str or bool] or None
+    condition: PropertyLike[str or bool] or None, optional
         Either a boolean value (`True`, `False`) or the name of a boolean 
         property in the feature’s property dictionary. If the condition 
         evaluates to `True`, the specified properties are applied.
@@ -6447,7 +6447,7 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
 
     Methods
     -------
-    `get(image: Any, condition: str or bool, **kwargs: Any) -> Any`
+    `get(inputs, condition, **kwargs) -> Any`
         Resolves the child feature, conditionally applying the specified 
         properties.
 
@@ -6456,25 +6456,30 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
     >>> import deeptrack as dt
     
     Define an image:
+
     >>> import numpy as np
     >>>
     >>> image = np.ones((512, 512))
 
     Define a `Gaussian` noise feature:
+
     >>> gaussian_noise = dt.Gaussian(sigma=0)
 
     --- Using a boolean condition ---
     Apply `sigma=5` only if `condition=True`:
+
     >>> conditional_feature = dt.ConditionalSetProperty(
     ...     gaussian_noise, sigma=5,
     ... )
 
     Resolve with condition met:
+
     >>> noisy_image = conditional_feature(image, condition=True)
     >>> round(noisy_image.std(), 1)
     5.0
 
     Resolve without condition:
+
     >>> conditional_feature.update()  # Essential to reset the property
     >>> clean_image = conditional_feature(image, condition=False)
     >>> round(clean_image.std(), 1)
@@ -6482,16 +6487,19 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
 
     --- Using a string-based condition ---
     Define condition as a string:
+
     >>> conditional_feature = dt.ConditionalSetProperty(
     ...     gaussian_noise, sigma=5, condition="is_noisy"
     ... )
 
     Resolve with condition met:
+
     >>> noisy_image = conditional_feature(image, is_noisy=True)
     >>> round(noisy_image.std(), 1)
     5.0
 
     Resolve without condition:
+
     >>> conditional_feature.update()
     >>> clean_image = conditional_feature(image, is_noisy=False)
     >>> round(clean_image.std(), 1)
@@ -6511,7 +6519,7 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
         ----------
         feature: Feature
             The child feature to conditionally modify.
-        condition: PropertyLike[str or bool] or None
+        condition: PropertyLike[str or bool] or None, optional
             A boolean value or the name of a boolean property in the feature's 
             property dictionary. If the condition evaluates to `True`, the 
             specified properties are applied.
@@ -6536,7 +6544,7 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
 
     def get(
         self: ConditionalSetProperty,
-        image: Any,
+        inputs: Any,
         condition: str | bool,
         **kwargs: Any,
     ) -> Any:
@@ -6544,8 +6552,8 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
 
         Parameters
         ----------
-        image: Any
-            The input data or image to process.
+        inputs: Any
+            The input data to process.
         condition: str or  bool
             A boolean value or the name of a boolean property in the feature's 
             property dictionary. If the condition evaluates to `True`, the 
@@ -6570,7 +6578,7 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
         if _condition:
             propagate_data_to_dependencies(self.feature, **kwargs)
 
-        return self.feature(image)
+        return self.feature(inputs)
 
 
 class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
@@ -6623,23 +6631,27 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
     >>> import deeptrack as dt
 
     Define an image:
+
     >>> import numpy as np
     >>>
     >>> image = np.ones((512, 512))
 
     Define two `Gaussian` noise features:
+
     >>> true_feature = dt.Gaussian(sigma=0)
     >>> false_feature = dt.Gaussian(sigma=5)
     
     --- Using a boolean condition ---
     Combine the features into a conditional set feature. 
     If not provided explicitely, the condition is assumed to be True:
+
     >>> conditional_feature = dt.ConditionalSetFeature(
     ...     on_true=true_feature,
     ...     on_false=false_feature,
     ... )
 
     Resolve based on the condition. If not specified, default is True:
+
     >>> clean_image = conditional_feature(image)
     >>> round(clean_image.std(), 1)
     0.0
@@ -6654,6 +6666,7 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
 
     --- Using a string-based condition ---
     Define condition as a string:
+
     >>> conditional_feature = dt.ConditionalSetFeature(
     ...     on_true=true_feature, 
     ...     on_false=false_feature, 
@@ -6661,6 +6674,7 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
     ... )
 
     Resolve based on the conditions:
+
     >>> noisy_image = conditional_feature(image, is_noisy=False)
     >>> round(noisy_image.std(), 1)
     5.0
@@ -6716,7 +6730,7 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
 
     def get(
         self: ConditionalSetFeature,
-        image: Any,
+        inputs: Any,
         *,
         condition: str | bool,
         **kwargs: Any,
@@ -6725,8 +6739,8 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
 
         Parameters
         ----------
-        image: Any
-            The input image to process.
+        inputs: Any
+            The inputs to process.
         condition: str or bool
             The name of the conditional property or a boolean value. If a 
             string is provided, it is looked up in `kwargs` to get the actual 
@@ -6737,9 +6751,9 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
         Returns
         -------
         Any
-            The processed image after resolving the appropriate feature. If 
+            The processed data after resolving the appropriate feature. If 
             neither `on_true` nor `on_false` is provided for the corresponding 
-            condition, the input image is returned unchanged.
+            condition, the input is returned unchanged.
 
         """
 
@@ -6750,10 +6764,10 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
 
         # Resolve the appropriate feature.
         if _condition and self.on_true:
-            return self.on_true(image)
+            return self.on_true(inputs)
         if not _condition and self.on_false:
-            return self.on_false(image)
-        return image
+            return self.on_false(inputs)
+        return inputs
 
 
 class Lambda(Feature):

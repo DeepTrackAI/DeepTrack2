@@ -989,7 +989,7 @@ class TestDLCC(unittest.TestCase):
         ## PART 2.3
         np.random.seed(123)  # Note that this seeding is not warratied
         random.seed(123)     # to give reproducible results across
-                            # platforms so the subsequent test might fail
+                             # platforms so the subsequent test might fail
 
         ellipse = dt.Ellipsoid(
             radius=random_ellipse_axes,
