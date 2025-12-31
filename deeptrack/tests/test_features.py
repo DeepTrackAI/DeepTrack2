@@ -1473,6 +1473,7 @@ class TestFeatures(unittest.TestCase):
 
 
     def test_Lambda_dependence(self):
+        # Without Lambda
         A = features.DummyFeature(a=1, b=2, c=3)
 
         B = features.DummyFeature(
@@ -1494,7 +1495,30 @@ class TestFeatures(unittest.TestCase):
         B.key.set_value("a")
         self.assertEqual(B.prop(), 1)
 
+        # With Lambda
+        A = features.DummyFeature(a=1, b=2, c=3)
+
+        def func_factory(key="a"):
+            def func(A):
+                return A.a() if key == "a" else (A.b() if key == "b" else A.c())
+            return func
+
+        B = features.Lambda(function=func_factory, key="a")
+
+        B.update()
+        self.assertEqual(B(A), 1)
+
+        B.key.set_value("b")
+        self.assertEqual(B(A), 2)
+
+        B.key.set_value("c")
+        self.assertEqual(B(A), 3)
+
+        B.key.set_value("a")
+        self.assertEqual(B(A), 1)
+
     def test_Lambda_dependence_twice(self):
+        # Without Lambda
         A = features.DummyFeature(a=1, b=2, c=3)
 
         B = features.DummyFeature(

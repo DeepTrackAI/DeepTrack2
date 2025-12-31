@@ -6774,51 +6774,54 @@ class Lambda(Feature):
     """Apply a user-defined function to the input.
 
     This feature allows applying a custom function to individual inputs in the
-    input pipeline. The `function` parameter must be wrapped in an **outer
-    function** that can depend on other properties of the pipeline. 
-    The **inner function** processes a single input.
+    input pipeline. The `function` parameter must be wrapped in an outer
+    function that can depend on other properties of the pipeline. 
+    The inner function processes a single input.
 
     Parameters
     ----------
-    function: Callable[..., Callable[[Image], Image]]
+    function: Callable[..., Callable[[AnyImageAny], Any]]
         A callable that produces a function. The outer function can accept 
         additional arguments from the pipeline, while the inner function 
-        operates on a single image.
+        operates on a single input.
     **kwargs: dict[str, Any]
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: Any, function: Callable[[Any], Any], **kwargs: Any) -> Any`
-        Applies the custom function to the input image.
+    `get(inputs, function, **kwargs) -> Any`
+        Applies the custom function to the inputs.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Define a factory function that returns a scaling function:
+
     >>> def scale_function_factory(scale=2):
     ...     def scale_function(image):
     ...         return image * scale
     ...     return scale_function
 
     Create a `Lambda` feature that scales images by a factor of 5:
+
     >>> lambda_feature = dt.Lambda(function=scale_function_factory, scale=5)
 
     Create an image:
+
     >>> import numpy as np
     >>> 
     >>> input_image = np.ones((2, 3))
     >>> input_image
     array([[1., 1., 1.],
-        [1., 1., 1.]])
+           [1., 1., 1.]])
 
     Apply the feature to the image:
+
     >>> output_image = lambda_feature(input_image)
     >>> output_image
     array([[5., 5., 5.],
-        [5., 5., 5.]])
+           [5., 5., 5.]])
 
     """
 
@@ -6848,7 +6851,7 @@ class Lambda(Feature):
 
     def get(
         self: Feature,
-        image: Any,
+        inputs: Any,
         function: Callable[[Any], Any],
         **kwargs: Any,
     ) -> Any:
@@ -6860,7 +6863,7 @@ class Lambda(Feature):
 
         Parameters
         ----------
-        image: Any
+        inputs: Any
             The input to be processed.
         function: Callable[[Any], Any]
             A callable function that takes an input and returns a transformed 
@@ -6875,7 +6878,7 @@ class Lambda(Feature):
 
         """
 
-        return function(image)
+        return function(inputs)
 
 
 class Merge(Feature):
