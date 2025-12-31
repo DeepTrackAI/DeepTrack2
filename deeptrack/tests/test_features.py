@@ -1631,7 +1631,7 @@ class TestFeatures(unittest.TestCase):
         # Test that OneOf applies one of the features randomly.
         one_of_feature = features.OneOf([feature_1, feature_2])
         output_image = one_of_feature.resolve(input_image)
-        
+
         # The output should either be:
         # - self.input_image + 10 (if feature_1 is chosen)
         # - self.input_image * 2  (if feature_2 is chosen)
@@ -1748,7 +1748,11 @@ class TestFeatures(unittest.TestCase):
     def test_OneOfDict_basic(self):
 
         values = features.OneOfDict(
-            {"1": features.Value(1), "2": features.Value(2), "3": features.Value(3)}
+            {
+                "1": features.Value(1),
+                "2": features.Value(2),
+                "3": features.Value(3),
+            }
         )
 
         has_been_one = False
@@ -1775,7 +1779,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(values.update().resolve(key="3"), 3)
 
         self.assertRaises(KeyError, lambda: values.update().resolve(key="4"))
-
 
     def test_OneOfDict(self):
         features_dict = {

@@ -7012,7 +7012,7 @@ class OneOf(Feature):
     ----------
     collection: Iterable[Feature]
         A collection of features to choose from.
-    key: int | None, optional
+    key: int or None, optional
         The index of the feature to resolve from the collection. If not 
         provided, a feature is selected randomly at each execution.
     **kwargs: Any
@@ -7021,14 +7021,15 @@ class OneOf(Feature):
     Attributes
     ----------
     __distributed__: bool
-        Indicates whether this feature distributes computation across inputs.
-        It defaults to `False`.
+        Set to `False`, indicating that this feature’s `.get()` method
+        processes the entire input at once even if it is a list, rather than 
+        distributing calls for each item of the list.
 
     Methods
     -------
-    `_process_properties(propertydict: dict) -> dict`
+    `_process_properties(propertydict) -> dict`
         It processes the properties to determine the selected feature index.
-    `get(image: Any, key: int, _ID: tuple[int, ...], **kwargs: Any) -> Any`
+    `get(image, key, _ID, **kwargs) -> Any`
         It applies the selected feature to the input.
   
     Examples
@@ -7036,22 +7037,27 @@ class OneOf(Feature):
     >>> import deeptrack as dt
 
     Define multiple features:
+
     >>> feature_1 = dt.Add(value=10)
     >>> feature_2 = dt.Multiply(value=2)
     
     Create a `OneOf` feature that randomly selects a transformation:
+
     >>> one_of_feature = dt.OneOf([feature_1, feature_2])
 
     Create an input image:
+
     >>> import numpy as np
     >>>
     >>> input_image = np.array([1, 2, 3])
 
     Apply the `OneOf` feature to the input image:
+
     >>> output_image = one_of_feature(input_image)
-    >>> output_image  # The output depends on the randomly selected feature.
+    >>> output_image  # The output depends on the randomly selected feature
 
     Use `key` to apply a specific feature:
+
     >>> controlled_feature = dt.OneOf([feature_1, feature_2], key=0)
     >>> output_image = controlled_feature(input_image)
     >>> output_image
@@ -7065,6 +7071,8 @@ class OneOf(Feature):
     """
 
     __distributed__: bool = False
+
+    collection: tuple[Feature, ...]
 
     def __init__(
         self: Feature,
@@ -7125,7 +7133,7 @@ class OneOf(Feature):
 
     def get(
         self: Feature,
-        image: Any,
+        inputs: Any,
         key: int,
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
@@ -7134,8 +7142,8 @@ class OneOf(Feature):
 
         Parameters
         ----------
-        image: Any
-            The input image or data to process.
+        inputs: Any
+            The input data to process.
         key: int
             The index of the feature to apply from the collection.
         _ID: tuple[int, ...], optional
@@ -7146,11 +7154,11 @@ class OneOf(Feature):
         Returns
         -------
         Any
-            The output of the selected feature applied to the input image.
+            The output of the selected feature applied to the input.
 
         """
 
-        return self.collection[key](image, _ID=_ID)
+        return self.collection[key](inputs, _ID=_ID)
 
 
 class OneOfDict(Feature):
@@ -7177,43 +7185,50 @@ class OneOfDict(Feature):
     Attributes
     ----------
     __distributed__: bool
-        Indicates whether this feature distributes computation across inputs.
-        It defaults to `False`.
+        Set to `False`, indicating that this feature’s `.get()` method
+        processes the entire input at once even if it is a list, rather than 
+        distributing calls for each item of the list.
 
     Methods
     -------
-    `_process_properties(propertydict: dict) -> dict`
+    `_process_properties(propertydict) -> dict`
         It determines which feature to use based on `key`.
-    `get(image: Any, key: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
-        It resolves the selected feature and applies it to the input image.
+    `get(inputs, key, _ID, **kwargs) -> Any`
+        It resolves the selected feature and applies it to the input.
    
     Examples
     --------
     >>> import deeptrack as dt
 
     Define a dictionary of features:
+
     >>> features_dict = {
     ...     "add": dt.Add(value=10),
     ...     "multiply": dt.Multiply(value=2),
     ... }
 
     Create a `OneOfDict` feature that randomly selects a transformation:
+
     >>> one_of_dict_feature = dt.OneOfDict(features_dict)
 
     Creare an image:
+
     >>> import numpy as np
     >>>
     >>> input_image = np.array([1, 2, 3])
 
     Apply a randomly selected feature to the image:
+
     >>> output_image = one_of_dict_feature(input_image)
-    >>> output_image  # The output depends on the randomly selected feature.
+    >>> output_image  # The output depends on the randomly selected feature
 
     Potentially select a different feature:
-    >>> output_image = one_of_dict_feature.update()(input_image)
+
+    >>> output_image = one_of_dict_feature.new(input_image)
     >>> output_image
 
     Use a specific key to apply a predefined feature:
+
     >>> controlled_feature = dt.OneOfDict(features_dict, key="add")
     >>> output_image = controlled_feature(input_image)
     >>> output_image
@@ -7222,6 +7237,8 @@ class OneOfDict(Feature):
     """
 
     __distributed__: bool = False
+
+    collection: tuple[Feature, ...]
 
     def __init__(
         self: Feature,
@@ -7275,13 +7292,14 @@ class OneOfDict(Feature):
 
         # Randomly sample a key if `key` is not specified.
         if propertydict["key"] is None:
-            propertydict["key"] = np.random.choice(list(self.collection.keys()))
+            propertydict["key"] = \
+                np.random.choice(list(self.collection.keys()))
 
         return propertydict
 
     def get(
         self: Feature,
-        image: Any,
+        inputs: Any,
         key: Any,
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
@@ -7290,8 +7308,8 @@ class OneOfDict(Feature):
 
         Parameters
         ----------
-        image: Any
-            The input image or data to be processed.
+        inputs: Any
+            The input data to be processed.
         key: Any
             The key of the feature to apply from the dictionary.
         _ID: tuple[int, ...], optional
@@ -7306,7 +7324,7 @@ class OneOfDict(Feature):
 
         """
 
-        return self.collection[key](image, _ID=_ID)
+        return self.collection[key](inputs, _ID=_ID)
 
 
 class LoadImage(Feature):
