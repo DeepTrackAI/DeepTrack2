@@ -4251,20 +4251,24 @@ class Chain(StructuralFeature):
 
     Create a feature chain where the first feature adds a constant offset, and 
     the second feature multiplies the result by a constant:
+
     >>> A = dt.Add(value=10)
     >>> M = dt.Multiply(value=0.5)
     >>>
     >>> chain = A >> M
 
-    Equivalent to: 
+    Equivalent to:
+
     >>> chain = dt.Chain(A, M)
 
     Create a dummy image:
+
     >>> import numpy as np
     >>>
     >>> dummy_image = np.zeros((2, 4))
 
     Apply the chained features:
+
     >>> chain(dummy_image)
     array([[5., 5., 5., 5.],
            [5., 5., 5., 5.]])
@@ -4345,9 +4349,9 @@ Branch = Chain  # Alias for backwards compatibility
 
 
 class DummyFeature(Feature):
-    """A no-op feature that simply returns the input unchanged.
+    """A no-op feature that simply returns the inputs unchanged.
 
-    This class can serve as a container for properties that don't directly 
+    `DummyFeature` can serve as a container for properties that don't directly 
     transform the data but need to be logically grouped. 
     
     Since it inherits from `Feature`, any keyword arguments passed to the
@@ -4357,16 +4361,16 @@ class DummyFeature(Feature):
 
     Parameters
     ----------
-    _input: Any, optional
-        Optional input for the feature. Defaults to an empty list [].
+    inputs: Any, optional
+        Optional inputs for the feature. Defaults to an empty list [].
     **kwargs: Any
         Additional keyword arguments are wrapped as `Property` instances and 
         stored in `self.properties`.
 
     Methods
     -------
-    `get(input, **kwargs) -> Any`
-        It simply returns the input(s) unchanged.
+    `get(inputs, **kwargs) -> Any`
+        It simply returns the inputs unchanged.
 
     Examples
     --------
@@ -4382,7 +4386,7 @@ class DummyFeature(Feature):
 
     >>> dummy_feature = dt.DummyFeature(prop1=42, prop2=3.14)
 
-    Pass the input image through the DummyFeature:
+    Pass the input through the DummyFeature:
 
     >>> dummy_output = dummy_feature(dummy_input)
     >>> dummy_output
@@ -4399,7 +4403,7 @@ class DummyFeature(Feature):
 
     def get(
         self: DummyFeature,
-        input: Any,
+        inputs: Any,
         **kwargs: Any,
     ) -> Any:
         """Return the input unchanged.
@@ -4410,7 +4414,7 @@ class DummyFeature(Feature):
 
         Parameters
         ----------
-        input: Any
+        inputs: Any
             The input to pass through without modification.
         **kwargs: Any
             Additional properties sampled from `self.properties` or passed 
