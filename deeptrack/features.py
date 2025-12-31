@@ -6015,28 +6015,32 @@ class Combine(StructuralFeature):
 
     Methods
     -------
-    `get(image: Any, **kwargs: Any) -> list[Any]`
-        Resolves each feature in the `features` list on the input image and 
-        returns their results as a list.
+    `get(inputs, **kwargs) -> list[Any]`
+        Resolves each feature in the `features` list on the inputs and returns
+        their results as a list.
 
     Examples
     --------
     >>> import deeptrack as dt
 
     Define a list of features:
+
     >>> add_1 = dt.Add(value=1)
     >>> add_2 = dt.Add(value=2)
     >>> add_3 = dt.Add(value=3)
 
     Combine the features:
+
     >>> combined_feature = dt.Combine([add_1, add_2, add_3])
 
     Define an input image:
+
     >>> import numpy as np
     >>>
     >>> input_image = np.zeros((2, 3))
 
     Apply the combined feature:
+
     >>> output_list = combined_feature(input_image)
     >>> output_list
     [array([[1., 1., 1.],
@@ -6072,15 +6076,15 @@ class Combine(StructuralFeature):
 
     def get(
         self: Combine,
-        image: Any,
+        inputs: Any,
         **kwargs: Any,
     ) -> list[Any]:
-        """Resolve each feature in the `features` list on the input image.
+        """Resolve each feature in the `features` list on the inputs.
 
         Parameters
         ----------
         image: Any
-            The input image or list of images to process.
+            The input or list of inputs to process.
         **kwargs: Any
             Additional arguments passed to each feature's `resolve` method.
 
@@ -6091,7 +6095,7 @@ class Combine(StructuralFeature):
 
         """
 
-        return [f(image, **kwargs) for f in self.features]
+        return [f(inputs, **kwargs) for f in self.features]
 
 
 class Slice(Feature):
@@ -6114,7 +6118,7 @@ class Slice(Feature):
 
     Methods
     -------
-    `get(image: array or list[array], slices: Iterable[int or slice or ellipsis], **kwargs: Any) -> array or list[array]`
+    `get(inputs, slices, **kwargs) -> array or list[array]`
         Applies the specified slices to the input image.
 
     Examples
@@ -6122,6 +6126,7 @@ class Slice(Feature):
     >>> import deeptrack as dt
 
     Recommended approach: Use normal indexing for static slicing:
+
     >>> import numpy as np
     >>>
     >>> feature = dt.DummyFeature()
@@ -6133,8 +6138,9 @@ class Slice(Feature):
            [[ 9, 10, 11],
             [15, 16, 17]]])
 
-    Using `Slice` for dynamic slicing (when necessary when slices depend on
-    computed properties):
+    Using `Slice` for dynamic slicing (necessary when slices depend on computed
+    properties):
+
     >>> feature = dt.DummyFeature()
     >>> dynamic_slicing = feature >> dt.Slice(
     ...     slices=(slice(0, 2), slice(None, None, 2), slice(None))
@@ -6146,7 +6152,7 @@ class Slice(Feature):
            [[ 9, 10, 11],
             [15, 16, 17]]])
 
-    In both cases, slices can be defined dynamically based on feature 
+    In both cases, slices can be defined dynamically based on feature
     properties.
 
     """
@@ -6172,7 +6178,7 @@ class Slice(Feature):
 
     def get(
         self: Slice,
-        image: ArrayLike[Any] | list[ArrayLike[Any]],
+        array: ArrayLike[Any] | list[ArrayLike[Any]],
         slices: slice | tuple[int | slice | Ellipsis, ...],
         **kwargs: Any,
     ) -> ArrayLike[Any] | list[ArrayLike[Any]]:
@@ -6181,7 +6187,7 @@ class Slice(Feature):
         Parameters
         ----------
         image: array or list[array]
-            The input image(s) to be sliced.
+            The input array(s) to be sliced.
         slices: slice ellipsis or tuple[int or slice or ellipsis, ...]
             The slicing instructions for the input image. Typically it is a
             tuple. Each element in the tuple corresponds to a dimension in the
@@ -6193,7 +6199,7 @@ class Slice(Feature):
         Returns
         -------
         array or list[array]
-            The sliced image(s).
+            The sliced array(s).
 
         """
 
@@ -6204,7 +6210,7 @@ class Slice(Feature):
             # Leave slices as is if conversion fails
             pass
 
-        return image[slices]
+        return array[slices]
 
 
 class Bind(StructuralFeature):
@@ -6218,13 +6224,13 @@ class Bind(StructuralFeature):
     Parameters
     ----------
     feature: Feature
-        The child feature
+        The child feature.
     **kwargs: Any
-        Properties to send to child
+        Properties to send to child.
 
     Methods
     -------
-    `get(image: Any, **kwargs: Any) -> Any`
+    `get(inputs, **kwargs) -> Any`
         It resolves the child feature with the provided arguments.
 
     Examples
@@ -6232,17 +6238,21 @@ class Bind(StructuralFeature):
     >>> import deeptrack as dt
 
     Start by creating a `Gaussian` feature: 
+
     >>> gaussian_noise = dt.Gaussian()
 
     Create a test image:
+
     >>> import numpy as np
     >>>
     >>> input_image = np.zeros((512, 512))
 
     Bind fixed values to the parameters:
+
     >>> bound_feature = dt.Bind(gaussian_noise, mu=-5, sigma=2)
 
     Resolve the bound feature:
+
     >>> output_image = bound_feature.resolve(input_image)
     >>> round(np.mean(output_image), 1), round(np.std(output_image), 1)
     (-5.0, 2.0)
@@ -6271,15 +6281,15 @@ class Bind(StructuralFeature):
 
     def get(
         self: Bind,
-        image: Any,
+        inputs: Any,
         **kwargs: Any,
     ) -> Any:
         """Resolve the child feature with the dynamically provided arguments.
 
         Parameters
         ----------
-        image: Any
-            The input data or image to process.
+        inputs: Any
+            The input data to process.
         **kwargs: Any
             Properties or arguments to pass to the child feature during
             resolution.
@@ -6292,7 +6302,7 @@ class Bind(StructuralFeature):
 
         """
 
-        return self.feature.resolve(image, **kwargs)
+        return self.feature.resolve(inputs, **kwargs)
 
 
 BindResolve = Bind
@@ -6320,7 +6330,7 @@ class BindUpdate(StructuralFeature):  # DEPRECATED
 
     Methods
     -------
-    `get(image: Any, **kwargs: Any) -> Any`
+    `get(inputs, **kwargs) -> Any`
         It resolves the child feature with the provided arguments.
 
     Examples
@@ -6328,9 +6338,11 @@ class BindUpdate(StructuralFeature):  # DEPRECATED
     >>> import deeptrack as dt
 
     Start by creating a `Gaussian` feature:
+
     >>> gaussian_noise = dt.Gaussian()
 
     Dynamically modify the behavior of the feature using `BindUpdate`:
+
     >>> bound_feature = dt.BindUpdate(gaussian_noise, mu = 5, sigma=3)
     
     >>> import numpy as np
@@ -6343,8 +6355,8 @@ class BindUpdate(StructuralFeature):  # DEPRECATED
     """
 
     def __init__(
-        self: Feature, 
-        feature: Feature, 
+        self: Feature,
+        feature: Feature,
         **kwargs: Any,
     ):
         """Initialize the BindUpdate feature.
@@ -6376,15 +6388,15 @@ class BindUpdate(StructuralFeature):  # DEPRECATED
 
     def get(
         self: Feature,
-        image: Any,
+        inputs: Any,
         **kwargs: Any,
     ) -> Any:
         """Resolve the child feature with the provided arguments.
 
         Parameters
         ----------
-        image: Any
-            The input data or image to process.
+        inputs: Any
+            The input data to process.
         **kwargs: Any
             Properties or arguments to pass to the child feature during 
             resolution.
@@ -6397,7 +6409,7 @@ class BindUpdate(StructuralFeature):  # DEPRECATED
 
         """
 
-        return self.feature.resolve(image, **kwargs)
+        return self.feature.resolve(inputs, **kwargs)
 
 
 class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
