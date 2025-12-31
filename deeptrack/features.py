@@ -4434,8 +4434,8 @@ class DummyFeature(Feature):
 class Value(Feature):
     """Represent a constant value in a DeepTrack2 pipeline.
 
-    This feature holds a constant value (e.g., a scalar or array) and supplies 
-    it on demand to other parts of the pipeline.
+    `Value` holds a constant value (e.g., a scalar or array) and supplies it on
+    demand to other parts of the pipeline.
     
     If called with an input, it ignores it and still returns the stored value.
 
@@ -4455,8 +4455,8 @@ class Value(Feature):
 
     Methods
     -------
-    `get(input, value, **kwargs) -> Any`
-        Returns the stored value, ignoring the input.
+    `get(inputs, value, **kwargs) -> Any`
+        Returns the stored value, ignoring the inputs.
 
     Examples
     --------
@@ -4526,7 +4526,7 @@ class Value(Feature):
 
     def get(
         self: Value,
-        input: Any,
+        inputs: Any,
         value: Any,
         **kwargs: Any,
     ) -> Any:
@@ -4537,7 +4537,7 @@ class Value(Feature):
 
         Parameters
         ----------
-        input: Any
+        inputs: Any
             `Value` ignores its input data.
         value: Any
             The current value to return. This may be the initial value or an 
