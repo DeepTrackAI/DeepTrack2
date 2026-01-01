@@ -7331,7 +7331,7 @@ class LoadImage(Feature):
     """Load an image from disk and preprocess it.
 
     `LoadImage` loads an image file using multiple fallback file readers
-    (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a suitable reader is
+    (`ImageIO`, `NumPy`, `Pillow`, and `OpenCV`) until a suitable reader is
     found. The image can be optionally converted to grayscale, reshaped to
     ensure a minimum number of dimensions, or treated as a list of images if
     multiple paths are provided.
@@ -7342,36 +7342,28 @@ class LoadImage(Feature):
         The path(s) to the image(s) to load. Can be a single string or a list
         of strings.
     load_options: PropertyLike[dict[str, Any]], optional
-        Additional options passed to the file reader. It defaults to `None`.
+        Additional options passed to the file reader. Defaults to `None`.
     as_list: PropertyLike[bool], optional
         If `True`, the first dimension of the image will be treated as a list.
-        It defaults to `False`.
+        Defaults to `False`.
     ndim: PropertyLike[int], optional
-        Ensures the image has at least this many dimensions. It defaults to
-        `3`.
+        Ensures the image has at least this many dimensions. Defaults to `3`.
     to_grayscale: PropertyLike[bool], optional
-        If `True`, converts the image to grayscale. It defaults to `False`.
+        If `True`, converts the image to grayscale. Defaults to `False`.
     get_one_random: PropertyLike[bool], optional
         If `True`, extracts a single random image from a stack of images. Only
-        used when `as_list` is `True`. It defaults to `False`.
+        used when `as_list` is `True`. Defaults to `False`.
 
     Attributes
     ----------
     __distributed__: bool
-        Indicates whether this feature distributes computation across inputs.
-        It defaults to `False`.
+        Set to `False`, indicating that this feature’s `.get()` method
+        processes the entire input at once even if it is a list, rather than 
+        distributing calls for each item of the list.
 
     Methods
     -------
-    `get(
-        path: str | list[str],
-        load_options: dict[str, Any] | None,
-        ndim: int,
-        to_grayscale: bool,
-        as_list: bool,
-        get_one_random: bool,
-        **kwargs: Any,
-    ) -> NDArray | list[NDArray] | torch.Tensor | list[torch.Tensor]`
+    `get(...) -> NDArray | list[NDArray] | torch.Tensor | list[torch.Tensor]`
         Load the image(s) from disk and process them.
 
     Raises
@@ -7390,6 +7382,7 @@ class LoadImage(Feature):
     >>> import deeptrack as dt
 
     Create a temporary image file:
+
     >>> import numpy as np
     >>> import os, tempfile
     >>>
@@ -7397,14 +7390,17 @@ class LoadImage(Feature):
     >>> np.save(temp_file.name, np.random.rand(100, 100, 3))
 
     Load the image using `LoadImage`:
+
     >>> load_image_feature = dt.LoadImage(path=temp_file.name)
     >>> loaded_image = load_image_feature.resolve()
 
     Print image shape:
+
     >>> loaded_image.shape
     (100, 100, 3)
 
     If `to_grayscale=True`, the image is converted to single channel:
+
     >>> load_image_feature = dt.LoadImage(
     ...     path=temp_file.name,
     ...     to_grayscale=True,
@@ -7414,6 +7410,7 @@ class LoadImage(Feature):
     (100, 100, 1)
 
     If `ndim=4`, additional dimensions are added if necessary:
+
     >>> load_image_feature = dt.LoadImage(
     ...     path=temp_file.name,
     ...     ndim=4,
@@ -7423,6 +7420,7 @@ class LoadImage(Feature):
     (100, 100, 3, 1)
 
     Load an image as a PyTorch tensor by setting the backend of the feature:
+
     >>> load_image_feature = dt.LoadImage(path=temp_file.name)
     >>> load_image_feature.torch()
     >>> loaded_image = load_image_feature.resolve()
@@ -7430,6 +7428,7 @@ class LoadImage(Feature):
     <class 'torch.Tensor'>
 
     Cleanup the temporary file:
+
     >>> os.remove(temp_file.name)
 
     """
@@ -7455,19 +7454,19 @@ class LoadImage(Feature):
             list of strings.
         load_options: PropertyLike[dict[str, Any]], optional
             Additional options passed to the file reader (e.g., `mode` for
-            OpenCV, `allow_pickle` for NumPy). It defaults to `None`.
+            OpenCV, `allow_pickle` for NumPy). Defaults to `None`.
         as_list: PropertyLike[bool], optional
             If `True`, treats the first dimension of the image as a list of
-            images. It defaults to `False`.
+            images. Defaults to `False`.
         ndim: PropertyLike[int], optional
             Ensures the image has at least this many dimensions. If the loaded
-            image has fewer dimensions, extra dimensions are added. It defaults
-            to `3`.
+            image has fewer dimensions, extra dimensions are added. Defaults to
+            `3`.
         to_grayscale: PropertyLike[bool], optional
-            If `True`, converts the image to grayscale. It defaults to `False`.
+            If `True`, converts the image to grayscale. Defaults to `False`.
         get_one_random: PropertyLike[bool], optional
             If `True`, selects a single random image from a stack when
-            `as_list=True`. It defaults to `False`.
+            `as_list=True`. Defaults to `False`.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class,
             allowing further customization.
@@ -7486,7 +7485,7 @@ class LoadImage(Feature):
 
     def get(
         self: Feature,
-        *ign: Any,
+        *_: Any,
         path: str | list[str],
         load_options: dict[str, Any] | None,
         ndim: int,
@@ -7494,11 +7493,11 @@ class LoadImage(Feature):
         as_list: bool,
         get_one_random: bool,
         **kwargs: Any,
-    ) -> NDArray[Any] | torch.Tensor | list:
+    ) -> NDArray[Any] | torch.Tensor | list[NDArray[Any] | torch.Tensor]:
         """Load and process an image or a list of images from disk.
 
         This method attempts to load an image using multiple file readers
-        (`imageio`, `numpy`, `Pillow`, and `OpenCV`) until a valid format is
+        (`ImageIO`, `NumPy`, `Pillow`, and `OpenCV`) until a valid format is
         found. It supports optional processing steps such as ensuring a minimum
         number of dimensions, grayscale conversion, and treating multi-frame
         images as lists.
@@ -7514,25 +7513,25 @@ class LoadImage(Feature):
             loads one image, while a list of paths loads multiple images.
         load_options: dict of str to Any, optional
             Additional options passed to the file reader (e.g., `allow_pickle`
-            for NumPy, `mode` for OpenCV). It defaults to `None`.
+            for NumPy, `mode` for OpenCV). Defaults to `None`.
         ndim: int
             Ensures the image has at least this many dimensions. If the loaded
-            image has fewer dimensions, extra dimensions are added. It defaults
-            to `3`.
+            image has fewer dimensions, extra dimensions are added. Defaults to
+            `3`.
         to_grayscale: bool
-            If `True`, converts the image to grayscale. It defaults to `False`.
+            If `True`, converts the image to grayscale. Defaults to `False`.
         as_list: bool
             If `True`, treats the first dimension as a list of images instead
-            of stacking them into a NumPy array. It defaults to `False`.
+            of stacking them into a NumPy array. Defaults to `False`.
         get_one_random: bool
             If `True`, selects a single random image from a multi-frame stack
-            when `as_list=True`. It defaults to `False`.
+            when `as_list=True`. Defaults to `False`.
         **kwargs: Any
             Additional keyword arguments.
 
         Returns
         -------
-        array
+        array or list of arrays
             The loaded and processed image(s). If `as_list=True`, returns a
             list of images; otherwise, returns a single NumPy array or PyTorch
             tensor.
