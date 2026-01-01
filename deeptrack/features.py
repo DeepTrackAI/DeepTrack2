@@ -213,7 +213,7 @@ __all__ = [
     "OneOf",
     "OneOfDict",
     "LoadImage",
-    "SampleToMasks",  # TODO ***MG***
+    "SampleToMasks",  # TODO ***CM*** revise this after elimination of Image
     "AsType",
     "ChannelFirst2d",
     "Upscale",  # TODO ***AL***
@@ -7646,9 +7646,9 @@ class SampleToMasks(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray | Image, transformation_function: Callable[[Image], Image], **kwargs: dict[str, Any]) -> Image`
+    `get(image, transformation_function, **kwargs) -> Image`
         Applies the transformation function to the input image.
-    `_process_and_get(images: list[np.ndarray] | np.ndarray | list[Image] | Image, **kwargs: dict[str, Any]) -> Image | np.ndarray`
+    `_process_and_get(images, **kwargs) -> Image | np.ndarray`
         Processes a list of images and generates a multi-layer mask.
 
     Returns
@@ -7666,9 +7666,11 @@ class SampleToMasks(Feature):
     >>> import deeptrack as dt
 
     Define number of particles:
+
     >>> n_particles = 12
 
     Define optics and particles:
+
     >>> import numpy as np
     >>>    
     >>> optics = dt.Fluorescence(output_region=(0, 0, 64, 64))
@@ -7678,6 +7680,7 @@ class SampleToMasks(Feature):
     >>> particles = particle ^ n_particles
 
     Define pipelines:
+
     >>> sim_im_pip = optics(particles)
     >>> sim_mask_pip = particles >> dt.SampleToMasks(
     ...     lambda: lambda particles: particles > 0,
@@ -7688,12 +7691,15 @@ class SampleToMasks(Feature):
     >>> pipeline.store_properties()
 
     Generate image and mask:
+
     >>> image, mask = pipeline.update()()
 
     Get particle positions:
+
     >>> positions = np.array(image.get_property("position", get_one=False))
 
     Visualize results:
+
     >>> import matplotlib.pyplot as plt
     >>>
     >>> plt.subplot(1, 2, 1)
@@ -7726,7 +7732,7 @@ class SampleToMasks(Feature):
         output_region: PropertyLike[tuple[int, int, int, int]], optional
             Output region of the mask. Default is None.
         merge_method: PropertyLike[str | Callable | list[str | Callable]], optional
-            Method to merge masks. Default is "add".
+            Method to merge masks. Defaults to "add".
         **kwargs: dict[str, Any]
             Additional keyword arguments passed to the parent class.
         
@@ -7915,22 +7921,22 @@ class SampleToMasks(Feature):
 
 
 class AsType(Feature):
-    """Convert the data type of images.
+    """Convert the data type of arrays.
 
-    `Astype` changes the data type (`dtype`) of input images to a specified
+    `Astype` changes the data type (`dtype`) of input arrays to a specified
     type. The accepted types are standard NumPy or PyTorch data types (e.g.,
     `"float64"`, `"int32"`, `"uint8"`, `"int8"`, and `"torch.float32"`).
 
     Parameters
     ----------
     dtype: PropertyLike[str], optional
-        The desired data type for the image. It defaults to `"float64"`.
+        The desired data type for the image. Defaults to `"float64"`.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: array, dtype: str, **kwargs: Any) -> array`
+    `get(image, dtype, **kwargs) -> array`
         Convert the data type of the input image.
 
     Examples
@@ -7938,17 +7944,20 @@ class AsType(Feature):
     >>> import deeptrack as dt
 
     Create an input array:
+
     >>> import numpy as np
     >>>
     >>> input_image = np.array([1.5, 2.5, 3.5])
 
     Apply an AsType feature to convert to "`int32"`:
+
     >>> astype_feature = dt.AsType(dtype="int32")
     >>> output_image = astype_feature.get(input_image, dtype="int32")
     >>> output_image
     array([1, 2, 3], dtype=int32)
 
     Verify the data type:
+
     >>> output_image.dtype
     dtype('int32')
 
@@ -7964,7 +7973,7 @@ class AsType(Feature):
         Parameters
         ----------
         dtype: PropertyLike[str], optional
-            The desired data type for the image. It defaults to `"float64"`.
+            The desired data type for the image. Defaults to `"float64"`.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
@@ -7974,10 +7983,10 @@ class AsType(Feature):
 
     def get(
         self: Feature,
-        image: NDArray | torch.Tensor | Image,
+        image: NDArray | torch.Tensor,
         dtype: str,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor | Image:
+    ) -> NDArray | torch.Tensor:
         """Convert the data type of the input image.
 
         Parameters
@@ -7994,7 +8003,7 @@ class AsType(Feature):
         -------
         array
             The input image converted to the specified data type. It can be a
-            NumPy array, a PyTorch tensor, or an Image.
+            NumPy array or a PyTorch tensor.
 
         """
 
@@ -8026,11 +8035,10 @@ class AsType(Feature):
                 raise ValueError(
                     f"Unsupported dtype for torch.Tensor: {dtype}"
                 )
-            
+
             return image.to(dtype=torch_dtype)
 
-        else:
-            return image.astype(dtype)
+        return image.astype(dtype)
 
 
 class ChannelFirst2d(Feature):  # DEPRECATED
