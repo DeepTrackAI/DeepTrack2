@@ -165,7 +165,7 @@ from deeptrack import units_registry as units
 from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
-from deeptrack.image import Image
+from deeptrack.image import Image  # TODO ***CM*** remove once elim. Image
 from deeptrack.properties import PropertyDict, SequentialProperty
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
@@ -284,9 +284,8 @@ class Feature(DeepTrackNode):
     ----------
     _input: Any, optional.
         The input data for the feature. If left empty, no initial input is set.
-        It is most commonly a NumPy array, PyTorch tensor, or Image object, or
-        a list of NumPy arrays, PyTorch tensors, or Image objects; however, it
-        can be anything.
+        It is most commonly a NumPy array, a PyTorch tensor, or a list of NumPy
+        arrays or PyTorch tensors; however, it can be anything.
     **kwargs: Any
         Keyword arguments to configure the feature. Each keyword argument is 
         wrapped as a `Property` and added to the `properties` attribute, 
@@ -304,8 +303,8 @@ class Feature(DeepTrackNode):
         properties of the output image.
     _input: DeepTrackNode
         A node representing the input data for the feature. It is most commonly
-        a NumPy array, PyTorch tensor, or Image object, or a list of NumPy
-        arrays, PyTorch tensors, or Image objects; however, it can be anything.
+        a NumPy array, PyTorch tensor, or a list of NumPy arrays or PyTorch
+        tensors; however, it can be anything.
         It supports lazy evaluation and graph traversal.
     _random_seed: DeepTrackNode
         A node representing the feature’s random seed. This allows for 
@@ -329,10 +328,6 @@ class Feature(DeepTrackNode):
     __conversion_table__: ConversionTable
         Defines the unit conversions used by the feature to convert its 
         properties into the desired units.
-    _wrap_array_with_image: bool
-        Internal flag that determines whether arrays are wrapped as `Image` 
-        instances during evaluation. When `True`, image metadata and properties 
-        are preserved and propagated. It defaults to `False`.
     float_dtype: np.dtype
         The data type of the float numbers.
     int_dtype: np.dtype
@@ -350,8 +345,8 @@ class Feature(DeepTrackNode):
     -------
     `get(image: Any, **kwargs: Any) -> Any`
         Abstract method that defines how the feature transforms the input. The
-        input is most commonly a NumPy array, PyTorch tensor, or Image object,
-        but it can be anything.
+        input is most commonly a NumPy array or a PyTorch tensor, but it can be
+        anything.
     `__call__(image_list: Any, _ID: tuple[int, ...], **kwargs: Any) -> Any`
         It executes the feature or pipeline on the input and applies property 
         overrides from `kwargs`.
@@ -391,8 +386,6 @@ class Feature(DeepTrackNode):
             | list[np.ndarray]
             | torch.Tensor
             | list[torch.Tensor]
-            | Image
-            | list[Image]
         ) = None,
         resolve_kwargs: dict | None = None,
         interval: float | None = None,
@@ -6777,7 +6770,7 @@ class Lambda(Feature):
 
     Parameters
     ----------
-    function: Callable[..., Callable[[AnyImageAny], Any]]
+    function: Callable[..., Callable[[Any], Any]]
         A callable that produces a function. The outer function can accept 
         additional arguments from the pipeline, while the inner function 
         operates on a single input.
@@ -6971,7 +6964,7 @@ class Merge(Feature):
         list_of_inputs: list[Any],
         function: Callable[[list[Any]], Any | list[Any]],
         **kwargs: Any,
-    ) -> Image | list[Image]:
+    ) -> Any | list[Any]:
         """Apply the custom function to a list of inputs.
 
         Parameters
