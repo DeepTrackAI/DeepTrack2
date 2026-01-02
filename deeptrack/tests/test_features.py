@@ -2086,15 +2086,17 @@ class TestFeatures(unittest.TestCase):
         image = simple_pipeline.update()()
         upscaled_image = upscaled_pipeline.update()()
 
-        self.assertEqual(image.shape, upscaled_image.shape,
-                         "Upscaled image shape should match original image shape")
+        # Upscaled image shape should match original image shape
+        self.assertEqual(image.shape, upscaled_image.shape)
 
         # Allow slight differences due to upscaling and downscaling
         difference = np.abs(image - upscaled_image)
         mean_difference = np.mean(difference)
 
-        self.assertLess(mean_difference, 1E-4,
-                        "The upscaled image should be similar to the original within a tolerance")
+        # The upscaled image should be similar to the original within a tolerance
+        self.assertLess(mean_difference, 1E-4)
+
+        # TODO ***CM*** add unit test for PyTorch
 
 
     def test_NonOverlapping_resample_volume_position(self):
@@ -2117,7 +2119,8 @@ class TestFeatures(unittest.TestCase):
         )()
 
         # Test.
-        self.assertEqual(volume_1.get_property("position"), positions_no_unit[0])
+        self.assertEqual(volume_1.get_property("position"),
+                         positions_no_unit[0])
         self.assertEqual(
             volume_2.get_property("position"),
             positions_with_unit[0].to("px").magnitude,
@@ -2126,11 +2129,14 @@ class TestFeatures(unittest.TestCase):
         nonOverlapping._resample_volume_position(volume_1)
         nonOverlapping._resample_volume_position(volume_2)
 
-        self.assertEqual(volume_1.get_property("position"), positions_no_unit[1])
+        self.assertEqual(volume_1.get_property("position"),
+                         positions_no_unit[1])
         self.assertEqual(
             volume_2.get_property("position"),
             positions_with_unit[1].to("px").magnitude,
         )
+
+        # TODO ***CM*** add unit test for PyTorch
 
     def test_NonOverlapping_check_volumes_non_overlapping(self):
         nonOverlapping = features.NonOverlapping(
@@ -2315,6 +2321,7 @@ class TestFeatures(unittest.TestCase):
             )
         )
 
+        # TODO ***CM*** add unit test for PyTorch
 
     def test_NonOverlapping_check_non_overlapping(self):
 
@@ -2412,6 +2419,8 @@ class TestFeatures(unittest.TestCase):
             )
         )
 
+        # TODO ***CM*** add unit test for PyTorch
+
     def test_NonOverlapping_ellipses(self):
         """Set up common test objects before each test."""
         min_distance = 7  # Minimum distance in pixels
@@ -2472,6 +2481,8 @@ class TestFeatures(unittest.TestCase):
         ### self.assertLess(min_distance_before, 2 * radius + min_distance)
         self.assertGreaterEqual(min_distance_after,
                                 2 * radius + min_distance - 2)
+
+        # TODO ***CM*** add unit test for PyTorch
 
 
     def test_Store(self):

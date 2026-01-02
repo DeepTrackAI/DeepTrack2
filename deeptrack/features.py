@@ -216,8 +216,8 @@ __all__ = [
     "SampleToMasks",  # TODO ***CM*** revise this after elimination of Image
     "AsType",
     "ChannelFirst2d",
-    "Upscale",  # TODO ***AL***
-    "NonOverlapping",  # TODO ***AL***
+    "Upscale",  # TODO ***CM*** revise and check PyTorch afrer elimin. Image
+    "NonOverlapping",  # TODO ***CM*** revise + PyTorch afrer elimin. Image
     "Store",
     "Squeeze",
     "Unsqueeze",
@@ -8052,14 +8052,14 @@ class ChannelFirst2d(Feature):  # DEPRECATED
     Parameters
     ----------
     axis: int, optional
-        The axis to move to the first position. It defaults to `-1`
-        (last axis), which is typically the channel axis for NumPy arrays.
+        The axis to move to the first position. Defaults to `-1` (last axis),
+        which is typically the channel axis for NumPy arrays.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: array, axis: int, **kwargs: Any) -> array`
+    `get(image, axis, **kwargs) -> array`
         It rearranges the axes of an image to channel-first format.
 
     Examples
@@ -8068,22 +8068,26 @@ class ChannelFirst2d(Feature):  # DEPRECATED
     >>> from deeptrack.features import ChannelFirst2d
 
     Create a 2D input array:
+
     >>> input_image_2d = np.random.rand(10, 10)
     >>> print(input_image_2d.shape)
     (10, 10)
 
     Convert it to channel-first format:
+
     >>> channel_first_feature = ChannelFirst2d()
     >>> output_image = channel_first_feature.get(input_image_2d, axis=-1)
     >>> print(output_image.shape)
     (1, 10, 10)
 
     Create a 3D input array:
+
     >>> input_image_3d = np.random.rand(10, 10, 3)
     >>> print(input_image_3d.shape)
     (10, 10, 3)
 
     Convert it to channel-first format:
+
     >>> output_image = channel_first_feature.get(input_image_3d, axis=-1)
     >>> print(output_image.shape)
     (3, 10, 10)
@@ -8100,8 +8104,8 @@ class ChannelFirst2d(Feature):  # DEPRECATED
         Parameters
         ----------
         axis: int, optional
-            The axis to move to the first position, 
-            defaults to `-1` (last axis).
+            The axis to move to the first position.
+            Defaults to `-1` (last axis).
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
@@ -8118,10 +8122,10 @@ class ChannelFirst2d(Feature):  # DEPRECATED
 
     def get(
         self: Feature,
-        image: NDArray | torch.Tensor | Image,
+        image: NDArray | torch.Tensor,
         axis: int = -1,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor | Image:
+    ) -> NDArray | torch.Tensor:
         """Rearrange the axes of an image to channel-first format.
 
         Rearrange the axes of a 3D image to channel-first format or add a
@@ -8157,14 +8161,14 @@ class ChannelFirst2d(Feature):  # DEPRECATED
         ndim = array.ndim
         if ndim not in (2, 3):
             raise ValueError("ChannelFirst2d only supports 2D or 3D images. "
-                         f"Received {ndim}D image.")
+                             f"Received {ndim}D image.")
 
         # Add a new dimension for 2D images.
         if ndim == 2:
             if apc.is_torch_array(array):
                 array = array.unsqueeze(0)
             else:
-                 array[None]
+                array[None]
 
         # Move axis for 3D images.
         else:
@@ -8191,8 +8195,9 @@ class Upscale(Feature):
     with lower-resolution pipelines.
     
     Internally, this feature redefines the scale of physical units (e.g., 
-    `units.pixel`) to achieve the effect of upscaling. It does not resize the 
-    input image itself but affects features that rely on physical units.
+    `units.pixel`) to achieve the effect of upscaling. Therefore, it does not
+    resize the input image itself but affects only features that rely on
+    physical units.
 
     Parameters
     ----------
@@ -8201,26 +8206,27 @@ class Upscale(Feature):
     factor: int or tuple[int, int, int], optional
         The factor by which to upscale the simulation. If a single integer is 
         provided, it is applied uniformly across all axes. If a tuple of three 
-        integers is provided, each axis is scaled individually. It defaults to 1.
+        integers is provided, each axis is scaled individually. Defaults to 1.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
     ----------
     __distributed__: bool
-        Indicates whether this feature distributes computation across inputs.
-        Always `False` for `Upscale`.
+        Always `False` for `Upscale`, indicating that this feature’s `.get()`
+        method processes the entire input at once even if it is a list, rather
+        than distributing calls for each item of the list.
 
     Methods
     -------
-    `get(image: np.ndarray | Image, factor: int | tuple[int, int, int], **kwargs) -> np.ndarray | torch.tensor`
-        Simulates the pipeline at a higher resolution and returns the result at 
+    `get(image, factor, **kwargs) -> np.ndarray | torch.tensor`
+        Simulates the pipeline at a higher resolution and returns the result at
         the original resolution.
 
     Notes
     -----
-    - This feature does **not** directly resize the image. Instead, it modifies
-      the unit conversions within the pipeline, making physical units smaller, 
+    - This feature does not directly resize the image. Instead, it modifies the
+      unit conversions within the pipeline, making physical units smaller,
       which results in more detail being simulated.
     - The final output is downscaled back to the original resolution using 
       `block_reduce` from `skimage.measure`.
@@ -8230,30 +8236,38 @@ class Upscale(Feature):
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import matplotlib.pyplot as plt
 
     Define an optical pipeline and a spherical particle:
+
     >>> optics = dt.Fluorescence()
     >>> particle = dt.Sphere()
     >>> simple_pipeline = optics(particle)
 
     Create an upscaled pipeline with a factor of 4:
-    >>> upscaled_pipeline = dt.Upscale(optics(particle), factor=4) 
+
+    >>> upscaled_pipeline = dt.Upscale(optics(particle), factor=4)
     
     Resolve the pipelines:
+
     >>> image = simple_pipeline()
     >>> upscaled_image = upscaled_pipeline()
 
     Visualize the images:
+
+    >>> import matplotlib.pyplot as plt
+    >>>
     >>> plt.subplot(1, 2, 1)
     >>> plt.imshow(image, cmap="gray")
     >>> plt.title("Original Image")
+    >>>
     >>> plt.subplot(1, 2, 2)
     >>> plt.imshow(upscaled_image, cmap="gray")
     >>> plt.title("Simulated at Higher Resolution")
+    >>>
     >>> plt.show()
     
     Compare the shapes (both are the same due to downscaling):
+
     >>> print(image.shape)
     (128, 128, 1)
     >>> print(upscaled_image.shape)
@@ -8262,6 +8276,8 @@ class Upscale(Feature):
     """
 
     __distributed__: bool = False
+
+    feature: Feature
 
     def __init__(
         self: Feature,
@@ -8279,7 +8295,7 @@ class Upscale(Feature):
             The factor by which to upscale the simulation. If a single integer 
             is provided, it is applied uniformly across all axes. If a tuple of
             three integers is provided, each axis is scaled individually. 
-            It defaults to `1`.
+            Defaults to 1.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
@@ -8290,15 +8306,15 @@ class Upscale(Feature):
 
     def get(
         self: Feature,
-        image: np.ndarray,
+        image: np.ndarray | torch.Tensor,
         factor: int | tuple[int, int, int],
         **kwargs: Any,
-    ) -> np.ndarray | torch.tensor:
+    ) -> np.ndarray | torch.Tensor:
         """Simulate the pipeline at a higher resolution and return result.
 
         Parameters
         ----------
-        image: np.ndarray
+        image: np.ndarray or torch.Tensor
             The input image to process.
         factor: int or tuple[int, int, int]
             The factor by which to upscale the simulation. If a single integer 
@@ -8309,7 +8325,7 @@ class Upscale(Feature):
 
         Returns
         -------
-        np.ndarray
+        np.ndarray or torch.Tensor
             The processed image at the original resolution.
 
         Raises
@@ -8364,67 +8380,71 @@ class NonOverlapping(Feature):
         The feature that generates the list of volumes to place 
         non-overlapping.
     min_distance: float, optional
-        The minimum distance between volumes in pixels. It defaults to `1`. 
-        It can be negative to allow for partial overlap.
+        The minimum distance between volumes in pixels. It can be negative to
+        allow for partial overlap. Defaults to 1. 
     max_attempts: int, optional
         The maximum number of attempts to place volumes without overlap.
-        It defaults to `5`. 
+        Defaults to 5. 
     max_iters: int, optional
-        The maximum number of resamplings. If this number is exceeded, a 
-            new list of volumes is generated. It defaults to `100`.
+        The maximum number of resamplings. If this number is exceeded, a new
+        list of volumes is generated. Defaults to 100.
 
     Attributes
     ----------
     __distributed__: bool
-        Indicates whether this feature distributes computation across inputs.
-        Always `False` for `NonOverlapping`.
+        Always `False` for `NonOverlapping`, indicating that this feature’s
+        `.get()` method processes the entire input at once even if it is a
+        list, rather than distributing calls for each item of the list.N
 
     Methods
     -------
-    `get(_: Any, min_distance: float, max_attempts: int, **kwargs: dict[str, Any]) -> list[np.ndarray]`
+    `get(*_, min_distance, max_attempts, **kwargs) -> array`
         Generate a list of non-overlapping 3D volumes.
-    `_check_non_overlapping(list_of_volumes: list[np.ndarray]) -> bool`
+    `_check_non_overlapping(list_of_volumes) -> bool`
         Check if all volumes in the list are non-overlapping.
-    `_check_bounding_cubes_non_overlapping(bounding_cube_1: list[int], bounding_cube_2: list[int], min_distance: float) -> bool`
+    `_check_bounding_cubes_non_overlapping(...) -> bool`
         Check if two bounding cubes are non-overlapping.
-    `_get_overlapping_cube(bounding_cube_1: list[int], bounding_cube_2: list[int]) -> list[int]`
+    `_get_overlapping_cube(...) -> list[int]`
         Get the overlapping cube between two bounding cubes.
-    `_get_overlapping_volume(volume: np.ndarray, bounding_cube: tuple[float, float, float, float, float, float], overlapping_cube: tuple[float, float, float, float, float, float]) -> np.ndarray`
+    `_get_overlapping_volume(...) -> array`
         Get the overlapping volume between a volume and a bounding cube.
-    `_check_volumes_non_overlapping(volume_1: np.ndarray, volume_2: np.ndarray, min_distance: float) -> bool`
+    `_check_volumes_non_overlapping(...) -> bool`
         Check if two volumes are non-overlapping.
-    `_resample_volume_position(volume: np.ndarray | Image) -> Image`
+    `_resample_volume_position(volume) -> Image`
         Resample the position of a volume to avoid overlap.
     
     Notes
     -----
-    - This feature performs **bounding cube checks first** to **quickly 
-      reject** obvious overlaps before voxel-level checks.
-    - If the bounding cubes overlap, precise **voxel-based checks** are 
-      performed.
+    - This feature performs bounding cube checks first to quickly reject
+      obvious overlaps before voxel-level checks.
+    - If the bounding cubes overlap, precise voxel-based checks are performed.
 
     Examples
     ---------
     >>> import deeptrack as dt
-    >>> import numpy as np
-    >>> import matplotlib.pyplot as plt
 
     Define an ellipse scatterer with randomly positioned objects:
+
+    >>> import numpy as np
+    >>>
     >>> scatterer = dt.Ellipse(
     >>>    radius= 13 * dt.units.pixels,
     >>>    position=lambda: np.random.uniform(5, 115, size=2)* dt.units.pixels,
     >>> )
 
     Create multiple scatterers:
+
     >>> scatterers = (scatterer ^ 8)  
 
     Define the optics and create the image with possible overlap:
+
     >>> optics = dt.Fluorescence()
     >>> im_with_overlap = optics(scatterers)
     >>> im_with_overlap.store_properties()
     >>> im_with_overlap_resolved = image_with_overlap()
 
     Gather position from image:
+
     >>> pos_with_overlap = np.array(
     >>>     im_with_overlap_resolved.get_property(
     >>>         "position", 
@@ -8433,12 +8453,17 @@ class NonOverlapping(Feature):
     >>> )
 
     Enforce non-overlapping and create the image without overlap:
-    >>> non_overlapping_scatterers = dt.NonOverlapping(scatterers, min_distance=4)
+    
+    >>> non_overlapping_scatterers = dt.NonOverlapping(
+    ...     scatterers,
+    ...     min_distance=4,
+    ... )
     >>> im_without_overlap =  optics(non_overlapping_scatterers)
     >>> im_without_overlap.store_properties()
     >>> im_without_overlap_resolved = im_without_overlap()
 
     Gather position from image:
+
     >>> pos_without_overlap = np.array(
     >>>     im_without_overlap_resolved.get_property(
     >>>         "position",
@@ -8447,20 +8472,26 @@ class NonOverlapping(Feature):
     >>> )
 
     Create a figure with two subplots to visualize the difference:
+
+    >>> import matplotlib.pyplot as plt
+    >>>
     >>> fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-    
+    >>>
     >>> axes[0].imshow(im_with_overlap_resolved, cmap="gray")
     >>> axes[0].scatter(pos_with_overlap[:,1],pos_with_overlap[:,0])
     >>> axes[0].set_title("Overlapping Objects")
     >>> axes[0].axis("off")
+    >>>
     >>> axes[1].imshow(im_without_overlap_resolved, cmap="gray")
     >>> axes[1].scatter(pos_without_overlap[:,1],pos_without_overlap[:,0])
     >>> axes[1].set_title("Non-Overlapping Objects")
     >>> axes[1].axis("off")
     >>> plt.tight_layout()
+    >>>
     >>> plt.show()
 
     Define function to calculate minimum distance:
+
     >>> def calculate_min_distance(positions):
     >>> distances = [
     >>>     np.linalg.norm(positions[i] - positions[j])
@@ -8470,8 +8501,10 @@ class NonOverlapping(Feature):
     >>> return min(distances)
 
     Print minimum distances with and without overlap:
+
     >>> print(calculate_min_distance(pos_with_overlap))
     10.768742383382174
+
     >>> print(calculate_min_distance(pos_without_overlap))
     30.82531120942446
 
@@ -8507,19 +8540,20 @@ class NonOverlapping(Feature):
         max_iters: int, optional
             The maximum number of resampling iterations per attempt. If 
             exceeded, a new list of volumes is generated. It defaults to `100`.
-        
+
         """
 
         super().__init__(
             min_distance=min_distance, 
             max_attempts=max_attempts, 
             max_iters=max_iters,
-            **kwargs)
+            **kwargs,
+        )
         self.feature = self.add_feature(feature, **kwargs)
 
     def get(
         self: NonOverlapping,
-        _: Any,
+        *_: Any,
         min_distance: float,
         max_attempts: int,
         max_iters: int,
@@ -8545,7 +8579,7 @@ class NonOverlapping(Feature):
             configuration.
         max_iters: int
             The maximum number of resampling iterations per attempt.
-        **kwargs: dict[str, Any]
+        **kwargs: Any
             Additional parameters that may be used by subclasses.
 
         Returns
@@ -8564,10 +8598,9 @@ class NonOverlapping(Feature):
 
         Notes
         -----
-        - The placement process **prioritizes bounding cube checks** for 
+        - The placement process prioritizes bounding cube checks for
           efficiency.
-        - If bounding cubes overlap, **voxel-based overlap checks** are 
-          performed.
+        - If bounding cubes overlap, voxel-based overlap checks are performed.
         
         """
 
