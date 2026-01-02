@@ -156,7 +156,6 @@ from typing import Any, Callable, Iterable, Literal, TYPE_CHECKING
 
 import array_api_compat as apc
 import numpy as np
-from numpy.typing import NDArray
 import matplotlib.pyplot as plt
 from matplotlib import animation
 from pint import Quantity
@@ -388,8 +387,8 @@ class Feature(DeepTrackNode):
         It binds another feature’s properties as arguments to this feature.
     `plot(
         input_image: (
-            NDArray
-            | list[NDArray]
+            np.ndarray
+            | list[np.ndarray]
             | torch.Tensor
             | list[torch.Tensor]
             | Image
@@ -1766,12 +1765,10 @@ class Feature(DeepTrackNode):
     def plot(
         self: Feature,
         input_image: (
-            NDArray
-            | list[NDArray]
+            np.ndarray
+            | list[np.ndarray]
             | torch.Tensor
             | list[torch.Tensor]
-            | Image
-            | list[Image]
         ) = None,
         resolve_kwargs: dict = None,
         interval: float = None,
@@ -7363,7 +7360,7 @@ class LoadImage(Feature):
 
     Methods
     -------
-    `get(...) -> NDArray | list[NDArray] | torch.Tensor | list[torch.Tensor]`
+    `get(...) -> array or tensor or list of arrays/tensors`
         Load the image(s) from disk and process them.
 
     Raises
@@ -7493,7 +7490,7 @@ class LoadImage(Feature):
         as_list: bool,
         get_one_random: bool,
         **kwargs: Any,
-    ) -> NDArray[Any] | torch.Tensor | list[NDArray[Any] | torch.Tensor]:
+    ) -> np.ndarray | torch.Tensor | list[np.ndarray | torch.Tensor]:
         """Load and process an image or a list of images from disk.
 
         This method attempts to load an image using multiple file readers
@@ -7983,10 +7980,10 @@ class AsType(Feature):
 
     def get(
         self: Feature,
-        image: NDArray | torch.Tensor,
+        image: np.ndarray | torch.Tensor,
         dtype: str,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor:
+    ) -> np.ndarray | torch.Tensor:
         """Convert the data type of the input image.
 
         Parameters
@@ -8122,10 +8119,10 @@ class ChannelFirst2d(Feature):  # DEPRECATED
 
     def get(
         self: Feature,
-        image: NDArray | torch.Tensor,
+        image: np.ndarray | torch.Tensor,
         axis: int = -1,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor:
+    ) -> np.ndarray | torch.Tensor:
         """Rearrange the axes of an image to channel-first format.
 
         Rearrange the axes of a 3D image to channel-first format or add a
