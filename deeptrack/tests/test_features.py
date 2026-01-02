@@ -2525,7 +2525,6 @@ class TestFeatures(unittest.TestCase):
             torch.testing.assert_close(cached_output, value_feature())
 
 
-
     def test_Squeeze(self):
         ### Test with NumPy array
         input_image = np.array([[[[3], [2], [1]]], [[[1], [2], [3]]]])

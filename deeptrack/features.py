@@ -9039,10 +9039,10 @@ class NonOverlapping(Feature):
 class Store(Feature):
     """Store the output of a feature for reuse.
 
-    The `Store` feature evaluates a given feature and stores its output in an
-    internal dictionary. Subsequent calls with the same key will return the
-    stored value unless the `replace` parameter is set to `True`. This enables
-    caching and reuse of computed feature outputs.
+    `Store` evaluates a given feature and stores its output in an internal
+    dictionary. Subsequent calls with the same key will return the stored value
+    unless the `replace` parameter is set to `True`. This enables caching and
+    reuse of computed feature outputs.
 
     Parameters
     ----------
@@ -9051,50 +9051,55 @@ class Store(Feature):
     key: Any
         The key used to identify the stored output.
     replace: PropertyLike[bool], optional
-        If `True`, replaces the stored value with the current computation. It
-        defaults to `False`.
-    **kwargs: dict of str to Any
+        If `True`, replaces the stored value with the current computation.
+        Defaults to `False`.
+    **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
     ----------
     __distributed__: bool
-        Indicates whether this feature distributes computation across inputs.
         Always `False` for `Store`, as it handles caching locally.
-    _store: dict[Any, Image]
+    _store: dict[Any, Any]
         A dictionary used to store the outputs of the evaluated feature.
 
     Methods
     -------
-    `get(_: Any, key: Any, replace: bool, **kwargs: dict[str, Any]) -> Any`
+    `get(*_, key, replace, **kwargs) -> Any`
         Evaluate and store the feature output, or return the cached result.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
-
-    >>> value_feature = dt.Value(lambda: np.random.rand())
 
     Create a `Store` feature with a key:
+
+    >>> import numpy as np
+    >>>
+    >>> value_feature = dt.Value(lambda: np.random.rand())
     >>> store_feature = dt.Store(feature=value_feature, key="example")
 
     Retrieve and store the value:
+
     >>> output = store_feature(None, key="example", replace=False)
 
     Retrieve the stored value without recomputing:
+
     >>> value_feature.update()
     >>> cached_output = store_feature(None, key="example", replace=False)
     >>> print(cached_output == output)
     True
+
     >>> print(cached_output == value_feature())
     False
 
     Retrieve the stored value recomputing:
+
     >>> value_feature.update()
     >>> cached_output = store_feature(None, key="example", replace=True)
     >>> print(cached_output == output)
     False
+
     >>> print(cached_output == value_feature())
     True
 
@@ -9119,8 +9124,8 @@ class Store(Feature):
             The key used to identify the stored output.
         replace: PropertyLike[bool], optional
             If `True`, replaces the stored value with a new computation.
-            It defaults to `False`.
-        **kwargs:: dict of str to Any
+            Defaults to `False`.
+        **kwargs:: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
@@ -9131,7 +9136,7 @@ class Store(Feature):
 
     def get(
         self: Store,
-        _: Any,
+        *_: Any,
         key: Any,
         replace: bool,
         **kwargs: Any,
@@ -9140,7 +9145,7 @@ class Store(Feature):
 
         Parameters
         ----------
-        _: Any
+        *_: Any
             Placeholder for unused image input.
         key: Any
             The key used to identify the stored output.
@@ -9163,35 +9168,36 @@ class Store(Feature):
         # Return the stored or newly computed result
         if self._wrap_array_with_image:
             return Image(self._store[key], copy=False)
-        else:
-            return self._store[key]
+
+        return self._store[key]
 
 
 class Squeeze(Feature):
     """Squeeze the input image to the smallest possible dimension.
 
-    This feature removes axes of size 1 from the input image. By default, it 
+    `Squeeze` removes axes of size 1 from the input image. By default, it 
     removes all singleton dimensions. If a specific axis or axes are specified, 
     only those axes are squeezed.
 
     Parameters
     ----------
     axis: int or tuple[int, ...], optional
-        The axis or axes to squeeze. It defaults to `None`, squeezing all axes.
+        The axis or axes to squeeze. Defaults to `None`, squeezing all axes.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: array, axis: int | tuple[int, ...], **kwargs: Any) -> array`
-        Squeeze the input image by removing singleton dimensions. The input and
-        output arrays can be a NumPy array, a PyTorch tensor, or an Image.
+    `get(image, axis, **kwargs) -> array`
+        Squeeze the input array by removing singleton dimensions. The input and
+        output arrays can be a NumPy array or a PyTorch tensor.
 
     Examples
     --------
     >>> import deeptrack as dt
 
     Create an input array with extra dimensions:
+
     >>> import numpy as np
     >>>
     >>> input_image = np.array([[[[1], [2], [3]]]])
@@ -9199,12 +9205,14 @@ class Squeeze(Feature):
     (1, 1, 3, 1)
 
     Create a Squeeze feature:
+
     >>> squeeze_feature = dt.Squeeze(axis=0)
     >>> output_image = squeeze_feature(input_image)
     >>> output_image.shape
     (1, 3, 1)
 
     Without specifying an axis:
+
     >>> squeeze_feature = dt.Squeeze()
     >>> output_image = squeeze_feature(input_image)
     >>> output_image.shape
@@ -9233,28 +9241,28 @@ class Squeeze(Feature):
 
     def get(
         self: Squeeze,
-        image: NDArray | torch.Tensor | Image,
+        image: np.ndarray | torch.Tensor,
         axis: int | tuple[int, ...] | None = None,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor | Image:
+    ) -> np.ndarray | torch.Tensor:
         """Squeeze the input image by removing singleton dimensions.
 
         Parameters
         ----------
-        image: array
-            The input image to process. The input array can be a NumPy array, a
-            PyTorch tensor, or an Image.
+        image: array or tensor
+            The input image to process. The input array can be a NumPy array or
+            a PyTorch tensor.
         axis: int or tuple[int, ...], optional
-            The axis or axes to squeeze. It defaults to `None`, which squeezes 
-            all singleton axes.
+            The axis or axes to squeeze. Defaults to `None`, which squeezes all
+            singleton axes.
         **kwargs: Any
             Additional keyword arguments (unused here).
 
         Returns
         -------
-        array
-            The squeezed image with reduced dimensions. The output array can be
-            a NumPy array, a PyTorch tensor, or an Image.
+        array or tensor
+            The squeezed array with reduced dimensions. The output array can be
+            a NumPy array or a PyTorch tensor.
 
         """
 
@@ -9280,22 +9288,23 @@ class Unsqueeze(Feature):
     Parameters
     ----------
     axis: int or tuple[int, ...], optional
-        The axis or axes where new singleton dimensions should be added. It
-        defaults to `None`, which adds a singleton dimension at the last axis.
+        The axis or axes where new singleton dimensions should be added.
+        Defaults to `None`, which adds a singleton dimension at the last axis.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: array, axis: int | tuple[int, ...] | None, **kwargs: Any) -> array`
+    `get(image, axis, **kwargs) -> array or tensor`
         Add singleton dimensions to the input image. The input and output
-        arrays can be a NumPy array, a PyTorch tensor, or an Image.
+        arrays can be a NumPy array or a PyTorch tensor.
 
     Examples
     --------
     >>> import deeptrack as dt
 
     Create an input array:
+
     >>> import numpy as np
     >>>
     >>> input_image = np.array([1, 2, 3])
@@ -9303,12 +9312,14 @@ class Unsqueeze(Feature):
     (3,)
 
     Apply Unsqueeze feature:
+
     >>> unsqueeze_feature = dt.Unsqueeze(axis=0)
     >>> output_image = unsqueeze_feature(input_image)
     >>> output_image.shape
     (1, 3)
 
     Without specifying an axis, in unsqueezes the last dimension:
+
     >>> unsqueeze_feature = dt.Unsqueeze()
     >>> output_image = unsqueeze_feature(input_image)
     >>> output_image.shape
@@ -9326,8 +9337,8 @@ class Unsqueeze(Feature):
         Parameters
         ----------
         axis: int or tuple[int, ...], optional
-            The axis or axes where new singleton dimensions should be added. It
-            defaults to -1, which adds a singleton dimension at the last axis.
+            The axis or axes where new singleton dimensions should be added. 
+            Defaults to -1, which adds a singleton dimension at the last axis.
         **kwargs:: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
@@ -9337,18 +9348,18 @@ class Unsqueeze(Feature):
 
     def get(
         self: Unsqueeze,
-        image: np.ndarray | torch.Tensor | Image,
+        image: np.ndarray | torch.Tensor,
         axis: int | tuple[int, ...] | None = -1,
         **kwargs: Any,
 
-    ) -> np.ndarray | torch.Tensor | Image:
+    ) -> np.ndarray | torch.Tensor:
         """Add singleton dimensions to the input image.
 
         Parameters
         ----------
         image: array
-            The input image to process. The input array can be a NumPy array, a
-            PyTorch tensor, or an Image.
+            The input image to process. The input array can be a NumPy array or
+            a PyTorch tensor.
         axis: int or tuple[int, ...], optional
             The axis or axes where new singleton dimensions should be added. 
             It defaults to -1, which adds a singleton dimension at the last
@@ -9358,9 +9369,9 @@ class Unsqueeze(Feature):
 
         Returns
         -------
-        array
+        array or tensor
             The input image with the specified singleton dimensions added. The
-            output array can be a NumPy array, a PyTorch tensor, or an Image.
+            output array can be a NumPy array, or a PyTorch tensor.
 
         """
 
@@ -9390,20 +9401,21 @@ class MoveAxis(Feature):
         The source position of the axis to move.
     destination: int
         The destination position of the axis.
-    **kwargs:: Any
+    **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image: array, source: int, destination: int, **kwargs: Any) -> array`
+    `get(image, source, destination, **kwargs) -> array or tensor`
         Move the specified axis of the input image to a new position. The input
-        and output array can be a NumPy array, a PyTorch tensor, or an Image.
+        and output can be NumPy arrays or PyTorch tensors.
 
     Examples
     --------
     >>> import deeptrack as dt
 
     Create an input array:
+
     >>> import numpy as np
     >>>
     >>> input_image = np.random.rand(2, 3, 4)
@@ -9411,6 +9423,7 @@ class MoveAxis(Feature):
     (2, 3, 4)
 
     Apply a MoveAxis feature:
+
     >>> move_axis_feature = dt.MoveAxis(source=0, destination=2)
     >>> output_image = move_axis_feature(input_image)
     >>> output_image.shape
@@ -9441,18 +9454,18 @@ class MoveAxis(Feature):
 
     def get(
         self: MoveAxis,
-        image: NDArray | torch.Tensor | Image,
+        image: np.ndarray | torch.Tensor,
         source: int,
         destination: int,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor | Image:
+    ) -> np.ndarray | torch.Tensor:
         """Move the specified axis of the input image to a new position.
 
         Parameters
         ----------
-        image: array
-            The input image to process. The input array can be a NumPy array, a
-            PyTorch tensor, or an Image.
+        image: array or tensor
+            The input image to process. The input can be a NumPy array or a
+            PyTorch tensor.
         source: int
             The axis to move.
         destination: int
@@ -9462,10 +9475,9 @@ class MoveAxis(Feature):
 
         Returns
         -------
-        array
+        array or tensor
             The input image with the specified axis moved to the destination.
-            The output array can be a NumPy array, a PyTorch tensor, or an
-            Image.
+            The output can be a NumPy array or a PyTorch tensor.
 
         """
 
@@ -9495,15 +9507,16 @@ class Transpose(Feature):
 
     Methods
     -------
-    `get(image: array, axes: tuple[int, ...] | None, **kwargs: Any) -> array`
-        Transpose the axes of the input image(s). The input and output array
-        can be a NumPy array, a PyTorch tensor, or an Image.
+    `get(image, axes, **kwargs) -> array or tensor`
+        Transpose the axes of the input image(s). The input and output can be
+        NumPy arrays or PyTorch tensors.
 
     Examples
     --------
     >>> import deeptrack as dt
 
     Create an input array:
+
     >>> import numpy as np
     >>>
     >>> input_image = np.random.rand(2, 3, 4)
@@ -9511,12 +9524,14 @@ class Transpose(Feature):
     (2, 3, 4)
 
     Apply a Transpose feature:
+
     >>> transpose_feature = dt.Transpose(axes=(1, 2, 0))
     >>> output_image = transpose_feature(input_image)
     >>> output_image.shape
     (3, 4, 2)
 
     Without specifying axes:
+
     >>> transpose_feature = dt.Transpose()
     >>> output_image = transpose_feature(input_image)
     >>> output_image.shape
@@ -9545,17 +9560,17 @@ class Transpose(Feature):
 
     def get(
         self: Transpose,
-        image: NDArray | torch.Tensor | Image,
+        image: np.ndarray | torch.Tensor,
         axes: tuple[int, ...] | None = None,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor | Image:
+    ) -> np.ndarray | torch.Tensor:
         """Transpose the axes of the input image.
 
         Parameters
         ----------
-        image: array
-            The input image to process. The input array can be a NumPy array, a
-            PyTorch tensor, or an Image.
+        image: array or tenor
+            The input image to process. The input can be a NumPy array or a
+            PyTorch tensor.
         axes: tuple[int, ...], optional
             A tuple specifying the permutation of the axes. If `None`, the 
             axes are reversed by default.
@@ -9564,9 +9579,9 @@ class Transpose(Feature):
 
         Returns
         -------
-        array
-            The transposed image with rearranged axes. The output array can be
-            a NumPy array, a PyTorch tensor, or an Image.
+        array or tensor
+            The transposed image with rearranged axes. The output can be a
+            NumPy array or a PyTorch tensor.
 
         """
 
@@ -9592,21 +9607,22 @@ class OneHot(Feature):
 
     Methods
     -------
-    `get(image: array, num_classes: int, **kwargs: Any) -> array`
+    `get(image, num_classes, **kwargs) -> array or tensor`
         Convert the input array of class labels into a one-hot encoded array.
-        The input and output arrays can be a NumPy array, a PyTorch tensor, or
-        an Image.
+        The input and output can be NumPy arrays or PyTorch tensors.
 
     Examples
     --------
     >>> import deeptrack as dt
     
     Create an input array of class labels:
+
     >>> import numpy as np
     >>>
     >>> input_data = np.array([0, 1, 2])
 
     Apply a OneHot feature:
+
     >>> one_hot_feature = dt.OneHot(num_classes=3)
     >>> one_hot_encoded = one_hot_feature.get(input_data, num_classes=3)
     >>> one_hot_encoded
@@ -9636,18 +9652,18 @@ class OneHot(Feature):
 
     def get(
         self: OneHot,
-        image: NDArray | torch.Tensor | Image,
+        image: np.ndarray | torch.Tensor,
         num_classes: int,
         **kwargs: Any,
-    ) -> NDArray | torch.Tensor | Image:
+    ) -> np.ndarray | torch.Tensor:
         """Convert the input array of labels into a one-hot encoded array.
 
         Parameters
         ----------
-        image: array
+        image: array or tensor
             The input array of class labels. The last dimension should contain 
-            integers representing class indices. The input array can be a NumPy
-            array, a PyTorch tensor, or an Image.
+            integers representing class indices. The input can be a NumPy array
+            or a PyTorch tensor.
         num_classes: int
             The total number of classes for the one-hot encoding.
         **kwargs: Any
@@ -9655,11 +9671,11 @@ class OneHot(Feature):
 
         Returns
         -------
-        array
+        array or tensor
             The one-hot encoded array. The last dimension is replaced with 
-            one-hot vectors of length `num_classes`. The output array can be a
-            NumPy array, a PyTorch tensor, or an Image. In all cases, it is of
-            data type float32 (e.g., np.float32 or torch.float32).
+            one-hot vectors of length `num_classes`. The output can be a NumPy
+            array or a PyTorch tensor. In all cases, it is of data type float32
+            (e.g., np.float32 or torch.float32).
 
         """
 
@@ -9692,13 +9708,12 @@ class TakeProperties(Feature):
         The feature from which to extract properties.
     names: list[str]
         The names of the properties to extract
-    **kwargs: dict of str to Any
+    **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Attributes
     ----------
     __distributed__: bool
-        Indicates whether this feature distributes computation across inputs.
         Always `False` for `TakeProperties`, as it processes sequentially.
     __list_merge_strategy__: int
         Specifies how lists of properties are merged. Set to
@@ -9706,8 +9721,7 @@ class TakeProperties(Feature):
 
     Methods
     -------
-    `get(image: Any, names: tuple[str, ...], **kwargs: dict[str, Any])
-        -> np.ndarray | tuple[np.ndarray, torch.Tensor, ...]`
+    `get(image, names, **kwargs) -> array or tensor or tuple of arrays/tensors`
         Extract the specified properties from the feature pipeline.
 
     Examples
@@ -9719,18 +9733,22 @@ class TakeProperties(Feature):
     ...         super().__init__(my_property=my_property, **kwargs)
 
     Create an example feature with a property:
+
     >>> feature = ExampleFeature(my_property=Property(42))
 
     Use `TakeProperties` to extract the property:
+
     >>> take_properties = dt.TakeProperties(feature)
     >>> output = take_properties.get(image=None, names=["my_property"])
     >>> print(output)
     [42]
 
     Create a `Gaussian` feature:
+
     >>> noise_feature = dt.Gaussian(mu=7, sigma=12)
 
     Use `TakeProperties` to extract the property:
+
     >>> take_properties = dt.TakeProperties(noise_feature)
     >>> output = take_properties.get(image=None, names=["mu"])
     >>> print(output)
@@ -9765,11 +9783,16 @@ class TakeProperties(Feature):
 
     def get(
         self: Feature,
-        image: NDArray[Any] | torch.Tensor,
+        image: np.ndarray | torch.Tensor,
         names: tuple[str, ...],
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
-    ) -> NDArray[Any] | tuple[NDArray[Any], torch.Tensor, ...]:
+    ) -> (
+        np.ndarray
+        | torch.Tensor
+        | tuple[np.ndarray, ...]
+        | tuple[torch.Tensor, ...]
+    ):
         """Extract the specified properties from the feature pipeline.
 
         This method retrieves the values of the specified properties from the
@@ -9777,7 +9800,7 @@ class TakeProperties(Feature):
 
         Parameters
         ----------
-        image: NDArray[Any] | torch.Tensor
+        image: array or tensor
             The input image (unused in this method).
         names: tuple[str, ...]
             The names of the properties to extract.
@@ -9789,11 +9812,11 @@ class TakeProperties(Feature):
 
         Returns
         -------
-        NDArray[Any] or tuple[NDArray[Any], torch.Tensor, ...]
-            If a single property name is provided, a NumPy array containing the
-            property values is returned. If multiple property names are
-            provided, a tuple of NumPy arrays is returned, where each array
-            corresponds to a property.
+        array or tensor or tuple of arrays or tensors
+            If a single property name is provided, a NumPy array or a PyTorch
+            tensor containing the property values is returned. If multiple
+            property names are provided, a tuple of NumPy arrays or PyTorch
+            tensors is returned, where each array/tensor corresponds to a property.
 
         """
 
