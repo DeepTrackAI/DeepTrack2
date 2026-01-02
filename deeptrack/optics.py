@@ -344,11 +344,11 @@ class Microscope(StructuralFeature):
                 volume_samples,
                 **additional_sample_kwargs,
             )
-            sample_volume = Image(sample_volume)
+            # sample_volume = Image(sample_volume)
 
             # Merge all properties into the volume.
-            for scatterer in volume_samples + field_samples:
-                sample_volume.merge_properties_from(scatterer)
+            # for scatterer in volume_samples + field_samples:
+            #     sample_volume.merge_properties_from(scatterer)
 
             # Let the objective know about the limits of the volume and all the fields.
             propagate_data_to_dependencies(
@@ -365,18 +365,18 @@ class Microscope(StructuralFeature):
                 imaged_sample
             )
 
-        # Merge with input
-        if not image:
-            if not self._wrap_array_with_image and isinstance(imaged_sample, Image):
-                return imaged_sample._value
-            else:
-                return imaged_sample
+        # # Merge with input
+        # if not image:
+        #     if not self._wrap_array_with_image and isinstance(imaged_sample, Image):
+        #         return imaged_sample._value
+        #     else:
+        #         return imaged_sample
 
-        if not isinstance(image, list):
-            image = [image]
-        for i in range(len(image)):
-            image[i].merge_properties_from(imaged_sample)
-        return image
+        # if not isinstance(image, list):
+        #     image = [image]
+        # for i in range(len(image)):
+        #     image[i].merge_properties_from(imaged_sample)
+        # return image
 
     # def _no_wrap_format_input(self, *args, **kwargs) -> list:
     #     return self._image_wrapped_format_input(*args, **kwargs)
@@ -757,19 +757,18 @@ class Optics(Feature):
 
         W, H = np.meshgrid(y, x)
         RHO = (W ** 2 + H ** 2).astype(complex)
-        pupil_function = Image((RHO < 1) + 0.0j, copy=False)
+        pupil_function = (RHO < 1) + 0.0j
         # Defocus
-        z_shift = Image(
+        z_shift = (
             2
             * np.pi
             * refractive_index_medium
             / wavelength
             * voxel_size[2]
-            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO),
-            copy=False,
+            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO)
         )
 
-        z_shift._value[z_shift._value.imag != 0] = 0
+        z_shift[z_shift.imag != 0] = 0
 
         try:
             z_shift = np.nan_to_num(z_shift, False, 0, 0, 0)
@@ -1118,9 +1117,7 @@ class Fluorescence(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(
-            np.zeros((*padded_volume.shape[0:2], 1)), copy=False
-        )
+        output_image = np.zeros((*padded_volume.shape[0:2], 1))
 
         index_iterator = range(padded_volume.shape[2])
 
@@ -1156,7 +1153,7 @@ class Fluorescence(Optics):
             field = np.fft.ifft2(convolved_fourier_field)
             # # Discard remaining imaginary part (should be 0 up to rounding error)
             field = np.real(field)
-            output_image._value[:, :, 0] += field[
+            output_image[:, :, 0] += field[
                 : padded_volume.shape[0], : padded_volume.shape[1]
             ]
 
@@ -1353,9 +1350,7 @@ class Brightfield(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(
-            np.zeros((*padded_volume.shape[0:2], 1))
-        )
+        output_image = np.zeros((*padded_volume.shape[0:2], 1))
 
         index_iterator = range(padded_volume.shape[2])
         z_iterator = np.linspace(
@@ -1426,7 +1421,7 @@ class Brightfield(Optics):
             : padded_volume.shape[0], : padded_volume.shape[1]
         ]
         output_image = np.expand_dims(output_image, axis=-1)
-        output_image = Image(output_image[pad[0] : -pad[2], pad[1] : -pad[3]])
+        output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
 
         if not kwargs.get("return_field", False):
             output_image = np.square(np.abs(output_image))
@@ -1436,7 +1431,7 @@ class Brightfield(Optics):
         # output_image = output_image * np.exp(1j * -np.pi / 4)
         # output_image = output_image + 1
 
-        output_image.properties = illuminated_volume.properties
+        # output_image.properties = illuminated_volume.properties
 
         return output_image
 
@@ -1959,14 +1954,12 @@ def _create_volume(
         ):
             continue
 
-        padded_scatterer = Image(
-            np.pad(
+        padded_scatterer = np.pad(
                 scatterer,
                 [(2, 2), (2, 2), (2, 2)],
                 "constant",
                 constant_values=0,
             )
-        )
         padded_scatterer.merge_properties_from(scatterer)
 
         scatterer = padded_scatterer

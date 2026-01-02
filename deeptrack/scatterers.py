@@ -333,7 +333,7 @@ class Scatterer(Feature):
             new_image = new_image[:, ~np.all(new_image == 0, axis=(0, 2))]
             new_image = new_image[:, :, ~np.all(new_image == 0, axis=(0, 1))]
 
-        return [Image(new_image)]
+        return [new_image]
 
     def _no_wrap_format_input(
         self,
