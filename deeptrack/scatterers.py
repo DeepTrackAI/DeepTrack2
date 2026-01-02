@@ -262,7 +262,7 @@ class Scatterer(Feature):
         **kwargs,
     ) -> None:
         # Ignore warning to help with comparison with arrays.
-        if upsample is not 1:  # noqa: F632
+        if upsample != 1:  # noqa: F632
             warnings.warn(
                 f"Setting upsample != 1 is deprecated. "
                 f"Please, instead use dt.Upscale(f, factor={upsample})"
@@ -361,13 +361,13 @@ class VolumeScatterer(Scatterer):
 
 class FieldScatterer(Scatterer):
     def _wrap_output(self, array, props) -> ScatteredField:
-        return ScatteredField(
+        return [ScatteredField(
             array=array,
             position=props.get("position", (0, 0)),
             wavelength=props.get("wavelength", 0.0),
             properties=props.copy(),
             main_property=self.main_property,
-        )
+        )]
 
 
 #TODO ***??*** revise PointParticle - torch, typing, docstring, unit test
@@ -603,7 +603,7 @@ class Sphere(VolumeScatterer):
 
 
 #TODO ***??*** revise Ellipsoid - torch, typing, docstring, unit test
-class Ellipsoid(Scatterer):
+class Ellipsoid(VolumeScatterer):
     """Generates an ellipsoidal scatterer
 
     Parameters
@@ -643,6 +643,8 @@ class Ellipsoid(Scatterer):
         radius=(u.meter, u.meter),
         rotation=(u.radian, u.radian),
     )
+
+    main_property = "refractive_index"
 
     def __init__(
         self,
@@ -853,6 +855,8 @@ class MieScatterer(FieldScatterer):
         offset_z=(u.meter, u.meter),
         coherence_length=(u.meter, u.pixel),
     )
+
+    main_property = "wavelength"
 
     def __init__(
         self,
@@ -1207,7 +1211,6 @@ class MieScatterer(FieldScatterer):
                 -mask.shape[1] // 2 : mask.shape[1] // 2,
             ]
             mask = np.exp(-0.5 * (x ** 2 + y ** 2) / ((sigma) ** 2))
-
             arr = arr * mask
 
         fourier_field = np.fft.fft2(arr)

@@ -8255,12 +8255,12 @@ class Upscale(Feature):
         # NOTE: The downscaling step is disabled and taken care in 
         # deeptrack.optics since it now depends on scatter.main_property
         
-        # # Downscale the result to the original resolution.        
-        # import skimage.measure
+        # Downscale the result to the original resolution.        
+        import skimage.measure
 
-        # image = skimage.measure.block_reduce(
-        #     image, (factor[0], factor[1]) + (1,) * (image.ndim - 2), np.mean
-        # )
+        image = skimage.measure.block_reduce(
+            image, (factor[0], factor[1]) + (1,) * (image.ndim - 2), np.mean
+        )
 
         return image
 
