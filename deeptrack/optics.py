@@ -142,7 +142,9 @@ import warnings
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.ndimage import convolve
+from scipy.ndimage import convolve #check if still necessary
+import torch
+import torch.nn.functional as F
 
 from deeptrack.backend.units import (
     ConversionTable,
@@ -150,7 +152,7 @@ from deeptrack.backend.units import (
     get_active_scale,
     get_active_voxel_size,
 )
-from deeptrack.math import AveragePooling
+# from deeptrack.math import AveragePooling
 from deeptrack.features import propagate_data_to_dependencies
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
 from deeptrack.image import Image, pad_image_to_fft
@@ -159,9 +161,15 @@ from deeptrack.types import ArrayLike, PropertyLike
 from deeptrack import image
 from deeptrack import units_registry as u
 
-if TYPE_CHECKING:
+from deeptrack import TORCH_AVAILABLE, image
+from deeptrack.backend import xp
+from deeptrack.scatterers import ScatteredVolume, ScatteredField
+
+if TORCH_AVAILABLE:
     import torch
 
+if TYPE_CHECKING:
+    import torch
 
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test
 class Microscope(StructuralFeature):
@@ -242,11 +250,13 @@ class Microscope(StructuralFeature):
 
         super().__init__(**kwargs)
 
+        print(">>> creating Microscope", type(sample), type(objective))
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
 
         #TODO: erase following line when rid of Image
-        self._sample.store_properties()
+        # self._sample.store_properties()
+        print(">>> creating Microscope", type(self._sample))
 
     def get(
         self: Microscope,
@@ -284,7 +294,7 @@ class Microscope(StructuralFeature):
 
         # Grab objective properties to pass to sample
         objective_properties = self._objective.properties()
-
+        print('>>scale', get_active_scale())
         #TODO: TBE
         """
         # Calculate required output image for the given upscale.
@@ -300,36 +310,69 @@ class Microscope(StructuralFeature):
         ):
         """
 
-        with u.context(create_context(*objective_properties["voxel_size"])):
 
-            upscale = np.round(get_active_scale())
+        with u.context(
+            create_context(
+                *objective_properties["voxel_size"]
+            )
+        ):
 
-            def _scale_region_2d(
-                region: list[int],
-                upscale: tuple[float, float, float],
-            ) -> list[int]:
-                """Scale a 4-tuple region (x_min, y_min, x_max, y_max) or
-                padding using the lateral upscale factors (ux, uy)."""
-                ux, uy, _ = upscale
-                return [int(v * f) for v, f in zip(region, (ux, uy, ux, uy))]
+            print('>>scale', get_active_scale())
+
+            # Following code does nothing is upscale is (1, 1, 1).
+            # It is needed if dt.Upscale is used
+
+            upscale = np.round(get_active_scale()).astype(int)
+            print(">>> upscale", upscale)
+
+            # def _scale_region_2d(
+            #     region: list[int],
+            #     upscale: tuple[float, float, float],
+            # ) -> list[int]:
+            #     """Scale a 4-tuple region (x_min, y_min, x_max, y_max) or
+            #     padding using the lateral upscale factors (ux, uy)."""
+            #     ux, uy, _ = upscale
+            #     return [int(v * f) for v, f in zip(region, (ux, uy, ux, uy))]
 
             # Scale output region from optics into sample voxel units.
             output_region = objective_properties.pop("output_region")
-            objective_properties["output_region"] = _scale_region_2d(
-                output_region,
-                upscale,
-            )
-            self._objective.output_region.set_value(
-                objective_properties["output_region"]
-            )
+            objective_properties["output_region"] = [
+                int(o * upsc)
+                for o, upsc in zip(
+                    output_region, (upscale[0], upscale[1], upscale[0], upscale[1])
+                )
+            ]
+
+            # output_region = objective_properties.pop("output_region")
+            # objective_properties["output_region"] = _scale_region_2d(
+            #     output_region,
+            #     upscale,
+            # )
+            # self._objective.output_region.set_value(
+            #     objective_properties["output_region"]
+            # )
 
             # Scale padding region in the same way (left, top, right, bottom).
             padding = objective_properties.pop("padding")
-            objective_properties["padding"] = _scale_region_2d(
-                padding,
-                upscale,
+            objective_properties["padding"] = [
+                int(p * upsc)
+                for p, upsc in zip(
+                    padding, (upscale[0], upscale[1], upscale[0], upscale[1])
+                )
+            ]
+
+            self._objective.output_region.set_value(
+                objective_properties["output_region"]
             )
             self._objective.padding.set_value(objective_properties["padding"])
+
+
+            # padding = objective_properties.pop("padding")
+            # objective_properties["padding"] = _scale_region_2d(
+            #     padding,
+            #     upscale,
+            # )
+            # self._objective.padding.set_value(objective_properties["padding"])
 
             # Propagate all relevant properties from the objective to the
             # sample graph. This ensures scatterers are evaluated in the
@@ -354,7 +397,7 @@ class Microscope(StructuralFeature):
             volume_scatterers = [
                 scatterer
                 for scatterer in list_of_scatterers
-                if not scatterer.get_property("is_field", default=False)
+                if isinstance(scatterer, ScatteredVolume)
             ]
 
             # All scatterers that are defined as fields.
@@ -363,26 +406,24 @@ class Microscope(StructuralFeature):
             field_scatterers = [
                 scatterer
                 for scatterer in list_of_scatterers
-                if scatterer.get_property("is_field", default=False)
+                if isinstance(scatterer, ScatteredField)
             ]
 
-
-
-
-
-
-
+            warn_upscale_fields = False
+            if field_scatterers and np.any(upscale != 1):
+                warn_upscale_fields = True
 
             # Merge all volumes into a single volume.
             sample_volume, limits = _create_volume(
                 volume_scatterers,
                 **objective_properties,
             )
-            sample_volume = Image(sample_volume)
+            # sample_volume = Image(sample_volume)
 
-            # Merge all properties into the volume.
-            for scatterer in volume_scatterers + field_scatterers:
-                sample_volume.merge_properties_from(scatterer)
+            # # # Merge all properties into the volume.
+            # for scatterer in volume_scatterers + field_scatterers:
+            #     sample_volume.merge_properties_from(scatterer)
+
 
             # Let the objective know about the limits of the volume and all the fields.
             propagate_data_to_dependencies(
@@ -392,6 +433,50 @@ class Microscope(StructuralFeature):
             )
 
             imaged_sample = self._objective.resolve(sample_volume)
+
+        if warn_upscale_fields:
+            warnings.warn(
+                "dt.Upscale is active while FieldScatterers are present. "
+                "Coherent fields are injected without resampling, so the "
+                "physical interpretation may change with Upscale. "
+                "This behavior is currently undefined and may change in a future release.",
+                UserWarning,
+            )
+        
+        # Collect main_property from scatterers
+        main_properties = {
+            s.main_property
+            for s in list_of_scatterers
+            if hasattr(s, "main_property")
+        }
+
+        if len(main_properties) != 1:
+            raise ValueError(
+                f"Inconsistent main_property across scatterers: {main_properties}"
+            )
+
+        main_property = main_properties.pop()
+
+        # Handling upscale from dt.Upscale() here to eliminate Image
+        # wrapping issues.
+        # if np.any(np.array(upscale) != 1):
+        #     imaged_sample = _downscale_scatterer(imaged_sample, upscale[:2], main_property)
+        # if np.any(np.array(upscale) != 1):
+        #     ux, uy = upscale[:2]
+        #     # Downscale the result to the original resolution.        
+        #     import skimage.measure
+
+        #     imaged_sample = skimage.measure.block_reduce(
+        #         imaged_sample, (ux, uy) + (1,) * (imaged_sample.ndim - 2), np.mean
+        #     )
+
+
+
+        #     if main_property == "intensity":
+        #         imaged_sample = SumPoolingCM((ux, uy, 1))(imaged_sample)
+        #     else:
+        #         imaged_sample = AveragePoolingCM((ux, uy, 1))(imaged_sample)
+
 
         #TODO: TBE
         """
@@ -420,16 +505,6 @@ class Microscope(StructuralFeature):
             image[i].merge_properties_from(imaged_sample)
         return image
         """
-
-    # def _no_wrap_format_input(self, *args, **kwargs) -> list:
-    #     return self._image_wrapped_format_input(*args, **kwargs)
-
-    # def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
-    #     return self._image_wrapped_process_and_get(*args, **feature_input)
-
-    # def _no_wrap_process_output(self, *args, **feature_input):
-    #     return self._image_wrapped_process_output(*args, **feature_input)
-
 
 #TODO ***??*** revise Optics - torch, typing, docstring, unit test
 class Optics(Feature):
@@ -540,7 +615,7 @@ class Optics(Feature):
         output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
         pupil: Feature = None,
         illumination: Feature = None,
-        upscale: int = 1,
+        upscale: int = 1,  # to be deprecated in favor of dt.Upscale()
         **kwargs: Any,
     ):
         """Initialize the `Optics` instance.
@@ -682,6 +757,7 @@ class Optics(Feature):
             upscale=upscale,
             limits=None,
             fields=None,
+            properties=None,
             **kwargs,
         )
 
@@ -800,19 +876,17 @@ class Optics(Feature):
 
         W, H = np.meshgrid(y, x)
         RHO = (W ** 2 + H ** 2).astype(complex)
-        pupil_function = Image((RHO < 1) + 0.0j, copy=False)
+        pupil_function = (RHO < 1) + 0.0j
         # Defocus
-        z_shift = Image(
+        z_shift = (
             2
             * np.pi
             * refractive_index_medium
             / wavelength
             * voxel_size[2]
-            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO),
-            copy=False,
+            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO)
         )
-
-        z_shift._value[z_shift._value.imag != 0] = 0
+        z_shift[z_shift.imag != 0] = 0
 
         try:
             z_shift = np.nan_to_num(z_shift, False, 0, 0, 0)
@@ -964,7 +1038,8 @@ class Optics(Feature):
         True
 
         """
-        from deeptrack.scatterers import MieScatterer # Temporary place for this import.
+        from deeptrack.scatterers import \
+            MieScatterer  # Temporary place for this import.
 
         if isinstance(self, (Darkfield, ISCAT, Holography)) and not isinstance(sample, MieScatterer):
             warnings.warn(
@@ -975,15 +1050,6 @@ class Optics(Feature):
             )
 
         return Microscope(sample, self, **kwargs)
-
-    # def _no_wrap_format_input(self, *args, **kwargs) -> list:
-    #     return self._image_wrapped_format_input(*args, **kwargs)
-    
-    # def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
-    #     return self._image_wrapped_process_and_get(*args, **feature_input)
-    
-    # def _no_wrap_process_output(self, *args, **feature_input):
-    #     return self._image_wrapped_process_output(*args, **feature_input)
 
 
 #TODO ***??*** revise Fluorescence - torch, typing, docstring, unit test
@@ -1161,9 +1227,8 @@ class Fluorescence(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(
-            np.zeros((*padded_volume.shape[0:2], 1)), copy=False
-        )
+        output_image = np.zeros((*padded_volume.shape[0:2], 1))
+        
 
         index_iterator = range(padded_volume.shape[2])
 
@@ -1199,12 +1264,12 @@ class Fluorescence(Optics):
             field = np.fft.ifft2(convolved_fourier_field)
             # # Discard remaining imaginary part (should be 0 up to rounding error)
             field = np.real(field)
-            output_image._value[:, :, 0] += field[
+            output_image[:, :, 0] += field[
                 : padded_volume.shape[0], : padded_volume.shape[1]
             ]
 
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
-        output_image.properties = illuminated_volume.properties + pupils.properties
+        # output_image.properties = illuminated_volume.properties + pupils.properties
 
         return output_image
 
@@ -1396,9 +1461,8 @@ class Brightfield(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(
-            np.zeros((*padded_volume.shape[0:2], 1))
-        )
+        output_image = np.zeros((*padded_volume.shape[0:2], 1))
+        
 
         index_iterator = range(padded_volume.shape[2])
         z_iterator = np.linspace(
@@ -1457,7 +1521,26 @@ class Brightfield(Optics):
         light_in_focus = light_in * shifted_pupil
 
         if len(fields) > 0:
-            field = np.sum(fields, axis=0)
+            field_arrays = []
+
+            for fs in fields:
+                # fs is a ScatteredField
+                arr = fs.array
+
+                # Enforce (H, W, 1) shape
+                if arr.ndim == 2:
+                    arr = arr[..., None]
+
+                if arr.ndim != 3 or arr.shape[-1] != 1:
+                    raise ValueError(
+                        f"Expected field of shape (H, W, 1), got {arr.shape}"
+                    )
+
+                field_arrays.append(arr)
+
+            field = np.sum(field_arrays, axis=0)
+
+            # field = np.sum(fields, axis=0)
             light_in_focus += field[..., 0]
         shifted_pupil = np.fft.fftshift(pupils[-1])
         light_in_focus = light_in_focus * shifted_pupil
@@ -1469,7 +1552,7 @@ class Brightfield(Optics):
             : padded_volume.shape[0], : padded_volume.shape[1]
         ]
         output_image = np.expand_dims(output_image, axis=-1)
-        output_image = Image(output_image[pad[0] : -pad[2], pad[1] : -pad[3]])
+        output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
 
         if not kwargs.get("return_field", False):
             output_image = np.square(np.abs(output_image))
@@ -1479,7 +1562,7 @@ class Brightfield(Optics):
         # output_image = output_image * np.exp(1j * -np.pi / 4)
         # output_image = output_image + 1
 
-        output_image.properties = illuminated_volume.properties
+        # output_image.properties = illuminated_volume.properties
 
         return output_image
 
@@ -1843,108 +1926,247 @@ class IlluminationGradient(Feature):
         return image
 
 
-#TODO ***??*** revise _get_position - torch, typing, docstring, unit test
+# #TODO ***??*** revise _get_position - torch, typing, docstring, unit test
+# def _get_position(
+#     scatterer: ScatteredVolume,
+#     mode: str = "corner",
+#     return_z: bool = False,
+# ) -> np.ndarray:
+#     """Extracts the position of the upper-left corner of a scatterer.
+
+#     Parameters
+#     ----------
+#     image: numpy.ndarray
+#         Input image or volume containing the scatterer.
+#     mode: str, optional
+#         Mode for position extraction. Default is "corner".
+#     return_z: bool, optional
+#         Whether to include the z-coordinate in the output. Default is False.
+
+#     Returns
+#     -------
+#     numpy.ndarray
+#         Array containing the position of the scatterer.
+    
+#     """
+
+#     num_outputs = 2 + return_z
+#     if mode == "corner" and scatterer.array.size > 0:
+#         import scipy.ndimage
+
+#         shift = scipy.ndimage.center_of_mass(np.abs(scatterer.array))
+
+#         if np.isnan(shift).any():
+#             shift = np.array(scatterer.array.shape) / 2
+
+#     else:
+#         shift = np.zeros((num_outputs))
+
+#     position = np.array(scatterer.get_property("position", default=None))
+
+#     if position is None:
+#         return position
+
+#     scale = np.array(get_active_scale())
+#     print("image size", scatterer.get_property("z", default=0))
+#     print(scale)
+#     print(shift)
+#     print(np.array([position[0], position[1], scatterer.get_property("z", default=0)]))
+#     if len(position) == 3:
+#         position = position * scale + 0.5 * (scale - 1)
+#         if return_z:
+#             return position * scale - shift
+#         else:
+#             return position[0:2] - shift[0:2]
+    
+#     elif len(position) == 2:
+#         if return_z:
+#             outp = (
+#                 np.array([position[0], position[1], scatterer.get_property("z", default=0)])
+#                 * scale
+#                 - shift
+#                 + 0.5 * (scale - 1)
+#             )
+#             return outp
+#         else:
+#             return position * scale[:2] - shift[0:2] + 0.5 * (scale[:2] - 1)
+#             # return position * scale[:2] - shift[0:2]
+
+
+#     return position
+
 def _get_position(
-    image: Image,
+    scatterer: ScatteredVolume,
     mode: str = "corner",
     return_z: bool = False,
 ) -> np.ndarray:
-    """Extracts the position of the upper-left corner of a scatterer.
+    """
+    Extract the insertion position of a scatterer in the current active scale.
 
-    Parameters
-    ----------
-    image: numpy.ndarray
-        Input image or volume containing the scatterer.
-    mode: str, optional
-        Mode for position extraction. Default is "corner".
-    return_z: bool, optional
-        Whether to include the z-coordinate in the output. Default is False.
-
-    Returns
-    -------
-    numpy.ndarray
-        Array containing the position of the scatterer.
-    
+    Notes
+    -----
+    - `shift` is computed in *array pixel coordinates* (including any padding
+      already present in `scatterer.array`) and is subtracted once.
+    - `scale = get_active_scale()` is applied exactly once.
+    - The optional half-pixel term is applied at most once. If you want pure
+      corner-based coordinates, set `use_half_pixel=False`.
     """
 
-    num_outputs = 2 + return_z
+    use_half_pixel = False  # set False if you want strict corner convention
 
-    if mode == "corner" and image.size > 0:
+    num_outputs = 2 + int(return_z)
+
+    # Compute shift of the scatterer array (in array coords)
+    if mode == "corner" and scatterer.array.size > 0:
         import scipy.ndimage
 
-        image = image.to_numpy()
-
-        shift = scipy.ndimage.center_of_mass(np.abs(image))
-
+        shift = scipy.ndimage.center_of_mass(np.abs(scatterer.array))
         if np.isnan(shift).any():
-            shift = np.array(image.shape) / 2
-
+            shift = np.array(scatterer.array.shape) / 2
+        shift = np.asarray(shift, dtype=float)
     else:
-        shift = np.zeros((num_outputs))
+        shift = np.zeros((3,), dtype=float)
 
-    position = np.array(image.get_property("position", default=None))
-
+    position = np.array(scatterer.get_property("position", default=None))
     if position is None:
         return position
 
-    scale = np.array(get_active_scale())
+    scale = np.array(get_active_scale(), dtype=float)
 
-    if len(position) == 3:
-        position = position * scale + 0.5 * (scale - 1)
-        if return_z:
-            return position * scale - shift
-        else:
-            return position[0:2] - shift[0:2]
+    # Build a 3D position consistently (x, y, z)
+    if position.size == 2:
+        pos3 = np.array(
+            [position[0], position[1], float(scatterer.get_property("z", default=0.0))],
+            dtype=float,
+        )
+    elif position.size == 3:
+        pos3 = position.astype(float)
+    else:
+        raise ValueError(f"Expected position of length 2 or 3, got {position}.")
 
-    elif len(position) == 2:
-        if return_z:
-            outp = (
-                np.array([position[0], position[1], image.get_property("z", default=0)])
-                * scale
-                - shift
-                + 0.5 * (scale - 1)
+    # Apply scale ONCE
+    pos3 = pos3 * scale
+
+    # Optional half-pixel correction ONCE (if you interpret `position` as pixel centers)
+    if use_half_pixel:
+        pos3 = pos3 + 0.5 * (scale - 1.0)
+
+    # Subtract scatterer-array shift (also once)
+    out3 = pos3 - shift[:3]
+
+    if return_z:
+        return out3
+    else:
+        return out3[:2]
+
+
+
+def _bilinear_interpolate_numpy(
+    scatterer: np.ndarray, x_off: float, y_off: float
+) -> np.ndarray:
+    """Apply bilinear subpixel interpolation in the x–y plane (NumPy)."""
+    kernel = np.array(
+        [
+            [0.0, 0.0, 0.0],
+            [0.0, (1 - x_off) * (1 - y_off), (1 - x_off) * y_off],
+            [0.0, x_off * (1 - y_off), x_off * y_off],
+        ]
+    )
+    out = np.zeros_like(scatterer)
+    for z in range(scatterer.shape[2]):
+        if np.iscomplexobj(scatterer):
+            out[:, :, z] = (
+                convolve(np.real(scatterer[:, :, z]), kernel, mode="constant")
+                + 1j
+                * convolve(np.imag(scatterer[:, :, z]), kernel, mode="constant")
             )
-            return outp
         else:
-            return position * scale[:2] - shift[0:2] + 0.5 * (scale[:2] - 1)
+            out[:, :, z] = convolve(scatterer[:, :, z], kernel, mode="constant")
+    return out
 
-    return position
+
+def _bilinear_interpolate_torch(
+    scatterer: torch.Tensor, x_off: float, y_off: float
+) -> torch.Tensor:
+    """Apply bilinear subpixel interpolation in the x–y plane (Torch).
+
+    Uses grid_sample for autograd-friendly interpolation.
+    """
+    H, W, D = scatterer.shape
+
+    # Normalized shifts in [-1,1]
+    x_shift = 2 * x_off / (W - 1)
+    y_shift = 2 * y_off / (H - 1)
+
+    yy, xx = torch.meshgrid(
+        torch.linspace(-1, 1, H, device=scatterer.device, dtype=scatterer.dtype),
+        torch.linspace(-1, 1, W, device=scatterer.device, dtype=scatterer.dtype),
+        indexing="ij",
+    )
+    grid = torch.stack((xx + x_shift, yy + y_shift), dim=-1)  # (H,W,2)
+    grid = grid.unsqueeze(0).repeat(D, 1, 1, 1)               # (D,H,W,2)
+
+    inp = scatterer.permute(2, 0, 1).unsqueeze(1)             # (D,1,H,W)
+
+    out = F.grid_sample(inp, grid, mode="bilinear",
+                        padding_mode="zeros", align_corners=True)
+    return out.squeeze(1).permute(1, 2, 0)                    # (H,W,D)
 
 
 #TODO ***??*** revise _create_volume - torch, typing, docstring, unit test
 def _create_volume(
-    list_of_scatterers: list,
-    pad: tuple = (0, 0, 0, 0),
-    output_region: tuple = (None, None, None, None),
+    list_of_scatterers: ArrayLike | Sequence[ArrayLike],
+    pad: tuple[int, int, int, int] = (0, 0, 0, 0),
+    output_region: tuple[int | None, int | None, int | None, int | None] = (None, None, None, None),
     refractive_index_medium: float = 1.33,
     **kwargs: Any,
-) -> tuple:
-    """Converts a list of scatterers into a volumetric representation.
+) -> tuple[ArrayLike, np.ndarray]:
+    """Assemble a volumetric representation from a list of scatterers.
+
+    Each scatterer is represented as an ND array (numpy or torch), with 
+    associated properties such as ``position``, ``intensity``, 
+    ``refractive_index``, or ``value``. Scatterers are inserted into a common 
+    3D volume with optional padding, output region cropping, and subpixel 
+    interpolation.
 
     Parameters
     ----------
-    list_of_scatterers: list or single scatterer
-        List of scatterers to include in the volume.
-    pad: tuple of int, optional
-        Padding for the volume in the format (left, right, top, bottom).
-        Default is (0, 0, 0, 0).
-    output_region: tuple of int, optional
-        Region to output, defined as (x_min, y_min, x_max, y_max). Default is 
-        None.
-    refractive_index_medium: float, optional
-        Refractive index of the medium surrounding the scatterers. Default is 
-        1.33.
-    **kwargs: Any
-        Additional arguments for customization.
+    list_of_scatterers : ArrayLike or Sequence[ArrayLike]
+        Single scatterer or sequence of scatterers to include in the volume.
+        Each scatterer must be an ``ndarray`` or ``torch.Tensor`` with
+        shape ``(nx, ny, nz)`` (or compatible) and carry a ``.properties``
+        dictionary including at least ``"position"``.
+    pad : tuple of int, optional
+        Padding for the volume in the format ``(left, right, top, bottom)``.
+        Default is ``(0, 0, 0, 0)``.
+    output_region : tuple of int or None, optional
+        Region to output, defined as ``(x_min, y_min, x_max, y_max)``.
+        Default is ``(None, None, None, None)``, meaning unbounded.
+    refractive_index_medium : float, optional
+        Refractive index of the surrounding medium. Default is ``1.33``.
+    **kwargs : Any
+        Additional keyword arguments for customization.
 
     Returns
     -------
-    tuple
-        - volume: numpy.ndarray
-            The generated volume containing the scatterers.
-        - limits: numpy.ndarray
-            Spatial limits of the volume.
+    volume : ArrayLike
+        The generated 3D volume containing all scatterers.
+        Type matches the input backend: ``numpy.ndarray`` or ``torch.Tensor``.
+    limits : numpy.ndarray of shape (3, 2)
+        Spatial limits of the volume along each axis, as integers.
+        ``limits[:, 0]`` are the minima, ``limits[:, 1]`` the maxima.
 
+    Raises
+    ------
+    UserWarning
+        If a scatterer does not define a valid ``position`` property.
+
+    Notes
+    -----
+    - Subpixel positioning is handled by bilinear interpolation
+      (NumPy: convolution, Torch: grid_sample).
+    - Overlapping scatterers are **added** together in the volume.
+   
     """
 
     if not isinstance(list_of_scatterers, list):
@@ -1953,7 +2175,7 @@ def _create_volume(
     volume = np.zeros((1, 1, 1), dtype=complex)
     limits = None
     OR = np.zeros((4,))
-    OR[0] = np.inf if output_region[0] is None else int(
+    OR[0] =-np.inf if output_region[0] is None else int(
         output_region[0] - pad[0]
     )
     OR[1] = -np.inf if output_region[1] is None else int(
@@ -1962,7 +2184,7 @@ def _create_volume(
     OR[2] = np.inf if output_region[2] is None else int(
         output_region[2] + pad[2]
     )
-    OR[3] = -np.inf if output_region[3] is None else int(
+    OR[3] = np.inf if output_region[3] is None else int(
         output_region[3] + pad[3]
     )
 
@@ -1970,24 +2192,24 @@ def _create_volume(
 
     # This accounts for upscale doing AveragePool instead of SumPool. This is
     # a bit of a hack, but it works for now.
-    fudge_factor = scale[0] * scale[1] / scale[2]
+    # fudge_factor = scale[0] * scale[1] / scale[2]
 
     for scatterer in list_of_scatterers:
 
+        print(">>> scatterer type:", type(scatterer))
+        # print(">>> scatterer properties:", scatterer.get_property("radius", None))
+
         position = _get_position(scatterer, mode="corner", return_z=True)
 
-        if scatterer.get_property("intensity", None) is not None:
-            intensity = scatterer.get_property("intensity")
-            scatterer_value = intensity * fudge_factor
-        elif scatterer.get_property("refractive_index", None) is not None:
-            refractive_index = scatterer.get_property("refractive_index")
-            scatterer_value = (
-                refractive_index - refractive_index_medium
-            )
-        else:
+        if scatterer.main_property == "intensity":
+            scatterer_value = scatterer.get_property("intensity") #* fudge_factor
+        elif scatterer.main_property == "refractive_index":
+            scatterer_value = scatterer.get_property("refractive_index") - refractive_index_medium
+        else:  # fallback to generic value
             scatterer_value = scatterer.get_property("value")
 
-        scatterer = scatterer * scatterer_value
+        # Scale the array accordingly
+        scatterer.array = scatterer.array * scatterer_value
 
         if limits is None:
             limits = np.zeros((3, 2), dtype=np.int32)
@@ -1995,26 +2217,26 @@ def _create_volume(
             limits[:, 1] = np.floor(position).astype(np.int32) + 1
 
         if (
-            position[0] + scatterer.shape[0] < OR[0]
+            position[0] + scatterer.array.shape[0] < OR[0]
             or position[0] > OR[2]
-            or position[1] + scatterer.shape[1] < OR[1]
+            or position[1] + scatterer.array.shape[1] < OR[1]
             or position[1] > OR[3]
         ):
             continue
 
-        padded_scatterer = Image(
-            np.pad(
-                scatterer,
-                [(2, 2), (2, 2), (2, 2)],
-                "constant",
-                constant_values=0,
-            )
+        # at this point properties do not seem any longer necessary
+        # just keep the array part
+        padded_scatterer = np.pad(
+            scatterer.array,
+            [(2, 2), (2, 2), (2, 2)],
+            "constant",
+            constant_values=0,
         )
-        padded_scatterer.merge_properties_from(scatterer)
+        # padded_scatterer.merge_properties_from(scatterer)
 
-        scatterer = padded_scatterer
-        position = _get_position(scatterer, mode="corner", return_z=True)
-        shape = np.array(scatterer.shape)
+        # scatterer = padded_scatterer
+        # position = _get_position(scatterer, mode="corner", return_z=True)
+        shape = np.array(padded_scatterer.shape)
 
         if position is None:
             RuntimeWarning(
@@ -2023,37 +2245,22 @@ def _create_volume(
             )
             continue
 
-        splined_scatterer = np.zeros_like(scatterer)
+        # splined_scatterer = np.zeros_like(padded_scatterer)
 
         x_off = position[0] - np.floor(position[0])
         y_off = position[1] - np.floor(position[1])
+ 
+        if isinstance(padded_scatterer, np.ndarray): # get_backend is a method of Features and not exposed 
+            splined_scatterer = _bilinear_interpolate_numpy(padded_scatterer, x_off, y_off)
+        elif isinstance(padded_scatterer, torch.Tensor):
+            splined_scatterer = _bilinear_interpolate_torch(padded_scatterer, x_off, y_off)
+        else:
+            raise TypeError(
+                f"Unsupported array type {type(padded_scatterer)}. "
+                "Expected np.ndarray or torch.Tensor."
+            )
 
-        kernel = np.array(
-            [
-                [0, 0, 0],
-                [0, (1 - x_off) * (1 - y_off), (1 - x_off) * y_off],
-                [0, x_off * (1 - y_off), x_off * y_off],
-            ]
-        )
-
-        for z in range(scatterer.shape[2]):
-            if splined_scatterer.dtype == complex:
-                splined_scatterer[:, :, z] = (
-                    convolve(
-                        np.real(scatterer[:, :, z]), kernel, mode="constant"
-                    )
-                    + convolve(
-                        np.imag(scatterer[:, :, z]), kernel, mode="constant"
-                    )
-                    * 1j
-                )
-            else:
-                splined_scatterer[:, :, z] = convolve(
-                    scatterer[:, :, z], kernel, mode="constant"
-                )
-
-        scatterer = splined_scatterer
-        position = np.floor(position)
+        position = np.floor(position) # check or change name, this is position on the grid
         new_limits = np.zeros(limits.shape, dtype=np.int32)
         for i in range(3):
             new_limits[i, :] = (
@@ -2081,7 +2288,8 @@ def _create_volume(
 
         within_volume_position = position - limits[:, 0]
 
-        # NOTE: Maybe shouldn't be additive.
+        # NOTE: Maybe shouldn't be additive
+        # give options: sum default, but also sum, mean, max, min
         volume[
             int(within_volume_position[0]) : 
             int(within_volume_position[0] + shape[0]),
@@ -2091,5 +2299,136 @@ def _create_volume(
 
             int(within_volume_position[2]) : 
             int(within_volume_position[2] + shape[2]),
-        ] += scatterer
+        ] += splined_scatterer
     return volume, limits
+
+# TODO: replace the inner part of this function with AveragePooling from 
+# deeptrack.math when implemented with torch
+def _downscale_scatterer(array, factor, main_property="value"):
+    """Downscale scatterer array by sum or average pooling depending on property.
+
+    Parameters
+    ----------
+    array : np.ndarray or torch.Tensor
+        The scatterer array.
+    factor : tuple[int, int]
+        Downscale factor (ux, uy).
+    main_property : str
+        Determines pooling strategy:
+        - "intensity" → sum pooling
+        - else → average pooling
+
+    Returns
+    -------
+    np.ndarray or torch.Tensor
+        Downscaled array in the same backend as input.
+    """
+
+    # Decide pooling op
+    is_sum = main_property == "intensity"
+
+    # Ensure factor is integer
+    factor = tuple(int(f) for f in factor)
+
+
+    # Case 1: NumPy backend
+    if isinstance(array, np.ndarray):
+        import skimage.measure
+
+        pool_shape = (factor[0], factor[1]) + (1,) * (array.ndim - 2)
+        func = np.sum if is_sum else np.mean
+        return skimage.measure.block_reduce(array, pool_shape, func)
+
+    # Case 2: Torch backend
+    elif isinstance(array, torch.Tensor):
+        if array.ndim < 2:
+            raise ValueError("Torch pooling requires at least 2D input.")
+
+        # spatial pooling only
+        kernel = (factor[0], factor[1])
+        stride = kernel
+
+        # Flatten extra dims as channels for pooling
+        b, c = 1, int(np.prod(array.shape[2:])) if array.ndim > 2 else 1
+        h, w = array.shape[0], array.shape[1]
+        x = array.reshape(1, c, h, w)
+
+        if is_sum:
+            pooled = torch.nn.functional.avg_pool2d(x, kernel, stride) * (kernel[0] * kernel[1])
+        else:
+            pooled = torch.nn.functional.avg_pool2d(x, kernel, stride)
+
+        # Reshape back
+        new_shape = (pooled.shape[2], pooled.shape[3]) + tuple(array.shape[2:])
+        return pooled.reshape(new_shape)
+
+    else:
+        raise TypeError("Unsupported array type: expected np.ndarray or torch.Tensor.")
+
+class _CenteredPoolingBase:
+    def __init__(self, pool_size: tuple[int, int, int]):
+        px, py, pz = pool_size
+        if pz != 1:
+            raise ValueError("Only pz=1 supported.")
+        self.px = int(px)
+        self.py = int(py)
+
+    def _crop_center(self, array):
+        H, W = array.shape[:2]
+        px, py = self.px, self.py
+
+        crop_h = (H // px) * px
+        crop_w = (W // py) * py
+
+        off_h = (H - crop_h) // 2
+        off_w = (W - crop_w) // 2
+
+        return array[off_h:off_h+crop_h, off_w:off_w+crop_w, ...]
+
+    def _pool_numpy(self, array, func):
+        import skimage.measure
+        array = self._crop_center(array)
+        pool_shape = (self.px, self.py) + (1,) * (array.ndim - 2)
+        return skimage.measure.block_reduce(array, pool_shape, func)
+
+    def _pool_torch(self, array, sum_pool=False):
+        px, py = self.px, self.py
+        array = self._crop_center(array)
+
+        extra = array.shape[2:]
+        C = int(np.prod(extra)) if extra else 1
+        x = array.reshape(1, C, array.shape[0], array.shape[1])
+
+        pooled = torch.nn.functional.avg_pool2d(
+            x, kernel_size=(px, py), stride=(px, py)
+        )
+        if sum_pool:
+            pooled = pooled * (px * py)
+
+        return pooled.reshape(
+            (pooled.shape[2], pooled.shape[3]) + extra
+        )
+
+class AveragePoolingCM(_CenteredPoolingBase):
+    """Center-preserving average pooling (intensive quantities)."""
+
+    def __call__(self, array):
+        if isinstance(array, np.ndarray):
+            return self._pool_numpy(array, np.mean)
+        elif TORCH_AVAILABLE and isinstance(array, torch.Tensor):
+            return self._pool_torch(array, sum_pool=False)
+        else:
+            raise TypeError("Unsupported array type.")
+
+class SumPoolingCM(_CenteredPoolingBase):
+    """Center-preserving sum pooling (extensive quantities)."""
+
+    def __call__(self, array):
+        if isinstance(array, np.ndarray):
+            return self._pool_numpy(array, np.sum)
+        elif TORCH_AVAILABLE and isinstance(array, torch.Tensor):
+            return self._pool_torch(array, sum_pool=True)
+        else:
+            raise TypeError("Unsupported array type.")
+
+

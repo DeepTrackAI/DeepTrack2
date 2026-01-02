@@ -166,6 +166,7 @@ import warnings
 import numpy as np
 from numpy.typing import NDArray
 from pint import Quantity
+from dataclasses import dataclass, field
 
 from deeptrack.holography import get_propagation_matrix
 from deeptrack.backend.units import (
@@ -246,6 +247,9 @@ class Scatterer(Feature):
         voxel_size=(u.meter, u.meter),
     )
 
+    #: Default property name (subclasses override this)
+    main_property: str = "value"
+
     def __init__(
         self,
         position: ArrayLike[float] = (32, 32),
@@ -258,7 +262,7 @@ class Scatterer(Feature):
         **kwargs,
     ) -> None:
         # Ignore warning to help with comparison with arrays.
-        if upsample is not 1:  # noqa: F632
+        if upsample != 1:  # noqa: F632
             warnings.warn(
                 f"Setting upsample != 1 is deprecated. "
                 f"Please, instead use dt.Upscale(f, factor={upsample})"
@@ -310,7 +314,7 @@ class Scatterer(Feature):
         voxel_size = get_active_voxel_size()
 
         # Calls parent _process_and_get.
-        new_image = super()._process_and_get(
+        new_image = super(Scatterer, self)._process_and_get(
             *args,
             voxel_size=voxel_size,
             upsample=upsample,
@@ -333,32 +337,41 @@ class Scatterer(Feature):
             new_image = new_image[:, ~np.all(new_image == 0, axis=(0, 2))]
             new_image = new_image[:, :, ~np.all(new_image == 0, axis=(0, 1))]
 
-        return [Image(new_image)]
+        # # Copy properties
+        # props = kwargs.copy()
+        return [self._wrap_output(new_image, kwargs)]
 
-    def _no_wrap_format_input(
-        self,
-        *args,
-        **kwargs
-    ) -> list:
-        return self._image_wrapped_format_input(*args, **kwargs)
+    def _wrap_output(self, array, props) -> ScatteredBase:
+        """Must be overridden in subclasses to wrap output correctly."""
+        raise NotImplementedError
 
-    def _no_wrap_process_and_get(
-        self,
-        *args,
-        **feature_input
-    ) -> list:
-        return self._image_wrapped_process_and_get(*args, **feature_input)
+class VolumeScatterer(Scatterer):
+    """Abstract scatterer producing ScatteredVolume outputs."""
+    def _wrap_output(self, array, props) -> ScatteredVolume:
+        return [ScatteredVolume(
+            array=array,
+            position=props.get("position", (0, 0)),
+            z=props.get("z", 0.0),
+            value=props.get("value", 1.0),
+            intensity=props.get("intensity", None),
+            refractive_index=props.get("refractive_index", None),
+            properties=props.copy(),
+            main_property=self.main_property,
+        )]
 
-    def _no_wrap_process_output(
-        self,
-        *args,
-        **feature_input
-    ) -> list:
-        return self._image_wrapped_process_output(*args, **feature_input)
+class FieldScatterer(Scatterer):
+    def _wrap_output(self, array, props) -> ScatteredField:
+        return [ScatteredField(
+            array=array,
+            position=props.get("position", (0, 0)),
+            wavelength=props.get("wavelength", 0.0),
+            properties=props.copy(),
+            main_property=self.main_property,
+        )]
 
 
 #TODO ***??*** revise PointParticle - torch, typing, docstring, unit test
-class PointParticle(Scatterer):
+class PointParticle(VolumeScatterer):
     """Generate a diffraction-limited point particle.
 
     A point particle is approximated by the size of a single pixel or voxel.
@@ -382,6 +395,8 @@ class PointParticle(Scatterer):
         
     """
 
+    main_property = "intensity"
+    
     def __init__(
         self: PointParticle,
         **kwargs: Any,
@@ -405,7 +420,7 @@ class PointParticle(Scatterer):
 
 
 #TODO ***??*** revise Ellipse - torch, typing, docstring, unit test
-class Ellipse(Scatterer):
+class Ellipse(VolumeScatterer):
     """Generates an elliptical disk scatterer
 
     Parameters
@@ -445,6 +460,8 @@ class Ellipse(Scatterer):
         radius=(u.meter, u.meter),
         rotation=(u.radian, u.radian),
     )
+
+    main_property = "refractive_index"
 
     def __init__(
         self,
@@ -519,7 +536,7 @@ class Ellipse(Scatterer):
 
 
 #TODO ***??*** revise Sphere - torch, typing, docstring, unit test
-class Sphere(Scatterer):
+class Sphere(VolumeScatterer):
     """Generates a spherical scatterer
 
     Parameters
@@ -549,6 +566,8 @@ class Sphere(Scatterer):
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
     )
+
+    main_property = "refractive_index"
 
     def __init__(
         self,
@@ -584,7 +603,7 @@ class Sphere(Scatterer):
 
 
 #TODO ***??*** revise Ellipsoid - torch, typing, docstring, unit test
-class Ellipsoid(Scatterer):
+class Ellipsoid(VolumeScatterer):
     """Generates an ellipsoidal scatterer
 
     Parameters
@@ -624,6 +643,8 @@ class Ellipsoid(Scatterer):
         radius=(u.meter, u.meter),
         rotation=(u.radian, u.radian),
     )
+
+    main_property = "refractive_index"
 
     def __init__(
         self,
@@ -741,7 +762,7 @@ class Ellipsoid(Scatterer):
 
 
 #TODO ***??*** revise MieScatterer - torch, typing, docstring, unit test
-class MieScatterer(Scatterer):
+class MieScatterer(FieldScatterer):
     """Base implementation of a Mie particle.
 
     New Mie-theory scatterers can be implemented by extending this class, and
@@ -835,6 +856,8 @@ class MieScatterer(Scatterer):
         coherence_length=(u.meter, u.pixel),
     )
 
+    main_property = "wavelength"
+
     def __init__(
         self,
         coefficients,
@@ -864,11 +887,11 @@ class MieScatterer(Scatterer):
                 "Please use input_polarization instead"
             )
             input_polarization = polarization_angle
-        kwargs.pop("is_field", None)
+        kwargs.pop("is_field", None) # remove
         kwargs.pop("crop_empty", None)
 
         super().__init__(
-            is_field=True,
+            is_field=True, # remove
             crop_empty=False,
             L=L,
             offset_z=offset_z,
@@ -1188,7 +1211,6 @@ class MieScatterer(Scatterer):
                 -mask.shape[1] // 2 : mask.shape[1] // 2,
             ]
             mask = np.exp(-0.5 * (x ** 2 + y ** 2) / ((sigma) ** 2))
-
             arr = arr * mask
 
         fourier_field = np.fft.fft2(arr)
@@ -1412,3 +1434,53 @@ class MieStratifiedSphere(MieScatterer):
             refractive_index=refractive_index,
             **kwargs,
         )
+
+
+@dataclass
+class ScatteredBase:
+    """Base class for scatterers (volumes and fields)."""
+
+    array: ArrayLike
+    position: np.ndarray
+    z: float = 0.0
+    properties: dict[str, Any] = field(default_factory=dict)
+    main_property: str = None
+    
+    def __post_init__(self):
+        self.position = np.array(self.position, dtype=float).reshape(-1)[:2]
+        self.z = float(np.atleast_1d(self.z).squeeze())
+
+    @property
+    def pos3d(self) -> np.ndarray:
+        return np.array([*self.position, self.z], dtype=float)
+
+    def as_array(self) -> ArrayLike:
+        """Return the underlying array.
+
+        Notes
+        -----
+        The raw array is also directly available as ``scatterer.array``.
+        This method exists mainly for API compatibility and clarity.
+
+        """
+        
+        return self.array
+
+    def get_property(self, key: str, default: Any = None) -> Any:
+        return getattr(self, key, self.properties.get(key, default))
+
+
+@dataclass
+class ScatteredVolume(ScatteredBase):
+    """Volumetric object: intensity sources or refractive index contrasts."""
+
+    refractive_index: float | None = None
+    intensity: float | None = None
+    value: float | None = None
+
+
+@dataclass
+class ScatteredField(ScatteredBase):
+    """Complex wavefield (already propagated or emitted)."""
+
+    wavelength: float = 500e-9
