@@ -351,6 +351,10 @@ class Microscope(StructuralFeature):
                 if isinstance(scatterer, ScatteredField)
             ]
 
+            warn_upscale_fields = False
+            if field_samples and np.any(upscale != 1):
+                warn_upscale_fields = True
+                
             # Merge all volumes into a single volume.
             sample_volume, limits = _create_volume(
                 volume_samples,
@@ -371,6 +375,14 @@ class Microscope(StructuralFeature):
 
             imaged_sample = self._objective.resolve(sample_volume)
 
+        if warn_upscale_fields:
+            warnings.warn(
+                "dt.Upscale is active while FieldScatterers are present. "
+                "Coherent fields are injected without resampling, so the "
+                "physical interpretation may change with Upscale. "
+                "This behavior is currently undefined.",
+                UserWarning,
+            )
 
         # Collect main_property from scatterers
         main_properties = {
@@ -1420,7 +1432,25 @@ class Brightfield(Optics):
         light_in_focus = light_in * shifted_pupil
 
         if len(fields) > 0:
-            field = np.sum(fields, axis=0)
+            # field = np.sum(fields, axis=0)
+            field_arrays = []
+
+            for fs in fields:
+                # fs is a ScatteredField
+                arr = fs.array
+
+                # Enforce (H, W, 1) shape
+                if arr.ndim == 2:
+                    arr = arr[..., None]
+
+                if arr.ndim != 3 or arr.shape[-1] != 1:
+                    raise ValueError(
+                        f"Expected field of shape (H, W, 1), got {arr.shape}"
+                    )
+
+                field_arrays.append(arr)
+
+            field = np.sum(field_arrays, axis=0)
             light_in_focus += field[..., 0]
         shifted_pupil = np.fft.fftshift(pupils[-1])
         light_in_focus = light_in_focus * shifted_pupil
