@@ -8082,7 +8082,7 @@ class Upscale(Feature):
 
         # Ensure factor is a tuple of three integers.
         if np.size(factor) == 1:
-            factor = (factor,) * 3
+            factor = (factor, factor, 1)
         elif len(factor) != 3:
             raise ValueError(
                 "Factor must be an integer or a tuple of three integers."
