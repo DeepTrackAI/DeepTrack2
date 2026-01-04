@@ -879,6 +879,7 @@ class MieScatterer(FieldScatterer):
         illumination_angle: float=0,
         amp_factor: float=1,
         phase_shift_correction: bool=False,
+        pupil: ArrayLike=[],
         **kwargs,
     ) -> None:
         if polarization_angle is not None:
@@ -887,7 +888,7 @@ class MieScatterer(FieldScatterer):
                 "Please use input_polarization instead"
             )
             input_polarization = polarization_angle
-        kwargs.pop("is_field", None) # remove
+        # kwargs.pop("is_field", None) # remove
         kwargs.pop("crop_empty", None)
 
         super().__init__(
@@ -912,6 +913,7 @@ class MieScatterer(FieldScatterer):
             illumination_angle=illumination_angle,
             amp_factor=amp_factor,
             phase_shift_correction=phase_shift_correction,
+            pupil=pupil,
             **kwargs,
         )
 
@@ -1037,7 +1039,8 @@ class MieScatterer(FieldScatterer):
         shape: int,
         voxel_size: ArrayLike[float],
         plane_position: float,
-        illumination_angle: float
+        illumination_angle: float,
+        k: float,
     ) -> tuple[float, float, float, float]:
         """Computes the coordinates of the plane in polar form."""
 
@@ -1050,15 +1053,22 @@ class MieScatterer(FieldScatterer):
 
         R2_squared = X ** 2 + Y ** 2
         R3 = np.sqrt(R2_squared + Z ** 2)  # Might be +z instead of -z.
+        Q = np.sqrt(R2_squared)/voxel_size[0]**2*2*np.pi/shape[0]
+        sin_theta=Q/(k)
+        pupil_mask=sin_theta<=1
+
+        cos_theta=np.zeros(sin_theta.shape)
+        cos_theta[pupil_mask]=np.sqrt(1-sin_theta[pupil_mask]**2)
 
         # Fet the angles.
-        cos_theta = Z / R3
+        # cos_theta = Z / R3
+        
         illumination_cos_theta = (
             np.cos(np.arccos(cos_theta) + illumination_angle)
             )
         phi = np.arctan2(Y, X)
 
-        return R3, cos_theta, illumination_cos_theta, phi
+        return R3, cos_theta, illumination_cos_theta, phi, pupil_mask
 
     def get(
         self,
@@ -1083,6 +1093,7 @@ class MieScatterer(FieldScatterer):
         illumination_angle: float,
         amp_factor: float,
         phase_shift_correction: bool,
+        pupil: ArrayLike,
         **kwargs,
     ) -> ArrayLike[float]:
         """Abstract method to initialize the Mie scatterer"""
@@ -1099,6 +1110,10 @@ class MieScatterer(FieldScatterer):
 
         ratio = offset_z / (working_distance - z)
 
+        # Wave vector.
+        k = 2 * np.pi / wavelength * refractive_index_medium
+
+
         # Position of pbjective relative particle.
         relative_position = np.array(
             (
@@ -1109,11 +1124,12 @@ class MieScatterer(FieldScatterer):
         )
 
         # Get field evaluation plane at offset_z.
-        R3_field, cos_theta_field, illumination_angle_field, phi_field =\
+        R3_field, cos_theta_field, illumination_angle_field, phi_field, pupil_mask =\
         self.get_plane_in_polar_coords(
             arr.shape, voxel_size,
             relative_position * ratio,
-            illumination_angle
+            illumination_angle,
+            k
         )
         
         cos_phi_field, sin_phi_field = np.cos(phi_field), np.sin(phi_field)
@@ -1132,9 +1148,9 @@ class MieScatterer(FieldScatterer):
         )
 
         # If the beam is within the pupil.
-        pupil_mask = (x_farfield - position_objective[0]) ** 2 + (
-            y_farfield - position_objective[1]
-        ) ** 2 < (pupil_physical_size / 2) ** 2
+        # pupil_mask = (x_farfield - position_objective[0]) ** 2 + (
+        #     y_farfield - position_objective[1]
+        # ) ** 2 < (pupil_physical_size / 2) ** 2
 
         R3_field = R3_field[pupil_mask]
         cos_theta_field = cos_theta_field[pupil_mask]
@@ -1169,9 +1185,6 @@ class MieScatterer(FieldScatterer):
             * illumination_angle_field
             )
 
-        # Wave vector.
-        k = 2 * np.pi / wavelength * refractive_index_medium
-
         # Harmonics.
         A, B = coefficients(L)
         PI, TAU = mie.harmonics(illumination_angle_field, L)
@@ -1188,12 +1201,14 @@ class MieScatterer(FieldScatterer):
             [E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)]
         )
         
-        arr[pupil_mask] = (
-            -1j
-            / (k * R3_field)
-            * np.exp(1j * k * R3_field)
-            * (S2 * S2_coef + S1 * S1_coef)
-        ) / amp_factor
+        # arr[pupil_mask] = (
+        #     -1j
+        #     / (k * R3_field)
+        #     * np.exp(1j * k * R3_field)
+        #     * (S2 * S2_coef + S1 * S1_coef)
+        # ) / amp_factor
+        arr[pupil_mask] = (S2 * S2_coef + S1 * S1_coef)/amp_factor
+
         
         # For phase shift correction (a multiplication of the field
         # by exp(1j * k * z)).
@@ -1213,13 +1228,19 @@ class MieScatterer(FieldScatterer):
             mask = np.exp(-0.5 * (x ** 2 + y ** 2) / ((sigma) ** 2))
             arr = arr * mask
 
-        fourier_field = np.fft.fft2(arr)
+        if len(pupil)>0:
+            c_pix=[arr.shape[0]//2,arr.shape[1]//2]
+
+            arr[c_pix[0]-pupil.shape[0]//2:c_pix[0]+pupil.shape[0]//2,c_pix[1]-pupil.shape[1]//2:c_pix[1]+pupil.shape[1]//2]*=pupil
+        fourier_field = -np.fft.ifft2(np.fft.fftshift(np.fft.fft2(np.fft.fftshift(arr)))) 
+        # fourier_field = np.fft.fft2(arr)
 
         propagation_matrix = get_propagation_matrix(
             fourier_field.shape,
             pixel_size=voxel_size[2],
             wavelength=wavelength / refractive_index_medium,
-            to_z=(-offset_z - z),
+            # to_z=(-offset_z - z),
+            to_z=(-z),
             dy=(
                 relative_position[0] * ratio
                 + position[0]
@@ -1232,7 +1253,7 @@ class MieScatterer(FieldScatterer):
             ),
         )
         fourier_field = (
-            fourier_field * propagation_matrix * np.exp(-1j * k * offset_z)
+            fourier_field * propagation_matrix #* np.exp(-1j * k * offset_z)
         )
 
         if return_fft:
