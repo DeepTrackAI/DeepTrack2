@@ -1,16 +1,16 @@
 """Core features for building and processing pipelines in DeepTrack2.
 
-This module defines the core classes and utilities used to create and 
-manipulate features in DeepTrack2, enabling users to build sophisticated data 
-processing pipelines with modular, reusable, and composable components.
+The `feasture.py` module defines the core classes and utilities used to create
+and manipulate features in DeepTrack2, enabling users to build sophisticated
+data processing pipelines with modular, reusable, and composable components.
 
 Key Features
 ------------
 - **Features**
 
-    A `Feature` is a building block of a data processing pipeline. 
+    A `Feature` is a building block of a data processing pipeline.
     It represents a transformation applied to data, such as image manipulation,
-    data augmentation, or computational operations. Features are highly 
+    data augmentation, or computational operations. Features are highly
     customizable and can be combined into pipelines for complex workflows.
 
 - **Structural Features**
@@ -28,13 +28,13 @@ Key Features
 
 - **Pipeline Composition**
 
-    Features can be composed into flexible pipelines using intuitive operators 
-    (`>>`, `&`, etc.), making it easy to define complex data processing 
+    Features can be composed into flexible pipelines using intuitive operators
+    (`>>`, `&`, etc.), making it easy to define complex data processing
     workflows.
 
 - **Lazy Evaluation**
 
-    DeepTrack2 supports lazy evaluation of features, ensuring that data is 
+    DeepTrack2 supports lazy evaluation of features, ensuring that data is
     processed only when needed, which improves performance and scalability.
 
 Module Structure
@@ -64,7 +64,7 @@ Structural Feature Classes:
 - `Repeat`: Apply a feature multiple times in sequence (^).
 - `Combine`: Combine multiple features into a single feature.
 - `Bind`: Bind a feature with property arguments.
-- `BindResolve`: Alias of `Bind`.
+- `BindResolve`: DEPRECATED Alias of `Bind`.
 - `BindUpdate`: DEPRECATED Bind a feature with certain arguments.
 - `ConditionalSetProperty`: DEPRECATED Conditionally override child properties.
 - `ConditionalSetFeature`: DEPRECATED Conditionally resolve features.
@@ -120,31 +120,37 @@ Functions:
 
 Examples
 --------
-Define a simple pipeline with features:
+Define a simple pipeline with features.
+
 >>> import deeptrack as dt
->>> import numpy as np
 
 Create a basic addition feature:
+
 >>> class BasicAdd(dt.Feature):
-...     def get(self, input, value, **kwargs):
-...         return input + value
+...     def get(self, data, value, **kwargs):
+...         return data + value
 
 Create two features:
+
 >>> add_five = BasicAdd(value=5)
 >>> add_ten = BasicAdd(value=10)
 
 Chain features together:
+
 >>> pipeline = dt.Chain(add_five, add_ten)
 
 Or equivalently:
 >>> pipeline = add_five >> add_ten
 
 Process an input image:
+
+>>> import numpy as np
+>>>
 >>> input = np.array([[1, 2, 3], [4, 5, 6]])
 >>> output = pipeline(input)
->>> print(output)
-[[16 17 18]
- [19 20 21]]
+>>> output
+array([[16, 17, 18],
+       [19, 20, 21]])
 
 """
 
@@ -165,7 +171,7 @@ from deeptrack import units_registry as units
 from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
-from deeptrack.image import Image  # TODO ***CM*** remove once elim. Image
+from deeptrack.image import Image  #TODO TBE
 from deeptrack.properties import PropertyDict, SequentialProperty
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
