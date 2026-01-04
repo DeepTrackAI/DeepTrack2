@@ -1473,43 +1473,57 @@ class Feature(DeepTrackNode):
     ) -> Feature:
         """Refresh the feature to generate a new output.
 
-        By default, when a feature is called multiple times, it returns the 
-        same value.
+        By default, when a feature is called multiple times, it returns the
+        same value, which is cached.
 
-        Calling `update()` forces the feature to recompute and 
-        return a new value the next time it is evaluated.
+        Calling `.update()` forces the feature to recompute and return a new
+        value the next time it is evaluated.
+
+        Calling `.new()` is equivalent to calling `.update()` plus evaulation.
 
         Parameters
         ----------
         **global_arguments: Any
-            Deprecated. Has no effect. Previously used to inject values 
-            during update. Use `Arguments` or call-time overrides instead.
+            DEPRECATED. Has no effect. Previously used to inject values during
+            update. Use `Arguments` or call-time overrides instead.
 
         Returns
         -------
         Feature
-            The updated feature instance, ensuring the next evaluation produces 
+            The updated feature instance, ensuring the next evaluation produces
             a fresh result.
 
         Examples
         -------
         >>> import deeptrack as dt
 
+        Create and resolve a feature:
+
         >>> import numpy as np
         >>>
-        >>> feature = dt.Value(value=lambda: np.random.rand())
+        >>> feature = dt.Value(lambda: np.random.rand())
         >>> output1 = feature()
         >>> output1
         0.9173610765203623
+
+        When resolving it again, it returns the same value:
 
         >>> output2 = feature()
         >>> output2  # Same as before
         0.9173610765203623
 
+        Using `.update()` forces re-evaluation when resolved:
+
         >>> feature.update()  # Feature updated
         >>> output3 = feature()
         >>> output3
         0.13917950359184617
+
+        Using `.new()` both updates and resolves the feature:
+
+        >>> output4 = feature.new()
+        >>> output4
+        0.006278518685428169
 
         """
 
@@ -1517,8 +1531,8 @@ class Feature(DeepTrackNode):
             # Deprecated, but not necessary to raise hard error.
             warnings.warn(
                 "Passing information through .update is no longer supported. "
-                "A quick fix is to pass the information when resolving the feature. "
-                "The prefered solution is to use dt.Arguments",
+                "A quick fix is to pass the information when resolving the "
+                "feature. The prefered solution is to use dt.Arguments",
                 DeprecationWarning,
             )
 

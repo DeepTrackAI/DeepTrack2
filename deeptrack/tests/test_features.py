@@ -14,7 +14,7 @@ import numpy as np
 
 from deeptrack import (
     features,
-    Image,
+    Image,  #TODO TBE
     Gaussian,
     optics,
     properties,
@@ -134,25 +134,27 @@ class TestFeatures(unittest.TestCase):
         F = features.DummyFeature(a=1, b=2)
         self.assertIsInstance(F, features.Feature)
         self.assertIsInstance(F.properties, properties.PropertyDict)
-        self.assertEqual(F.properties(),
-                         {'a': 1, 'b': 2, 'name': 'DummyFeature'})
+        self.assertEqual(
+            F.properties(),
+            {'a': 1, 'b': 2, 'name': 'DummyFeature'},
+        )
 
-        F = features.DummyFeature(prop_int=1, prop_bool=True, prop_str='a')
+        F = features.DummyFeature(prop_int=1, prop_bool=True, prop_str="a")
         self.assertIsInstance(F, features.Feature)
         self.assertIsInstance(F.properties, properties.PropertyDict)
         self.assertEqual(
             F.properties(),
-            {'prop_int': 1, 'prop_bool': True, 'prop_str': 'a', 
+            {'prop_int': 1, 'prop_bool': True, 'prop_str': 'a',
              'name': 'DummyFeature'},
         )
-        self.assertIsInstance(F.properties['prop_int'](), int)
-        self.assertEqual(F.properties['prop_int'](), 1)
-        self.assertIsInstance(F.properties['prop_bool'](), bool)
-        self.assertEqual(F.properties['prop_bool'](), True)
-        self.assertIsInstance(F.properties['prop_str'](), str)
-        self.assertEqual(F.properties['prop_str'](), 'a')
+        self.assertIsInstance(F.properties["prop_int"](), int)
+        self.assertEqual(F.properties["prop_int"](), 1)
+        self.assertIsInstance(F.properties["prop_bool"](), bool)
+        self.assertEqual(F.properties["prop_bool"](), True)
+        self.assertIsInstance(F.properties["prop_str"](), str)
+        self.assertEqual(F.properties["prop_str"](), 'a')
 
-    def test_Feature_properties_update(self):
+    def test_Feature_properties_update_new(self):
 
         feature = features.DummyFeature(
             prop_a=lambda: np.random.rand(),
@@ -172,6 +174,9 @@ class TestFeatures(unittest.TestCase):
         feature.update()
         prop_dict_with_update = feature.properties()
         self.assertNotEqual(prop_dict, prop_dict_with_update)
+
+        prop_dict_with_new = feature.properties.new()
+        self.assertNotEqual(prop_dict, prop_dict_with_new)
 
     def test_Feature_memorized(self):
 
