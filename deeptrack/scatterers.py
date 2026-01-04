@@ -1054,9 +1054,9 @@ class MieScatterer(FieldScatterer):
         R2_squared = X ** 2 + Y ** 2
         R3 = np.sqrt(R2_squared + Z ** 2)  # Might be +z instead of -z.
         Q = np.sqrt(R2_squared)/voxel_size[0]**2*2*np.pi/shape[0]
+        # is dimensionally ok? Doesn't look like it.
         sin_theta=Q/(k)
-        pupil_mask=sin_theta<=1
-
+        pupil_mask=sin_theta<1
         cos_theta=np.zeros(sin_theta.shape)
         cos_theta[pupil_mask]=np.sqrt(1-sin_theta[pupil_mask]**2)
 
@@ -1103,6 +1103,9 @@ class MieScatterer(FieldScatterer):
         voxel_size = get_active_voxel_size()
         arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
         position = np.array(position) * voxel_size[: len(position)]
+        print(xSize, ySize)
+        print(padding)
+        print(position)
 
         pupil_physical_size = working_distance * np.tan(collection_angle) * 2
 

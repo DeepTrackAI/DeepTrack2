@@ -2015,7 +2015,6 @@ def _create_volume(
     # fudge_factor = scale[0] * scale[1] / scale[2]
 
     for scatterer in list_of_scatterers:
-
         position = _get_position(scatterer, mode="corner", return_z=True)
         if scatterer.main_property == "intensity":
             scatterer_value = scatterer.get_property("intensity") #* fudge_factor
