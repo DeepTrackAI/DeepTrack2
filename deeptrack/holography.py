@@ -146,8 +146,8 @@ def get_propagation_matrix(
     x = np.arange(0, xr, 1) - xr / 2 + (xr % 2) / 2
     y = np.arange(0, yr, 1) - yr / 2 + (yr % 2) / 2
 
-    x = 2 * np.pi / pixel_size * x / xr
-    y = 2 * np.pi / pixel_size * y / yr
+    x = 2 * np.pi / pixel_size[0] * x / xr
+    y = 2 * np.pi / pixel_size[1] * y / yr
 
     KXk, KYk = np.meshgrid(x, y)
     KXk = KXk.astype(complex)

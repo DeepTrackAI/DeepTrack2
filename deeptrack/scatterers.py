@@ -1002,8 +1002,10 @@ class MieScatterer(FieldScatterer):
             The meshgrid of X and Y coordinates.
 
         """
-        x = np.arange(shape[0]) - shape[0] / 2
-        y = np.arange(shape[1]) - shape[1] / 2
+        # x = np.arange(shape[0]) - shape[0] / 2
+        # y = np.arange(shape[1]) - shape[1] / 2
+        x = np.arange(shape[0]) - (shape[0] - 1) / 2
+        y = np.arange(shape[1]) - (shape[1] - 1) / 2
         return np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
 
     def get_detector_mask(
@@ -1101,11 +1103,9 @@ class MieScatterer(FieldScatterer):
         # Get size of the output.
         xSize, ySize = self.get_xy_size(output_region, padding)
         voxel_size = get_active_voxel_size()
+        scale = get_active_scale()
         arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
-        position = np.array(position) * voxel_size[: len(position)]
-        print(xSize, ySize)
-        print(padding)
-        print(position)
+        position = np.array(position) * scale[: len(position)] * voxel_size[: len(position)]
 
         pupil_physical_size = working_distance * np.tan(collection_angle) * 2
 
@@ -1117,7 +1117,7 @@ class MieScatterer(FieldScatterer):
         k = 2 * np.pi / wavelength * refractive_index_medium
 
 
-        # Position of pbjective relative particle.
+        # Position of objective relative particle.
         relative_position = np.array(
             (
                 position_objective[0] - position[0],
@@ -1236,11 +1236,11 @@ class MieScatterer(FieldScatterer):
 
             arr[c_pix[0]-pupil.shape[0]//2:c_pix[0]+pupil.shape[0]//2,c_pix[1]-pupil.shape[1]//2:c_pix[1]+pupil.shape[1]//2]*=pupil
         fourier_field = -np.fft.ifft2(np.fft.fftshift(np.fft.fft2(np.fft.fftshift(arr)))) 
-        # fourier_field = np.fft.fft2(arr)
+        # fourier_field = np.fft.fft2(np.fft.fftshift(arr))
 
         propagation_matrix = get_propagation_matrix(
             fourier_field.shape,
-            pixel_size=voxel_size[2],
+            pixel_size=voxel_size[:2], # this needs a double check
             wavelength=wavelength / refractive_index_medium,
             # to_z=(-offset_z - z),
             to_z=(-z),
@@ -1252,9 +1252,10 @@ class MieScatterer(FieldScatterer):
             dx=(
                 relative_position[1] * ratio
                 + position[1]
-                + (padding[1] - arr.shape[1] / 2) * voxel_size[1]
+                + (padding[2] - arr.shape[1] / 2) * voxel_size[1] # check if padding is top, bottom, left, right
             ),
         )
+
         fourier_field = (
             fourier_field * propagation_matrix #* np.exp(-1j * k * offset_z)
         )

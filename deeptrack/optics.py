@@ -351,9 +351,9 @@ class Microscope(StructuralFeature):
                 if isinstance(scatterer, ScatteredField)
             ]
 
-            warn_upscale_fields = False
-            if field_samples and np.any(upscale != 1):
-                warn_upscale_fields = True
+            # warn_upscale_fields = False
+            # if field_samples and np.any(upscale != 1):
+            #     warn_upscale_fields = True
                 
             # Merge all volumes into a single volume.
             sample_volume, limits = _create_volume(
@@ -375,14 +375,14 @@ class Microscope(StructuralFeature):
 
             imaged_sample = self._objective.resolve(sample_volume)
 
-        if warn_upscale_fields:
-            warnings.warn(
-                "dt.Upscale is active while FieldScatterers are present. "
-                "Coherent fields are injected without resampling, so the "
-                "physical interpretation may change with Upscale. "
-                "This behavior is currently undefined.",
-                UserWarning,
-            )
+        # if warn_upscale_fields:
+        #     warnings.warn(
+        #         "dt.Upscale is active while FieldScatterers are present. "
+        #         "Coherent fields are injected without resampling, so the "
+        #         "physical interpretation may change with Upscale. "
+        #         "This behavior is currently undefined.",
+        #         UserWarning,
+        #     )
 
         # Collect main_property from scatterers
         main_properties = {
@@ -1365,7 +1365,7 @@ class Brightfield(Optics):
             if output_region[3] is None
             else int(output_region[3] - limits[1, 0] + pad[3])
         )
-
+        
         padded_volume = padded_volume[
             output_region[0] : output_region[2],
             output_region[1] : output_region[3],
