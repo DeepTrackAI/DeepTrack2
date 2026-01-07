@@ -653,19 +653,26 @@ class Feature(DeepTrackNode):
         super().__init__()
 
         # Ensure the feature has a 'name' property; default = class name.
-        kwargs.setdefault("name", type(self).__name__)
+        self.node_name = kwargs.setdefault("name", type(self).__name__)
 
         # 1) Create a PropertyDict to hold the feature’s properties.
-        self.properties = PropertyDict(**kwargs)
+        self.properties = PropertyDict(
+            node_name="properties",
+            **kwargs,
+        )
         self.properties.add_child(self)
 
         # 2) Initialize the input as a DeepTrackNode.
-        self._input = DeepTrackNode(_input)
+        self._input = DeepTrackNode(
+            node_name="_input",
+            action=_input,
+        )
         self._input.add_child(self)
 
         # 3) Random seed node (for deterministic behavior if desired).
         self._random_seed = DeepTrackNode(
-            lambda: random.randint(0, 2147483648)
+            node_name="_random_seed",
+            action=lambda: random.randint(0, 2147483648),
         )
         self._random_seed.add_child(self)
 
@@ -725,8 +732,7 @@ class Feature(DeepTrackNode):
         ----------
         data_list: Any, optional
             The input data to the feature or pipeline. It is most commonly a
-            NumPy array, a PyTorch tensor, or a list of NumPy arrays or PyTorch
-            tensors; however, it can be anything.
+            list of NumPy arrays or PyTorch tensors, but it can be anything.
             Defaults to `None`, in which case the feature uses the previous set
             of input values or propagates properties.
         **kwargs: Any
@@ -763,10 +769,15 @@ class Feature(DeepTrackNode):
         >>> feature()  # Uses stored input
         array([3, 4, 5])
 
+        Execute the feature with new input:
+    
+        >>> feature(np.array([10, 20, 30]))  # Uses new input
+        array([12, 22, 32])
+
         Override a property:
     
-        >>> feature(np.array([1, 2, 3]), b=10)
-        array([11, 12, 13])
+        >>> feature(np.array([10, 20, 30]), b=1)
+        array([11, 21, 31])
 
         """
 
