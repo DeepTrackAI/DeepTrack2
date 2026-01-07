@@ -1002,10 +1002,10 @@ class MieScatterer(FieldScatterer):
             The meshgrid of X and Y coordinates.
 
         """
-        # x = np.arange(shape[0]) - shape[0] / 2
-        # y = np.arange(shape[1]) - shape[1] / 2
-        x = np.arange(shape[0]) - (shape[0] - 1) / 2
-        y = np.arange(shape[1]) - (shape[1] - 1) / 2
+        x = np.arange(shape[0]) - shape[0] / 2
+        y = np.arange(shape[1]) - shape[1] / 2
+        # x = np.arange(shape[0]) - (shape[0] - 1) / 2
+        # y = np.arange(shape[1]) - (shape[1] - 1) / 2
         return np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
 
     def get_detector_mask(
