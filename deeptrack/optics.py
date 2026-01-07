@@ -291,6 +291,15 @@ class Microscope(StructuralFeature):
 
         # Grab properties from the objective to pass to the sample
         additional_sample_kwargs = self._objective.properties()
+        contrast_type = getattr(self._objective, "contrast_type", None)
+        if contrast_type is None:
+            raise RuntimeError(
+                f"{self._objective.__class__.__name__} must define `contrast_type` "
+                "(e.g. 'intensity' or 'refractive_index')."
+            )
+
+        additional_sample_kwargs["contrast_type"] = contrast_type
+
 
         # # Calculate required output image for the given upscale
         # # This way of providing the upscale will be deprecated in the future
@@ -384,25 +393,25 @@ class Microscope(StructuralFeature):
         #         UserWarning,
         #     )
 
-        # Collect main_property from scatterers
-        main_properties = {
-            s.main_property
-            for s in list_of_scatterers
-            if hasattr(s, "main_property")
-        }
+        # # Collect main_property from scatterers
+        # main_properties = {
+        #     s.main_property
+        #     for s in list_of_scatterers
+        #     if hasattr(s, "main_property")
+        # }
 
-        if len(main_properties) != 1:
-            raise ValueError(
-                f"Inconsistent main_property across scatterers: {main_properties}"
-            )
+        # if len(main_properties) != 1:
+        #     raise ValueError(
+        #         f"Inconsistent main_property across scatterers: {main_properties}"
+        #     )
 
-        main_property = main_properties.pop()
+        # main_property = main_properties.pop()
 
         # Handling upscale from dt.Upscale() here to eliminate Image
         # wrapping issues.
         if np.any(np.array(upscale) != 1):
             ux, uy = upscale[:2]
-            if main_property == "intensity":
+            if contrast_type == "intensity":
                 print("Using sum pooling for intensity downscaling.")   
                 imaged_sample = SumPoolingCM((ux, uy, 1))(imaged_sample)
             else:
@@ -1045,6 +1054,7 @@ class Fluorescence(Optics):
     1.4
 
     """
+    contrast_type = "intensity"
 
     def get(
         self:  Fluorescence,
@@ -1269,6 +1279,8 @@ class Brightfield(Optics):
     1.4
     
     """
+
+    contrast_type = "refractive_index"
 
     __conversion_table__ = ConversionTable(
         working_distance=(u.meter, u.meter),
@@ -1988,6 +2000,12 @@ def _create_volume(
             Spatial limits of the volume.
 
     """
+    contrast_type = kwargs.get("contrast_type", None)
+    if contrast_type is None:
+        raise RuntimeError(
+            "_create_volume requires a contrast_type "
+            "(e.g. 'intensity' or 'refractive_index')"
+        )
 
     if not isinstance(list_of_scatterers, list):
         list_of_scatterers = [list_of_scatterers]
@@ -2016,12 +2034,30 @@ def _create_volume(
 
     for scatterer in list_of_scatterers:
         position = _get_position(scatterer, mode="corner", return_z=True)
-        if scatterer.main_property == "intensity":
-            scatterer_value = scatterer.get_property("intensity") #* fudge_factor
-        elif scatterer.main_property == "refractive_index":
-            scatterer_value = scatterer.get_property("refractive_index") - refractive_index_medium
-        else:  # fallback to generic value
-            scatterer_value = scatterer.get_property("value")
+    #     if scatterer.main_property == "intensity":
+    #         scatterer_value = scatterer.get_property("intensity") #* fudge_factor
+    #     elif scatterer.main_property == "refractive_index":
+    #         scatterer_value = scatterer.get_property("refractive_index") - refractive_index_medium
+    #     else:  # fallback to generic value
+    #         scatterer_value = scatterer.get_property("value")
+
+    #     # Scale the array accordingly
+    #     scatterer.array = scatterer.array * scatterer_value
+
+        if contrast_type == "intensity":
+            value = scatterer.get_property("intensity", None)
+            if value is None:
+                raise ValueError("Scatterer has no intensity.")
+            scatterer_value = value
+
+        elif contrast_type == "refractive_index":
+            ri = scatterer.get_property("refractive_index", None)
+            if ri is None:
+                raise ValueError("Scatterer has no refractive_index.")
+            scatterer_value = ri - refractive_index_medium
+
+        else:
+            raise RuntimeError(f"Unknown contrast_type: {contrast_type}")
 
         # Scale the array accordingly
         scatterer.array = scatterer.array * scatterer_value

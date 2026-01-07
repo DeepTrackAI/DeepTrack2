@@ -353,8 +353,8 @@ class VolumeScatterer(Scatterer):
             position=props.get("position", (0, 0)),
             z=props.get("z", 0.0),
             value=props.get("value", 1.0),
-            intensity=props.get("intensity", None),
-            refractive_index=props.get("refractive_index", None),
+            intensity=props.get("intensity", 1.0),
+            refractive_index=props.get("refractive_index", 1.59),
             properties=props.copy(),
             main_property=self.main_property,
         )]
@@ -364,7 +364,7 @@ class FieldScatterer(Scatterer):
         return [ScatteredField(
             array=array,
             position=props.get("position", (0, 0)),
-            wavelength=props.get("wavelength", 0.0),
+            wavelength=props.get("wavelength", 532.0),
             properties=props.copy(),
             main_property=self.main_property,
         )]
@@ -394,8 +394,6 @@ class PointParticle(VolumeScatterer):
         for `Brightfield` and `intensity` for `Fluorescence`).
         
     """
-
-    main_property = "intensity"
     
     def __init__(
         self: PointParticle,
