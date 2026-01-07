@@ -250,7 +250,7 @@ class Microscope(StructuralFeature):
 
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
-        self._sample.store_properties()
+        # self._sample.store_properties()
 
     def get(
         self: Microscope,
@@ -1047,7 +1047,7 @@ class Fluorescence(Optics):
         illuminated_volume: ArrayLike[complex],
         limits: ArrayLike[int],
         **kwargs: Any,
-    ) -> Image:
+    ) -> ArrayLike[complex]:
         """Simulates the imaging process using a fluorescence microscope.
 
         This method convolves the 3D illuminated volume with a pupil function 
@@ -2055,7 +2055,7 @@ def _create_volume(
         # Pad scatterer to avoid edge effects during interpolation
         padded_scatterer = scatterer
         padded_scatterer.array = np.pad(
-                scatterer.array._value,  # this is a temporary fix, Image should be removed from features
+                scatterer.array,
                 [(2, 2), (2, 2), (2, 2)],
                 "constant",
                 constant_values=0,
