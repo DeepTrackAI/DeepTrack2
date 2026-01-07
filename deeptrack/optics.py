@@ -393,20 +393,6 @@ class Microscope(StructuralFeature):
         #         UserWarning,
         #     )
 
-        # # Collect main_property from scatterers
-        # main_properties = {
-        #     s.main_property
-        #     for s in list_of_scatterers
-        #     if hasattr(s, "main_property")
-        # }
-
-        # if len(main_properties) != 1:
-        #     raise ValueError(
-        #         f"Inconsistent main_property across scatterers: {main_properties}"
-        #     )
-
-        # main_property = main_properties.pop()
-
         # Handling upscale from dt.Upscale() here to eliminate Image
         # wrapping issues.
         if np.any(np.array(upscale) != 1):
@@ -2034,15 +2020,6 @@ def _create_volume(
 
     for scatterer in list_of_scatterers:
         position = _get_position(scatterer, mode="corner", return_z=True)
-    #     if scatterer.main_property == "intensity":
-    #         scatterer_value = scatterer.get_property("intensity") #* fudge_factor
-    #     elif scatterer.main_property == "refractive_index":
-    #         scatterer_value = scatterer.get_property("refractive_index") - refractive_index_medium
-    #     else:  # fallback to generic value
-    #         scatterer_value = scatterer.get_property("value")
-
-    #     # Scale the array accordingly
-    #     scatterer.array = scatterer.array * scatterer_value
 
         if contrast_type == "intensity":
             value = scatterer.get_property("intensity", None)
