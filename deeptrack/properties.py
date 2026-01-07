@@ -143,6 +143,8 @@ class Property(DeepTrackNode):
         The rule for sampling values. Can be a constant, function, list, 
         dictionary, iterator, tuple, NumPy array, PyTorch tensor, slice,
         or `DeepTrackNode`.
+    node_name: string or None
+        The name of this node. Defaults to None.
     **dependencies: Property
         Additional dependencies passed as named arguments. These dependencies 
         can be used as inputs to functions or other dynamic components of the 
@@ -325,6 +327,7 @@ class Property(DeepTrackNode):
             DeepTrackNode |
             Any
         ),
+        node_name: str | None = None,
         **dependencies: Property,
     ):
         """Initialize a `Property` object with a given sampling rule.
@@ -335,6 +338,8 @@ class Property(DeepTrackNode):
                        or tuple or NumPy array or PyTorch tensor or slice
                        or DeepTrackNode or Any
             The rule to sample values for the property.
+        node_name: string or None
+            The name of this node. Defaults to None.
         **dependencies: Property
             Additional named dependencies used in the sampling rule.
         
@@ -343,6 +348,8 @@ class Property(DeepTrackNode):
         super().__init__()
 
         self.action = self.create_action(sampling_rule, **dependencies)
+
+        self.node_name = node_name
 
     def create_action(
         self: Property,
@@ -516,6 +523,7 @@ class PropertyDict(DeepTrackNode, dict):
 
     def __init__(
         self: PropertyDict,
+        node_name: str | None = None,
         **kwargs: Any,
     ):
         """Initialize a PropertyDict with properties and dependencies.
@@ -530,6 +538,8 @@ class PropertyDict(DeepTrackNode, dict):
 
         Parameters
         ----------
+        node_name: string or None
+            The name of this node. Defaults to None.
         **kwargs: Any
             Key-value pairs used to initialize the dictionary. Values can be 
             constants, functions, or other `Property`-compatible types.
@@ -547,6 +557,7 @@ class PropertyDict(DeepTrackNode, dict):
                     # resolving dependencies.
                     dependencies[key] = Property(
                         value,
+                        node_name=key,
                         **{**dependencies, **kwargs},
                     )
                     # Remove the key from the input dictionary once resolved.
@@ -576,6 +587,8 @@ class PropertyDict(DeepTrackNode, dict):
             return dict((key, value(_ID=_ID)) for key, value in self.items())
 
         super().__init__(action, **dependencies)
+
+        self.node_name = node_name
 
         for value in dependencies.values():
             value.add_child(self)
