@@ -154,7 +154,7 @@ from deeptrack.backend.units import (
 from deeptrack.math import AveragePooling
 from deeptrack.features import propagate_data_to_dependencies
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
-from deeptrack.image import Image, pad_image_to_fft
+from deeptrack.image import pad_image_to_fft
 from deeptrack.types import ArrayLike, PropertyLike
 
 from deeptrack import image
@@ -198,7 +198,7 @@ class Microscope(StructuralFeature):
 
     Methods
     -------
-    `get(image: Image or None, **kwargs: Any) -> Image`
+    `get(image: np.ndarray or None, **kwargs: Any) -> np.ndarray`
         Simulates the imaging process using the defined optical system and 
         returns the resulting image.
 
@@ -254,9 +254,9 @@ class Microscope(StructuralFeature):
 
     def get(
         self: Microscope,
-        image: Image | None,
+        image: np.ndarray | None,
         **kwargs: Any,
-    ) -> Image:
+    ) -> np.ndarray:
         """Generate an image of the sample using the defined optical system.
 
         This method processes the sample through the optical system to
@@ -264,14 +264,14 @@ class Microscope(StructuralFeature):
 
         Parameters
         ----------
-        image: Image | None
+        image: np.ndarray | None
             The input image to be processed. If None, a new image is created.
         **kwargs: Any
             Additional parameters for the imaging process.
 
         Returns
         -------
-        Image: Image
+        image: np.ndarray
             The processed image after applying the optical system.
 
         Examples
@@ -299,14 +299,6 @@ class Microscope(StructuralFeature):
             )
 
         additional_sample_kwargs["contrast_type"] = contrast_type
-
-
-        # # Calculate required output image for the given upscale
-        # # This way of providing the upscale will be deprecated in the future
-        # # in favor of dt.Upscale().
-        # _upscale_given_by_optics = additional_sample_kwargs["upscale"]
-        # if np.array(_upscale_given_by_optics).size == 1:
-        #     _upscale_given_by_optics = (_upscale_given_by_optics,) * 3
 
         with u.context(
             create_context(
@@ -359,21 +351,12 @@ class Microscope(StructuralFeature):
                 for scatterer in list_of_scatterers
                 if isinstance(scatterer, ScatteredField)
             ]
-
-            # warn_upscale_fields = False
-            # if field_samples and np.any(upscale != 1):
-            #     warn_upscale_fields = True
                 
             # Merge all volumes into a single volume.
             sample_volume, limits = _create_volume(
                 volume_samples,
                 **additional_sample_kwargs,
             )
-            # sample_volume = Image(sample_volume)
-
-            # Merge all properties into the volume.
-            # for scatterer in volume_samples + field_samples:
-            #     sample_volume.merge_properties_from(scatterer)
 
             # Let the objective know about the limits of the volume and all the fields.
             propagate_data_to_dependencies(
@@ -383,15 +366,6 @@ class Microscope(StructuralFeature):
             )
 
             imaged_sample = self._objective.resolve(sample_volume)
-
-        # if warn_upscale_fields:
-        #     warnings.warn(
-        #         "dt.Upscale is active while FieldScatterers are present. "
-        #         "Coherent fields are injected without resampling, so the "
-        #         "physical interpretation may change with Upscale. "
-        #         "This behavior is currently undefined.",
-        #         UserWarning,
-        #     )
 
         # Handling upscale from dt.Upscale() here to eliminate Image
         # wrapping issues.
@@ -1024,7 +998,7 @@ class Fluorescence(Optics):
 
     Methods
     -------
-    `get(illuminated_volume: array_like[complex], limits: array_like[int, int], **kwargs: Any) -> Image`
+    `get(illuminated_volume: array_like[complex], limits: array_like[int, int], **kwargs: Any) -> np.ndarray`
         Simulates the imaging process using a fluorescence microscope.
 
     Examples
@@ -1066,7 +1040,7 @@ class Fluorescence(Optics):
 
         Returns
         -------
-        Image: Image
+        image: np.ndarray
             A 2D image object representing the fluorescence projection.
 
         Notes
@@ -1084,7 +1058,7 @@ class Fluorescence(Optics):
         >>> optics = dt.Fluorescence(
         ...     NA=1.4, wavelength=0.52e-6, magnification=60,
         ... )
-        >>> volume = dt.Image(np.ones((128, 128, 10), dtype=complex))
+        >>> volume = np.ones((128, 128, 10), dtype=complex)
         >>> limits = np.array([[0, 128], [0, 128], [0, 10]])
         >>> properties = optics.properties()
         >>> filtered_properties = {
@@ -1250,7 +1224,7 @@ class Brightfield(Optics):
     -------
     `get(illuminated_volume: array_like[complex], 
         limits: array_like[int, int], fields: array_like[complex], 
-        **kwargs: Any) -> Image`
+        **kwargs: Any) -> np.ndarray`
         Simulates imaging with brightfield microscopy.
 
 
@@ -1278,7 +1252,7 @@ class Brightfield(Optics):
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
         **kwargs: Any,
-    ) -> Image:
+    ) -> np.ndarray:
         """Simulates imaging with brightfield microscopy.
 
         This method propagates light through the given volume, applying 
@@ -1303,7 +1277,7 @@ class Brightfield(Optics):
 
         Returns
         -------
-        Image: Image
+        image: np.ndarray
             Processed image after simulating the brightfield imaging process.
 
         Examples
@@ -1318,7 +1292,7 @@ class Brightfield(Optics):
         ...     wavelength=0.52e-6, 
         ...     magnification=60,
         ... )
-        >>> volume = dt.Image(np.ones((128, 128, 10), dtype=complex))
+        >>> volume = np.ones((128, 128, 10), dtype=complex)
         >>> limits = np.array([[0, 128], [0, 128], [0, 10]])
         >>> fields = np.array([np.ones((162, 162), dtype=complex)])
         >>> properties = optics.properties()
@@ -1665,7 +1639,7 @@ class Darkfield(Brightfield):
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
         **kwargs: Any,
-    ) -> Image:
+    ) -> np.ndarray:
         """Retrieve the darkfield image of the illuminated volume.
 
         Parameters

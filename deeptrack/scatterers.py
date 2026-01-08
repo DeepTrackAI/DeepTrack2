@@ -176,7 +176,7 @@ from deeptrack.backend.units import (
 )
 from deeptrack.backend import mie
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
-from deeptrack.image import pad_image_to_fft, Image
+from deeptrack.image import pad_image_to_fft
 from deeptrack.types import ArrayLike
 from deeptrack import units_registry as u
 
@@ -300,7 +300,7 @@ class Scatterer(Feature):
         upsample_axes=None,
         crop_empty=True,
         **kwargs
-    ) -> list[Image] | list[np.ndarray]:
+    ) -> list[np.ndarray]:
         # Post processes the created object to handle upsampling,
         # as well as cropping empty slices.
         if not self._processed_properties:
@@ -407,7 +407,7 @@ class PointParticle(VolumeScatterer):
 
     def get(
         self: PointParticle,
-        image: Image | np.ndarray,
+        image: np.ndarray,
         **kwarg: Any,
     ) -> NDArray[Any] | torch.Tensor:
         """Evaluate and return the scatterer volume."""
@@ -576,7 +576,7 @@ class Sphere(VolumeScatterer):
 
     def get(
         self,
-        image: Image | np.ndarray,
+        image: np.ndarray,
         radius: float,
         voxel_size: float,
         **kwargs
@@ -713,7 +713,7 @@ class Ellipsoid(VolumeScatterer):
 
     def get(
         self,
-        image: Image | np.ndarray,
+        image: np.ndarray,
         radius: float,
         rotation: ArrayLike[float] | float,
         voxel_size: float,
