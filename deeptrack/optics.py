@@ -162,7 +162,7 @@ from deeptrack import units_registry as u
 
 from deeptrack import TORCH_AVAILABLE, image
 from deeptrack.backend import xp
-from deeptrack.scatterers import ScatteredVolume, ScatteredField
+from deeptrack.scatterers import ScatteredObject
 
 if TORCH_AVAILABLE:
     import torch
@@ -342,14 +342,14 @@ class Microscope(StructuralFeature):
             volume_samples = [
                 scatterer
                 for scatterer in list_of_scatterers
-                if isinstance(scatterer, ScatteredVolume)
+                if scatterer.role == "volume"
             ]
 
             # All scatterers that are defined as fields.
             field_samples = [
                 scatterer
                 for scatterer in list_of_scatterers
-                if isinstance(scatterer, ScatteredField)
+                if scatterer.role == "field"
             ]
                 
             # Merge all volumes into a single volume.
@@ -1810,7 +1810,7 @@ class IlluminationGradient(Feature):
 
 #TODO ***??*** revise _get_position - torch, typing, docstring, unit test
 def _get_position(
-    scatterer: ScatteredVolume,
+    scatterer: ScatteredObject,
     mode: str = "corner",
     return_z: bool = False,
 ) -> np.ndarray:
@@ -2033,8 +2033,8 @@ def _create_volume(
                 "constant",
                 constant_values=0,
             )
-        padded_scatterer = ScatteredVolume(
-            array=padded_scatterer_arr, properties=scatterer.properties.copy()
+        padded_scatterer = ScatteredObject(
+            array=padded_scatterer_arr, properties=scatterer.properties.copy(), role=scatterer.role,
             )
         position = _get_position(padded_scatterer, mode="corner", return_z=True)
         shape = np.array(padded_scatterer.array.shape)
@@ -2059,30 +2059,6 @@ def _create_volume(
                 f"Unsupported array type {type(padded_scatterer.array)}. "
                 "Expected np.ndarray or torch.Tensor."
             )
-
-        # kernel = np.array(
-        #     [
-        #         [0, 0, 0],
-        #         [0, (1 - x_off) * (1 - y_off), (1 - x_off) * y_off],
-        #         [0, x_off * (1 - y_off), x_off * y_off],
-        #     ]
-        # )
-
-        # for z in range(padded_scatterer.array.shape[2]):
-        #     if splined_scatterer.dtype == complex:
-        #         splined_scatterer[:, :, z] = (
-        #             convolve(
-        #                 np.real(padded_scatterer.array[:, :, z]), kernel, mode="constant"
-        #             )
-        #             + convolve(
-        #                 np.imag(padded_scatterer.array[:, :, z]), kernel, mode="constant"
-        #             )
-        #             * 1j
-        #         )
-        #     else:
-        #         splined_scatterer[:, :, z] = convolve(
-        #             padded_scatterer.array[:, :, z], kernel, mode="constant"
-        #         )
 
         position = np.floor(position)
         new_limits = np.zeros(limits.shape, dtype=np.int32)
@@ -2113,7 +2089,7 @@ def _create_volume(
         within_volume_position = position - limits[:, 0]
 
         # NOTE: Maybe shouldn't be additive.
-        # give options: sum default, but also sum, mean, max, min
+        # give options: sum default, but also mean, max, min, or
         volume[
             int(within_volume_position[0]) : 
             int(within_volume_position[0] + shape[0]),

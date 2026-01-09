@@ -7543,10 +7543,11 @@ class SampleToMasks(Feature):
         # if isinstance(images, list) and len(images) != 1:
         list_of_labels = super()._process_and_get(images, **kwargs)
 
-        from deeptrack.scatterers import ScatteredVolume
+        from deeptrack.scatterers import ScatteredObject
+        
         for idx, (label, image) in enumerate(zip(list_of_labels, images)):
             list_of_labels[idx] = \
-                ScatteredVolume(array=label, properties=image.properties.copy())        
+                ScatteredObject(array=label, properties=image.properties.copy(), role=image.role)        
 
         # Create an empty output image.
         output_region = kwargs["output_region"]
@@ -7566,19 +7567,14 @@ class SampleToMasks(Feature):
             label = volume.array
             position = _get_position(volume)
 
-            # p0 = np.round(position - output_region[0:2])
             p0 = xp.round(position - xp.asarray(output_region[0:2]))
             p0 = p0.astype(xp.int64)
 
 
-            # if np.any(p0 > output.shape[0:2]) or \
-            #     np.any(p0 + label.shape[0:2] < 0):
             if xp.any(p0 > xp.asarray(output.shape[:2])) or \
                 xp.any(p0 + xp.asarray(label.shape[:2]) < 0):
                 continue
 
-            # crop_x = int(-np.min([p0[0], 0]))
-            # crop_y = int(-np.min([p0[1], 0]))
             crop_x = (-xp.minimum(p0[0], 0)).item()
             crop_y = (-xp.minimum(p0[1], 0)).item()
 
@@ -7637,9 +7633,6 @@ class SampleToMasks(Feature):
                         output_slice[..., label_index] != 0, 
                         labelarg[..., label_index] != 0
                         )
-                    # (output_slice[..., label_index] != 0) | (
-                    #     labelarg[..., label_index] != 0
-                    # )
 
                 elif merge == "mul":
                     output[
@@ -8408,7 +8401,7 @@ class NonOverlapping(Feature):
         - If bounding cubes overlap, voxel-level checks are performed.
 
         """
-        from deeptrack.scatterers import ScatteredVolume
+        from deeptrack.scatterers import ScatteredObject
 
         from deeptrack.augmentations import CropTight, Pad # these are not compatibles with torch backend
         from deeptrack.optics import _get_position
@@ -8434,9 +8427,10 @@ class NonOverlapping(Feature):
             else:
                 new_arr = new_arr.astype(arr.dtype)
 
-            new_volume = ScatteredVolume(
+            new_volume = ScatteredObject(
                 array=new_arr,
                 properties=volume.properties.copy(),
+                role=volume.role,
             )
 
             new_volumes.append(new_volume)

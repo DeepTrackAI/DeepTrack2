@@ -338,28 +338,33 @@ class Scatterer(Feature):
         # props = kwargs.copy()
         return [self._wrap_output(new_image, kwargs)]
 
-    def _wrap_output(self, array, props) -> ScatteredBase:
-        """Must be overridden in subclasses to wrap output correctly."""
-        raise NotImplementedError
-
-class VolumeScatterer(Scatterer):
-    """Abstract scatterer producing ScatteredVolume outputs."""
-    def _wrap_output(self, array, props) -> ScatteredVolume:
-        return ScatteredVolume(
+    def _wrap_output(self, array, props) -> ScatteredObject:
+        # """Must be overridden in subclasses to wrap output correctly."""
+        # raise NotImplementedError
+        return ScatteredObject(
             array=array,
             properties=props.copy(),
+            role = self.role,
         )
 
-class FieldScatterer(Scatterer):
-    def _wrap_output(self, array, props) -> ScatteredField:
-        return ScatteredField(
-            array=array,
-            properties=props.copy(),
-        )
+# class VolumeScatterer(Scatterer):
+#     """Abstract scatterer producing ScatteredVolume outputs."""
+#     def _wrap_output(self, array, props) -> ScatteredVolume:
+#         return ScatteredVolume(
+#             array=array,
+#             properties=props.copy(),
+#         )
+
+# class FieldScatterer(Scatterer):
+#     def _wrap_output(self, array, props) -> ScatteredField:
+#         return ScatteredField(
+#             array=array,
+#             properties=props.copy(),
+#         )
 
 
 #TODO ***??*** revise PointParticle - torch, typing, docstring, unit test
-class PointParticle(VolumeScatterer):
+class PointParticle(Scatterer):
     """Generate a diffraction-limited point particle.
 
     A point particle is approximated by the size of a single pixel or voxel.
@@ -382,7 +387,8 @@ class PointParticle(VolumeScatterer):
         for `Brightfield` and `intensity` for `Fluorescence`).
         
     """
-    
+    role = "volume"
+
     def __init__(
         self: PointParticle,
         **kwargs: Any,
@@ -406,7 +412,7 @@ class PointParticle(VolumeScatterer):
 
 
 #TODO ***??*** revise Ellipse - torch, typing, docstring, unit test
-class Ellipse(VolumeScatterer):
+class Ellipse(Scatterer):
     """Generates an elliptical disk scatterer
 
     Parameters
@@ -441,6 +447,7 @@ class Ellipse(VolumeScatterer):
         before rotation.
 
     """
+    role = "volume"
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
@@ -520,7 +527,7 @@ class Ellipse(VolumeScatterer):
 
 
 #TODO ***??*** revise Sphere - torch, typing, docstring, unit test
-class Sphere(VolumeScatterer):
+class Sphere(Scatterer):
     """Generates a spherical scatterer
 
     Parameters
@@ -546,6 +553,7 @@ class Sphere(VolumeScatterer):
         Upsamples the calculations of the pixel occupancy fraction.
         
     """
+    role = "volume"
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
@@ -585,7 +593,7 @@ class Sphere(VolumeScatterer):
 
 
 #TODO ***??*** revise Ellipsoid - torch, typing, docstring, unit test
-class Ellipsoid(VolumeScatterer):
+class Ellipsoid(Scatterer):
     """Generates an ellipsoidal scatterer
 
     Parameters
@@ -620,6 +628,8 @@ class Ellipsoid(VolumeScatterer):
         This is applied before rotation.
         
     """
+
+    role = "volume"
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
@@ -742,7 +752,7 @@ class Ellipsoid(VolumeScatterer):
 
 
 #TODO ***??*** revise MieScatterer - torch, typing, docstring, unit test
-class MieScatterer(FieldScatterer):
+class MieScatterer(Scatterer):
     """Base implementation of a Mie particle.
 
     New Mie-theory scatterers can be implemented by extending this class, and
@@ -826,6 +836,8 @@ class MieScatterer(FieldScatterer):
         arr*=np.exp(1j * k * z + 1j * np.pi / 2)
         
     """
+
+    role = "field"
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
@@ -1304,6 +1316,8 @@ class MieSphere(MieScatterer):
         
     """
 
+    role = "field"
+
     def __init__(
         self,
         radius: float = 1e-6,
@@ -1406,6 +1420,8 @@ class MieStratifiedSphere(MieScatterer):
         
     """
 
+    role = "field"
+
     def __init__(
         self,
         radius: ArrayLike[float] = [1e-6],
@@ -1444,17 +1460,12 @@ class MieStratifiedSphere(MieScatterer):
 
 
 @dataclass
-class ScatteredBase:
+class ScatteredObject:
     """Base class for scatterers (volumes and fields)."""
 
     array: ArrayLike
-    # position: np.ndarray
-    # z: float = 0.0
     properties: dict[str, Any] = field(default_factory=dict)
-    
-    # def __post_init__(self):
-    #     self.position = np.array(self.position, dtype=float).reshape(-1)[:2]
-    #     self.z = float(np.atleast_1d(self.z).squeeze())
+    role: Literal["volume", "field"] = "volume"
 
     @property
     def ndim(self) -> int:
@@ -1486,20 +1497,20 @@ class ScatteredBase:
         return getattr(self, key, self.properties.get(key, default))
 
 
-@dataclass
-class ScatteredVolume(ScatteredBase):
-    """Volumetric object: intensity sources or refractive index contrasts."""
+# @dataclass
+# class ScatteredVolume(ScatteredBase):
+#     """Volumetric object: intensity sources or refractive index contrasts."""
 
-    # refractive_index: float | None = None
-    # intensity: float | None = None
-    # value: float | None = None
-    # position_sampler: Optional[Callable[[], np.ndarray]] = None
-    pass
+#     # refractive_index: float | None = None
+#     # intensity: float | None = None
+#     # value: float | None = None
+#     # position_sampler: Optional[Callable[[], np.ndarray]] = None
+#     pass
 
-@dataclass
-class ScatteredField(ScatteredBase):
-    """Complex wavefield (already propagated or emitted)."""
+# @dataclass
+# class ScatteredField(ScatteredBase):
+#     """Complex wavefield (already propagated or emitted)."""
 
-    # wavelength: float = 500e-9
-    # position_sampler: Optional[Callable[[], np.ndarray]] = None
-    pass
+#     # wavelength: float = 500e-9
+#     # position_sampler: Optional[Callable[[], np.ndarray]] = None
+#     pass
