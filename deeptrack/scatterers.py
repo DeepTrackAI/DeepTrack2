@@ -348,26 +348,26 @@ class Scatterer(Feature):
 class VolumeScatterer(Scatterer):
     """Abstract scatterer producing ScatteredVolume outputs."""
     def _wrap_output(self, array, props) -> ScatteredVolume:
-        return [ScatteredVolume(
+        return ScatteredVolume(
             array=array,
-            position=props.get("position", (0, 0)),
-            z=props.get("z", 0.0),
-            value=props.get("value", 1.0),
-            intensity=props.get("intensity", 1.0),
-            refractive_index=props.get("refractive_index", 1.59),
+            # position=props.get("position", (0, 0)),
+            # z=props.get("z", 0.0),
+            # value=props.get("value", 1.0),
+            # intensity=props.get("intensity", 1.0),
+            # refractive_index=props.get("refractive_index", 1.59),
             properties=props.copy(),
-            main_property=self.main_property,
-        )]
+            # position_sampler=props.get("_position_sampler", None),
+        )
 
 class FieldScatterer(Scatterer):
     def _wrap_output(self, array, props) -> ScatteredField:
-        return [ScatteredField(
+        return ScatteredField(
             array=array,
-            position=props.get("position", (0, 0)),
-            wavelength=props.get("wavelength", 532.0),
+            # position=props.get("position", (0, 0)),
+            # wavelength=props.get("wavelength", 532.0),
             properties=props.copy(),
-            main_property=self.main_property,
-        )]
+            # position_sampler=props.get("_position_sampler", None),
+        )
 
 
 #TODO ***??*** revise PointParticle - torch, typing, docstring, unit test
@@ -1468,14 +1468,23 @@ class ScatteredBase:
     """Base class for scatterers (volumes and fields)."""
 
     array: ArrayLike
-    position: np.ndarray
-    z: float = 0.0
+    # position: np.ndarray
+    # z: float = 0.0
     properties: dict[str, Any] = field(default_factory=dict)
-    main_property: str = None
     
-    def __post_init__(self):
-        self.position = np.array(self.position, dtype=float).reshape(-1)[:2]
-        self.z = float(np.atleast_1d(self.z).squeeze())
+    # def __post_init__(self):
+    #     self.position = np.array(self.position, dtype=float).reshape(-1)[:2]
+    #     self.z = float(np.atleast_1d(self.z).squeeze())
+
+    @property
+    def ndim(self) -> int:
+        """Number of dimensions of the underlying array."""
+        return self.array.ndim
+
+    @property
+    def shape(self) -> int:
+        """Number of dimensions of the underlying array."""
+        return self.array.shape
 
     @property
     def pos3d(self) -> np.ndarray:
@@ -1501,13 +1510,16 @@ class ScatteredBase:
 class ScatteredVolume(ScatteredBase):
     """Volumetric object: intensity sources or refractive index contrasts."""
 
-    refractive_index: float | None = None
-    intensity: float | None = None
-    value: float | None = None
-
+    # refractive_index: float | None = None
+    # intensity: float | None = None
+    # value: float | None = None
+    # position_sampler: Optional[Callable[[], np.ndarray]] = None
+    pass
 
 @dataclass
 class ScatteredField(ScatteredBase):
     """Complex wavefield (already propagated or emitted)."""
 
-    wavelength: float = 500e-9
+    # wavelength: float = 500e-9
+    # position_sampler: Optional[Callable[[], np.ndarray]] = None
+    pass

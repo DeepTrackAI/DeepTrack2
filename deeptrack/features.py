@@ -171,7 +171,7 @@ from deeptrack import units_registry as units
 from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
-from deeptrack.image import Image  #TODO TBE
+# from deeptrack.image import Image  #TODO TBE
 from deeptrack.properties import PropertyDict, SequentialProperty
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
@@ -218,11 +218,11 @@ __all__ = [
     "OneOf",
     "OneOfDict",
     "LoadImage",
-    "SampleToMasks",  # TODO ***CM*** revise this after elimination of Image
+    "SampleToMasks",
     "AsType",
     "ChannelFirst2d",
-    "Upscale",  # TODO ***CM*** revise and check PyTorch afrer elimin. Image
-    "NonOverlapping",  # TODO ***CM*** revise + PyTorch afrer elimin. Image
+    "Upscale",
+    "NonOverlapping",
     "Store",
     "Squeeze",
     "Unsqueeze",
@@ -7493,7 +7493,7 @@ class SampleToMasks(Feature):
 
     def get(
         self: Feature,
-        image: np.ndarray | Image,
+        image: np.ndarray,
         transformation_function: Callable[[Image], Image],
         **kwargs: Any,
     ) -> Image:
@@ -7515,7 +7515,7 @@ class SampleToMasks(Feature):
 
         """
 
-        return transformation_function(image)
+        return transformation_function(image.array)
 
     def _process_and_get(
         self: Feature,
@@ -7540,26 +7540,33 @@ class SampleToMasks(Feature):
         """
 
         # Handle list of images.
-        if isinstance(images, list) and len(images) != 1:
-            list_of_labels = super()._process_and_get(images, **kwargs)
-            if not self._wrap_array_with_image:
-                for idx, (label, image) in enumerate(zip(list_of_labels, 
-                                                         images)):
-                    list_of_labels[idx] = \
-                        Image(label, copy=False).merge_properties_from(image)
-        else:
-            if isinstance(images, list):
-                images = images[0]
-            list_of_labels = []
-            for prop in images.properties:
+        # if isinstance(images, list) and len(images) != 1:
+        list_of_labels = super()._process_and_get(images, **kwargs)
+        # print(len(list_of_labels))
+        # print(list_of_labels[0].shape)
 
-                if "position" in prop:
+        from deeptrack.scatterers import ScatteredVolume
+            # if not self._wrap_array_with_image:
+        for idx, (label, image) in enumerate(zip(list_of_labels, 
+                                                            images)):
+            list_of_labels[idx] = \
+                ScatteredVolume(array=label, properties=image.properties.copy())
+            #             Image(label, copy=False).merge_properties_from(image)
+        # else:
+        #     if isinstance(images, list):
+        #         images = images[0]
+        #     list_of_labels = []
+        #     for prop in images.properties:
 
-                    inp = Image(np.array(images))
-                    inp.append(prop)
-                    out = Image(self.get(inp, **kwargs))
-                    out.merge_properties_from(inp)
-                    list_of_labels.append(out)
+        #         if "position" in prop:
+
+        #             inp = Image(np.array(images))
+        #             inp.append(prop)
+        #             out = Image(self.get(inp, **kwargs))
+        #             out.merge_properties_from(inp)
+        #             list_of_labels.append(out)
+
+        
 
         # Create an empty output image.
         output_region = kwargs["output_region"]
@@ -7574,8 +7581,10 @@ class SampleToMasks(Feature):
         from deeptrack.optics import _get_position
 
         # Merge masks into the output.
-        for label in list_of_labels:
-            position = _get_position(label)
+        for volume in list_of_labels:
+            label = volume.array
+            position = _get_position(volume)
+
             p0 = np.round(position - output_region[0:2])
 
             if np.any(p0 > output.shape[0:2]) or \
@@ -7657,11 +7666,11 @@ class SampleToMasks(Feature):
                         labelarg[..., label_index],
                     )
 
-        if not self._wrap_array_with_image:
-            return output
-        output = Image(output)
-        for label in list_of_labels:
-            output.merge_properties_from(label)
+        # if not self._wrap_array_with_image:
+            # return output
+        # output = Image(output)
+        # for label in list_of_labels:
+            # output.merge_properties_from(label)
         return output
 
 
@@ -8087,7 +8096,7 @@ class Upscale(Feature):
             raise ValueError(
                 "Factor must be an integer or a tuple of three integers."
             )
-
+        
         # Create a context for upscaling and perform computation.
         ctx = create_context(None, None, None, *factor)
         with units.context(ctx):
@@ -8356,7 +8365,7 @@ class NonOverlapping(Feature):
                 list_of_volumes = [list_of_volumes]
 
             for _ in range(max_iters):
-
+                
                 list_of_volumes = [
                     self._resample_volume_position(volume) 
                     for volume in list_of_volumes
@@ -8411,32 +8420,40 @@ class NonOverlapping(Feature):
         - If bounding cubes overlap, voxel-level checks are performed.
 
         """
+        from deeptrack.scatterers import ScatteredVolume
 
-        from skimage.morphology import isotropic_erosion, isotropic_dilation
-
-        from deeptrack.augmentations import CropTight, Pad
+        from deeptrack.augmentations import CropTight, Pad # these are not compatibles with torch backend
         from deeptrack.optics import _get_position
 
         min_distance = self.min_distance()
         crop = CropTight()
+
+        new_volumes = []
         
-        if min_distance < 0:
-            list_of_volumes = [
-                Image(
-                    crop(isotropic_erosion(volume != 0, -min_distance/2)),
-                    copy=False,
-                ).merge_properties_from(volume) 
-                for volume in list_of_volumes
-            ]
-        else:
-            pad = Pad(px = [int(np.ceil(min_distance/2))]*6, keep_size=True)
-            list_of_volumes = [    
-                Image(
-                    crop(isotropic_dilation(pad(volume) != 0, min_distance/2)),
-                    copy=False,
-                ).merge_properties_from(volume) 
-            for volume in list_of_volumes 
-            ]
+        for volume in list_of_volumes:
+            arr = volume.array
+            mask = arr != 0
+
+            if min_distance < 0:
+                new_arr = isotropic_erosion(mask, -min_distance / 2, backend=self.get_backend())
+            else:
+                pad = Pad(px=[int(np.ceil(min_distance / 2))] * 6, keep_size=True)
+                new_arr = isotropic_dilation(pad(mask) != 0 , min_distance / 2, backend=self.get_backend())
+                new_arr = crop(new_arr)
+
+            if self.get_backend() == "torch":
+                new_arr = new_arr.to(dtype=arr.dtype)
+            else:
+                new_arr = new_arr.astype(arr.dtype)
+
+            new_volume = ScatteredVolume(
+                array=new_arr,
+                properties=volume.properties.copy(),
+            )
+
+            new_volumes.append(new_volume)
+
+        list_of_volumes = new_volumes       
         min_distance = 1
 
         # The position of the top left corner of each volume (index (0, 0, 0)).
@@ -8472,10 +8489,10 @@ class NonOverlapping(Feature):
                 volume_bounding_cube[i], volume_bounding_cube[j]
             )
             overlapping_volume_1 = self._get_overlapping_volume(
-                list_of_volumes[i], volume_bounding_cube[i], overlapping_cube
+                list_of_volumes[i].array, volume_bounding_cube[i], overlapping_cube
             )
             overlapping_volume_2 = self._get_overlapping_volume(
-                list_of_volumes[j], volume_bounding_cube[j], overlapping_cube
+                list_of_volumes[j].array, volume_bounding_cube[j], overlapping_cube
             )
 
             # If either the overlapping regions are empty, the volumes do not 
@@ -8710,8 +8727,12 @@ class NonOverlapping(Feature):
         """
 
         # Get the positions of the non-zero voxels of each volume.
-        positions_1 = np.argwhere(volume_1)
-        positions_2 = np.argwhere(volume_2)
+        if self.get_backend() == "torch":
+            positions_1 = torch.nonzero(volume_1, as_tuple=False)
+            positions_2 = torch.nonzero(volume_2, as_tuple=False)
+        else:
+            positions_1 = np.argwhere(volume_1)
+            positions_2 = np.argwhere(volume_2)
 
         # if positions_1.size == 0 or positions_2.size == 0:
         #     return True  # If either volume is empty, they are "non-overlapping"
@@ -8732,9 +8753,14 @@ class NonOverlapping(Feature):
 
         # Check that the non-zero voxels of the volumes are at least 
         # min_distance apart.
-        return np.all(
-            cdist(positions_1, positions_2) > min_distance
-        )
+        if self.get_backend() == "torch":
+            dist = torch.cdist(
+                positions_1.float(),
+                positions_2.float(),
+            )
+            return bool((dist > min_distance).all())
+        else:
+            return np.all(cdist(positions_1, positions_2) > min_distance)
 
     def _resample_volume_position(
         self: NonOverlapping,
@@ -8750,7 +8776,7 @@ class NonOverlapping(Feature):
 
         Parameters
         ----------
-        volume: np.ndarray or Image
+        volume: np.ndarray
             The 3D volume whose position is to be resampled. The volume must 
             have a `properties` attribute containing dictionaries with 
             `position` and `_position_sampler` keys.
@@ -8771,12 +8797,12 @@ class NonOverlapping(Feature):
         
         """
 
-        for pdict in volume.properties:
-            if "position" in pdict and "_position_sampler" in pdict:
-                new_position = pdict["_position_sampler"]()
-                if isinstance(new_position, Quantity):
-                    new_position = new_position.to("pixel").magnitude
-                pdict["position"] = new_position
+        pdict = volume.properties
+        if "position" in pdict and "_position_sampler" in pdict:
+            new_position = pdict["_position_sampler"]()
+            if isinstance(new_position, Quantity):
+                new_position = new_position.to("pixel").magnitude
+            pdict["position"] = new_position
 
         return volume
 
@@ -9594,3 +9620,73 @@ class TakeProperties(Feature):
             res = res[0]
 
         return res
+
+### Move to math?
+def isotropic_dilation(
+    mask,
+    radius: float,
+    *,
+    backend: str,
+    device=None,
+    dtype=None,
+):
+    if radius <= 0:
+        return mask
+
+    if backend == "numpy":
+        from skimage.morphology import isotropic_dilation
+        return isotropic_dilation(mask, radius)
+
+    # torch backend
+    import torch
+
+    r = int(np.ceil(radius))
+    kernel = torch.ones(
+        (1, 1, 2 * r + 1, 2 * r + 1, 2 * r + 1),
+        device=device or mask.device,
+        dtype=dtype or torch.float32,
+    )
+
+    x = mask.to(dtype=kernel.dtype)[None, None]
+    y = torch.nn.functional.conv3d(
+        x,
+        kernel,
+        padding=r,
+    )
+
+    return (y[0, 0] > 0)
+
+
+def isotropic_erosion(
+    mask,
+    radius: float,
+    *,
+    backend: str,
+    device=None,
+    dtype=None,
+):
+    if radius <= 0:
+        return mask
+
+    if backend == "numpy":
+        from skimage.morphology import isotropic_erosion
+        return isotropic_erosion(mask, radius)
+
+    import torch
+
+    r = int(np.ceil(radius))
+    kernel = torch.ones(
+        (1, 1, 2 * r + 1, 2 * r + 1, 2 * r + 1),
+        device=device or mask.device,
+        dtype=dtype or torch.float32,
+    )
+
+    x = mask.to(dtype=kernel.dtype)[None, None]
+    y = torch.nn.functional.conv3d(
+        x,
+        kernel,
+        padding=r,
+    )
+
+    required = kernel.numel()
+    return (y[0, 0] >= required)
