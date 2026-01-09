@@ -171,7 +171,7 @@ from deeptrack import units_registry as units
 from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable, create_context
-# from deeptrack.image import Image  #TODO TBE
+from deeptrack.image import Image  #TODO TBE
 from deeptrack.properties import PropertyDict, SequentialProperty
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
@@ -7398,7 +7398,7 @@ class SampleToMasks(Feature):
 
     Returns
     -------
-    Image or np.ndarray
+    np.ndarray
         The final mask image with the specified number of layers.
 
     Raises
@@ -7460,7 +7460,7 @@ class SampleToMasks(Feature):
 
     def __init__(
         self: Feature,
-        transformation_function: Callable[[Image], Image],
+        transformation_function: Callable[[np.ndarray], np.ndarray, torch.Tensor],
         number_of_masks: PropertyLike[int] = 1,
         output_region: PropertyLike[tuple[int, int, int, int]] = None,
         merge_method: PropertyLike[str | Callable | list[str | Callable]] = "add",
@@ -7494,16 +7494,16 @@ class SampleToMasks(Feature):
     def get(
         self: Feature,
         image: np.ndarray,
-        transformation_function: Callable[[Image], Image],
+        transformation_function: Callable[list[np.ndarray] | np.ndarray | torch.Tensor],
         **kwargs: Any,
-    ) -> Image:
+    ) -> np.ndarray:
         """Apply the transformation function to a single image.
 
         Parameters
         ----------
-        image: np.ndarray | Image
+        image: np.ndarray
             The input image.
-        transformation_function: Callable[[Image], Image]
+        transformation_function: Callable[[np.ndarray], np.ndarray]
             Function to transform the image.
         **kwargs: dict[str, Any]
             Additional parameters.
@@ -7519,9 +7519,9 @@ class SampleToMasks(Feature):
 
     def _process_and_get(
         self: Feature,
-        images: list[np.ndarray] | np.ndarray | list[Image] | Image,
+        images: list[np.ndarray] | np.ndarray | list[torch.Tensor] | torch.Tensor,
         **kwargs: Any,
-    ) -> Image | np.ndarray:
+    ) -> np.ndarray:
         """Process a list of images and generate a multi-layer mask.
 
         Parameters
@@ -7542,40 +7542,21 @@ class SampleToMasks(Feature):
         # Handle list of images.
         # if isinstance(images, list) and len(images) != 1:
         list_of_labels = super()._process_and_get(images, **kwargs)
-        # print(len(list_of_labels))
-        # print(list_of_labels[0].shape)
 
         from deeptrack.scatterers import ScatteredVolume
-            # if not self._wrap_array_with_image:
-        for idx, (label, image) in enumerate(zip(list_of_labels, 
-                                                            images)):
+        for idx, (label, image) in enumerate(zip(list_of_labels, images)):
             list_of_labels[idx] = \
-                ScatteredVolume(array=label, properties=image.properties.copy())
-            #             Image(label, copy=False).merge_properties_from(image)
-        # else:
-        #     if isinstance(images, list):
-        #         images = images[0]
-        #     list_of_labels = []
-        #     for prop in images.properties:
-
-        #         if "position" in prop:
-
-        #             inp = Image(np.array(images))
-        #             inp.append(prop)
-        #             out = Image(self.get(inp, **kwargs))
-        #             out.merge_properties_from(inp)
-        #             list_of_labels.append(out)
-
-        
+                ScatteredVolume(array=label, properties=image.properties.copy())        
 
         # Create an empty output image.
         output_region = kwargs["output_region"]
-        output = np.zeros(
+        output = xp.zeros(
             (
                 output_region[2] - output_region[0],
                 output_region[3] - output_region[1],
                 kwargs["number_of_masks"],
-            )
+            ),
+            dtype=list_of_labels[0].array.dtype,
         )
 
         from deeptrack.optics import _get_position
@@ -7585,14 +7566,22 @@ class SampleToMasks(Feature):
             label = volume.array
             position = _get_position(volume)
 
-            p0 = np.round(position - output_region[0:2])
+            # p0 = np.round(position - output_region[0:2])
+            p0 = xp.round(position - xp.asarray(output_region[0:2]))
+            p0 = p0.astype(xp.int64)
 
-            if np.any(p0 > output.shape[0:2]) or \
-                np.any(p0 + label.shape[0:2] < 0):
+
+            # if np.any(p0 > output.shape[0:2]) or \
+            #     np.any(p0 + label.shape[0:2] < 0):
+            if xp.any(p0 > xp.asarray(output.shape[:2])) or \
+                xp.any(p0 + xp.asarray(label.shape[:2]) < 0):
                 continue
 
-            crop_x = int(-np.min([p0[0], 0]))
-            crop_y = int(-np.min([p0[1], 0]))
+            # crop_x = int(-np.min([p0[0], 0]))
+            # crop_y = int(-np.min([p0[1], 0]))
+            crop_x = (-xp.minimum(p0[0], 0)).item()
+            crop_y = (-xp.minimum(p0[1], 0)).item()
+
             crop_x_end = int(
                 label.shape[0]
                 - np.max([p0[0] + label.shape[0] - output.shape[0], 0])
@@ -7644,9 +7633,13 @@ class SampleToMasks(Feature):
                         p0[0] : p0[0] + labelarg.shape[0],
                         p0[1] : p0[1] + labelarg.shape[1],
                         label_index,
-                    ] = (output_slice[..., label_index] != 0) | (
+                    ] = xp.logical_or(
+                        output_slice[..., label_index] != 0, 
                         labelarg[..., label_index] != 0
-                    )
+                        )
+                    # (output_slice[..., label_index] != 0) | (
+                    #     labelarg[..., label_index] != 0
+                    # )
 
                 elif merge == "mul":
                     output[
@@ -7666,11 +7659,6 @@ class SampleToMasks(Feature):
                         labelarg[..., label_index],
                     )
 
-        # if not self._wrap_array_with_image:
-            # return output
-        # output = Image(output)
-        # for label in list_of_labels:
-            # output.merge_properties_from(label)
         return output
 
 

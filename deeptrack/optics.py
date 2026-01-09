@@ -2027,14 +2027,14 @@ def _create_volume(
             continue
 
         # Pad scatterer to avoid edge effects during interpolation
-        padded_scatterer_arr = np.pad(  #torch?
+        padded_scatterer_arr = np.pad(  #Use Pad instead and make it torch-compatible?
                 scatterer.array,
                 [(2, 2), (2, 2), (2, 2)],
                 "constant",
                 constant_values=0,
             )
         padded_scatterer = ScatteredVolume(
-            array=padded_scatterer_arr,properties=scatterer.properties.copy()
+            array=padded_scatterer_arr, properties=scatterer.properties.copy()
             )
         position = _get_position(padded_scatterer, mode="corner", return_z=True)
         shape = np.array(padded_scatterer.array.shape)
