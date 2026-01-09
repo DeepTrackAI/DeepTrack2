@@ -247,9 +247,6 @@ class Scatterer(Feature):
         voxel_size=(u.meter, u.meter),
     )
 
-    #: Default property name (subclasses override this)
-    main_property: str = "value"
-
     def __init__(
         self,
         position: ArrayLike[float] = (32, 32),
@@ -350,23 +347,14 @@ class VolumeScatterer(Scatterer):
     def _wrap_output(self, array, props) -> ScatteredVolume:
         return ScatteredVolume(
             array=array,
-            # position=props.get("position", (0, 0)),
-            # z=props.get("z", 0.0),
-            # value=props.get("value", 1.0),
-            # intensity=props.get("intensity", 1.0),
-            # refractive_index=props.get("refractive_index", 1.59),
             properties=props.copy(),
-            # position_sampler=props.get("_position_sampler", None),
         )
 
 class FieldScatterer(Scatterer):
     def _wrap_output(self, array, props) -> ScatteredField:
         return ScatteredField(
             array=array,
-            # position=props.get("position", (0, 0)),
-            # wavelength=props.get("wavelength", 532.0),
             properties=props.copy(),
-            # position_sampler=props.get("_position_sampler", None),
         )
 
 
@@ -458,8 +446,6 @@ class Ellipse(VolumeScatterer):
         radius=(u.meter, u.meter),
         rotation=(u.radian, u.radian),
     )
-
-    main_property = "refractive_index"
 
     def __init__(
         self,
@@ -565,8 +551,6 @@ class Sphere(VolumeScatterer):
         radius=(u.meter, u.meter),
     )
 
-    main_property = "refractive_index"
-
     def __init__(
         self,
         radius: float = 1e-6,
@@ -641,8 +625,6 @@ class Ellipsoid(VolumeScatterer):
         radius=(u.meter, u.meter),
         rotation=(u.radian, u.radian),
     )
-
-    main_property = "refractive_index"
 
     def __init__(
         self,
@@ -853,8 +835,6 @@ class MieScatterer(FieldScatterer):
         offset_z=(u.meter, u.meter),
         coherence_length=(u.meter, u.pixel),
     )
-
-    main_property = "wavelength"
 
     def __init__(
         self,
