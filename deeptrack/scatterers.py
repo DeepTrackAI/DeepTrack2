@@ -1481,6 +1481,16 @@ class ScatteredObject:
     def pos3d(self) -> np.ndarray:
         return np.array([*self.position, self.z], dtype=float)
 
+    @property
+    def position(self) -> np.ndarray:
+        pos = self.properties.get("position", None)
+        if pos is None:
+            return None
+        pos = np.asarray(pos, dtype=float)
+        if pos.ndim == 2 and pos.shape[0] == 1:
+            pos = pos[0]
+        return pos
+
     def as_array(self) -> ArrayLike:
         """Return the underlying array.
 
@@ -1495,22 +1505,3 @@ class ScatteredObject:
 
     def get_property(self, key: str, default: Any = None) -> Any:
         return getattr(self, key, self.properties.get(key, default))
-
-
-# @dataclass
-# class ScatteredVolume(ScatteredBase):
-#     """Volumetric object: intensity sources or refractive index contrasts."""
-
-#     # refractive_index: float | None = None
-#     # intensity: float | None = None
-#     # value: float | None = None
-#     # position_sampler: Optional[Callable[[], np.ndarray]] = None
-#     pass
-
-# @dataclass
-# class ScatteredField(ScatteredBase):
-#     """Complex wavefield (already propagated or emitted)."""
-
-#     # wavelength: float = 500e-9
-#     # position_sampler: Optional[Callable[[], np.ndarray]] = None
-#     pass
