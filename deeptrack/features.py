@@ -7340,6 +7340,7 @@ class LoadImage(Feature):
                 warnings.warn(
                     "Non-rgb image, ignoring to_grayscale",
                     UserWarning,
+                    stacklevel=2,
                 )
 
         # Ensure the image has at least `ndim` dimensions.
@@ -8373,6 +8374,7 @@ class NonOverlapping(Feature):
             "adjusting parameters: reduce object radius, increase FOV, "
             "or decrease min_distance.",
             UserWarning,
+            stacklevel=2,
         )
         return list_of_volumes
 
