@@ -93,7 +93,7 @@ Process an input image:
 
 from __future__ import annotations
 
-from typing import Any, Callable, TYPE_CHECKING
+from typing import Any, Callable, Dict, Tuple, TYPE_CHECKING
 
 import array_api_compat as apc
 import numpy as np
@@ -110,6 +110,7 @@ from deeptrack.backend import xp
 
 if TORCH_AVAILABLE:
     import torch
+    import torch.nn.functional as F
 
 if OPENCV_AVAILABLE:
     import cv2
@@ -129,10 +130,14 @@ __all__ = [
     "MaxPooling",
     "MinPooling",
     "MedianPooling",
+    "PoolV2",
+    "AveragePoolingV2",
+    "MaxPoolingV2",
+    "MinPoolingV2",
+    "MedianPoolingV2",
     "BlurCV2",
     "BilateralBlur",
 ]
-
 
 if TYPE_CHECKING:
     import torch
@@ -1663,6 +1668,218 @@ class MedianPooling(Pool):
         super().__init__(np.median, ksize=ksize, **kwargs)
 
 
+class PoolV2:
+    """
+    DeepTrack v2 replacement for Pool.
+
+    Generic, center-preserving block pooling with NumPy and Torch backends.
+    Public API matches v1: a single integer ksize.
+
+    Pool size semantics:
+    - 2D input  -> (ksize, ksize, 1)
+    - 3D input  -> (ksize, ksize, ksize)
+    """
+
+    _TORCH_REDUCERS_2D: Dict[Callable, Callable] = {
+        np.mean: lambda x, k, s: F.avg_pool2d(x, k, s),
+        np.sum:  lambda x, k, s: F.avg_pool2d(x, k, s) * (k[0] * k[1]),
+        np.max:  lambda x, k, s: F.max_pool2d(x, k, s),
+        np.min:  lambda x, k, s: -F.max_pool2d(-x, k, s),
+    }
+
+    _TORCH_REDUCERS_3D: Dict[Callable, Callable] = {
+        np.mean: lambda x, k, s: F.avg_pool3d(x, k, s),
+        np.sum:  lambda x, k, s: F.avg_pool3d(x, k, s) * (k[0] * k[1] * k[2]),
+        np.max:  lambda x, k, s: F.max_pool3d(x, k, s),
+        np.min:  lambda x, k, s: -F.max_pool3d(-x, k, s),
+    }
+
+    def __init__(
+        self,
+        pooling_function: Callable,
+        ksize: int = 2,
+    ):
+        if pooling_function not in (
+            np.mean, np.sum, np.min, np.max, np.median
+        ):
+            raise ValueError(
+                "Unsupported pooling_function. "
+                "Use one of: np.mean, np.sum, np.min, np.max, np.median."
+            )
+
+        if not isinstance(ksize, int) or ksize < 1:
+            raise ValueError("ksize must be a positive integer.")
+
+        self.pooling_function = pooling_function
+        self.ksize = int(ksize)
+
+    def _get_pool_size(self, array) -> Tuple[int, int, int]:
+        """
+        Determine pooling kernel size based on semantic dimensionality.
+
+        - 2D images: (Nx, Ny) or (Nx, Ny, C)  -> pool in x,y only
+        - 3D volumes: (Nx, Ny, Nz) or (Nx, Ny, Nz, C) -> pool in x,y,z
+        - Never pool over channels
+        """
+        k = self.ksize
+
+        # 2D image
+        if array.ndim == 2:
+            return k, k, 1
+
+        # 3D array: could be (x, y, z) or (x, y, c)
+        if array.ndim == 3:
+            # Heuristic: small last dim → channels
+            if array.shape[-1] <= 4:
+                return k, k, 1
+            return k, k, k
+
+        # 4D array: (x, y, z, c)
+        if array.ndim == 4:
+            return k, k, k
+
+        raise ValueError(
+            f"Unsupported array shape {array.shape} for pooling."
+        )
+
+    def _crop_center(self, array):
+        px, py, pz = self._get_pool_size(array)
+
+        # 2D (or effectively 2D)
+        if array.ndim < 3 or pz == 1:
+            H, W = array.shape[:2]
+            crop_h = (H // px) * px
+            crop_w = (W // py) * py
+            off_h = (H - crop_h) // 2
+            off_w = (W - crop_w) // 2
+            return array[
+                off_h : off_h + crop_h,
+                off_w : off_w + crop_w,
+                ...
+            ]
+
+        # 3D
+        Z, H, W = array.shape[:3]
+        crop_z = (Z // pz) * pz
+        crop_h = (H // px) * px
+        crop_w = (W // py) * py
+        off_z = (Z - crop_z) // 2
+        off_h = (H - crop_h) // 2
+        off_w = (W - crop_w) // 2
+        return array[
+            off_z : off_z + crop_z,
+            off_h : off_h + crop_h,
+            off_w : off_w + crop_w,
+            ...
+        ]
+
+    def _pool_numpy(self, array: np.ndarray) -> np.ndarray:
+        array = self._crop_center(array)
+        px, py, pz = self._get_pool_size(array)
+
+        if array.ndim < 3 or pz == 1:
+            pool_shape = (px, py) + (1,) * (array.ndim - 2)
+        else:
+            pool_shape = (pz, px, py) + (1,) * (array.ndim - 3)
+
+        return skimage.measure.block_reduce(
+            array,
+            block_size=pool_shape,
+            func=self.pooling_function,
+        )
+
+    def _pool_torch(self, array: torch.Tensor) -> torch.Tensor:
+        array = self._crop_center(array)
+        px, py, pz = self._get_pool_size(array)
+
+        is_3d = array.ndim >= 3 and pz > 1
+
+        if not is_3d:
+            extra = array.shape[2:]
+            C = int(np.prod(extra)) if extra else 1
+            x = array.reshape(1, C, array.shape[0], array.shape[1])
+            kernel = (px, py)
+            stride = (px, py)
+            reducers = self._TORCH_REDUCERS_2D
+        else:
+            extra = array.shape[3:]
+            C = int(np.prod(extra)) if extra else 1
+            x = array.reshape(
+                1, C, array.shape[0], array.shape[1], array.shape[2]
+            )
+            kernel = (pz, px, py)
+            stride = (pz, px, py)
+            reducers = self._TORCH_REDUCERS_3D
+
+        # Median: explicit unfolding
+        if self.pooling_function is np.median:
+            if is_3d:
+                x_u = (
+                    x.unfold(2, pz, pz)
+                     .unfold(3, px, px)
+                     .unfold(4, py, py)
+                )
+                x_u = x_u.contiguous().view(
+                    1, C,
+                    x_u.shape[2],
+                    x_u.shape[3],
+                    x_u.shape[4],
+                    -1,
+                )
+                pooled = x_u.median(dim=-1).values
+            else:
+                x_u = x.unfold(2, px, px).unfold(3, py, py)
+                x_u = x_u.contiguous().view(
+                    1, C,
+                    x_u.shape[2],
+                    x_u.shape[3],
+                    -1,
+                )
+                pooled = x_u.median(dim=-1).values
+        else:
+            reducer = reducers[self.pooling_function]
+            pooled = reducer(x, kernel, stride)
+
+        return pooled.reshape(pooled.shape[2:] + extra)
+
+    def __call__(self, array):
+        if isinstance(array, np.ndarray):
+            return self._pool_numpy(array)
+
+        if TORCH_AVAILABLE and isinstance(array, torch.Tensor):
+            return self._pool_torch(array)
+
+        raise TypeError(
+            "PoolV2 only supports np.ndarray or torch.Tensor inputs."
+        )
+
+
+class AveragePoolingV2(PoolV2):
+    def __init__(self, ksize: int = 2):
+        super().__init__(np.mean, ksize)
+
+
+class SumPoolingV2(PoolV2):
+    def __init__(self, ksize: int = 2):
+        super().__init__(np.sum, ksize)
+
+
+class MinPoolingV2(PoolV2):
+    def __init__(self, ksize: int = 2):
+        super().__init__(np.min, ksize)
+
+
+class MaxPoolingV2(PoolV2):
+    def __init__(self, ksize: int = 2):
+        super().__init__(np.max, ksize)
+
+
+class MedianPoolingV2(PoolV2):
+    def __init__(self, ksize: int = 2):
+        super().__init__(np.median, ksize)
+
+
+
 class Resize(Feature):
     """Resize an image to a specified size.
 
@@ -2059,3 +2276,73 @@ class BilateralBlur(BlurCV2):
             sigmaSpace=sigma_space,
             **kwargs,
         )
+
+
+def isotropic_dilation(
+    mask,
+    radius: float,
+    *,
+    backend: str,
+    device=None,
+    dtype=None,
+):
+    if radius <= 0:
+        return mask
+
+    if backend == "numpy":
+        from skimage.morphology import isotropic_dilation
+        return isotropic_dilation(mask, radius)
+
+    # torch backend
+    import torch
+
+    r = int(np.ceil(radius))
+    kernel = torch.ones(
+        (1, 1, 2 * r + 1, 2 * r + 1, 2 * r + 1),
+        device=device or mask.device,
+        dtype=dtype or torch.float32,
+    )
+
+    x = mask.to(dtype=kernel.dtype)[None, None]
+    y = torch.nn.functional.conv3d(
+        x,
+        kernel,
+        padding=r,
+    )
+
+    return (y[0, 0] > 0)
+
+
+def isotropic_erosion(
+    mask,
+    radius: float,
+    *,
+    backend: str,
+    device=None,
+    dtype=None,
+):
+    if radius <= 0:
+        return mask
+
+    if backend == "numpy":
+        from skimage.morphology import isotropic_erosion
+        return isotropic_erosion(mask, radius)
+
+    import torch
+
+    r = int(np.ceil(radius))
+    kernel = torch.ones(
+        (1, 1, 2 * r + 1, 2 * r + 1, 2 * r + 1),
+        device=device or mask.device,
+        dtype=dtype or torch.float32,
+    )
+
+    x = mask.to(dtype=kernel.dtype)[None, None]
+    y = torch.nn.functional.conv3d(
+        x,
+        kernel,
+        padding=r,
+    )
+
+    required = kernel.numel()
+    return (y[0, 0] >= required)

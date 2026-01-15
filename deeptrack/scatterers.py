@@ -175,10 +175,12 @@ from deeptrack.backend.units import (
     get_active_voxel_size,
 )
 from deeptrack.backend import mie
+from deeptrack.math import AveragePoolingV2
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
 from deeptrack.image import pad_image_to_fft
 from deeptrack.types import ArrayLike
 from deeptrack import units_registry as u
+
 
 
 __all__ = [
@@ -239,7 +241,7 @@ class Scatterer(Feature):
         
     """
 
-    __list_merge_strategy__ = MERGE_STRATEGY_APPEND
+    __list_merge_strategy__ = MERGE_STRATEGY_APPEND ### Not clear why needed
     __distributed__ = False
     __conversion_table__ = ConversionTable(
         position=(u.pixel, u.pixel),
@@ -279,6 +281,21 @@ class Scatterer(Feature):
             **kwargs,
         )
 
+    def _antialias_volume(self, volume, factor: int):
+        """Geometry-only supersampling anti-aliasing.
+
+        Assumes `volume` was generated on a grid oversampled by `factor`
+        and downsamples it back by average pooling.
+        """
+        if factor == 1:
+            return volume
+
+        # average pooling conserves fractional occupancy
+        return AveragePoolingV2(
+            factor
+        )(volume)
+
+
     def _process_properties(
         self,
         properties: dict
@@ -308,16 +325,31 @@ class Scatterer(Feature):
                 + "Optics.upscale != 1."
             )
 
-        voxel_size = get_active_voxel_size()
 
-        # Calls parent _process_and_get.
+        voxel_size = np.asarray(get_active_voxel_size(), float)
+
+        apply_supersampling = upsample > 1 and isinstance(self, VolumeScatterer)
+
+        if upsample > 1 and not apply_supersampling:
+            warnings.warn(
+                "Geometry supersampling (upsample) is ignored for "
+                "FieldScatterers.",
+                UserWarning,
+            )
+
+        if apply_supersampling:
+            voxel_size /= float(upsample)
+
         new_image = super(Scatterer, self)._process_and_get(
             *args,
             voxel_size=voxel_size,
             upsample=upsample,
             **kwargs,
-        )
-        new_image = new_image[0]
+        )[0]
+
+        if apply_supersampling:
+            new_image = self._antialias_volume(new_image, factor=upsample)
+
 
         if new_image.size == 0:
             warnings.warn(
@@ -338,33 +370,31 @@ class Scatterer(Feature):
         # props = kwargs.copy()
         return [self._wrap_output(new_image, kwargs)]
 
-    def _wrap_output(self, array, props) -> ScatteredObject:
-        # """Must be overridden in subclasses to wrap output correctly."""
-        # raise NotImplementedError
-        return ScatteredObject(
-            array=array,
-            properties=props.copy(),
-            role = self.role,
+    def _wrap_output(self, array, props):
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement _wrap_output()"
         )
 
-# class VolumeScatterer(Scatterer):
-#     """Abstract scatterer producing ScatteredVolume outputs."""
-#     def _wrap_output(self, array, props) -> ScatteredVolume:
-#         return ScatteredVolume(
-#             array=array,
-#             properties=props.copy(),
-#         )
 
-# class FieldScatterer(Scatterer):
-#     def _wrap_output(self, array, props) -> ScatteredField:
-#         return ScatteredField(
-#             array=array,
-#             properties=props.copy(),
-#         )
+class VolumeScatterer(Scatterer):
+    """Abstract scatterer producing ScatteredVolume outputs."""
+    def _wrap_output(self, array, props) -> ScatteredVolume:
+        return ScatteredVolume(
+            array=array,
+            properties=props.copy(),
+        )
+
+
+class FieldScatterer(Scatterer):
+    def _wrap_output(self, array, props) -> ScatteredField:
+        return ScatteredField(
+            array=array,
+            properties=props.copy(),
+        )
 
 
 #TODO ***??*** revise PointParticle - torch, typing, docstring, unit test
-class PointParticle(Scatterer):
+class PointParticle(VolumeScatterer):
     """Generate a diffraction-limited point particle.
 
     A point particle is approximated by the size of a single pixel or voxel.
@@ -387,7 +417,6 @@ class PointParticle(Scatterer):
         for `Brightfield` and `intensity` for `Fluorescence`).
         
     """
-    role = "volume"
 
     def __init__(
         self: PointParticle,
@@ -396,7 +425,7 @@ class PointParticle(Scatterer):
         """
 
         """
-
+        kwargs.pop("upsample", None)
         super().__init__(upsample=1, upsample_axes=(), **kwargs)
 
     def get(
@@ -412,7 +441,7 @@ class PointParticle(Scatterer):
 
 
 #TODO ***??*** revise Ellipse - torch, typing, docstring, unit test
-class Ellipse(Scatterer):
+class Ellipse(VolumeScatterer):
     """Generates an elliptical disk scatterer
 
     Parameters
@@ -447,7 +476,7 @@ class Ellipse(Scatterer):
         before rotation.
 
     """
-    role = "volume"
+
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
@@ -527,7 +556,7 @@ class Ellipse(Scatterer):
 
 
 #TODO ***??*** revise Sphere - torch, typing, docstring, unit test
-class Sphere(Scatterer):
+class Sphere(VolumeScatterer):
     """Generates a spherical scatterer
 
     Parameters
@@ -553,7 +582,6 @@ class Sphere(Scatterer):
         Upsamples the calculations of the pixel occupancy fraction.
         
     """
-    role = "volume"
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
@@ -593,7 +621,7 @@ class Sphere(Scatterer):
 
 
 #TODO ***??*** revise Ellipsoid - torch, typing, docstring, unit test
-class Ellipsoid(Scatterer):
+class Ellipsoid(VolumeScatterer):
     """Generates an ellipsoidal scatterer
 
     Parameters
@@ -628,8 +656,6 @@ class Ellipsoid(Scatterer):
         This is applied before rotation.
         
     """
-
-    role = "volume"
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
@@ -752,7 +778,7 @@ class Ellipsoid(Scatterer):
 
 
 #TODO ***??*** revise MieScatterer - torch, typing, docstring, unit test
-class MieScatterer(Scatterer):
+class MieScatterer(FieldScatterer):
     """Base implementation of a Mie particle.
 
     New Mie-theory scatterers can be implemented by extending this class, and
@@ -837,7 +863,6 @@ class MieScatterer(Scatterer):
         
     """
 
-    role = "field"
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
@@ -878,7 +903,6 @@ class MieScatterer(Scatterer):
                 "Please use input_polarization instead"
             )
             input_polarization = polarization_angle
-        # kwargs.pop("is_field", None) # remove
         kwargs.pop("crop_empty", None)
 
         super().__init__(
@@ -1106,7 +1130,6 @@ class MieScatterer(Scatterer):
         # Wave vector.
         k = 2 * np.pi / wavelength * refractive_index_medium
 
-
         # Position of objective relative particle.
         relative_position = np.array(
             (
@@ -1316,7 +1339,6 @@ class MieSphere(MieScatterer):
         
     """
 
-    role = "field"
 
     def __init__(
         self,
@@ -1420,7 +1442,6 @@ class MieStratifiedSphere(MieScatterer):
         
     """
 
-    role = "field"
 
     def __init__(
         self,
@@ -1460,12 +1481,11 @@ class MieStratifiedSphere(MieScatterer):
 
 
 @dataclass
-class ScatteredObject:
+class ScatteredBase:
     """Base class for scatterers (volumes and fields)."""
 
-    array: ArrayLike
+    array: np.ndarray | torch.Tensor
     properties: dict[str, Any] = field(default_factory=dict)
-    role: Literal["volume", "field"] = "volume"
 
     @property
     def ndim(self) -> int:
@@ -1505,3 +1525,15 @@ class ScatteredObject:
 
     def get_property(self, key: str, default: Any = None) -> Any:
         return getattr(self, key, self.properties.get(key, default))
+
+
+@dataclass
+class ScatteredVolume(ScatteredBase):
+    """Voxelized volume produced by a VolumeScatterer."""
+    pass
+
+
+@dataclass
+class ScatteredField(ScatteredBase):
+    """Complex field produced by a FieldScatterer."""
+    pass

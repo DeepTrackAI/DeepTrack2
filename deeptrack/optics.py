@@ -151,7 +151,7 @@ from deeptrack.backend.units import (
     get_active_scale,
     get_active_voxel_size,
 )
-from deeptrack.math import AveragePooling
+from deeptrack.math import AveragePoolingV2, SumPoolingV2
 from deeptrack.features import propagate_data_to_dependencies
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
 from deeptrack.image import pad_image_to_fft
@@ -162,7 +162,7 @@ from deeptrack import units_registry as u
 
 from deeptrack import TORCH_AVAILABLE, image
 from deeptrack.backend import xp
-from deeptrack.scatterers import ScatteredObject
+from deeptrack.scatterers import ScatteredVolume, ScatteredField
 
 if TORCH_AVAILABLE:
     import torch
@@ -175,9 +175,13 @@ if TYPE_CHECKING:
 class Microscope(StructuralFeature):
     """Simulates imaging of a sample using an optical system.
 
-    This class combines a feature-set that defines the sample to be imaged with
-    a feature-set defining the optical system, enabling the simulation of 
-    optical imaging processes.
+    This class combines the sample to be imaged with the optical system, 
+    enabling the simulation of optical imaging processes.
+    A Microscope:
+    - validates the semantic compatibility between scatterers and optics
+    - interprets volume-based scatterers into scalar fields when needed
+    - delegates numerical propagation to the objective (Optics)
+    - performs detector downscaling according to its physical semantics
 
     Parameters
     ----------
@@ -201,6 +205,12 @@ class Microscope(StructuralFeature):
     `get(image: np.ndarray or None, **kwargs: Any) -> np.ndarray`
         Simulates the imaging process using the defined optical system and 
         returns the resulting image.
+
+    Notes
+    -----
+    All volume scatterers imaged by a Microscope instance are assumed to
+    share the same contrast mechanism (e.g. refractive index or fluorescence).
+    Mixing contrast types is not supported.
 
     Examples
     --------
@@ -250,13 +260,40 @@ class Microscope(StructuralFeature):
 
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
-        # self._sample.store_properties()
+
+    def _validate_input(self, scattered):
+        if hasattr(self._objective, "validate_input"):
+            self._objective.validate_input(scattered)
+
+    def _extract_contrast_volume(self, scattered):
+        if hasattr(self._objective, "extract_contrast_volume"):
+            return self._objective.extract_contrast_volume(scattered)
+
+        # default: geometry-only
+        return scattered.array
+
+    def _downscale_image(self, image, upscale):
+        if hasattr(self._objective, "downscale_image"):
+            return self._objective.downscale_image(image, upscale)
+
+        if not np.any(np.array(upscale) != 1):
+            return image
+
+        ux, uy = upscale[:2]
+        if ux != uy:
+            raise ValueError(
+                f"Energy-conserving detector integration requires ux == uy, "
+                f"got ux={ux}, uy={uy}."
+            )
+        if isinstance(ux, float) and ux.is_integer():
+            ux = int(ux)
+        return AveragePoolingV2(ux)(image)
 
     def get(
         self: Microscope,
-        image: np.ndarray | None,
+        image: np.ndarray | torch.Tensor | None = None,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor:
         """Generate an image of the sample using the defined optical system.
 
         This method processes the sample through the optical system to
@@ -264,14 +301,14 @@ class Microscope(StructuralFeature):
 
         Parameters
         ----------
-        image: np.ndarray | None
+        image: np.ndarray | torch.Tensor | None
             The input image to be processed. If None, a new image is created.
         **kwargs: Any
             Additional parameters for the imaging process.
 
         Returns
         -------
-        image: np.ndarray
+        image: np.ndarray | torch.Tensor
             The processed image after applying the optical system.
 
         Examples
@@ -291,18 +328,14 @@ class Microscope(StructuralFeature):
 
         # Grab properties from the objective to pass to the sample
         additional_sample_kwargs = self._objective.properties()
-        contrast_type = getattr(self._objective, "contrast_type", None)
-        if contrast_type is None:
-            raise RuntimeError(
-                f"{self._objective.__class__.__name__} must define `contrast_type` "
-                "(e.g. 'intensity' or 'refractive_index')."
-            )
 
-        additional_sample_kwargs["contrast_type"] = contrast_type
+        _upscale_given_by_optics = additional_sample_kwargs["upscale"]
+        if np.array(_upscale_given_by_optics).size == 1:
+            _upscale_given_by_optics = (_upscale_given_by_optics,) * 3
 
         with u.context(
             create_context(
-                *additional_sample_kwargs["voxel_size"]#, *_upscale_given_by_optics
+                *additional_sample_kwargs["voxel_size"], *_upscale_given_by_optics
             )
         ):
 
@@ -338,18 +371,22 @@ class Microscope(StructuralFeature):
             if not isinstance(list_of_scatterers, list):
                 list_of_scatterers = [list_of_scatterers]
 
+            # Semantic validation (per scatterer)
+            for scattered in list_of_scatterers:
+                self._validate_input(scattered)
+
             # All scatterers that are defined as volumes.
             volume_samples = [
                 scatterer
                 for scatterer in list_of_scatterers
-                if scatterer.role == "volume"
+                if isinstance(scatterer, ScatteredVolume)
             ]
 
             # All scatterers that are defined as fields.
             field_samples = [
                 scatterer
                 for scatterer in list_of_scatterers
-                if scatterer.role == "field"
+                if isinstance(scatterer, ScatteredField)
             ]
                 
             # Merge all volumes into a single volume.
@@ -358,24 +395,33 @@ class Microscope(StructuralFeature):
                 **additional_sample_kwargs,
             )
 
+            # Interpret the merged volume semantically
+            sample_volume = self._extract_contrast_volume(
+                ScatteredVolume(
+                    array=sample_volume,
+                    properties=volume_samples[0].properties,
+                )
+            )
+
             # Let the objective know about the limits of the volume and all the fields.
             propagate_data_to_dependencies(
                 self._objective,
                 limits=limits,
-                fields=field_samples,
+                fields=field_samples, # should We add upscale?
             )
 
             imaged_sample = self._objective.resolve(sample_volume)
 
-        # Handling upscale from dt.Upscale() here to eliminate Image
-        # wrapping issues.
-        if np.any(np.array(upscale) != 1):
-            ux, uy = upscale[:2]
-            if contrast_type == "intensity":
-                print("Using sum pooling for intensity downscaling.")   
-                imaged_sample = SumPoolingCM((ux, uy, 1))(imaged_sample)
-            else:
-                imaged_sample = AveragePoolingCM((ux, uy, 1))(imaged_sample)
+        imaged_sample = self._downscale_image(imaged_sample, upscale)
+        # # Handling upscale from dt.Upscale() here to eliminate Image
+        # # wrapping issues.
+        # if np.any(np.array(upscale) != 1):
+        #     ux, uy = upscale[:2]
+        #     if contrast_type == "intensity":
+        #         print("Using sum pooling for intensity downscaling.")   
+        #         imaged_sample = SumPoolingCM((ux, uy, 1))(imaged_sample)
+        #     else:
+        #         imaged_sample = AveragePoolingCM((ux, uy, 1))(imaged_sample)
 
         return imaged_sample
 
@@ -561,6 +607,15 @@ class Optics(Feature):
 
         """
 
+        def validate_scattered(self, scattered):
+            pass
+
+        def extract_contrast_volume(self, scattered):
+            pass
+
+        def downscale_image(self, image, upscale):
+            pass
+
         def get_voxel_size(
             resolution: float | ArrayLike[float], 
             magnification: float,
@@ -665,6 +720,7 @@ class Optics(Feature):
         wavelength = propertydict["wavelength"]
         voxel_size = get_active_voxel_size()
         radius = NA / wavelength * np.array(voxel_size)
+        print('Pupil radius (in pixels):', radius)
 
         if np.any(radius[:2] > 0.5):
             required_upscale = np.max(np.ceil(radius[:2] * 2))
@@ -1014,7 +1070,66 @@ class Fluorescence(Optics):
     1.4
 
     """
-    contrast_type = "intensity"
+
+
+    def validate_input(self, scattered):
+        """Semantic validation for fluorescence microscopy."""
+        
+        # Fluorescence cannot operate on coherent fields
+        if isinstance(scattered, ScatteredField):
+            raise TypeError(
+                "Fluorescence microscope cannot operate on ScatteredField."
+            )
+
+        # Fluorescence must not use refractive index
+        if isinstance(scattered, ScatteredVolume):
+            if scattered.get_property("refractive_index", None) is not None:
+                raise ValueError(
+                    "Fluorescence does not use refractive index. "
+                    "Found 'refractive_index' in scatterer properties."
+                )
+
+
+    def extract_contrast_volume(self, scattered: ScatteredVolume) -> np.ndarray:
+        """Contrast extraction (semantic interpretation)"""
+        intensity = scattered.get_property("intensity", None)
+
+        if intensity is None:
+            intensity = scattered.get_property("value", None)
+            if intensity is None:
+                raise ValueError(
+                    "Fluorescence requires 'intensity' or 'value'."
+                )
+
+            warnings.warn(
+                "Using 'value' as fluorescence intensity is ambiguous. "
+                "Please use 'intensity' explicitly to avoid ambiguity.",
+                UserWarning,
+            )
+
+        voxel_size = np.asarray(get_active_voxel_size(), dtype=float)
+        voxel_volume = float(np.prod(voxel_size))
+
+        return scattered.array * intensity * voxel_volume
+
+
+    def downscale_image(self, image: np.ndarray, upscale):
+        """Detector downscaling (energy conserving)"""
+        if not np.any(np.array(upscale) != 1):
+            return image
+
+        ux, uy = upscale[:2]
+        if ux != uy:
+            raise ValueError(
+                f"Energy-conserving detector integration requires ux == uy, "
+                f"got ux={ux}, uy={uy}."
+            )
+        if isinstance(ux, float) and ux.is_integer():
+            ux = int(ux)
+
+        # Energy-conserving detector integration
+        return SumPoolingV2(ux)(image)
+
 
     def get(
         self:  Fluorescence,
@@ -1240,7 +1355,6 @@ class Brightfield(Optics):
     
     """
 
-    contrast_type = "refractive_index"
 
     __conversion_table__ = ConversionTable(
         working_distance=(u.meter, u.meter),
@@ -1960,12 +2074,12 @@ def _create_volume(
             Spatial limits of the volume.
 
     """
-    contrast_type = kwargs.get("contrast_type", None)
-    if contrast_type is None:
-        raise RuntimeError(
-            "_create_volume requires a contrast_type "
-            "(e.g. 'intensity' or 'refractive_index')"
-        )
+    # contrast_type = kwargs.get("contrast_type", None)
+    # if contrast_type is None:
+    #     raise RuntimeError(
+    #         "_create_volume requires a contrast_type "
+    #         "(e.g. 'intensity' or 'refractive_index')"
+    #     )
 
     if not isinstance(list_of_scatterers, list):
         list_of_scatterers = [list_of_scatterers]
@@ -1995,23 +2109,23 @@ def _create_volume(
     for scatterer in list_of_scatterers:
         position = _get_position(scatterer, mode="corner", return_z=True)
 
-        if contrast_type == "intensity":
-            value = scatterer.get_property("intensity", None)
-            if value is None:
-                raise ValueError("Scatterer has no intensity.")
-            scatterer_value = value
+        # if contrast_type == "intensity":
+        #     value = scatterer.get_property("intensity", None)
+        #     if value is None:
+        #         raise ValueError("Scatterer has no intensity.")
+        #     scatterer_value = value
 
-        elif contrast_type == "refractive_index":
-            ri = scatterer.get_property("refractive_index", None)
-            if ri is None:
-                raise ValueError("Scatterer has no refractive_index.")
-            scatterer_value = ri - refractive_index_medium
+        # elif contrast_type == "refractive_index":
+        #     ri = scatterer.get_property("refractive_index", None)
+        #     if ri is None:
+        #         raise ValueError("Scatterer has no refractive_index.")
+        #     scatterer_value = ri - refractive_index_medium
 
-        else:
-            raise RuntimeError(f"Unknown contrast_type: {contrast_type}")
+        # else:
+        #     raise RuntimeError(f"Unknown contrast_type: {contrast_type}")
 
-        # Scale the array accordingly
-        scatterer.array = scatterer.array * scatterer_value
+        # # Scale the array accordingly
+        # scatterer.array = scatterer.array * scatterer_value
 
         if limits is None:
             limits = np.zeros((3, 2), dtype=np.int32)
@@ -2033,8 +2147,8 @@ def _create_volume(
                 "constant",
                 constant_values=0,
             )
-        padded_scatterer = ScatteredObject(
-            array=padded_scatterer_arr, properties=scatterer.properties.copy(), role=scatterer.role,
+        padded_scatterer = ScatteredVolume(
+            array=padded_scatterer_arr, properties=scatterer.properties.copy(),
             )
         position = _get_position(padded_scatterer, mode="corner", return_z=True)
         shape = np.array(padded_scatterer.array.shape)
@@ -2088,7 +2202,7 @@ def _create_volume(
 
         within_volume_position = position - limits[:, 0]
 
-        # NOTE: Maybe shouldn't be additive.
+        # NOTE: Maybe shouldn't be ONLY additive.
         # give options: sum default, but also mean, max, min, or
         volume[
             int(within_volume_position[0]) : 
@@ -2101,70 +2215,3 @@ def _create_volume(
             int(within_volume_position[2] + shape[2]),
         ] += splined_scatterer
     return volume, limits
-
-# this should be moved to math
-class _CenteredPoolingBase:
-    def __init__(self, pool_size: tuple[int, int, int]):
-        px, py, pz = pool_size
-        if pz != 1:
-            raise ValueError("Only pz=1 supported.")
-        self.px = int(px)
-        self.py = int(py)
-
-    def _crop_center(self, array):
-        H, W = array.shape[:2]
-        px, py = self.px, self.py
-
-        crop_h = (H // px) * px
-        crop_w = (W // py) * py
-
-        off_h = (H - crop_h) // 2
-        off_w = (W - crop_w) // 2
-
-        return array[off_h:off_h+crop_h, off_w:off_w+crop_w, ...]
-
-    def _pool_numpy(self, array, func):
-        import skimage.measure
-        array = self._crop_center(array)
-        pool_shape = (self.px, self.py) + (1,) * (array.ndim - 2)
-        return skimage.measure.block_reduce(array, pool_shape, func)
-
-    def _pool_torch(self, array, sum_pool=False):
-        px, py = self.px, self.py
-        array = self._crop_center(array)
-
-        extra = array.shape[2:]
-        C = int(np.prod(extra)) if extra else 1
-        x = array.reshape(1, C, array.shape[0], array.shape[1])
-
-        pooled = torch.nn.functional.avg_pool2d(
-            x, kernel_size=(px, py), stride=(px, py)
-        )
-        if sum_pool:
-            pooled = pooled * (px * py)
-
-        return pooled.reshape(
-            (pooled.shape[2], pooled.shape[3]) + extra
-        )
-
-class AveragePoolingCM(_CenteredPoolingBase):
-    """Center-preserving average pooling (intensive quantities)."""
-
-    def __call__(self, array):
-        if isinstance(array, np.ndarray):
-            return self._pool_numpy(array, np.mean)
-        elif TORCH_AVAILABLE and isinstance(array, torch.Tensor):
-            return self._pool_torch(array, sum_pool=False)
-        else:
-            raise TypeError("Unsupported array type.")
-
-class SumPoolingCM(_CenteredPoolingBase):
-    """Center-preserving sum pooling (extensive quantities)."""
-
-    def __call__(self, array):
-        if isinstance(array, np.ndarray):
-            return self._pool_numpy(array, np.sum)
-        elif TORCH_AVAILABLE and isinstance(array, torch.Tensor):
-            return self._pool_torch(array, sum_pool=True)
-        else:
-            raise TypeError("Unsupported array type.")

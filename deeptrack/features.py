@@ -96,7 +96,7 @@ Other Feature Classes:
 - `TakeProperties`: Extract all instances of properties from a pipeline.
 
 Arithmetic Feature Classes:
-- `Add`: Add a value to the input.
+- `Add`: Add a value to the input.@dataclass
 - `Subtract`: Subtract a value from the input.
 - `Multiply`: Multiply the input by a value.
 - `Divide`: Divide the input by a value.
@@ -7543,11 +7543,11 @@ class SampleToMasks(Feature):
         # if isinstance(images, list) and len(images) != 1:
         list_of_labels = super()._process_and_get(images, **kwargs)
 
-        from deeptrack.scatterers import ScatteredObject
+        from deeptrack.scatterers import ScatteredVolume
         
         for idx, (label, image) in enumerate(zip(list_of_labels, images)):
             list_of_labels[idx] = \
-                ScatteredObject(array=label, properties=image.properties.copy(), role=image.role)        
+                ScatteredVolume(array=label, properties=image.properties.copy())        
 
         # Create an empty output image.
         output_region = kwargs["output_region"]
@@ -8080,15 +8080,18 @@ class Upscale(Feature):
         
         # Create a context for upscaling and perform computation.
         ctx = create_context(None, None, None, *factor)
+
+        print('before:', image)
         with units.context(ctx):
             image = self.feature(image)
 
-        # # Downscale the result to the original resolution.        
-        # import skimage.measure
+        print('after:', image)
+        # Downscale the result to the original resolution.        
+        import skimage.measure
 
-        # image = skimage.measure.block_reduce(
-        #     image, (factor[0], factor[1]) + (1,) * (image.ndim - 2), np.mean
-        # )
+        image = skimage.measure.block_reduce(
+            image, (factor[0], factor[1]) + (1,) * (image.ndim - 2), np.mean
+        )
 
         return image
 
@@ -8401,10 +8404,11 @@ class NonOverlapping(Feature):
         - If bounding cubes overlap, voxel-level checks are performed.
 
         """
-        from deeptrack.scatterers import ScatteredObject
+        from deeptrack.scatterers import ScatteredVolume
 
         from deeptrack.augmentations import CropTight, Pad # these are not compatibles with torch backend
         from deeptrack.optics import _get_position
+        from deeptrack.math import isotropic_erosion, isotropic_dilation
 
         min_distance = self.min_distance()
         crop = CropTight()
@@ -8427,10 +8431,9 @@ class NonOverlapping(Feature):
             else:
                 new_arr = new_arr.astype(arr.dtype)
 
-            new_volume = ScatteredObject(
+            new_volume = ScatteredVolume(
                 array=new_arr,
                 properties=volume.properties.copy(),
-                role=volume.role,
             )
 
             new_volumes.append(new_volume)
@@ -9602,73 +9605,3 @@ class TakeProperties(Feature):
             res = res[0]
 
         return res
-
-### Move to math?
-def isotropic_dilation(
-    mask,
-    radius: float,
-    *,
-    backend: str,
-    device=None,
-    dtype=None,
-):
-    if radius <= 0:
-        return mask
-
-    if backend == "numpy":
-        from skimage.morphology import isotropic_dilation
-        return isotropic_dilation(mask, radius)
-
-    # torch backend
-    import torch
-
-    r = int(np.ceil(radius))
-    kernel = torch.ones(
-        (1, 1, 2 * r + 1, 2 * r + 1, 2 * r + 1),
-        device=device or mask.device,
-        dtype=dtype or torch.float32,
-    )
-
-    x = mask.to(dtype=kernel.dtype)[None, None]
-    y = torch.nn.functional.conv3d(
-        x,
-        kernel,
-        padding=r,
-    )
-
-    return (y[0, 0] > 0)
-
-
-def isotropic_erosion(
-    mask,
-    radius: float,
-    *,
-    backend: str,
-    device=None,
-    dtype=None,
-):
-    if radius <= 0:
-        return mask
-
-    if backend == "numpy":
-        from skimage.morphology import isotropic_erosion
-        return isotropic_erosion(mask, radius)
-
-    import torch
-
-    r = int(np.ceil(radius))
-    kernel = torch.ones(
-        (1, 1, 2 * r + 1, 2 * r + 1, 2 * r + 1),
-        device=device or mask.device,
-        dtype=dtype or torch.float32,
-    )
-
-    x = mask.to(dtype=kernel.dtype)[None, None]
-    y = torch.nn.functional.conv3d(
-        x,
-        kernel,
-        padding=r,
-    )
-
-    required = kernel.numel()
-    return (y[0, 0] >= required)
