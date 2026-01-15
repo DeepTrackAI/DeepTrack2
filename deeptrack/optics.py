@@ -267,9 +267,10 @@ class Microscope(StructuralFeature):
 
     def _extract_contrast_volume(self, scattered):
         if hasattr(self._objective, "extract_contrast_volume"):
-            return self._objective.extract_contrast_volume(scattered)
-
-        # default: geometry-only
+            return self._objective.extract_contrast_volume(
+                scattered,
+                **self._objective.properties(),
+            )
         return scattered.array
 
     def _downscale_image(self, image, upscale):
@@ -395,12 +396,14 @@ class Microscope(StructuralFeature):
                 **additional_sample_kwargs,
             )
 
+            print('prop', volume_samples[0].properties)
+
             # Interpret the merged volume semantically
             sample_volume = self._extract_contrast_volume(
                 ScatteredVolume(
                     array=sample_volume,
                     properties=volume_samples[0].properties,
-                )
+                ),
             )
 
             # Let the objective know about the limits of the volume and all the fields.
@@ -1081,37 +1084,36 @@ class Fluorescence(Optics):
                 "Fluorescence microscope cannot operate on ScatteredField."
             )
 
-        # Fluorescence must not use refractive index
-        if isinstance(scattered, ScatteredVolume):
-            if scattered.get_property("refractive_index", None) is not None:
-                raise ValueError(
-                    "Fluorescence does not use refractive index. "
-                    "Found 'refractive_index' in scatterer properties."
-                )
-
 
     def extract_contrast_volume(self, scattered: ScatteredVolume) -> np.ndarray:
-        """Contrast extraction (semantic interpretation)"""
+        voxel_size = np.asarray(get_active_voxel_size(), float)
+        voxel_volume = np.prod(voxel_size)
+
         intensity = scattered.get_property("intensity", None)
+        value = scattered.get_property("value", None)
+        ri = scattered.get_property("refractive_index", None)
 
-        if intensity is None:
-            intensity = scattered.get_property("value", None)
-            if intensity is None:
-                raise ValueError(
-                    "Fluorescence requires 'intensity' or 'value'."
-                )
-
+        # Refractive index is always ignored in fluorescence
+        if ri is not None:
             warnings.warn(
-                "Using 'value' as fluorescence intensity is ambiguous. "
-                "Please use 'intensity' explicitly to avoid ambiguity.",
+                "Scatterer defines 'refractive_index', which is ignored in "
+                "fluorescence microscopy.",
                 UserWarning,
             )
 
-        voxel_size = np.asarray(get_active_voxel_size(), dtype=float)
-        voxel_volume = float(np.prod(voxel_size))
+        # Preferred, physically meaningful case
+        if intensity is not None:
+            return intensity * voxel_volume * scattered.array
 
-        return scattered.array * intensity * voxel_volume
+        # Fallback: legacy / dimensionless brightness
+        warnings.warn(
+            "Fluorescence scatterer has no 'intensity'. Interpreting 'value' as a "
+            "non-physical brightness factor. Quantitative interpretation is invalid. "
+            "Define 'intensity' to model physical fluorescence emission.",
+            UserWarning,
+        )
 
+        return value * scattered.array
 
     def downscale_image(self, image: np.ndarray, upscale):
         """Detector downscaling (energy conserving)"""
@@ -1357,8 +1359,50 @@ class Brightfield(Optics):
 
 
     __conversion_table__ = ConversionTable(
-        working_distance=(u.meter, u.meter),
-    )
+    working_distance=(u.meter, u.meter),
+)
+
+    def validate_input(self, scattered):
+        """Semantic validation for brightfield microscopy."""
+
+        if isinstance(scattered, ScatteredVolume):
+            warnings.warn(
+                "Brightfield imaging from ScatteredVolume assumes a "
+                "weak-phase / projection approximation. "
+                "Use ScatteredField for physically accurate brightfield simulations.",
+                UserWarning,
+            )
+
+    def extract_contrast_volume(
+        self,
+        scattered: ScatteredVolume,
+        refractive_index_medium: float,
+        **kwargs: Any,
+    ) -> np.ndarray:
+        print('ri_medium', refractive_index_medium)
+
+        ri = scattered.get_property("refractive_index", None)
+        value = scattered.get_property("value", None)
+        intensity = scattered.get_property("intensity", None)
+
+        if intensity is not None:
+            warnings.warn(
+                "Scatterer defines 'intensity', which is ignored in "
+                "brightfield microscopy.",
+                UserWarning,
+            )
+
+        if ri is not None:
+            return (ri - refractive_index_medium) * scattered.array
+
+        warnings.warn(
+            "No 'refractive_index' specified; using 'value' as a non-physical "
+            "brightfield contrast. Results are not physically calibrated. "
+            "Define 'refractive_index' for physically meaningful contrast.",
+            UserWarning,
+        )
+
+        return value * scattered.array
 
     def get(
         self: Brightfield,
@@ -1746,6 +1790,57 @@ class Darkfield(Brightfield):
             illumination_angle=illumination_angle,
             **kwargs)
 
+    def validate_input(self, scattered):
+        if isinstance(scattered, ScatteredVolume):
+            warnings.warn(
+                "Darkfield imaging from ScatteredVolume is a very rough "
+                "approximation. Use ScatteredField for physically meaningful "
+                "darkfield simulations.",
+                UserWarning,
+            )
+
+    def extract_contrast_volume(
+        self,
+        scattered: ScatteredVolume,
+        refractive_index_medium: float,
+        **kwargs: Any,
+    ) -> np.ndarray:
+        """
+        Approximate darkfield contrast from a volume (toy model).
+
+        This is a non-physical approximation intended for qualitative simulations.
+        """
+
+        ri = scattered.get_property("refractive_index", None)
+        value = scattered.get_property("value", None)
+        intensity = scattered.get_property("intensity", None)
+
+        # Intensity has no meaning here
+        if intensity is not None:
+            warnings.warn(
+                "Scatterer defines 'intensity', which is ignored in "
+                "darkfield microscopy.",
+                UserWarning,
+            )
+
+        if ri is not None:
+            delta_n = ri - refractive_index_medium
+            warnings.warn(
+                "Approximating darkfield contrast from refractive index. "
+                "Result is non-physical and qualitative only.",
+                UserWarning,
+            )
+            return (delta_n ** 2) * scattered.array
+
+        warnings.warn(
+            "No 'refractive_index' specified; using 'value' as a non-physical "
+            "darkfield scattering strength. Results are qualitative only.",
+            UserWarning,
+        )
+
+        return (value ** 2) * scattered.array
+
+
     #Retrieve get as super
     def get(
         self: Darkfield,
@@ -1921,6 +2016,998 @@ class IlluminationGradient(Feature):
 
         return image
 
+
+class NonOverlapping(Feature):
+    """Ensure volumes are placed non-overlapping in a 3D space.
+
+    This feature ensures that a list of 3D volumes are positioned such that 
+    their non-zero voxels do not overlap. If volumes overlap, their positions 
+    are resampled until they are non-overlapping. If the maximum number of 
+    attempts is exceeded, the feature regenerates the list of volumes and 
+    raises a warning if non-overlapping placement cannot be achieved.
+    
+    Note: `min_distance` refers to the distance between the edges of volumes, 
+    not their centers. Due to the way volumes are calculated, slight rounding 
+    errors may affect the final distance.
+    
+    This feature is incompatible with non-volumetric scatterers such as 
+    `MieScatterers`.
+    
+    Parameters
+    ----------
+    feature: Feature
+        The feature that generates the list of volumes to place 
+        non-overlapping.
+    min_distance: float, optional
+        The minimum distance between volumes in pixels. It can be negative to
+        allow for partial overlap. Defaults to 1. 
+    max_attempts: int, optional
+        The maximum number of attempts to place volumes without overlap.
+        Defaults to 5. 
+    max_iters: int, optional
+        The maximum number of resamplings. If this number is exceeded, a new
+        list of volumes is generated. Defaults to 100.
+
+    Attributes
+    ----------
+    __distributed__: bool
+        Always `False` for `NonOverlapping`, indicating that this feature’s
+        `.get()` method processes the entire input at once even if it is a
+        list, rather than distributing calls for each item of the list.N
+
+    Methods
+    -------
+    `get(*_, min_distance, max_attempts, **kwargs) -> array`
+        Generate a list of non-overlapping 3D volumes.
+    `_check_non_overlapping(list_of_volumes) -> bool`
+        Check if all volumes in the list are non-overlapping.
+    `_check_bounding_cubes_non_overlapping(...) -> bool`
+        Check if two bounding cubes are non-overlapping.
+    `_get_overlapping_cube(...) -> list[int]`
+        Get the overlapping cube between two bounding cubes.
+    `_get_overlapping_volume(...) -> array`
+        Get the overlapping volume between a volume and a bounding cube.
+    `_check_volumes_non_overlapping(...) -> bool`
+        Check if two volumes are non-overlapping.
+    `_resample_volume_position(volume) -> Image`
+        Resample the position of a volume to avoid overlap.
+    
+    Notes
+    -----
+    - This feature performs bounding cube checks first to quickly reject
+      obvious overlaps before voxel-level checks.
+    - If the bounding cubes overlap, precise voxel-based checks are performed.
+
+    Examples
+    ---------
+    >>> import deeptrack as dt
+
+    Define an ellipse scatterer with randomly positioned objects:
+
+    >>> import numpy as np
+    >>>
+    >>> scatterer = dt.Ellipse(
+    >>>    radius= 13 * dt.units.pixels,
+    >>>    position=lambda: np.random.uniform(5, 115, size=2)* dt.units.pixels,
+    >>> )
+
+    Create multiple scatterers:
+
+    >>> scatterers = (scatterer ^ 8)  
+
+    Define the optics and create the image with possible overlap:
+
+    >>> optics = dt.Fluorescence()
+    >>> im_with_overlap = optics(scatterers)
+    >>> im_with_overlap.store_properties()
+    >>> im_with_overlap_resolved = image_with_overlap()
+
+    Gather position from image:
+
+    >>> pos_with_overlap = np.array(
+    >>>     im_with_overlap_resolved.get_property(
+    >>>         "position", 
+    >>>         get_one=False
+    >>>     )
+    >>> )
+
+    Enforce non-overlapping and create the image without overlap:
+    
+    >>> non_overlapping_scatterers = dt.NonOverlapping(
+    ...     scatterers,
+    ...     min_distance=4,
+    ... )
+    >>> im_without_overlap =  optics(non_overlapping_scatterers)
+    >>> im_without_overlap.store_properties()
+    >>> im_without_overlap_resolved = im_without_overlap()
+
+    Gather position from image:
+
+    >>> pos_without_overlap = np.array(
+    >>>     im_without_overlap_resolved.get_property(
+    >>>         "position",
+    >>>        get_one=False
+    >>>     )
+    >>> )
+
+    Create a figure with two subplots to visualize the difference:
+
+    >>> import matplotlib.pyplot as plt
+    >>>
+    >>> fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+    >>>
+    >>> axes[0].imshow(im_with_overlap_resolved, cmap="gray")
+    >>> axes[0].scatter(pos_with_overlap[:,1],pos_with_overlap[:,0])
+    >>> axes[0].set_title("Overlapping Objects")
+    >>> axes[0].axis("off")
+    >>>
+    >>> axes[1].imshow(im_without_overlap_resolved, cmap="gray")
+    >>> axes[1].scatter(pos_without_overlap[:,1],pos_without_overlap[:,0])
+    >>> axes[1].set_title("Non-Overlapping Objects")
+    >>> axes[1].axis("off")
+    >>> plt.tight_layout()
+    >>>
+    >>> plt.show()
+
+    Define function to calculate minimum distance:
+
+    >>> def calculate_min_distance(positions):
+    >>> distances = [
+    >>>     np.linalg.norm(positions[i] - positions[j])
+    >>>     for i in range(len(positions))
+    >>>         for j in range(i + 1, len(positions))
+    >>> ]
+    >>> return min(distances)
+
+    Print minimum distances with and without overlap:
+
+    >>> print(calculate_min_distance(pos_with_overlap))
+    10.768742383382174
+
+    >>> print(calculate_min_distance(pos_without_overlap))
+    30.82531120942446
+
+    """
+
+    __distributed__: bool = False
+
+    def __init__(
+        self: NonOverlapping,
+        feature: Feature,
+        min_distance: float = 1,
+        max_attempts: int = 5,
+        max_iters: int = 100,
+        **kwargs: Any,
+    ):
+        """Initializes the NonOverlapping feature.
+
+        Ensures that volumes are placed **non-overlapping** by iteratively 
+        resampling their positions. If the maximum number of attempts is 
+        exceeded, the feature regenerates the list of volumes.
+
+        Parameters
+        ----------
+        feature: Feature
+            The feature that generates the list of volumes.
+        min_distance: float, optional
+            The minimum separation distance **between volume edges**, in 
+            pixels. It defaults to `1`. Negative values allow for partial
+            overlap.
+        max_attempts: int, optional
+            The maximum number of attempts to place the volumes without 
+            overlap. It defaults to `5`.
+        max_iters: int, optional
+            The maximum number of resampling iterations per attempt. If 
+            exceeded, a new list of volumes is generated. It defaults to `100`.
+
+        """
+
+        super().__init__(
+            min_distance=min_distance, 
+            max_attempts=max_attempts, 
+            max_iters=max_iters,
+            **kwargs,
+        )
+        self.feature = self.add_feature(feature, **kwargs)
+
+    def get(
+        self: NonOverlapping,
+        *_: Any,
+        min_distance: float,
+        max_attempts: int,
+        max_iters: int,
+        **kwargs: Any,
+    ) -> list[np.ndarray]:
+        """Generates a list of non-overlapping 3D volumes within a defined 
+        field of view (FOV).
+
+        This method **iteratively** attempts to place volumes while ensuring 
+        they maintain at least `min_distance` separation. If non-overlapping 
+        placement is not achieved within `max_attempts`, a warning is issued, 
+        and the best available configuration is returned.
+
+        Parameters
+        ----------
+        _: Any
+            Placeholder parameter, typically for an input image.
+        min_distance: float
+            The minimum required separation distance between volumes, in 
+            pixels.
+        max_attempts: int
+            The maximum number of attempts to generate a valid non-overlapping 
+            configuration.
+        max_iters: int
+            The maximum number of resampling iterations per attempt.
+        **kwargs: Any
+            Additional parameters that may be used by subclasses.
+
+        Returns
+        -------
+        list[np.ndarray]
+            A list of 3D volumes represented as NumPy arrays. If 
+            non-overlapping placement is unsuccessful, the best available 
+            configuration is returned.
+
+        Warns
+        -----
+        UserWarning
+            If non-overlapping placement is **not** achieved within 
+            `max_attempts`, suggesting parameter adjustments such as increasing
+            the FOV or reducing `min_distance`.
+
+        Notes
+        -----
+        - The placement process prioritizes bounding cube checks for
+          efficiency.
+        - If bounding cubes overlap, voxel-based overlap checks are performed.
+        
+        """
+
+        for _ in range(max_attempts):
+            list_of_volumes = self.feature()
+
+            if not isinstance(list_of_volumes, list):
+                list_of_volumes = [list_of_volumes]
+
+            for _ in range(max_iters):
+                
+                list_of_volumes = [
+                    self._resample_volume_position(volume) 
+                    for volume in list_of_volumes
+                ]
+
+                if self._check_non_overlapping(list_of_volumes):
+                    return list_of_volumes
+
+            # Generate a new list of volumes if max_attempts is exceeded.
+            self.feature.update()
+
+        warnings.warn(
+            "Non-overlapping placement could not be achieved. Consider "
+            "adjusting parameters: reduce object radius, increase FOV, "
+            "or decrease min_distance.",
+            UserWarning,
+        )
+        return list_of_volumes
+
+    def _check_non_overlapping(
+        self: NonOverlapping, 
+        list_of_volumes: list[np.ndarray],
+    ) -> bool:
+        """Determines whether all volumes in the provided list are 
+        non-overlapping.
+
+        This method verifies that the non-zero voxels of each 3D volume in 
+        `list_of_volumes` are at least `min_distance` apart. It first checks 
+        bounding boxes for early rejection and then examines actual voxel 
+        overlap when necessary. Volumes are assumed to have a `position` 
+        attribute indicating their placement in 3D space.
+
+        Parameters
+        ----------
+        list_of_volumes: list[np.ndarray]
+            A list of 3D arrays representing the volumes to be checked for 
+            overlap. Each volume is expected to have a position attribute.
+
+        Returns
+        -------
+        bool
+            `True` if all volumes are non-overlapping, otherwise `False`.
+
+        Notes
+        -----
+        - If `min_distance` is negative, volumes are shrunk using isotropic 
+          erosion before checking overlap.
+        - If `min_distance` is positive, volumes are padded and expanded using 
+          isotropic dilation.
+        - Overlapping checks are first performed on bounding cubes for 
+            efficiency.
+        - If bounding cubes overlap, voxel-level checks are performed.
+
+        """
+        from deeptrack.scatterers import ScatteredVolume
+
+        from deeptrack.augmentations import CropTight, Pad # these are not compatibles with torch backend
+        from deeptrack.optics import _get_position
+        from deeptrack.math import isotropic_erosion, isotropic_dilation
+
+        min_distance = self.min_distance()
+        crop = CropTight()
+
+        new_volumes = []
+        
+        for volume in list_of_volumes:
+            arr = volume.array
+            mask = arr != 0
+
+            if min_distance < 0:
+                new_arr = isotropic_erosion(mask, -min_distance / 2, backend=self.get_backend())
+            else:
+                pad = Pad(px=[int(np.ceil(min_distance / 2))] * 6, keep_size=True)
+                new_arr = isotropic_dilation(pad(mask) != 0 , min_distance / 2, backend=self.get_backend())
+                new_arr = crop(new_arr)
+
+            if self.get_backend() == "torch":
+                new_arr = new_arr.to(dtype=arr.dtype)
+            else:
+                new_arr = new_arr.astype(arr.dtype)
+
+            new_volume = ScatteredVolume(
+                array=new_arr,
+                properties=volume.properties.copy(),
+            )
+
+            new_volumes.append(new_volume)
+
+        list_of_volumes = new_volumes       
+        min_distance = 1
+
+        # The position of the top left corner of each volume (index (0, 0, 0)).
+        volume_positions_1 = [
+            _get_position(volume, mode="corner", return_z=True).astype(int)
+            for volume in list_of_volumes
+        ]
+
+        # The position of the bottom right corner of each volume 
+        # (index (-1, -1, -1)).
+        volume_positions_2 = [
+            p0 + np.array(v.shape) 
+            for v, p0 in zip(list_of_volumes, volume_positions_1)
+        ]
+
+        # (x1, y1, z1, x2, y2, z2) for each volume.
+        volume_bounding_cube = [
+            [*p0, *p1] 
+            for p0, p1 in zip(volume_positions_1, volume_positions_2)
+        ]
+
+        for i, j in itertools.combinations(range(len(list_of_volumes)), 2):
+
+            # If the bounding cubes do not overlap, the volumes do not overlap.
+            if self._check_bounding_cubes_non_overlapping(
+                volume_bounding_cube[i], volume_bounding_cube[j], min_distance
+            ):
+                continue
+
+            # If the bounding cubes overlap, get the overlapping region of each 
+            # volume.
+            overlapping_cube = self._get_overlapping_cube(
+                volume_bounding_cube[i], volume_bounding_cube[j]
+            )
+            overlapping_volume_1 = self._get_overlapping_volume(
+                list_of_volumes[i].array, volume_bounding_cube[i], overlapping_cube
+            )
+            overlapping_volume_2 = self._get_overlapping_volume(
+                list_of_volumes[j].array, volume_bounding_cube[j], overlapping_cube
+            )
+
+            # If either the overlapping regions are empty, the volumes do not 
+            # overlap (done for speed).
+            if (np.all(overlapping_volume_1 == 0)
+                or np.all(overlapping_volume_2 == 0)):
+                continue
+
+            # If products of overlapping regions are non-zero, return False.
+            # if np.any(overlapping_volume_1 * overlapping_volume_2):
+            #     return False
+
+            # Finally, check that the non-zero voxels of the volumes are at 
+            # least min_distance apart.
+            if not self._check_volumes_non_overlapping(
+                overlapping_volume_1, overlapping_volume_2, min_distance
+            ):
+                return False
+
+        return True
+
+    def _check_bounding_cubes_non_overlapping(
+        self: NonOverlapping,
+        bounding_cube_1: list[int],
+        bounding_cube_2: list[int], 
+        min_distance: float,
+    ) -> bool:
+        """Determines whether two 3D bounding cubes are non-overlapping.
+
+        This method checks whether the bounding cubes of two volumes are 
+        **separated by at least** `min_distance` along **any** spatial axis.
+
+        Parameters
+        ----------
+        bounding_cube_1: list[int]
+            A list of six integers `[x1, y1, z1, x2, y2, z2]` representing 
+            the first bounding cube.
+        bounding_cube_2: list[int]
+            A list of six integers `[x1, y1, z1, x2, y2, z2]` representing 
+            the second bounding cube.
+        min_distance: float
+            The required **minimum separation distance** between the two 
+            bounding cubes.
+
+        Returns
+        -------
+        bool
+            `True` if the bounding cubes are non-overlapping (separated by at 
+            least `min_distance` along **at least one axis**), otherwise 
+            `False`.
+
+        Notes
+        -----
+        - This function **only checks bounding cubes**, **not actual voxel 
+          data**.
+        - If the bounding cubes are non-overlapping, the corresponding 
+          **volumes are also non-overlapping**.
+        - This check is much **faster** than full voxel-based comparisons.
+        
+        """
+
+        # bounding_cube_1 and bounding_cube_2 are (x1, y1, z1, x2, y2, z2).
+        # Check that the bounding cubes are non-overlapping.
+        return (
+        (bounding_cube_1[0] >= bounding_cube_2[3] + min_distance) or
+        (bounding_cube_2[0] >= bounding_cube_1[3] + min_distance) or
+        (bounding_cube_1[1] >= bounding_cube_2[4] + min_distance) or
+        (bounding_cube_2[1] >= bounding_cube_1[4] + min_distance) or
+        (bounding_cube_1[2] >= bounding_cube_2[5] + min_distance) or
+        (bounding_cube_2[2] >= bounding_cube_1[5] + min_distance)
+        )
+
+    def _get_overlapping_cube(
+        self: NonOverlapping,
+        bounding_cube_1: list[int],
+        bounding_cube_2: list[int],
+    ) -> list[int]:
+        """Computes the overlapping region between two 3D bounding cubes.
+
+        This method calculates the coordinates of the intersection of two 
+        axis-aligned bounding cubes, each represented as a list of six 
+        integers:
+
+        - `[x1, y1, z1]`: Coordinates of the **top-left-front** corner.
+        - `[x2, y2, z2]`: Coordinates of the **bottom-right-back** corner.
+
+        The resulting overlapping region is determined by:
+        - Taking the **maximum** of the starting coordinates (`x1, y1, z1`).
+        - Taking the **minimum** of the ending coordinates (`x2, y2, z2`).
+
+        If the cubes **do not** overlap, the resulting coordinates will not 
+        form a valid cube (i.e., `x1 > x2`, `y1 > y2`, or `z1 > z2`).
+
+        Parameters
+        ----------
+        bounding_cube_1: list[int]
+            The first bounding cube, formatted as `[x1, y1, z1, x2, y2, z2]`.
+        bounding_cube_2: list[int]
+            The second bounding cube, formatted as `[x1, y1, z1, x2, y2, z2]`.
+
+        Returns
+        -------
+        list[int]
+            A list of six integers `[x1, y1, z1, x2, y2, z2]` representing the 
+            overlapping bounding cube. If no overlap exists, the coordinates 
+            will **not** define a valid cube.
+
+        Notes
+        -----
+        - This function does **not** check for valid input or ensure the 
+          resulting cube is well-formed.
+        - If no overlap exists, downstream functions must handle the invalid 
+          result.
+        
+        """
+
+        return [
+            max(bounding_cube_1[0], bounding_cube_2[0]),
+            max(bounding_cube_1[1], bounding_cube_2[1]),
+            max(bounding_cube_1[2], bounding_cube_2[2]),
+            min(bounding_cube_1[3], bounding_cube_2[3]),
+            min(bounding_cube_1[4], bounding_cube_2[4]),
+            min(bounding_cube_1[5], bounding_cube_2[5]),
+        ]
+
+    def _get_overlapping_volume(
+        self: NonOverlapping,
+        volume: np.ndarray,  # 3D array.
+        bounding_cube: tuple[float, float, float, float, float, float],
+        overlapping_cube: tuple[float, float, float, float, float, float],
+    ) -> np.ndarray:
+        """Extracts the overlapping region of a 3D volume within the specified 
+        overlapping cube.
+
+        This method identifies and returns the subregion of `volume` that 
+        lies within the `overlapping_cube`. The bounding information of the 
+        volume is provided via `bounding_cube`.
+
+        Parameters
+        ----------
+        volume: np.ndarray
+            A 3D NumPy array representing the volume from which the 
+            overlapping region is extracted.
+        bounding_cube: tuple[float, float, float, float, float, float]
+            The bounding cube of the volume, given as a tuple of six floats: 
+            `(x1, y1, z1, x2, y2, z2)`. The first three values define the 
+            **top-left-front** corner, while the last three values define the 
+            **bottom-right-back** corner.
+        overlapping_cube: tuple[float, float, float, float, float, float]
+            The overlapping region between the volume and another volume, 
+            represented in the same format as `bounding_cube`.
+
+        Returns
+        -------
+        np.ndarray
+            A 3D NumPy array representing the portion of `volume` that 
+            lies within `overlapping_cube`. If the overlap does not exist, 
+            an empty array may be returned.
+
+        Notes
+        -----
+        - The method computes the relative indices of `overlapping_cube` 
+          within `volume` by subtracting the bounding cube's starting 
+          position.
+        - The extracted region is determined by integer indices, meaning 
+          coordinates are implicitly **floored to integers**.
+        - If `overlapping_cube` extends beyond `volume` boundaries, the 
+          returned subregion is **cropped** to fit within `volume`.
+        
+        """
+
+        # The position of the top left corner of the overlapping cube in the volume
+        overlapping_cube_position = np.array(overlapping_cube[:3]) - np.array(
+            bounding_cube[:3]
+        )
+
+        # The position of the bottom right corner of the overlapping cube in the volume
+        overlapping_cube_end_position = np.array(
+            overlapping_cube[3:]
+            ) - np.array(bounding_cube[:3])
+
+        # cast to int
+        overlapping_cube_position = overlapping_cube_position.astype(int)
+        overlapping_cube_end_position = overlapping_cube_end_position.astype(int)
+
+        return volume[
+            overlapping_cube_position[0] : overlapping_cube_end_position[0],
+            overlapping_cube_position[1] : overlapping_cube_end_position[1],
+            overlapping_cube_position[2] : overlapping_cube_end_position[2],
+        ]
+
+    def _check_volumes_non_overlapping(
+        self: NonOverlapping,
+        volume_1: np.ndarray,
+        volume_2: np.ndarray,
+        min_distance: float,
+    ) -> bool:
+        """Determines whether the non-zero voxels in two 3D volumes are at 
+        least `min_distance` apart.
+
+        This method checks whether the active regions (non-zero voxels) in 
+        `volume_1` and `volume_2` maintain a minimum separation of 
+        `min_distance`. If the volumes differ in size, the positions of their 
+        non-zero voxels are adjusted accordingly to ensure a fair comparison.
+
+        Parameters
+        ----------
+        volume_1: np.ndarray
+            A 3D NumPy array representing the first volume.
+        volume_2: np.ndarray
+            A 3D NumPy array representing the second volume.
+        min_distance: float
+            The minimum Euclidean distance required between any two non-zero 
+            voxels in the two volumes.
+
+        Returns
+        -------
+        bool
+            `True` if all non-zero voxels in `volume_1` and `volume_2` are at 
+            least `min_distance` apart, otherwise `False`.
+
+        Notes
+        -----
+        - This function assumes both volumes are correctly aligned within a 
+          shared coordinate space.
+        - If the volumes are of different sizes, voxel positions are scaled 
+          or adjusted for accurate distance measurement.
+        - Uses **Euclidean distance** for separation checking.
+        - If either volume is empty (i.e., no non-zero voxels), they are 
+          considered non-overlapping.
+        
+        """
+
+        # Get the positions of the non-zero voxels of each volume.
+        if self.get_backend() == "torch":
+            positions_1 = torch.nonzero(volume_1, as_tuple=False)
+            positions_2 = torch.nonzero(volume_2, as_tuple=False)
+        else:
+            positions_1 = np.argwhere(volume_1)
+            positions_2 = np.argwhere(volume_2)
+
+        # if positions_1.size == 0 or positions_2.size == 0:
+        #     return True  # If either volume is empty, they are "non-overlapping"
+
+        # # If the volumes are not the same size, the positions of the non-zero 
+        # # voxels of each volume need to be scaled.
+        # if positions_1.size == 0 or positions_2.size == 0:
+        #     return True  # If either volume is empty, they are "non-overlapping"
+
+        # If the volumes are not the same size, the positions of the non-zero 
+        # voxels of each volume need to be scaled.
+        if volume_1.shape != volume_2.shape:
+            positions_1 = (
+                positions_1 * np.array(volume_2.shape) 
+                / np.array(volume_1.shape)
+            )
+            positions_1 = positions_1.astype(int)
+
+        # Check that the non-zero voxels of the volumes are at least 
+        # min_distance apart.
+        if self.get_backend() == "torch":
+            dist = torch.cdist(
+                positions_1.float(),
+                positions_2.float(),
+            )
+            return bool((dist > min_distance).all())
+        else:
+            return np.all(cdist(positions_1, positions_2) > min_distance)
+
+    def _resample_volume_position(
+        self: NonOverlapping,
+        volume: np.ndarray | Image,
+    ) -> Image:
+        """Resamples the position of a 3D volume using its internal position 
+        sampler.
+
+        This method updates the `position` property of the given `volume` by 
+        drawing a new position from the `_position_sampler` stored in the 
+        volume's `properties`. If the sampled position is a `Quantity`, it is 
+        converted to pixel units.
+
+        Parameters
+        ----------
+        volume: np.ndarray
+            The 3D volume whose position is to be resampled. The volume must 
+            have a `properties` attribute containing dictionaries with 
+            `position` and `_position_sampler` keys.
+
+        Returns
+        -------
+        Image
+            The same input volume with its `position` property updated to the 
+            newly sampled value.
+
+        Notes
+        -----
+        - The `_position_sampler` function is expected to return a **tuple of 
+        three floats** (e.g., `(x, y, z)`).
+        - If the sampled position is a `Quantity`, it is converted to pixels.
+        - **Only** dictionaries in `volume.properties` that contain both 
+        `position` and `_position_sampler` keys are modified.
+        
+        """
+
+        pdict = volume.properties
+        if "position" in pdict and "_position_sampler" in pdict:
+            new_position = pdict["_position_sampler"]()
+            if isinstance(new_position, Quantity):
+                new_position = new_position.to("pixel").magnitude
+            pdict["position"] = new_position
+
+        return volume
+
+
+class SampleToMasks(Feature):
+    """Create a mask from a list of images.
+
+    This feature applies a transformation function to each input image and 
+    merges the resulting masks into a single multi-layer image. Each input 
+    image must have a `position` property that determines its placement within 
+    the final mask. When used with scatterers, the `voxel_size` property must 
+    be provided for correct object sizing.
+
+    Parameters
+    ----------
+    transformation_function: Callable[[Image], Image]
+        A function that transforms each input image into a mask with 
+        `number_of_masks` layers.
+    number_of_masks: PropertyLike[int], optional
+        The number of mask layers to generate. Default is 1.
+    output_region: PropertyLike[tuple[int, int, int, int]], optional
+        The size and position of the output mask, typically aligned with 
+        `optics.output_region`.
+    merge_method: PropertyLike[str | Callable | list[str | Callable]], optional
+        Method for merging individual masks into the final image. Can be:
+        - "add" (default): Sum the masks.
+        - "overwrite": Later masks overwrite earlier masks.
+        - "or": Combine masks using a logical OR operation.
+        - "mul": Multiply masks.
+        - Function: Custom function taking two images and merging them.
+
+    **kwargs: dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Methods
+    -------
+    `get(image, transformation_function, **kwargs) -> Image`
+        Applies the transformation function to the input image.
+    `_process_and_get(images, **kwargs) -> Image | np.ndarray`
+        Processes a list of images and generates a multi-layer mask.
+
+    Returns
+    -------
+    np.ndarray
+        The final mask image with the specified number of layers.
+
+    Raises
+    ------
+    ValueError
+        If `merge_method` is invalid.
+
+    Examples
+    -------
+    >>> import deeptrack as dt
+
+    Define number of particles:
+
+    >>> n_particles = 12
+
+    Define optics and particles:
+
+    >>> import numpy as np
+    >>>    
+    >>> optics = dt.Fluorescence(output_region=(0, 0, 64, 64))
+    >>> particle = dt.PointParticle(
+    >>>     position=lambda: np.random.uniform(5, 55, size=2),
+    >>> )
+    >>> particles = particle ^ n_particles
+
+    Define pipelines:
+
+    >>> sim_im_pip = optics(particles)
+    >>> sim_mask_pip = particles >> dt.SampleToMasks(
+    ...     lambda: lambda particles: particles > 0,
+    ...     output_region=optics.output_region,
+    ...     merge_method="or",
+    ... )
+    >>> pipeline = sim_im_pip & sim_mask_pip
+    >>> pipeline.store_properties()
+
+    Generate image and mask:
+
+    >>> image, mask = pipeline.update()()
+
+    Get particle positions:
+
+    >>> positions = np.array(image.get_property("position", get_one=False))
+
+    Visualize results:
+
+    >>> import matplotlib.pyplot as plt
+    >>>
+    >>> plt.subplot(1, 2, 1)
+    >>> plt.imshow(image, cmap="gray")
+    >>> plt.title("Original Image")
+    >>> plt.subplot(1, 2, 2)
+    >>> plt.imshow(mask, cmap="gray")
+    >>> plt.scatter(positions[:,1], positions[:,0], c="y", marker="x", s = 50)
+    >>> plt.title("Mask")
+    >>> plt.show()
+
+    """
+
+    def __init__(
+        self: Feature,
+        transformation_function: Callable[[np.ndarray], np.ndarray, torch.Tensor],
+        number_of_masks: PropertyLike[int] = 1,
+        output_region: PropertyLike[tuple[int, int, int, int]] = None,
+        merge_method: PropertyLike[str | Callable | list[str | Callable]] = "add",
+        **kwargs: Any,
+    ):
+        """Initialize the SampleToMasks feature.
+
+        Parameters
+        ----------
+        transformation_function: Callable[[Image], Image]
+            Function to transform input images into masks.
+        number_of_masks: PropertyLike[int], optional
+            Number of mask layers. Default is 1.
+        output_region: PropertyLike[tuple[int, int, int, int]], optional
+            Output region of the mask. Default is None.
+        merge_method: PropertyLike[str | Callable | list[str | Callable]], optional
+            Method to merge masks. Defaults to "add".
+        **kwargs: dict[str, Any]
+            Additional keyword arguments passed to the parent class.
+        
+        """
+
+        super().__init__(
+            transformation_function=transformation_function,
+            number_of_masks=number_of_masks,
+            output_region=output_region,
+            merge_method=merge_method,
+            **kwargs,
+        )
+
+    def get(
+        self: Feature,
+        image: np.ndarray,
+        transformation_function: Callable[list[np.ndarray] | np.ndarray | torch.Tensor],
+        **kwargs: Any,
+    ) -> np.ndarray:
+        """Apply the transformation function to a single image.
+
+        Parameters
+        ----------
+        image: np.ndarray
+            The input image.
+        transformation_function: Callable[[np.ndarray], np.ndarray]
+            Function to transform the image.
+        **kwargs: dict[str, Any]
+            Additional parameters.
+
+        Returns
+        -------
+        Image
+            The transformed image.
+
+        """
+
+        return transformation_function(image.array)
+
+    def _process_and_get(
+        self: Feature,
+        images: list[np.ndarray] | np.ndarray | list[torch.Tensor] | torch.Tensor,
+        **kwargs: Any,
+    ) -> np.ndarray:
+        """Process a list of images and generate a multi-layer mask.
+
+        Parameters
+        ----------
+        images: np.ndarray or list[np.ndarrray] or  Image or list[Image]
+            List of input images or a single image.
+        **kwargs: dict[str, Any]
+            Additional parameters including `output_region`, `number_of_masks`, 
+            and `merge_method`.
+
+        Returns
+        -------
+        Image or np.ndarray
+            The final mask image.
+            
+        """
+
+        # Handle list of images.
+        # if isinstance(images, list) and len(images) != 1:
+        list_of_labels = super()._process_and_get(images, **kwargs)
+
+        from deeptrack.scatterers import ScatteredVolume
+        
+        for idx, (label, image) in enumerate(zip(list_of_labels, images)):
+            list_of_labels[idx] = \
+                ScatteredVolume(array=label, properties=image.properties.copy())        
+
+        # Create an empty output image.
+        output_region = kwargs["output_region"]
+        output = xp.zeros(
+            (
+                output_region[2] - output_region[0],
+                output_region[3] - output_region[1],
+                kwargs["number_of_masks"],
+            ),
+            dtype=list_of_labels[0].array.dtype,
+        )
+
+        from deeptrack.optics import _get_position
+
+        # Merge masks into the output.
+        for volume in list_of_labels:
+            label = volume.array
+            position = _get_position(volume)
+
+            p0 = xp.round(position - xp.asarray(output_region[0:2]))
+            p0 = p0.astype(xp.int64)
+
+
+            if xp.any(p0 > xp.asarray(output.shape[:2])) or \
+                xp.any(p0 + xp.asarray(label.shape[:2]) < 0):
+                continue
+
+            crop_x = (-xp.minimum(p0[0], 0)).item()
+            crop_y = (-xp.minimum(p0[1], 0)).item()
+
+            crop_x_end = int(
+                label.shape[0]
+                - np.max([p0[0] + label.shape[0] - output.shape[0], 0])
+            )
+            crop_y_end = int(
+                label.shape[1]
+                - np.max([p0[1] + label.shape[1] - output.shape[1], 0])
+            )
+
+            labelarg = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
+
+            p0[0] = np.max([p0[0], 0])
+            p0[1] = np.max([p0[1], 0])
+
+            p0 = p0.astype(int)
+
+            output_slice = output[
+                p0[0] : p0[0] + labelarg.shape[0],
+                p0[1] : p0[1] + labelarg.shape[1],
+            ]
+
+            for label_index in range(kwargs["number_of_masks"]):
+
+                if isinstance(kwargs["merge_method"], list):
+                    merge = kwargs["merge_method"][label_index]
+                else:
+                    merge = kwargs["merge_method"]
+
+                if merge == "add":
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] += labelarg[..., label_index]
+
+                elif merge == "overwrite":
+                    output_slice[
+                        labelarg[..., label_index] != 0, label_index
+                    ] = labelarg[labelarg[..., label_index] != 0, \
+                        label_index]
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] = output_slice[..., label_index]
+
+                elif merge == "or":
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] = xp.logical_or(
+                        output_slice[..., label_index] != 0, 
+                        labelarg[..., label_index] != 0
+                        )
+
+                elif merge == "mul":
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] *= labelarg[..., label_index]
+
+                else:
+                    # No match, assume function
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] = merge(
+                        output_slice[..., label_index],
+                        labelarg[..., label_index],
+                    )
+
+        return output
+        
 
 #TODO ***??*** revise _get_position - torch, typing, docstring, unit test
 def _get_position(
