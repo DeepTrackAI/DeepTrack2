@@ -1,6 +1,6 @@
 """Core features for building and processing pipelines in DeepTrack2.
 
-The `feasture.py` module defines the core classes and utilities used to create
+The `feature.py` module defines the core classes and utilities used to create
 and manipulate features in DeepTrack2, enabling users to build sophisticated
 data processing pipelines with modular, reusable, and composable components.
 
@@ -80,11 +80,8 @@ Other Feature Classes:
 - `OneOf`: Resolve one feature from a given collection.
 - `OneOfDict`: Resolve one feature from a dictionary and apply it to an input.
 - `LoadImage`: Load an image from disk and preprocess it.
-- `SampleToMasks`: Create a mask from a list of images.
 - `AsType`: Convert the data type of the input.
 - `ChannelFirst2d`: DEPRECATED Convert an image to a channel-first format.
-- `Upscale`: Simulate a pipeline at a higher resolution.
-- `NonOverlapping`: Ensure volumes are placed non-overlapping in a 3D space.
 - `Store`: Store the output of a feature for reuse.
 - `Squeeze`: Squeeze the input to the smallest possible dimension.
 - `Unsqueeze`: Unsqueeze the input.

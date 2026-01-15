@@ -151,7 +151,7 @@ from deeptrack.backend.units import (
     get_active_scale,
     get_active_voxel_size,
 )
-from deeptrack.math import AveragePoolingV2, SumPoolingV2
+from deeptrack.math import AveragePooling, SumPooling
 from deeptrack.features import propagate_data_to_dependencies
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
 from deeptrack.image import pad_image_to_fft
@@ -1840,6 +1840,22 @@ class Darkfield(Brightfield):
 
         return (value ** 2) * scattered.array
 
+    def downscale_image(self, image: np.ndarray, upscale):
+        """Detector downscaling (energy conserving)"""
+        if not np.any(np.array(upscale) != 1):
+            return image
+
+        ux, uy = upscale[:2]
+        if ux != uy:
+            raise ValueError(
+                f"Energy-conserving detector integration requires ux == uy, "
+                f"got ux={ux}, uy={uy}."
+            )
+        if isinstance(ux, float) and ux.is_integer():
+            ux = int(ux)
+
+        # Energy-conserving detector integration
+        return SumPoolingV2(ux)(image)
 
     #Retrieve get as super
     def get(
@@ -3007,7 +3023,7 @@ class SampleToMasks(Feature):
                     )
 
         return output
-        
+
 
 #TODO ***??*** revise _get_position - torch, typing, docstring, unit test
 def _get_position(
