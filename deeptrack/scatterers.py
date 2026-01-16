@@ -175,7 +175,7 @@ from deeptrack.backend.units import (
     get_active_voxel_size,
 )
 from deeptrack.backend import mie
-from deeptrack.math import AveragePoolingV2
+from deeptrack.math import AveragePooling
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
 from deeptrack.image import pad_image_to_fft
 from deeptrack.types import ArrayLike
@@ -261,11 +261,11 @@ class Scatterer(Feature):
         **kwargs,
     ) -> None:
         # Ignore warning to help with comparison with arrays.
-        if upsample != 1:  # noqa: F632
-            warnings.warn(
-                f"Setting upsample != 1 is deprecated. "
-                f"Please, instead use dt.Upscale(f, factor={upsample})"
-            )
+        # if upsample != 1:  # noqa: F632
+        #     warnings.warn(
+        #         f"Setting upsample != 1 is deprecated. "
+        #         f"Please, instead use dt.Upscale(f, factor={upsample})"
+        #     )
 
         self._processed_properties = False
 
@@ -291,7 +291,7 @@ class Scatterer(Feature):
             return volume
 
         # average pooling conserves fractional occupancy
-        return AveragePoolingV2(
+        return AveragePooling(
             factor
         )(volume)
 

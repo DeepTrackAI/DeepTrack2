@@ -288,7 +288,7 @@ class Microscope(StructuralFeature):
             )
         if isinstance(ux, float) and ux.is_integer():
             ux = int(ux)
-        return AveragePoolingV2(ux)(image)
+        return AveragePooling(ux)(image)
 
     def get(
         self: Microscope,
@@ -1130,7 +1130,7 @@ class Fluorescence(Optics):
             ux = int(ux)
 
         # Energy-conserving detector integration
-        return SumPoolingV2(ux)(image)
+        return SumPooling(ux)(image)
 
 
     def get(
@@ -1855,7 +1855,7 @@ class Darkfield(Brightfield):
             ux = int(ux)
 
         # Energy-conserving detector integration
-        return SumPoolingV2(ux)(image)
+        return SumPooling(ux)(image)
 
     #Retrieve get as super
     def get(

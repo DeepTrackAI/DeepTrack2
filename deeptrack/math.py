@@ -1453,54 +1453,67 @@ class MedianPooling(Pool):
 class Resize(Feature):
     """Resize an image to a specified size.
 
-    `Resize` resizes an image using:
-      - OpenCV (`cv2.resize`) for NumPy arrays.
-      - PyTorch (`torch.nn.functional.interpolate`) for PyTorch tensors.
+    `Resize` resizes images following the channels-last semantic
+    convention.
 
-    The interpretation of the `dsize` parameter follows the convention 
-    of the underlying backend:
-      - **NumPy (OpenCV)**: `dsize` is given as `(width, height)` to match
-        OpenCV’s default.
-      - **PyTorch**: `dsize` is given as `(height, width)`.
+    The operation supports both NumPy arrays and PyTorch tensors:
+    - NumPy arrays are resized using OpenCV (`cv2.resize`).
+    - PyTorch tensors are resized using `torch.nn.functional.interpolate`.
+
+    In all cases, the input is interpreted as having spatial dimensions
+    first and an optional channel dimension last.
 
     Parameters
     ----------
-    dsize: PropertyLike[tuple[int, int]]
-        The target size. Format depends on backend: `(width, height)` for
-        NumPy, `(height, width)` for PyTorch.
-    **kwargs: Any
-        Additional parameters sent to the underlying resize function:
-          - NumPy: passed to `cv2.resize`.
-          - PyTorch: passed to `torch.nn.functional.interpolate`.
+    dsize : PropertyLike[tuple[int, int]]
+        Target output size given as (width, height). This convention is
+        backend-independent and applies equally to NumPy and PyTorch inputs.
+
+    **kwargs : Any
+        Additional keyword arguments forwarded to the underlying resize
+        implementation:
+        - NumPy backend: passed to `cv2.resize`.
+        - PyTorch backend: passed to
+        `torch.nn.functional.interpolate`.
 
     Methods
     -------
     get(
-        image: np.ndarray | torch.Tensor, dsize: tuple[int, int], **kwargs
+        image: np.ndarray | torch.Tensor,
+        dsize: tuple[int, int],
+        **kwargs
     ) -> np.ndarray | torch.Tensor
         Resize the input image to the specified size.
 
     Examples
     --------
-    >>> import deeptrack as dt
+    NumPy example:
 
-    Numpy example:
     >>> import numpy as np
-    >>>
-    >>> input_image = np.random.rand(16, 16)            # Create image
-    >>> feature = dt.math.Resize(dsize=(8, 4))          # (width=8, height=4)
-    >>> resized_image = feature.resolve(input_image)    # Resize it to (4, 8)
-    >>> print(resized_image.shape)
+    >>> input_image = np.random.rand(16, 16)
+    >>> feature = dt.math.Resize(dsize=(8, 4))   # (width=8, height=4)
+    >>> resized_image = feature.resolve(input_image)
+    >>> resized_image.shape
     (4, 8)
 
     PyTorch example:
+
     >>> import torch
-    >>>
-    >>> input_image = torch.rand(1, 1, 16, 16)          # Create image
-    >>> feature = dt.math.Resize(dsize=(4, 8))          # (height=4, width=8)
-    >>> resized_image = feature.resolve(input_image)    # Resize it to (4, 8)
-    >>> print(resized_image.shape)
-    torch.Size([1, 1, 4, 8])
+    >>> input_image = torch.rand(16, 16)         # channels-last
+    >>> feature = dt.math.Resize(dsize=(8, 4))
+    >>> resized_image = feature.resolve(input_image)
+    >>> resized_image.shape
+    torch.Size([4, 8])
+
+    Notes
+    -----
+    - Resize follows channels-last semantics, consistent with other features
+    such as Pool and Blur.
+    - Torch tensors with channels-first layout (e.g. (C, H, W) or
+    (N, C, H, W)) are not supported and must be converted to
+    channels-last format before resizing.
+    - For PyTorch tensors, bilinear interpolation is used with
+    `align_corners=False`, closely matching OpenCV’s default behavior.
 
     """
 
@@ -1533,67 +1546,109 @@ class Resize(Feature):
 
         Parameters
         ----------
-        image: np.ndarray or torch.Tensor
-            The input image to resize.
-            - NumPy arrays may be grayscale (H, W) or color (H, W, C).
-            - Torch tensors are expected in one of the following formats:
-              (N, C, H, W), (C, H, W), or (H, W).
-        dsize: tuple[int, int]
-            Desired output size of the image.
-            - NumPy: (width, height)
-            - PyTorch: (height, width)
-        **kwargs: Any
-            Additional keyword arguments passed to the underlying resize 
-            function (`cv2.resize` or `torch.nn.functional.interpolate`).
+        image : np.ndarray or torch.Tensor
+            Input image following channels-last semantics.
+
+            Supported shapes are:
+            - (H, W)
+            - (H, W, C)
+            - (Z, H, W)
+            - (Z, H, W, C)
+
+            For PyTorch tensors, channels-first layouts such as (C, H, W) or
+            (N, C, H, W) are not supported and must be converted to
+            channels-last format before calling `Resize`.
+
+        dsize : tuple[int, int]
+            Desired output size given as (width, height). This convention is
+            backend-independent and applies to both NumPy and PyTorch inputs.
+
+        **kwargs : Any
+            Additional keyword arguments passed to the underlying resize
+            implementation:
+            - NumPy backend: forwarded to `cv2.resize`.
+            - PyTorch backend: forwarded to `torch.nn.functional.interpolate`.
 
         Returns
         -------
         np.ndarray or torch.Tensor
-            The resized image in the same type and dimensionality format as
-            input.
+            The resized image, with the same type and dimensionality layout as
+            the input image.
 
         Notes
         -----
+        - Resize follows the same channels-last semantic convention as other
+        features in `deeptrack.math`.
         - For PyTorch tensors, resizing uses bilinear interpolation with
-          `align_corners=False`. This choice matches OpenCV’s `cv2.resize`
-          default behavior when resizing NumPy arrays, aiming to produce nearly
-          identical results between both backends.
+        `align_corners=False`, which closely matches OpenCV’s default behavior.
 
         """
 
-        if apc.is_torch_array(image):
-            original_shape = image.shape
+        target_w, target_h = dsize
 
-            # Reshape input to (N, C, H, W)
-            if image.ndim == 2:     # (H, W)
-                image = image.unsqueeze(0).unsqueeze(0)
-            elif image.ndim == 3:   # (C, H, W)
-                image = image.unsqueeze(0)
-            elif image.ndim != 4:
+        # Torch backend
+        if apc.is_torch_array(image):
+            import torch.nn.functional as F
+
+            original_ndim = image.ndim
+            has_channels = (
+                image.ndim >= 3 and image.shape[-1] <= 4
+            )
+
+            # Bring to (N, C, H, W)
+            if image.ndim == 2:
+                # (H, W) -> (1, 1, H, W)
+                x = image.unsqueeze(0).unsqueeze(0)
+
+            elif image.ndim == 3 and has_channels:
+                # (H, W, C) -> (1, C, H, W)
+                x = image.permute(2, 0, 1).unsqueeze(0)
+
+            elif image.ndim == 3:
+                # (Z, H, W) -> treat Z as batch
+                x = image.unsqueeze(1)
+
+            elif image.ndim == 4 and has_channels:
+                # (Z, H, W, C) -> (Z, C, H, W)
+                x = image.permute(0, 3, 1, 2)
+
+            else:
                 raise ValueError(
-                    "Resize only supports tensors with shape (N, C, H, W), "
-                    "(C, H, W), or (H, W)."
+                    f"Unsupported tensor shape {image.shape} for Resize."
                 )
 
-            resized = torch.nn.functional.interpolate(
-                image,
-                size=dsize,
+            # Resize spatial dimensions
+            resized = F.interpolate(
+                x,
+                size=(target_h, target_w),
                 mode="bilinear",
                 align_corners=False,
             )
 
-            # Restore original dimensionality
-            if len(original_shape) == 2:
-                resized = resized.squeeze(0).squeeze(0)
-            elif len(original_shape) == 3:
-                resized = resized.squeeze(0)
+            # Restore original layout
+            if original_ndim == 2:
+                return resized.squeeze(0).squeeze(0)
 
-            return resized
+            if original_ndim == 3 and has_channels:
+                return resized.squeeze(0).permute(1, 2, 0)
 
+            if original_ndim == 3:
+                return resized.squeeze(1)
+
+            if original_ndim == 4:
+                return resized.permute(0, 2, 3, 1)
+
+            raise RuntimeError("Unexpected shape restoration path.")
+
+        # NumPy / OpenCV backend
         else:
             import cv2
+
+            # OpenCV expects (width, height)
             return utils.safe_call(
-                cv2.resize, positional_args=[image, dsize], **kwargs
+                cv2.resize,
+                positional_args=[image, (target_w, target_h)],
+                **kwargs,
             )
 
 
@@ -1646,6 +1701,12 @@ class BlurCV2(Feature):
     >>> output_image = blur(input_image)
     >>> print(output_image.shape)
     (32, 32)
+
+    Notes
+    -----
+    BlurCV2 is NumPy-only and does not support PyTorch tensors.
+    This class is intended for OpenCV-specific filters that are
+    not available in the backend-agnostic math layer.
 
     """
 
@@ -1741,6 +1802,12 @@ class BlurCV2(Feature):
 
         """
 
+        if apc.is_torch_array(image):
+            raise TypeError(
+                "BlurCV2 only supports NumPy arrays. "
+                "For Torch tensors, use Blur or GaussianBlur instead."
+            )
+
         kwargs.pop("name", None)
         result = self.filter(src=image, **kwargs)
         return result
@@ -1789,6 +1856,10 @@ class BilateralBlur(BlurCV2):
     >>> output_image = bilateral_blur(input_image)
     >>> print(output_image.shape)
     (32, 32)
+
+    Notes
+    -----
+    BilateralBlur is NumPy-only and does not support PyTorch tensors.
 
     """
 
