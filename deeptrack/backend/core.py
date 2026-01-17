@@ -220,7 +220,7 @@ class DeepTrackDataObject:
     _data: Any
     _valid: bool
 
-    def __init__(self: DeepTrackDataObject):
+    def __init__(self: DeepTrackDataObject) -> None:
         """Initialize the container without data.
 
         Initializes `_data` to `None` and `_valid` to `False`.
@@ -484,7 +484,7 @@ class DeepTrackDataDict:
     _keylength: int | None
     _dict: dict[tuple[int, ...], DeepTrackDataObject]
 
-    def __init__(self: DeepTrackDataDict):
+    def __init__(self: DeepTrackDataDict) -> None:
         """Initialize the data dictionary.
 
         Initializes `keylength` to `None` and `dict` to an empty dictionary,
@@ -1190,7 +1190,7 @@ class DeepTrackNode:
         action: Callable[..., Any] | Any = None,
         node_name: str | None = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize a new DeepTrackNode.
 
         Parameters
