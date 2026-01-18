@@ -59,6 +59,8 @@ Classes:
 
 - `MinPooling`: Apply min-pooling to the image.
 
+- `SumPooling`: Apply sum pooling to the image.
+
 - `MedianPooling`: Apply median pooling to the image.
 
 - `Resize`: Resize the image to a specified size.
@@ -97,14 +99,12 @@ from typing import Any, Callable, Dict, Tuple, TYPE_CHECKING
 
 import array_api_compat as apc
 import numpy as np
-from numpy.typing import NDArray #TODO TBE
 from scipy import ndimage
 import skimage
 import skimage.measure
 
 from deeptrack import utils, OPENCV_AVAILABLE, TORCH_AVAILABLE
-from deeptrack.features import Feature
-from deeptrack.image import Image, strip #TODO TBE
+from deeptrack.features import Feature, BackendDispatched
 from deeptrack.types import PropertyLike
 from deeptrack.backend import xp
 
@@ -129,7 +129,9 @@ __all__ = [
     "AveragePooling",
     "MaxPooling",
     "MinPooling",
+    "SumPooling",
     "MedianPooling",
+    "Resize",
     "BlurCV2",
     "BilateralBlur",
 ]
@@ -297,8 +299,8 @@ class Clip(Feature):
 
     def __init__(
         self: Clip,
-        min: PropertyLike[float] = -np.inf,
-        max: PropertyLike[float] = +np.inf,
+        min: PropertyLike[float] = -xp.inf,
+        max: PropertyLike[float] = +xp.inf,
         **kwargs: Any,
     ):
         """Initialize the clipping range.
@@ -306,9 +308,9 @@ class Clip(Feature):
         Parameters
         ----------
         min: float, optional
-            Minimum allowed value. It defaults to `-np.inf`.
+            Minimum allowed value. It defaults to `-xp.inf`.
         max: float, optional
-            Maximum allowed value. It defaults to `+np.inf`.
+            Maximum allowed value. It defaults to `+xp.inf`.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -441,31 +443,31 @@ class NormalizeMinMax(Feature):
 
         """
 
-        if featurewise:
-            # Normalize per feature (last axis)
-            axis = tuple(range(image.ndim - 1))
+        has_channels = image.ndim >= 3 and image.shape[-1] <= 4
 
+        if featurewise and has_channels:
+            # reduce over spatial dimensions only
+            axis = tuple(range(image.ndim - 1))
             img_min = xp.min(image, axis=axis, keepdims=True)
             img_max = xp.max(image, axis=axis, keepdims=True)
         else:
-            # Normalize globally
+            # global normalization
             img_min = xp.min(image)
             img_max = xp.max(image)
 
         ptp = img_max - img_min
+        eps = xp.asarray(1e-8, dtype=image.dtype)
+        ptp = xp.maximum(ptp, eps)
 
-        # Avoid division by zero
-        image = (image - img_min) / ptp * (max - min) + min
+        image = (image - img_min) / ptp
+        image = image * (max - min) + min
 
-        try:
-            image[xp.isnan(image)] = 0
-        except TypeError:
-            pass
-
+        image = xp.where(xp.isnan(image), xp.zeros_like(image), image)
         return image
 
 
-class NormalizeStandard(Feature):
+
+class NormalizeStandard(BackendDispatched, Feature):
     """Image normalization using standardization.
 
     Standardizes the input image to have zero mean and unit standard
@@ -498,6 +500,9 @@ class NormalizeStandard(Feature):
         [ 0.4472136 ,  1.34164079]])
 
     """
+
+    _NUMPY_IMPL = "_get_numpy"
+    _TORCH_IMPL = "_get_torch"
 
     def __init__(
         self: NormalizeStandard,
@@ -539,37 +544,63 @@ class NormalizeStandard(Feature):
         np.ndarray or torch.Tensor
             The standardized image.
         """
+        return self._dispatch_backend(
+            image,
+            featurewise=featurewise,
+        )
 
-        if featurewise:
-            # Normalize per feature (last axis)
+    # ------ NumPy backend ------
+    
+    def _get_numpy(
+        self,
+        image: np.ndarray,
+        featurewise: bool,
+    ) -> np.ndarray:
+
+        has_channels = image.ndim >= 3 and image.shape[-1] <= 4
+
+        if featurewise and has_channels:
             axis = tuple(range(image.ndim - 1))
-
-            mean = xp.mean(image, axis=axis, keepdims=True)
-
-            if apc.is_torch_array(image):
-                std = torch.std(image, dim=axis, keepdim=True, unbiased=False)
-            else:
-                std = xp.std(image, axis=axis)
+            mean = np.mean(image, axis=axis, keepdims=True)
+            std = np.std(image, axis=axis, keepdims=True)  # population std
         else:
-            # Normalize globally
-            mean = xp.mean(image)
+            mean = np.mean(image)
+            std = np.std(image)
 
-            if apc.is_torch_array(image):
-                std = torch.std(image, unbiased=False)
-            else:
-                std = xp.std(image)
+        std = np.maximum(std, 1e-8)
 
-        image = (image - mean) / std
+        out = (image - mean) / std
+        out = np.where(np.isnan(out), 0.0, out)
 
-        try:
-            image[xp.isnan(image)] = 0
-        except TypeError:
-            pass
+        return out
 
-        return image
+    # ------ Torch backend ------
+
+    def _get_torch(
+        self,
+        image: torch.Tensor,
+        featurewise: bool,
+    ) -> torch.Tensor:
+
+        has_channels = image.ndim >= 3 and image.shape[-1] <= 4
+
+        if featurewise and has_channels:
+            axis = tuple(range(image.ndim - 1))
+            mean = image.mean(dim=axis, keepdim=True)
+            std = image.std(dim=axis, keepdim=True, unbiased=False)
+        else:
+            mean = image.mean()
+            std = image.std(unbiased=False)
+
+        std = torch.clamp(std, min=1e-8)
+
+        out = (image - mean) / std
+        out = torch.nan_to_num(out, nan=0.0)
+
+        return out
 
 
-class NormalizeQuantile(Feature):
+class NormalizeQuantile(BackendDispatched, Feature):
     """Image normalization using quantiles.
 
     Centers the image at the median and scales it such that the values at the
@@ -589,6 +620,12 @@ class NormalizeQuantile(Feature):
     get(image: array, quantiles: tuple[float, float], **kwargs) -> array
         Normalizes the input based on the given quantile range.
 
+    Notes
+    -----
+    This operation is not differentiable. When used inside a gradient-based
+    model, it will block gradient flow. Use with care if end-to-end 
+    differentiability is required.
+
     Examples
     --------
     >>> import deeptrack as dt
@@ -607,7 +644,8 @@ class NormalizeQuantile(Feature):
 
     """
 
-    #TODO ___??___ Implement the `featurewise=False` option
+    _NUMPY_IMPL = "_get_numpy"
+    _TORCH_IMPL = "_get_torch"
 
     def __init__(
         self: NormalizeQuantile,
@@ -637,12 +675,25 @@ class NormalizeQuantile(Feature):
         )
 
     def get(
-        self: NormalizeQuantile,
+        self,
         image: np.ndarray | torch.Tensor,
         quantiles: tuple[float, float],
         featurewise: bool,
         **kwargs: Any,
-    ) -> np.ndarray | torch.Tensor:
+    ):
+        return self._dispatch_backend(
+            image,
+            quantiles=quantiles,
+            featurewise=featurewise,
+        )
+
+    def _get_numpy(
+        self: NormalizeQuantile,
+        image: np.ndarray,
+        quantiles: tuple[float, float],
+        featurewise: bool,
+        **kwargs: Any,
+    ) -> np.ndarray:
         """Normalize the input image based on the specified quantiles.
 
         Parameters
@@ -658,140 +709,127 @@ class NormalizeQuantile(Feature):
         -------
         np.ndarray or torch.Tensor
             The quantile-normalized image.
+        
         """
 
         q_low_val, q_high_val = quantiles
 
-        if featurewise:
-            # Per-feature normalization (last axis)
+        has_channels = image.ndim >= 3 and image.shape[-1] <= 4
+
+        if featurewise and has_channels:
             axis = tuple(range(image.ndim - 1))
-
-            if apc.is_torch_array(image):
-                q = torch.tensor(
-                    [q_low_val, q_high_val, 0.5],
-                    device=image.device,
-                    dtype=image.dtype,
-                )
-                q_low, q_high, median = torch.quantile(
-                    image, q, dim=axis, keepdim=True
-                )
-            else:
-                q_low, q_high, median = xp.quantile(
-                    image, (q_low_val, q_high_val, 0.5),
-                    axis=axis,
-                    keepdims=True,
-                )
+            q_low, q_high, median = np.quantile(
+                image,
+                (q_low_val, q_high_val, 0.5),
+                axis=axis,
+                keepdims=True,
+            )
         else:
-            # Global normalization
-            if apc.is_torch_array(image):
+            q_low, q_high, median = np.quantile(
+                image,
+                (q_low_val, q_high_val, 0.5),
+            )
+
+        scale = q_high - q_low
+        eps = np.asarray(1e-8, dtype=image.dtype)
+        scale = np.maximum(scale, eps)
+
+        image = (image - median) / scale 
+        image = np.where(np.isnan(image), np.zeros_like(image), image)
+        return image
+    
+    def _get_torch(
+        self,
+        image: torch.Tensor,
+        quantiles: tuple[float, float],
+        featurewise: bool,
+    ):
+        q_low_val, q_high_val = quantiles
+
+        if featurewise:
+            if image.ndim < 3:
+                # No channels → global quantile
                 q = torch.tensor(
                     [q_low_val, q_high_val, 0.5],
                     device=image.device,
                     dtype=image.dtype,
                 )
-                q_low, q_high, median = torch.quantile(
-                    image, q, dim=None, keepdim=False
-                )
+                q_low, q_high, median = torch.quantile(image, q)
             else:
-                q_low, q_high, median = xp.quantile(
-                    image, (q_low_val, q_high_val, 0.5)
+                # channels-last: (..., C)
+                spatial_dims = image.ndim - 1
+                C = image.shape[-1]
+
+                # flatten spatial dims
+                x = image.reshape(-1, C)   # (N, C)
+
+                q = torch.tensor(
+                    [q_low_val, q_high_val, 0.5],
+                    device=image.device,
+                    dtype=image.dtype,
                 )
 
-        image = (image - median) / (q_high - q_low) * 2.0
+                q_vals = torch.quantile(x, q, dim=0)
+                q_low, q_high, median = q_vals
 
-        try:
-            image[xp.isnan(image)] = 0
-        except TypeError:
-            pass
+                # reshape for broadcasting
+                shape = [1] * image.ndim
+                shape[-1] = C
+                q_low = q_low.view(shape)
+                q_high = q_high.view(shape)
+                median = median.view(shape)
+
+        else:
+            q = torch.tensor(
+                [q_low_val, q_high_val, 0.5],
+                device=image.device,
+                dtype=image.dtype,
+            )
+            q_low, q_high, median = torch.quantile(image, q)
+
+        scale = q_high - q_low
+        scale = torch.clamp(scale, min=1e-8)
+
+        image = (image - median) / scale
+        image = torch.nan_to_num(image)
 
         return image
 
 
-
 #TODO ***CM*** revise typing, docstring, unit test
-class Blur(Feature):
-    """Apply a blurring filter to an image.
-
-    This class acts as a backend-dispatching blur operator. Subclasses must
-    implement backend-specific logic via `_get_numpy` and optionally
-    `_get_torch`.
-
-    Notes
-    -----
-    - NumPy execution is always supported.
-    - Torch execution is only supported if `_get_torch` is implemented.
-    - Generic `filter_function`-based blurs are NumPy-only by design.
+class Blur(BackendDispatched, Feature):
+    """Abstract blur feature with backend-dispatched implementations.
+    
+    This class serves as a base for blur features that support multiple
+    backends (e.g., NumPy, Torch). Subclasses should implement backend-specific
+    blurring logic via `_get_numpy` and/or `_get_torch` methods.
+    
+    Methods
+    -------
+    get(image: np.ndarray | torch.Tensor, **kwargs) -> np.ndarray | torch.Tensor
+        Applies the appropriate backend-specific blurring method.
+        
+    _blur(xp, image: array, **kwargs) -> array
+        Internal method that dispatches to the correct backend-specific blur
+        implementation.
 
     """
 
-    def __init__(
-        self,
-        filter_function: Callable | None = None,
-        mode: PropertyLike[str] = "reflect",
-        **kwargs: Any,
-    ):
-        """Initialize the blur feature.
+    _NUMPY_IMPL = "_get_numpy"
+    _TORCH_IMPL = "_get_torch"
 
-        Parameters
-        ----------
-        filter_function : Callable or None
-            NumPy-based blurring function. Must accept the input image as a
-            keyword argument named `input`. If `None`, the subclass must
-            implement `_get_numpy`.
-        mode : str
-            Border mode for NumPy-based filters.
-        **kwargs : Any
-            Additional keyword arguments passed to Feature.
-        """
-        self.filter = filter_function
-        self.mode = mode
-        super().__init__(**kwargs)
-
-    def __call__(
+    def get(
         self,
         image: np.ndarray | torch.Tensor,
-        **kwargs: Any,
-    ) -> np.ndarray | torch.Tensor:
-        if isinstance(image, np.ndarray):
-            return self._get_numpy(image, **kwargs)
+        **kwargs,
+    ):
+        return self._dispatch_backend(image, **kwargs)
 
-        if TORCH_AVAILABLE and isinstance(image, torch.Tensor):
-            return self._get_torch(image, **kwargs)
+    def _get_numpy(self, image: np.ndarray, **kwargs):
+        raise NotImplementedError
 
-        raise TypeError(
-            "Blur only supports numpy.ndarray or torch.Tensor inputs."
-        )
-
-    def _get_numpy(
-        self,
-        image: np.ndarray,
-        **kwargs: Any,
-    ) -> np.ndarray:
-        if self.filter is None:
-            raise NotImplementedError(
-                f"{self.__class__.__name__} does not implement a NumPy backend."
-            )
-
-        # Avoid passing conflicting keywords
-        kwargs = dict(kwargs)
-        kwargs.pop("input", None)
-
-        return utils.safe_call(
-            self.filter,
-            input=image,
-            mode=self.mode,
-            **kwargs,
-        )
-
-    def _get_torch(
-        self,
-        image: torch.Tensor,
-        **kwargs: Any,
-    ) -> torch.Tensor:
-        raise TypeError(
-            f"{self.__class__.__name__} does not support torch.Tensor inputs. "
-            "Use a Torch-enabled blur (e.g. AverageBlur or a V2 blur class)."
-        )
+    def _get_torch(self, image: torch.Tensor, **kwargs):
+        raise NotImplementedError
 
 
 
@@ -829,10 +867,10 @@ class AverageBlur(Blur):
     """
 
     def __init__(
-        self: AverageBlur,
-        ksize: PropertyLike[int] = 3,
-        **kwargs: Any,
-    ):
+        self: AverageBlur, 
+        ksize: int = 3, 
+        **kwargs: Any
+    ) -> None:
         """Initialize the parameters for averaging input features.
 
         This constructor initializes the parameters for averaging input
@@ -847,106 +885,119 @@ class AverageBlur(Blur):
 
         """
 
-        super().__init__(None, ksize=ksize, **kwargs)
+        self.ksize = int(ksize)
+        super().__init__(**kwargs)
 
-    def _kernel_shape(self, shape: tuple[int, ...], ksize: int) -> tuple[int, ...]:
+    @staticmethod
+    def _kernel_shape(shape: tuple[int, ...], ksize: int) -> tuple[int, ...]:
+        # If last dim is channel and smaller than kernel, do not blur channels
         if shape[-1] < ksize:
             return (ksize,) * (len(shape) - 1) + (1,)
         return (ksize,) * len(shape)
 
+    # ---------- NumPy backend ----------
     def _get_numpy(
-        self, input: np.ndarray, ksize: tuple[int, ...], **kwargs: Any
+        self: AverageBlur, 
+        image: np.ndarray, 
+        **kwargs: Any
     ) -> np.ndarray:
-        return ndimage.uniform_filter(
-            input,
-            size=ksize,
-            mode=kwargs.get("mode", "reflect"),
-            cval=kwargs.get("cval", 0),
-            origin=kwargs.get("origin", 0),
-            axes=tuple(range(0, len(ksize))),
-        )
+        """Apply average blurring using SciPy's uniform_filter.
 
-    def _get_torch(
-        self, input: torch.Tensor, ksize: tuple[int, ...], **kwargs: Any
-    ) -> torch.Tensor:
-
-        last_dim_is_channel = len(ksize) < input.ndim
-        if last_dim_is_channel:
-            input = input.movedim(-1, 0)
-        else:
-            input = input.unsqueeze(0)
-
-        # add batch dimension
-        input = input.unsqueeze(0)
-
-        # dynamic padding
-        pad = []
-        for k in reversed(ksize):
-            p = k // 2
-            pad.extend([p, p])
-        pad = tuple(pad)
-
-        input = F.pad(
-            input,
-            pad,
-            mode=kwargs.get("mode", "reflect"),
-            value=kwargs.get("cval", 0),
-        )
-
-        if input.ndim == 3:
-            x = F.avg_pool1d(input, kernel_size=ksize, stride=1)
-        elif input.ndim == 4:
-            x = F.avg_pool2d(input, kernel_size=ksize, stride=1)
-        elif input.ndim == 5:
-            x = F.avg_pool3d(input, kernel_size=ksize, stride=1)
-        else:
-            raise NotImplementedError(
-                f"Input dimension {input.ndim - 2} not supported for torch backend"
-            )
-
-        # restore layout
-        x = x.squeeze(0)
-        if last_dim_is_channel:
-            x = x.movedim(0, -1)
-        else:
-            x = x.squeeze(0)
-
-        return x
-
-    def get(
-        self: AverageBlur,
-        input: np.ndarray | torch.Tensor,
-        ksize: int,
-        **kwargs: Any,
-    ) -> np.ndarray | torch.Tensor:
-        """Applies the average blurring filter to the input image.
-
-        This method applies the average blurring filter to the input image.
-
+        This method applies average blurring to the input image using
+        SciPy's `uniform_filter`.
+        
         Parameters
         ----------
-        input: np.ndarray
+        image: np.ndarray
             The input image to blur.
-        ksize: int
-            Kernel size for the pooling operation.
         **kwargs: dict[str, Any]
-            Additional keyword arguments.
-
+            Additional keyword arguments for `uniform_filter`.
+        
         Returns
         -------
         np.ndarray
             The blurred image.
+        
+        """
+
+        k = self._kernel_shape(image.shape, self.ksize)
+        return ndimage.uniform_filter(
+            image,
+            size=k,
+            mode=kwargs.get("mode", "reflect"),
+            cval=kwargs.get("cval", 0),
+            origin=kwargs.get("origin", 0),
+            axes=tuple(range(len(k))),
+        )
+
+    # ---------- Torch backend ----------
+    def _get_torch(
+        self: AverageBlur, 
+        image: torch.Tensor, 
+        **kwargs: Any
+    ) -> torch.Tensor:
+        """Apply average blurring using PyTorch's avg_pool.
+
+        This method applies average blurring to the input image using
+        PyTorch's `avg_pool` functions.
+
+        Parameters
+        ----------
+        image: torch.Tensor
+            The input image to blur.
+        **kwargs: dict[str, Any]
+            Additional keyword arguments for padding.
+
+        Returns
+        -------
+        torch.Tensor
+            The blurred image.
 
         """
 
-        k = self._kernel_shape(input.shape, ksize)
+        k = self._kernel_shape(tuple(image.shape), self.ksize)
 
-        if self.backend == "numpy":
-            return self._get_numpy(input, k, **kwargs)
-        elif self.backend == "torch":
-            return self._get_torch(input, k, **kwargs)
+        last_dim_is_channel = len(k) < image.ndim
+        if last_dim_is_channel:
+            image = image.movedim(-1, 0)   # C, ...
         else:
-            raise NotImplementedError(f"Backend {self.backend} not supported")
+            image = image.unsqueeze(0)     # 1, ...
+
+        # add batch dimension
+        image = image.unsqueeze(0)         # 1, C, ...
+
+        # symmetric padding
+        pad = []
+        for kk in reversed(k):
+            p = kk // 2
+            pad.extend([p, p])
+        image = F.pad(
+            image,
+            tuple(pad),
+            mode=kwargs.get("mode", "reflect"),
+            value=kwargs.get("cval", 0),
+        )
+
+        # pooling by dimensionality
+        if image.ndim == 3:
+            out = F.avg_pool1d(image, kernel_size=k, stride=1)
+        elif image.ndim == 4:
+            out = F.avg_pool2d(image, kernel_size=k, stride=1)
+        elif image.ndim == 5:
+            out = F.avg_pool3d(image, kernel_size=k, stride=1)
+        else:
+            raise NotImplementedError(
+                f"Input dimensionality {image.ndim - 2} not supported"
+            )
+
+        # restore layout
+        out = out.squeeze(0)
+        if last_dim_is_channel:
+            out = out.movedim(0, -1)
+        else:
+            out = out.squeeze(0)
+
+        return out
 
 
 #TODO ***CM*** revise typing, docstring, unit test
@@ -1004,27 +1055,32 @@ class GaussianBlur(Blur):
         self.sigma = float(sigma)
         super().__init__(None, **kwargs)
 
+    # ---------- NumPy backend ----------
+
     def _get_numpy(
         self,
-        input: np.ndarray,
+        image: np.ndarray,
         **kwargs: Any,
     ) -> np.ndarray:
         return ndimage.gaussian_filter(
-            input,
+            image,
             sigma=self.sigma,
             mode=kwargs.get("mode", "reflect"),
             cval=kwargs.get("cval", 0),
         )
 
+    # ---------- Torch backend ----------
+
+    @staticmethod
     def _gaussian_kernel_1d(
-        self,
         sigma: float,
         device,
         dtype,
     ) -> torch.Tensor:
         radius = int(np.ceil(3 * sigma))
         x = torch.arange(
-            -radius, radius + 1,
+            -radius,
+            radius + 1,
             device=device,
             dtype=dtype,
         )
@@ -1034,29 +1090,29 @@ class GaussianBlur(Blur):
 
     def _get_torch(
         self,
-        input: torch.Tensor,
+        image: torch.Tensor,
         **kwargs: Any,
     ) -> torch.Tensor:
         import torch.nn.functional as F
 
-        sigma = self.sigma
         kernel_1d = self._gaussian_kernel_1d(
-            sigma,
-            device=input.device,
-            dtype=input.dtype,
+            self.sigma,
+            device=image.device,
+            dtype=image.dtype,
         )
 
-        last_dim_is_channel = input.ndim >= 3
+        # channel-last handling
+        last_dim_is_channel = image.ndim >= 3
         if last_dim_is_channel:
-            input = input.movedim(-1, 0)  # C, ...
+            image = image.movedim(-1, 0)  # C, ...
         else:
-            input = input.unsqueeze(0)    # 1, ...
+            image = image.unsqueeze(0)    # 1, ...
 
         # add batch dimension
-        input = input.unsqueeze(0)        # 1, C, ...
+        image = image.unsqueeze(0)        # 1, C, ...
 
-        spatial_dims = input.ndim - 2
-        C = input.shape[1]
+        spatial_dims = image.ndim - 2
+        C = image.shape[1]
 
         for d in range(spatial_dims):
             k = kernel_1d
@@ -1071,31 +1127,31 @@ class GaussianBlur(Blur):
             pad[-(2 * d + 1)] = radius
             pad = tuple(pad)
 
-            input = F.pad(
-                input,
+            image = F.pad(
+                image,
                 pad,
                 mode=kwargs.get("mode", "reflect"),
             )
 
             if spatial_dims == 1:
-                input = F.conv1d(input, k, groups=C)
+                image = F.conv1d(image, k, groups=C)
             elif spatial_dims == 2:
-                input = F.conv2d(input, k, groups=C)
+                image = F.conv2d(image, k, groups=C)
             elif spatial_dims == 3:
-                input = F.conv3d(input, k, groups=C)
+                image = F.conv3d(image, k, groups=C)
             else:
                 raise NotImplementedError(
                     f"{spatial_dims}D Gaussian blur not supported"
                 )
 
         # restore layout
-        input = input.squeeze(0)
+        image = image.squeeze(0)
         if last_dim_is_channel:
-            input = input.movedim(0, -1)
+            image = image.movedim(0, -1)
         else:
-            input = input.squeeze(0)
+            image = image.squeeze(0)
 
-        return input
+        return image
 
 
 #TODO ***JH*** revise MedianBlur - torch, typing, docstring, unit test
@@ -1122,6 +1178,10 @@ class MedianBlur(Blur):
     -----
     Torch median blurring is significantly more expensive than mean or
     Gaussian blurring due to explicit tensor unfolding.
+
+    Median blur is not differentiable. This is typically acceptable, as the
+    operation is intended for denoising and preprocessing rather than as a
+    trainable network layer.
 
     Examples
     --------
@@ -1156,21 +1216,25 @@ class MedianBlur(Blur):
         self.ksize = int(ksize)
         super().__init__(None, **kwargs)
 
+    # ---------- NumPy backend ----------
+
     def _get_numpy(
         self,
-        input: np.ndarray,
+        image: np.ndarray,
         **kwargs: Any,
     ) -> np.ndarray:
         return ndimage.median_filter(
-            input,
+            image,
             size=self.ksize,
             mode=kwargs.get("mode", "reflect"),
             cval=kwargs.get("cval", 0),
         )
 
+    # ---------- Torch backend ----------
+
     def _get_torch(
         self,
-        input: torch.Tensor,
+        image: torch.Tensor,
         **kwargs: Any,
     ) -> torch.Tensor:
         import torch.nn.functional as F
@@ -1179,42 +1243,36 @@ class MedianBlur(Blur):
         if k % 2 == 0:
             raise ValueError("MedianBlur requires an odd kernel size.")
 
-        last_dim_is_channel = input.ndim >= 3
+        last_dim_is_channel = image.ndim >= 3
         if last_dim_is_channel:
-            input = input.movedim(-1, 0)   # C, ...
+            image = image.movedim(-1, 0)   # C, ...
         else:
-            input = input.unsqueeze(0)     # 1, ...
+            image = image.unsqueeze(0)     # 1, ...
 
         # add batch dimension
-        input = input.unsqueeze(0)         # 1, C, ...
+        image = image.unsqueeze(0)         # 1, C, ...
 
-        spatial_dims = input.ndim - 2
+        spatial_dims = image.ndim - 2
         pad = k // 2
 
-        # padding
         pad_tuple = []
         for _ in range(spatial_dims):
             pad_tuple.extend([pad, pad])
         pad_tuple = tuple(reversed(pad_tuple))
 
-        input = F.pad(
-            input,
+        image = F.pad(
+            image,
             pad_tuple,
             mode=kwargs.get("mode", "reflect"),
         )
 
-        # unfold spatial dimensions
         if spatial_dims == 1:
-            x = input.unfold(2, k, 1)
+            x = image.unfold(2, k, 1)
         elif spatial_dims == 2:
-            x = (
-                input
-                .unfold(2, k, 1)
-                .unfold(3, k, 1)
-            )
+            x = image.unfold(2, k, 1).unfold(3, k, 1)
         elif spatial_dims == 3:
             x = (
-                input
+                image
                 .unfold(2, k, 1)
                 .unfold(3, k, 1)
                 .unfold(4, k, 1)
@@ -1224,11 +1282,9 @@ class MedianBlur(Blur):
                 f"{spatial_dims}D median blur not supported"
             )
 
-        # flatten neighborhood and take median
         x = x.contiguous().view(*x.shape[:-spatial_dims], -1)
         x = x.median(dim=-1).values
 
-        # restore layout
         x = x.squeeze(0)
         if last_dim_is_channel:
             x = x.movedim(0, -1)
@@ -1238,219 +1294,479 @@ class MedianBlur(Blur):
         return x
 
 #TODO ***CM*** revise typing, docstring, unit test
-class Pool:
-    """
-    DeepTrack v2 replacement for Pool.
+class Pool(BackendDispatched, Feature):
+    """Abstract base class for pooling features."""
 
-    Generic, center-preserving block pooling with NumPy and Torch backends.
-    Public API matches v1: a single integer ksize.
-
-    Pool size semantics:
-    - 2D input  -> (ksize, ksize, 1)
-    - 3D input  -> (ksize, ksize, ksize)
-    """
-
-    _TORCH_REDUCERS_2D: Dict[Callable, Callable] = {
-        np.mean: lambda x, k, s: F.avg_pool2d(x, k, s),
-        np.sum:  lambda x, k, s: F.avg_pool2d(x, k, s) * (k[0] * k[1]),
-        np.max:  lambda x, k, s: F.max_pool2d(x, k, s),
-        np.min:  lambda x, k, s: -F.max_pool2d(-x, k, s),
-    }
-
-    _TORCH_REDUCERS_3D: Dict[Callable, Callable] = {
-        np.mean: lambda x, k, s: F.avg_pool3d(x, k, s),
-        np.sum:  lambda x, k, s: F.avg_pool3d(x, k, s) * (k[0] * k[1] * k[2]),
-        np.max:  lambda x, k, s: F.max_pool3d(x, k, s),
-        np.min:  lambda x, k, s: -F.max_pool3d(-x, k, s),
-    }
+    _NUMPY_IMPL = "_get_numpy"
+    _TORCH_IMPL = "_get_torch"
 
     def __init__(
         self,
-        pooling_function: Callable,
-        ksize: int = 2,
+        ksize: PropertyLike[int] = 2,
+        **kwargs: Any,
     ):
-        if pooling_function not in (
-            np.mean, np.sum, np.min, np.max, np.median
-        ):
-            raise ValueError(
-                "Unsupported pooling_function. "
-                "Use one of: np.mean, np.sum, np.min, np.max, np.median."
-            )
-
-        if not isinstance(ksize, int) or ksize < 1:
-            raise ValueError("ksize must be a positive integer.")
-
-        self.pooling_function = pooling_function
         self.ksize = int(ksize)
+        super().__init__(**kwargs)
 
-    def _get_pool_size(self, array) -> Tuple[int, int, int]:
-        """
-        Determine pooling kernel size based on semantic dimensionality.
+    def get(
+        self,
+        image: np.ndarray | torch.Tensor,
+        **kwargs: Any,
+    ) -> np.ndarray | torch.Tensor:
+        return self._dispatch_backend(image, **kwargs)
 
-        - 2D images: (Nx, Ny) or (Nx, Ny, C)  -> pool in x,y only
-        - 3D volumes: (Nx, Ny, Nz) or (Nx, Ny, Nz, C) -> pool in x,y,z
-        - Never pool over channels
-        """
+    # ---------- shared helpers ----------
+
+    def _get_pool_size(self, array) -> tuple[int, int, int]:
         k = self.ksize
 
-        # 2D image
         if array.ndim == 2:
             return k, k, 1
 
-        # 3D array: could be (x, y, z) or (x, y, c)
         if array.ndim == 3:
-            # Heuristic: small last dim → channels
-            if array.shape[-1] <= 4:
+            if array.shape[-1] <= 4:   # channel heuristic
                 return k, k, 1
             return k, k, k
 
-        # 4D array: (x, y, z, c)
         if array.ndim == 4:
             return k, k, k
 
-        raise ValueError(
-            f"Unsupported array shape {array.shape} for pooling."
-        )
+        raise ValueError(f"Unsupported array shape {array.shape}")
 
     def _crop_center(self, array):
         px, py, pz = self._get_pool_size(array)
 
-        # 2D (or effectively 2D)
+        # 2D or effectively 2D (channels-last)
         if array.ndim < 3 or pz == 1:
             H, W = array.shape[:2]
             crop_h = (H // px) * px
             crop_w = (W // py) * py
-            off_h = (H - crop_h) // 2
-            off_w = (W - crop_w) // 2
-            return array[
-                off_h : off_h + crop_h,
-                off_w : off_w + crop_w,
-                ...
-            ]
+            return array[:crop_h, :crop_w, ...]
 
-        # 3D
+        # 3D volume
         Z, H, W = array.shape[:3]
         crop_z = (Z // pz) * pz
         crop_h = (H // px) * px
         crop_w = (W // py) * py
-        off_z = (Z - crop_z) // 2
-        off_h = (H - crop_h) // 2
-        off_w = (W - crop_w) // 2
-        return array[
-            off_z : off_z + crop_z,
-            off_h : off_h + crop_h,
-            off_w : off_w + crop_w,
-            ...
-        ]
+        return array[:crop_z, :crop_h, :crop_w, ...]
 
-    def _pool_numpy(self, array: np.ndarray) -> np.ndarray:
-        array = self._crop_center(array)
-        px, py, pz = self._get_pool_size(array)
+    # ---------- abstract backends ----------
 
-        if array.ndim < 3 or pz == 1:
-            pool_shape = (px, py) + (1,) * (array.ndim - 2)
-        else:
-            pool_shape = (pz, px, py) + (1,) * (array.ndim - 3)
+    def _get_numpy(self, image: np.ndarray, **kwargs):
+        raise NotImplementedError
 
-        return skimage.measure.block_reduce(
-            array,
-            block_size=pool_shape,
-            func=self.pooling_function,
-        )
-
-    def _pool_torch(self, array: torch.Tensor) -> torch.Tensor:
-        array = self._crop_center(array)
-        px, py, pz = self._get_pool_size(array)
-
-        is_3d = array.ndim >= 3 and pz > 1
-
-        if not is_3d:
-            extra = array.shape[2:]
-            C = int(np.prod(extra)) if extra else 1
-            x = array.reshape(1, C, array.shape[0], array.shape[1])
-            kernel = (px, py)
-            stride = (px, py)
-            reducers = self._TORCH_REDUCERS_2D
-        else:
-            extra = array.shape[3:]
-            C = int(np.prod(extra)) if extra else 1
-            x = array.reshape(
-                1, C, array.shape[0], array.shape[1], array.shape[2]
-            )
-            kernel = (pz, px, py)
-            stride = (pz, px, py)
-            reducers = self._TORCH_REDUCERS_3D
-
-        # Median: explicit unfolding
-        if self.pooling_function is np.median:
-            if is_3d:
-                x_u = (
-                    x.unfold(2, pz, pz)
-                     .unfold(3, px, px)
-                     .unfold(4, py, py)
-                )
-                x_u = x_u.contiguous().view(
-                    1, C,
-                    x_u.shape[2],
-                    x_u.shape[3],
-                    x_u.shape[4],
-                    -1,
-                )
-                pooled = x_u.median(dim=-1).values
-            else:
-                x_u = x.unfold(2, px, px).unfold(3, py, py)
-                x_u = x_u.contiguous().view(
-                    1, C,
-                    x_u.shape[2],
-                    x_u.shape[3],
-                    -1,
-                )
-                pooled = x_u.median(dim=-1).values
-        else:
-            reducer = reducers[self.pooling_function]
-            pooled = reducer(x, kernel, stride)
-
-        return pooled.reshape(pooled.shape[2:] + extra)
-
-    def __call__(self, array):
-        if isinstance(array, np.ndarray):
-            return self._pool_numpy(array)
-
-        if TORCH_AVAILABLE and isinstance(array, torch.Tensor):
-            return self._pool_torch(array)
-
-        raise TypeError(
-            "Pool only supports np.ndarray or torch.Tensor inputs."
-        )
+    def _get_torch(self, image: torch.Tensor, **kwargs):
+        raise NotImplementedError
 
 
 class AveragePooling(Pool):
-    def __init__(self, ksize: int = 2):
-        super().__init__(np.mean, ksize)
+    """Average pooling feature.
 
+    Downsamples the input by applying mean pooling over non-overlapping
+    blocks of size `ksize`, preserving the center of the image and never
+    pooling over channel dimensions.
 
-class SumPooling(Pool):
-    def __init__(self, ksize: int = 2):
-        super().__init__(np.sum, ksize)
+    Works with NumPy and PyTorch backends.
+    """
 
+    # ---------- NumPy backend ----------
 
-class MinPooling(Pool):
-    def __init__(self, ksize: int = 2):
-        super().__init__(np.min, ksize)
+    def _get_numpy(
+        self,
+        image: np.ndarray,
+        **kwargs: Any,
+    ) -> np.ndarray:
+        image = self._crop_center(image)
+        px, py, pz = self._get_pool_size(image)
+
+        # 2D or effectively 2D (channels-last)
+        if image.ndim < 3 or pz == 1:
+            block_size = (px, py) + (1,) * (image.ndim - 2)
+        else:
+            # 3D volume (optionally with channels)
+            block_size = (pz, px, py) + (1,) * (image.ndim - 3)
+
+        return skimage.measure.block_reduce(
+            image,
+            block_size=block_size,
+            func=np.mean,
+        )
+
+    # ---------- Torch backend ----------
+
+    def _get_torch(
+        self,
+        image: torch.Tensor,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        import torch.nn.functional as F
+
+        image = self._crop_center(image)
+        px, py, pz = self._get_pool_size(image)
+
+        is_3d = image.ndim >= 3 and pz > 1
+
+        # Flatten extra (channel / feature) dimensions into C
+        if not is_3d:
+            extra = image.shape[2:]
+            C = int(np.prod(extra)) if extra else 1
+            x = image.reshape(1, C, image.shape[0], image.shape[1])
+            kernel = (px, py)
+            stride = (px, py)
+            pooled = F.avg_pool2d(x, kernel, stride)
+        else:
+            extra = image.shape[3:]
+            C = int(np.prod(extra)) if extra else 1
+            x = image.reshape(
+                1, C,
+                image.shape[0],
+                image.shape[1],
+                image.shape[2],
+            )
+            kernel = (pz, px, py)
+            stride = (pz, px, py)
+            pooled = F.avg_pool3d(x, kernel, stride)
+
+        # Restore original layout
+        return pooled.reshape(pooled.shape[2:] + extra)
 
 
 class MaxPooling(Pool):
-    def __init__(self, ksize: int = 2):
-        super().__init__(np.max, ksize)
+    """Max pooling feature.
+
+    Downsamples the input by applying max pooling over non-overlapping
+    blocks of size `ksize`, preserving the center of the image and never
+    pooling over channel dimensions.
+
+    Works with NumPy and PyTorch backends.
+    """
+
+    # ---------- NumPy backend ----------
+
+    def _get_numpy(
+        self,
+        image: np.ndarray,
+        **kwargs: Any,
+    ) -> np.ndarray:
+        image = self._crop_center(image)
+        px, py, pz = self._get_pool_size(image)
+
+        # 2D or effectively 2D (channels-last)
+        if image.ndim < 3 or pz == 1:
+            block_size = (px, py) + (1,) * (image.ndim - 2)
+        else:
+            # 3D volume (optionally with channels)
+            block_size = (pz, px, py) + (1,) * (image.ndim - 3)
+
+        return skimage.measure.block_reduce(
+            image,
+            block_size=block_size,
+            func=np.max,
+        )
+
+    # ---------- Torch backend ----------
+
+    def _get_torch(
+        self,
+        image: torch.Tensor,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        import torch.nn.functional as F
+
+        image = self._crop_center(image)
+        px, py, pz = self._get_pool_size(image)
+
+        is_3d = image.ndim >= 3 and pz > 1
+
+        # Flatten extra (channel / feature) dimensions into C
+        if not is_3d:
+            extra = image.shape[2:]
+            C = int(np.prod(extra)) if extra else 1
+            x = image.reshape(1, C, image.shape[0], image.shape[1])
+            kernel = (px, py)
+            stride = (px, py)
+            pooled = F.max_pool2d(x, kernel, stride)
+        else:
+            extra = image.shape[3:]
+            C = int(np.prod(extra)) if extra else 1
+            x = image.reshape(
+                1, C,
+                image.shape[0],
+                image.shape[1],
+                image.shape[2],
+            )
+            kernel = (pz, px, py)
+            stride = (pz, px, py)
+            pooled = F.max_pool3d(x, kernel, stride)
+
+        # Restore original layout
+        return pooled.reshape(pooled.shape[2:] + extra)
+
+
+class MinPooling(Pool):
+    """Min pooling feature.
+
+    Downsamples the input by applying min pooling over non-overlapping
+    blocks of size `ksize`, preserving the center of the image and never
+    pooling over channel dimensions.
+
+    Works with NumPy and PyTorch backends.
+
+    """
+
+    # ---------- NumPy backend ----------
+
+    def _get_numpy(
+        self,
+        image: np.ndarray,
+        **kwargs: Any,
+    ) -> np.ndarray:
+        image = self._crop_center(image)
+        px, py, pz = self._get_pool_size(image)
+
+        # 2D or effectively 2D (channels-last)
+        if image.ndim < 3 or pz == 1:
+            block_size = (px, py) + (1,) * (image.ndim - 2)
+        else:
+            # 3D volume (optionally with channels)
+            block_size = (pz, px, py) + (1,) * (image.ndim - 3)
+
+        return skimage.measure.block_reduce(
+            image,
+            block_size=block_size,
+            func=np.min,
+        )
+
+    # ---------- Torch backend ----------
+
+    def _get_torch(
+        self,
+        image: torch.Tensor,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        import torch.nn.functional as F
+
+        image = self._crop_center(image)
+        px, py, pz = self._get_pool_size(image)
+
+        is_3d = image.ndim >= 3 and pz > 1
+
+        # Flatten extra (channel / feature) dimensions into C
+        if not is_3d:
+            extra = image.shape[2:]
+            C = int(np.prod(extra)) if extra else 1
+            x = image.reshape(1, C, image.shape[0], image.shape[1])
+            kernel = (px, py)
+            stride = (px, py)
+
+            # min(x) = -max(-x)
+            pooled = -F.max_pool2d(-x, kernel, stride)
+        else:
+            extra = image.shape[3:]
+            C = int(np.prod(extra)) if extra else 1
+            x = image.reshape(
+                1, C,
+                image.shape[0],
+                image.shape[1],
+                image.shape[2],
+            )
+            kernel = (pz, px, py)
+            stride = (pz, px, py)
+
+            pooled = -F.max_pool3d(-x, kernel, stride)
+
+        # Restore original layout
+        return pooled.reshape(pooled.shape[2:] + extra)
+
+
+class SumPooling(Pool):
+    """Sum pooling feature.
+
+    Downsamples the input by applying sum pooling over non-overlapping
+    blocks of size `ksize`, preserving the center of the image and never
+    pooling over channel dimensions.
+
+    Works with NumPy and PyTorch backends.
+    """
+
+    # ---------- NumPy backend ----------
+
+    def _get_numpy(
+        self,
+        image: np.ndarray,
+        **kwargs: Any,
+    ) -> np.ndarray:
+        image = self._crop_center(image)
+        px, py, pz = self._get_pool_size(image)
+
+        # 2D or effectively 2D (channels-last)
+        if image.ndim < 3 or pz == 1:
+            block_size = (px, py) + (1,) * (image.ndim - 2)
+        else:
+            # 3D volume (optionally with channels)
+            block_size = (pz, px, py) + (1,) * (image.ndim - 3)
+
+        return skimage.measure.block_reduce(
+            image,
+            block_size=block_size,
+            func=np.sum,
+        )
+
+    # ---------- Torch backend ----------
+
+    def _get_torch(
+        self,
+        image: torch.Tensor,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        import torch.nn.functional as F
+
+        image = self._crop_center(image)
+        px, py, pz = self._get_pool_size(image)
+
+        is_3d = image.ndim >= 3 and pz > 1
+
+        # Flatten extra (channel / feature) dimensions into C
+        if not is_3d:
+            extra = image.shape[2:]
+            C = int(np.prod(extra)) if extra else 1
+            x = image.reshape(1, C, image.shape[0], image.shape[1])
+            kernel = (px, py)
+            stride = (px, py)
+            pooled = F.avg_pool2d(x, kernel, stride) * (px * py)
+        else:
+            extra = image.shape[3:]
+            C = int(np.prod(extra)) if extra else 1
+            x = image.reshape(
+                1, C,
+                image.shape[0],
+                image.shape[1],
+                image.shape[2],
+            )
+            kernel = (pz, px, py)
+            stride = (pz, px, py)
+            pooled = F.avg_pool3d(x, kernel, stride) * (pz * px * py)
+
+        # Restore original layout
+        return pooled.reshape(pooled.shape[2:] + extra)
 
 
 class MedianPooling(Pool):
-    def __init__(self, ksize: int = 2):
-        super().__init__(np.median, ksize)
+    """Median pooling feature.
+
+    Downsamples the input by applying median pooling over non-overlapping
+    blocks of size `ksize`, preserving the center of the image and never
+    pooling over channel dimensions.
+
+    Notes
+    -----
+    - NumPy backend uses `skimage.measure.block_reduce`
+    - Torch backend performs explicit unfolding followed by `median`
+    - Torch median pooling is significantly more expensive than mean/max
+
+    Median pooling is not differentiable and should not be used inside
+    trainable neural networks requiring gradient-based optimization.
+    
+    """
+
+    # ---------- NumPy backend ----------
+
+    def _get_numpy(
+        self,
+        image: np.ndarray,
+        **kwargs: Any,
+    ) -> np.ndarray:
+        image = self._crop_center(image)
+        px, py, pz = self._get_pool_size(image)
+
+        if image.ndim < 3 or pz == 1:
+            block_size = (px, py) + (1,) * (image.ndim - 2)
+        else:
+            block_size = (pz, px, py) + (1,) * (image.ndim - 3)
+
+        return skimage.measure.block_reduce(
+            image,
+            block_size=block_size,
+            func=np.median,
+        )
+
+    # ---------- Torch backend ----------
+
+    def _get_torch(
+        self,
+        image: torch.Tensor,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+
+        if not self._warned:
+            warnings.warn(
+                "MedianPooling is not differentiable and is expensive on the "
+                "Torch backend. Avoid using it inside trainable models.",
+                UserWarning,
+                stacklevel=2,
+            )
+            self._warned = True
+
+        image = self._crop_center(image)
+        px, py, pz = self._get_pool_size(image)
+
+        is_3d = image.ndim >= 3 and pz > 1
+
+        if not is_3d:
+            # 2D case (with optional channels)
+            extra = image.shape[2:]
+            C = int(np.prod(extra)) if extra else 1
+
+            x = image.reshape(1, C, image.shape[0], image.shape[1])
+
+            # unfold: (B, C, H', W', px, py)
+            x_u = (
+                x.unfold(2, px, px)
+                 .unfold(3, py, py)
+            )
+
+            x_u = x_u.contiguous().view(
+                1, C,
+                x_u.shape[2],
+                x_u.shape[3],
+                -1,
+            )
+
+            pooled = x_u.median(dim=-1).values
+
+        else:
+            # 3D case (with optional channels)
+            extra = image.shape[3:]
+            C = int(np.prod(extra)) if extra else 1
+
+            x = image.reshape(
+                1, C,
+                image.shape[0],
+                image.shape[1],
+                image.shape[2],
+            )
+
+            # unfold: (B, C, Z', Y', X', pz, px, py)
+            x_u = (
+                x.unfold(2, pz, pz)
+                 .unfold(3, px, px)
+                 .unfold(4, py, py)
+            )
+
+            x_u = x_u.contiguous().view(
+                1, C,
+                x_u.shape[2],
+                x_u.shape[3],
+                x_u.shape[4],
+                -1,
+            )
+
+            pooled = x_u.median(dim=-1).values
+
+        return pooled.reshape(pooled.shape[2:] + extra)
 
 
-
-class Resize(Feature):
+class Resize(BackendDispatched, Feature):
     """Resize an image to a specified size.
 
     `Resize` resizes images following the channels-last semantic
@@ -1517,6 +1833,9 @@ class Resize(Feature):
 
     """
 
+    _NUMPY_IMPL = "_get_numpy"
+    _TORCH_IMPL = "_get_torch"
+
     def __init__(
         self: Resize,
         dsize: PropertyLike[tuple[int, int]] = (256, 256),
@@ -1527,8 +1846,8 @@ class Resize(Feature):
         Parameters
         ----------
         dsize: PropertyLike[tuple[int, int]]
-            The target size. Format depends on backend: `(width, height)` for
-            NumPy, `(height, width)` for PyTorch. Default is (256, 256).
+            The target size. dsize is always (width, height) for both backends. 
+            Default is (256, 256).
         **kwargs: Any
             Additional arguments passed to the parent `Feature` class.
 
@@ -1583,83 +1902,102 @@ class Resize(Feature):
         `align_corners=False`, which closely matches OpenCV’s default behavior.
 
         """
+        return self._dispatch_backend(image, dsize=dsize, **kwargs)
+
+    # ---------- NumPy backend (OpenCV) ----------
+
+    def _get_numpy(
+        self,
+        image: np.ndarray,
+        dsize: tuple[int, int],
+        **kwargs: Any,
+    ) -> np.ndarray:
 
         target_w, target_h = dsize
 
-        # Torch backend
-        if apc.is_torch_array(image):
-            import torch.nn.functional as F
-
-            original_ndim = image.ndim
-            has_channels = (
-                image.ndim >= 3 and image.shape[-1] <= 4
-            )
-
-            # Bring to (N, C, H, W)
-            if image.ndim == 2:
-                # (H, W) -> (1, 1, H, W)
-                x = image.unsqueeze(0).unsqueeze(0)
-
-            elif image.ndim == 3 and has_channels:
-                # (H, W, C) -> (1, C, H, W)
-                x = image.permute(2, 0, 1).unsqueeze(0)
-
-            elif image.ndim == 3:
-                # (Z, H, W) -> treat Z as batch
-                x = image.unsqueeze(1)
-
-            elif image.ndim == 4 and has_channels:
-                # (Z, H, W, C) -> (Z, C, H, W)
-                x = image.permute(0, 3, 1, 2)
-
-            else:
-                raise ValueError(
-                    f"Unsupported tensor shape {image.shape} for Resize."
-                )
-
-            # Resize spatial dimensions
-            resized = F.interpolate(
-                x,
-                size=(target_h, target_w),
-                mode="bilinear",
-                align_corners=False,
-            )
-
-            # Restore original layout
-            if original_ndim == 2:
-                return resized.squeeze(0).squeeze(0)
-
-            if original_ndim == 3 and has_channels:
-                return resized.squeeze(0).permute(1, 2, 0)
-
-            if original_ndim == 3:
-                return resized.squeeze(1)
-
-            if original_ndim == 4:
-                return resized.permute(0, 2, 3, 1)
-
-            raise RuntimeError("Unexpected shape restoration path.")
-
-        # NumPy / OpenCV backend
-        else:
+        # Prefer OpenCV if available
+        if OPENCV_AVAILABLE:
             import cv2
-
-            # OpenCV expects (width, height)
             return utils.safe_call(
                 cv2.resize,
                 positional_args=[image, (target_w, target_h)],
                 **kwargs,
             )
+        if not OPENCV_AVAILABLE and kwargs:
+            warnings.warn("OpenCV not available: resize kwargs may be ignored.", UserWarning)
 
+        # Fallback: skimage (always available in DT)
+        from skimage.transform import resize as sk_resize
 
-if OPENCV_AVAILABLE:
-    _map_mode_to_cv2_borderType = {
-        "reflect": cv2.BORDER_REFLECT,
-        "wrap": cv2.BORDER_WRAP,
-        "constant": cv2.BORDER_CONSTANT,
-        "mirror": cv2.BORDER_REFLECT_101,
-        "nearest": cv2.BORDER_REPLICATE,
-    }
+        if image.ndim == 2:
+            out_shape = (target_h, target_w)
+        else:
+            out_shape = (target_h, target_w) + image.shape[2:]
+
+        out = sk_resize(
+            image,
+            out_shape,
+            preserve_range=True,
+            anti_aliasing=True,
+        )
+
+        return out.astype(image.dtype, copy=False)
+
+    # ---------- Torch backend ----------
+
+    def _get_torch(
+        self,
+        image: torch.Tensor,
+        dsize: tuple[int, int],
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        import torch.nn.functional as F
+
+        target_w, target_h = dsize
+
+        original_ndim = image.ndim
+        has_channels = image.ndim >= 3 and image.shape[-1] <= 4
+
+        # Convert to (N, C, H, W)
+        if image.ndim == 2:
+            x = image.unsqueeze(0).unsqueeze(0)          # (1, 1, H, W)
+
+        elif image.ndim == 3 and has_channels:
+            x = image.permute(2, 0, 1).unsqueeze(0)      # (1, C, H, W)
+
+        elif image.ndim == 3:
+            x = image.unsqueeze(1)                       # (Z, 1, H, W)
+
+        elif image.ndim == 4 and has_channels:
+            x = image.permute(0, 3, 1, 2)                # (Z, C, H, W)
+
+        else:
+            raise ValueError(
+                f"Unsupported tensor shape {image.shape} for Resize."
+            )
+
+        # Resize spatial dimensions
+        x = F.interpolate(
+            x,
+            size=(target_h, target_w),
+            mode="bilinear",
+            align_corners=False,
+        )
+
+        # Restore original layout
+        if original_ndim == 2:
+            return x.squeeze(0).squeeze(0)
+
+        if original_ndim == 3 and has_channels:
+            return x.squeeze(0).permute(1, 2, 0)
+
+        if original_ndim == 3:
+            return x.squeeze(1)
+
+        if original_ndim == 4:
+            return x.permute(0, 2, 3, 1)
+
+        raise RuntimeError("Unexpected shape restoration path.")
 
 
 #TODO ***JH*** revise BlurCV2 - torch, typing, docstring, unit test
@@ -1679,7 +2017,7 @@ class BlurCV2(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray | Image, **kwargs: Any) --> np.ndarray`
+    `get(image: np.ndarray, **kwargs: Any) --> np.ndarray`
         Applies the blurring filter to the input image.
 
     Examples
@@ -1710,52 +2048,17 @@ class BlurCV2(Feature):
 
     """
 
-    def __new__(
-        cls: type,
-        *args: tuple,
-        **kwargs: Any,
-    ):
-        """Ensures that OpenCV (cv2) is available before instantiating the
-        class.
-
-        Overrides the default object creation process to check that the `cv2`
-        module is available before creating the class. If OpenCV is not
-        installed, it raises an ImportError with instructions for installation.
-
-        Parameters
-        ----------
-        *args : tuple
-            Positional arguments passed to the class constructor.
-        **kwargs : dict
-            Keyword arguments passed to the class constructor.
-
-        Returns
-        -------
-        BlurCV2
-            An instance of the BlurCV2 feature class.
-
-        Raises
-        ------
-        ImportError
-            If the OpenCV (`cv2`) module is not available in the current
-            environment.
-
-        """
-
-        print(cls.__name__)
-
-        if not OPENCV_AVAILABLE:
-            raise ImportError(
-                "OpenCV not installed on device. Since OpenCV is an optional "
-                f"dependency of DeepTrack2. To use {cls.__name__}, "
-                "you need to install it manually."
-            )
-
-        return super().__new__(cls)
+    _MODE_TO_BORDER = {
+        "reflect": "BORDER_REFLECT",
+        "wrap": "BORDER_WRAP",
+        "constant": "BORDER_CONSTANT",
+        "mirror": "BORDER_REFLECT_101",
+        "nearest": "BORDER_REPLICATE",
+    }
 
     def __init__(
         self: BlurCV2,
-        filter_function: Callable,
+        filter_function: Callable | str,
         mode: PropertyLike[str] = "reflect",
         **kwargs: Any,
     ):
@@ -1775,13 +2078,20 @@ class BlurCV2(Feature):
 
         """
 
+        if not OPENCV_AVAILABLE:
+            raise ImportError(
+                "OpenCV not installed on device. Since OpenCV is an optional "
+                f"dependency of DeepTrack2. To use {self.__class__.__name__}, "
+                "you need to install it manually."
+            )
+        
         self.filter = filter_function
-        borderType = _map_mode_to_cv2_borderType[mode]
-        super().__init__(borderType=borderType, **kwargs)
+        self.mode = mode
+        super().__init__(**kwargs)
 
     def get(
         self: BlurCV2,
-        image: np.ndarray | Image,
+        image: np.ndarray,
         **kwargs: Any,
     ) -> np.ndarray:
         """Applies the blurring filter to the input image.
@@ -1790,8 +2100,8 @@ class BlurCV2(Feature):
 
         Parameters
         ----------
-        image: np.ndarray | Image
-            The input image to blur. Can be a NumPy array or DeepTrack Image.
+        image: np.ndarray
+            The input image to blur. Must be a NumPy array.
         **kwargs: Any
             Additional parameters for the blurring function.
 
@@ -1805,12 +2115,31 @@ class BlurCV2(Feature):
         if apc.is_torch_array(image):
             raise TypeError(
                 "BlurCV2 only supports NumPy arrays. "
-                "For Torch tensors, use Blur or GaussianBlur instead."
+                "Use GaussianBlur / AverageBlur for Torch."
             )
 
+        import cv2
+
+        filter_fn = getattr(cv2, self.filter) if isinstance(self.filter, str) else self.filter
+
+        try:
+            border_attr = self._MODE_TO_BORDER[self.mode]
+        except KeyError as e:
+            raise ValueError(f"Unsupported border mode '{self.mode}'") from e
+
+        try:
+            border = getattr(cv2, border_attr)
+        except AttributeError as e:
+            raise RuntimeError(f"OpenCV missing border constant '{border_attr}'") from e
+
+        # preserve legacy behavior
         kwargs.pop("name", None)
-        result = self.filter(src=image, **kwargs)
-        return result
+
+        return filter_fn(
+            src=image,
+            borderType=border,
+            **kwargs,
+        )
 
 
 #TODO ***JH*** revise BilateralBlur - torch, typing, docstring, unit test
@@ -1894,7 +2223,7 @@ class BilateralBlur(BlurCV2):
         """
 
         super().__init__(
-            cv2.bilateralFilter,
+            filter_function="bilateralFilter",
             d=d,
             sigmaColor=sigma_color,
             sigmaSpace=sigma_space,
@@ -1903,13 +2232,25 @@ class BilateralBlur(BlurCV2):
 
 
 def isotropic_dilation(
-    mask,
+    mask: np.ndarray | torch.Tensor,
     radius: float,
     *,
-    backend: str,
+    backend: Literal["numpy", "torch"],
     device=None,
     dtype=None,
-):
+) -> np.ndarray | torch.Tensor:
+    """
+    Binary dilation using an isotropic (NumPy) or box-shaped (Torch) kernel.
+
+    Notes
+    -----
+    - NumPy backend uses a true Euclidean ball.
+    - Torch backend uses a cubic structuring element (approximate).
+    - Torch backend supports 3D masks only.
+    - Operation is non-differentiable.
+
+    """
+    
     if radius <= 0:
         return mask
 
@@ -1938,13 +2279,25 @@ def isotropic_dilation(
 
 
 def isotropic_erosion(
-    mask,
+    mask: np.ndarray | torch.Tensor,
     radius: float,
     *,
-    backend: str,
+    backend: Literal["numpy", "torch"],
     device=None,
     dtype=None,
-):
+) -> np.ndarray | torch.Tensor:
+    """ 
+    Binary erosion using an isotropic (NumPy) or box-shaped (Torch) kernel.
+    
+    Notes
+    -----
+    - NumPy backend uses a true Euclidean ball.
+    - Torch backend uses a cubic structuring element (approximate).
+    - Torch backend supports 3D masks only.
+    - Operation is non-differentiable.
+
+    """
+
     if radius <= 0:
         return mask
 

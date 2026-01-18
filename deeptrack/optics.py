@@ -395,16 +395,15 @@ class Microscope(StructuralFeature):
                 volume_samples,
                 **additional_sample_kwargs,
             )
+            if volume_samples:
+                # Interpret the merged volume semantically
+                sample_volume = self._extract_contrast_volume(
+                    ScatteredVolume(
+                        array=sample_volume,
+                        properties=volume_samples[0].properties,
+                    ),
+                )
 
-            print('prop', volume_samples[0].properties)
-
-            # Interpret the merged volume semantically
-            sample_volume = self._extract_contrast_volume(
-                ScatteredVolume(
-                    array=sample_volume,
-                    properties=volume_samples[0].properties,
-                ),
-            )
 
             # Let the objective know about the limits of the volume and all the fields.
             propagate_data_to_dependencies(
@@ -723,7 +722,6 @@ class Optics(Feature):
         wavelength = propertydict["wavelength"]
         voxel_size = get_active_voxel_size()
         radius = NA / wavelength * np.array(voxel_size)
-        print('Pupil radius (in pixels):', radius)
 
         if np.any(radius[:2] > 0.5):
             required_upscale = np.max(np.ceil(radius[:2] * 2))
@@ -1074,7 +1072,6 @@ class Fluorescence(Optics):
 
     """
 
-
     def validate_input(self, scattered):
         """Semantic validation for fluorescence microscopy."""
         
@@ -1085,9 +1082,9 @@ class Fluorescence(Optics):
             )
 
 
-    def extract_contrast_volume(self, scattered: ScatteredVolume) -> np.ndarray:
-        voxel_size = np.asarray(get_active_voxel_size(), float)
-        voxel_volume = np.prod(voxel_size)
+    def extract_contrast_volume(self, scattered: ScatteredVolume, **kwargs) -> np.ndarray:
+        scale = np.asarray(get_active_scale(), float)
+        scale_volume = np.prod(scale)
 
         intensity = scattered.get_property("intensity", None)
         value = scattered.get_property("value", None)
@@ -1103,7 +1100,7 @@ class Fluorescence(Optics):
 
         # Preferred, physically meaningful case
         if intensity is not None:
-            return intensity * voxel_volume * scattered.array
+            return intensity * scale_volume * scattered.array
 
         # Fallback: legacy / dimensionless brightness
         warnings.warn(
@@ -1379,7 +1376,6 @@ class Brightfield(Optics):
         refractive_index_medium: float,
         **kwargs: Any,
     ) -> np.ndarray:
-        print('ri_medium', refractive_index_medium)
 
         ri = scattered.get_property("refractive_index", None)
         value = scattered.get_property("value", None)
@@ -2093,6 +2089,9 @@ class NonOverlapping(Feature):
     - This feature performs bounding cube checks first to quickly reject
       obvious overlaps before voxel-level checks.
     - If the bounding cubes overlap, precise voxel-based checks are performed.
+    - The feature may be computationally intensive for large numbers of volumes
+      or high-density placements.
+    - The feature is not differentiable.
 
     Examples
     ---------
@@ -2375,7 +2374,7 @@ class NonOverlapping(Feature):
 
             new_volumes.append(new_volume)
 
-        list_of_volumes = new_volumes       
+        list_of_volumes = new_volumes
         min_distance = 1
 
         # The position of the top left corner of each volume (index (0, 0, 0)).
