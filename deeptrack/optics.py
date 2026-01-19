@@ -738,11 +738,19 @@ class Optics(Feature):
         return propertydict
 
     def _pupil(self, shape, **kwargs):
+        kwargs.setdefault("NA", float(self.NA()))
+        kwargs.setdefault("wavelength", float(self.wavelength()))
+        kwargs.setdefault(
+            "refractive_index_medium",
+            float(self.refractive_index_medium()),
+        )
+
         return (
             self._pupil_torch(shape, **kwargs)
             if self.get_backend() == "torch"
             else self._pupil_numpy(shape, **kwargs)
         )
+
 
     def _pupil_numpy(
         self: Optics,
@@ -848,7 +856,7 @@ class Optics(Feature):
         return pupil_functions
 
     def _pupil_torch(
-        self,
+        self: Optics,
         shape: np.ndarray | tuple[int, int] | list[int],
         NA: float,
         wavelength: float,
@@ -891,7 +899,6 @@ class Optics(Feature):
         # Pupil radius
         Rx = (NA / wavelength) * vx
         Ry = (NA / wavelength) * vy
-
         x_radius = Rx * H
         y_radius = Ry * W
 
@@ -1496,15 +1503,10 @@ class Fluorescence(BackendDispatched, Optics):
         device = illuminated_volume.device
         dtype = illuminated_volume.dtype
 
-        print(type(illuminated_volume))
-
         # --- Pad volume (must return torch tensors) ---
         padded_volume, limits = self._pad_volume(
             illuminated_volume, limits=limits, **kwargs
         )
-
-        print(type(padded_volume))
-
 
         pad = kwargs.get("padding", (0, 0, 0, 0))
         output_region = kwargs.get(
