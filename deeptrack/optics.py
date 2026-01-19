@@ -153,7 +153,7 @@ from deeptrack.backend.units import (
 )
 from deeptrack.math import AveragePooling, SumPooling
 from deeptrack.features import propagate_data_to_dependencies
-from deeptrack.features import DummyFeature, Feature, StructuralFeature
+from deeptrack.features import DummyFeature, Feature, StructuralFeature, BackendDispatched
 from deeptrack.image import pad_image_to_fft
 from deeptrack.types import ArrayLike, PropertyLike
 
@@ -161,7 +161,7 @@ from deeptrack import image
 from deeptrack import units_registry as u
 
 from deeptrack import TORCH_AVAILABLE, image
-from deeptrack.backend import xp
+from deeptrack.backend import xp, config
 from deeptrack.scatterers import ScatteredVolume, ScatteredField
 
 if TORCH_AVAILABLE:
@@ -737,7 +737,14 @@ class Optics(Feature):
 
         return propertydict
 
-    def _pupil(
+    def _pupil(self, shape, **kwargs):
+        return (
+            self._pupil_torch(shape, **kwargs)
+            if self.get_backend() == "torch"
+            else self._pupil_numpy(shape, **kwargs)
+        )
+
+    def _pupil_numpy(
         self: Optics,
         shape: ArrayLike[int],
         NA: float,
@@ -840,6 +847,134 @@ class Optics(Feature):
 
         return pupil_functions
 
+    def _pupil_torch(
+        self,
+        shape: np.ndarray | tuple[int, int] | list[int],
+        NA: float,
+        wavelength: float,
+        refractive_index_medium: float,
+        include_aberration: bool = True,
+        defocus: float | np.ndarray | torch.Tensor = 0,
+        *,
+        device: torch.device | None = None,
+        dtype: torch.dtype = torch.complex64,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """
+        Torch implementation of _pupil().
+
+        Returns
+        -------
+        torch.Tensor
+            Complex tensor with shape (Z, H, W), matching the NumPy version
+            semantics: (z, y, x) where your code uses shape=(shape[0], shape[1])
+            but constructs meshgrid(y, x) and ends up with (shape[0], shape[1]).
+        """
+        # Resolve device
+        if device is None:
+            # best-effort: use current torch default device
+            device = torch.device("cpu")
+
+        # shape -> (H, W) following your current usage where shape[0] is x-axis length in your code
+        shape_arr = np.array(shape, dtype=int)
+        if shape_arr.size != 2:
+            raise ValueError(f"shape must be length-2, got {shape}")
+
+        H = int(shape_arr[0])
+        W = int(shape_arr[1])
+
+        voxel_size_np = np.array(get_active_voxel_size(), dtype=float)  # (vx, vy, vz)
+        # Use python floats for constants; this is fine for differentiability w.r.t. volume
+        # If you ever want gradients w.r.t voxel_size, you’d pass it as torch.Tensor.
+        vx, vy, vz = (float(voxel_size_np[0]), float(voxel_size_np[1]), float(voxel_size_np[2]))
+
+        # Pupil radius
+        Rx = (NA / wavelength) * vx
+        Ry = (NA / wavelength) * vy
+
+        x_radius = Rx * H
+        y_radius = Ry * W
+
+        # Build coordinates exactly like NumPy:
+        # np.linspace(-(N/2), N/2 - 1, N) / radius + 1e-8
+        # Use float for coordinate grid to reduce artifacts
+        real_dtype = torch.float32 if dtype in (torch.complex64, torch.float32) else torch.float64
+
+        x = torch.linspace(
+            -H / 2.0,
+            H / 2.0 - 1.0,
+            H,
+            device=device,
+            dtype=real_dtype,
+        ) / float(x_radius) + 1e-8
+
+        y = torch.linspace(
+            -W / 2.0,
+            W / 2.0 - 1.0,
+            W,
+            device=device,
+            dtype=real_dtype,
+        ) / float(y_radius) + 1e-8
+
+        # NumPy: W, H = np.meshgrid(y, x)
+        # i.e. first argument becomes columns, second becomes rows
+        Wg, Hg = torch.meshgrid(y, x, indexing="xy")  # Wg: (H, W), Hg: (H, W)
+
+        RHO = (Wg**2 + Hg**2).to(dtype=torch.complex64 if dtype == torch.complex64 else torch.complex128)
+
+        pupil_function = (RHO.real < 1.0).to(dtype=torch.complex64 if dtype == torch.complex64 else torch.complex128)
+
+        # z_shift term:
+        # 2*pi*n/wavelength * vz * sqrt(1 - (NA/n)^2 * RHO)
+        k0 = 2.0 * np.pi * float(refractive_index_medium) / float(wavelength)
+        alpha = (float(NA) / float(refractive_index_medium)) ** 2
+
+        inside = 1.0 - alpha * RHO  # complex
+        sqrt_term = torch.sqrt(inside)
+
+        z_shift = (k0 * float(vz)) * sqrt_term  # complex
+
+        # NumPy: z_shift[z_shift.imag != 0] = 0
+        # Torch equivalent:
+        z_shift = torch.where(z_shift.imag != 0, torch.zeros_like(z_shift), z_shift)
+
+        # nan_to_num equivalent
+        # z_shift = _torch_nan_to_num(z_shift)
+        z_shift = torch.nan_to_num(z_shift)
+
+        # defocus reshape (-1,1,1)
+        if isinstance(defocus, torch.Tensor):
+            defocus_t = defocus.to(device=device, dtype=real_dtype)
+        else:
+            defocus_t = torch.as_tensor(defocus, device=device, dtype=real_dtype)
+
+        defocus_t = defocus_t.reshape(-1, 1, 1)
+
+        # broadcast z_shift to (Z,H,W)
+        z_shift_3d = defocus_t * z_shift.unsqueeze(0)
+
+        # Aberration / custom pupil feature
+        if include_aberration:
+            pupil_feat = self.pupil
+
+            # If Feature: call it on tensor. This requires that Feature supports torch backend.
+            if isinstance(pupil_feat, Feature):
+                pupil_function = pupil_feat(pupil_function)
+
+            # If ndarray: multiply (will break differentiability unless you move it to torch)
+            elif isinstance(pupil_feat, np.ndarray):
+                pf = torch.as_tensor(pupil_feat, device=device, dtype=pupil_function.dtype)
+                pupil_function = pupil_function * pf
+
+        # Final pupil functions (Z,H,W)
+        pupil_functions = pupil_function.unsqueeze(0) * torch.exp(1j * z_shift_3d)
+
+        # Cast to requested complex dtype
+        if dtype == torch.complex64:
+            return pupil_functions.to(torch.complex64)
+        return pupil_functions.to(torch.complex128)
+
+
     def _pad_volume(
         self: Optics,
         volume: ArrayLike[complex],
@@ -893,49 +1028,106 @@ class Optics(Feature):
         
         """
         
+        # if limits is None:
+        #     limits = np.zeros((3, 2))
+
+        # new_limits = np.array(limits)
+        # output_region = np.array(output_region)
+
+        # # Replace None entries with current limit
+        # output_region[0] = (
+        #     output_region[0] if not output_region[0] is None else new_limits[0, 0]
+        # )
+        # output_region[1] = (
+        #     output_region[1] if not output_region[1] is None else new_limits[0, 1]
+        # )
+        # output_region[2] = (
+        #     output_region[2] if not output_region[2] is None else new_limits[1, 0]
+        # )
+        # output_region[3] = (
+        #     output_region[3] if not output_region[3] is None else new_limits[1, 1]
+        # )
+
+        # for i in range(2):
+        #     new_limits[i, :] = (
+        #         np.min([new_limits[i, 0], output_region[i] - padding[i]]),
+        #         np.max(
+        #             [
+        #                 new_limits[i, 1],
+        #                 output_region[i + 2] + padding[i + 2],
+        #             ]
+        #         ),
+        #     )
+        # new_volume = np.zeros(
+        #     np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
+        #     dtype=complex,
+        # )
+
+        # old_region = (limits - new_limits).astype(np.int32)
+        # limits = limits.astype(np.int32)
+        # new_volume[
+        #     old_region[0, 0] : old_region[0, 0] + limits[0, 1] - limits[0, 0],
+        #     old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
+        #     old_region[2, 0] : old_region[2, 0] + limits[2, 1] - limits[2, 0],
+        # ] = volume
+        # return new_volume, new_limits
+
         if limits is None:
-            limits = np.zeros((3, 2))
+            limits = xp.zeros((3, 2), dtype=xp.int32)
+        else:
+            limits = xp.asarray(limits)
 
-        new_limits = np.array(limits)
-        output_region = np.array(output_region)
+        padding = xp.asarray(padding)
+        output_region = xp.asarray(output_region)
 
-        # Replace None entries with current limit
-        output_region[0] = (
-            output_region[0] if not output_region[0] is None else new_limits[0, 0]
-        )
-        output_region[1] = (
-            output_region[1] if not output_region[1] is None else new_limits[0, 1]
-        )
-        output_region[2] = (
-            output_region[2] if not output_region[2] is None else new_limits[1, 0]
-        )
-        output_region[3] = (
-            output_region[3] if not output_region[3] is None else new_limits[1, 1]
-        )
+        import torch
+
+        if isinstance(limits, torch.Tensor):
+            new_limits = limits.clone()
+        else:
+            new_limits = limits.copy()
+
+
+        # Replace None-like entries (NumPy/Torch safe)
+        for i in range(4):
+            if output_region[i] is None:
+                output_region[i] = (
+                    new_limits[0, 0] if i == 0 else
+                    new_limits[0, 1] if i == 1 else
+                    new_limits[1, 0] if i == 2 else
+                    new_limits[1, 1]
+                )
 
         for i in range(2):
-            new_limits[i, :] = (
-                np.min([new_limits[i, 0], output_region[i] - padding[i]]),
-                np.max(
-                    [
-                        new_limits[i, 1],
-                        output_region[i + 2] + padding[i + 2],
-                    ]
-                ),
+            new_limits[i, 0] = xp.minimum(
+                new_limits[i, 0], output_region[i] - padding[i]
             )
-        new_volume = np.zeros(
-            np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
-            dtype=complex,
-        )
+            new_limits[i, 1] = xp.maximum(
+                new_limits[i, 1], output_region[i + 2] + padding[i + 2]
+            )
 
-        old_region = (limits - new_limits).astype(np.int32)
-        limits = limits.astype(np.int32)
+        shape = (new_limits[:, 1] - new_limits[:, 0])
+        if isinstance(shape, torch.Tensor):
+            shape = shape.to(dtype=torch.int)
+        else:
+            shape = shape.astype(int)
+
+        new_volume = xp.zeros(shape.tolist(), dtype=volume.dtype)
+
+        old_region = (limits - new_limits)
+        if isinstance(old_region, torch.Tensor):
+            old_region = old_region.to(dtype=torch.int)
+        else:
+            old_region = old_region.astype(int)
+
         new_volume[
             old_region[0, 0] : old_region[0, 0] + limits[0, 1] - limits[0, 0],
             old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
             old_region[2, 0] : old_region[2, 0] + limits[2, 1] - limits[2, 0],
         ] = volume
+
         return new_volume, new_limits
+
 
     def __call__(
         self: Optics,
@@ -969,15 +1161,17 @@ class Optics(Feature):
         True
 
         """
-        from deeptrack.scatterers import MieScatterer # Temporary place for this import.
 
-        if isinstance(self, (Darkfield, ISCAT, Holography)) and not isinstance(sample, MieScatterer):
-            warnings.warn(
-                f"{type(self).__name__} optics must be used with Mie scatterers "
-                f"to produce a {type(self).__name__} image. "
-                f"Got sample of type {type(sample).__name__}.",
-                UserWarning,
-            )
+        ### TBE
+        # from deeptrack.scatterers import MieScatterer # Temporary place for this import.
+
+        # if isinstance(self, (Darkfield, ISCAT, Holography)) and not isinstance(sample, MieScatterer):
+        #     warnings.warn(
+        #         f"{type(self).__name__} optics must be used with Mie scatterers "
+        #         f"to produce a {type(self).__name__} image. "
+        #         f"Got sample of type {type(sample).__name__}.",
+        #         UserWarning,
+        #     )
 
         return Microscope(sample, self, **kwargs)
 
@@ -992,7 +1186,7 @@ class Optics(Feature):
 
 
 #TODO ***??*** revise Fluorescence - torch, typing, docstring, unit test
-class Fluorescence(Optics):
+class Fluorescence(BackendDispatched, Optics):
     """Optical device for fluorescent imaging.
 
     The `Fluorescence` class simulates the imaging process in fluorescence
@@ -1072,6 +1266,9 @@ class Fluorescence(Optics):
 
     """
 
+    _NUMPY_IMPL = "_get_numpy"
+    _TORCH_IMPL = "_get_torch"
+
     def validate_input(self, scattered):
         """Semantic validation for fluorescence microscopy."""
         
@@ -1112,7 +1309,7 @@ class Fluorescence(Optics):
 
         return value * scattered.array
 
-    def downscale_image(self, image: np.ndarray, upscale):
+    def downscale_image(self, image: np.ndarray | torch.Tensor, upscale):
         """Detector downscaling (energy conserving)"""
         if not np.any(np.array(upscale) != 1):
             return image
@@ -1129,13 +1326,28 @@ class Fluorescence(Optics):
         # Energy-conserving detector integration
         return SumPooling(ux)(image)
 
-
     def get(
-        self:  Fluorescence,
-        illuminated_volume: ArrayLike[complex],
-        limits: ArrayLike[int],
+        self: Fluorescence,
+        illuminated_volume: np.ndarray | torch.Tensor,
+        limits: np.ndarray,
         **kwargs: Any,
-    ) -> ArrayLike[complex]:
+    ) -> np.ndarray | torch.Tensor:
+        """
+        Backend-dispatched fluorescence imaging.
+        """
+        return self._dispatch_backend(
+            illuminated_volume,
+            limits,
+            **kwargs,
+        )
+
+
+    def _get_numpy(
+        self:  Fluorescence,
+        illuminated_volume: np.ndarray,
+        limits: np.ndarray,
+        **kwargs: Any,
+    ) -> np.ndarray:
         """Simulates the imaging process using a fluorescence microscope.
 
         This method convolves the 3D illuminated volume with a pupil function 
@@ -1265,9 +1477,125 @@ class Fluorescence(Optics):
             ]
 
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
-        # output_image.properties = illuminated_volume.properties + pupils.properties
 
         return output_image
+
+    def _get_torch(
+        self: Fluorescence,
+        illuminated_volume: torch.Tensor,
+        limits: torch.Tensor,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """
+        Torch implementation of fluorescence imaging.
+        Fully differentiable w.r.t. illuminated_volume.
+        """
+
+        import torch
+
+        device = illuminated_volume.device
+        dtype = illuminated_volume.dtype
+
+        print(type(illuminated_volume))
+
+        # --- Pad volume (must return torch tensors) ---
+        padded_volume, limits = self._pad_volume(
+            illuminated_volume, limits=limits, **kwargs
+        )
+
+        print(type(padded_volume))
+
+
+        pad = kwargs.get("padding", (0, 0, 0, 0))
+        output_region = kwargs.get(
+            "output_region", (None, None, None, None)
+        )
+
+        # Compute crop indices (same logic as NumPy)
+        def _idx(val):
+            return None if val is None else int(val)
+
+        ox0, oy0, ox1, oy1 = output_region
+        ox0 = _idx(None if ox0 is None else ox0 - limits[0, 0] - pad[0])
+        oy0 = _idx(None if oy0 is None else oy0 - limits[1, 0] - pad[1])
+        ox1 = _idx(None if ox1 is None else ox1 - limits[0, 0] + pad[2])
+        oy1 = _idx(None if oy1 is None else oy1 - limits[1, 0] + pad[3])
+
+        padded_volume = padded_volume[
+            ox0:ox1,
+            oy0:oy1,
+            :
+        ]
+
+        z_limits = limits[2]
+
+        H, W, Z = padded_volume.shape
+        output_image = torch.zeros(
+            (H, W, 1),
+            device=device,
+            dtype=torch.float32,
+        )
+
+        # --- z iterator ---
+        z_iterator = torch.linspace(
+            z_limits[0],
+            z_limits[1],
+            steps=Z,
+            device=device,
+            dtype=torch.float32,
+        )
+
+        # Identify empty planes (non-differentiable but OK)
+        zero_plane = torch.all(
+            padded_volume == 0,
+            dim=(0, 1),
+        )
+
+        z_values = z_iterator[~zero_plane]
+
+        # --- FFT padding ---
+        volume = pad_image_to_fft(padded_volume, axes=(0, 1))
+
+        # --- Pupil (torch) ---
+        pupils = self._pupil(
+            volume.shape[:2],
+            defocus=z_values,
+            device=device,
+        )
+
+        z_index = 0
+
+        # --- Main convolution loop ---
+        for i in range(Z):
+            if zero_plane[i]:
+                continue
+
+            pupil = pupils[z_index]
+            z_index += 1
+
+            # PSF
+            psf = torch.abs(
+                torch.fft.ifft2(
+                    torch.fft.fftshift(pupil)
+                )
+            ) ** 2
+
+            otf = torch.fft.fft2(psf)
+            field_fft = torch.fft.fft2(volume[:, :, i])
+            convolved = field_fft * otf
+            field = torch.fft.ifft2(convolved).real
+
+            output_image[:, :, 0] += field[:H, :W]
+
+        # --- Remove padding ---
+        output_image = output_image[
+            pad[0]: output_image.shape[0] - pad[2],
+            pad[1]: output_image.shape[1] - pad[3],
+            :
+        ]
+
+        return output_image
+
 
 
 #TODO ***??*** revise Brightfield - torch, typing, docstring, unit test
@@ -3088,6 +3416,37 @@ def _get_position(
 
     return position
 
+# def get_position_torch(
+#     volume: torch.Tensor,          # (Z, Y, X) or (Y, X)
+#     position: torch.Tensor,        # base position (pixel units)
+#     scale: torch.Tensor,           # active scale
+#     return_z: bool = False,
+# ):
+#     # magnitude field (keeps gradients)
+#     w = volume.abs()
+
+#     eps = 1e-8
+#     w_sum = w.sum() + eps
+
+#     dims = w.ndim
+#     coords = torch.meshgrid(
+#         *[torch.arange(s, device=w.device, dtype=w.dtype) for s in w.shape],
+#         indexing="ij",
+#     )
+
+#     com = [ (w * c).sum() / w_sum for c in coords ]
+
+#     com = torch.stack(com)  # (Z,Y,X) or (Y,X)
+
+#     # shift relative to volume origin
+#     if dims == 3 and not return_z:
+#         com = com[1:]  # drop Z
+
+#     # scaled physical position
+#     pos = position * scale + 0.5 * (scale - 1)
+
+#     return pos - com
+
 
 def _bilinear_interpolate_numpy(
     scatterer: np.ndarray, x_off: float, y_off: float
@@ -3209,25 +3568,13 @@ def _create_volume(
     # fudge_factor = scale[0] * scale[1] / scale[2]
 
     for scatterer in list_of_scatterers:
+
+        if isinstance(scatterer.array, torch.Tensor):
+            device = scatterer.array.device
+            dtype = scatterer.array.dtype
+            scatterer.array = scatterer.array.detach().cpu().numpy()
+
         position = _get_position(scatterer, mode="corner", return_z=True)
-
-        # if contrast_type == "intensity":
-        #     value = scatterer.get_property("intensity", None)
-        #     if value is None:
-        #         raise ValueError("Scatterer has no intensity.")
-        #     scatterer_value = value
-
-        # elif contrast_type == "refractive_index":
-        #     ri = scatterer.get_property("refractive_index", None)
-        #     if ri is None:
-        #         raise ValueError("Scatterer has no refractive_index.")
-        #     scatterer_value = ri - refractive_index_medium
-
-        # else:
-        #     raise RuntimeError(f"Unknown contrast_type: {contrast_type}")
-
-        # # Scale the array accordingly
-        # scatterer.array = scatterer.array * scatterer_value
 
         if limits is None:
             limits = np.zeros((3, 2), dtype=np.int32)
@@ -3316,4 +3663,52 @@ def _create_volume(
             int(within_volume_position[2]) : 
             int(within_volume_position[2] + shape[2]),
         ] += splined_scatterer
+
+    if config.get_backend() == "torch":
+        volume = torch.from_numpy(volume).to(device=device, dtype=dtype)
+
     return volume, limits
+
+# # Move to image
+# def pad_image_to_fft(
+#     image: np.ndarray | torch.Tensor,
+#     axes: Iterable[int] = (0, 1),
+# ):
+#     """Pad image to FFT-friendly sizes.
+
+#     Preserves backend:
+#     - NumPy input → NumPy output
+#     - Torch input → Torch output (fully differentiable)
+#     """
+
+#     def _closest(dim: int) -> int:
+#         for size in _FASTEST_SIZES:
+#             if size >= dim:
+#                 return size
+#         raise ValueError(
+#             f"No suitable size found in _FASTEST_SIZES={_FASTEST_SIZES} "
+#             f"for dimension {dim}."
+#         )
+
+#     shape = list(image.shape)
+#     new_shape = list(shape)
+
+#     for axis in axes:
+#         new_shape[axis] = _closest(shape[axis])
+
+#     pad_sizes = [(0, new - old) for old, new in zip(shape, new_shape)]
+
+#     # --- NumPy backend ---
+#     if isinstance(image, np.ndarray):
+#         return np.pad(image, pad_sizes, mode="constant")
+
+#     # --- Torch backend ---
+#     if isinstance(image, torch.Tensor):
+#         # torch.nn.functional.pad expects reversed flat list
+#         pad = []
+#         for before, after in reversed(pad_sizes):
+#             pad.extend([before, after])
+
+#         return torch.nn.functional.pad(image, pad, mode="constant", value=0.0)
+
+#     raise TypeError(f"Unsupported type: {type(image)}")

@@ -163,6 +163,7 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 import warnings
 
+import array_api_compat as apc
 import numpy as np
 from numpy.typing import NDArray
 from pint import Quantity
@@ -181,7 +182,7 @@ from deeptrack.image import pad_image_to_fft
 from deeptrack.types import ArrayLike
 from deeptrack import units_registry as u
 
-
+from deeptrack.backend import xp
 
 __all__ = [
     "Scatterer",
@@ -326,7 +327,7 @@ class Scatterer(Feature):
             )
 
 
-        voxel_size = np.asarray(get_active_voxel_size(), float)
+        voxel_size = xp.asarray(get_active_voxel_size(), dtype=float)
 
         apply_supersampling = upsample > 1 and isinstance(self, VolumeScatterer)
 
@@ -351,7 +352,8 @@ class Scatterer(Feature):
             new_image = self._antialias_volume(new_image, factor=upsample)
 
 
-        if new_image.size == 0:
+        # if new_image.size == 0:
+        if new_image.numel() == 0 if apc.is_torch_array(new_image) else new_image.size == 0:
             warnings.warn(
                 "Scatterer created that is smaller than a pixel. "
                 + "This may yield inconsistent results."
@@ -362,9 +364,14 @@ class Scatterer(Feature):
 
         # Crops empty slices
         if crop_empty:
-            new_image = new_image[~np.all(new_image == 0, axis=(1, 2))]
-            new_image = new_image[:, ~np.all(new_image == 0, axis=(0, 2))]
-            new_image = new_image[:, :, ~np.all(new_image == 0, axis=(0, 1))]
+            # new_image = new_image[~np.all(new_image == 0, axis=(1, 2))]
+            # new_image = new_image[:, ~np.all(new_image == 0, axis=(0, 2))]
+            # new_image = new_image[:, :, ~np.all(new_image == 0, axis=(0, 1))]
+            mask_z = ~xp.all(new_image == 0, axis=(1, 2))
+            mask_y = ~xp.all(new_image == 0, axis=(0, 2))
+            mask_x = ~xp.all(new_image == 0, axis=(0, 1))
+
+            new_image = new_image[mask_z][:, mask_y][:, :, mask_x]
 
         # # Copy properties
         # props = kwargs.copy()
@@ -430,14 +437,14 @@ class PointParticle(VolumeScatterer):
 
     def get(
         self: PointParticle,
-        image: np.ndarray,
+        *ignore,
         **kwarg: Any,
-    ) -> NDArray[Any] | torch.Tensor:
+    ) -> np.ndarray | torch.Tensor:
         """Evaluate and return the scatterer volume."""
 
-        scale = get_active_scale()
+        scale = xp.asarray(get_active_scale(), dtype=float)
 
-        return np.ones((1, 1, 1)) * np.prod(scale)
+        return xp.ones((1, 1, 1), dtype=scale.dtype) * xp.prod(scale)
 
 
 #TODO ***??*** revise Ellipse - torch, typing, docstring, unit test
