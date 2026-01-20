@@ -362,7 +362,7 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(PD()["constant"], 1)
 
 
-    def test_SequentialProperty(self):
+    def test_SequentialProperty_init(self):
         # Test basic initialization and children/dependencies
         sp = properties.SequentialProperty()
 
@@ -391,7 +391,7 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(len(sp.previous_values.recurse_children()), 2)
         self.assertEqual(len(sp.previous_values.recurse_dependencies()), 2)
 
-        # Test with parameters
+        # Test basic initialization and children/dependencies with parameters
         sp = properties.SequentialProperty(
             initial_sampling_rule=1,
             sampling_rule=lambda sequence_index: sequence_index * 10,
@@ -408,10 +408,10 @@ class TestProperties(unittest.TestCase):
 
         self.assertEqual(sp(), 1)
         self.assertEqual(sp(), 1)
-        sp.next_step()
+        self.assertTrue(sp.next_step())
         self.assertEqual(sp(), 10)
         self.assertEqual(sp(), 10)
-        sp.next_step()
+        self.assertTrue(sp.next_step())
         self.assertEqual(sp(), 20)
         self.assertEqual(sp(), 20)
 
@@ -429,6 +429,69 @@ class TestProperties(unittest.TestCase):
 
         self.assertEqual(len(sp.previous_values.recurse_children()), 2)
         self.assertEqual(len(sp.previous_values.recurse_dependencies()), 2)
+
+    def test_SequentialProperty_full_run(self):
+        # Test full run: generate a complete sequence and verify history.
+        sp = properties.SequentialProperty(
+            initial_sampling_rule=1,
+            sampling_rule=lambda previous_value: previous_value + 1,
+            sequence_length=10,
+        )
+
+        expected = list(range(1, 11))
+
+        for step in range(sp.sequence_length()):
+            self.assertEqual(sp(), expected[step])
+
+            advanced = sp.next_step()
+
+            if step < sp.sequence_length() - 1:
+                self.assertTrue(advanced)
+                self.assertEqual(sp.sequence_index(), step + 1)
+                self.assertEqual(len(sp.sequence()), step + 1)
+            else:
+                # Final step: cannot advance further.
+                self.assertFalse(advanced)
+                self.assertEqual(sp.sequence_index(), step)
+
+        self.assertEqual(len(sp.sequence()), sp.sequence_length())
+        self.assertEqual(sp.sequence(), expected)
+        self.assertEqual(sp.previous_value(), expected[-2])
+        self.assertEqual(sp.previous_values(), expected[:-2])
+        self.assertEqual(sp.sequence_index(), sp.sequence_length() - 1)
+
+        # Test no sampling_rule but initial_sampling_rule exists.
+        sp = properties.SequentialProperty(
+            initial_sampling_rule=7,
+            sampling_rule=None,
+            sequence_length=3,
+        )
+
+        self.assertEqual(sp(), 7)
+        self.assertTrue(sp.next_step())
+        self.assertIsNone(sp())
+        self.assertTrue(sp.next_step())
+        self.assertIsNone(sp())
+        self.assertFalse(sp.next_step())
+
+    def test_SequentialProperty_error_in_current_value(self):
+        # Test error path in current_value()
+        sp = properties.SequentialProperty(
+            initial_sampling_rule=1,
+            sampling_rule=lambda previous_value: previous_value + 1,
+            sequence_length=3,
+        )
+
+        # No calls yet, so history is empty, but index is 0.
+        with self.assertRaises(IndexError):
+            sp.current_value()
+
+        # Then after one evaluation:
+        sp()
+        self.assertEqual(sp.current_value(), 1)
+
+    # Test _ID
+    # TODO add test using _ID
 
 
 if __name__ == "__main__":
