@@ -79,17 +79,15 @@ Handle sequential properties:
 ...     sampling_rule=lambda: np.random.randint(10, 20),
 ...     sequence_length = 5,
 ... )
->>> seq_prop.set_sequence_length(5)
 >>> for step in range(seq_prop.sequence_length()):
-...     seq_prop.set_current_index(step)
-...     current_value = seq_prop.sample()
-...     seq_prop.store(current_value)
-...     print(f"{step}: {seq_prop.previous()}")
-0: [16]
-1: [16, 19]
-2: [16, 19, 18]
-3: [16, 19, 18, 15]
-4: [16, 19, 18, 15, 19]
+...     seq_prop()
+...     seq_prop.next_step()
+...     print(f"Sequence at step {step}: {seq_prop.sequence()}")
+Sequence at step 0: [19]
+Sequence at step 1: [19, 10]
+Sequence at step 2: [19, 10, 11]
+Sequence at step 3: [19, 10, 11, 14]
+Sequence at step 4: [19, 10, 11, 14, 12]
 
 """
 
@@ -672,36 +670,33 @@ class PropertyDict(DeepTrackNode, dict):
 
 
 class SequentialProperty(Property):
-    """Property that yields different values for sequential steps.
+    """Property that yields different values across sequential steps.
 
-    A `SequentialProperty` lets the user encapsulate feature sampling rules and
-    iterator logic in a single object to evaluate them sequentially.
+    A `SequentialProperty` encapsulates sampling rules and step management in a
+    single object for sequential evaluation.
 
-    The `SequentialProperty` class extends the standard `Property` to handle
-    scenarios where the property’s value evolves over discrete steps, such as
-    frames in a video, time-series data, or any sequential process. At each
-    step, it selects whether to use the `initial_sampling_rule` function
-    (step = 0) or the `sampling_rule` function (steps > 0). It also keeps track
-    of all previously generated values, allowing to refer back to them if
-    needed.
+    This class extends `Property` to support scenarios where a property value
+    evolves over discrete steps, such as frames in a video, time-series data,
+    or other sequential processes. At each step, it selects whether to use the
+    `initial_sampling_rule` (when step == 0 and it is provided) or the
+    `sampling_rule` (otherwise). It also keeps track of previously generated
+    values, allowing sampling rules to depend on history.
 
     Parameters
     ----------
     node_name: str or None, optional
         The name of this node. Defaults to `None`.
     initial_sampling_rule: Any, optional
-        A sampling rule for the first step of the sequence (step=0).
-        Can be any value or callable that is acceptable to `Property`.
-        Defaults to `None`.
+        A sampling rule for the first step (step == 0). Can be any value or
+        callable accepted by `Property`. Defaults to `None`.
     sampling_rule: Any, optional
-        The sampling rule (value or callable) for steps > 0.
-        Defaults to `None`.
+        The sampling rule (value or callable) for steps > 0, and also for
+        step == 0 when `initial_sampling_rule` is `None`. Defaults to `None`.
     sequence_length: int, optional
-        The length of the sequence.
+        The length of the sequence. Defaults to `None`.
     **kwargs: Property
-        Additional dependencies that might be required if
-        `initial_sampling_rule` is a callable. These dependencies are injected
-        when evaluating `initial_sampling_rule`.
+        Additional dependencies injected when evaluating callable sampling
+        rules.
 
     Attributes
     ----------
@@ -709,44 +704,39 @@ class SequentialProperty(Property):
         A `Property` holding the total number of steps (`int`) in the sequence.
         Initialized to 0 by default.
     sequence_index: Property
-        A `Property` holding the index (`int`) of current step (starting at 0).
+        A `Property` holding the index (`int`) of the current step (starting
+        at 0).
     previous_values: Property
-        A `Property` returning all previously stored values (`list[Any]`) up
-        to, but not including, the current value and the previous value.
+        A `Property` returning all stored values strictly before the previous
+        value (`list[Any]`).
     previous_value: Property
         A `Property` returning the most recently stored value (`Any`), or
-        `None` if there is no history yet.
-    initial_sampling_rule: Callable[..., Any], optional
-        A function to compute the value at step=0. If `None`, the property
-        returns `None` at the first step.
+        `None` if no values have been stored yet.
+    initial_sampling_rule: Callable[..., Any] | None
+        A function (or constant wrapped as an action) used to compute the value
+        at step 0. If `None`, the property falls back to `sampling_rule` at
+        step 0.
     sample: Callable[..., Any]
-        Computes the value at steps > 0 with the given sampling rule.
-        By default, it returns `None`.
+        The action used to compute the value at steps > 0 (and at step 0 if
+        `initial_sampling_rule` is `None`). If no `sampling_rule` is provided,
+        it returns `None`.
     action: Callable[..., Any]
         Overrides the default `Property.action` to select between
-        `initial_sampling_rule` (if `sequence_index` is 0) or
-        `sampling_rule` (otherwise).
+        `initial_sampling_rule` (when step is 0) and `sample` (otherwise).
 
     Methods
     -------
     `_action_override(_ID) -> Any`
-        Internal logic to pick which function (`initial_sampling_rule` or
-        `sampling_rule`) to call based on the `sequence_index`.
+        Select the appropriate sampling rule based on `sequence_index`.
+    `sequence(_ID) -> list[Any]`
+        Return the stored sequence for `_ID` without recomputing.
+    `next_step(_ID) -> bool`
+        Advance the sequence index by one step (if possible).
     `store(value, _ID) -> None`
-        Store a newly computed `value` in the property’s internal list of 
-        previously generated values.
-    `sample(_ID) -> Any`
-        Retrieve the sampling_rule associated with the current step index.
-    `__call__(_ID) -> Any`
-        Evaluate the property at the current step, returning either the
-        initialization (if index = 0) or current value (if index > 0).
-    `set_sequence_length(self, sequence_length, ID) -> None`
-        Store the value for the length of the sequence, analogous to
-        `SequentialProperty.sequence_length.store()`.
-    `set_current_index(self, current_index, ID) -> None`
-        Store the value for the current step of the sequence, analogous to
-        `SequentialProperty.sequence_index.store()`.
-        
+        Append a newly computed value to the stored sequence for `_ID`.
+    `current_value(_ID) -> Any`
+        Return the stored value at the current step index.
+
     Examples
     --------
     To illustrate the use of `SequentialProperty`, we will implement a
@@ -759,26 +749,22 @@ class SequentialProperty(Property):
     >>> import numpy as np
     >>>
     >>> seq_prop = dt.SequentialProperty(
-    ...    initial_sampling_rule=0,  # Sampling rule for first time step
-    ...    sampling_rule=np.random.randn,  # Sampl. rule for subsequent steps
-    ...    sequence_length=10,  # Number of steps
+    ...     initial_sampling_rule=0,  # Sampling rule for first time step
+    ...     sampling_rule=(  # Sampl. rule for subsequent steps
+    ...         lambda previous_value: previous_value + np.random.randn()
+    ...     ),
+    ...     sequence_length=10,  # Number of steps
     ... )
 
-    Sample and store initial position:
+    Iteratively calculate the sequence:
 
-    >>> start_position = seq_prop.initial_sampling_rule()
-    >>> seq_prop.store(start_position)
+    >>> for step in range(seq_prop.sequence_length()):
+    ...     seq_prop()
+    ...     seq_prop.next_step()  # Returns False at the final step
 
-    Iteratively update and store position:
+    Print all values of the sequence:
 
-    >>> for step in range(1, seq_prop.sequence_length()): 
-    ...     seq_prop.set_current_index(step)
-    ...     previous_position = seq_prop.previous()[-1]  # Previous value
-    ...     new_position = previous_position + seq_prop.sample()
-    ...     seq_prop.store(new_position)
-
-    Print all stored values:
-    >>> seq_prop.previous()
+    >>> seq_prop.sequence()
     [0,
     -0.38200070551587934,
     0.4107493780458869,
@@ -808,20 +794,24 @@ class SequentialProperty(Property):
         sequence_length: int | None = None,
         **kwargs: Property,
     ) -> None:
-        """Create SequentialProperty.
+        """Create a SequentialProperty.
         
         Parameters
         ----------
+        node_name: str or None, optional
+            The name of this node. Defaults to `None`.
         initial_sampling_rule: Any, optional
-            The sampling rule (value or callable) for step = 0.
+            The sampling rule (value or callable) for step == 0. If `None`,
+            evaluation at step 0 falls back to `sampling_rule`.
             Defaults to `None`.
         sampling_rule: Any, optional
-            The sampling rule (value or callable) for the current step.
+            The sampling rule (value or callable) for steps > 0, and also for
+            step == 0 when `initial_sampling_rule` is `None`.
             Defaults to `None`.
         sequence_length: int, optional
             The length of the sequence. Defaults to `None`.
         **kwargs: Property
-            Additional named dependencies for `initialization` and `current`.
+            Additional named dependencies for callable sampling rules.
         
         """
 
@@ -840,6 +830,7 @@ class SequentialProperty(Property):
         self.sequence_length.add_child(self)
 
         # 2) Initialize sequence index.
+        # Invariant: 0 <= sequence_index < sequence_length for valid sequence.
         self.sequence_index = Property(0, node_name="sequence_index")
         self.sequence_index.add_child(self)
 
@@ -896,10 +887,10 @@ class SequentialProperty(Property):
         self: SequentialProperty,
         _ID: tuple[int, ...] = (),
     ) -> Any:
-        """Decide which function to call based on the current step.
+        """Select the appropriate sampling rule for the current step.
 
-        For step=0, it calls `self.initial_sampling_rule()`.
-        Otherwise, it calls `self.sample()`.
+        At step 0, this calls `initial_sampling_rule` if it is not `None`.
+        Otherwise, it calls `sample`.
 
         Parameters
         ----------
@@ -909,8 +900,7 @@ class SequentialProperty(Property):
         Returns
         -------
         Any
-            Result of the `self.initial_sampling_rule()` function if step == 0,
-            or result of the `self.sample` function if step > 0.
+            The sampled value for the current step.
         
         """
 
@@ -924,10 +914,10 @@ class SequentialProperty(Property):
         value: Any,
         _ID: tuple[int, ...] = (),
     ) -> None:
-        """Append value to the internal list of previously generated values.
+        """Append a value to the stored sequence for _ID.
 
-        It retrieves the existing list of values for this _ID. If this _ID has
-        never been used, it starts an empty list.
+        Appends `value` to the stored sequence for `_ID`. If no values have
+        been stored yet for `_ID`, it starts a new list.
 
         Parameters
         ----------
@@ -937,25 +927,16 @@ class SequentialProperty(Property):
             A unique identifier that allows the property to keep separate 
             histories for different parallel evaluations.
 
-        Raises
-        ------
-        KeyError
-            If no existing data for this _ID, it initializes an empty list.
-
         """
 
-        try:
-            current_data = self.data[_ID].current_value()
-        except KeyError:
-            current_data = []
-
+        current_data = self.sequence(_ID=_ID)
         super().store(current_data + [value], _ID=_ID)
 
     def current_value(
         self: SequentialProperty,
         _ID: tuple[int, ...] = (),
     ) -> Any:
-        """Retrieve the value corresponding to the current sequence step.
+        """Return the stored value at the current step index.
 
         It expects that each step's value has been stored. If no value has been
         stored for this step, it throws an IndexError.
@@ -977,10 +958,19 @@ class SequentialProperty(Property):
 
         """
 
-        return super().current_value(_ID=_ID)[self.sequence_index(_ID=_ID)]
+        sequence = self.sequence(_ID=_ID)
+        index = self.sequence_index(_ID=_ID)
+
+        if index >= len(sequence):
+            raise IndexError(
+                "No stored value for current step: index="
+                f"{index}, stored_values={len(sequence)}."
+            )
+
+        return sequence[index]
 
     def sequence(self, _ID: tuple[int, ...] = ()) -> list[Any]:
-        """Retrieve the previously stored value at ID without recomputing.
+        """Retrieve the stored sequence for _ID without recomputing.
 
         Parameters
         ----------
@@ -989,9 +979,9 @@ class SequentialProperty(Property):
 
         Returns
         -------
-        Any
-            The previously stored value if `_ID` is valid.
-            Returns `[]` if `_ID` is not a valid index.
+        list[Any]
+            The list of stored values for this `_ID`. Returns an empty list if
+            no values have been stored yet.
 
         """
 
@@ -1000,17 +990,26 @@ class SequentialProperty(Property):
 
         return []
 
+    # Invariant:
+    # For a sequence of length L = sequence_length(_ID),
+    # the valid range of sequence_index(_ID) is:
+    #
+    #     0 <= sequence_index < L
+    #
+    # Each index corresponds to one stored value in the sequence.
+    # Attempting to advance beyond L - 1 returns False.
+
     def next_step(
         self: SequentialProperty,
         _ID: tuple[int, ...] = (),
-    ) -> int:
+    ) -> bool:
         """Advance the sequence index by one step.
 
-        This method increments the internal `sequence_index` by one for the
-        given `_ID`, provided that the next index does not exceed the
-        configured `sequence_length`. It also invalidates cached properties
-        that depend on the sequence index to ensure correct recomputation on
-        subsequent access.
+        This method increments `sequence_index` by one for the given `_ID` if
+        the next index remains strictly less than `sequence_length`. It also
+        invalidates cached properties that depend on the sequence index to
+        ensure correct recomputation on subsequent access. If the sequence is
+        already at its final step, the index is not changed.
 
         Parameters
         ----------
@@ -1020,15 +1019,8 @@ class SequentialProperty(Property):
 
         Returns
         -------
-        int
-            The updated sequence index after incrementing.
-
-        Raises
-        ------
-        IndexError
-            If advancing the sequence index would exceed or equal the
-            configured `sequence_length`. This indicates that the sequence has
-            reached its final step and cannot be advanced further.
+        bool
+            True if the index was advanced, False if already at the final step.
 
         """
 
@@ -1036,11 +1028,7 @@ class SequentialProperty(Property):
         sequence_length = self.sequence_length(_ID=_ID)
 
         if current_index + 1 >= sequence_length:
-            raise IndexError(
-                "Cannot advance sequence index: current_index="
-                f"{current_index}, sequence_length={sequence_length}. "
-                "The sequence has already reached its final step."
-            )
+            return False
 
         self.sequence_index.store(current_index + 1, _ID=_ID)
 
@@ -1048,4 +1036,4 @@ class SequentialProperty(Property):
         self.previous_value.invalidate()
         self.previous_values.invalidate()
 
-        return current_index + 1
+        return True
