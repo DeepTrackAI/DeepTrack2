@@ -442,6 +442,9 @@ class TestProperties(unittest.TestCase):
 
         for step in range(sp.sequence_length()):
             self.assertEqual(sp(), expected[step])
+            self.assertEqual(sp.sequence(), expected[:step + 1])
+            self.assertEqual(sp(), expected[step])
+            self.assertEqual(sp.sequence(), expected[:step + 1])
 
             advanced = sp.next_step()
 
@@ -490,8 +493,134 @@ class TestProperties(unittest.TestCase):
         sp()
         self.assertEqual(sp.current_value(), 1)
 
-    # Test _ID
-    # TODO add test using _ID
+    def test_SequentialProperty_update(self):
+        # Test initial step + update.
+        rng = np.random.default_rng(123)
+
+        sp = properties.SequentialProperty(
+            initial_sampling_rule=lambda: rng.random(),
+            sampling_rule=None,
+            sequence_length=3,
+        )
+
+        v1 = sp()
+        v2 = sp()
+        self.assertEqual(v1, v2)
+
+        sp.update()
+        self.assertEqual(sp.sequence(), [])
+
+        v3 = sp()
+        self.assertNotEqual(v1, v3)
+
+        self.assertEqual(sp.sequence_index(), 0)
+
+        # Test multiple steps + update.
+        initial_value = 0
+        sp = properties.SequentialProperty(
+            initial_sampling_rule=lambda: initial_value,
+            sampling_rule=lambda previous_value: previous_value + 1,
+            sequence_length=5,
+        )
+
+        initial_value = 1
+        v0 = sp()
+        self.assertTrue(sp.next_step())
+        v1 = sp()
+        self.assertEqual(v1, v0 + 1)
+        self.assertEqual(sp.sequence(), [v0, v1])
+
+        sp.update()
+
+        initial_value = 2
+        w0 = sp()
+        self.assertNotEqual(w0, v0)
+        self.assertTrue(sp.next_step())
+        w1 = sp()
+        self.assertEqual(w1, w0 + 1)
+        self.assertEqual(sp.sequence(), [w0, w1])
+
+    def test_SequentialProperty_ID_separates_history(self):
+        return  # TODO
+
+        # Minimal: histories don’t mix across _ID
+
+        sp = properties.SequentialProperty(
+            initial_sampling_rule=1,
+            sampling_rule=lambda previous_value: previous_value + 1,
+            sequence_length=3,
+        )
+
+        id0 = (0,)
+        id1 = (1,)
+
+        # Step 0 for each ID.
+        self.assertEqual(sp(_ID=id0), 1)
+        self.assertEqual(sp(_ID=id1), 1)
+
+        # Advance only id0 and evaluate step 1.
+        self.assertTrue(sp.next_step(_ID=id0))
+        self.assertEqual(sp(_ID=id0), 2)
+
+        # id1 should still be at step 0 and unchanged.
+        self.assertEqual(sp.sequence_index(_ID=id1), 0)
+        self.assertEqual(sp(_ID=id1), 1)
+
+        # Histories should be separate.
+        self.assertEqual(sp.sequence(_ID=id0), [1, 2])
+        self.assertEqual(sp.sequence(_ID=id1), [1])
+
+    def test_SequentialProperty_ID_previous_value_is_local(self):
+        return  # TODO
+
+        #Mid-sequence previous_value is _ID-local
+
+        sp = properties.SequentialProperty(
+            initial_sampling_rule=5,
+            sampling_rule=lambda previous_value: previous_value + 10,
+            sequence_length=4,
+        )
+
+        id0 = (0,)
+        id1 = (1,)
+
+        # Seed different progress.
+        sp(_ID=id0)                 # step 0 -> 5
+        self.assertTrue(sp.next_step(_ID=id0))
+        sp(_ID=id0)                 # step 1 -> 15
+
+        sp(_ID=id1)                 # step 0 -> 5 (no step advance)
+
+        # previous_value depends on per-ID index/history.
+        self.assertEqual(sp.previous_value(_ID=id0), 5)
+        self.assertEqual(sp.previous_value(_ID=id1), None)
+
+    def test_SequentialProperty_full_run_two_IDs_interleaved(self):
+        return  # TODO
+
+        # Full run for two IDs interleaved (strongest)
+        sp = properties.SequentialProperty(
+            initial_sampling_rule=1,
+            sampling_rule=lambda previous_value: previous_value + 1,
+            sequence_length=5,
+        )
+
+        id0 = (0,)
+        id1 = (1,)
+
+        expected = [1, 2, 3, 4, 5]
+
+        # Interleave steps: id0 runs ahead, id1 lags.
+        for step in range(sp.sequence_length()):
+            self.assertEqual(sp(_ID=id0), expected[step])
+            sp.next_step(_ID=id0)
+
+            if step % 2 == 0:  # id1 advances every other step
+                self.assertEqual(sp(_ID=id1), expected[step // 2])
+                sp.next_step(_ID=id1)
+
+        self.assertEqual(sp.sequence(_ID=id0), expected)
+        self.assertEqual(sp.sequence(_ID=id1), [1, 2, 3])
 
 
 if __name__ == "__main__":
