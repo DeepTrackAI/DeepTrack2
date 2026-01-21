@@ -1033,7 +1033,7 @@ class SequentialProperty(Property):
         self.sequence_index.store(current_index + 1, _ID=_ID)
 
         # Ensures updates when action is executed again
-        self.previous_value.invalidate()
-        self.previous_values.invalidate()
+        self.previous_value.invalidate(_ID=_ID)
+        self.previous_values.invalidate(_ID=_ID)
 
         return True
