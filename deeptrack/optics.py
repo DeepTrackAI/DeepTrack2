@@ -153,7 +153,7 @@ from deeptrack.backend.units import (
 )
 from deeptrack.math import AveragePooling, SumPooling
 from deeptrack.features import propagate_data_to_dependencies
-from deeptrack.features import DummyFeature, Feature, StructuralFeature, BackendDispatched
+from deeptrack.features import DummyFeature, Feature, StructuralFeature
 from deeptrack.image import pad_image_to_fft
 from deeptrack.types import ArrayLike, PropertyLike
 
@@ -395,6 +395,8 @@ class Microscope(StructuralFeature):
                 volume_samples,
                 **additional_sample_kwargs,
             )
+
+            print('1',type(sample_volume))
             if volume_samples:
                 # Interpret the merged volume semantically
                 sample_volume = self._extract_contrast_volume(
@@ -1193,7 +1195,7 @@ class Optics(Feature):
 
 
 #TODO ***??*** revise Fluorescence - torch, typing, docstring, unit test
-class Fluorescence(BackendDispatched, Optics):
+class Fluorescence(Optics):
     """Optical device for fluorescent imaging.
 
     The `Fluorescence` class simulates the imaging process in fluorescence
@@ -1273,9 +1275,6 @@ class Fluorescence(BackendDispatched, Optics):
 
     """
 
-    _NUMPY_IMPL = "_get_numpy"
-    _TORCH_IMPL = "_get_torch"
-
     def validate_input(self, scattered):
         """Semantic validation for fluorescence microscopy."""
         
@@ -1342,12 +1341,37 @@ class Fluorescence(BackendDispatched, Optics):
         """
         Backend-dispatched fluorescence imaging.
         """
-        return self._dispatch_backend(
-            illuminated_volume,
-            limits,
-            **kwargs,
-        )
+        backend = config.get_backend()
 
+        if backend == "torch":
+            # ---- HARD GUARD: torch only ----
+            if not isinstance(image, torch.Tensor):
+                raise TypeError(
+                    "Torch backend selected but image is not a torch.Tensor"
+                )
+
+            return self._get_torch(
+                illuminated_volume,
+                limits,
+                **kwargs,
+            )
+
+        elif backend == "numpy":
+            # ---- HARD GUARD: numpy only ----
+            if not isinstance(image, np.ndarray):
+                raise TypeError(
+                    "NumPy backend selected but image is not a np.ndarray"
+                )
+
+            return self._get_numpy(
+                illuminated_volume,
+                limits,
+                **kwargs,
+            )
+
+        else:
+            raise RuntimeError(f"Unknown backend: {backend}")
+        
 
     def _get_numpy(
         self:  Fluorescence,
@@ -3667,8 +3691,7 @@ def _create_volume(
         ] += splined_scatterer
 
     if config.get_backend() == "torch":
-        volume = torch.from_numpy(volume).to(device=device, dtype=dtype)
-
+        volume = torch.from_numpy(volume).to(device=device, dtype=torch.float64)
     return volume, limits
 
 # # Move to image

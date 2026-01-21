@@ -104,9 +104,9 @@ import skimage
 import skimage.measure
 
 from deeptrack import utils, OPENCV_AVAILABLE, TORCH_AVAILABLE
-from deeptrack.features import Feature, BackendDispatched
+from deeptrack.features import Feature
 from deeptrack.types import PropertyLike
-from deeptrack.backend import xp
+from deeptrack.backend import xp, config
 
 if TORCH_AVAILABLE:
     import torch
@@ -467,7 +467,7 @@ class NormalizeMinMax(Feature):
 
 
 
-class NormalizeStandard(BackendDispatched, Feature):
+class NormalizeStandard(Feature):
     """Image normalization using standardization.
 
     Standardizes the input image to have zero mean and unit standard
@@ -501,8 +501,6 @@ class NormalizeStandard(BackendDispatched, Feature):
 
     """
 
-    _NUMPY_IMPL = "_get_numpy"
-    _TORCH_IMPL = "_get_torch"
 
     def __init__(
         self: NormalizeStandard,
@@ -544,10 +542,38 @@ class NormalizeStandard(BackendDispatched, Feature):
         np.ndarray or torch.Tensor
             The standardized image.
         """
-        return self._dispatch_backend(
-            image,
-            featurewise=featurewise,
-        )
+
+        backend = config.get_backend()
+
+        if backend == "torch":
+            # ---- HARD GUARD: torch only ----
+            if not isinstance(image, torch.Tensor):
+                raise TypeError(
+                    "Torch backend selected but image is not a torch.Tensor"
+                )
+
+            return self._get_torch(
+                image,
+                featurewise=featurewise,
+                **kwargs,
+            )
+
+        elif backend == "numpy":
+            # ---- HARD GUARD: numpy only ----
+            if not isinstance(image, np.ndarray):
+                raise TypeError(
+                    "NumPy backend selected but image is not a np.ndarray"
+                )
+
+            return self._get_numpy(
+                image,
+                featurewise=featurewise,
+                **kwargs,
+            )
+
+        else:
+            raise RuntimeError(f"Unknown backend: {backend}")
+
 
     # ------ NumPy backend ------
     
@@ -555,6 +581,7 @@ class NormalizeStandard(BackendDispatched, Feature):
         self,
         image: np.ndarray,
         featurewise: bool,
+        **kwargs: Any,
     ) -> np.ndarray:
 
         has_channels = image.ndim >= 3 and image.shape[-1] <= 4
@@ -580,6 +607,7 @@ class NormalizeStandard(BackendDispatched, Feature):
         self,
         image: torch.Tensor,
         featurewise: bool,
+        **kwargs: Any,
     ) -> torch.Tensor:
 
         has_channels = image.ndim >= 3 and image.shape[-1] <= 4
@@ -600,7 +628,7 @@ class NormalizeStandard(BackendDispatched, Feature):
         return out
 
 
-class NormalizeQuantile(BackendDispatched, Feature):
+class NormalizeQuantile(Feature):
     """Image normalization using quantiles.
 
     Centers the image at the median and scales it such that the values at the
@@ -644,8 +672,6 @@ class NormalizeQuantile(BackendDispatched, Feature):
 
     """
 
-    _NUMPY_IMPL = "_get_numpy"
-    _TORCH_IMPL = "_get_torch"
 
     def __init__(
         self: NormalizeQuantile,
@@ -681,12 +707,40 @@ class NormalizeQuantile(BackendDispatched, Feature):
         featurewise: bool,
         **kwargs: Any,
     ):
-        return self._dispatch_backend(
-            image,
-            quantiles=quantiles,
-            featurewise=featurewise,
-        )
+        backend = config.get_backend()
 
+        if backend == "torch":
+            # ---- HARD GUARD: torch only ----
+            if not isinstance(image, torch.Tensor):
+                raise TypeError(
+                    "Torch backend selected but image is not a torch.Tensor"
+                )
+
+            return self._get_torch(
+                image,
+                quantiles=quantiles,
+                featurewise=featurewise,
+                **kwargs,
+            )
+
+        elif backend == "numpy":
+            # ---- HARD GUARD: numpy only ----
+            if not isinstance(image, np.ndarray):
+                raise TypeError(
+                    "NumPy backend selected but image is not a np.ndarray"
+                )
+
+            return self._get_numpy(
+                image,
+                quantiles=quantiles,
+                featurewise=featurewise,
+                **kwargs,
+            )
+
+        else:
+            raise RuntimeError(f"Unknown backend: {backend}")
+
+    # ------ NumPy backend ------
     def _get_numpy(
         self: NormalizeQuantile,
         image: np.ndarray,
@@ -743,6 +797,7 @@ class NormalizeQuantile(BackendDispatched, Feature):
         image: torch.Tensor,
         quantiles: tuple[float, float],
         featurewise: bool,
+        **kwargs: Any,
     ):
         q_low_val, q_high_val = quantiles
 
@@ -797,7 +852,7 @@ class NormalizeQuantile(BackendDispatched, Feature):
 
 
 #TODO ***CM*** revise typing, docstring, unit test
-class Blur(BackendDispatched, Feature):
+class Blur(Feature):
     """Abstract blur feature with backend-dispatched implementations.
     
     This class serves as a base for blur features that support multiple
@@ -815,15 +870,40 @@ class Blur(BackendDispatched, Feature):
 
     """
 
-    _NUMPY_IMPL = "_get_numpy"
-    _TORCH_IMPL = "_get_torch"
 
     def get(
         self,
         image: np.ndarray | torch.Tensor,
         **kwargs,
     ):
-        return self._dispatch_backend(image, **kwargs)
+        backend = config.get_backend()
+
+        if backend == "torch":
+            # ---- HARD GUARD: torch only ----
+            if not isinstance(image, torch.Tensor):
+                raise TypeError(
+                    "Torch backend selected but image is not a torch.Tensor"
+                )
+
+            return self._get_torch(
+                image,
+                **kwargs,
+            )
+
+        elif backend == "numpy":
+            # ---- HARD GUARD: numpy only ----
+            if not isinstance(image, np.ndarray):
+                raise TypeError(
+                    "NumPy backend selected but image is not a np.ndarray"
+                )
+
+            return self._get_numpy(
+                image,
+                **kwargs,
+            )
+
+        else:
+            raise RuntimeError(f"Unknown backend: {backend}")
 
     def _get_numpy(self, image: np.ndarray, **kwargs):
         raise NotImplementedError
@@ -1294,11 +1374,9 @@ class MedianBlur(Blur):
         return x
 
 #TODO ***CM*** revise typing, docstring, unit test
-class Pool(BackendDispatched, Feature):
+class Pool(Feature):
     """Abstract base class for pooling features."""
 
-    _NUMPY_IMPL = "_get_numpy"
-    _TORCH_IMPL = "_get_torch"
 
     def __init__(
         self,
@@ -1313,7 +1391,36 @@ class Pool(BackendDispatched, Feature):
         image: np.ndarray | torch.Tensor,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
-        return self._dispatch_backend(image, **kwargs)
+        
+        backend = config.get_backend()
+
+        if backend == "torch":
+            # ---- HARD GUARD: torch only ----
+            if not isinstance(image, torch.Tensor):
+                raise TypeError(
+                    "Torch backend selected but image is not a torch.Tensor"
+                )
+
+            return self._get_torch(
+                image,
+                **kwargs,
+            )
+
+        elif backend == "numpy":
+            # ---- HARD GUARD: numpy only ----
+            if not isinstance(image, np.ndarray):
+                raise TypeError(
+                    "NumPy backend selected but image is not a np.ndarray"
+                )
+
+            return self._get_numpy(
+                image,
+                **kwargs,
+            )
+        
+        else:
+            raise RuntimeError(f"Unknown backend: {backend}")
+
 
     # ---------- shared helpers ----------
 
@@ -1766,7 +1873,7 @@ class MedianPooling(Pool):
         return pooled.reshape(pooled.shape[2:] + extra)
 
 
-class Resize(BackendDispatched, Feature):
+class Resize(Feature):
     """Resize an image to a specified size.
 
     `Resize` resizes images following the channels-last semantic
@@ -1833,8 +1940,6 @@ class Resize(BackendDispatched, Feature):
 
     """
 
-    _NUMPY_IMPL = "_get_numpy"
-    _TORCH_IMPL = "_get_torch"
 
     def __init__(
         self: Resize,
@@ -1902,7 +2007,38 @@ class Resize(BackendDispatched, Feature):
         `align_corners=False`, which closely matches OpenCV’s default behavior.
 
         """
-        return self._dispatch_backend(image, dsize=dsize, **kwargs)
+
+        backend = config.get_backend()
+
+        if backend == "torch":
+            # ---- HARD GUARD: torch only ----
+            if not isinstance(image, torch.Tensor):
+                raise TypeError(
+                    "Torch backend selected but image is not a torch.Tensor"
+                )
+
+            return self._get_torch(
+                image,
+                dsize=dsize,
+                **kwargs,
+            )
+
+        elif backend == "numpy":
+            # ---- HARD GUARD: numpy only ----
+            if not isinstance(image, np.ndarray):
+                raise TypeError(
+                    "NumPy backend selected but image is not a np.ndarray"
+                )
+
+            return self._get_numpy(
+                image,
+                dsize=dsize,
+                **kwargs,
+            )
+        
+        else:
+            raise RuntimeError(f"Unknown backend: {backend}")
+
 
     # ---------- NumPy backend (OpenCV) ----------
 

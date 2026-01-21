@@ -52,11 +52,6 @@ Key Classes:
     hierarchical or logical structures in the pipeline without input
     transformations.
 
-- `BackendDispatched`: Mixin class for backend-specific implementations.
-
-    Provides mechanisms for dispatching feature methods based on the
-    computational backend (e.g., NumPy, PyTorch).
-
 - `ArithmeticOperationFeature`: Apply arithmetic operation element-wise.
 
     A parent class for features performing arithmetic operations like addition,
@@ -185,7 +180,6 @@ if TORCH_AVAILABLE:
 __all__ = [
     "Feature",
     "StructuralFeature",
-    "BackendDispatched",
     "Chain",
     "Branch",
     "DummyFeature",
@@ -3866,7 +3860,7 @@ class Feature(DeepTrackNode):
         if self.__distributed__:
             # Call get on each image in list, and merge properties from
             # corresponding image
-
+            print(type(image_list[0]))
             return [self.get(x, **feature_input) for x in image_list]
 
         # Else, call get on entire list.
@@ -3953,30 +3947,31 @@ class StructuralFeature(Feature):
     __distributed__: bool = False  # Process the entire image list in one call
 
 
-class BackendDispatched:
-    """Mixin for Feature.get() methods with backend-specific implementations."""
+# TBE
+# class BackendDispatched:
+#     """Mixin for Feature.get() methods with backend-specific implementations."""
 
-    _NUMPY_IMPL: str | None = None
-    _TORCH_IMPL: str | None = None
+#     _NUMPY_IMPL: str | None = None
+#     _TORCH_IMPL: str | None = None
 
-    def _dispatch_backend(self, *args, **kwargs):
-        backend = self.get_backend()
+#     def _dispatch_backend(self, *args, **kwargs):
+#         backend = self.get_backend()
 
-        if backend == "numpy":
-            if self._NUMPY_IMPL is None:
-                raise NotImplementedError(
-                    f"{self.__class__.__name__} does not support NumPy backend."
-                )
-            return getattr(self, self._NUMPY_IMPL)(*args, **kwargs)
+#         if backend == "numpy":
+#             if self._NUMPY_IMPL is None:
+#                 raise NotImplementedError(
+#                     f"{self.__class__.__name__} does not support NumPy backend."
+#                 )
+#             return getattr(self, self._NUMPY_IMPL)(*args, **kwargs)
 
-        if backend == "torch":
-            if self._TORCH_IMPL is None:
-                raise NotImplementedError(
-                    f"{self.__class__.__name__} does not support Torch backend."
-                )
-            return getattr(self, self._TORCH_IMPL)(*args, **kwargs)
+#         if backend == "torch":
+#             if self._TORCH_IMPL is None:
+#                 raise NotImplementedError(
+#                     f"{self.__class__.__name__} does not support Torch backend."
+#                 )
+#             return getattr(self, self._TORCH_IMPL)(*args, **kwargs)
 
-        raise RuntimeError(f"Unknown backend {backend}")
+#         raise RuntimeError(f"Unknown backend {backend}")
 
 
 class Chain(StructuralFeature):
