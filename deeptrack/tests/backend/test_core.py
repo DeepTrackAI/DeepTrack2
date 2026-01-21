@@ -181,6 +181,74 @@ class TestCore(unittest.TestCase):
         # Test dict property access
         self.assertIs(datadict.dict[(0, 0)], datadict[(0, 0)])
 
+    def test_DeepTrackDataDict_invalidate_validate_semantics(self):
+        # Exact vs prefix vs all vs trim
+
+        d = core.DeepTrackDataDict()
+
+        # Establish keylength=2 with 4 entries
+        keys = [(0, 0), (0, 1), (1, 0), (1, 1)]
+        for k in keys:
+            d.create_index(k)
+            d[k].store(k)
+
+        # Sanity
+        self.assertTrue(all(d[k].is_valid() for k in keys))
+
+        # (A) prefix invalidate
+        d.invalidate((0,))
+        self.assertFalse(d[(0, 0)].is_valid())
+        self.assertFalse(d[(0, 1)].is_valid())
+        self.assertTrue(d[(1, 0)].is_valid())
+        self.assertTrue(d[(1, 1)].is_valid())
+
+        # (B) prefix validate
+        d.validate((0,))
+        self.assertTrue(d[(0, 0)].is_valid())
+        self.assertTrue(d[(0, 1)].is_valid())
+
+        # (C) exact invalidate (existing key)
+        d.invalidate((1, 1))
+        self.assertFalse(d[(1, 1)].is_valid())
+        self.assertTrue(d[(1, 0)].is_valid())
+
+        # (D) trim invalidate: longer IDs trim to keylength
+        d.validate()  # reset all to valid
+        d.invalidate((1, 0, 999))
+        self.assertFalse(d[(1, 0)].is_valid())
+        self.assertTrue(d[(1, 1)].is_valid())
+
+        # (E) all invalidate via empty tuple
+        d.invalidate(())
+        self.assertTrue(all(not d[k].is_valid() for k in keys))
+
+        # (F) all validate
+        d.validate(())
+        self.assertTrue(all(d[k].is_valid() for k in keys))
+
+    def test_DeepTrackDataDict_prefix_invalidate_no_match_is_noop(self):
+        # Prefix invalidate when prefix matches nothing should be a no-op
+
+        d = core.DeepTrackDataDict()
+        for k in [(0, 0), (0, 1)]:
+            d.create_index(k)
+            d[k].store(k)
+
+        d.invalidate((9,))  # no keys with prefix (9,)
+        self.assertTrue(d[(0, 0)].is_valid())
+        self.assertTrue(d[(0, 1)].is_valid())
+
+    def test_DeepTrackDataDict_exact_invalidate_missing_key_is_noop(self):
+        # Exact invalidate on a missing key should be a no-op
+        # (matches your _matching_keys)
+
+        d = core.DeepTrackDataDict()
+        d.create_index((0, 0))
+        d[(0, 0)].store(1)
+
+        d.invalidate((1, 1))  # missing exact key => no-op
+        self.assertTrue(d[(0, 0)].is_valid())
+
 
     def test_DeepTrackNode_basics(self):
         ## Without _ID
@@ -553,6 +621,88 @@ class TestCore(unittest.TestCase):
                                     # (3 + 5) * (2 + 1)
                                     # 24
         self.assertEqual(C_0_1_2, 24)
+
+    def test_DeepTrackNode_invalidate_prefix_affects_descendants(self):
+        # invalidate(_ID=prefix) affects descendants by prefix, not everything
+
+        parent = core.DeepTrackNode(action=lambda _ID: _ID[0])
+        child = core.DeepTrackNode(action=lambda _ID: parent(_ID[:1]) + 10)
+        parent.add_child(child)
+
+        # Populate caches in child for mixed prefixes
+        child((0, 0))
+        child((0, 1))
+        child((1, 0))
+        child((1, 1))
+
+        self.assertTrue(child.is_valid((0, 0)))
+        self.assertTrue(child.is_valid((1, 0)))
+        self.assertTrue(child.is_valid((0, 1)))
+        self.assertTrue(child.is_valid((1, 1)))
+
+        # Invalidate only prefix (0,) => should only kill (0,*) in child
+        parent.invalidate((0,))
+
+        self.assertFalse(child.is_valid((0, 0)))
+        self.assertFalse(child.is_valid((0, 1)))
+        self.assertTrue(child.is_valid((1, 0)))
+        self.assertTrue(child.is_valid((1, 1)))
+
+    def test_DeepTrackNode_validate_does_not_validate_children(self):
+        # validate(_ID=...) should not validate children
+
+        parent = core.DeepTrackNode(action=lambda _ID: _ID[0])
+        child = core.DeepTrackNode(action=lambda _ID: parent(_ID[:1]) + 10)
+        parent.add_child(child)
+
+        # Fill caches
+        child((0, 0))
+        self.assertTrue(parent.is_valid((0,)))
+        self.assertTrue(child.is_valid((0, 0)))
+
+        # Invalidate parent (should invalidate child too)
+        parent.invalidate((0,))
+        self.assertFalse(parent.is_valid((0,)))
+        self.assertFalse(child.is_valid((0, 0)))
+
+        # Validate parent only
+        parent.validate((0,))
+        self.assertTrue(parent.is_valid((0,)))
+        self.assertFalse(child.is_valid((0, 0)))  # MUST remain invalid
+
+    def test_DeepTrackNode_invalidate_propagates_to_grandchildren(self):
+        # Invalidation should affect all descendants, not just direct children
+
+        parent = core.DeepTrackNode(action=lambda _ID: _ID[0])
+        child = core.DeepTrackNode(action=lambda _ID: parent(_ID[:1]) + 1)
+        grandchild = core.DeepTrackNode(action=lambda _ID: child(_ID) + 1)
+
+        parent.add_child(child)
+        child.add_child(grandchild)
+
+        grandchild((0, 0))
+        self.assertTrue(grandchild.is_valid((0, 0)))
+
+        parent.invalidate((0,))
+        self.assertFalse(child.is_valid((0, 0)))
+        self.assertFalse(grandchild.is_valid((0, 0)))
+
+    def test_DeepTrackNode_invalidate_trims_ids_in_descendants(self):
+        # Trim behavior through DeepTrackNode.invalidate(_ID=longer)
+        # (relies on DeepTrackDataDict)
+
+        parent = core.DeepTrackNode(action=lambda _ID: _ID[0])
+        child = core.DeepTrackNode(action=lambda _ID: parent(_ID[:1]) + 10)
+        parent.add_child(child)
+
+        # child caches at (1, 7)
+        child((1, 7))
+        self.assertTrue(child.is_valid((1, 7)))
+
+        # invalidate with longer ID;
+        # in child's data, keylength=2 => trims to (1,7)
+        parent.invalidate((1, 7, 999))
+        self.assertFalse(child.is_valid((1, 7)))
 
 
     def test__equivalent(self):
