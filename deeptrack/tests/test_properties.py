@@ -541,8 +541,6 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(sp.sequence(), [w0, w1])
 
     def test_SequentialProperty_ID_separates_history(self):
-        return  # TODO
-
         # Minimal: histories don’t mix across _ID
 
         sp = properties.SequentialProperty(
@@ -571,9 +569,7 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(sp.sequence(_ID=id1), [1])
 
     def test_SequentialProperty_ID_previous_value_is_local(self):
-        return  # TODO
-
-        #Mid-sequence previous_value is _ID-local
+        # Mid-sequence previous_value is _ID-local
 
         sp = properties.SequentialProperty(
             initial_sampling_rule=5,
@@ -596,9 +592,8 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(sp.previous_value(_ID=id1), None)
 
     def test_SequentialProperty_full_run_two_IDs_interleaved(self):
-        return  # TODO
-
         # Full run for two IDs interleaved (strongest)
+
         sp = properties.SequentialProperty(
             initial_sampling_rule=1,
             sampling_rule=lambda previous_value: previous_value + 1,
