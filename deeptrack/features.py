@@ -640,7 +640,7 @@ class Feature(DeepTrackNode):
         self._bool_dtype = "default"
         self._device = config.get_device()
 
-        super().__init__()
+        super().__init__(action=self.action)
 
         # Ensure the feature has a 'name' property; default = class name.
         self.node_name = kwargs.setdefault("name", type(self).__name__)
@@ -1279,7 +1279,7 @@ class Feature(DeepTrackNode):
 
         return tuple(results)
 
-    def action(
+    def _action(
         self: Feature,
         _ID: tuple[int, ...] = (),
     ) -> Any | list[Any]:

@@ -1279,9 +1279,6 @@ class DeepTrackNode:
         else:
             self.action = lambda: action
 
-        # TODO Remove once understood why this is needed
-        self._accepts_ID = "_ID" in get_kwarg_names(self.action)
-
         # Keep track of all children, including this node.
         self._all_children = WeakSet()
         self._all_children.add(self)
