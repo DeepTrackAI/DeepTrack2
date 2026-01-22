@@ -396,7 +396,6 @@ class Microscope(StructuralFeature):
                 **additional_sample_kwargs,
             )
 
-            print('1',type(sample_volume))
             if volume_samples:
                 # Interpret the merged volume semantically
                 sample_volume = self._extract_contrast_volume(
@@ -1345,7 +1344,7 @@ class Fluorescence(Optics):
 
         if backend == "torch":
             # ---- HARD GUARD: torch only ----
-            if not isinstance(image, torch.Tensor):
+            if not isinstance(illuminated_volume, torch.Tensor):
                 raise TypeError(
                     "Torch backend selected but image is not a torch.Tensor"
                 )
@@ -1358,7 +1357,7 @@ class Fluorescence(Optics):
 
         elif backend == "numpy":
             # ---- HARD GUARD: numpy only ----
-            if not isinstance(image, np.ndarray):
+            if not isinstance(illuminated_volume, np.ndarray):
                 raise TypeError(
                     "NumPy backend selected but image is not a np.ndarray"
                 )
@@ -1605,7 +1604,7 @@ class Fluorescence(Optics):
                     torch.fft.fftshift(pupil)
                 )
             ) ** 2
-
+            
             otf = torch.fft.fft2(psf)
             field_fft = torch.fft.fft2(volume[:, :, i])
             convolved = field_fft * otf
