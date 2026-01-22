@@ -1,8 +1,8 @@
 """Tools to manage feature properties in DeepTrack2.
 
-This module provides classes for managing, sampling, and evaluating properties 
-of features within the DeepTrack2 framework. It offers flexibility in defining 
-and handling properties with various data types, dependencies, and sampling 
+This module provides classes for managing, sampling, and evaluating properties
+of features within the DeepTrack2 framework. It offers flexibility in defining
+and handling properties with various data types, dependencies, and sampling
 rules.
 
 Key Features
@@ -16,8 +16,8 @@ Key Features
 
 - **Sequential Sampling** 
     
-    The `SequentialProperty` class enables the creation of properties that 
-    evolve over a sequence, useful for applications like creating dynamic 
+    The `SequentialProperty` class enables the creation of properties that
+    evolve over a sequence, useful for applications like creating dynamic
     features in videos or time-series data.
 
 Module Structure
@@ -26,12 +26,12 @@ Classes:
 
 - `Property`: Property of a feature.
 
-    Defines a single property of a feature, supporting various data types and 
+    Defines a single property of a feature, supporting various data types and
     dynamic evaluations.
     
 - `PropertyDict`: Property dictionary.
 
-    A dictionary of properties with utilities for dependency management and 
+    A dictionary of properties with utilities for dependency management and
     sampling.
 
 - `SequentialProperty`: Property for sequential sampling.
@@ -77,26 +77,26 @@ Handle sequential properties:
 
 >>> seq_prop = dt.SequentialProperty(
 ...     sampling_rule=lambda: np.random.randint(10, 20),
+...     sequence_length = 5,
 ... )
->>> seq_prop.set_sequence_length(5)
 >>> for step in range(seq_prop.sequence_length()):
-...     seq_prop.set_current_index(step)
-...     current_value = seq_prop.sample()
-...     seq_prop.store(current_value)
-...     print(f"{step}: {seq_prop.previous()}")
-0: [16]
-1: [16, 19]
-2: [16, 19, 18]
-3: [16, 19, 18, 15]
-4: [16, 19, 18, 15, 19]
+...     seq_prop()
+...     seq_prop.next_step()
+...     print(f"Sequence at step {step}: {seq_prop.sequence()}")
+Sequence at step 0: [19]
+Sequence at step 1: [19, 10]
+Sequence at step 2: [19, 10, 11]
+Sequence at step 3: [19, 10, 11, 14]
+Sequence at step 4: [19, 10, 11, 14, 12]
 
 """
+
 
 from __future__ import annotations
 
 from typing import Any, Callable, TYPE_CHECKING
 
-from numpy.typing import NDArray
+import numpy as np
 
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.utils import get_kwarg_names
@@ -116,8 +116,8 @@ if TYPE_CHECKING:
 class Property(DeepTrackNode):
     """Property of a feature in the DeepTrack2 framework.
 
-    A `Property` defines a rule for sampling values used to evaluate features. 
-    It supports various data types and structures, such as constants, 
+    A `Property` defines a rule for sampling values used to evaluate features.
+    It supports various data types and structures, such as constants,
     functions, lists, iterators, dictionaries, tuples, NumPy arrays, PyTorch
     tensors, slices, and `DeepTrackNode` objects.
 
@@ -127,12 +127,13 @@ class Property(DeepTrackNode):
         tensors) always return the same value.
     - **Functions** are evaluated dynamically, potentially using other
         properties as arguments.
-    - **Lists or dictionaries** evaluate and sample each member individually.
+    - **Lists, dictionaries, or tuples ** evaluate and sample each member
+        individually.
     - **Iterators** return the next value in the sequence, repeating the final
         value indefinitely.
     - **Slices** sample the `start`, `stop`, and `step` values individually.
     - **DeepTrackNode's** (e.g., other properties or features) use the value 
-      computed by the node.
+        computed by the node.
 
     Dependencies between properties are tracked automatically, enabling 
     efficient recomputation when dependencies change.
@@ -140,10 +141,10 @@ class Property(DeepTrackNode):
     Parameters
     ----------
     sampling_rule: Any
-        The rule for sampling values. Can be a constant, function, list, 
+        The rule for sampling values. Can be a constant, function, list,
         dictionary, iterator, tuple, NumPy array, PyTorch tensor, slice,
         or `DeepTrackNode`.
-    node_name: string or None
+    node_name: str or None
         The name of this node. Defaults to None.
     **dependencies: Property
         Additional dependencies passed as named arguments. These dependencies 
@@ -153,7 +154,7 @@ class Property(DeepTrackNode):
     Methods
     -------
     `create_action(sampling_rule, **dependencies) -> Callable[..., Any]`
-        Creates an action that defines how the property is evaluated. The 
+        Creates an action that defines how the property is evaluated. The
         behavior of the action depends on the type of `sampling_rule`.
 
     Examples
@@ -186,7 +187,7 @@ class Property(DeepTrackNode):
     >>> const_prop()
     tensor([1., 2., 3.])
 
-    Dynamic property using functions, which can also depend on other
+    Dynamic property typically use functions and can also depend on other
     properties:
     
     >>> dynamic_prop = dt.Property(lambda: np.random.rand())
@@ -233,7 +234,8 @@ class Property(DeepTrackNode):
     >>> iter_prop.new()  # Last value repeats
     3
 
-    Lists and dictionaries can contain properties, functions, or constants:
+    Lists, dictionaries, and tuples can contain properties, functions, or
+    constants:
 
     >>> list_prop = dt.Property([
     ...     1,
@@ -251,7 +253,15 @@ class Property(DeepTrackNode):
     >>> dict_prop()
     {'a': 1, 'b': 2, 'c': 3}
 
-    Property can wrap a DeepTrackNode, such as another feature node:
+    >>> tuple_prop = dt.Property((
+    ...     1,
+    ...     lambda: 2,
+    ...     dt.Property(3),
+    ... ))
+    >>> tuple_prop()
+    (1, 2, 3)
+
+    Property can wrap a `DeepTrackNode`, such as another feature node:
 
     >>> node = dt.DeepTrackNode(100)
     >>> node_prop = dt.Property(node)
@@ -321,7 +331,7 @@ class Property(DeepTrackNode):
             list[Any] |
             dict[Any, Any] |
             tuple[Any, ...] |
-            NDArray[Any] |
+            np.ndarray |
             torch.Tensor |
             slice |
             DeepTrackNode |
@@ -329,16 +339,17 @@ class Property(DeepTrackNode):
         ),
         node_name: str | None = None,
         **dependencies: Property,
-    ):
+    ) -> None:
         """Initialize a `Property` object with a given sampling rule.
 
         Parameters
         ----------
-        sampling_rule: Callable[..., Any] or list[Any] or dict[Any, Any]
-                       or tuple or NumPy array or PyTorch tensor or slice
-                       or DeepTrackNode or Any
-            The rule to sample values for the property.
-        node_name: string or None
+        sampling_rule: Any
+            The rule to sample values for the property. It can be essentially
+            anything, most often:
+            Callable[..., Any] or list[Any] or dict[Any, Any] or tuple
+            or NumPy array or PyTorch tensor or slice or DeepTrackNode or Any
+        node_name: str or None
             The name of this node. Defaults to None.
         **dependencies: Property
             Additional named dependencies used in the sampling rule.
@@ -358,7 +369,7 @@ class Property(DeepTrackNode):
             list[Any] |
             dict[Any, Any] |
             tuple[Any, ...] |
-            NDArray[Any] |
+            np.ndarray |
             torch.Tensor |
             slice |
             DeepTrackNode |
@@ -370,10 +381,11 @@ class Property(DeepTrackNode):
 
         Parameters
         ----------
-        sampling_rule: Callable[..., Any] or list[Any] or dict[Any]
-                       or tuple or np.ndarray or torch.Tensor or slice
-                       or DeepTrackNode or Any
-            The rule to sample values for the property.
+        sampling_rule: Any
+            The rule to sample values for the property. It can be essentially
+            anything, most often:
+            Callable[..., Any] or list[Any] or dict[Any, Any] or tuple
+            or NumPy array or PyTorch tensor or slice or DeepTrackNode or Any
         **dependencies: Property
             Dependencies to be used in the sampling rule.
 
@@ -388,34 +400,50 @@ class Property(DeepTrackNode):
         # Return the value sampled by the DeepTrackNode.
         if isinstance(sampling_rule, DeepTrackNode):
             sampling_rule.add_child(self)
-            # self.add_dependency(sampling_rule)  # Already done by add_child.
             return sampling_rule
 
         # Dictionary
-        # Return a dictionary with each each member sampled individually.
+        # Return a dictionary with each member sampled individually.
         if isinstance(sampling_rule, dict):
             dict_of_actions = dict(
-                (key, self.create_action(value, **dependencies))
-                for key, value in sampling_rule.items()
+                (key, self.create_action(rule, **dependencies))
+                for key, rule in sampling_rule.items()
             )
             return lambda _ID=(): dict(
-                (key, value(_ID=_ID)) for key, value in dict_of_actions.items()
+                (key, action(_ID=_ID))
+                for key, action in dict_of_actions.items()
             )
 
         # List
-        # Return a list with each each member sampled individually.
+        # Return a list with each member sampled individually.
         if isinstance(sampling_rule, list):
             list_of_actions = [
-                self.create_action(value, **dependencies)
-                for value in sampling_rule
+                self.create_action(rule, **dependencies)
+                for rule in sampling_rule
             ]
-            return lambda _ID=(): [value(_ID=_ID) for value in list_of_actions]
+            return lambda _ID=(): [
+                action(_ID=_ID)
+                for action in list_of_actions
+            ]
+
+        # Tuple
+        # Return a tuple with each member sampled individually.
+        if isinstance(sampling_rule, tuple):
+            tuple_of_actions = tuple(
+                self.create_action(rule, **dependencies)
+                for rule in sampling_rule
+            )
+            return lambda _ID=(): tuple(
+                action(_ID=_ID)
+                for action in tuple_of_actions
+            )
 
         # Iterable
         # Return the next value. The last value is returned indefinitely.
         if hasattr(sampling_rule, "__next__"):
 
             def wrapped_iterator():
+                next_value = None
                 while True:
                     try:
                         next_value = next(sampling_rule)
@@ -431,9 +459,8 @@ class Property(DeepTrackNode):
             return action
 
         # Slice
-        # Sample individually the start, stop and step.
+        # Sample start, stop, and step individually.
         if isinstance(sampling_rule, slice):
-
             start = self.create_action(sampling_rule.start, **dependencies)
             stop = self.create_action(sampling_rule.stop, **dependencies)
             step = self.create_action(sampling_rule.step, **dependencies)
@@ -453,18 +480,20 @@ class Property(DeepTrackNode):
 
             # Extract the arguments that are also properties.
             used_dependencies = dict(
-                (key, dependency) for key, dependency
-                in dependencies.items() if key in knames
+                (key, dependency)
+                for key, dependency
+                in dependencies.items()
+                if key in knames
             )
 
             # Add the dependencies of the function as children.
             for dependency in used_dependencies.values():
                 dependency.add_child(self)
-                # self.add_dependency(dependency)  # Already done by add_child.
 
             # Create the action.
             return lambda _ID=(): sampling_rule(
-                **{key: dependency(_ID=_ID) for key, dependency
+                **{key: dependency(_ID=_ID)
+                   for key, dependency
                    in used_dependencies.items()},
                 **({"_ID": _ID} if "_ID" in knames else {}),
             )
@@ -477,16 +506,18 @@ class Property(DeepTrackNode):
 class PropertyDict(DeepTrackNode, dict):
     """Dictionary with Property elements.
 
-    A `PropertyDict` is a specialized dictionary where values are instances of 
-    `Property`. It provides additional utility functions to update, sample, 
-    reset, and retrieve properties. This is particularly useful for managing 
+    A `PropertyDict` is a specialized dictionary where values are instances of
+    `Property`. It provides additional utility functions to update, sample,
+    reset, and retrieve properties. This is particularly useful for managing
     feature-specific properties in a structured manner.
 
     Parameters
     ----------
+    node_name: str or None, optional
+        The name of this node. Defaults to `None`.
     **kwargs: Any
-        Key-value pairs used to initialize the dictionary, where values are 
-        either directly used to create `Property` instances or are dependent 
+        Key-value pairs used to initialize the dictionary, where values are
+        either directly used to create `Property` instances or are dependent
         on other `Property` values.
 
     Methods
@@ -525,46 +556,57 @@ class PropertyDict(DeepTrackNode, dict):
         self: PropertyDict,
         node_name: str | None = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize a PropertyDict with properties and dependencies.
 
-        Iteratively converts the input dictionary's values into `Property` 
-        instances while resolving dependencies between the properties.
-
-        It resolves dependencies between the properties iteratively.
+        Iteratively converts the input dictionary's values into `Property`
+        instances while iteratively resolving dependencies between the
+        properties.
         
         An `action` is created to evaluate and return the dictionary with 
         sampled values.
 
         Parameters
         ----------
-        node_name: string or None
-            The name of this node. Defaults to None.
+        node_name: str or None
+            The name of this node. Defaults to `None`.
         **kwargs: Any
             Key-value pairs used to initialize the dictionary. Values can be 
             constants, functions, or other `Property`-compatible types.
 
         """
 
-        dependencies = {}  # To store the resolved Property instances.
+        dependencies: dict[str, Property] = {}  # Store resolved properties
+        unresolved = dict(kwargs)
 
-        while kwargs:
+        while unresolved:
             # Multiple passes over the data until everything that can be
             # resolved is resolved.
-            for key, value in list(kwargs.items()):
+            progressed = False  # Track whether any key resolved in this pass
+
+            for key, rule in list(unresolved.items()):
                 try:
                     # Create a Property instance for the key,
                     # resolving dependencies.
                     dependencies[key] = Property(
-                        value,
+                        rule,
                         node_name=key,
-                        **{**dependencies, **kwargs},
+                        **{**dependencies, **unresolved},
                     )
                     # Remove the key from the input dictionary once resolved.
-                    kwargs.pop(key)
+                    unresolved.pop(key)
+
+                    progressed = True  # Progress has been made
+
                 except AttributeError:
                     # Catch unresolved dependencies and continue iterating.
-                    pass
+                    continue
+
+            if not progressed:
+                raise ValueError(
+                    "Could not resolve PropertyDict dependencies for keys: "
+                    f"{', '.join(unresolved.keys())}."
+                )
 
         def action(
             _ID: tuple[int, ...] = (),
@@ -574,25 +616,24 @@ class PropertyDict(DeepTrackNode, dict):
             Parameters
             ----------
             _ID: tuple[int, ...], optional
-                A unique identifier for sampling properties.
+                A unique identifier for sampling properties. Defaults to `()`.
 
             Returns
             -------
             dict[str, Any]
-                A dictionary where each value is sampled from its respective 
+                A dictionary where each value is sampled from its respective
                 `Property`.
             
             """
 
-            return dict((key, value(_ID=_ID)) for key, value in self.items())
+            return dict((key, prop(_ID=_ID)) for key, prop in self.items())
 
         super().__init__(action, **dependencies)
 
         self.node_name = node_name
 
-        for value in dependencies.values():
-            value.add_child(self)
-            # self.add_dependency(value)  # Already executed by add_child.
+        for prop in dependencies.values():
+            prop.add_child(self)
 
     def __getitem__(
         self: PropertyDict,
@@ -600,7 +641,8 @@ class PropertyDict(DeepTrackNode, dict):
     ) -> Any:
         """Retrieve a value from the dictionary.
 
-        Overrides the default `__getitem__` to ensure dictionary functionality.
+        Overrides the default `.__getitem__()` to ensure dictionary
+        functionality.
 
         Parameters
         ----------
@@ -614,9 +656,9 @@ class PropertyDict(DeepTrackNode, dict):
 
         Notes
         -----
-        This method directly calls the `__getitem__()` method of the built-in 
-        `dict` class. This ensures that the standard dictionary behavior is 
-        used to retrieve values, bypassing any custom logic in `PropertyDict` 
+        This method directly calls the `.__getitem__()` method of the built-in
+        `dict` class. This ensures that the standard dictionary behavior is
+        used to retrieve values, bypassing any custom logic in `PropertyDict`
         that might otherwise cause infinite recursion or unexpected results.
         
         """
@@ -628,111 +670,101 @@ class PropertyDict(DeepTrackNode, dict):
 
 
 class SequentialProperty(Property):
-    """Property that yields different values for sequential steps.
+    """Property that yields different values across sequential steps.
 
-    SequentialProperty lets the user encapsulate feature sampling rules and
-    iterator logic in a single object to evaluate them sequentially.
-    
-    The `SequentialProperty` class extends the standard `Property` to handle 
-    scenarios where the property’s value evolves over discrete steps, such as 
-    frames in a video, time-series data, or any sequential process. At each 
-    step, it selects whether to use the `initialization` function (step = 0) or 
-    the `current` function (steps >= 1). It also keeps track of all previously 
-    generated values, allowing to refer back to them if needed.
+    A `SequentialProperty` encapsulates sampling rules and step management in a
+    single object for sequential evaluation.
 
+    This class extends `Property` to support scenarios where a property value
+    evolves over discrete steps, such as frames in a video, time-series data,
+    or other sequential processes. At each step, it selects whether to use the
+    `initial_sampling_rule` (when step == 0 and it is provided) or the
+    `sampling_rule` (otherwise). It also keeps track of previously generated
+    values, allowing sampling rules to depend on history.
 
     Parameters
     ----------
+    node_name: str or None, optional
+        The name of this node. Defaults to `None`.
     initial_sampling_rule: Any, optional
-        A sampling rule for the first step of the sequence (step=0). 
-        Can be any value or callable that is acceptable to `Property`. 
-        If not provided, the initial value is `None`.
-        
-    current_value: Any, optional
-        The sampling rule (value or callable) for steps > 0. Defaults to None.
+        A sampling rule for the first step (step == 0). Can be any value or
+        callable accepted by `Property`. Defaults to `None`.
+    sampling_rule: Any, optional
+        The sampling rule (value or callable) for steps > 0, and also for
+        step == 0 when `initial_sampling_rule` is `None`. Defaults to `None`.
     sequence_length: int, optional
-        The length of the sequence.
-    sequence_index: int, optional
-        The current index of the sequence. 
-        
-    **kwargs: dict[str, Property]
-        Additional dependencies that might be required if `initialization` 
-        is a callable. These dependencies are injected when evaluating
-        `initialization`.
+        The length of the sequence. Defaults to `None`.
+    **kwargs: Property
+        Additional dependencies injected when evaluating callable sampling
+        rules.
 
     Attributes
     ----------
     sequence_length: Property
-        A `Property` holding the total number of steps in the sequence. 
+        A `Property` holding the total number of steps (`int`) in the sequence.
         Initialized to 0 by default.
     sequence_index: Property
-        A `Property` holding the index of the current step (starting at 0).
+        A `Property` holding the index (`int`) of the current step (starting
+        at 0).
     previous_values: Property
-        A `Property` returning all previously stored values up to, but not
-        including, the current value and the previous value.
+        A `Property` returning all stored values strictly before the previous
+        value (`list[Any]`).
     previous_value: Property
-        A `Property` returning the most recently stored value, or `None` 
-        if there is no history yet.
-    initial_sampling_rule: Callable[..., Any], optional
-        A function to compute the value at step=0. If `None`, the property 
-        returns `None` at the first step.
+        A `Property` returning the most recently stored value (`Any`), or
+        `None` if no values have been stored yet.
+    initial_sampling_rule: Callable[..., Any] | None
+        A function (or constant wrapped as an action) used to compute the value
+        at step 0. If `None`, the property falls back to `sampling_rule` at
+        step 0.
     sample: Callable[..., Any]
-        Computes the value at steps >= 1 with the given sampling rule.
-        By default, it returns `None`.
+        The action used to compute the value at steps > 0 (and at step 0 if
+        `initial_sampling_rule` is `None`). If no `sampling_rule` is provided,
+        it returns `None`.
     action: Callable[..., Any]
-        Overrides the default `Property.action` to select between 
-        `initial_sampling_rule` (if `sequence_index` is 0) or `sampling_rule` (otherwise).
+        Overrides the default `Property.action` to select between
+        `initial_sampling_rule` (when step is 0) and `sample` (otherwise).
 
     Methods
     -------
-    _action_override(_ID: tuple[int, ...]) -> Any
-        Internal logic to pick which function (`initialization` or `current`) 
-        to call based on the `sequence_index`.
-    store(value: Any, _ID: tuple[int, ...] = ()) -> None
-        Store a newly computed `value` in the property’s internal list of 
-        previously generated values.
-    sampling_rule(_ID: tuple[int, ...] = ()) -> Any
-        Retrieve the sampling_rule associated with the current step index.
-    __call__(_ID: tuple[int, ...] = ()) -> Any
-        Evaluate the property at the current step, returning either the 
-        initialization (if index = 0) or current value (if index > 0).
-    set_sequence_length(self, value, ID) -> None:
-        Stores the value for the length of the sequence,
-        analagous to SequentialProperty.sequence_length.store()        
-    set_current_index(self, value, ID) -> None:
-        Stores the value for the current step of the sequence,
-        analagous to SequentialProperty.current_step.store()
-        
+    `_action_override(_ID) -> Any`
+        Select the appropriate sampling rule based on `sequence_index`.
+    `sequence(_ID) -> list[Any]`
+        Return the stored sequence for `_ID` without recomputing.
+    `next_step(_ID) -> bool`
+        Advance the sequence index by one step (if possible).
+    `store(value, _ID) -> None`
+        Append a newly computed value to the stored sequence for `_ID`.
+    `current_value(_ID) -> Any`
+        Return the stored value at the current step index.
+
     Examples
     --------
-    >>> import deeptrack as dt
-
     To illustrate the use of `SequentialProperty`, we will implement a
     one-dimensional Brownian walker.
 
+    >>> import deeptrack as dt
+
     Define the `SequentialProperty`:
+
     >>> import numpy as np
     >>>
     >>> seq_prop = dt.SequentialProperty(
-    ...    initial_sampling_rule=0,  # Sampling rule for first time step
-    ...    sampling_rule= np.random.randn,  # Sampl. rule for subsequent steps
-    ...    sequence_length=10,  # Number of steps
-    ...    sequence_index=0,  # Initial step
+    ...     initial_sampling_rule=0,  # Sampling rule for first time step
+    ...     sampling_rule=(  # Sampl. rule for subsequent steps
+    ...         lambda previous_value: previous_value + np.random.randn()
+    ...     ),
+    ...     sequence_length=10,  # Number of steps
     ... )
 
-    Sample and store initial position:
-    >>> start_position = seq_prop.initial_sampling_rule()
-    >>> seq_prop.store(start_position)
+    Iteratively calculate the sequence:
 
-    Iteratively update and store position:
-    >>> for step in range(1, seq_prop.sequence_length()): 
-    ...     seq_prop.set_current_index(step)
-    ...     previous_position = seq_prop.previous()[-1] # Previous value
-    ...     new_position = previous_position + seq_prop.sample()
-    ...     seq_prop.store(new_position)
+    >>> for step in range(seq_prop.sequence_length()):
+    ...     seq_prop()
+    ...     seq_prop.next_step()  # Returns False at the final step
 
-    Print all stored values:
-    >>> seq_prop.previous()
+    Print all values of the sequence:
+
+    >>> seq_prop.sequence()
     [0,
     -0.38200070551587934,
     0.4107493780458869,
@@ -746,84 +778,85 @@ class SequentialProperty(Property):
 
     """
 
-    sequence_length: Property
-    sequence_index: Property
-    previous_values: Property
-    previous_value: Property
-    initial_sampling_rule: Callable[..., Any]
+    sequence_length: Property  # int
+    sequence_index: Property  # int
+    previous_values: Property  # list[Any]
+    previous_value: Property  # Any
+    initial_sampling_rule: Callable[..., Any] | None
     sample: Callable[..., Any]
     action: Callable[..., Any]
 
     def __init__(
         self: SequentialProperty,
+        node_name: str | None = None,
         initial_sampling_rule: Any = None,
         sampling_rule: Any = None,
         sequence_length: int | None = None,
-        sequence_index: int | None = None,
         **kwargs: Property,
     ) -> None:
-        """Create SequentialProperty.
+        """Create a SequentialProperty.
         
         Parameters
         ----------
+        node_name: str or None, optional
+            The name of this node. Defaults to `None`.
         initial_sampling_rule: Any, optional
-            The sampling rule (value or callable) for step = 0. It defaults to
-            `None`.
+            The sampling rule (value or callable) for step == 0. If `None`,
+            evaluation at step 0 falls back to `sampling_rule`.
+            Defaults to `None`.
         sampling_rule: Any, optional
-            The sampling rule (value or callable) for the current step. It
-            defaults to `None`.
+            The sampling rule (value or callable) for steps > 0, and also for
+            step == 0 when `initial_sampling_rule` is `None`.
+            Defaults to `None`.
         sequence_length: int, optional
-            The length of the sequence. It defaults to `None`.
-        sequence_index: int, optional
-            The current index of the sequence. It defaults to `None`.
+            The length of the sequence. Defaults to `None`.
         **kwargs: Property
-            Additional named dependencies for `initialization` and `current`.
+            Additional named dependencies for callable sampling rules.
         
         """
 
         # Set sampling_rule=None to the base constructor.
         # It overrides action below with _action_override().
-        super().__init__(sampling_rule=None)
+        super().__init__(sampling_rule=None, node_name=node_name)
 
         # 1) Initialize sequence length.
         if isinstance(sequence_length, int):
-            self.sequence_length = Property(sequence_length)
-        else:  
-            self.sequence_length = Property(0)
+            self.sequence_length = Property(
+                sequence_length,
+                node_name="sequence_length",
+            )
+        else:
+            self.sequence_length = Property(0, node_name="sequence_length")
         self.sequence_length.add_child(self)
-        # self.add_dependency(self.sequence_length)  # Done by add_child.
 
         # 2) Initialize sequence index.
-        if isinstance(sequence_index, int):
-            self.sequence_index = Property(sequence_index)
-        else:
-            self.sequence_index = Property(0)
+        # Invariant: 0 <= sequence_index < sequence_length for valid sequence.
+        self.sequence_index = Property(0, node_name="sequence_index")
         self.sequence_index.add_child(self)
-        # self.add_dependency(self.sequence_index)  # Done by add_child.
 
-        # 3) Store all previous values if sequence step > 0.
+        # 3) Store all previous values if sequence index > 0.
         self.previous_values = Property(
-            lambda _ID=(): self.previous(_ID=_ID)[: self.sequence_index() - 1]
-                           if self.sequence_index(_ID=_ID)
-                           else []
+            lambda _ID=(): (
+                self.sequence(_ID=_ID)[: self.sequence_index(_ID=_ID) - 1]
+                if self.sequence_index(_ID=_ID) > 0
+                else []
+            ),
+            node_name="previous_values",
         )
         self.previous_values.add_child(self)
-        # self.add_dependency(self.previous_values)  # Done by add_child
-
         self.sequence_index.add_child(self.previous_values)
-        # self.previous_values.add_dependency(self.sequence_index)  # Done
 
         # 4) Store the previous value.
         self.previous_value = Property(
-            lambda _ID=(): self.previous(_ID=_ID)[self.sequence_index() - 1]
-                           if self.previous(_ID=_ID)
-                           else None
+            lambda _ID=(): (
+                self.sequence(_ID=_ID)[self.sequence_index(_ID=_ID) - 1]
+                if self.sequence_index(_ID=_ID) > 0
+                else None
+            ),
+            node_name="previous_value",
         )
         self.previous_value.add_child(self)
-        # self.add_dependency(self.previous_value)  # Done by add_child
-
         self.sequence_index.add_child(self.previous_value)
-        # self.previous_value.add_dependency(self.sequence_index)  # Done
 
         # 5) Create an action for initializing the sequence.
         if initial_sampling_rule is not None:
@@ -854,10 +887,10 @@ class SequentialProperty(Property):
         self: SequentialProperty,
         _ID: tuple[int, ...] = (),
     ) -> Any:
-        """Decide which function to call based on the current step.
+        """Select the appropriate sampling rule for the current step.
 
-        For step=0, it calls `self.initial_sampling_rule`. Otherwise, it calls
-        `self.sampling_rule`.
+        At step 0, this calls `initial_sampling_rule` if it is not `None`.
+        Otherwise, it calls `sample`.
 
         Parameters
         ----------
@@ -867,15 +900,12 @@ class SequentialProperty(Property):
         Returns
         -------
         Any
-            Result of the `self.initial_sampling_rule` function (if step == 0)
-            or result of the `self.sampling_rule` function (if step > 0).
+            The sampled value for the current step.
         
         """
 
-        if self.sequence_index(_ID=_ID) == 0:
-            if self.initial_sampling_rule:
-                return self.initial_sampling_rule(_ID=_ID)
-            return None
+        if self.sequence_index(_ID=_ID) == 0 and self.initial_sampling_rule:
+            return self.initial_sampling_rule(_ID=_ID)
 
         return self.sample(_ID=_ID)
 
@@ -884,10 +914,10 @@ class SequentialProperty(Property):
         value: Any,
         _ID: tuple[int, ...] = (),
     ) -> None:
-        """Append value to the internal list of previously generated values.
+        """Append a value to the stored sequence for _ID.
 
-        It retrieves the existing list of values for this _ID. If this _ID has 
-        never been used, it starts an empty list.
+        Appends `value` to the stored sequence for `_ID`. If no values have
+        been stored yet for `_ID`, it starts a new list.
 
         Parameters
         ----------
@@ -897,28 +927,19 @@ class SequentialProperty(Property):
             A unique identifier that allows the property to keep separate 
             histories for different parallel evaluations.
 
-        Raises
-        ------
-        KeyError
-            If no existing data for this _ID, it initializes an empty list.
-
         """
 
-        try:
-            current_data = self.data[_ID].current_value()
-        except KeyError:
-            current_data = []
-
+        current_data = self.sequence(_ID=_ID)
         super().store(current_data + [value], _ID=_ID)
 
     def current_value(
         self: SequentialProperty,
         _ID: tuple[int, ...] = (),
     ) -> Any:
-        """Retrieve the value corresponding to the current sequence step.
+        """Return the stored value at the current step index.
 
-        It expects that each step's value has been stored. If no value has been 
-        stored for this step, it thorws an IndexError.
+        It expects that each step's value has been stored. If no value has been
+        stored for this step, it throws an IndexError.
 
         Parameters
         ----------
@@ -933,79 +954,86 @@ class SequentialProperty(Property):
         Raises
         ------
         IndexError
-            If no value has been stored for this step, it thorws an IndexError.
+            If no value has been stored for this step, it throws an IndexError.
 
         """
 
-        return super().current_value(_ID=_ID)[self.sequence_index(_ID=_ID)]
+        sequence = self.sequence(_ID=_ID)
+        index = self.sequence_index(_ID=_ID)
 
-    def previous(self, _ID: tuple[int, ...] = ()) -> Any:
-        """Retrieve the previously stored value at ID without recomputing.
+        if index >= len(sequence):
+            raise IndexError(
+                "No stored value for current step: index="
+                f"{index}, stored_values={len(sequence)}."
+            )
+
+        return sequence[index]
+
+    def sequence(self, _ID: tuple[int, ...] = ()) -> list[Any]:
+        """Retrieve the stored sequence for _ID without recomputing.
 
         Parameters
         ----------
-        _ID : Tuple[int, ...], optional
+        _ID: tuple[int, ...], optional
             The ID for which to retrieve the previous value.
 
         Returns
         -------
-        Any
-            The previously stored value if `_ID` is valid.
-            Returns `[]` if `_ID` is not a valid index.
-        
+        list[Any]
+            The list of stored values for this `_ID`. Returns an empty list if
+            no values have been stored yet.
+
         """
 
-        if self.data.valid_index(_ID):
+        if self.data.valid_index(_ID) and _ID in self.data.keys():
             return self.data[_ID].current_value()
-        else:
-            return []
 
-    def set_sequence_length(
+        return []
+
+    # Invariant:
+    # For a sequence of length L = sequence_length(_ID),
+    # the valid range of sequence_index(_ID) is:
+    #
+    #     0 <= sequence_index < L
+    #
+    # Each index corresponds to one stored value in the sequence.
+    # Attempting to advance beyond L - 1 returns False.
+
+    def next_step(
         self: SequentialProperty,
-        value: Any,
         _ID: tuple[int, ...] = (),
-    ) -> None:
-        """Sets the `sequence_length` attribute of a sequence to be resolved.
+    ) -> bool:
+        """Advance the sequence index by one step.
 
-        It supports dependencies if `value` is a `Property`.
+        This method increments `sequence_index` by one for the given `_ID` if
+        the next index remains strictly less than `sequence_length`. It also
+        invalidates cached properties that depend on the sequence index to
+        ensure correct recomputation on subsequent access. If the sequence is
+        already at its final step, the index is not changed.
 
         Parameters
         ----------
-        value: Any
-            The value to store in `self.sequence_length`.
         _ID: tuple[int, ...], optional
-            A unique identifier that allows the property to keep separate 
-            histories for different parallel evaluations.
+            A unique identifier that allows the property to keep separate
+            sequence states for different parallel evaluations.
+
+        Returns
+        -------
+        bool
+            True if the index was advanced, False if already at the final step.
 
         """
 
-        if isinstance(value, Property):  # For dependencies
-            self.sequence_length = Property(lambda _ID: value(_ID))
-            self.sequence_length.add_dependency(value)
-        else:
-            self.sequence_length = Property(value, _ID=_ID)
+        current_index = self.sequence_index(_ID=_ID)
+        sequence_length = self.sequence_length(_ID=_ID)
 
-    def set_current_index(
-        self: SequentialProperty,
-        value: Any,
-        _ID: tuple[int, ...] = (),
-    ) -> None:
-        """Set the `sequence_index` attribute of a sequence to be resolved.
+        if current_index + 1 >= sequence_length:
+            return False
 
-        It supports dependencies if `value` is a `Property`.
+        self.sequence_index.store(current_index + 1, _ID=_ID)
 
-        Parameters
-        ----------
-        value: Any
-            The value to store in `sequence_index`.
-        _ID: tuple[int, ...], optional
-            A unique identifier that allows the property to keep separate 
-            histories for different parallel evaluations.
-    
-        """
+        # Ensures updates when action is executed again
+        self.previous_value.invalidate(_ID=_ID)
+        self.previous_values.invalidate(_ID=_ID)
 
-        if isinstance(value, Property):  # For dependencies
-            self.sequence_index = Property(lambda _ID: value(_ID))
-            self.sequence_index.add_dependency(value)
-        else:
-            self.sequence_index = Property(value, _ID=_ID)
+        return True

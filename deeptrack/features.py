@@ -7361,6 +7361,7 @@ class LoadImage(Feature):
                 warnings.warn(
                     "Non-rgb image, ignoring to_grayscale",
                     UserWarning,
+                    stacklevel=2,
                 )
 
         # Ensure the image has at least `ndim` dimensions.

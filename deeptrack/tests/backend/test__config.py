@@ -20,8 +20,9 @@ class TestConfig(unittest.TestCase):
 
     def tearDown(self):
         # Restore original state after each test
-        _config.config.set_backend(self.original_backend)
         _config.config.set_device(self.original_device)
+        _config.config.set_backend(self.original_backend)
+
 
     def test___all__(self):
         from deeptrack import (
@@ -39,12 +40,14 @@ class TestConfig(unittest.TestCase):
             xp,
         )
 
+
     def test_TORCH_AVAILABLE(self):
         try:
             import torch
             self.assertTrue(_config.TORCH_AVAILABLE)
         except ImportError:
             self.assertFalse(_config.TORCH_AVAILABLE)
+
 
     def test_DEEPLAY_AVAILABLE(self):
         try:
@@ -53,6 +56,7 @@ class TestConfig(unittest.TestCase):
         except ImportError:
             self.assertFalse(_config.DEEPLAY_AVAILABLE)
 
+
     def test_OPENCV_AVAILABLE(self):
         try:
             import cv2
@@ -60,13 +64,13 @@ class TestConfig(unittest.TestCase):
         except ImportError:
             self.assertFalse(_config.OPENCV_AVAILABLE)
 
+
     def test__Proxy_set_backend(self):
 
         from array_api_compat import numpy as apc_np
         import numpy as np
 
-        xp = _config._Proxy("numpy")
-        xp.set_backend(apc_np)
+        xp = _config._Proxy("numpy", apc_np)
         array = xp.arange(5)
         self.assertIsInstance(array, np.ndarray)
 
@@ -87,8 +91,7 @@ class TestConfig(unittest.TestCase):
 
         from array_api_compat import numpy as apc_np
 
-        xp = _config._Proxy("numpy")
-        xp.set_backend(apc_np)
+        xp = _config._Proxy("numpy", apc_np)
 
         # Test default float dtype (NumPy)
         dtype_default = xp.get_float_dtype()
@@ -134,8 +137,7 @@ class TestConfig(unittest.TestCase):
 
         from array_api_compat import numpy as apc_np
 
-        xp = _config._Proxy("numpy")
-        xp.set_backend(apc_np)
+        xp = _config._Proxy("numpy", apc_np)
 
         # Test default int dtype (NumPy)
         dtype_default = xp.get_int_dtype()
@@ -177,8 +179,7 @@ class TestConfig(unittest.TestCase):
 
         from array_api_compat import numpy as apc_np
 
-        xp = _config._Proxy("numpy")
-        xp.set_backend(apc_np)
+        xp = _config._Proxy("numpy", apc_np)
 
         # Test default complex dtype (NumPy)
         dtype_default = xp.get_complex_dtype()
@@ -222,8 +223,7 @@ class TestConfig(unittest.TestCase):
 
         from array_api_compat import numpy as apc_np
 
-        xp = _config._Proxy("numpy")
-        xp.set_backend(apc_np)
+        xp = _config._Proxy("numpy", apc_np)
 
         # Test default bool dtype (NumPy)
         dtype_default = xp.get_bool_dtype()
@@ -259,8 +259,7 @@ class TestConfig(unittest.TestCase):
         from array_api_compat import numpy as apc_np
         import numpy as np
 
-        xp = _config._Proxy("numpy")
-        xp.set_backend(apc_np)
+        xp = _config._Proxy("numpy", apc_np)
 
         # The proxy should forward .arange to NumPy's arange
         arange = xp.arange(3)
@@ -299,8 +298,7 @@ class TestConfig(unittest.TestCase):
 
         from array_api_compat import numpy as apc_np
 
-        xp = _config._Proxy("numpy")
-        xp.set_backend(apc_np)
+        xp = _config._Proxy("numpy", apc_np)
 
         attrs_numpy = dir(xp)
         self.assertIsInstance(attrs_numpy, list)
@@ -318,6 +316,7 @@ class TestConfig(unittest.TestCase):
             # These attributes should be present for NumPy backend
             self.assertIn("arange", attrs_torch)
             self.assertIn("ones", attrs_torch)
+
 
     def test_Config_set_device(self):
 
@@ -361,7 +360,7 @@ class TestConfig(unittest.TestCase):
             _config.config.set_backend_torch()
             self.assertEqual(_config.config.get_backend(), "torch")
         else:
-            with self.assertRaises(ModuleNotFoundError):
+            with self.assertRaises(ImportError):
                 _config.config.set_backend_torch()
 
     def test_Config_set_backend(self):
@@ -373,7 +372,7 @@ class TestConfig(unittest.TestCase):
             _config.config.set_backend_torch()
             self.assertEqual(_config.config.get_backend(), "torch")
         else:
-            with self.assertRaises(ModuleNotFoundError):
+            with self.assertRaises(ImportError):
                 _config.config.set_backend_torch()
 
     def test_Config_get_backend(self):
@@ -390,7 +389,7 @@ class TestConfig(unittest.TestCase):
         if _config.TORCH_AVAILABLE:
             target_backend = "torch"
             other_backend = "numpy"
-            
+
             # Switch to target backend
             _config.config.set_backend(target_backend)
             self.assertEqual(_config.config.get_backend(), target_backend)

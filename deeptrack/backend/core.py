@@ -9,7 +9,7 @@ Key Features
 - **Hierarchical Data Management**
 
     Provides validated, hierarchical data containers (`DeepTrackDataObject` and
-    `DeepTrackDataDict`) for storing data and managing complex, nested data
+    `DeepTrackDataDict`) to store data and manage complex, nested data
     structures. Supports dependency tracking and flexible indexing.
 
 - **Computation Graphs with Lazy Evaluation**
@@ -111,11 +111,12 @@ False
 
 from __future__ import annotations
 
-from collections.abc import ItemsView, KeysView, ValuesView
+from collections.abc import ItemsView, Iterator, KeysView, ValuesView
 import operator  # Operator overloading for computation nodes
 from weakref import WeakSet  # To manage relationships between nodes without
                              # creating circular dependencies
-from typing import Any, Callable, Iterator
+from typing import Any, Callable
+import warnings
 
 from deeptrack.utils import get_kwarg_names
 
@@ -146,7 +147,7 @@ class DeepTrackDataObject:
     """Basic data container for DeepTrack2.
 
     `DeepTrackDataObject` is a simple data container to store some data and
-    track its validity.
+    to track its validity.
 
     Attributes
     ----------
@@ -219,7 +220,7 @@ class DeepTrackDataObject:
     _data: Any
     _valid: bool
 
-    def __init__(self: DeepTrackDataObject):
+    def __init__(self: DeepTrackDataObject) -> None:
         """Initialize the container without data.
 
         Initializes `_data` to `None` and `_valid` to `False`.
@@ -310,9 +311,9 @@ class DeepTrackDataDict:
     Once the first entry is created, all `_ID`s must match the set key-length.
 
     When retrieving the data associated to an `_ID`:
-    -   If an `_ID` longer than the set key-length is requested, it is trimmed.
-    -   If an `_ID` shorter than the set key-length is requested, a dictionary
-        slice containing all matching entries is returned.
+    - If an `_ID` longer than the set key-length is requested, it is trimmed.
+    - If an `_ID` shorter than the set key-length is requested, a dictionary
+      slice containing all matching entries is returned.
 
     NOTE: The `_ID`s are specifically used in the `Repeat` feature to allow it
     to return different values without changing the input.
@@ -332,18 +333,18 @@ class DeepTrackDataDict:
     -------
     `create_index(_ID) -> None`
         Create an entry for the given `_ID` if it does not exist.
-    `invalidate() -> None`
-        Mark all stored data objects as invalid.
-    `validate() -> None`
-        Mark all stored data objects as valid.
+    `invalidate(_ID) -> None`
+        Mark stored data objects as invalid.
+    `validate(_ID) -> None`
+        Mark stored data objects as valid.
     `valid_index(_ID) -> bool`
         Check if the given `_ID` is valid for the current configuration.
     `__getitem__(_ID) -> DeepTrackDataObject or dict[_ID, DeepTrackDataObject]`
         Retrieve data associated with the `_ID`. Can return a
-        `DeepTrackDataObject`, or a dict of `DeepTrackDataObject`s if `_ID` is
-        shorter than `keylength`.
+        `DeepTrackDataObject`, or a dictionary of `DeepTrackDataObject`s if
+        `_ID` is shorter than `keylength`.
     `__contains__(_ID) -> bool`
-        Check whether the given `_ID` exists in the dictionary.
+        Return whether the given `_ID` exists in the dictionary.
     `__len__() -> int`
         Return the number of stored entries.
     `__iter__() -> Iterator`
@@ -483,7 +484,7 @@ class DeepTrackDataDict:
     _keylength: int | None
     _dict: dict[tuple[int, ...], DeepTrackDataObject]
 
-    def __init__(self: DeepTrackDataDict):
+    def __init__(self: DeepTrackDataDict) -> None:
         """Initialize the data dictionary.
 
         Initializes `keylength` to `None` and `dict` to an empty dictionary,
@@ -494,33 +495,86 @@ class DeepTrackDataDict:
         self._keylength = None
         self._dict = {}
 
-    def invalidate(self: DeepTrackDataDict) -> None:
-        """Mark all stored data objects as invalid.
+    def _matching_keys(
+        self: DeepTrackDataDict,
+        _ID: tuple[int, ...] = (),
+    ) -> list[tuple[int, ...]]:
+        """Return keys affected by an operation for the given _ID.
 
-        Calls `invalidate()` on every `DeepTrackDataObject` in the dictionary.
+        Selection rules
+        ---------------
+        If `keylength` is `None`, returns an empty list.
+        If `len(_ID) > keylength`, trims `_ID` to `keylength`.
+        If `len(_ID) == keylength`, returns `[_ID]` if it exists, else `[]`.
+        If `len(_ID) < keylength`, returns all keys whose prefix matches `_ID`.
 
-        NOTE: Currently, it invalidates the data objects stored at all `_ID`s.
-        TODO: Add optional argument `_ID: tuple[int, ...] ()` and permit
-        invalidation of only specific `_ID`s.
-
-        """
-
-        for dataobject in self._dict.values():
-            dataobject.invalidate()
-
-    def validate(self: DeepTrackDataDict) -> None:
-        """Mark all stored data objects as valid.
-
-        Calls `validate()` on every `DeepTrackDataObject` in the dictionary.
-
-        NOTE: Currently, it validates the data objects stored at all `_ID`s.
-        TODO: Add optional argument `_ID: tuple[int, ...] ()` and permit
-        validation of only specific `_ID`s.
+        Notes
+        -----
+        `_ID == ()` matches all keys by prefix, but callers may special-case
+        it.
 
         """
 
-        for dataobject in self._dict.values():
-            dataobject.validate()
+        if self._keylength is None:
+            return []
+
+        if len(_ID) > self._keylength:
+            _ID = _ID[: self._keylength]
+
+        if len(_ID) == self._keylength:
+            return [_ID] if _ID in self._dict else []
+
+        # Prefix slice
+        return [k for k in self._dict if k[: len(_ID)] == _ID]
+
+    def invalidate(
+        self: DeepTrackDataDict,
+        _ID: tuple[int, ...] = (),
+    ) -> None:
+        """Mark stored data objects as invalid.
+
+        Parameters
+        ----------
+        _ID: tuple[int, ...], optional
+            If empty, invalidates all cached entries.
+            If shorter than `keylength`, invalidates entries matching the
+            prefix.
+            If equal to `keylength`, invalidates that exact entry (if present).
+            If longer than `keylength`, trims to `keylength`.
+
+        """
+
+        if _ID == ():
+            for dataobject in self._dict.values():
+                dataobject.invalidate()
+            return
+
+        for key in self._matching_keys(_ID):
+            self._dict[key].invalidate()
+
+    def validate(
+        self: DeepTrackDataDict,
+        _ID: tuple[int, ...] = (),
+    ) -> None:
+        """Mark stored data objects as valid.
+
+        Parameters
+        ----------
+        _ID: tuple[int, ...], optional
+            If empty, validates all cached entries.
+            If shorter than `keylength`, validates entries matching the prefix.
+            If equal to `keylength`, validates that exact entry (if present).
+            If longer than `keylength`, trims to `keylength`.
+
+        """
+
+        if _ID == ():
+            for dataobject in self._dict.values():
+                dataobject.validate()
+            return
+
+        for key in self._matching_keys(_ID):
+            self._dict[key].validate()
 
     def valid_index(
         self: DeepTrackDataDict,
@@ -563,7 +617,7 @@ class DeepTrackDataDict:
             f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
         )
 
-        # If keylength has not yet been set, all indexes are valid.
+        # If keylength has not been set yet, all indexes are valid.
         if self._keylength is None:
             return True
 
@@ -584,7 +638,8 @@ class DeepTrackDataDict:
         Each newly created index is associated with a new
         `DeepTrackDataObject`.
 
-        If `_ID` is already in `dict`, no new entry is created.
+        If `_ID` is already in `dict`, no new entry is created and a warning is
+        issued.
 
         If `keylength` is `None`, it is set to the length of `_ID`. Once
         established, all subsequently created `_ID`s must have this same
@@ -608,11 +663,16 @@ class DeepTrackDataDict:
         # Check if the given _ID is valid.
         # (Also: Ensure _ID is a tuple of integers.)
         assert self.valid_index(_ID), (
-            f"{_ID} is not a valid index for current dictionary configuration."
+            f"{_ID} is not a valid index for {self}."
         )
 
-        # If `_ID` already exists, do nothing.
+        # If `_ID` already exists, issue a warning and skip creation.
         if _ID in self._dict:
+            warnings.warn(
+                f"Index {_ID!r} already exists in {self}. "
+                "No new entry was created.",
+                UserWarning
+            )
             return
 
         # Create a new DeepTrackDataObject for this _ID.
@@ -788,7 +848,7 @@ class DeepTrackDataDict:
     def keylength(self: DeepTrackDataDict) -> int | None:
         """Access the internal keylength (read-only).
 
-        This property exploses the internal `_keylength` attribute as a public
+        This property exposes the internal `_keylength` attribute as a public
         read-only interface.
 
         Returns
@@ -837,7 +897,7 @@ class DeepTrackNode:
     ----------
     action: Callable or Any, optional
         Action to compute this node's value. If not provided, uses a no-op
-        action (lambda: None).
+        action (`lambda: None`).
     node_name: str or None, optional
         Optional name assigned to the node. Defaults to `None`.
     **kwargs: Any
@@ -846,28 +906,28 @@ class DeepTrackNode:
     Attributes
     ----------
     node_name: str or None
-        Optional name assigned to the node. Defaults to `None`.
+        Name assigned to the node. Defaults to `None`.
     data: DeepTrackDataDict
         Dictionary-like object for storing data, indexed by tuples of integers.
     children: WeakSet[DeepTrackNode]
-        Read-only property exposing the internal weak set `_children`
+        Read-only property exposing the internal weak set `._children`
         containing the nodes that depend on this node (its children).
-        This is a weakref.WeakSet, so references are weak and do not prevent
+        This is a `weakref.WeakSet`, so references are weak and do not prevent
         garbage collection of nodes that are no longer used.
     dependencies: WeakSet[DeepTrackNode]
-        Read-only property exposing the internal weak set `_dependencies`
-        containing the nodes on which this node depends (its parents).
-        This is a weakref.WeakSet, for efficient memory management.
+        Read-only property exposing the internal weak set `._dependencies`
+        containing the nodes on which this node depends (its ancestors).
+        This is a `weakref.WeakSet`, for efficient memory management.
     _action: Callable[..., Any]
         The function or lambda-function to compute the node value.
     _accepts_ID: bool
-        Whether `action` accepts an input _ID.
+        Whether `action` accepts an input `_ID`.
     _all_children: WeakSet[DeepTrackNode]
         All nodes in the subtree rooted at the node, including the node itself.
-        This is a weakref.WeakSet, for efficient memory management.
+        This is a `weakref.WeakSet`, for efficient memory management.
     _all_dependencies: WeakSet[DeepTrackNode]
         All the dependencies for this node, including the node itself.
-        This is a weakref.WeakSet, for efficient memory management.
+        This is a `weakref.WeakSet`, for efficient memory management.
     _citations: list[str]
         Citations associated with this node.
 
@@ -888,10 +948,11 @@ class DeepTrackNode:
     `valid_index(_ID) -> bool`
         Check whether the given `_ID` is valid for this node.
     `invalidate(_ID) -> DeepTrackNode`
-        Invalidate the data for the given `_ID` and all child nodes.
+        Invalidate the data for the given `_ID` (exact, trimmed, or prefix
+        slice) and all child nodes.
     `validate(_ID) -> DeepTrackNode`
-        Validate the data for the given `_ID`, marking it as up-to-date, but
-        not its children.
+        Validate the data for the given `_ID` (exact, trimmed, or prefix
+        slice), marking it as up-to-date, but not its children.
     `update() -> DeepTrackNode`
         Reset the data.
     `set_value(value, _ID) -> DeepTrackNode`
@@ -899,11 +960,11 @@ class DeepTrackNode:
         current value, the node is invalidated to ensure dependencies are
         recomputed.
     `print_children_tree(indent) -> None`
-        Print a tree of all child nodes (recursively) for debugging.
+        Print a tree of all child nodes (recursively) for inspection.
     `recurse_children() -> set[DeepTrackNode]`
         Return all child nodes in the dependency tree rooted at this node.
     `print_dependencies_tree(indent) -> None`
-        Print a tree of all parent nodes (recursively) for debugging.
+        Print a tree of all parent nodes (recursively) for inspection.
     `recurse_dependencies() -> Iterator[DeepTrackNode]`
         Yield all nodes that this node depends on, traversing dependencies.
     `get_citations() -> set[str]`
@@ -945,7 +1006,7 @@ class DeepTrackNode:
 
     Examples
     --------
-    >>> from deeptrack.backend.core import DeepTrackNode
+    >>> from deeptrack import DeepTrackNode
 
     Create three `DeepTrackNode` objects, as parent, child, and grandchild:
 
@@ -1123,13 +1184,14 @@ class DeepTrackNode:
 
     Citations for a node and its dependencies:
 
-    >>> parent.get_citations()  # Set of citation strings
+    >>> parent.get_citations()  # Get of citation strings
     {...}
 
     """
 
     node_name: str | None
     data: DeepTrackDataDict
+
     _children: WeakSet[DeepTrackNode]
     _dependencies: WeakSet[DeepTrackNode]
     _all_children: WeakSet[DeepTrackNode]
@@ -1182,16 +1244,16 @@ class DeepTrackNode:
         action: Callable[..., Any] | Any = None,
         node_name: str | None = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize a new DeepTrackNode.
 
         Parameters
         ----------
         action: Callable or Any, optional
             Action to compute this node's value. If not provided, uses a no-op
-            action (lambda: None).
+            action (`lambda: None`).
         node_name: str or None, optional
-            Optional name for the node. Defaults to `None`.
+            Name for the node. Defaults to `None`.
         **kwargs: Any
             Additional arguments for subclasses or extended functionality.
 
@@ -1206,23 +1268,21 @@ class DeepTrackNode:
         self._children = WeakSet()
         self._dependencies = WeakSet()
 
-        # If action is provided, set it.
-        # If it's callable, use it directly;
-        # otherwise, wrap it in a lambda.
-        if callable(action):
-            self._action = action
+        # Set the action via the property setter so `_accepts_ID` is computed
+        # consistently in one place.
+        #
+        # If `action` is `None`, match the docstring's "no-op" semantics.
+        if action is None:
+            self.action = (lambda: None)
         else:
-            self._action = lambda: action
-
-        # Check if action accepts `_ID`.
-        self._accepts_ID = "_ID" in get_kwarg_names(self.action)
+            self.action = action if callable(action) else (lambda: action)
 
         # Keep track of all children, including this node.
-        self._all_children = WeakSet()  #TODO ***BM*** Ok WeakSet from set?
+        self._all_children = WeakSet()
         self._all_children.add(self)
 
         # Keep track of all dependencies, including this node.
-        self._all_dependencies = WeakSet()  #TODO ***BM*** Ok this addition?
+        self._all_dependencies = WeakSet()
         self._all_dependencies.add(self)
 
     def add_child(
@@ -1253,7 +1313,7 @@ class DeepTrackNode:
 
         """
 
-        # Check for cycle: if `self` is already in `child`'s dependency tree
+        # Check for cycle: if `self` is already in `child`'s children tree
         if self in child.recurse_children():
             raise ValueError(
                 f"Adding {child.node_name} as child to {self.node_name} "
@@ -1269,18 +1329,21 @@ class DeepTrackNode:
         # Merge all these children into this node's subtree.
         self._all_children = self._all_children.union(child_all_children)
         for parent in self.recurse_dependencies():
-            parent._all_children = \
-                parent._all_children.union(child_all_children)
+            parent._all_children = parent._all_children.union(
+                child_all_children
+            )
 
         # Get all dependencies of `self`, which includes `self` itself.
         self_all_dependencies = self._all_dependencies.copy()
 
         # Merge all these dependencies into the child's subtree.
-        child._all_dependencies = \
-            child._all_dependencies.union(self_all_dependencies)
+        child._all_dependencies = child._all_dependencies.union(
+            self_all_dependencies
+        )
         for grandchild in child.recurse_children():
-            grandchild._all_dependencies = \
-                grandchild._all_dependencies.union(self_all_dependencies)
+            grandchild._all_dependencies = grandchild._all_dependencies.union(
+                self_all_dependencies
+            )
 
         return self
 
@@ -1305,6 +1368,12 @@ class DeepTrackNode:
         self: DeepTrackNode
             Return the current node for chaining.
 
+        Raises
+        ------
+        ValueError
+            If adding this parent would introduce a cycle in the dependency
+            graph.
+
         """
 
         parent.add_child(self)
@@ -1324,7 +1393,7 @@ class DeepTrackNode:
             The data to be stored.
         _ID: tuple[int, ...], optional
             The index for this data. If `_ID` does not exist, it creates it.
-            Defaults to (), indicating a root-level entry.
+            Defaults to `()`, indicating a root-level entry.
 
         Returns
         -------
@@ -1334,7 +1403,8 @@ class DeepTrackNode:
         """
 
         # Create the index if necessary
-        self.data.create_index(_ID)
+        if _ID not in self.data:
+            self.data.create_index(_ID)
 
         # Then store data in it
         self.data[_ID].store(data)
@@ -1390,15 +1460,12 @@ class DeepTrackNode:
     ) -> DeepTrackNode:
         """Mark this node's data and all its children's data as invalid.
 
-        NOTE: At the moment, the code to invalidate specific `_ID`s is not
-        implemented, so the `_ID` parameter is not effectively used.
-        TODO: Implement the invalidation of specific `_ID`s.
-
         Parameters
         ----------
         _ID: tuple[int, ...], optional
-            The _ID to invalidate. Default is empty tuple, indicating
-            potentially the full dataset.
+            The _ID to invalidate. Default is empty tuple, invalidating all
+            cached entries. If _ID is shorter than keylength, invalidates
+            entries matching prefix; if longer, trims.
 
         Returns
         -------
@@ -1409,7 +1476,7 @@ class DeepTrackNode:
 
         # Invalidate data for all children of this node.
         for child in self.recurse_children():
-            child.data.invalidate()
+            child.data.invalidate(_ID=_ID)
 
         return self
 
@@ -1422,7 +1489,8 @@ class DeepTrackNode:
         Parameters
         ----------
         _ID: tuple[int, ...], optional
-            The _ID to validate. Defaults to empty tuple.
+            The _ID to validate. Defaults to empty tuple, validating all cached
+            entries. Validation is applied only to this node, not its children.
 
         Returns
         -------
@@ -1430,7 +1498,7 @@ class DeepTrackNode:
 
         """
 
-        self.data[_ID].validate()
+        self.data.validate(_ID=_ID)
 
         return self
 
@@ -1470,7 +1538,7 @@ class DeepTrackNode:
         value: Any
             The value to store.
         _ID: tuple[int, ...], optional
-            The `_ID` at which to store the value.
+            The `_ID` at which to store the value. Defaults to `()`.
 
         Returns
         -------
@@ -1559,7 +1627,7 @@ class DeepTrackNode:
 
         # Recursively traverse children.
         for child in self._children:
-            yield from child.recurse_children(memory=memory)
+            yield from child.old_recurse_children(memory=memory)
 
     def print_dependencies_tree(self: DeepTrackNode, indent: int = 0) -> None:
         """Print a tree of all parent nodes (recursively) for debugging.
@@ -1629,7 +1697,7 @@ class DeepTrackNode:
 
         # Recursively yield dependencies.
         for dependency in self._dependencies:
-            yield from dependency.recurse_dependencies(memory=memory)
+            yield from dependency.old_recurse_dependencies(memory=memory)
 
     def get_citations(self: DeepTrackNode) -> set[str]:
         """Get citations from this node and all its dependencies.
@@ -1644,17 +1712,19 @@ class DeepTrackNode:
 
         """
 
-        # Initialize citations as a set of elements from self.citations.
+        # Initialize citations as a set of elements from self._citations.
         citations = set(self._citations) if self._citations else set()
 
         # Recurse through dependencies to collect all citations.
         for dependency in self.recurse_dependencies():
             for obj in type(dependency).mro():
-                if hasattr(obj, "citations"):
+                if hasattr(obj, "_citations"):
                     # Add the citations of the current object.
+                    citations_attr = getattr(obj, "_citations")
                     citations.update(
-                        obj.citations if isinstance(obj.citations, list)
-                        else [obj.citations]
+                        citations_attr
+                        if isinstance(citations_attr, list)
+                        else [citations_attr]
                     )
 
         return citations
@@ -1705,7 +1775,7 @@ class DeepTrackNode:
         self: DeepTrackNode,
         _ID: tuple[int, ...] = (),
     ) -> Any:
-        """Retrieve the currently stored value at _ID.
+        """Retrieve the value currently stored at _ID.
 
         Parameters
         ----------
@@ -1778,7 +1848,7 @@ class DeepTrackNode:
         """
 
         # Create a new node whose action indexes into this node's result.
-        node = DeepTrackNode(lambda _ID=None: self(_ID=_ID)[idx])
+        node = DeepTrackNode(lambda _ID=(): self(_ID=_ID)[idx])
 
         self.add_child(node)
 
@@ -2161,7 +2231,7 @@ class DeepTrackNode:
     def dependencies(self: DeepTrackNode) -> WeakSet[DeepTrackNode]:
         """Access the dependencies of the node (read-only).
 
-        This property exploses the internal `_dependencies` attribute as a
+        This property exposes the internal `_dependencies` attribute as a
         public read-only interface.
 
         Returns
@@ -2177,7 +2247,7 @@ class DeepTrackNode:
     def children(self: DeepTrackNode) -> WeakSet[DeepTrackNode]:
         """Access the children of the node (read-only).
 
-        This property exploses the internal `_children` attribute as a public
+        This property exposes the internal `_children` attribute as a public
         read-only interface.
 
         Returns
