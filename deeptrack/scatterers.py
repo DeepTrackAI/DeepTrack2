@@ -163,9 +163,11 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 import warnings
 
+import array_api_compat as apc
 import numpy as np
 from numpy.typing import NDArray
 from pint import Quantity
+from dataclasses import dataclass, field
 
 from deeptrack.holography import get_propagation_matrix
 from deeptrack.backend.units import (
@@ -174,11 +176,13 @@ from deeptrack.backend.units import (
     get_active_voxel_size,
 )
 from deeptrack.backend import mie
+from deeptrack.math import AveragePooling
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
-from deeptrack.image import pad_image_to_fft, Image
+from deeptrack.image import pad_image_to_fft
 from deeptrack.types import ArrayLike
 from deeptrack import units_registry as u
 
+from deeptrack.backend import xp
 
 __all__ = [
     "Scatterer",
@@ -238,7 +242,7 @@ class Scatterer(Feature):
         
     """
 
-    __list_merge_strategy__ = MERGE_STRATEGY_APPEND
+    __list_merge_strategy__ = MERGE_STRATEGY_APPEND ### Not clear why needed
     __distributed__ = False
     __conversion_table__ = ConversionTable(
         position=(u.pixel, u.pixel),
@@ -258,11 +262,11 @@ class Scatterer(Feature):
         **kwargs,
     ) -> None:
         # Ignore warning to help with comparison with arrays.
-        if upsample is not 1:  # noqa: F632
-            warnings.warn(
-                f"Setting upsample != 1 is deprecated. "
-                f"Please, instead use dt.Upscale(f, factor={upsample})"
-            )
+        # if upsample != 1:  # noqa: F632
+        #     warnings.warn(
+        #         f"Setting upsample != 1 is deprecated. "
+        #         f"Please, instead use dt.Upscale(f, factor={upsample})"
+        #     )
 
         self._processed_properties = False
 
@@ -277,6 +281,21 @@ class Scatterer(Feature):
             _position_sampler=lambda: position,
             **kwargs,
         )
+
+    def _antialias_volume(self, volume, factor: int):
+        """Geometry-only supersampling anti-aliasing.
+
+        Assumes `volume` was generated on a grid oversampled by `factor`
+        and downsamples it back by average pooling.
+        """
+        if factor == 1:
+            return volume
+
+        # average pooling conserves fractional occupancy
+        return AveragePooling(
+            factor
+        )(volume)
+
 
     def _process_properties(
         self,
@@ -296,7 +315,7 @@ class Scatterer(Feature):
         upsample_axes=None,
         crop_empty=True,
         **kwargs
-    ) -> list[Image] | list[np.ndarray]:
+    ) -> list[np.ndarray]:
         # Post processes the created object to handle upsampling,
         # as well as cropping empty slices.
         if not self._processed_properties:
@@ -307,18 +326,34 @@ class Scatterer(Feature):
                 + "Optics.upscale != 1."
             )
 
-        voxel_size = get_active_voxel_size()
 
-        # Calls parent _process_and_get.
-        new_image = super()._process_and_get(
+        voxel_size = xp.asarray(get_active_voxel_size(), dtype=float)
+
+        apply_supersampling = upsample > 1 and isinstance(self, VolumeScatterer)
+
+        if upsample > 1 and not apply_supersampling:
+            warnings.warn(
+                "Geometry supersampling (upsample) is ignored for "
+                "FieldScatterers.",
+                UserWarning,
+            )
+
+        if apply_supersampling:
+            voxel_size /= float(upsample)
+
+        new_image = super(Scatterer, self)._process_and_get(
             *args,
             voxel_size=voxel_size,
             upsample=upsample,
             **kwargs,
-        )
-        new_image = new_image[0]
+        )[0]
 
-        if new_image.size == 0:
+        if apply_supersampling:
+            new_image = self._antialias_volume(new_image, factor=upsample)
+
+
+        # if new_image.size == 0:
+        if new_image.numel() == 0 if apc.is_torch_array(new_image) else new_image.size == 0:
             warnings.warn(
                 "Scatterer created that is smaller than a pixel. "
                 + "This may yield inconsistent results."
@@ -329,36 +364,44 @@ class Scatterer(Feature):
 
         # Crops empty slices
         if crop_empty:
-            new_image = new_image[~np.all(new_image == 0, axis=(1, 2))]
-            new_image = new_image[:, ~np.all(new_image == 0, axis=(0, 2))]
-            new_image = new_image[:, :, ~np.all(new_image == 0, axis=(0, 1))]
+            # new_image = new_image[~np.all(new_image == 0, axis=(1, 2))]
+            # new_image = new_image[:, ~np.all(new_image == 0, axis=(0, 2))]
+            # new_image = new_image[:, :, ~np.all(new_image == 0, axis=(0, 1))]
+            mask_z = ~xp.all(new_image == 0, axis=(1, 2))
+            mask_y = ~xp.all(new_image == 0, axis=(0, 2))
+            mask_x = ~xp.all(new_image == 0, axis=(0, 1))
 
-        return [Image(new_image)]
+            new_image = new_image[mask_z][:, mask_y][:, :, mask_x]
 
-    def _no_wrap_format_input(
-        self,
-        *args,
-        **kwargs
-    ) -> list:
-        return self._image_wrapped_format_input(*args, **kwargs)
+        # # Copy properties
+        # props = kwargs.copy()
+        return [self._wrap_output(new_image, kwargs)]
 
-    def _no_wrap_process_and_get(
-        self,
-        *args,
-        **feature_input
-    ) -> list:
-        return self._image_wrapped_process_and_get(*args, **feature_input)
+    def _wrap_output(self, array, props):
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement _wrap_output()"
+        )
 
-    def _no_wrap_process_output(
-        self,
-        *args,
-        **feature_input
-    ) -> list:
-        return self._image_wrapped_process_output(*args, **feature_input)
+
+class VolumeScatterer(Scatterer):
+    """Abstract scatterer producing ScatteredVolume outputs."""
+    def _wrap_output(self, array, props) -> ScatteredVolume:
+        return ScatteredVolume(
+            array=array,
+            properties=props.copy(),
+        )
+
+
+class FieldScatterer(Scatterer):
+    def _wrap_output(self, array, props) -> ScatteredField:
+        return ScatteredField(
+            array=array,
+            properties=props.copy(),
+        )
 
 
 #TODO ***??*** revise PointParticle - torch, typing, docstring, unit test
-class PointParticle(Scatterer):
+class PointParticle(VolumeScatterer):
     """Generate a diffraction-limited point particle.
 
     A point particle is approximated by the size of a single pixel or voxel.
@@ -389,23 +432,23 @@ class PointParticle(Scatterer):
         """
 
         """
-
+        kwargs.pop("upsample", None)
         super().__init__(upsample=1, upsample_axes=(), **kwargs)
 
     def get(
         self: PointParticle,
-        image: Image | np.ndarray,
+        *ignore,
         **kwarg: Any,
-    ) -> NDArray[Any] | torch.Tensor:
+    ) -> np.ndarray | torch.Tensor:
         """Evaluate and return the scatterer volume."""
 
-        scale = get_active_scale()
+        scale = xp.asarray(get_active_scale(), dtype=float)
 
-        return np.ones((1, 1, 1)) * np.prod(scale)
+        return xp.ones((1, 1, 1), dtype=scale.dtype) * xp.prod(scale)
 
 
 #TODO ***??*** revise Ellipse - torch, typing, docstring, unit test
-class Ellipse(Scatterer):
+class Ellipse(VolumeScatterer):
     """Generates an elliptical disk scatterer
 
     Parameters
@@ -440,6 +483,7 @@ class Ellipse(Scatterer):
         before rotation.
 
     """
+
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
@@ -519,7 +563,7 @@ class Ellipse(Scatterer):
 
 
 #TODO ***??*** revise Sphere - torch, typing, docstring, unit test
-class Sphere(Scatterer):
+class Sphere(VolumeScatterer):
     """Generates a spherical scatterer
 
     Parameters
@@ -559,7 +603,7 @@ class Sphere(Scatterer):
 
     def get(
         self,
-        image: Image | np.ndarray,
+        image: np.ndarray,
         radius: float,
         voxel_size: float,
         **kwargs
@@ -584,7 +628,7 @@ class Sphere(Scatterer):
 
 
 #TODO ***??*** revise Ellipsoid - torch, typing, docstring, unit test
-class Ellipsoid(Scatterer):
+class Ellipsoid(VolumeScatterer):
     """Generates an ellipsoidal scatterer
 
     Parameters
@@ -694,7 +738,7 @@ class Ellipsoid(Scatterer):
 
     def get(
         self,
-        image: Image | np.ndarray,
+        image: np.ndarray,
         radius: float,
         rotation: ArrayLike[float] | float,
         voxel_size: float,
@@ -741,7 +785,7 @@ class Ellipsoid(Scatterer):
 
 
 #TODO ***??*** revise MieScatterer - torch, typing, docstring, unit test
-class MieScatterer(Scatterer):
+class MieScatterer(FieldScatterer):
     """Base implementation of a Mie particle.
 
     New Mie-theory scatterers can be implemented by extending this class, and
@@ -826,6 +870,7 @@ class MieScatterer(Scatterer):
         
     """
 
+
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
         polarization_angle=(u.radian, u.radian),
@@ -856,6 +901,7 @@ class MieScatterer(Scatterer):
         illumination_angle: float=0,
         amp_factor: float=1,
         phase_shift_correction: bool=False,
+        # pupil: ArrayLike=[], # Daniel
         **kwargs,
     ) -> None:
         if polarization_angle is not None:
@@ -864,11 +910,10 @@ class MieScatterer(Scatterer):
                 "Please use input_polarization instead"
             )
             input_polarization = polarization_angle
-        kwargs.pop("is_field", None)
         kwargs.pop("crop_empty", None)
 
         super().__init__(
-            is_field=True,
+            is_field=True, # remove
             crop_empty=False,
             L=L,
             offset_z=offset_z,
@@ -889,6 +934,7 @@ class MieScatterer(Scatterer):
             illumination_angle=illumination_angle,
             amp_factor=amp_factor,
             phase_shift_correction=phase_shift_correction,
+            # pupil=pupil, # Daniel
             **kwargs,
         )
 
@@ -1014,7 +1060,8 @@ class MieScatterer(Scatterer):
         shape: int,
         voxel_size: ArrayLike[float],
         plane_position: float,
-        illumination_angle: float
+        illumination_angle: float,
+        # k: float, # Daniel
     ) -> tuple[float, float, float, float]:
         """Computes the coordinates of the plane in polar form."""
 
@@ -1027,15 +1074,24 @@ class MieScatterer(Scatterer):
 
         R2_squared = X ** 2 + Y ** 2
         R3 = np.sqrt(R2_squared + Z ** 2)  # Might be +z instead of -z.
+        
+        # # DANIEL
+        # Q = np.sqrt(R2_squared)/voxel_size[0]**2*2*np.pi/shape[0]
+        # # is dimensionally ok?
+        # sin_theta=Q/(k)
+        # pupil_mask=sin_theta<1
+        # cos_theta=np.zeros(sin_theta.shape)
+        # cos_theta[pupil_mask]=np.sqrt(1-sin_theta[pupil_mask]**2)
 
         # Fet the angles.
         cos_theta = Z / R3
+        
         illumination_cos_theta = (
             np.cos(np.arccos(cos_theta) + illumination_angle)
             )
         phi = np.arctan2(Y, X)
 
-        return R3, cos_theta, illumination_cos_theta, phi
+        return R3, cos_theta, illumination_cos_theta, phi#, pupil_mask # Daniel
 
     def get(
         self,
@@ -1060,6 +1116,7 @@ class MieScatterer(Scatterer):
         illumination_angle: float,
         amp_factor: float,
         phase_shift_correction: bool,
+        # pupil: ArrayLike, # Daniel
         **kwargs,
     ) -> ArrayLike[float]:
         """Abstract method to initialize the Mie scatterer"""
@@ -1067,8 +1124,9 @@ class MieScatterer(Scatterer):
         # Get size of the output.
         xSize, ySize = self.get_xy_size(output_region, padding)
         voxel_size = get_active_voxel_size()
+        scale = get_active_scale()
         arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
-        position = np.array(position) * voxel_size[: len(position)]
+        position = np.array(position) * scale[: len(position)] * voxel_size[: len(position)]
 
         pupil_physical_size = working_distance * np.tan(collection_angle) * 2
 
@@ -1076,7 +1134,10 @@ class MieScatterer(Scatterer):
 
         ratio = offset_z / (working_distance - z)
 
-        # Position of pbjective relative particle.
+        # Wave vector.
+        k = 2 * np.pi / wavelength * refractive_index_medium
+
+        # Position of objective relative particle.
         relative_position = np.array(
             (
                 position_objective[0] - position[0],
@@ -1085,12 +1146,13 @@ class MieScatterer(Scatterer):
             )
         )
 
-        # Get field evaluation plane at offset_z.
+        # Get field evaluation plane at offset_z. # , pupil_mask # Daniel
         R3_field, cos_theta_field, illumination_angle_field, phi_field =\
         self.get_plane_in_polar_coords(
             arr.shape, voxel_size,
             relative_position * ratio,
-            illumination_angle
+            illumination_angle,
+            # k # Daniel
         )
         
         cos_phi_field, sin_phi_field = np.cos(phi_field), np.sin(phi_field)
@@ -1108,7 +1170,7 @@ class MieScatterer(Scatterer):
             sin_phi_field / ratio
         )
 
-        # If the beam is within the pupil.
+        # If the beam is within the pupil. Remove if Daniel
         pupil_mask = (x_farfield - position_objective[0]) ** 2 + (
             y_farfield - position_objective[1]
         ) ** 2 < (pupil_physical_size / 2) ** 2
@@ -1146,9 +1208,6 @@ class MieScatterer(Scatterer):
             * illumination_angle_field
             )
 
-        # Wave vector.
-        k = 2 * np.pi / wavelength * refractive_index_medium
-
         # Harmonics.
         A, B = coefficients(L)
         PI, TAU = mie.harmonics(illumination_angle_field, L)
@@ -1165,12 +1224,15 @@ class MieScatterer(Scatterer):
             [E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)]
         )
         
+        # Daniel
+        # arr[pupil_mask] = (S2 * S2_coef + S1 * S1_coef)/amp_factor
         arr[pupil_mask] = (
             -1j
             / (k * R3_field)
             * np.exp(1j * k * R3_field)
             * (S2 * S2_coef + S1 * S1_coef)
         ) / amp_factor
+
         
         # For phase shift correction (a multiplication of the field
         # by exp(1j * k * z)).
@@ -1188,15 +1250,23 @@ class MieScatterer(Scatterer):
                 -mask.shape[1] // 2 : mask.shape[1] // 2,
             ]
             mask = np.exp(-0.5 * (x ** 2 + y ** 2) / ((sigma) ** 2))
-
             arr = arr * mask
 
+        # Not sure if needed... CM
+        # if len(pupil)>0:
+        #     c_pix=[arr.shape[0]//2,arr.shape[1]//2] 
+
+        #     arr[c_pix[0]-pupil.shape[0]//2:c_pix[0]+pupil.shape[0]//2,c_pix[1]-pupil.shape[1]//2:c_pix[1]+pupil.shape[1]//2]*=pupil
+        
+        # Daniel
+        # fourier_field = -np.fft.ifft2(np.fft.fftshift(np.fft.fft2(np.fft.fftshift(arr)))) 
         fourier_field = np.fft.fft2(arr)
 
         propagation_matrix = get_propagation_matrix(
             fourier_field.shape,
-            pixel_size=voxel_size[2],
+            pixel_size=voxel_size[:2], # this needs a double check
             wavelength=wavelength / refractive_index_medium,
+            # to_z=(-z), # Daniel
             to_z=(-offset_z - z),
             dy=(
                 relative_position[0] * ratio
@@ -1206,11 +1276,12 @@ class MieScatterer(Scatterer):
             dx=(
                 relative_position[1] * ratio
                 + position[1]
-                + (padding[1] - arr.shape[1] / 2) * voxel_size[1]
+                + (padding[2] - arr.shape[1] / 2) * voxel_size[1] # check if padding is top, bottom, left, right
             ),
         )
+
         fourier_field = (
-            fourier_field * propagation_matrix * np.exp(-1j * k * offset_z)
+            fourier_field * propagation_matrix * np.exp(-1j * k * offset_z) # Remove last part (from exp)) if Daniel
         )
 
         if return_fft:
@@ -1274,6 +1345,7 @@ class MieSphere(MieScatterer):
         keep the same as input_polarization.
         
     """
+
 
     def __init__(
         self,
@@ -1377,6 +1449,7 @@ class MieStratifiedSphere(MieScatterer):
         
     """
 
+
     def __init__(
         self,
         radius: ArrayLike[float] = [1e-6],
@@ -1412,3 +1485,62 @@ class MieStratifiedSphere(MieScatterer):
             refractive_index=refractive_index,
             **kwargs,
         )
+
+
+@dataclass
+class ScatteredBase:
+    """Base class for scatterers (volumes and fields)."""
+
+    array: np.ndarray | torch.Tensor
+    properties: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def ndim(self) -> int:
+        """Number of dimensions of the underlying array."""
+        return self.array.ndim
+
+    @property
+    def shape(self) -> int:
+        """Number of dimensions of the underlying array."""
+        return self.array.shape
+
+    @property
+    def pos3d(self) -> np.ndarray:
+        return np.array([*self.position, self.z], dtype=float)
+
+    @property
+    def position(self) -> np.ndarray:
+        pos = self.properties.get("position", None)
+        if pos is None:
+            return None
+        pos = np.asarray(pos, dtype=float)
+        if pos.ndim == 2 and pos.shape[0] == 1:
+            pos = pos[0]
+        return pos
+
+    def as_array(self) -> ArrayLike:
+        """Return the underlying array.
+
+        Notes
+        -----
+        The raw array is also directly available as ``scatterer.array``.
+        This method exists mainly for API compatibility and clarity.
+
+        """
+        
+        return self.array
+
+    def get_property(self, key: str, default: Any = None) -> Any:
+        return getattr(self, key, self.properties.get(key, default))
+
+
+@dataclass
+class ScatteredVolume(ScatteredBase):
+    """Voxelized volume produced by a VolumeScatterer."""
+    pass
+
+
+@dataclass
+class ScatteredField(ScatteredBase):
+    """Complex field produced by a FieldScatterer."""
+    pass

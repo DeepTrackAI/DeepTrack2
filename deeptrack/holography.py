@@ -101,7 +101,7 @@ from deeptrack import Feature
 def get_propagation_matrix(
     shape: tuple[int, int],
     to_z: float,
-    pixel_size: float,
+    pixel_size: float | tuple[float, float],
     wavelength: float,
     dx: float = 0,
     dy: float = 0
@@ -118,8 +118,8 @@ def get_propagation_matrix(
         The dimensions of the optical field (height, width).
     to_z: float
         Propagation distance along the z-axis.
-    pixel_size: float
-        The physical size of each pixel in the optical field.
+    pixel_size: float | tuple[float, float]
+        Physical pixel size. If scalar, isotropic pixels are assumed.
     wavelength: float
         The wavelength of the optical field.
     dx: float, optional
@@ -140,14 +140,22 @@ def get_propagation_matrix(
 
     """
 
+    if pixel_size is None:
+        pixel_size = get_active_voxel_size()
+
+    if np.isscalar(pixel_size):
+        pixel_size = (pixel_size, pixel_size)
+
+    px, py = pixel_size
+
     k = 2 * np.pi / wavelength
     yr, xr, *_ = shape
 
     x = np.arange(0, xr, 1) - xr / 2 + (xr % 2) / 2
     y = np.arange(0, yr, 1) - yr / 2 + (yr % 2) / 2
 
-    x = 2 * np.pi / pixel_size * x / xr
-    y = 2 * np.pi / pixel_size * y / yr
+    x = 2 * np.pi / px * x / xr
+    y = 2 * np.pi / py * y / yr
 
     KXk, KYk = np.meshgrid(x, y)
     KXk = KXk.astype(complex)

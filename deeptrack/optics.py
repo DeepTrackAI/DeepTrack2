@@ -137,11 +137,13 @@ Simulating an image with the `Fluorescence` class:
 from __future__ import annotations
 
 from pint import Quantity
-from typing import Any
+from typing import Any, TYPE_CHECKING
 import warnings
 
 import numpy as np
-from scipy.ndimage import convolve
+from scipy.ndimage import convolve # might be removed later
+import torch
+import torch.nn.functional as F
 
 from deeptrack.backend.units import (
     ConversionTable,
@@ -149,23 +151,37 @@ from deeptrack.backend.units import (
     get_active_scale,
     get_active_voxel_size,
 )
-from deeptrack.math import AveragePooling
+from deeptrack.math import AveragePooling, SumPooling
 from deeptrack.features import propagate_data_to_dependencies
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
-from deeptrack.image import Image, pad_image_to_fft
+from deeptrack.image import pad_image_to_fft
 from deeptrack.types import ArrayLike, PropertyLike
 
 from deeptrack import image
 from deeptrack import units_registry as u
+
+from deeptrack import TORCH_AVAILABLE, image
+from deeptrack.backend import xp, config
+from deeptrack.scatterers import ScatteredVolume, ScatteredField
+
+if TORCH_AVAILABLE:
+    import torch
+
+if TYPE_CHECKING:
+    import torch
 
 
 #TODO ***??*** revise Microscope - torch, typing, docstring, unit test
 class Microscope(StructuralFeature):
     """Simulates imaging of a sample using an optical system.
 
-    This class combines a feature-set that defines the sample to be imaged with
-    a feature-set defining the optical system, enabling the simulation of 
-    optical imaging processes.
+    This class combines the sample to be imaged with the optical system, 
+    enabling the simulation of optical imaging processes.
+    A Microscope:
+    - validates the semantic compatibility between scatterers and optics
+    - interprets volume-based scatterers into scalar fields when needed
+    - delegates numerical propagation to the objective (Optics)
+    - performs detector downscaling according to its physical semantics
 
     Parameters
     ----------
@@ -186,9 +202,15 @@ class Microscope(StructuralFeature):
 
     Methods
     -------
-    `get(image: Image or None, **kwargs: Any) -> Image`
+    `get(image: np.ndarray or None, **kwargs: Any) -> np.ndarray`
         Simulates the imaging process using the defined optical system and 
         returns the resulting image.
+
+    Notes
+    -----
+    All volume scatterers imaged by a Microscope instance are assumed to
+    share the same contrast mechanism (e.g. refractive index or fluorescence).
+    Mixing contrast types is not supported.
 
     Examples
     --------
@@ -238,13 +260,41 @@ class Microscope(StructuralFeature):
 
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
-        self._sample.store_properties()
+
+    def _validate_input(self, scattered):
+        if hasattr(self._objective, "validate_input"):
+            self._objective.validate_input(scattered)
+
+    def _extract_contrast_volume(self, scattered):
+        if hasattr(self._objective, "extract_contrast_volume"):
+            return self._objective.extract_contrast_volume(
+                scattered,
+                **self._objective.properties(),
+            )
+        return scattered.array
+
+    def _downscale_image(self, image, upscale):
+        if hasattr(self._objective, "downscale_image"):
+            return self._objective.downscale_image(image, upscale)
+
+        if not np.any(np.array(upscale) != 1):
+            return image
+
+        ux, uy = upscale[:2]
+        if ux != uy:
+            raise ValueError(
+                f"Energy-conserving detector integration requires ux == uy, "
+                f"got ux={ux}, uy={uy}."
+            )
+        if isinstance(ux, float) and ux.is_integer():
+            ux = int(ux)
+        return AveragePooling(ux)(image)
 
     def get(
         self: Microscope,
-        image: Image | None,
+        image: np.ndarray | torch.Tensor | None = None,
         **kwargs: Any,
-    ) -> Image:
+    ) -> np.ndarray | torch.Tensor:
         """Generate an image of the sample using the defined optical system.
 
         This method processes the sample through the optical system to
@@ -252,14 +302,14 @@ class Microscope(StructuralFeature):
 
         Parameters
         ----------
-        image: Image | None
+        image: np.ndarray | torch.Tensor | None
             The input image to be processed. If None, a new image is created.
         **kwargs: Any
             Additional parameters for the imaging process.
 
         Returns
         -------
-        Image: Image
+        image: np.ndarray | torch.Tensor
             The processed image after applying the optical system.
 
         Examples
@@ -280,9 +330,6 @@ class Microscope(StructuralFeature):
         # Grab properties from the objective to pass to the sample
         additional_sample_kwargs = self._objective.properties()
 
-        # Calculate required output image for the given upscale
-        # This way of providing the upscale will be deprecated in the future
-        # in favor of dt.Upscale().
         _upscale_given_by_optics = additional_sample_kwargs["upscale"]
         if np.array(_upscale_given_by_optics).size == 1:
             _upscale_given_by_optics = (_upscale_given_by_optics,) * 3
@@ -325,67 +372,62 @@ class Microscope(StructuralFeature):
             if not isinstance(list_of_scatterers, list):
                 list_of_scatterers = [list_of_scatterers]
 
+            # Semantic validation (per scatterer)
+            for scattered in list_of_scatterers:
+                self._validate_input(scattered)
+
             # All scatterers that are defined as volumes.
             volume_samples = [
                 scatterer
                 for scatterer in list_of_scatterers
-                if not scatterer.get_property("is_field", default=False)
+                if isinstance(scatterer, ScatteredVolume)
             ]
 
             # All scatterers that are defined as fields.
             field_samples = [
                 scatterer
                 for scatterer in list_of_scatterers
-                if scatterer.get_property("is_field", default=False)
+                if isinstance(scatterer, ScatteredField)
             ]
-
+                
             # Merge all volumes into a single volume.
             sample_volume, limits = _create_volume(
                 volume_samples,
                 **additional_sample_kwargs,
             )
-            sample_volume = Image(sample_volume)
 
-            # Merge all properties into the volume.
-            for scatterer in volume_samples + field_samples:
-                sample_volume.merge_properties_from(scatterer)
+            print('1',type(sample_volume))
+            if volume_samples:
+                # Interpret the merged volume semantically
+                sample_volume = self._extract_contrast_volume(
+                    ScatteredVolume(
+                        array=sample_volume,
+                        properties=volume_samples[0].properties,
+                    ),
+                )
+
 
             # Let the objective know about the limits of the volume and all the fields.
             propagate_data_to_dependencies(
                 self._objective,
                 limits=limits,
-                fields=field_samples,
+                fields=field_samples, # should We add upscale?
             )
 
             imaged_sample = self._objective.resolve(sample_volume)
 
-        # Upscale given by the optics needs to be handled separately.
-        if _upscale_given_by_optics != (1, 1, 1):
-            imaged_sample = AveragePooling((*_upscale_given_by_optics[:2], 1))(
-                imaged_sample
-            )
+        imaged_sample = self._downscale_image(imaged_sample, upscale)
+        # # Handling upscale from dt.Upscale() here to eliminate Image
+        # # wrapping issues.
+        # if np.any(np.array(upscale) != 1):
+        #     ux, uy = upscale[:2]
+        #     if contrast_type == "intensity":
+        #         print("Using sum pooling for intensity downscaling.")   
+        #         imaged_sample = SumPoolingCM((ux, uy, 1))(imaged_sample)
+        #     else:
+        #         imaged_sample = AveragePoolingCM((ux, uy, 1))(imaged_sample)
 
-        # Merge with input
-        if not image:
-            if not self._wrap_array_with_image and isinstance(imaged_sample, Image):
-                return imaged_sample._value
-            else:
-                return imaged_sample
-
-        if not isinstance(image, list):
-            image = [image]
-        for i in range(len(image)):
-            image[i].merge_properties_from(imaged_sample)
-        return image
-
-    # def _no_wrap_format_input(self, *args, **kwargs) -> list:
-    #     return self._image_wrapped_format_input(*args, **kwargs)
-
-    # def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
-    #     return self._image_wrapped_process_and_get(*args, **feature_input)
-
-    # def _no_wrap_process_output(self, *args, **feature_input):
-    #     return self._image_wrapped_process_output(*args, **feature_input)
+        return imaged_sample
 
 
 #TODO ***??*** revise Optics - torch, typing, docstring, unit test
@@ -569,6 +611,15 @@ class Optics(Feature):
 
         """
 
+        def validate_scattered(self, scattered):
+            pass
+
+        def extract_contrast_volume(self, scattered):
+            pass
+
+        def downscale_image(self, image, upscale):
+            pass
+
         def get_voxel_size(
             resolution: float | ArrayLike[float], 
             magnification: float,
@@ -688,7 +739,22 @@ class Optics(Feature):
 
         return propertydict
 
-    def _pupil(
+    def _pupil(self, shape, **kwargs):
+        kwargs.setdefault("NA", float(self.NA()))
+        kwargs.setdefault("wavelength", float(self.wavelength()))
+        kwargs.setdefault(
+            "refractive_index_medium",
+            float(self.refractive_index_medium()),
+        )
+
+        return (
+            self._pupil_torch(shape, **kwargs)
+            if self.get_backend() == "torch"
+            else self._pupil_numpy(shape, **kwargs)
+        )
+
+
+    def _pupil_numpy(
         self: Optics,
         shape: ArrayLike[int],
         NA: float,
@@ -757,19 +823,18 @@ class Optics(Feature):
 
         W, H = np.meshgrid(y, x)
         RHO = (W ** 2 + H ** 2).astype(complex)
-        pupil_function = Image((RHO < 1) + 0.0j, copy=False)
+        pupil_function = (RHO < 1) + 0.0j
         # Defocus
-        z_shift = Image(
+        z_shift = (
             2
             * np.pi
             * refractive_index_medium
             / wavelength
             * voxel_size[2]
-            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO),
-            copy=False,
+            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO)
         )
 
-        z_shift._value[z_shift._value.imag != 0] = 0
+        z_shift[z_shift.imag != 0] = 0
 
         try:
             z_shift = np.nan_to_num(z_shift, False, 0, 0, 0)
@@ -791,6 +856,133 @@ class Optics(Feature):
         pupil_functions = pupil_function * np.exp(1j * z_shift)
 
         return pupil_functions
+
+    def _pupil_torch(
+        self: Optics,
+        shape: np.ndarray | tuple[int, int] | list[int],
+        NA: float,
+        wavelength: float,
+        refractive_index_medium: float,
+        include_aberration: bool = True,
+        defocus: float | np.ndarray | torch.Tensor = 0,
+        *,
+        device: torch.device | None = None,
+        dtype: torch.dtype = torch.complex64,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """
+        Torch implementation of _pupil().
+
+        Returns
+        -------
+        torch.Tensor
+            Complex tensor with shape (Z, H, W), matching the NumPy version
+            semantics: (z, y, x) where your code uses shape=(shape[0], shape[1])
+            but constructs meshgrid(y, x) and ends up with (shape[0], shape[1]).
+        """
+        # Resolve device
+        if device is None:
+            # best-effort: use current torch default device
+            device = torch.device("cpu")
+
+        # shape -> (H, W) following your current usage where shape[0] is x-axis length in your code
+        shape_arr = np.array(shape, dtype=int)
+        if shape_arr.size != 2:
+            raise ValueError(f"shape must be length-2, got {shape}")
+
+        H = int(shape_arr[0])
+        W = int(shape_arr[1])
+
+        voxel_size_np = np.array(get_active_voxel_size(), dtype=float)  # (vx, vy, vz)
+        # Use python floats for constants; this is fine for differentiability w.r.t. volume
+        # If you ever want gradients w.r.t voxel_size, you’d pass it as torch.Tensor.
+        vx, vy, vz = (float(voxel_size_np[0]), float(voxel_size_np[1]), float(voxel_size_np[2]))
+
+        # Pupil radius
+        Rx = (NA / wavelength) * vx
+        Ry = (NA / wavelength) * vy
+        x_radius = Rx * H
+        y_radius = Ry * W
+
+        # Build coordinates exactly like NumPy:
+        # np.linspace(-(N/2), N/2 - 1, N) / radius + 1e-8
+        # Use float for coordinate grid to reduce artifacts
+        real_dtype = torch.float32 if dtype in (torch.complex64, torch.float32) else torch.float64
+
+        x = torch.linspace(
+            -H / 2.0,
+            H / 2.0 - 1.0,
+            H,
+            device=device,
+            dtype=real_dtype,
+        ) / float(x_radius) + 1e-8
+
+        y = torch.linspace(
+            -W / 2.0,
+            W / 2.0 - 1.0,
+            W,
+            device=device,
+            dtype=real_dtype,
+        ) / float(y_radius) + 1e-8
+
+        # NumPy: W, H = np.meshgrid(y, x)
+        # i.e. first argument becomes columns, second becomes rows
+        Wg, Hg = torch.meshgrid(y, x, indexing="xy")  # Wg: (H, W), Hg: (H, W)
+
+        RHO = (Wg**2 + Hg**2).to(dtype=torch.complex64 if dtype == torch.complex64 else torch.complex128)
+
+        pupil_function = (RHO.real < 1.0).to(dtype=torch.complex64 if dtype == torch.complex64 else torch.complex128)
+
+        # z_shift term:
+        # 2*pi*n/wavelength * vz * sqrt(1 - (NA/n)^2 * RHO)
+        k0 = 2.0 * np.pi * float(refractive_index_medium) / float(wavelength)
+        alpha = (float(NA) / float(refractive_index_medium)) ** 2
+
+        inside = 1.0 - alpha * RHO  # complex
+        sqrt_term = torch.sqrt(inside)
+
+        z_shift = (k0 * float(vz)) * sqrt_term  # complex
+
+        # NumPy: z_shift[z_shift.imag != 0] = 0
+        # Torch equivalent:
+        z_shift = torch.where(z_shift.imag != 0, torch.zeros_like(z_shift), z_shift)
+
+        # nan_to_num equivalent
+        # z_shift = _torch_nan_to_num(z_shift)
+        z_shift = torch.nan_to_num(z_shift)
+
+        # defocus reshape (-1,1,1)
+        if isinstance(defocus, torch.Tensor):
+            defocus_t = defocus.to(device=device, dtype=real_dtype)
+        else:
+            defocus_t = torch.as_tensor(defocus, device=device, dtype=real_dtype)
+
+        defocus_t = defocus_t.reshape(-1, 1, 1)
+
+        # broadcast z_shift to (Z,H,W)
+        z_shift_3d = defocus_t * z_shift.unsqueeze(0)
+
+        # Aberration / custom pupil feature
+        if include_aberration:
+            pupil_feat = self.pupil
+
+            # If Feature: call it on tensor. This requires that Feature supports torch backend.
+            if isinstance(pupil_feat, Feature):
+                pupil_function = pupil_feat(pupil_function)
+
+            # If ndarray: multiply (will break differentiability unless you move it to torch)
+            elif isinstance(pupil_feat, np.ndarray):
+                pf = torch.as_tensor(pupil_feat, device=device, dtype=pupil_function.dtype)
+                pupil_function = pupil_function * pf
+
+        # Final pupil functions (Z,H,W)
+        pupil_functions = pupil_function.unsqueeze(0) * torch.exp(1j * z_shift_3d)
+
+        # Cast to requested complex dtype
+        if dtype == torch.complex64:
+            return pupil_functions.to(torch.complex64)
+        return pupil_functions.to(torch.complex128)
+
 
     def _pad_volume(
         self: Optics,
@@ -845,49 +1037,106 @@ class Optics(Feature):
         
         """
         
+        # if limits is None:
+        #     limits = np.zeros((3, 2))
+
+        # new_limits = np.array(limits)
+        # output_region = np.array(output_region)
+
+        # # Replace None entries with current limit
+        # output_region[0] = (
+        #     output_region[0] if not output_region[0] is None else new_limits[0, 0]
+        # )
+        # output_region[1] = (
+        #     output_region[1] if not output_region[1] is None else new_limits[0, 1]
+        # )
+        # output_region[2] = (
+        #     output_region[2] if not output_region[2] is None else new_limits[1, 0]
+        # )
+        # output_region[3] = (
+        #     output_region[3] if not output_region[3] is None else new_limits[1, 1]
+        # )
+
+        # for i in range(2):
+        #     new_limits[i, :] = (
+        #         np.min([new_limits[i, 0], output_region[i] - padding[i]]),
+        #         np.max(
+        #             [
+        #                 new_limits[i, 1],
+        #                 output_region[i + 2] + padding[i + 2],
+        #             ]
+        #         ),
+        #     )
+        # new_volume = np.zeros(
+        #     np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
+        #     dtype=complex,
+        # )
+
+        # old_region = (limits - new_limits).astype(np.int32)
+        # limits = limits.astype(np.int32)
+        # new_volume[
+        #     old_region[0, 0] : old_region[0, 0] + limits[0, 1] - limits[0, 0],
+        #     old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
+        #     old_region[2, 0] : old_region[2, 0] + limits[2, 1] - limits[2, 0],
+        # ] = volume
+        # return new_volume, new_limits
+
         if limits is None:
-            limits = np.zeros((3, 2))
+            limits = xp.zeros((3, 2), dtype=xp.int32)
+        else:
+            limits = xp.asarray(limits)
 
-        new_limits = np.array(limits)
-        output_region = np.array(output_region)
+        padding = xp.asarray(padding)
+        output_region = xp.asarray(output_region)
 
-        # Replace None entries with current limit
-        output_region[0] = (
-            output_region[0] if not output_region[0] is None else new_limits[0, 0]
-        )
-        output_region[1] = (
-            output_region[1] if not output_region[1] is None else new_limits[0, 1]
-        )
-        output_region[2] = (
-            output_region[2] if not output_region[2] is None else new_limits[1, 0]
-        )
-        output_region[3] = (
-            output_region[3] if not output_region[3] is None else new_limits[1, 1]
-        )
+        import torch
+
+        if isinstance(limits, torch.Tensor):
+            new_limits = limits.clone()
+        else:
+            new_limits = limits.copy()
+
+
+        # Replace None-like entries (NumPy/Torch safe)
+        for i in range(4):
+            if output_region[i] is None:
+                output_region[i] = (
+                    new_limits[0, 0] if i == 0 else
+                    new_limits[0, 1] if i == 1 else
+                    new_limits[1, 0] if i == 2 else
+                    new_limits[1, 1]
+                )
 
         for i in range(2):
-            new_limits[i, :] = (
-                np.min([new_limits[i, 0], output_region[i] - padding[i]]),
-                np.max(
-                    [
-                        new_limits[i, 1],
-                        output_region[i + 2] + padding[i + 2],
-                    ]
-                ),
+            new_limits[i, 0] = xp.minimum(
+                new_limits[i, 0], output_region[i] - padding[i]
             )
-        new_volume = np.zeros(
-            np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
-            dtype=complex,
-        )
+            new_limits[i, 1] = xp.maximum(
+                new_limits[i, 1], output_region[i + 2] + padding[i + 2]
+            )
 
-        old_region = (limits - new_limits).astype(np.int32)
-        limits = limits.astype(np.int32)
+        shape = (new_limits[:, 1] - new_limits[:, 0])
+        if isinstance(shape, torch.Tensor):
+            shape = shape.to(dtype=torch.int)
+        else:
+            shape = shape.astype(int)
+
+        new_volume = xp.zeros(shape.tolist(), dtype=volume.dtype)
+
+        old_region = (limits - new_limits)
+        if isinstance(old_region, torch.Tensor):
+            old_region = old_region.to(dtype=torch.int)
+        else:
+            old_region = old_region.astype(int)
+
         new_volume[
             old_region[0, 0] : old_region[0, 0] + limits[0, 1] - limits[0, 0],
             old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
             old_region[2, 0] : old_region[2, 0] + limits[2, 1] - limits[2, 0],
         ] = volume
+
         return new_volume, new_limits
+
 
     def __call__(
         self: Optics,
@@ -921,15 +1170,17 @@ class Optics(Feature):
         True
 
         """
-        from deeptrack.scatterers import MieScatterer # Temporary place for this import.
 
-        if isinstance(self, (Darkfield, ISCAT, Holography)) and not isinstance(sample, MieScatterer):
-            warnings.warn(
-                f"{type(self).__name__} optics must be used with Mie scatterers "
-                f"to produce a {type(self).__name__} image. "
-                f"Got sample of type {type(sample).__name__}.",
-                UserWarning,
-            )
+        ### TBE
+        # from deeptrack.scatterers import MieScatterer # Temporary place for this import.
+
+        # if isinstance(self, (Darkfield, ISCAT, Holography)) and not isinstance(sample, MieScatterer):
+        #     warnings.warn(
+        #         f"{type(self).__name__} optics must be used with Mie scatterers "
+        #         f"to produce a {type(self).__name__} image. "
+        #         f"Got sample of type {type(sample).__name__}.",
+        #         UserWarning,
+        #     )
 
         return Microscope(sample, self, **kwargs)
 
@@ -1007,7 +1258,7 @@ class Fluorescence(Optics):
 
     Methods
     -------
-    `get(illuminated_volume: array_like[complex], limits: array_like[int, int], **kwargs: Any) -> Image`
+    `get(illuminated_volume: array_like[complex], limits: array_like[int, int], **kwargs: Any) -> np.ndarray`
         Simulates the imaging process using a fluorescence microscope.
 
     Examples
@@ -1024,12 +1275,110 @@ class Fluorescence(Optics):
 
     """
 
+    def validate_input(self, scattered):
+        """Semantic validation for fluorescence microscopy."""
+        
+        # Fluorescence cannot operate on coherent fields
+        if isinstance(scattered, ScatteredField):
+            raise TypeError(
+                "Fluorescence microscope cannot operate on ScatteredField."
+            )
+
+
+    def extract_contrast_volume(self, scattered: ScatteredVolume, **kwargs) -> np.ndarray:
+        scale = np.asarray(get_active_scale(), float)
+        scale_volume = np.prod(scale)
+
+        intensity = scattered.get_property("intensity", None)
+        value = scattered.get_property("value", None)
+        ri = scattered.get_property("refractive_index", None)
+
+        # Refractive index is always ignored in fluorescence
+        if ri is not None:
+            warnings.warn(
+                "Scatterer defines 'refractive_index', which is ignored in "
+                "fluorescence microscopy.",
+                UserWarning,
+            )
+
+        # Preferred, physically meaningful case
+        if intensity is not None:
+            return intensity * scale_volume * scattered.array
+
+        # Fallback: legacy / dimensionless brightness
+        warnings.warn(
+            "Fluorescence scatterer has no 'intensity'. Interpreting 'value' as a "
+            "non-physical brightness factor. Quantitative interpretation is invalid. "
+            "Define 'intensity' to model physical fluorescence emission.",
+            UserWarning,
+        )
+
+        return value * scattered.array
+
+    def downscale_image(self, image: np.ndarray | torch.Tensor, upscale):
+        """Detector downscaling (energy conserving)"""
+        if not np.any(np.array(upscale) != 1):
+            return image
+
+        ux, uy = upscale[:2]
+        if ux != uy:
+            raise ValueError(
+                f"Energy-conserving detector integration requires ux == uy, "
+                f"got ux={ux}, uy={uy}."
+            )
+        if isinstance(ux, float) and ux.is_integer():
+            ux = int(ux)
+
+        # Energy-conserving detector integration
+        return SumPooling(ux)(image)
+
     def get(
-        self:  Fluorescence,
-        illuminated_volume: ArrayLike[complex],
-        limits: ArrayLike[int],
+        self: Fluorescence,
+        illuminated_volume: np.ndarray | torch.Tensor,
+        limits: np.ndarray,
         **kwargs: Any,
-    ) -> Image:
+    ) -> np.ndarray | torch.Tensor:
+        """
+        Backend-dispatched fluorescence imaging.
+        """
+        backend = config.get_backend()
+
+        if backend == "torch":
+            # ---- HARD GUARD: torch only ----
+            if not isinstance(image, torch.Tensor):
+                raise TypeError(
+                    "Torch backend selected but image is not a torch.Tensor"
+                )
+
+            return self._get_torch(
+                illuminated_volume,
+                limits,
+                **kwargs,
+            )
+
+        elif backend == "numpy":
+            # ---- HARD GUARD: numpy only ----
+            if not isinstance(image, np.ndarray):
+                raise TypeError(
+                    "NumPy backend selected but image is not a np.ndarray"
+                )
+
+            return self._get_numpy(
+                illuminated_volume,
+                limits,
+                **kwargs,
+            )
+
+        else:
+            raise RuntimeError(f"Unknown backend: {backend}")
+        
+
+    def _get_numpy(
+        self:  Fluorescence,
+        illuminated_volume: np.ndarray,
+        limits: np.ndarray,
+        **kwargs: Any,
+    ) -> np.ndarray:
         """Simulates the imaging process using a fluorescence microscope.
 
         This method convolves the 3D illuminated volume with a pupil function 
@@ -1048,7 +1397,7 @@ class Fluorescence(Optics):
 
         Returns
         -------
-        Image: Image
+        image: np.ndarray
             A 2D image object representing the fluorescence projection.
 
         Notes
@@ -1066,7 +1415,7 @@ class Fluorescence(Optics):
         >>> optics = dt.Fluorescence(
         ...     NA=1.4, wavelength=0.52e-6, magnification=60,
         ... )
-        >>> volume = dt.Image(np.ones((128, 128, 10), dtype=complex))
+        >>> volume = np.ones((128, 128, 10), dtype=complex)
         >>> limits = np.array([[0, 128], [0, 128], [0, 10]])
         >>> properties = optics.properties()
         >>> filtered_properties = {
@@ -1118,9 +1467,7 @@ class Fluorescence(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(
-            np.zeros((*padded_volume.shape[0:2], 1)), copy=False
-        )
+        output_image = np.zeros((*padded_volume.shape[0:2], 1))
 
         index_iterator = range(padded_volume.shape[2])
 
@@ -1156,14 +1503,125 @@ class Fluorescence(Optics):
             field = np.fft.ifft2(convolved_fourier_field)
             # # Discard remaining imaginary part (should be 0 up to rounding error)
             field = np.real(field)
-            output_image._value[:, :, 0] += field[
+            output_image[:, :, 0] += field[
                 : padded_volume.shape[0], : padded_volume.shape[1]
             ]
 
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
-        output_image.properties = illuminated_volume.properties + pupils.properties
 
         return output_image
+
+    def _get_torch(
+        self: Fluorescence,
+        illuminated_volume: torch.Tensor,
+        limits: torch.Tensor,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """
+        Torch implementation of fluorescence imaging.
+        Fully differentiable w.r.t. illuminated_volume.
+        """
+
+        import torch
+
+        device = illuminated_volume.device
+        dtype = illuminated_volume.dtype
+
+        # --- Pad volume (must return torch tensors) ---
+        padded_volume, limits = self._pad_volume(
+            illuminated_volume, limits=limits, **kwargs
+        )
+
+        pad = kwargs.get("padding", (0, 0, 0, 0))
+        output_region = kwargs.get(
+            "output_region", (None, None, None, None)
+        )
+
+        # Compute crop indices (same logic as NumPy)
+        def _idx(val):
+            return None if val is None else int(val)
+
+        ox0, oy0, ox1, oy1 = output_region
+        ox0 = _idx(None if ox0 is None else ox0 - limits[0, 0] - pad[0])
+        oy0 = _idx(None if oy0 is None else oy0 - limits[1, 0] - pad[1])
+        ox1 = _idx(None if ox1 is None else ox1 - limits[0, 0] + pad[2])
+        oy1 = _idx(None if oy1 is None else oy1 - limits[1, 0] + pad[3])
+
+        padded_volume = padded_volume[
+            ox0:ox1,
+            oy0:oy1,
+            :
+        ]
+
+        z_limits = limits[2]
+
+        H, W, Z = padded_volume.shape
+        output_image = torch.zeros(
+            (H, W, 1),
+            device=device,
+            dtype=torch.float32,
+        )
+
+        # --- z iterator ---
+        z_iterator = torch.linspace(
+            z_limits[0],
+            z_limits[1],
+            steps=Z,
+            device=device,
+            dtype=torch.float32,
+        )
+
+        # Identify empty planes (non-differentiable but OK)
+        zero_plane = torch.all(
+            padded_volume == 0,
+            dim=(0, 1),
+        )
+
+        z_values = z_iterator[~zero_plane]
+
+        # --- FFT padding ---
+        volume = pad_image_to_fft(padded_volume, axes=(0, 1))
+
+        # --- Pupil (torch) ---
+        pupils = self._pupil(
+            volume.shape[:2],
+            defocus=z_values,
+            device=device,
+        )
+
+        z_index = 0
+
+        # --- Main convolution loop ---
+        for i in range(Z):
+            if zero_plane[i]:
+                continue
+
+            pupil = pupils[z_index]
+            z_index += 1
+
+            # PSF
+            psf = torch.abs(
+                torch.fft.ifft2(
+                    torch.fft.fftshift(pupil)
+                )
+            ) ** 2
+
+            otf = torch.fft.fft2(psf)
+            field_fft = torch.fft.fft2(volume[:, :, i])
+            convolved = field_fft * otf
+            field = torch.fft.ifft2(convolved).real
+
+            output_image[:, :, 0] += field[:H, :W]
+
+        # --- Remove padding ---
+        output_image = output_image[
+            pad[0]: output_image.shape[0] - pad[2],
+            pad[1]: output_image.shape[1] - pad[3],
+            :
+        ]
+
+        return output_image
+
 
 
 #TODO ***??*** revise Brightfield - torch, typing, docstring, unit test
@@ -1234,7 +1692,7 @@ class Brightfield(Optics):
     -------
     `get(illuminated_volume: array_like[complex], 
         limits: array_like[int, int], fields: array_like[complex], 
-        **kwargs: Any) -> Image`
+        **kwargs: Any) -> np.ndarray`
         Simulates imaging with brightfield microscopy.
 
 
@@ -1250,9 +1708,51 @@ class Brightfield(Optics):
     
     """
 
+
     __conversion_table__ = ConversionTable(
-        working_distance=(u.meter, u.meter),
-    )
+    working_distance=(u.meter, u.meter),
+)
+
+    def validate_input(self, scattered):
+        """Semantic validation for brightfield microscopy."""
+
+        if isinstance(scattered, ScatteredVolume):
+            warnings.warn(
+                "Brightfield imaging from ScatteredVolume assumes a "
+                "weak-phase / projection approximation. "
+                "Use ScatteredField for physically accurate brightfield simulations.",
+                UserWarning,
+            )
+
+    def extract_contrast_volume(
+        self,
+        scattered: ScatteredVolume,
+        refractive_index_medium: float,
+        **kwargs: Any,
+    ) -> np.ndarray:
+
+        ri = scattered.get_property("refractive_index", None)
+        value = scattered.get_property("value", None)
+        intensity = scattered.get_property("intensity", None)
+
+        if intensity is not None:
+            warnings.warn(
+                "Scatterer defines 'intensity', which is ignored in "
+                "brightfield microscopy.",
+                UserWarning,
+            )
+
+        if ri is not None:
+            return (ri - refractive_index_medium) * scattered.array
+
+        warnings.warn(
+            "No 'refractive_index' specified; using 'value' as a non-physical "
+            "brightfield contrast. Results are not physically calibrated. "
+            "Define 'refractive_index' for physically meaningful contrast.",
+            UserWarning,
+        )
+
+        return value * scattered.array
 
     def get(
         self: Brightfield,
@@ -1260,7 +1760,7 @@ class Brightfield(Optics):
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
         **kwargs: Any,
-    ) -> Image:
+    ) -> np.ndarray:
         """Simulates imaging with brightfield microscopy.
 
         This method propagates light through the given volume, applying 
@@ -1285,7 +1785,7 @@ class Brightfield(Optics):
 
         Returns
         -------
-        Image: Image
+        image: np.ndarray
             Processed image after simulating the brightfield imaging process.
 
         Examples
@@ -1300,7 +1800,7 @@ class Brightfield(Optics):
         ...     wavelength=0.52e-6, 
         ...     magnification=60,
         ... )
-        >>> volume = dt.Image(np.ones((128, 128, 10), dtype=complex))
+        >>> volume = np.ones((128, 128, 10), dtype=complex)
         >>> limits = np.array([[0, 128], [0, 128], [0, 10]])
         >>> fields = np.array([np.ones((162, 162), dtype=complex)])
         >>> properties = optics.properties()
@@ -1345,7 +1845,7 @@ class Brightfield(Optics):
             if output_region[3] is None
             else int(output_region[3] - limits[1, 0] + pad[3])
         )
-
+        
         padded_volume = padded_volume[
             output_region[0] : output_region[2],
             output_region[1] : output_region[3],
@@ -1353,9 +1853,7 @@ class Brightfield(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = Image(
-            np.zeros((*padded_volume.shape[0:2], 1))
-        )
+        output_image = np.zeros((*padded_volume.shape[0:2], 1))
 
         index_iterator = range(padded_volume.shape[2])
         z_iterator = np.linspace(
@@ -1414,7 +1912,25 @@ class Brightfield(Optics):
         light_in_focus = light_in * shifted_pupil
 
         if len(fields) > 0:
-            field = np.sum(fields, axis=0)
+            # field = np.sum(fields, axis=0)
+            field_arrays = []
+
+            for fs in fields:
+                # fs is a ScatteredField
+                arr = fs.array
+
+                # Enforce (H, W, 1) shape
+                if arr.ndim == 2:
+                    arr = arr[..., None]
+
+                if arr.ndim != 3 or arr.shape[-1] != 1:
+                    raise ValueError(
+                        f"Expected field of shape (H, W, 1), got {arr.shape}"
+                    )
+
+                field_arrays.append(arr)
+
+            field = np.sum(field_arrays, axis=0)
             light_in_focus += field[..., 0]
         shifted_pupil = np.fft.fftshift(pupils[-1])
         light_in_focus = light_in_focus * shifted_pupil
@@ -1426,7 +1942,7 @@ class Brightfield(Optics):
             : padded_volume.shape[0], : padded_volume.shape[1]
         ]
         output_image = np.expand_dims(output_image, axis=-1)
-        output_image = Image(output_image[pad[0] : -pad[2], pad[1] : -pad[3]])
+        output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
 
         if not kwargs.get("return_field", False):
             output_image = np.square(np.abs(output_image))
@@ -1436,7 +1952,7 @@ class Brightfield(Optics):
         # output_image = output_image * np.exp(1j * -np.pi / 4)
         # output_image = output_image + 1
 
-        output_image.properties = illuminated_volume.properties
+        # output_image.properties = illuminated_volume.properties
 
         return output_image
 
@@ -1624,6 +2140,73 @@ class Darkfield(Brightfield):
             illumination_angle=illumination_angle,
             **kwargs)
 
+    def validate_input(self, scattered):
+        if isinstance(scattered, ScatteredVolume):
+            warnings.warn(
+                "Darkfield imaging from ScatteredVolume is a very rough "
+                "approximation. Use ScatteredField for physically meaningful "
+                "darkfield simulations.",
+                UserWarning,
+            )
+
+    def extract_contrast_volume(
+        self,
+        scattered: ScatteredVolume,
+        refractive_index_medium: float,
+        **kwargs: Any,
+    ) -> np.ndarray:
+        """
+        Approximate darkfield contrast from a volume (toy model).
+
+        This is a non-physical approximation intended for qualitative simulations.
+        """
+
+        ri = scattered.get_property("refractive_index", None)
+        value = scattered.get_property("value", None)
+        intensity = scattered.get_property("intensity", None)
+
+        # Intensity has no meaning here
+        if intensity is not None:
+            warnings.warn(
+                "Scatterer defines 'intensity', which is ignored in "
+                "darkfield microscopy.",
+                UserWarning,
+            )
+
+        if ri is not None:
+            delta_n = ri - refractive_index_medium
+            warnings.warn(
+                "Approximating darkfield contrast from refractive index. "
+                "Result is non-physical and qualitative only.",
+                UserWarning,
+            )
+            return (delta_n ** 2) * scattered.array
+
+        warnings.warn(
+            "No 'refractive_index' specified; using 'value' as a non-physical "
+            "darkfield scattering strength. Results are qualitative only.",
+            UserWarning,
+        )
+
+        return (value ** 2) * scattered.array
+
+    def downscale_image(self, image: np.ndarray, upscale):
+        """Detector downscaling (energy conserving)"""
+        if not np.any(np.array(upscale) != 1):
+            return image
+
+        ux, uy = upscale[:2]
+        if ux != uy:
+            raise ValueError(
+                f"Energy-conserving detector integration requires ux == uy, "
+                f"got ux={ux}, uy={uy}."
+            )
+        if isinstance(ux, float) and ux.is_integer():
+            ux = int(ux)
+
+        # Energy-conserving detector integration
+        return SumPooling(ux)(image)
+
     #Retrieve get as super
     def get(
         self: Darkfield,
@@ -1631,7 +2214,7 @@ class Darkfield(Brightfield):
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
         **kwargs: Any,
-    ) -> Image:
+    ) -> np.ndarray:
         """Retrieve the darkfield image of the illuminated volume.
 
         Parameters
@@ -1800,9 +2383,1004 @@ class IlluminationGradient(Feature):
         return image
 
 
+class NonOverlapping(Feature):
+    """Ensure volumes are placed non-overlapping in a 3D space.
+
+    This feature ensures that a list of 3D volumes are positioned such that 
+    their non-zero voxels do not overlap. If volumes overlap, their positions 
+    are resampled until they are non-overlapping. If the maximum number of 
+    attempts is exceeded, the feature regenerates the list of volumes and 
+    raises a warning if non-overlapping placement cannot be achieved.
+    
+    Note: `min_distance` refers to the distance between the edges of volumes, 
+    not their centers. Due to the way volumes are calculated, slight rounding 
+    errors may affect the final distance.
+    
+    This feature is incompatible with non-volumetric scatterers such as 
+    `MieScatterers`.
+    
+    Parameters
+    ----------
+    feature: Feature
+        The feature that generates the list of volumes to place 
+        non-overlapping.
+    min_distance: float, optional
+        The minimum distance between volumes in pixels. It can be negative to
+        allow for partial overlap. Defaults to 1. 
+    max_attempts: int, optional
+        The maximum number of attempts to place volumes without overlap.
+        Defaults to 5. 
+    max_iters: int, optional
+        The maximum number of resamplings. If this number is exceeded, a new
+        list of volumes is generated. Defaults to 100.
+
+    Attributes
+    ----------
+    __distributed__: bool
+        Always `False` for `NonOverlapping`, indicating that this feature’s
+        `.get()` method processes the entire input at once even if it is a
+        list, rather than distributing calls for each item of the list.N
+
+    Methods
+    -------
+    `get(*_, min_distance, max_attempts, **kwargs) -> array`
+        Generate a list of non-overlapping 3D volumes.
+    `_check_non_overlapping(list_of_volumes) -> bool`
+        Check if all volumes in the list are non-overlapping.
+    `_check_bounding_cubes_non_overlapping(...) -> bool`
+        Check if two bounding cubes are non-overlapping.
+    `_get_overlapping_cube(...) -> list[int]`
+        Get the overlapping cube between two bounding cubes.
+    `_get_overlapping_volume(...) -> array`
+        Get the overlapping volume between a volume and a bounding cube.
+    `_check_volumes_non_overlapping(...) -> bool`
+        Check if two volumes are non-overlapping.
+    `_resample_volume_position(volume) -> Image`
+        Resample the position of a volume to avoid overlap.
+    
+    Notes
+    -----
+    - This feature performs bounding cube checks first to quickly reject
+      obvious overlaps before voxel-level checks.
+    - If the bounding cubes overlap, precise voxel-based checks are performed.
+    - The feature may be computationally intensive for large numbers of volumes
+      or high-density placements.
+    - The feature is not differentiable.
+
+    Examples
+    ---------
+    >>> import deeptrack as dt
+
+    Define an ellipse scatterer with randomly positioned objects:
+
+    >>> import numpy as np
+    >>>
+    >>> scatterer = dt.Ellipse(
+    >>>    radius= 13 * dt.units.pixels,
+    >>>    position=lambda: np.random.uniform(5, 115, size=2)* dt.units.pixels,
+    >>> )
+
+    Create multiple scatterers:
+
+    >>> scatterers = (scatterer ^ 8)  
+
+    Define the optics and create the image with possible overlap:
+
+    >>> optics = dt.Fluorescence()
+    >>> im_with_overlap = optics(scatterers)
+    >>> im_with_overlap.store_properties()
+    >>> im_with_overlap_resolved = image_with_overlap()
+
+    Gather position from image:
+
+    >>> pos_with_overlap = np.array(
+    >>>     im_with_overlap_resolved.get_property(
+    >>>         "position", 
+    >>>         get_one=False
+    >>>     )
+    >>> )
+
+    Enforce non-overlapping and create the image without overlap:
+    
+    >>> non_overlapping_scatterers = dt.NonOverlapping(
+    ...     scatterers,
+    ...     min_distance=4,
+    ... )
+    >>> im_without_overlap =  optics(non_overlapping_scatterers)
+    >>> im_without_overlap.store_properties()
+    >>> im_without_overlap_resolved = im_without_overlap()
+
+    Gather position from image:
+
+    >>> pos_without_overlap = np.array(
+    >>>     im_without_overlap_resolved.get_property(
+    >>>         "position",
+    >>>        get_one=False
+    >>>     )
+    >>> )
+
+    Create a figure with two subplots to visualize the difference:
+
+    >>> import matplotlib.pyplot as plt
+    >>>
+    >>> fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+    >>>
+    >>> axes[0].imshow(im_with_overlap_resolved, cmap="gray")
+    >>> axes[0].scatter(pos_with_overlap[:,1],pos_with_overlap[:,0])
+    >>> axes[0].set_title("Overlapping Objects")
+    >>> axes[0].axis("off")
+    >>>
+    >>> axes[1].imshow(im_without_overlap_resolved, cmap="gray")
+    >>> axes[1].scatter(pos_without_overlap[:,1],pos_without_overlap[:,0])
+    >>> axes[1].set_title("Non-Overlapping Objects")
+    >>> axes[1].axis("off")
+    >>> plt.tight_layout()
+    >>>
+    >>> plt.show()
+
+    Define function to calculate minimum distance:
+
+    >>> def calculate_min_distance(positions):
+    >>> distances = [
+    >>>     np.linalg.norm(positions[i] - positions[j])
+    >>>     for i in range(len(positions))
+    >>>         for j in range(i + 1, len(positions))
+    >>> ]
+    >>> return min(distances)
+
+    Print minimum distances with and without overlap:
+
+    >>> print(calculate_min_distance(pos_with_overlap))
+    10.768742383382174
+
+    >>> print(calculate_min_distance(pos_without_overlap))
+    30.82531120942446
+
+    """
+
+    __distributed__: bool = False
+
+    def __init__(
+        self: NonOverlapping,
+        feature: Feature,
+        min_distance: float = 1,
+        max_attempts: int = 5,
+        max_iters: int = 100,
+        **kwargs: Any,
+    ):
+        """Initializes the NonOverlapping feature.
+
+        Ensures that volumes are placed **non-overlapping** by iteratively 
+        resampling their positions. If the maximum number of attempts is 
+        exceeded, the feature regenerates the list of volumes.
+
+        Parameters
+        ----------
+        feature: Feature
+            The feature that generates the list of volumes.
+        min_distance: float, optional
+            The minimum separation distance **between volume edges**, in 
+            pixels. It defaults to `1`. Negative values allow for partial
+            overlap.
+        max_attempts: int, optional
+            The maximum number of attempts to place the volumes without 
+            overlap. It defaults to `5`.
+        max_iters: int, optional
+            The maximum number of resampling iterations per attempt. If 
+            exceeded, a new list of volumes is generated. It defaults to `100`.
+
+        """
+
+        super().__init__(
+            min_distance=min_distance, 
+            max_attempts=max_attempts, 
+            max_iters=max_iters,
+            **kwargs,
+        )
+        self.feature = self.add_feature(feature, **kwargs)
+
+    def get(
+        self: NonOverlapping,
+        *_: Any,
+        min_distance: float,
+        max_attempts: int,
+        max_iters: int,
+        **kwargs: Any,
+    ) -> list[np.ndarray]:
+        """Generates a list of non-overlapping 3D volumes within a defined 
+        field of view (FOV).
+
+        This method **iteratively** attempts to place volumes while ensuring 
+        they maintain at least `min_distance` separation. If non-overlapping 
+        placement is not achieved within `max_attempts`, a warning is issued, 
+        and the best available configuration is returned.
+
+        Parameters
+        ----------
+        _: Any
+            Placeholder parameter, typically for an input image.
+        min_distance: float
+            The minimum required separation distance between volumes, in 
+            pixels.
+        max_attempts: int
+            The maximum number of attempts to generate a valid non-overlapping 
+            configuration.
+        max_iters: int
+            The maximum number of resampling iterations per attempt.
+        **kwargs: Any
+            Additional parameters that may be used by subclasses.
+
+        Returns
+        -------
+        list[np.ndarray]
+            A list of 3D volumes represented as NumPy arrays. If 
+            non-overlapping placement is unsuccessful, the best available 
+            configuration is returned.
+
+        Warns
+        -----
+        UserWarning
+            If non-overlapping placement is **not** achieved within 
+            `max_attempts`, suggesting parameter adjustments such as increasing
+            the FOV or reducing `min_distance`.
+
+        Notes
+        -----
+        - The placement process prioritizes bounding cube checks for
+          efficiency.
+        - If bounding cubes overlap, voxel-based overlap checks are performed.
+        
+        """
+
+        for _ in range(max_attempts):
+            list_of_volumes = self.feature()
+
+            if not isinstance(list_of_volumes, list):
+                list_of_volumes = [list_of_volumes]
+
+            for _ in range(max_iters):
+                
+                list_of_volumes = [
+                    self._resample_volume_position(volume) 
+                    for volume in list_of_volumes
+                ]
+
+                if self._check_non_overlapping(list_of_volumes):
+                    return list_of_volumes
+
+            # Generate a new list of volumes if max_attempts is exceeded.
+            self.feature.update()
+
+        warnings.warn(
+            "Non-overlapping placement could not be achieved. Consider "
+            "adjusting parameters: reduce object radius, increase FOV, "
+            "or decrease min_distance.",
+            UserWarning,
+        )
+        return list_of_volumes
+
+    def _check_non_overlapping(
+        self: NonOverlapping, 
+        list_of_volumes: list[np.ndarray],
+    ) -> bool:
+        """Determines whether all volumes in the provided list are 
+        non-overlapping.
+
+        This method verifies that the non-zero voxels of each 3D volume in 
+        `list_of_volumes` are at least `min_distance` apart. It first checks 
+        bounding boxes for early rejection and then examines actual voxel 
+        overlap when necessary. Volumes are assumed to have a `position` 
+        attribute indicating their placement in 3D space.
+
+        Parameters
+        ----------
+        list_of_volumes: list[np.ndarray]
+            A list of 3D arrays representing the volumes to be checked for 
+            overlap. Each volume is expected to have a position attribute.
+
+        Returns
+        -------
+        bool
+            `True` if all volumes are non-overlapping, otherwise `False`.
+
+        Notes
+        -----
+        - If `min_distance` is negative, volumes are shrunk using isotropic 
+          erosion before checking overlap.
+        - If `min_distance` is positive, volumes are padded and expanded using 
+          isotropic dilation.
+        - Overlapping checks are first performed on bounding cubes for 
+            efficiency.
+        - If bounding cubes overlap, voxel-level checks are performed.
+
+        """
+        from deeptrack.scatterers import ScatteredVolume
+
+        from deeptrack.augmentations import CropTight, Pad # these are not compatibles with torch backend
+        from deeptrack.optics import _get_position
+        from deeptrack.math import isotropic_erosion, isotropic_dilation
+
+        min_distance = self.min_distance()
+        crop = CropTight()
+
+        new_volumes = []
+        
+        for volume in list_of_volumes:
+            arr = volume.array
+            mask = arr != 0
+
+            if min_distance < 0:
+                new_arr = isotropic_erosion(mask, -min_distance / 2, backend=self.get_backend())
+            else:
+                pad = Pad(px=[int(np.ceil(min_distance / 2))] * 6, keep_size=True)
+                new_arr = isotropic_dilation(pad(mask) != 0 , min_distance / 2, backend=self.get_backend())
+                new_arr = crop(new_arr)
+
+            if self.get_backend() == "torch":
+                new_arr = new_arr.to(dtype=arr.dtype)
+            else:
+                new_arr = new_arr.astype(arr.dtype)
+
+            new_volume = ScatteredVolume(
+                array=new_arr,
+                properties=volume.properties.copy(),
+            )
+
+            new_volumes.append(new_volume)
+
+        list_of_volumes = new_volumes
+        min_distance = 1
+
+        # The position of the top left corner of each volume (index (0, 0, 0)).
+        volume_positions_1 = [
+            _get_position(volume, mode="corner", return_z=True).astype(int)
+            for volume in list_of_volumes
+        ]
+
+        # The position of the bottom right corner of each volume 
+        # (index (-1, -1, -1)).
+        volume_positions_2 = [
+            p0 + np.array(v.shape) 
+            for v, p0 in zip(list_of_volumes, volume_positions_1)
+        ]
+
+        # (x1, y1, z1, x2, y2, z2) for each volume.
+        volume_bounding_cube = [
+            [*p0, *p1] 
+            for p0, p1 in zip(volume_positions_1, volume_positions_2)
+        ]
+
+        for i, j in itertools.combinations(range(len(list_of_volumes)), 2):
+
+            # If the bounding cubes do not overlap, the volumes do not overlap.
+            if self._check_bounding_cubes_non_overlapping(
+                volume_bounding_cube[i], volume_bounding_cube[j], min_distance
+            ):
+                continue
+
+            # If the bounding cubes overlap, get the overlapping region of each 
+            # volume.
+            overlapping_cube = self._get_overlapping_cube(
+                volume_bounding_cube[i], volume_bounding_cube[j]
+            )
+            overlapping_volume_1 = self._get_overlapping_volume(
+                list_of_volumes[i].array, volume_bounding_cube[i], overlapping_cube
+            )
+            overlapping_volume_2 = self._get_overlapping_volume(
+                list_of_volumes[j].array, volume_bounding_cube[j], overlapping_cube
+            )
+
+            # If either the overlapping regions are empty, the volumes do not 
+            # overlap (done for speed).
+            if (np.all(overlapping_volume_1 == 0)
+                or np.all(overlapping_volume_2 == 0)):
+                continue
+
+            # If products of overlapping regions are non-zero, return False.
+            # if np.any(overlapping_volume_1 * overlapping_volume_2):
+            #     return False
+
+            # Finally, check that the non-zero voxels of the volumes are at 
+            # least min_distance apart.
+            if not self._check_volumes_non_overlapping(
+                overlapping_volume_1, overlapping_volume_2, min_distance
+            ):
+                return False
+
+        return True
+
+    def _check_bounding_cubes_non_overlapping(
+        self: NonOverlapping,
+        bounding_cube_1: list[int],
+        bounding_cube_2: list[int], 
+        min_distance: float,
+    ) -> bool:
+        """Determines whether two 3D bounding cubes are non-overlapping.
+
+        This method checks whether the bounding cubes of two volumes are 
+        **separated by at least** `min_distance` along **any** spatial axis.
+
+        Parameters
+        ----------
+        bounding_cube_1: list[int]
+            A list of six integers `[x1, y1, z1, x2, y2, z2]` representing 
+            the first bounding cube.
+        bounding_cube_2: list[int]
+            A list of six integers `[x1, y1, z1, x2, y2, z2]` representing 
+            the second bounding cube.
+        min_distance: float
+            The required **minimum separation distance** between the two 
+            bounding cubes.
+
+        Returns
+        -------
+        bool
+            `True` if the bounding cubes are non-overlapping (separated by at 
+            least `min_distance` along **at least one axis**), otherwise 
+            `False`.
+
+        Notes
+        -----
+        - This function **only checks bounding cubes**, **not actual voxel 
+          data**.
+        - If the bounding cubes are non-overlapping, the corresponding 
+          **volumes are also non-overlapping**.
+        - This check is much **faster** than full voxel-based comparisons.
+        
+        """
+
+        # bounding_cube_1 and bounding_cube_2 are (x1, y1, z1, x2, y2, z2).
+        # Check that the bounding cubes are non-overlapping.
+        return (
+        (bounding_cube_1[0] >= bounding_cube_2[3] + min_distance) or
+        (bounding_cube_2[0] >= bounding_cube_1[3] + min_distance) or
+        (bounding_cube_1[1] >= bounding_cube_2[4] + min_distance) or
+        (bounding_cube_2[1] >= bounding_cube_1[4] + min_distance) or
+        (bounding_cube_1[2] >= bounding_cube_2[5] + min_distance) or
+        (bounding_cube_2[2] >= bounding_cube_1[5] + min_distance)
+        )
+
+    def _get_overlapping_cube(
+        self: NonOverlapping,
+        bounding_cube_1: list[int],
+        bounding_cube_2: list[int],
+    ) -> list[int]:
+        """Computes the overlapping region between two 3D bounding cubes.
+
+        This method calculates the coordinates of the intersection of two 
+        axis-aligned bounding cubes, each represented as a list of six 
+        integers:
+
+        - `[x1, y1, z1]`: Coordinates of the **top-left-front** corner.
+        - `[x2, y2, z2]`: Coordinates of the **bottom-right-back** corner.
+
+        The resulting overlapping region is determined by:
+        - Taking the **maximum** of the starting coordinates (`x1, y1, z1`).
+        - Taking the **minimum** of the ending coordinates (`x2, y2, z2`).
+
+        If the cubes **do not** overlap, the resulting coordinates will not 
+        form a valid cube (i.e., `x1 > x2`, `y1 > y2`, or `z1 > z2`).
+
+        Parameters
+        ----------
+        bounding_cube_1: list[int]
+            The first bounding cube, formatted as `[x1, y1, z1, x2, y2, z2]`.
+        bounding_cube_2: list[int]
+            The second bounding cube, formatted as `[x1, y1, z1, x2, y2, z2]`.
+
+        Returns
+        -------
+        list[int]
+            A list of six integers `[x1, y1, z1, x2, y2, z2]` representing the 
+            overlapping bounding cube. If no overlap exists, the coordinates 
+            will **not** define a valid cube.
+
+        Notes
+        -----
+        - This function does **not** check for valid input or ensure the 
+          resulting cube is well-formed.
+        - If no overlap exists, downstream functions must handle the invalid 
+          result.
+        
+        """
+
+        return [
+            max(bounding_cube_1[0], bounding_cube_2[0]),
+            max(bounding_cube_1[1], bounding_cube_2[1]),
+            max(bounding_cube_1[2], bounding_cube_2[2]),
+            min(bounding_cube_1[3], bounding_cube_2[3]),
+            min(bounding_cube_1[4], bounding_cube_2[4]),
+            min(bounding_cube_1[5], bounding_cube_2[5]),
+        ]
+
+    def _get_overlapping_volume(
+        self: NonOverlapping,
+        volume: np.ndarray,  # 3D array.
+        bounding_cube: tuple[float, float, float, float, float, float],
+        overlapping_cube: tuple[float, float, float, float, float, float],
+    ) -> np.ndarray:
+        """Extracts the overlapping region of a 3D volume within the specified 
+        overlapping cube.
+
+        This method identifies and returns the subregion of `volume` that 
+        lies within the `overlapping_cube`. The bounding information of the 
+        volume is provided via `bounding_cube`.
+
+        Parameters
+        ----------
+        volume: np.ndarray
+            A 3D NumPy array representing the volume from which the 
+            overlapping region is extracted.
+        bounding_cube: tuple[float, float, float, float, float, float]
+            The bounding cube of the volume, given as a tuple of six floats: 
+            `(x1, y1, z1, x2, y2, z2)`. The first three values define the 
+            **top-left-front** corner, while the last three values define the 
+            **bottom-right-back** corner.
+        overlapping_cube: tuple[float, float, float, float, float, float]
+            The overlapping region between the volume and another volume, 
+            represented in the same format as `bounding_cube`.
+
+        Returns
+        -------
+        np.ndarray
+            A 3D NumPy array representing the portion of `volume` that 
+            lies within `overlapping_cube`. If the overlap does not exist, 
+            an empty array may be returned.
+
+        Notes
+        -----
+        - The method computes the relative indices of `overlapping_cube` 
+          within `volume` by subtracting the bounding cube's starting 
+          position.
+        - The extracted region is determined by integer indices, meaning 
+          coordinates are implicitly **floored to integers**.
+        - If `overlapping_cube` extends beyond `volume` boundaries, the 
+          returned subregion is **cropped** to fit within `volume`.
+        
+        """
+
+        # The position of the top left corner of the overlapping cube in the volume
+        overlapping_cube_position = np.array(overlapping_cube[:3]) - np.array(
+            bounding_cube[:3]
+        )
+
+        # The position of the bottom right corner of the overlapping cube in the volume
+        overlapping_cube_end_position = np.array(
+            overlapping_cube[3:]
+            ) - np.array(bounding_cube[:3])
+
+        # cast to int
+        overlapping_cube_position = overlapping_cube_position.astype(int)
+        overlapping_cube_end_position = overlapping_cube_end_position.astype(int)
+
+        return volume[
+            overlapping_cube_position[0] : overlapping_cube_end_position[0],
+            overlapping_cube_position[1] : overlapping_cube_end_position[1],
+            overlapping_cube_position[2] : overlapping_cube_end_position[2],
+        ]
+
+    def _check_volumes_non_overlapping(
+        self: NonOverlapping,
+        volume_1: np.ndarray,
+        volume_2: np.ndarray,
+        min_distance: float,
+    ) -> bool:
+        """Determines whether the non-zero voxels in two 3D volumes are at 
+        least `min_distance` apart.
+
+        This method checks whether the active regions (non-zero voxels) in 
+        `volume_1` and `volume_2` maintain a minimum separation of 
+        `min_distance`. If the volumes differ in size, the positions of their 
+        non-zero voxels are adjusted accordingly to ensure a fair comparison.
+
+        Parameters
+        ----------
+        volume_1: np.ndarray
+            A 3D NumPy array representing the first volume.
+        volume_2: np.ndarray
+            A 3D NumPy array representing the second volume.
+        min_distance: float
+            The minimum Euclidean distance required between any two non-zero 
+            voxels in the two volumes.
+
+        Returns
+        -------
+        bool
+            `True` if all non-zero voxels in `volume_1` and `volume_2` are at 
+            least `min_distance` apart, otherwise `False`.
+
+        Notes
+        -----
+        - This function assumes both volumes are correctly aligned within a 
+          shared coordinate space.
+        - If the volumes are of different sizes, voxel positions are scaled 
+          or adjusted for accurate distance measurement.
+        - Uses **Euclidean distance** for separation checking.
+        - If either volume is empty (i.e., no non-zero voxels), they are 
+          considered non-overlapping.
+        
+        """
+
+        # Get the positions of the non-zero voxels of each volume.
+        if self.get_backend() == "torch":
+            positions_1 = torch.nonzero(volume_1, as_tuple=False)
+            positions_2 = torch.nonzero(volume_2, as_tuple=False)
+        else:
+            positions_1 = np.argwhere(volume_1)
+            positions_2 = np.argwhere(volume_2)
+
+        # if positions_1.size == 0 or positions_2.size == 0:
+        #     return True  # If either volume is empty, they are "non-overlapping"
+
+        # # If the volumes are not the same size, the positions of the non-zero 
+        # # voxels of each volume need to be scaled.
+        # if positions_1.size == 0 or positions_2.size == 0:
+        #     return True  # If either volume is empty, they are "non-overlapping"
+
+        # If the volumes are not the same size, the positions of the non-zero 
+        # voxels of each volume need to be scaled.
+        if volume_1.shape != volume_2.shape:
+            positions_1 = (
+                positions_1 * np.array(volume_2.shape) 
+                / np.array(volume_1.shape)
+            )
+            positions_1 = positions_1.astype(int)
+
+        # Check that the non-zero voxels of the volumes are at least 
+        # min_distance apart.
+        if self.get_backend() == "torch":
+            dist = torch.cdist(
+                positions_1.float(),
+                positions_2.float(),
+            )
+            return bool((dist > min_distance).all())
+        else:
+            return np.all(cdist(positions_1, positions_2) > min_distance)
+
+    def _resample_volume_position(
+        self: NonOverlapping,
+        volume: np.ndarray | Image,
+    ) -> Image:
+        """Resamples the position of a 3D volume using its internal position 
+        sampler.
+
+        This method updates the `position` property of the given `volume` by 
+        drawing a new position from the `_position_sampler` stored in the 
+        volume's `properties`. If the sampled position is a `Quantity`, it is 
+        converted to pixel units.
+
+        Parameters
+        ----------
+        volume: np.ndarray
+            The 3D volume whose position is to be resampled. The volume must 
+            have a `properties` attribute containing dictionaries with 
+            `position` and `_position_sampler` keys.
+
+        Returns
+        -------
+        Image
+            The same input volume with its `position` property updated to the 
+            newly sampled value.
+
+        Notes
+        -----
+        - The `_position_sampler` function is expected to return a **tuple of 
+        three floats** (e.g., `(x, y, z)`).
+        - If the sampled position is a `Quantity`, it is converted to pixels.
+        - **Only** dictionaries in `volume.properties` that contain both 
+        `position` and `_position_sampler` keys are modified.
+        
+        """
+
+        pdict = volume.properties
+        if "position" in pdict and "_position_sampler" in pdict:
+            new_position = pdict["_position_sampler"]()
+            if isinstance(new_position, Quantity):
+                new_position = new_position.to("pixel").magnitude
+            pdict["position"] = new_position
+
+        return volume
+
+
+class SampleToMasks(Feature):
+    """Create a mask from a list of images.
+
+    This feature applies a transformation function to each input image and 
+    merges the resulting masks into a single multi-layer image. Each input 
+    image must have a `position` property that determines its placement within 
+    the final mask. When used with scatterers, the `voxel_size` property must 
+    be provided for correct object sizing.
+
+    Parameters
+    ----------
+    transformation_function: Callable[[Image], Image]
+        A function that transforms each input image into a mask with 
+        `number_of_masks` layers.
+    number_of_masks: PropertyLike[int], optional
+        The number of mask layers to generate. Default is 1.
+    output_region: PropertyLike[tuple[int, int, int, int]], optional
+        The size and position of the output mask, typically aligned with 
+        `optics.output_region`.
+    merge_method: PropertyLike[str | Callable | list[str | Callable]], optional
+        Method for merging individual masks into the final image. Can be:
+        - "add" (default): Sum the masks.
+        - "overwrite": Later masks overwrite earlier masks.
+        - "or": Combine masks using a logical OR operation.
+        - "mul": Multiply masks.
+        - Function: Custom function taking two images and merging them.
+
+    **kwargs: dict[str, Any]
+        Additional keyword arguments passed to the parent `Feature` class.
+
+    Methods
+    -------
+    `get(image, transformation_function, **kwargs) -> Image`
+        Applies the transformation function to the input image.
+    `_process_and_get(images, **kwargs) -> Image | np.ndarray`
+        Processes a list of images and generates a multi-layer mask.
+
+    Returns
+    -------
+    np.ndarray
+        The final mask image with the specified number of layers.
+
+    Raises
+    ------
+    ValueError
+        If `merge_method` is invalid.
+
+    Examples
+    -------
+    >>> import deeptrack as dt
+
+    Define number of particles:
+
+    >>> n_particles = 12
+
+    Define optics and particles:
+
+    >>> import numpy as np
+    >>>    
+    >>> optics = dt.Fluorescence(output_region=(0, 0, 64, 64))
+    >>> particle = dt.PointParticle(
+    >>>     position=lambda: np.random.uniform(5, 55, size=2),
+    >>> )
+    >>> particles = particle ^ n_particles
+
+    Define pipelines:
+
+    >>> sim_im_pip = optics(particles)
+    >>> sim_mask_pip = particles >> dt.SampleToMasks(
+    ...     lambda: lambda particles: particles > 0,
+    ...     output_region=optics.output_region,
+    ...     merge_method="or",
+    ... )
+    >>> pipeline = sim_im_pip & sim_mask_pip
+    >>> pipeline.store_properties()
+
+    Generate image and mask:
+
+    >>> image, mask = pipeline.update()()
+
+    Get particle positions:
+
+    >>> positions = np.array(image.get_property("position", get_one=False))
+
+    Visualize results:
+
+    >>> import matplotlib.pyplot as plt
+    >>>
+    >>> plt.subplot(1, 2, 1)
+    >>> plt.imshow(image, cmap="gray")
+    >>> plt.title("Original Image")
+    >>> plt.subplot(1, 2, 2)
+    >>> plt.imshow(mask, cmap="gray")
+    >>> plt.scatter(positions[:,1], positions[:,0], c="y", marker="x", s = 50)
+    >>> plt.title("Mask")
+    >>> plt.show()
+
+    """
+
+    def __init__(
+        self: Feature,
+        transformation_function: Callable[[np.ndarray], np.ndarray, torch.Tensor],
+        number_of_masks: PropertyLike[int] = 1,
+        output_region: PropertyLike[tuple[int, int, int, int]] = None,
+        merge_method: PropertyLike[str | Callable | list[str | Callable]] = "add",
+        **kwargs: Any,
+    ):
+        """Initialize the SampleToMasks feature.
+
+        Parameters
+        ----------
+        transformation_function: Callable[[Image], Image]
+            Function to transform input images into masks.
+        number_of_masks: PropertyLike[int], optional
+            Number of mask layers. Default is 1.
+        output_region: PropertyLike[tuple[int, int, int, int]], optional
+            Output region of the mask. Default is None.
+        merge_method: PropertyLike[str | Callable | list[str | Callable]], optional
+            Method to merge masks. Defaults to "add".
+        **kwargs: dict[str, Any]
+            Additional keyword arguments passed to the parent class.
+        
+        """
+
+        super().__init__(
+            transformation_function=transformation_function,
+            number_of_masks=number_of_masks,
+            output_region=output_region,
+            merge_method=merge_method,
+            **kwargs,
+        )
+
+    def get(
+        self: Feature,
+        image: np.ndarray,
+        transformation_function: Callable[list[np.ndarray] | np.ndarray | torch.Tensor],
+        **kwargs: Any,
+    ) -> np.ndarray:
+        """Apply the transformation function to a single image.
+
+        Parameters
+        ----------
+        image: np.ndarray
+            The input image.
+        transformation_function: Callable[[np.ndarray], np.ndarray]
+            Function to transform the image.
+        **kwargs: dict[str, Any]
+            Additional parameters.
+
+        Returns
+        -------
+        Image
+            The transformed image.
+
+        """
+
+        return transformation_function(image.array)
+
+    def _process_and_get(
+        self: Feature,
+        images: list[np.ndarray] | np.ndarray | list[torch.Tensor] | torch.Tensor,
+        **kwargs: Any,
+    ) -> np.ndarray:
+        """Process a list of images and generate a multi-layer mask.
+
+        Parameters
+        ----------
+        images: np.ndarray or list[np.ndarrray] or  Image or list[Image]
+            List of input images or a single image.
+        **kwargs: dict[str, Any]
+            Additional parameters including `output_region`, `number_of_masks`, 
+            and `merge_method`.
+
+        Returns
+        -------
+        Image or np.ndarray
+            The final mask image.
+            
+        """
+
+        # Handle list of images.
+        # if isinstance(images, list) and len(images) != 1:
+        list_of_labels = super()._process_and_get(images, **kwargs)
+
+        from deeptrack.scatterers import ScatteredVolume
+        
+        for idx, (label, image) in enumerate(zip(list_of_labels, images)):
+            list_of_labels[idx] = \
+                ScatteredVolume(array=label, properties=image.properties.copy())        
+
+        # Create an empty output image.
+        output_region = kwargs["output_region"]
+        output = xp.zeros(
+            (
+                output_region[2] - output_region[0],
+                output_region[3] - output_region[1],
+                kwargs["number_of_masks"],
+            ),
+            dtype=list_of_labels[0].array.dtype,
+        )
+
+        from deeptrack.optics import _get_position
+
+        # Merge masks into the output.
+        for volume in list_of_labels:
+            label = volume.array
+            position = _get_position(volume)
+
+            p0 = xp.round(position - xp.asarray(output_region[0:2]))
+            p0 = p0.astype(xp.int64)
+
+
+            if xp.any(p0 > xp.asarray(output.shape[:2])) or \
+                xp.any(p0 + xp.asarray(label.shape[:2]) < 0):
+                continue
+
+            crop_x = (-xp.minimum(p0[0], 0)).item()
+            crop_y = (-xp.minimum(p0[1], 0)).item()
+
+            crop_x_end = int(
+                label.shape[0]
+                - np.max([p0[0] + label.shape[0] - output.shape[0], 0])
+            )
+            crop_y_end = int(
+                label.shape[1]
+                - np.max([p0[1] + label.shape[1] - output.shape[1], 0])
+            )
+
+            labelarg = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
+
+            p0[0] = np.max([p0[0], 0])
+            p0[1] = np.max([p0[1], 0])
+
+            p0 = p0.astype(int)
+
+            output_slice = output[
+                p0[0] : p0[0] + labelarg.shape[0],
+                p0[1] : p0[1] + labelarg.shape[1],
+            ]
+
+            for label_index in range(kwargs["number_of_masks"]):
+
+                if isinstance(kwargs["merge_method"], list):
+                    merge = kwargs["merge_method"][label_index]
+                else:
+                    merge = kwargs["merge_method"]
+
+                if merge == "add":
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] += labelarg[..., label_index]
+
+                elif merge == "overwrite":
+                    output_slice[
+                        labelarg[..., label_index] != 0, label_index
+                    ] = labelarg[labelarg[..., label_index] != 0, \
+                        label_index]
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] = output_slice[..., label_index]
+
+                elif merge == "or":
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] = xp.logical_or(
+                        output_slice[..., label_index] != 0, 
+                        labelarg[..., label_index] != 0
+                        )
+
+                elif merge == "mul":
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] *= labelarg[..., label_index]
+
+                else:
+                    # No match, assume function
+                    output[
+                        p0[0] : p0[0] + labelarg.shape[0],
+                        p0[1] : p0[1] + labelarg.shape[1],
+                        label_index,
+                    ] = merge(
+                        output_slice[..., label_index],
+                        labelarg[..., label_index],
+                    )
+
+        return output
+
+
 #TODO ***??*** revise _get_position - torch, typing, docstring, unit test
 def _get_position(
-    image: Image,
+    scatterer: ScatteredObject,
     mode: str = "corner",
     return_z: bool = False,
 ) -> np.ndarray:
@@ -1826,26 +3404,23 @@ def _get_position(
 
     num_outputs = 2 + return_z
 
-    if mode == "corner" and image.size > 0:
+    if mode == "corner" and scatterer.array.size > 0:
         import scipy.ndimage
 
-        image = image.to_numpy()
-
-        shift = scipy.ndimage.center_of_mass(np.abs(image))
+        shift = scipy.ndimage.center_of_mass(np.abs(scatterer.array))
 
         if np.isnan(shift).any():
-            shift = np.array(image.shape) / 2
+            shift = np.array(scatterer.array.shape) / 2
 
     else:
         shift = np.zeros((num_outputs))
 
-    position = np.array(image.get_property("position", default=None))
+    position = np.array(scatterer.get_property("position", default=None))
 
     if position is None:
         return position
 
     scale = np.array(get_active_scale())
-
     if len(position) == 3:
         position = position * scale + 0.5 * (scale - 1)
         if return_z:
@@ -1856,7 +3431,7 @@ def _get_position(
     elif len(position) == 2:
         if return_z:
             outp = (
-                np.array([position[0], position[1], image.get_property("z", default=0)])
+                np.array([position[0], position[1], scatterer.get_property("z", default=0)])
                 * scale
                 - shift
                 + 0.5 * (scale - 1)
@@ -1866,6 +3441,89 @@ def _get_position(
             return position * scale[:2] - shift[0:2] + 0.5 * (scale[:2] - 1)
 
     return position
+
+# def get_position_torch(
+#     volume: torch.Tensor,          # (Z, Y, X) or (Y, X)
+#     position: torch.Tensor,        # base position (pixel units)
+#     scale: torch.Tensor,           # active scale
+#     return_z: bool = False,
+# ):
+#     # magnitude field (keeps gradients)
+#     w = volume.abs()
+
+#     eps = 1e-8
+#     w_sum = w.sum() + eps
+
+#     dims = w.ndim
+#     coords = torch.meshgrid(
+#         *[torch.arange(s, device=w.device, dtype=w.dtype) for s in w.shape],
+#         indexing="ij",
+#     )
+
+#     com = [ (w * c).sum() / w_sum for c in coords ]
+
+#     com = torch.stack(com)  # (Z,Y,X) or (Y,X)
+
+#     # shift relative to volume origin
+#     if dims == 3 and not return_z:
+#         com = com[1:]  # drop Z
+
+#     # scaled physical position
+#     pos = position * scale + 0.5 * (scale - 1)
+
+#     return pos - com
+
+
+def _bilinear_interpolate_numpy(
+    scatterer: np.ndarray, x_off: float, y_off: float
+) -> np.ndarray:
+    """Apply bilinear subpixel interpolation in the x–y plane (NumPy)."""
+    kernel = np.array(
+        [
+            [0.0, 0.0, 0.0],
+            [0.0, (1 - x_off) * (1 - y_off), (1 - x_off) * y_off],
+            [0.0, x_off * (1 - y_off), x_off * y_off],
+        ]
+    )
+    out = np.zeros_like(scatterer)
+    for z in range(scatterer.shape[2]):
+        if np.iscomplexobj(scatterer):
+            out[:, :, z] = (
+                convolve(np.real(scatterer[:, :, z]), kernel, mode="constant")
+                + 1j
+                * convolve(np.imag(scatterer[:, :, z]), kernel, mode="constant")
+            )
+        else:
+            out[:, :, z] = convolve(scatterer[:, :, z], kernel, mode="constant")
+    return out
+
+
+def _bilinear_interpolate_torch(
+    scatterer: torch.Tensor, x_off: float, y_off: float
+) -> torch.Tensor:
+    """Apply bilinear subpixel interpolation in the x–y plane (Torch).
+
+    Uses grid_sample for autograd-friendly interpolation.
+    """
+    H, W, D = scatterer.shape
+
+    # Normalized shifts in [-1,1]
+    x_shift = 2 * x_off / (W - 1)
+    y_shift = 2 * y_off / (H - 1)
+
+    yy, xx = torch.meshgrid(
+        torch.linspace(-1, 1, H, device=scatterer.device, dtype=scatterer.dtype),
+        torch.linspace(-1, 1, W, device=scatterer.device, dtype=scatterer.dtype),
+        indexing="ij",
+    )
+    grid = torch.stack((xx + x_shift, yy + y_shift), dim=-1)  # (H,W,2)
+    grid = grid.unsqueeze(0).repeat(D, 1, 1, 1)               # (D,H,W,2)
+
+    inp = scatterer.permute(2, 0, 1).unsqueeze(1)             # (D,1,H,W)
+
+    out = F.grid_sample(inp, grid, mode="bilinear",
+                        padding_mode="zeros", align_corners=True)
+    return out.squeeze(1).permute(1, 2, 0)                    # (H,W,D)
 
 
 #TODO ***??*** revise _create_volume - torch, typing, docstring, unit test
@@ -1903,6 +3561,12 @@ def _create_volume(
             Spatial limits of the volume.
 
     """
+    # contrast_type = kwargs.get("contrast_type", None)
+    # if contrast_type is None:
+    #     raise RuntimeError(
+    #         "_create_volume requires a contrast_type "
+    #         "(e.g. 'intensity' or 'refractive_index')"
+    #     )
 
     if not isinstance(list_of_scatterers, list):
         list_of_scatterers = [list_of_scatterers]
@@ -1927,24 +3591,16 @@ def _create_volume(
 
     # This accounts for upscale doing AveragePool instead of SumPool. This is
     # a bit of a hack, but it works for now.
-    fudge_factor = scale[0] * scale[1] / scale[2]
+    # fudge_factor = scale[0] * scale[1] / scale[2]
 
     for scatterer in list_of_scatterers:
 
+        if isinstance(scatterer.array, torch.Tensor):
+            device = scatterer.array.device
+            dtype = scatterer.array.dtype
+            scatterer.array = scatterer.array.detach().cpu().numpy()
+
         position = _get_position(scatterer, mode="corner", return_z=True)
-
-        if scatterer.get_property("intensity", None) is not None:
-            intensity = scatterer.get_property("intensity")
-            scatterer_value = intensity * fudge_factor
-        elif scatterer.get_property("refractive_index", None) is not None:
-            refractive_index = scatterer.get_property("refractive_index")
-            scatterer_value = (
-                refractive_index - refractive_index_medium
-            )
-        else:
-            scatterer_value = scatterer.get_property("value")
-
-        scatterer = scatterer * scatterer_value
 
         if limits is None:
             limits = np.zeros((3, 2), dtype=np.int32)
@@ -1952,26 +3608,25 @@ def _create_volume(
             limits[:, 1] = np.floor(position).astype(np.int32) + 1
 
         if (
-            position[0] + scatterer.shape[0] < OR[0]
+            position[0] + scatterer.array.shape[0] < OR[0]
             or position[0] > OR[2]
-            or position[1] + scatterer.shape[1] < OR[1]
+            or position[1] + scatterer.array.shape[1] < OR[1]
             or position[1] > OR[3]
         ):
             continue
 
-        padded_scatterer = Image(
-            np.pad(
-                scatterer,
+        # Pad scatterer to avoid edge effects during interpolation
+        padded_scatterer_arr = np.pad(  #Use Pad instead and make it torch-compatible?
+                scatterer.array,
                 [(2, 2), (2, 2), (2, 2)],
                 "constant",
                 constant_values=0,
             )
-        )
-        padded_scatterer.merge_properties_from(scatterer)
-
-        scatterer = padded_scatterer
-        position = _get_position(scatterer, mode="corner", return_z=True)
-        shape = np.array(scatterer.shape)
+        padded_scatterer = ScatteredVolume(
+            array=padded_scatterer_arr, properties=scatterer.properties.copy(),
+            )
+        position = _get_position(padded_scatterer, mode="corner", return_z=True)
+        shape = np.array(padded_scatterer.array.shape)
 
         if position is None:
             RuntimeWarning(
@@ -1980,36 +3635,20 @@ def _create_volume(
             )
             continue
 
-        splined_scatterer = np.zeros_like(scatterer)
-
         x_off = position[0] - np.floor(position[0])
         y_off = position[1] - np.floor(position[1])
 
-        kernel = np.array(
-            [
-                [0, 0, 0],
-                [0, (1 - x_off) * (1 - y_off), (1 - x_off) * y_off],
-                [0, x_off * (1 - y_off), x_off * y_off],
-            ]
-        )
+        
+        if isinstance(padded_scatterer.array, np.ndarray): # get_backend is a method of Features and not exposed 
+            splined_scatterer = _bilinear_interpolate_numpy(padded_scatterer.array, x_off, y_off)
+        elif isinstance(padded_scatterer.array, torch.Tensor):
+            splined_scatterer = _bilinear_interpolate_torch(padded_scatterer.array, x_off, y_off)
+        else:
+            raise TypeError(
+                f"Unsupported array type {type(padded_scatterer.array)}. "
+                "Expected np.ndarray or torch.Tensor."
+            )
 
-        for z in range(scatterer.shape[2]):
-            if splined_scatterer.dtype == complex:
-                splined_scatterer[:, :, z] = (
-                    convolve(
-                        np.real(scatterer[:, :, z]), kernel, mode="constant"
-                    )
-                    + convolve(
-                        np.imag(scatterer[:, :, z]), kernel, mode="constant"
-                    )
-                    * 1j
-                )
-            else:
-                splined_scatterer[:, :, z] = convolve(
-                    scatterer[:, :, z], kernel, mode="constant"
-                )
-
-        scatterer = splined_scatterer
         position = np.floor(position)
         new_limits = np.zeros(limits.shape, dtype=np.int32)
         for i in range(3):
@@ -2038,7 +3677,8 @@ def _create_volume(
 
         within_volume_position = position - limits[:, 0]
 
-        # NOTE: Maybe shouldn't be additive.
+        # NOTE: Maybe shouldn't be ONLY additive.
+        # give options: sum default, but also mean, max, min, or
         volume[
             int(within_volume_position[0]) : 
             int(within_volume_position[0] + shape[0]),
@@ -2048,5 +3688,52 @@ def _create_volume(
 
             int(within_volume_position[2]) : 
             int(within_volume_position[2] + shape[2]),
-        ] += scatterer
+        ] += splined_scatterer
+
+    if config.get_backend() == "torch":
+        volume = torch.from_numpy(volume).to(device=device, dtype=torch.float64)
     return volume, limits
+
+# # Move to image
+# def pad_image_to_fft(
+#     image: np.ndarray | torch.Tensor,
+#     axes: Iterable[int] = (0, 1),
+# ):
+#     """Pad image to FFT-friendly sizes.
+
+#     Preserves backend:
+#     - NumPy input → NumPy output
+#     - Torch input → Torch output (fully differentiable)
+#     """
+
+#     def _closest(dim: int) -> int:
+#         for size in _FASTEST_SIZES:
+#             if size >= dim:
+#                 return size
+#         raise ValueError(
+#             f"No suitable size found in _FASTEST_SIZES={_FASTEST_SIZES} "
+#             f"for dimension {dim}."
+#         )
+
+#     shape = list(image.shape)
+#     new_shape = list(shape)
+
+#     for axis in axes:
+#         new_shape[axis] = _closest(shape[axis])
+
+#     pad_sizes = [(0, new - old) for old, new in zip(shape, new_shape)]
+
+#     # --- NumPy backend ---
+#     if isinstance(image, np.ndarray):
+#         return np.pad(image, pad_sizes, mode="constant")
+
+#     # --- Torch backend ---
+#     if isinstance(image, torch.Tensor):
+#         # torch.nn.functional.pad expects reversed flat list
+#         pad = []
+#         for before, after in reversed(pad_sizes):
+#             pad.extend([before, after])
+
+#         return torch.nn.functional.pad(image, pad, mode="constant", value=0.0)
+
+#     raise TypeError(f"Unsupported type: {type(image)}")
