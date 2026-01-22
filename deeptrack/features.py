@@ -640,6 +640,7 @@ class Feature(DeepTrackNode):
         self._bool_dtype = "default"
         self._device = config.get_device()
 
+        # Pass Feature core logic to DeepTrackNode as its action with _ID
         super().__init__(action=self.action)
 
         # Ensure the feature has a 'name' property; default = class name.
