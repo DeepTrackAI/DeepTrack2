@@ -3861,7 +3861,6 @@ class Feature(DeepTrackNode):
         if self.__distributed__:
             # Call get on each image in list, and merge properties from
             # corresponding image
-            print(type(image_list[0]))
             return [self.get(x, **feature_input) for x in image_list]
 
         # Else, call get on entire list.
