@@ -1273,9 +1273,14 @@ class DeepTrackNode:
         #
         # If `action` is `None`, match the docstring's "no-op" semantics.
         if action is None:
-            self.action = (lambda: None)
+            self.action = lambda: None
+        elif callable(action):
+            self.action = action
         else:
-            self.action = action if callable(action) else (lambda: action)
+            self.action = lambda: action
+
+        # TODO Remove once understood why this is needed
+        self._accepts_ID = "_ID" in get_kwarg_names(self.action)
 
         # Keep track of all children, including this node.
         self._all_children = WeakSet()
