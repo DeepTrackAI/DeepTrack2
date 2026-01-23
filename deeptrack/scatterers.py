@@ -44,7 +44,7 @@ Classes:
 
 - `PointParticle`: Generates point particles with the size of 1 pixel.
 
-    Represented as a numpy array of ones.
+    Represented as a numpy array or a torch tensor of ones.
 
 - `Ellipse`: Generates 2-D elliptical particles.
 
@@ -1517,6 +1517,34 @@ class ScatteredBase:
         if pos.ndim == 2 and pos.shape[0] == 1:
             pos = pos[0]
         return pos
+
+    def copy(
+        self,
+        *,
+        array=None,
+        properties=None,
+    ) -> ScatteredBase:
+        """Return a shallow copy of the ScatteredBase.
+
+        Parameters
+        ----------
+        array : np.ndarray | torch.Tensor | None
+            Optional replacement for the internal array.
+            If None, the existing array is reused.
+        properties : dict | None
+            Optional replacement for properties.
+            If None, a shallow copy of the current properties is used.
+
+        Returns
+        -------
+        ScatteredBase
+            A new ScatteredBase instance.
+        """
+        return ScatteredBase(
+            array=self.array if array is None else array,
+            properties=self.properties.copy() if properties is None else properties,
+        )
+
 
     def as_array(self) -> ArrayLike:
         """Return the underlying array.

@@ -739,11 +739,11 @@ class Optics(Feature):
         return propertydict
 
     def _pupil(self, shape, **kwargs):
-        kwargs.setdefault("NA", float(self.NA()))
-        kwargs.setdefault("wavelength", float(self.wavelength()))
+        kwargs.setdefault("NA", self.NA())
+        kwargs.setdefault("wavelength", self.wavelength())
         kwargs.setdefault(
             "refractive_index_medium",
-            float(self.refractive_index_medium()),
+            self.refractive_index_medium(),
         )
 
         return (
@@ -1340,7 +1340,7 @@ class Fluorescence(Optics):
         """
         Backend-dispatched fluorescence imaging.
         """
-        backend = config.get_backend()
+        backend = self.get_backend()
 
         if backend == "torch":
             # ---- HARD GUARD: torch only ----
@@ -2696,7 +2696,6 @@ class NonOverlapping(Feature):
         from deeptrack.scatterers import ScatteredVolume
 
         from deeptrack.augmentations import CropTight, Pad # these are not compatibles with torch backend
-        from deeptrack.optics import _get_position
         from deeptrack.math import isotropic_erosion, isotropic_dilation
 
         min_distance = self.min_distance()
@@ -3282,8 +3281,6 @@ class SampleToMasks(Feature):
             dtype=list_of_labels[0].array.dtype,
         )
 
-        from deeptrack.optics import _get_position
-
         # Merge masks into the output.
         for volume in list_of_labels:
             label = volume.array
@@ -3473,7 +3470,7 @@ def _get_position(
 #     return pos - com
 
 
-def _bilinear_interpolate_numpy(
+def _bilinear_interpolate(
     scatterer: np.ndarray, x_off: float, y_off: float
 ) -> np.ndarray:
     """Apply bilinear subpixel interpolation in the x–y plane (NumPy)."""
@@ -3497,40 +3494,43 @@ def _bilinear_interpolate_numpy(
     return out
 
 
-def _bilinear_interpolate_torch(
-    scatterer: torch.Tensor, x_off: float, y_off: float
-) -> torch.Tensor:
-    """Apply bilinear subpixel interpolation in the x–y plane (Torch).
+# def _bilinear_interpolate_torch(
+#     scatterer: torch.Tensor, x_off: float, y_off: float
+# ) -> torch.Tensor:
+#     """Apply bilinear subpixel interpolation in the x–y plane (Torch).
 
-    Uses grid_sample for autograd-friendly interpolation.
-    """
-    H, W, D = scatterer.shape
+#     Uses grid_sample for autograd-friendly interpolation.
+#     """
+#     H, W, D = scatterer.shape
 
-    # Normalized shifts in [-1,1]
-    x_shift = 2 * x_off / (W - 1)
-    y_shift = 2 * y_off / (H - 1)
+#     # Normalized shifts in [-1,1]
+#     x_shift = 2 * x_off / (W - 1)
+#     y_shift = 2 * y_off / (H - 1)
 
-    yy, xx = torch.meshgrid(
-        torch.linspace(-1, 1, H, device=scatterer.device, dtype=scatterer.dtype),
-        torch.linspace(-1, 1, W, device=scatterer.device, dtype=scatterer.dtype),
-        indexing="ij",
-    )
-    grid = torch.stack((xx + x_shift, yy + y_shift), dim=-1)  # (H,W,2)
-    grid = grid.unsqueeze(0).repeat(D, 1, 1, 1)               # (D,H,W,2)
+#     yy, xx = torch.meshgrid(
+#         torch.linspace(-1, 1, H, device=scatterer.device, dtype=scatterer.dtype),
+#         torch.linspace(-1, 1, W, device=scatterer.device, dtype=scatterer.dtype),
+#         indexing="ij",
+#     )
+#     grid = torch.stack((xx + x_shift, yy + y_shift), dim=-1)  # (H,W,2)
+#     grid = grid.unsqueeze(0).repeat(D, 1, 1, 1)               # (D,H,W,2)
 
-    inp = scatterer.permute(2, 0, 1).unsqueeze(1)             # (D,1,H,W)
+#     inp = scatterer.permute(2, 0, 1).unsqueeze(1)             # (D,1,H,W)
 
-    out = F.grid_sample(inp, grid, mode="bilinear",
-                        padding_mode="zeros", align_corners=True)
-    return out.squeeze(1).permute(1, 2, 0)                    # (H,W,D)
+#     out = F.grid_sample(inp, grid, mode="bilinear",
+#                         padding_mode="zeros", align_corners=True)
+#     return out.squeeze(1).permute(1, 2, 0)                    # (H,W,D)
 
 
 #TODO ***??*** revise _create_volume - torch, typing, docstring, unit test
+
+# This is where differentiability respect to position, shape, etc is broken.
 def _create_volume(
     list_of_scatterers: list,
     pad: tuple = (0, 0, 0, 0),
     output_region: tuple = (None, None, None, None),
     refractive_index_medium: float = 1.33,
+    backend: Literal["numpy", "torch"] = "numpy",
     **kwargs: Any,
 ) -> tuple:
     """Converts a list of scatterers into a volumetric representation.
@@ -3559,16 +3559,39 @@ def _create_volume(
         - limits: numpy.ndarray
             Spatial limits of the volume.
 
+    Notes
+    -----
+    This function is non-differentiable with respect to scatterer parameters.
+    If torch tensors are provided, they are converted to NumPy internally and
+    converted back before returning.
+
     """
-    # contrast_type = kwargs.get("contrast_type", None)
-    # if contrast_type is None:
-    #     raise RuntimeError(
-    #         "_create_volume requires a contrast_type "
-    #         "(e.g. 'intensity' or 'refractive_index')"
-    #     )
 
     if not isinstance(list_of_scatterers, list):
         list_of_scatterers = [list_of_scatterers]
+
+    backend = config.get_backend()
+
+    device = None
+
+    for s in list_of_scatterers:
+        arr = s.array
+
+        if backend == "torch":
+            if not isinstance(arr, torch.Tensor):
+                raise TypeError(
+                    "Torch backend active but scatterer.array is not a torch.Tensor"
+                )
+
+        elif backend == "numpy":
+            if isinstance(arr, torch.Tensor):
+                raise TypeError(
+                    "NumPy backend active but scatterer.array is a torch.Tensor"
+                )
+
+        else:
+            raise RuntimeError(f"Unknown backend: {backend}")
+
 
     volume = np.zeros((1, 1, 1), dtype=complex)
     limits = None
@@ -3594,10 +3617,12 @@ def _create_volume(
 
     for scatterer in list_of_scatterers:
 
-        if isinstance(scatterer.array, torch.Tensor):
-            device = scatterer.array.device
-            dtype = scatterer.array.dtype
-            scatterer.array = scatterer.array.detach().cpu().numpy()
+        if backend == "torch" and isinstance(scatterer.array, torch.Tensor):
+            if device is None:
+                device = scatterer.array.device
+            scatterer = scatterer.copy( 
+                array=scatterer.array.detach().cpu().numpy()
+            )
 
         position = _get_position(scatterer, mode="corner", return_z=True)
 
@@ -3613,7 +3638,7 @@ def _create_volume(
             or position[1] > OR[3]
         ):
             continue
-
+        
         # Pad scatterer to avoid edge effects during interpolation
         padded_scatterer_arr = np.pad(  #Use Pad instead and make it torch-compatible?
                 scatterer.array,
@@ -3621,8 +3646,8 @@ def _create_volume(
                 "constant",
                 constant_values=0,
             )
-        padded_scatterer = ScatteredVolume(
-            array=padded_scatterer_arr, properties=scatterer.properties.copy(),
+        padded_scatterer = scatterer.copy(
+            array=padded_scatterer_arr,
             )
         position = _get_position(padded_scatterer, mode="corner", return_z=True)
         shape = np.array(padded_scatterer.array.shape)
@@ -3637,16 +3662,7 @@ def _create_volume(
         x_off = position[0] - np.floor(position[0])
         y_off = position[1] - np.floor(position[1])
 
-        
-        if isinstance(padded_scatterer.array, np.ndarray): # get_backend is a method of Features and not exposed 
-            splined_scatterer = _bilinear_interpolate_numpy(padded_scatterer.array, x_off, y_off)
-        elif isinstance(padded_scatterer.array, torch.Tensor):
-            splined_scatterer = _bilinear_interpolate_torch(padded_scatterer.array, x_off, y_off)
-        else:
-            raise TypeError(
-                f"Unsupported array type {type(padded_scatterer.array)}. "
-                "Expected np.ndarray or torch.Tensor."
-            )
+        splined_scatterer = _bilinear_interpolate(padded_scatterer.array, x_off, y_off)
 
         position = np.floor(position)
         new_limits = np.zeros(limits.shape, dtype=np.int32)
@@ -3689,8 +3705,10 @@ def _create_volume(
             int(within_volume_position[2] + shape[2]),
         ] += splined_scatterer
 
-    if config.get_backend() == "torch":
-        volume = torch.from_numpy(volume).to(device=device, dtype=torch.float64)
+    if backend == "torch":
+        if device is None:
+            device = torch.device("cpu")
+        volume = torch.from_numpy(volume).to(device=device)
     return volume, limits
 
 # # Move to image
