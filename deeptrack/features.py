@@ -1,8 +1,8 @@
 """Core features for building and processing pipelines in DeepTrack2.
 
-The `feature.py` module defines the core classes and utilities used to create
-and manipulate features in DeepTrack2, enabling users to build sophisticated
-data processing pipelines with modular, reusable, and composable components.
+This module defines the core classes and utilities used to create and
+manipulate features in DeepTrack2, enabling users to build sophisticated data
+processing pipelines with modular, reusable, and composable components.
 
 Key Features
 ------------
@@ -54,7 +54,7 @@ Key Classes:
 
 - `ArithmeticOperationFeature`: Apply arithmetic operation element-wise.
 
-    A parent class for features performing arithmetic operations like addition,
+    Base class for features performing arithmetic operations like addition,
     subtraction, multiplication, and division.
 
 Structural Feature Classes:
@@ -112,7 +112,7 @@ Functions:
 
 - `propagate_data_to_dependencies(feature, **kwargs) -> None`
 
-    Propagate data to all dependencies of a feature, updating their properties
+    Propagates data to all dependencies of a feature, updating their properties
     with the provided values.
 
 Examples
@@ -137,9 +137,10 @@ Chain features together:
 >>> pipeline = dt.Chain(add_five, add_ten)
 
 Or equivalently:
+
 >>> pipeline = add_five >> add_ten
 
-Process an input image:
+Process an input array:
 
 >>> import numpy as np
 >>>
@@ -3947,33 +3948,6 @@ class StructuralFeature(Feature):
     __distributed__: bool = False  # Process the entire image list in one call
 
 
-# TBE
-# class BackendDispatched:
-#     """Mixin for Feature.get() methods with backend-specific implementations."""
-
-#     _NUMPY_IMPL: str | None = None
-#     _TORCH_IMPL: str | None = None
-
-#     def _dispatch_backend(self, *args, **kwargs):
-#         backend = self.get_backend()
-
-#         if backend == "numpy":
-#             if self._NUMPY_IMPL is None:
-#                 raise NotImplementedError(
-#                     f"{self.__class__.__name__} does not support NumPy backend."
-#                 )
-#             return getattr(self, self._NUMPY_IMPL)(*args, **kwargs)
-
-#         if backend == "torch":
-#             if self._TORCH_IMPL is None:
-#                 raise NotImplementedError(
-#                     f"{self.__class__.__name__} does not support Torch backend."
-#                 )
-#             return getattr(self, self._TORCH_IMPL)(*args, **kwargs)
-
-#         raise RuntimeError(f"Unknown backend {backend}")
-
-
 class Chain(StructuralFeature):
     """Resolve two features sequentially.
 
@@ -7646,183 +7620,6 @@ class ChannelFirst2d(Feature):  # DEPRECATED
         return array
 
 
-# class Upscale(Feature):
-#     """Simulate a pipeline at a higher resolution.
-
-#     This feature scales up the resolution of the input pipeline by a specified 
-#     factor, performs computations at the higher resolution, and then 
-#     downsamples the result back to the original size. This is useful for 
-#     simulating effects at a finer resolution while preserving compatibility 
-#     with lower-resolution pipelines.
-    
-#     Internally, this feature redefines the scale of physical units (e.g., 
-#     `units.pixel`) to achieve the effect of upscaling. Therefore, it does not
-#     resize the input image itself but affects only features that rely on
-#     physical units.
-
-#     Parameters
-#     ----------
-#     feature: Feature
-#         The pipeline or feature to resolve at a higher resolution.
-#     factor: int or tuple[int, int, int], optional
-#         The factor by which to upscale the simulation. If a single integer is 
-#         provided, it is applied uniformly across all axes. If a tuple of three 
-#         integers is provided, each axis is scaled individually. Defaults to 1.
-#     **kwargs: Any
-#         Additional keyword arguments passed to the parent `Feature` class.
-
-#     Attributes
-#     ----------
-#     __distributed__: bool
-#         Always `False` for `Upscale`, indicating that this feature’s `.get()`
-#         method processes the entire input at once even if it is a list, rather
-#         than distributing calls for each item of the list.
-
-#     Methods
-#     -------
-#     `get(image, factor, **kwargs) -> np.ndarray | torch.tensor`
-#         Simulates the pipeline at a higher resolution and returns the result at
-#         the original resolution.
-
-#     Notes
-#     -----
-#     - This feature does not directly resize the image. Instead, it modifies the
-#       unit conversions within the pipeline, making physical units smaller,
-#       which results in more detail being simulated.
-#     - The final output is downscaled back to the original resolution using 
-#       `block_reduce` from `skimage.measure`.
-#     - The effect is only noticeable if features use physical units (e.g., 
-#       `units.pixel`, `units.meter`). Otherwise, the result will be identical.
-
-#     Examples
-#     --------
-#     >>> import deeptrack as dt
-
-#     Define an optical pipeline and a spherical particle:
-
-#     >>> optics = dt.Fluorescence()
-#     >>> particle = dt.Sphere()
-#     >>> simple_pipeline = optics(particle)
-
-#     Create an upscaled pipeline with a factor of 4:
-
-#     >>> upscaled_pipeline = dt.Upscale(optics(particle), factor=4)
-    
-#     Resolve the pipelines:
-
-#     >>> image = simple_pipeline()
-#     >>> upscaled_image = upscaled_pipeline()
-
-#     Visualize the images:
-
-#     >>> import matplotlib.pyplot as plt
-#     >>>
-#     >>> plt.subplot(1, 2, 1)
-#     >>> plt.imshow(image, cmap="gray")
-#     >>> plt.title("Original Image")
-#     >>>
-#     >>> plt.subplot(1, 2, 2)
-#     >>> plt.imshow(upscaled_image, cmap="gray")
-#     >>> plt.title("Simulated at Higher Resolution")
-#     >>>
-#     >>> plt.show()
-    
-#     Compare the shapes (both are the same due to downscaling):
-
-#     >>> print(image.shape)
-#     (128, 128, 1)
-#     >>> print(upscaled_image.shape)
-#     (128, 128, 1)
-    
-#     """
-
-#     __distributed__: bool = False
-
-#     feature: Feature
-
-#     def __init__(
-#         self: Feature,
-#         feature: Feature,
-#         factor: int | tuple[int, int, int] = 1,
-#         **kwargs: Any,
-#     ) -> None:
-#         """Initialize the Upscale feature.
-
-#         Parameters
-#         ----------
-#         feature: Feature
-#             The pipeline or feature to resolve at a higher resolution.
-#         factor: int or tuple[int, int, int], optional
-#             The factor by which to upscale the simulation. If a single integer 
-#             is provided, it is applied uniformly across all axes. If a tuple of
-#             three integers is provided, each axis is scaled individually. 
-#             Defaults to 1.
-#         **kwargs: Any
-#             Additional keyword arguments passed to the parent `Feature` class.
-
-#         """
-
-#         super().__init__(factor=factor, **kwargs)
-#         self.feature = self.add_feature(feature)
-
-#     def get(
-#         self: Feature,
-#         image: np.ndarray | torch.Tensor,
-#         factor: int | tuple[int, int, int],
-#         **kwargs: Any,
-#     ) -> np.ndarray | torch.Tensor:
-#         """Simulate the pipeline at a higher resolution and return result.
-
-#         Parameters
-#         ----------
-#         image: np.ndarray or torch.Tensor
-#             The input image to process.
-#         factor: int or tuple[int, int, int]
-#             The factor by which to upscale the simulation. If a single integer 
-#             is provided, it is applied uniformly across all axes. If a tuple of
-#             three integers is provided, each axis is scaled individually.
-#         **kwargs: Any
-#             Additional keyword arguments passed to the feature.
-
-#         Returns
-#         -------
-#         np.ndarray or torch.Tensor
-#             The processed image at the original resolution.
-
-#         Raises
-#         ------
-#         ValueError
-#             If the input `factor` is not a valid integer or tuple of integers.
-
-#         """
-
-#         # Ensure factor is a tuple of three integers.
-#         if np.size(factor) == 1:
-#             factor = (factor, factor, 1)
-#         elif len(factor) != 3:
-#             raise ValueError(
-#                 "Factor must be an integer or a tuple of three integers."
-#             )
-        
-#         # Create a context for upscaling and perform computation.
-#         ctx = create_context(None, None, None, *factor)
-
-#         print('before:', image)
-#         with units.context(ctx):
-#             image = self.feature(image)
-
-#         print('after:', image)
-#         # Downscale the result to the original resolution.        
-#         import skimage.measure
-
-#         image = skimage.measure.block_reduce(
-#             image, (factor[0], factor[1]) + (1,) * (image.ndim - 2), np.mean
-#         )
-
-#         return image
-
-
-
 class Store(Feature):
     """Store the output of a feature for reuse.
 
@@ -7952,9 +7749,10 @@ class Store(Feature):
         if replace or not key in self._store:
             self._store[key] = self.feature()
 
-        # Return the stored or newly computed result
-        if self._wrap_array_with_image:
-            return Image(self._store[key], copy=False)
+        # TODO TBE
+        ## Return the stored or newly computed result
+        #if self._wrap_array_with_image:
+        #    return Image(self._store[key], copy=False)
 
         return self._store[key]
 
