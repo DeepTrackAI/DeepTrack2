@@ -12,11 +12,14 @@ import unittest
 
 import numpy as np
 
-from deeptrack import features, Gaussian, properties, TORCH_AVAILABLE
-from deeptrack import units_registry as u
+from deeptrack import (
+    config, features, Gaussian, properties, TORCH_AVAILABLE,
+)
+
 
 if TORCH_AVAILABLE:
     import torch
+
 
 def grid_test_features(
     tester,
@@ -168,6 +171,37 @@ class TestFeatures(unittest.TestCase):
             TakeProperties,
         )
 
+
+    def test_Feature_init(self):
+        # Default init
+        f1 = features.Feature()
+        self.assertIsNone(f1.arguments)
+        self.assertEqual(f1._backend, config.get_backend())
+
+        self.assertEqual(f1.node_name, "Feature")
+        self.assertIsInstance(f1.properties, properties.PropertyDict)
+        self.assertIn("name", f1.properties)
+        self.assertEqual(f1.properties["name"](), "Feature")
+
+        self.assertIsInstance(f1._input, properties.DeepTrackNode)
+        self.assertIsInstance(f1._random_seed, properties.DeepTrackNode)
+
+        # `_input=None` should become a new empty list
+        self.assertEqual(f1._input(), [])
+
+        # Not shared mutable default across instances
+        f2 = features.Feature()
+        self.assertEqual(f2._input(), [])
+
+        x1 = f1._input()
+        x1.append(123)
+        self.assertEqual(f1._input(), [123])
+        self.assertEqual(f2._input(), [])
+
+        # Custom name override
+        f3 = features.Feature(name="CustomName")
+        self.assertEqual(f3.node_name, "CustomName")
+        self.assertEqual(f3.properties["name"](), "CustomName")
 
     def test_Feature_basics(self):
 
