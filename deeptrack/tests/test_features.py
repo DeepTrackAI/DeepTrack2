@@ -9,6 +9,7 @@
 import itertools
 import operator
 import unittest
+import warnings
 
 import numpy as np
 
@@ -202,6 +203,131 @@ class TestFeatures(unittest.TestCase):
         f3 = features.Feature(name="CustomName")
         self.assertEqual(f3.node_name, "CustomName")
         self.assertEqual(f3.properties["name"](), "CustomName")
+
+    def test_Feature_torch_numpy_get_backend_dtype_to(self):
+        feature = features.DummyFeature()
+
+        # numpy() + get_backend() + to() warning normalization
+        feature.numpy()
+        self.assertEqual(feature.get_backend(), "numpy")
+        self.assertEqual(feature.device, "cpu")
+
+        # Requesting a non-CPU device under NumPy should warn and normalize.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+
+            feature.to("cuda")
+            self.assertTrue(
+                any(issubclass(x.category, UserWarning) for x in w)
+            )
+            self.assertEqual(feature.device, "cpu")
+
+        if TORCH_AVAILABLE:
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+
+                feature.to(torch.device("cuda"))
+                self.assertTrue(
+                    any(issubclass(x.category, UserWarning) for x in w)
+                )
+                self.assertEqual(feature.device, "cpu")
+
+        # After the above, ensure NumPy device is CPU as expected.
+        self.assertEqual(feature.get_backend(), "numpy")
+        self.assertEqual(feature.device, "cpu")
+
+        # dtype() under NumPy
+        feature.dtype(
+            float="float32",
+            int="int16",
+            complex="complex64",
+            bool="bool",
+        )
+        self.assertEqual(feature.float_dtype, np.dtype("float32"))
+        self.assertEqual(feature.int_dtype, np.dtype("int16"))
+        self.assertEqual(feature.complex_dtype, np.dtype("complex64"))
+        self.assertEqual(feature.bool_dtype, np.dtype("bool"))
+
+        # torch() + get_backend() + dtype() + to()
+        if TORCH_AVAILABLE:
+            feature.torch(device=torch.device("cpu"))
+            self.assertEqual(feature.get_backend(), "torch")
+            self.assertIsInstance(feature.device, torch.device)
+            self.assertEqual(feature.device.type, "cpu")
+
+            # dtype resolution should now be torch dtypes
+            feature.dtype(float="float64")
+            self.assertEqual(feature.float_dtype.name, "float64")
+
+            # Calling to(torch.device("cpu")) under torch should not warn.
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+
+                feature.to(torch.device("cpu"))
+                self.assertFalse(
+                    any(issubclass(x.category, UserWarning) for x in w)
+                )
+                self.assertEqual(feature.device.type, "cpu")
+
+            # -----------------------------------------------------------------
+            # Extra coverage 1: recursive backend switching in a small pipeline
+            pipeline = features.Add(b=1) >> features.Add(b=2)
+
+            pipeline.numpy(recursive=True)
+            self.assertEqual(pipeline.get_backend(), "numpy")
+            self.assertEqual(pipeline.device, "cpu")
+
+            # Ensure dependent features are also converted when recursive=True.
+            for dependency in pipeline.recurse_dependencies():
+                if isinstance(dependency, features.Feature):
+                    self.assertEqual(dependency.get_backend(), "numpy")
+                    self.assertEqual(dependency.device, "cpu")
+
+            if TORCH_AVAILABLE:
+                pipeline.torch(device=torch.device("cuda"), recursive=True)
+                self.assertEqual(pipeline.get_backend(), "torch")
+                self.assertIsInstance(pipeline.device, torch.device)
+                self.assertEqual(pipeline.device.type, "cuda")
+
+                for dependency in pipeline.recurse_dependencies():
+                    if isinstance(dependency, features.Feature):
+                        self.assertEqual(dependency.get_backend(), "torch")
+                        self.assertIsInstance(dependency.device, torch.device)
+                        self.assertEqual(dependency.device.type, "cuda")
+
+            # -----------------------------------------------------------------
+            # Extra coverage 2: numpy() resets device to CPU even after non-CPU
+            if TORCH_AVAILABLE:
+                feature.torch(device=torch.device("cuda"))
+                self.assertEqual(feature.get_backend(), "torch")
+                self.assertIsInstance(feature.device, torch.device)
+                self.assertEqual(feature.device.type, "cuda")
+
+                feature.numpy()
+                self.assertEqual(feature.get_backend(), "numpy")
+                self.assertEqual(feature.device, "cpu")
+
+            # -----------------------------------------------------------------
+            # Extra coverage 3: to("cpu") under NumPy should not warn.
+            feature.numpy()
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+
+                feature.to("cpu")
+                self.assertFalse(
+                    any(issubclass(x.category, UserWarning) for x in w)
+                )
+                self.assertEqual(feature.device, "cpu")
+
+            if TORCH_AVAILABLE:
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter("always")
+
+                    feature.to(torch.device("cpu"))
+                    self.assertFalse(
+                        any(issubclass(x.category, UserWarning) for x in w)
+                    )
+                    self.assertEqual(feature.device.type, "cpu")
 
     def test_Feature_basics(self):
 
