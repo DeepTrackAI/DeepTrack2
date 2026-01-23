@@ -12,15 +12,7 @@ import unittest
 
 import numpy as np
 
-from deeptrack import (
-    features,
-    Image,  #TODO TBE
-    Gaussian,
-    optics,
-    properties,
-    scatterers,
-    TORCH_AVAILABLE,
-)
+from deeptrack import features, Gaussian, properties, TORCH_AVAILABLE
 from deeptrack import units_registry as u
 
 if TORCH_AVAILABLE:
@@ -123,6 +115,59 @@ def test_operator(self, operator, emulated_operator=None):
 
 
 class TestFeatures(unittest.TestCase):
+
+    def test___all__(self):
+        from deeptrack import (
+            Feature,
+            StructuralFeature,
+            Chain,
+            Branch,
+            DummyFeature,
+            Value,
+            ArithmeticOperationFeature,
+            Add,
+            Subtract,
+            Multiply,
+            Divide,
+            FloorDivide,
+            Power,
+            LessThan,
+            LessThanOrEquals,
+            LessThanOrEqual,
+            GreaterThan,
+            GreaterThanOrEquals,
+            GreaterThanOrEqual,
+            Equals,
+            Equal,
+            Stack,
+            Arguments,
+            Probability,
+            Repeat,
+            Combine,
+            Slice,
+            Bind,
+            BindResolve,
+            BindUpdate,
+            ConditionalSetProperty,
+            ConditionalSetFeature,
+            Lambda,
+            Merge,
+            OneOf,
+            OneOfDict,
+            LoadImage,
+            AsType,
+            ChannelFirst2d,
+            Store,
+            Squeeze,
+            Unsqueeze,
+            ExpandDims,
+            MoveAxis,
+            Transpose,
+            Permute,
+            OneHot,
+            TakeProperties,
+        )
+
 
     def test_Feature_basics(self):
 
@@ -1875,11 +1920,6 @@ class TestFeatures(unittest.TestCase):
         output_image = channel_first_feature.get(input_image, axis=-1)
         self.assertEqual(output_image.shape, (3, 10, 20))
 
-        # Image[Numpy] shape
-        input_image = Image(np.zeros((10, 20, 3)))
-        output_image = channel_first_feature.get(input_image, axis=-1)
-        self.assertEqual(output_image._value.shape, (3, 10, 20))
-
         # Numpy values
         input_image = np.array([[[1, 2, 3], [4, 5, 6]]])
         output_image = channel_first_feature.get(input_image, axis=-1)
@@ -1893,11 +1933,6 @@ class TestFeatures(unittest.TestCase):
             self.assertEqual(tuple(output_image.shape), (1, 10, 20))
 
             input_image = torch.zeros(10, 20, 3)
-            output_image = channel_first_feature.get(input_image, axis=-1)
-            self.assertEqual(tuple(output_image.shape), (3, 10, 20))
-
-            # Image[Torch] shape
-            input_image = Image(torch.zeros(10, 20, 3))
             output_image = channel_first_feature.get(input_image, axis=-1)
             self.assertEqual(tuple(output_image.shape), (3, 10, 20))
 
@@ -1974,29 +2009,6 @@ class TestFeatures(unittest.TestCase):
         expected_output = np.squeeze(np.squeeze(input_image, axis=3), axis=1)
         np.testing.assert_array_equal(output_image, expected_output)
 
-        ### Test with Image
-        input_data = np.array([[[[3], [2], [1]]], [[[1], [2], [3]]]])
-        # shape: (2, 1, 3, 1)
-        input_image = features.Image(input_data)
-
-        squeeze_feature = features.Squeeze(axis=1)
-        output_image = squeeze_feature(input_image)
-        self.assertEqual(output_image.shape, (2, 3, 1))
-        expected_output = np.squeeze(input_data, axis=1)
-        np.testing.assert_array_equal(output_image, expected_output)
-
-        squeeze_feature = features.Squeeze()
-        output_image = squeeze_feature(input_image)
-        self.assertEqual(output_image.shape, (2, 3))
-        expected_output = np.squeeze(input_data)
-        np.testing.assert_array_equal(output_image, expected_output)
-
-        squeeze_feature = features.Squeeze(axis=(1, 3))
-        output_image = squeeze_feature(input_image)
-        self.assertEqual(output_image.shape, (2, 3))
-        expected_output = np.squeeze(np.squeeze(input_data, axis=3), axis=1)
-        np.testing.assert_array_equal(output_image, expected_output)
-
         ### Test with PyTorch tensor (if available)
         if TORCH_AVAILABLE:
             input_tensor = torch.tensor([[[[3], [2], [1]]], [[[1], [2], [3]]]])
@@ -2038,18 +2050,6 @@ class TestFeatures(unittest.TestCase):
         output_image = unsqueeze_feature(input_image)
         self.assertEqual(output_image.shape, (1, 3, 1))
 
-        ### Test with Image
-        input_data = np.array([1, 2, 3])
-        input_image = features.Image(input_data)
-
-        unsqueeze_feature = features.Unsqueeze(axis=0)
-        output_image = unsqueeze_feature(input_image)
-        self.assertEqual(output_image.shape, (1, 3))
-
-        unsqueeze_feature = features.Unsqueeze()
-        output_image = unsqueeze_feature(input_image)
-        self.assertEqual(output_image.shape, (3, 1))
-
         # Multiple axes
         unsqueeze_feature = features.Unsqueeze(axis=(0, 2))
         output_image = unsqueeze_feature(input_image)
@@ -2087,14 +2087,6 @@ class TestFeatures(unittest.TestCase):
         output_image = move_axis_feature(input_image)
         self.assertEqual(output_image.shape, (3, 4, 2))
 
-        ### Test with Image
-        input_data = np.random.rand(2, 3, 4)
-        input_image = features.Image(input_data)
-
-        move_axis_feature = features.MoveAxis(source=0, destination=2)
-        output_image = move_axis_feature(input_image)
-        self.assertEqual(output_image.shape, (3, 4, 2))
-
         ### Test with PyTorch tensor (if available)
         if TORCH_AVAILABLE:
             input_tensor = torch.rand(2, 3, 4)
@@ -2122,14 +2114,6 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(output_image.shape, (4, 3, 2))
         expected_output = np.transpose(input_image)
         self.assertTrue(np.allclose(output_image, expected_output))
-
-        ### Test with Image
-        input_data = np.random.rand(2, 3, 4)
-        input_image = features.Image(input_data)
-
-        transpose_feature = features.Transpose(axes=(1, 2, 0))
-        output_image = transpose_feature(input_image)
-        self.assertEqual(output_image.shape, (3, 4, 2))
 
         ### Test with PyTorch tensor (if available)
         if TORCH_AVAILABLE:
@@ -2167,13 +2151,6 @@ class TestFeatures(unittest.TestCase):
 
         ### Test with singleton last dimension
         input_image = np.array([[0], [1], [2]])  # shape (3, 1)
-        output_image = one_hot_feature(input_image)
-        self.assertEqual(output_image.shape, (3, 3))
-        np.testing.assert_array_equal(output_image, expected_output)
-
-        ### Test with Image
-        input_data = np.array([0, 1, 2])
-        input_image = features.Image(input_data)
         output_image = one_hot_feature(input_image)
         self.assertEqual(output_image.shape, (3, 3))
         np.testing.assert_array_equal(output_image, expected_output)
