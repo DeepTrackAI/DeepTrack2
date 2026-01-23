@@ -967,10 +967,11 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         device: torch.device, optional
-            The target device of the output (e.g., cpu or cuda). 
+            The device to use during evaluation (e.g. CPU, CUDA, or MPS).
+            If provided, the feature's device is updated via `.to(device)`.
             Defaults to `None`.
         recursive: bool, optional
-            If `True` (default), it also convert all dependent features.
+            If `True` (default), it also converts all dependent features.
             If `False`, it does not.
 
         Returns
@@ -1027,12 +1028,17 @@ class Feature(DeepTrackNode):
         """
 
         self._backend = "torch"
+
+        if device is not None:
+            self.to(device)
+
         if recursive:
             for dependency in self.recurse_dependencies():
                 if isinstance(dependency, Feature):
-                    dependency.torch(device, recursive=False)
+                    dependency.torch(device=device, recursive=False)
 
         self.invalidate()
+
         return self
 
     def numpy(
@@ -1041,10 +1047,13 @@ class Feature(DeepTrackNode):
     ) -> Feature:
         """Set the backend to numpy.
 
+        The NumPy backend does not support non-CPU devices. Calling `.numpy()`
+        resets the feature's device to `"cpu"`.
+
         Parameters
         ----------
         recursive: bool, optional
-            If `True` (default), also convert all dependent features.
+            If `True` (default), also converts all dependent features.
 
         Returns
         -------
@@ -1080,17 +1089,20 @@ class Feature(DeepTrackNode):
         """
 
         self._backend = "numpy"
+
+        # NumPy backend does not support non-CPU devices.
+        self.to("cpu")
+
         if recursive:
             for dependency in self.recurse_dependencies():
                 if isinstance(dependency, Feature):
                     dependency.numpy(recursive=False)
 
         self.invalidate()
+
         return self
 
-    def get_backend(
-            self: Feature
-    ) -> Literal["numpy", "torch"]:
+    def get_backend(self: Feature) -> Literal["numpy", "torch"]:
         """Get the current backend of the feature.
 
         Returns
@@ -1119,6 +1131,7 @@ class Feature(DeepTrackNode):
         'torch'
 
         """
+
         return self._backend
 
     def dtype(
@@ -1128,25 +1141,25 @@ class Feature(DeepTrackNode):
         complex: Literal["complex64", "complex128", "default"] | None = None,
         bool: Literal["bool", "default"] | None = None,
     ) -> Feature:
-        """Set the dtype to be used during evaluation.
+        """Set the dtypes to be used during evaluation.
 
-        It alters the dtype used for array creation, but does not automatically
-        cast the type.
+        It alters the dtypes used for array creation, but does not
+        automatically cast the type.
 
         Parameters
         ----------
         float: str, optional
-            The float dtype to set. It can be `"float32"`, `"float64"`,
-            `"default"`, or `None`. It defaults to `None`.
+            The float dtype to set. Can be `"float32"`, `"float64"`,
+            `"default"`, or `None`. Defaults to `None`.
         int: str, optional
-            The int dtype to set. It can be `"int16"`, `"int32"`, `"int64"`,
-            `"default"`, or `None`. It defaults to `None`.
+            The int dtype to set. Can be `"int16"`, `"int32"`, `"int64"`,
+            `"default"`, or `None`. Defaults to `None`.
         complex: str, optional
-            The complex dtype to set. It can be `"complex64"`, `"complex128"`,
-            `"default"`, or `None`. It defaults to `None`.
+            The complex dtype to set. Can be `"complex64"`, `"complex128"`,
+            `"default"`, or `None`. Defaults to `None`.
         bool: str, optional
-            The bool dtype to set. It can be `"bool"`, `"default"`, or `None`.
-            It defaults to `None`.
+            The bool dtype to set. Can be `"bool"`, `"default"`, or `None`.
+            Defaults to `None`.
 
         Returns
         -------
@@ -1158,22 +1171,26 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Set float and int data types for a feature:
+
         >>> feature = dt.Multiply(b=2)
         >>> feature.dtype(float="float32", int="int16")
         >>> feature.float_dtype
         dtype('float32')
+
         >>> feature.int_dtype
         dtype('int16')
 
         Use complex numbers in the feature:
+
         >>> feature.dtype(complex="complex128")
         >>> feature.complex_dtype
         dtype('complex128')
 
         Reset float dtype to default:
+
         >>> feature.dtype(float="default")
         >>> feature.float_dtype  # resolved from config
-        dtype('float64')  # depending on backend config
+        dtype('float64')  # Depends on backend config
 
         """
 
@@ -1210,6 +1227,7 @@ class Feature(DeepTrackNode):
         >>> import torch
 
         Create a feature and assign a device (for torch backend):
+
         >>> feature = dt.Add(b=1)
         >>> feature.torch()
         >>> feature.to(torch.device("cpu"))
@@ -1217,12 +1235,14 @@ class Feature(DeepTrackNode):
         device(type='cpu')
 
         Move the feature to GPU (if available):
+
         >>> if torch.cuda.is_available():
         ...     feature.to(torch.device("cuda"))
         ...     feature.device
         device(type='cuda')
 
         Use Apple MPS device on Apple Silicon (if supported):
+
         >>> if (torch.backends.mps.is_available()
         ...     and torch.backends.mps.is_built()):
         ...     feature.to(torch.device("mps"))
@@ -1231,7 +1251,27 @@ class Feature(DeepTrackNode):
 
         """
 
-        self._device = device
+        # NumPy backend is CPU-only. We explicitly allow both "cpu" and
+        # torch.device("cpu") to avoid spurious warnings, while normalizing
+        # any other device request back to CPU.
+        if self._backend == "numpy" and not (
+            device == "cpu"
+            or (
+                TORCH_AVAILABLE
+                and isinstance(device, torch.device)
+                and device.type == "cpu"
+            )
+        ):
+            warnings.warn(
+                "NumPy backend only supports CPU; "
+                "device has been reset to 'cpu'.",
+                UserWarning,
+            )
+            device = "cpu"
+
+        if device != self._device:
+            self._device = device
+            self.invalidate()
 
         return self
 
