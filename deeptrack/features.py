@@ -612,24 +612,49 @@ class Feature(DeepTrackNode):
 
     def __init__(
         self: Feature,
-        _input: Any = [],
+        _input: Any | None = None,
         **kwargs: Any,
     ):
         """Initialize a new Feature instance.
 
+        This constructor sets up the feature as a `DeepTrackNode` whose
+        executable logic is defined by the `_action()` method. All keyword
+        arguments are wrapped as `Property` objects and stored in a
+        `PropertyDict`, enabling dynamic sampling and dependency tracking
+        during evaluation.
+
+        The input is wrapped internally as a `DeepTrackNode`, allowing it to
+        participate in lazy evaluation, caching, and graph traversal.
+
+
+        Initialization proceeds in the following order:
+        1. Backend, dtypes, and device are set from the global configuration.
+        2. The feature is registered as a `DeepTrackNode` with `_action` as its
+        executable logic.
+        3. Properties are wrapped into a `PropertyDict` and attached as
+        dependencies.
+        4. The input is wrapped as a `DeepTrackNode`.
+        5. A random seed node is created for reproducible stochastic behavior.
+
+        This ordering is required to ensure correct dependency tracking and
+        evaluation behavior.
+
         Parameters
         ----------
         _input: Any, optional
-            The initial input(s) for the feature. It is most commonly a NumPy
-            array, a PyTorch tensor, or a list of NumPy arrays or PyTorch
-            tensors; however, it can be anything. If not provided, defaults to
-            an empty list.
+            The initial input(s) for the feature. Commonly a NumPy array, a
+            PyTorch tensor, or a list of such objects, but may be any value.
+            If `None`, the input defaults to an empty list.
         **kwargs: Any
-            Keyword arguments that are wrapped into `Property` instances and
-            stored in the `properties` attribute, allowing for dynamic or
-            parameterized behavior.
+            Keyword arguments used to configure the feature. Each keyword
+            argument is wrapped as a `Property` and added to the feature's
+            `properties` attribute. These properties are resolved dynamically
+            at call time and passed to the `.get()` method.
 
         """
+
+        if _input is None:
+            _input = []
 
         # Store backend, dtypes and device on initialization.
         self._backend = config.get_backend()
@@ -640,7 +665,8 @@ class Feature(DeepTrackNode):
         self._device = config.get_device()
 
         # Pass Feature core logic to DeepTrackNode as its action with _ID.
-        super().__init__(action=self.action)
+        # NOTE: _action must be registered before adding dependencies.
+        super().__init__(action=self._action)
 
         # Ensure the feature has a 'name' property; default = class name.
         self.node_name = kwargs.setdefault("name", type(self).__name__)
@@ -671,16 +697,16 @@ class Feature(DeepTrackNode):
         """Transform input data (abstract method).
 
         Abstract method that defines how the feature transforms the input data.
-        The current value of all properties is passed as keyword arguments.
+        The current values of all properties are passed as keyword arguments.
 
         Parameters
         ----------
         data: Any
-            The input data to be transform, most commonly a NumPy array or a
+            The input data to be transformed, most commonly a NumPy array or a
             PyTorch tensor, but it can be anything.
         **kwargs: Any
-            The current value of all properties in `properties`, as well as any 
-            global arguments passed to the feature.
+            The current value of all properties in the `properties` attribute,
+            as well as any global arguments passed to the feature.
 
         Returns
         -------
@@ -708,8 +734,8 @@ class Feature(DeepTrackNode):
         provided input data and updates the computation graph if necessary.
         It overrides properties using the keyword arguments.
 
-        The actual computation is performed by calling the parent `.__call__()` 
-        method in the `DeepTrackNode` class, which manages lazy evaluation and 
+        The actual computation is performed by calling the parent `.__call__()`
+        method in the `DeepTrackNode` class, which manages lazy evaluation and
         caching.
 
         Parameters
@@ -721,17 +747,17 @@ class Feature(DeepTrackNode):
             of input values or propagates properties.
         **kwargs: Any
             Additional parameters passed to the pipeline. These override 
-            properties with matching names. For example, calling 
-            `feature(x, value=4)` executes `feature` on the input `x` while 
-            setting the property `value` to `4`. All features in a pipeline are 
+            properties with matching names. For example, calling
+            `feature(x, value=4)` executes `feature` on the input `x` while
+            setting the property `value` to `4`. All features in a pipeline are
             affected by these overrides.
 
         Returns
         -------
         Any
             The output of the feature or pipeline after execution. This is
-            typically a NumPy array, a PyTorch tensor, or a list of NumPy
-            arrays or PyTorch tensors, but it can be anything.
+            typically a list of NumPy arrays or PyTorch tensors, but it can be
+            anything.
 
         Examples
         --------
@@ -766,7 +792,7 @@ class Feature(DeepTrackNode):
         """
 
         with config.with_backend(self._backend):
-            # If data_list is as Source, activate it.
+            # If data_list is a Source, activate it.
             self._activate_sources(data_list)
 
             # Potentially fragile.
@@ -798,9 +824,9 @@ class Feature(DeepTrackNode):
                         self.arguments.properties[key] \
                             .set_value(value, _ID=_ID)
 
-            # This executes the feature. DeepTrackNode will determine if it
-            # needs to be recalculated. If it does, it will call the
-            # `.action()` method.
+            # This executes the feature.
+            # DeepTrackNode will determine if it needs to be recalculated.
+            # If it does, it will call the `.action()` method.
             output = super().__call__(_ID=_ID)
 
             # If there are self.arguments, reset the values of self.arguments
