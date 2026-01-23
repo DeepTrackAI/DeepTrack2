@@ -155,7 +155,10 @@ array([[16, 17, 18],
 
 from __future__ import annotations
 
-import itertools, operator, random, warnings
+import itertools
+import operator
+import random
+import warnings
 from typing import Any, Callable, Iterable, Literal, TYPE_CHECKING
 
 import array_api_compat as apc
@@ -163,13 +166,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
 from pint import Quantity
-from scipy.spatial.distance import cdist
 
-from deeptrack import units_registry as units
 from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
-from deeptrack.backend.units import ConversionTable, create_context
-from deeptrack.image import Image  #TODO TBE
+from deeptrack.backend.units import ConversionTable
 from deeptrack.properties import PropertyDict, SequentialProperty
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
@@ -7557,7 +7557,7 @@ class ChannelFirst2d(Feature):  # DEPRECATED
 
     def get(
         self: Feature,
-        image: np.ndarray | torch.Tensor,
+        array: np.ndarray | torch.Tensor,
         axis: int = -1,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
@@ -7588,10 +7588,6 @@ class ChannelFirst2d(Feature):  # DEPRECATED
 
         """
 
-        # Pre-processing logic to check for Image objects.
-        is_image = isinstance(image, Image)
-        array = image._value if is_image else image
-
         # Raise error if not 2D or 3D.
         ndim = array.ndim
         if ndim not in (2, 3):
@@ -7613,9 +7609,6 @@ class ChannelFirst2d(Feature):  # DEPRECATED
                 array = array.permute(*dims)
             else:
                 array = xp.moveaxis(array, axis, 0)
-
-        if is_image:
-            return Image(array)
 
         return array
 
