@@ -625,43 +625,35 @@ class Feature(DeepTrackNode):
             tensors; however, it can be anything. If not provided, defaults to
             an empty list.
         **kwargs: Any
-            Keyword arguments that are wrapped into `Property` instances and 
-            stored in `self.properties`, allowing for dynamic or parameterized
-            behavior.
+            Keyword arguments that are wrapped into `Property` instances and
+            stored in the `properties` attribute, allowing for dynamic or
+            parameterized behavior.
 
         """
 
-        # Store backend on initialization.
+        # Store backend, dtypes and device on initialization.
         self._backend = config.get_backend()
-
-        # Store the dtype and device on initialization.
         self._float_dtype = "default"
         self._int_dtype = "default"
         self._complex_dtype = "default"
         self._bool_dtype = "default"
         self._device = config.get_device()
 
-        # Pass Feature core logic to DeepTrackNode as its action with _ID
+        # Pass Feature core logic to DeepTrackNode as its action with _ID.
         super().__init__(action=self.action)
 
         # Ensure the feature has a 'name' property; default = class name.
         self.node_name = kwargs.setdefault("name", type(self).__name__)
 
-        # 1) Create a PropertyDict to hold the feature’s properties.
-        self.properties = PropertyDict(
-            node_name="properties",
-            **kwargs,
-        )
+        # Create a PropertyDict to hold the feature’s properties.
+        self.properties = PropertyDict(node_name="properties", **kwargs)
         self.properties.add_child(self)
 
-        # 2) Initialize the input as a DeepTrackNode.
-        self._input = DeepTrackNode(
-            node_name="_input",
-            action=_input,
-        )
+        # Initialize the input as a DeepTrackNode.
+        self._input = DeepTrackNode(node_name="_input", action=_input)
         self._input.add_child(self)
 
-        # 3) Random seed node (for deterministic behavior if desired).
+        # Random seed node (for deterministic behavior if desired).
         self._random_seed = DeepTrackNode(
             node_name="_random_seed",
             action=lambda: random.randint(0, 2147483648),
