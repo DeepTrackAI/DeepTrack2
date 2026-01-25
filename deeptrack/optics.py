@@ -863,10 +863,10 @@ class Optics(Feature):
         wavelength: float,
         refractive_index_medium: float,
         include_aberration: bool = True,
-        defocus: float | np.ndarray | torch.Tensor = 0,
-        *,
-        device: torch.device | None = None,
-        dtype: torch.dtype = torch.complex64,
+        defocus: float | torch.Tensor = 0,
+        # *,
+        # device: torch.device | None = None,
+        # dtype: torch.dtype = torch.complex64,
         **kwargs: Any,
     ) -> torch.Tensor:
         """
@@ -879,10 +879,19 @@ class Optics(Feature):
             semantics: (z, y, x) where your code uses shape=(shape[0], shape[1])
             but constructs meshgrid(y, x) and ends up with (shape[0], shape[1]).
         """
+        
         # Resolve device
-        if device is None:
-            # best-effort: use current torch default device
+        if isinstance(defocus, torch.Tensor):
+            device = defocus.device
+            complex_dtype = (
+                defocus.dtype
+                if defocus.dtype in (torch.complex64, torch.complex128)
+                else torch.complex64
+            )
+        else:
             device = torch.device("cpu")
+            complex_dtype = torch.complex64
+
 
         # shape -> (H, W) following your current usage where shape[0] is x-axis length in your code
         shape_arr = np.array(shape, dtype=int)
@@ -906,7 +915,7 @@ class Optics(Feature):
         # Build coordinates exactly like NumPy:
         # np.linspace(-(N/2), N/2 - 1, N) / radius + 1e-8
         # Use float for coordinate grid to reduce artifacts
-        real_dtype = torch.float32 if dtype in (torch.complex64, torch.float32) else torch.float64
+        real_dtype = torch.float32 if complex_dtype == torch.complex64 else torch.float64
 
         x = torch.linspace(
             -H / 2.0,
@@ -928,9 +937,9 @@ class Optics(Feature):
         # i.e. first argument becomes columns, second becomes rows
         Wg, Hg = torch.meshgrid(y, x, indexing="xy")  # Wg: (H, W), Hg: (H, W)
 
-        RHO = (Wg**2 + Hg**2).to(dtype=torch.complex64 if dtype == torch.complex64 else torch.complex128)
+        RHO = (Wg**2 + Hg**2)
 
-        pupil_function = (RHO.real < 1.0).to(dtype=torch.complex64 if dtype == torch.complex64 else torch.complex128)
+        pupil_function = (RHO.real < 1.0).to(complex_dtype)
 
         # z_shift term:
         # 2*pi*n/wavelength * vz * sqrt(1 - (NA/n)^2 * RHO)
@@ -938,16 +947,19 @@ class Optics(Feature):
         alpha = (float(NA) / float(refractive_index_medium)) ** 2
 
         inside = 1.0 - alpha * RHO  # complex
-        sqrt_term = torch.sqrt(inside)
+        sqrt_term = torch.sqrt(inside.to(complex_dtype))
 
         z_shift = (k0 * float(vz)) * sqrt_term  # complex
 
         # NumPy: z_shift[z_shift.imag != 0] = 0
         # Torch equivalent:
-        z_shift = torch.where(z_shift.imag != 0, torch.zeros_like(z_shift), z_shift)
+        z_shift = torch.where(
+            z_shift.imag.abs() > 1e-12,
+            torch.zeros_like(z_shift),
+            z_shift,
+        )
 
         # nan_to_num equivalent
-        # z_shift = _torch_nan_to_num(z_shift)
         z_shift = torch.nan_to_num(z_shift)
 
         # defocus reshape (-1,1,1)
@@ -978,9 +990,7 @@ class Optics(Feature):
         pupil_functions = pupil_function.unsqueeze(0) * torch.exp(1j * z_shift_3d)
 
         # Cast to requested complex dtype
-        if dtype == torch.complex64:
-            return pupil_functions.to(torch.complex64)
-        return pupil_functions.to(torch.complex128)
+        return pupil_functions.to(complex_dtype)
 
 
     def _pad_volume(
@@ -1755,7 +1765,7 @@ class Brightfield(Optics):
 
     def get(
         self: Brightfield,
-        illuminated_volume: ArrayLike[complex],
+        illuminated_volume: np.ndarray | torch.Tensor,
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
         **kwargs: Any,
@@ -1852,7 +1862,10 @@ class Brightfield(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = np.zeros((*padded_volume.shape[0:2], 1))
+        output_image = xp.zeros(
+            (*padded_volume.shape[0:2], 1),
+            dtype=xp.float32 if self.get_backend() == "torch" else float,
+        )
 
         index_iterator = range(padded_volume.shape[2])
         z_iterator = np.linspace(
@@ -1862,7 +1875,7 @@ class Brightfield(Optics):
             endpoint=False,
         )
 
-        zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+        zero_plane = xp.all(padded_volume == 0, axis=(0, 1), keepdims=False)
         # z_values = z_iterator[~zero_plane]
 
         volume = pad_image_to_fft(padded_volume, axes=(0, 1))
@@ -1887,11 +1900,11 @@ class Brightfield(Optics):
             )[0]
         ]
 
-        pupil_step = np.fft.fftshift(pupils[0])
+        pupil_step = xp.fft.fftshift(pupils[0])
 
-        light_in = np.ones(volume.shape[:2], dtype=complex)
+        light_in = xp.ones(volume.shape[:2], dtype=xp.complex64 if self.get_backend() == "torch" else complex)
         light_in = self.illumination.resolve(light_in)
-        light_in = np.fft.fft2(light_in)
+        light_in = xp.fft.fft2(light_in)
 
         K = 2 * np.pi / kwargs["wavelength"]*kwargs["refractive_index_medium"]
 
@@ -1903,11 +1916,12 @@ class Brightfield(Optics):
                 continue
 
             ri_slice = volume[:, :, i]
-            light = np.fft.ifft2(light_in)
-            light_out = light * np.exp(1j * ri_slice * voxel_size[-1] * K)
-            light_in = np.fft.fft2(light_out)
+            light = xp.fft.ifft2(light_in)
+            light_out = light * xp.exp(1j * ri_slice * voxel_size[-1] * K)
+            light_in = xp.fft.fft2(light_out)
+
   
-        shifted_pupil = np.fft.fftshift(pupils[1])
+        shifted_pupil = xp.fft.fftshift(pupils[1])
         light_in_focus = light_in * shifted_pupil
 
         if len(fields) > 0:
@@ -1929,22 +1943,25 @@ class Brightfield(Optics):
 
                 field_arrays.append(arr)
 
-            field = np.sum(field_arrays, axis=0)
+            field = xp.sum(field_arrays, axis=0)
             light_in_focus += field[..., 0]
-        shifted_pupil = np.fft.fftshift(pupils[-1])
+        shifted_pupil = xp.fft.fftshift(pupils[-1])
         light_in_focus = light_in_focus * shifted_pupil
         # Mask to remove light outside the pupil.
         mask = np.abs(shifted_pupil) > 0
         light_in_focus = light_in_focus * mask
 
-        output_image = np.fft.ifft2(light_in_focus)[
+        output_image = xp.fft.ifft2(light_in_focus)[
             : padded_volume.shape[0], : padded_volume.shape[1]
         ]
-        output_image = np.expand_dims(output_image, axis=-1)
+        # output_image = np.expand_dims(output_image, axis=-1)
+        output_image = xp.expand_dims(output_image, axis=-1)
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
 
         if not kwargs.get("return_field", False):
-            output_image = np.square(np.abs(output_image))
+            # output_image = np.square(np.abs(output_image))
+            output_image = xp.square(xp.abs(output_image))
+
         # else:
         # Fudge factor. Not sure why this is needed.
         # output_image = output_image - 1

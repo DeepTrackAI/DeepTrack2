@@ -611,19 +611,29 @@ class Sphere(VolumeScatterer):
         """Abstract method to initialize the sphere scatterer"""
 
         # Create a grid to calculate on.
-        rad = radius * np.ones(3) / voxel_size
-        rad_ceil = np.ceil(rad)
-        x = np.arange(-rad_ceil[0], rad_ceil[0])
-        y = np.arange(-rad_ceil[1], rad_ceil[1])
-        z = np.arange(-rad_ceil[2], rad_ceil[2])
+        rad = radius * xp.ones(3) / voxel_size
+        rad_ceil = xp.ceil(rad)
+        if hasattr(rad_ceil, "astype"):      # NumPy
+            rad_ceil = rad_ceil.astype(int)
+        else:                                # Torch
+            rad_ceil = rad_ceil.to(dtype=xp.int64)
+            
+        x = xp.arange(-rad_ceil[0], rad_ceil[0])
+        y = xp.arange(-rad_ceil[1], rad_ceil[1])
+        z = xp.arange(-rad_ceil[2], rad_ceil[2])
         
-        X, Y, Z = np.meshgrid(
+        X, Y, Z = xp.meshgrid(
             (y / rad[1]) ** 2,
             (x / rad[0]) ** 2,
-            (z / rad[2]) ** 2
+            (z / rad[2]) ** 2,
+            indexing="xy",   # important for torch consistency
         )
 
-        mask = (X + Y + Z <= 1).astype(float)
+        mask = (X + Y + Z <= 1)
+
+        # backend-safe cast
+        mask = mask.astype(xp.float32) if hasattr(mask, "astype") else mask.to(xp.float32)
+
         return mask
 
 
