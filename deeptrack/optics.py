@@ -1294,7 +1294,7 @@ class Fluorescence(Optics):
             )
 
 
-    def extract_contrast_volume(self, scattered: ScatteredVolume, **kwargs) -> np.ndarray:
+    def extract_contrast_volume(self, scattered: ScatteredVolume, **kwargs) -> np.ndarray | torch.Tensor:
         scale = np.asarray(get_active_scale(), float)
         scale_volume = np.prod(scale)
 
@@ -1738,7 +1738,7 @@ class Brightfield(Optics):
         scattered: ScatteredVolume,
         refractive_index_medium: float,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor:
 
         ri = scattered.get_property("refractive_index", None)
         value = scattered.get_property("value", None)
@@ -2170,7 +2170,7 @@ class Darkfield(Brightfield):
         scattered: ScatteredVolume,
         refractive_index_medium: float,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor:
         """
         Approximate darkfield contrast from a volume (toy model).
 
