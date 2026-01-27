@@ -14,7 +14,7 @@ import warnings
 import numpy as np
 
 from deeptrack import (
-    config, features, Gaussian, properties, TORCH_AVAILABLE,
+    config, features, Gaussian, properties, TORCH_AVAILABLE, xp,
 )
 
 
@@ -328,6 +328,73 @@ class TestFeatures(unittest.TestCase):
                         any(issubclass(x.category, UserWarning) for x in w)
                     )
                     self.assertEqual(feature.device.type, "cpu")
+
+    def test_Feature_batch(self):
+        # Single-output case
+        feature = features.Value(value=lambda: xp.arange(3))
+
+        # NumPy backend
+        feature.numpy()
+        batch = feature.batch(batch_size=4)
+        self.assertIsInstance(batch, tuple)
+        self.assertEqual(len(batch), 1)
+        self.assertEqual(batch[0].shape, (4, 3))
+        self.assertEqual(batch[0].dtype, feature.int_dtype)
+
+        # Torch backend
+        if TORCH_AVAILABLE:
+            feature.torch(device=torch.device("cpu"))
+            batch = feature.batch(batch_size=4)
+            self.assertIsInstance(batch, tuple)
+            self.assertEqual(len(batch), 1)
+            self.assertEqual(tuple(batch[0].shape), (4, 3))
+            self.assertEqual(str(batch[0].dtype), str(feature.int_dtype))
+
+        # Multi-output case
+        multi = features.Value(
+            value=lambda: (xp.arange(3), xp.arange(3) + 1),
+        )
+
+        # NumPy backend
+        multi.numpy()
+        batch = multi.batch(batch_size=4)
+        self.assertIsInstance(batch, tuple)
+        self.assertEqual(len(batch), 2)
+        self.assertEqual(batch[0].shape, (4, 3))
+        self.assertEqual(batch[1].shape, (4, 3))
+        self.assertEqual(batch[0].dtype, multi.int_dtype)
+        self.assertEqual(batch[1].dtype, multi.int_dtype)
+
+        # Torch backend
+        if TORCH_AVAILABLE:
+            multi.torch(device=torch.device("cpu"))
+            batch = multi.batch(batch_size=4)
+            self.assertIsInstance(batch, tuple)
+            self.assertEqual(len(batch), 2)
+            self.assertEqual(tuple(batch[0].shape), (4, 3))
+            self.assertEqual(tuple(batch[1].shape), (4, 3))
+            self.assertEqual(str(batch[0].dtype), str(multi.int_dtype))
+            self.assertEqual(str(batch[1].dtype), str(multi.int_dtype))
+
+        # Scalar-output case
+        scalar = features.Value(value=lambda: 1)
+
+        # NumPy backend
+        scalar.numpy()
+        batch = scalar.batch(batch_size=4)
+        self.assertIsInstance(batch, tuple)
+        self.assertEqual(len(batch), 1)
+        self.assertEqual(batch[0].shape, (4,))
+        self.assertTrue(xp.all(batch[0] == 1))
+
+        # Torch backend
+        if TORCH_AVAILABLE:
+            scalar.torch(device=torch.device("cpu"))
+            batch = scalar.batch(batch_size=4)
+            self.assertIsInstance(batch, tuple)
+            self.assertEqual(len(batch), 1)
+            self.assertEqual(tuple(batch[0].shape), (4,))
+            self.assertTrue(bool(xp.all(batch[0] == 1)))
 
     def test_Feature_basics(self):
 
