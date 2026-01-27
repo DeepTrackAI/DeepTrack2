@@ -1281,13 +1281,12 @@ class Feature(DeepTrackNode):
     ) -> tuple:
         """Batch the feature.
 
-        This method produces a batch of outputs by repeatedly calling 
-        `update()` and `__call__()`.
+        This method produces a batch of outputs by repeatedly calling `.new()`.
 
         Parameters
         ----------
-        batch_size: int
-            The number of times to sample or generate data. It defaults to 32.
+        batch_size: int, optional
+            The number of times to sample or generate data. Defaults to 32.
 
         Returns
         -------
@@ -1301,6 +1300,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Define a feature that adds a random value to a fixed array:
+
         >>> import numpy as np
         >>>
         >>> feature = (
@@ -1309,11 +1309,13 @@ class Feature(DeepTrackNode):
         ... )
 
         Evaluate the feature once:
+
         >>> output = feature()
         >>> output
         array([[-0.77378939,  1.22621061]])
 
         Generate a batch of outputs:
+
         >>> batch = feature.batch(batch_size=3)
         >>> batch
         (array([[-0.2375814 ,  1.7624186 ],
@@ -1322,22 +1324,29 @@ class Feature(DeepTrackNode):
 
         """
 
-        results = [self.update()() for _ in range(batch_size)]
+        samples = [self.new() for _ in range(batch_size)]
 
-        try:
-            # Attempt to unzip results
-            results = [(r,) for r in results]
-        except TypeError:
-            # If outputs are scalar (not iterable), wrap each in a tuple
-            results = [(r,) for r in results]
-            results = [(r,) for r in results]
+        # Normalize the output structure:
+        # If a sample is a tuple, treat it as multi-output, (y1, y2, ...).
+        # Otherwise, treat it as a single-output feature and wrap it as (y,).
+        # This preserves the number of output components and makes batching
+        # consistent across single- and multi-output features.
+        normalized: list[tuple[Any, ...]] = []
+        for sample in samples:
+            if isinstance(sample, tuple):
+                normalized.append(sample)
+            else:
+                normalized.append((sample,))
 
-        results = list(zip(*results))
+        # Group outputs by component:
+        # normalized = [(a1, b1), (a2, b2), (a3, b3)]
+        # components = [(a1, a2, a3), (b1, b2, b3)]
+        components = list(zip(*normalized))
 
-        for idx, r in enumerate(results):
-            results[idx] = xp.stack(r)
+        # Stack each component along a new leading batch axis.
+        batched = [xp.stack(component) for component in components]
 
-        return tuple(results)
+        return tuple(batched)
 
     def _action(
         self: Feature,
@@ -1872,7 +1881,6 @@ class Feature(DeepTrackNode):
                 ),
             )
 
-    #TODO ***AL***
     def _normalize(
         self: Feature,
         **properties: dict[str, Any],
@@ -2062,8 +2070,8 @@ class Feature(DeepTrackNode):
     ) -> Feature:
         """Return self as an iterator over feature values.
 
-        This makes the `Feature` object compatible with Python's iterator 
-        protocol. Each call to `next(feature)` generates a new output by 
+        This makes the `Feature` object compatible with Python's iterator
+        protocol. Each call to `next(feature)` generates a new output by
         resampling its properties and resolving the pipeline.
 
         Returns
@@ -2076,11 +2084,13 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Create feature:
+
         >>> import numpy as np
         >>>
         >>> feature = dt.Value(value=lambda: np.random.rand())
 
         Use the feature in a loop:
+
         >>> for sample in feature:
         ...     print(sample)
         ...     if sample > 0.5:
