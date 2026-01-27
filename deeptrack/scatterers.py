@@ -442,7 +442,7 @@ class PointParticle(VolumeScatterer):
     ) -> np.ndarray | torch.Tensor:
         """Evaluate and return the scatterer volume."""
 
-        scale = xp.asarray(get_active_scale(), dtype=float)
+        scale = xp.asarray(get_active_scale(), dtype=xp.float32)
 
         return xp.ones((1, 1, 1), dtype=scale.dtype) * xp.prod(scale)
 
@@ -514,24 +514,20 @@ class Ellipse(VolumeScatterer):
         properties = super()._process_properties(properties)
 
         # Ensure radius is of length 2
-        # radius = np.array(properties["radius"])
-        # Make radius length-2 without forcing numpy
         radius = properties["radius"]
         r = xp.asarray(radius) if hasattr(xp, "asarray") else xp.array(radius)
 
-        # if radius.ndim == 0:
-        #     radius = np.array((properties["radius"], properties["radius"]))
-        # elif radius.size == 1:
-        #     radius = np.array((*radius,) * 2)
-        # else:
-        #     radius = radius[:2]
-
         if r.ndim == 0:
             r = xp.stack([r, r])
-        elif r.size == 1:
-            r = xp.stack([r.reshape(()), r.reshape(())])
         else:
-            r = r[:2]
+            n = r.shape[0]
+            if n == 1:
+                # If only one value, assume circle.
+                # radius = (radius[0], radius[0])
+                r = xp.stack([r.reshape(()), r.reshape(())])
+            else:
+                r = r[:2]
+        
         properties["radius"] = r
 
         return properties
@@ -539,46 +535,42 @@ class Ellipse(VolumeScatterer):
     def get(
         self,
         *ignore,
-        radius: ArrayLike[float] | float,
+        radius: np.ndarray | torch.Tensor | float,
         rotation: float,
         voxel_size: float,
         transpose: float,
         **kwargs
-    ) -> ArrayLike[float]:
+    ) -> np.ndarray | torch.Tensor:
         """Abstract method to initialize the ellipse scatterer"""
         rotation = xp.asarray(rotation)
         if not transpose:
             radius = xp.stack([radius[1], radius[0]])
-            # radius = radius[::-1]
-            # rotation = rotation[::-1]
+
         # Create a grid to calculate on.
         rad = radius[:2]
         ceil = int(xp.ceil(xp.max(rad) / xp.min(voxel_size[:2])))
+        rad_ceil = int(
+            xp.ceil(xp.max(radius) / xp.min(voxel_size)).item()
+        )
         Y, X = xp.meshgrid(
-            xp.arange(-ceil, ceil) * voxel_size[1],
-            xp.arange(-ceil, ceil) * voxel_size[0],
+            xp.arange(-rad_ceil, rad_ceil) * voxel_size[1],
+            xp.arange(-rad_ceil, rad_ceil) * voxel_size[0],
         )
 
-        # Rotate the grid.
-        # if rotation != 0:
-            # Xt = X * np.cos(-rotation) + Y * np.sin(-rotation)
-            # Yt = -X * np.sin(-rotation) + Y * np.cos(-rotation)
-            # X = Xt
-            # Y = Yt
-
-        c = xp.cos(-rotation)
-        s = xp.sin(-rotation)
-        Xt = X * c + Y * s
-        Yt = -X * s + Y * c
+        cos = xp.cos(-rotation)
+        sin = xp.sin(-rotation)
+        Xt = X * cos + Y * sin
+        Yt = -X * sin + Y * cos
 
         # Evaluate ellipse.
-        mask = (
+        mask = xp.asarray(
             (Xt * Xt) / (rad[0] * rad[0]) +
-            (Yt * Yt) / (rad[1] * rad[1]) < 1
-            )
-        mask = mask.astype(xp.float32) if hasattr(mask, "astype") else mask.to(xp.float32)
+            (Yt * Yt) / (rad[1] * rad[1]) < 1,
+            dtype=xp.float32,
+        )
         mask = xp.expand_dims(mask, axis=-1)
         return mask
+
 
 
 #TODO ***??*** revise Sphere - torch, typing, docstring, unit test
@@ -622,20 +614,18 @@ class Sphere(VolumeScatterer):
 
     def get(
         self,
-        image: np.ndarray,
+        image: np.ndarray | torch.Tensor,
         radius: float,
         voxel_size: float,
         **kwargs
-    ) -> ArrayLike[float]:
+    ) -> np.ndarray | torch.Tensor:
         """Abstract method to initialize the sphere scatterer"""
 
         # Create a grid to calculate on.
         rad = radius * xp.ones(3) / voxel_size
-        rad_ceil = xp.ceil(rad)
-        if hasattr(rad_ceil, "astype"):      # NumPy
-            rad_ceil = rad_ceil.astype(int)
-        else:                                # Torch
-            rad_ceil = rad_ceil.to(dtype=xp.int64)
+        rad_ceil = int(
+            xp.ceil(xp.max(radius) / xp.min(voxel_size)).item()
+        )
             
         x = xp.arange(-rad_ceil[0], rad_ceil[0])
         y = xp.arange(-rad_ceil[1], rad_ceil[1])
@@ -648,11 +638,10 @@ class Sphere(VolumeScatterer):
             indexing="xy",   # important for torch consistency
         )
 
-        mask = (X + Y + Z <= 1)
-
-        # backend-safe cast
-        mask = mask.astype(xp.float32) if hasattr(mask, "astype") else mask.to(xp.float32)
-
+        mask = xp.asarray(
+            X + Y + Z <= 1,
+            dtype=xp.float32,
+        )
         return mask
 
 
@@ -728,71 +717,88 @@ class Ellipsoid(VolumeScatterer):
         propertydict = super()._process_properties(propertydict)
 
         # Ensure radius has three values.
-        radius = np.array(propertydict["radius"])
-        if radius.ndim == 0:
-            radius = np.array([radius])
-        if radius.size == 1:
-            
+        r = xp.asarray(propertydict["radius"])
+        if r.ndim == 0:
+            r = xp.stack([r])
+
+        n = r.shape[0]
+        if n == 1:
             # If only one value, assume sphere.
-            radius = (*radius,) * 3
-        elif radius.size == 2:
-            
+            # radius = (*radius,) * 3
+            r = xp.stack([r.reshape(()), r.reshape(()), r.reshape(())])
+        elif n == 2:
             # If two values, duplicate the minor axis.
-            radius = (*radius, np.min(radius[-1]))
-        elif radius.size == 3:
-            
+            # radius = (*radius, np.min(radius[-1]))
+            r = xp.stack([r[0], r[1], xp.minimum(r[0], r[1])])
+        elif n == 3:
             # If three values, convert to tuple for consistency.
-            radius = (*radius,)
-        propertydict["radius"] = radius
+            # radius = (*radius,)
+            r = r[:3]
+        propertydict["radius"] = r
 
         # Ensure rotation has three values.
-        rotation = np.array(propertydict["rotation"])
-        if rotation.ndim == 0:
-            rotation = np.array([rotation])
-        if rotation.size == 1:
-            
+        rot = xp.asarray(propertydict["rotation"])
+        if rot.ndim == 0:
+            # rot = xp.array([rot])
+            rot = xp.stack([rot])
+
+        n = rot.shape[0]
+        if n == 1:
             # If only one value, pad with two zeros.
-            rotation = (*rotation, 0, 0)
-        elif rotation.size == 2:
-            
+            # rotation = (*rotation, 0, 0)
+            rot = xp.stack([rot.reshape(()), xp.asarray(0.0), xp.asarray(0.0)])
+        elif n == 2:
             # If two values, pad with one zero.
-            rotation = (*rotation, 0)
-        elif rotation.size == 3:
-            
+            # rotation = (*rotation, 0)
+            rot = xp.stack([rot[0], rot[1], xp.asarray(0.0)])
+        elif n == 3:        
             # If three values, convert to tuple for consistency.
-            rotation = (*rotation,)
-        propertydict["rotation"] = rotation
+            # rotation = (*rotation,)
+            rot = rot[:3]
+        propertydict["rotation"] = rot
 
         return propertydict
 
     def get(
         self,
-        image: np.ndarray,
-        radius: float,
-        rotation: ArrayLike[float] | float,
-        voxel_size: float,
+        image: np.ndarray | torch.Tensor,
+        radius: np.ndarray | torch.Tensor | float,
+        rotation: np.ndarray | torch.Tensor | float,
+        voxel_size: np.ndarray | torch.Tensor | float,
         transpose: bool,
         **kwargs
-    ) -> ArrayLike[float]:
+    ) -> np.ndarray | torch.Tensor:
         """Abstract method to initialize the ellipsoid scatterer"""
+
+        radius = xp.asarray(radius)
+        rotation = xp.asarray(rotation)
+        voxel_size = xp.asarray(voxel_size)
+
+        print(radius)
+
         if not transpose:
-            
             # Swap the first and second value of the radius vector.
-            radius = (radius[1], radius[0], radius[2])
+            # radius = (radius[1], radius[0], radius[2])
+            radius = xp.stack([radius[1], radius[0], radius[2]])
+
 
         # radius_in_pixels = np.array(radius) / np.array(voxel_size)
         # max_rad = np.max(radius_in_pixels)
-        rad_ceil = np.ceil(np.max(radius) / np.min(voxel_size))
+        # rad_ceil = xp.ceil(xp.max(radius) / xp.min(voxel_size))
+        rad_ceil = int(
+            xp.ceil(xp.max(radius) / xp.min(voxel_size)).item()
+        )
+
 
         # Create grid to calculate on.
-        x = np.arange(-rad_ceil, rad_ceil) * voxel_size[0]
-        y = np.arange(-rad_ceil, rad_ceil) * voxel_size[1]
-        z = np.arange(-rad_ceil, rad_ceil) * voxel_size[2]
-        Y, X, Z = np.meshgrid(y, x, z)
+        x = xp.arange(-rad_ceil, rad_ceil) * voxel_size[0]
+        y = xp.arange(-rad_ceil, rad_ceil) * voxel_size[1]
+        z = xp.arange(-rad_ceil, rad_ceil) * voxel_size[2]
+        Y, X, Z = xp.meshgrid(y, x, z)
 
         # Rotate the grid.
-        cos = np.cos(rotation)
-        sin = np.sin(rotation)
+        cos = xp.cos(rotation)
+        sin = xp.sin(rotation)
         XR = (
             (cos[0] * cos[1] * X)
             + (cos[0] * sin[1] * sin[2] - sin[0] * cos[2]) * Y
@@ -805,11 +811,12 @@ class Ellipsoid(VolumeScatterer):
         )
         ZR = (-sin[1] * X) + cos[1] * sin[2] * Y + cos[1] * cos[2] * Z
 
-        mask = (
+        mask = xp.asarray(
             (XR / radius[0]) ** 2 +
             (YR / radius[1]) ** 2 +
-            (ZR / radius[2]) ** 2 < 1
-        ).astype(float)
+            (ZR / radius[2]) ** 2 < 1,
+            dtype=xp.float32,
+        )
         return mask
 
 
