@@ -2012,9 +2012,12 @@ class Feature(DeepTrackNode):
     ) -> Any:
         """Access properties of the feature as if they were attributes.
 
-        This method allows dynamic access to the feature's properties via 
-        standard attribute syntax. For example, `feature.my_property` is 
-        equivalent to:
+        This method allows dynamic access to the feature's properties via
+        standard attribute syntax. For example,
+        
+        >>> feature.my_property
+        
+        is equivalent to
 
         >>> feature.properties["my_property"]`()
 
@@ -2071,8 +2074,8 @@ class Feature(DeepTrackNode):
         """Return self as an iterator over feature values.
 
         This makes the `Feature` object compatible with Python's iterator
-        protocol. Each call to `next(feature)` generates a new output by
-        resampling its properties and resolving the pipeline.
+        protocol. The actual sampling and pipeline evaluation occur in
+        `__next__()`, which is called at each iteration step.
 
         Returns
         -------
@@ -2089,7 +2092,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> feature = dt.Value(value=lambda: np.random.rand())
 
-        Use the feature in a loop:
+        Use the feature in a loop (requiring manual termination):
 
         >>> for sample in feature:
         ...     print(sample)
@@ -2099,13 +2102,18 @@ class Feature(DeepTrackNode):
         0.3270413736199965
         0.6734339603677173
 
+        Use the feature for a predefined number of iterations:
+
+        >>> from itertools import islice
+        >>>
+        >>> for sample in islice(feature, 2):
+        ...     print(sample)
+        0.43126475134786546
+        0.3270413736199965
+
         """
 
         return self
-
-        #TODO ***BM*** TBE? Previous implementation, not standard in Python
-        # while True:
-        #     yield from next(self)
 
     def __next__(
         self: Feature,
@@ -2113,11 +2121,11 @@ class Feature(DeepTrackNode):
         """Return the next resolved feature in the sequence.
 
         This method allows a `Feature` to be used as an iterator that yields
-        a new result at each step. It is called automatically by `next(feature)`
-        or when used in iteration.
+        a new result at each step. It is called automatically by
+        `next(feature)` or when used in iteration.
 
         Each call to `__next__()` triggers a resampling of all properties and
-        evaluation of the pipeline using `self.update().resolve()`.
+        evaluation of the pipeline by calling `self.new()`.
 
         Returns
         -------
@@ -2129,20 +2137,19 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Create a feature:
+
         >>> import numpy as np
         >>>
         >>> feature = dt.Value(value=lambda: np.random.rand())
 
         Get a single sample:
+
         >>> next(feature)
         0.41251758103924216
 
         """
 
-        return self.update().resolve()
-
-        #TODO ***BM*** TBE? Previous implementation, not standard in Python
-        # yield self.update().resolve()
+        return self.new()
 
     def __rshift__(
         self: Feature,
