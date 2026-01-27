@@ -514,14 +514,25 @@ class Ellipse(VolumeScatterer):
         properties = super()._process_properties(properties)
 
         # Ensure radius is of length 2
-        radius = np.array(properties["radius"])
-        if radius.ndim == 0:
-            radius = np.array((properties["radius"], properties["radius"]))
-        elif radius.size == 1:
-            radius = np.array((*radius,) * 2)
+        # radius = np.array(properties["radius"])
+        # Make radius length-2 without forcing numpy
+        radius = properties["radius"]
+        r = xp.asarray(radius) if hasattr(xp, "asarray") else xp.array(radius)
+
+        # if radius.ndim == 0:
+        #     radius = np.array((properties["radius"], properties["radius"]))
+        # elif radius.size == 1:
+        #     radius = np.array((*radius,) * 2)
+        # else:
+        #     radius = radius[:2]
+
+        if r.ndim == 0:
+            r = xp.stack([r, r])
+        elif r.size == 1:
+            r = xp.stack([r.reshape(()), r.reshape(())])
         else:
-            radius = radius[:2]
-        properties["radius"] = radius
+            r = r[:2]
+        properties["radius"] = r
 
         return properties
 
@@ -535,30 +546,38 @@ class Ellipse(VolumeScatterer):
         **kwargs
     ) -> ArrayLike[float]:
         """Abstract method to initialize the ellipse scatterer"""
+        rotation = xp.asarray(rotation)
         if not transpose:
-            radius = radius[::-1]
+            radius = xp.stack([radius[1], radius[0]])
+            # radius = radius[::-1]
             # rotation = rotation[::-1]
         # Create a grid to calculate on.
         rad = radius[:2]
-        ceil = int(np.ceil(np.max(rad) / np.min(voxel_size[:2])))
-        Y, X = np.meshgrid(
-            np.arange(-ceil, ceil) * voxel_size[1],
-            np.arange(-ceil, ceil) * voxel_size[0],
+        ceil = int(xp.ceil(xp.max(rad) / xp.min(voxel_size[:2])))
+        Y, X = xp.meshgrid(
+            xp.arange(-ceil, ceil) * voxel_size[1],
+            xp.arange(-ceil, ceil) * voxel_size[0],
         )
 
         # Rotate the grid.
-        if rotation != 0:
-            Xt = X * np.cos(-rotation) + Y * np.sin(-rotation)
-            Yt = -X * np.sin(-rotation) + Y * np.cos(-rotation)
-            X = Xt
-            Y = Yt
+        # if rotation != 0:
+            # Xt = X * np.cos(-rotation) + Y * np.sin(-rotation)
+            # Yt = -X * np.sin(-rotation) + Y * np.cos(-rotation)
+            # X = Xt
+            # Y = Yt
+
+        c = xp.cos(-rotation)
+        s = xp.sin(-rotation)
+        Xt = X * c + Y * s
+        Yt = -X * s + Y * c
 
         # Evaluate ellipse.
         mask = (
-            (X * X) / (rad[0] * rad[0]) +
-            (Y * Y) / (rad[1] * rad[1]) < 1
-            ).astype(float)
-        mask = np.expand_dims(mask, axis=-1)
+            (Xt * Xt) / (rad[0] * rad[0]) +
+            (Yt * Yt) / (rad[1] * rad[1]) < 1
+            )
+        mask = mask.astype(xp.float32) if hasattr(mask, "astype") else mask.to(xp.float32)
+        mask = xp.expand_dims(mask, axis=-1)
         return mask
 
 
