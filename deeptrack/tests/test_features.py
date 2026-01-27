@@ -396,6 +396,22 @@ class TestFeatures(unittest.TestCase):
             self.assertEqual(tuple(batch[0].shape), (4,))
             self.assertTrue(bool(xp.all(batch[0] == 1)))
 
+    def test_Feature__iter__and__next__(self):
+        # Deterministic value source
+        values = iter([0, 1, 2, 3])
+        feature = features.Value(value=lambda: next(values))
+
+        # __iter__ should return self
+        self.assertIs(iter(feature), feature)
+
+        # __next__ should return successive values
+        self.assertEqual(next(feature), 0)
+        self.assertEqual(next(feature), 1)
+
+        # Finite iteration using islice (as documented)
+        samples = list(itertools.islice(feature, 2))
+        self.assertEqual(samples, [2, 3])
+
     def test_Feature_basics(self):
 
         F = features.DummyFeature()
