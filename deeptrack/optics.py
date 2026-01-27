@@ -2226,11 +2226,11 @@ class Darkfield(Brightfield):
     #Retrieve get as super
     def get(
         self: Darkfield,
-        illuminated_volume: ArrayLike[complex],
+        illuminated_volume: np.ndarray | torch.Tensor,
         limits: ArrayLike[int],
         fields: ArrayLike[complex],
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor:
         """Retrieve the darkfield image of the illuminated volume.
 
         Parameters
@@ -2253,7 +2253,7 @@ class Darkfield(Brightfield):
         """
 
         field = super().get(illuminated_volume, limits, fields, return_field=True, **kwargs)
-        return np.square(np.abs(field-1))
+        return xp.square(xp.abs(field-1))
 
 
 #TODO ***??*** revise IlluminationGradient - torch, typing, docstring, unit test
@@ -3437,7 +3437,7 @@ def _get_position(
     if len(position) == 3:
         position = position * scale + 0.5 * (scale - 1)
         if return_z:
-            return position * scale - shift
+            return position - shift
         else:
             return position[0:2] - shift[0:2]
 

@@ -622,10 +622,16 @@ class Sphere(VolumeScatterer):
         """Abstract method to initialize the sphere scatterer"""
 
         # Create a grid to calculate on.
-        rad = radius * xp.ones(3) / voxel_size
-        rad_ceil = int(
-            xp.ceil(xp.max(radius) / xp.min(voxel_size)).item()
-        )
+        # rad = radius * xp.ones(3) / voxel_size
+        # rad_ceil = int(
+        #     xp.ceil(xp.max(radius) / xp.min(voxel_size)).item()
+        # )
+        rad = xp.asarray(radius) * xp.ones(3) / xp.asarray(voxel_size)
+        rad_ceil = xp.ceil(rad)
+        if hasattr(rad_ceil, "astype"):
+            rad_ceil = rad_ceil.astype(int)
+        else:
+            rad_ceil = rad_ceil.to(dtype=xp.int64)
             
         x = xp.arange(-rad_ceil[0], rad_ceil[0])
         y = xp.arange(-rad_ceil[1], rad_ceil[1])
@@ -774,21 +780,14 @@ class Ellipsoid(VolumeScatterer):
         rotation = xp.asarray(rotation)
         voxel_size = xp.asarray(voxel_size)
 
-        print(radius)
-
         if not transpose:
             # Swap the first and second value of the radius vector.
-            # radius = (radius[1], radius[0], radius[2])
             radius = xp.stack([radius[1], radius[0], radius[2]])
 
 
-        # radius_in_pixels = np.array(radius) / np.array(voxel_size)
-        # max_rad = np.max(radius_in_pixels)
-        # rad_ceil = xp.ceil(xp.max(radius) / xp.min(voxel_size))
         rad_ceil = int(
             xp.ceil(xp.max(radius) / xp.min(voxel_size)).item()
         )
-
 
         # Create grid to calculate on.
         x = xp.arange(-rad_ceil, rad_ceil) * voxel_size[0]
