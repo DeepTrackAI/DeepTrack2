@@ -396,6 +396,18 @@ class TestFeatures(unittest.TestCase):
             self.assertEqual(tuple(batch[0].shape), (4,))
             self.assertTrue(bool(xp.all(batch[0] == 1)))
 
+    def test_Feature___getattr__(self):
+        feature = features.DummyFeature(value=42, prop="a")
+
+        self.assertIs(feature.value, feature.properties["value"])
+        self.assertIs(feature.prop, feature.properties["prop"])
+
+        self.assertEqual(feature.value(), feature.properties["value"]())
+        self.assertEqual(feature.prop(), feature.properties["prop"]())
+
+        with self.assertRaises(AttributeError):
+            _ = feature.nonexistent
+
     def test_Feature__iter__and__next__(self):
         # Deterministic value source
         values = iter([0, 1, 2, 3])
