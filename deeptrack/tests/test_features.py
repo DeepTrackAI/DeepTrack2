@@ -445,6 +445,97 @@ class TestFeatures(unittest.TestCase):
         with self.assertRaises(TypeError):
             _ = feature1 >> "invalid"
 
+    def test_Feature_operators(self):
+        # __add__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = feature + 5
+        self.assertEqual(pipeline(), [6, 7, 8])
+
+        feature1 = features.Value(value=[1, 2, 3])
+        feature2 = features.Value(value=[3, 2, 1])
+        pipeline = feature1 + feature2
+        self.assertEqual(pipeline(), [4, 4, 4])
+
+        # __radd__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = 4 + feature
+        self.assertEqual(pipeline(), [5, 6, 7])
+
+        # __sub__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = feature - 5
+        self.assertEqual(pipeline(), [-4, -3, -2])
+
+        feature1 = features.Value(value=[1, 2, 3])
+        feature2 = features.Value(value=[3, 2, 1])
+        pipeline = feature1 - feature2
+        self.assertEqual(pipeline(), [-2, 0, 2])
+
+        # __rsub__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = 4 - feature
+        self.assertEqual(pipeline(), [3, 2, 1])
+
+        # __mul__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = feature * 5
+        self.assertEqual(pipeline(), [5, 10, 15])
+
+        feature1 = features.Value(value=[1, 2, 3])
+        feature2 = features.Value(value=[3, 2, 1])
+        pipeline = feature1 * feature2
+        self.assertEqual(pipeline(), [3, 4, 3])
+
+        # __rmul__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = 4 * feature
+        self.assertEqual(pipeline(), [4, 8, 12])
+
+        # __truediv__
+        feature = features.Value(value=[10, 20, 30])
+        pipeline = feature / 5
+        self.assertEqual(pipeline(), [2.0, 4.0, 6.0])
+
+        feature1 = features.Value(value=[10, 20, 30])
+        feature2 = features.Value(value=[5, 4, 3])
+        pipeline = feature1 / feature2
+        self.assertEqual(pipeline(), [2.0, 5.0, 10.0])
+
+        # __rtruediv__
+        feature = features.Value(value=[2, 4, 5])
+        pipeline = 10 / feature
+        self.assertEqual(pipeline(), [5.0, 2.5, 2.0])
+
+        # __floordiv__
+        feature = features.Value(value=[12, 24, 36])
+        pipeline = feature // 5
+        self.assertEqual(pipeline(), [2, 4, 7])
+
+        feature1 = features.Value(value=[12, 22, 32])
+        feature2 = features.Value(value=[5, 4, 3])
+        pipeline = feature1 // feature2
+        self.assertEqual(pipeline(), [2, 5, 10])
+
+        # __rfloordiv__
+        feature = features.Value(value=[3, 6, 7])
+        pipeline = 10 // feature
+        self.assertEqual(pipeline(), [3, 1, 1])
+
+        # __pow__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = feature ** 3 
+        self.assertEqual(pipeline(), [1, 8, 27])
+
+        feature1 = features.Value(value=[1, 2, 3])
+        feature2 = features.Value(value=[3, 2, 1])
+        pipeline = feature1 ** feature2
+        self.assertEqual(pipeline(), [1, 4, 3])
+
+        # __rpow__
+        feature = features.Value(value=[2, 3, 4])
+        pipeline = 10 ** feature
+        self.assertEqual(pipeline(), [100, 1_000, 10_000])
+
     def test_Feature_basics(self):
 
         F = features.DummyFeature()
