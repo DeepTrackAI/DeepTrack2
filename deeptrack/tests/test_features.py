@@ -408,7 +408,7 @@ class TestFeatures(unittest.TestCase):
         with self.assertRaises(AttributeError):
             _ = feature.nonexistent
 
-    def test_Feature__iter__and__next__(self):
+    def test_Feature___iter__and__next__(self):
         # Deterministic value source
         values = iter([0, 1, 2, 3])
         feature = features.Value(value=lambda: next(values))
@@ -423,6 +423,27 @@ class TestFeatures(unittest.TestCase):
         # Finite iteration using islice (as documented)
         samples = list(itertools.islice(feature, 2))
         self.assertEqual(samples, [2, 3])
+
+    def test_Feature___rshift__and__rrshift__(self):
+        # __rshift__: Feature >> Feature
+        feature1 = features.Value(value=[1, 2, 3])
+        feature2 = features.Add(b=1)
+
+        pipeline = feature1 >> feature2
+        self.assertIsInstance(pipeline, features.Chain)
+        self.assertEqual(pipeline(), [2, 3, 4])
+
+        # __rshift__: Feature >> callable
+        import numpy as np
+
+        feature = features.Value(value=np.array([1, 2, 3]))
+        pipeline = feature >> np.mean
+        self.assertIsInstance(pipeline, features.Chain)
+        self.assertEqual(pipeline(), 2.0)
+
+        # Python (Feature.__rshift__ returns NotImplemented).
+        with self.assertRaises(TypeError):
+            _ = feature1 >> "invalid"
 
     def test_Feature_basics(self):
 
