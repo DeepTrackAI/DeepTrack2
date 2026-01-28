@@ -2159,7 +2159,7 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Chain this feature with another feature or function using '>>'.
+        """Chain this feature with another node or callable using `>>`.
 
         This operator enables pipeline-style chaining. The expression:
 
@@ -2172,14 +2172,12 @@ class Feature(DeepTrackNode):
         It creates a new pipeline where the output of `feature` is passed as
         input to `other`:
         - If `other` is a `Feature` or `DeepTrackNode`, this returns a
-        `Chain(feature, other)`.
-        - If `other` is a callable (e.g., a function), it is wrapped using
-        `dt.Lambda(lambda: other)` and chained similarly. The lambda returns
-        the function itself, which is then automatically called with the
-        upstream feature’s output during evaluation.
-        - If `other` is neither a `DeepTrackNode` nor a callable, the operator
-        is not implemented and returns `NotImplemented`, which may lead to a
-        `TypeError` if no matching reverse operator is defined.
+          `Chain(feature, other)`.
+        - If `other` is callable, it is wrapped in a `Lambda` node and
+          chained as `Chain(feature, Lambda(lambda: other))`. The zero-argument
+          lambda returns the callable, which is then invoked internally with
+          the upstream output during evaluation.
+        - Otherwise, this method returns `NotImplemented`.
 
         Parameters
         ----------
@@ -2242,7 +2240,7 @@ class Feature(DeepTrackNode):
         # If other is a function, call it on the output of the feature.
         # For example, feature >> some_function
         if callable(other):
-            return self >> Lambda(lambda: other)
+            return Chain(self, Lambda(lambda: other))
 
         # The operator is not implemented for other inputs.
         return NotImplemented
@@ -2251,24 +2249,26 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Chain another feature or value with this feature using '>>'.
+        """Reflected `>>` operator for chaining into this feature.
 
-        This operator supports chaining when the `Feature` appears on the
-        right-hand side of a pipeline. The expression:
+        This method is only invoked when the left operand implements
+        `.__rshift__()` and returns `NotImplemented`. In that case, this
+        method attempts to create a chain where `other` is evaluated before
+        this feature.
 
-        >>> other >> feature
+        Important
+        ---------
+        Python does not call `.__rrshift__()` for most built-in types (e.g.,
+        list, tuple, NumPy arrays, or PyTorch tensors) because these types do
+        not define `.__rshift__()`. Therefore, expressions like:
 
-        triggers `feature.__rrshift__(other)` if `other` does not implement
-        `__rshift__`, or if its implementation returns `NotImplemented`.
+        [1, 2, 3] >> feature
 
-        If `other` is a `Feature`, this is equivalent to:
+        raise `TypeError` and will not reach this method.
 
-        >>> dt.Chain(other, feature)
+        To start a pipeline from a raw value, wrap it explicitly:
 
-        If `other` is a raw value (e.g., a list or array), it is wrapped using
-        `dt.Value(value=other)` before chaining:
-
-        >>> dt.Chain(dt.Value(value=other), feature)
+        Value(value=[1, 2, 3]) >> feature
 
         Parameters
         ----------
@@ -2284,51 +2284,12 @@ class Feature(DeepTrackNode):
         ------
         TypeError
             If `other` is not a supported type, this method returns
-            `NotImplemented`, which may raise a `TypeError` if no matching 
-            forward operator is defined.
-
-        Notes
-        -----
-        This method enables chaining where a `Feature` appears on the
-        right-hand side of the `>>` operator. It is triggered when the
-        left-hand operand does not implement `__rshift__`, or when its
-        implementation returns `NotImplemented`.
-
-        This is particularly useful when chaining two `Feature` instances or
-        when the left-hand operand is a custom class designed to delegate
-        chaining behavior. For example:
-
-        >>> pipeline = dt.Value(value=[1, 2, 3]) >> dt.Add(b=1)
-
-        In this case, if `dt.Value` does not handle `__rshift__`, Python will
-        fall back to calling `Add.__rrshift__(...)`, which constructs the
-        chain.
-
-        However, this mechanism does not apply to built-in types like
-        `int`, `float`, or `list`. Due to limitations in Python's operator
-        overloading, expressions like:
-
-        >>> 1 >> dt.Add(b=1)
-        >>> [1, 2, 3] >> dt.Add(b=1)
-
-        will raise `TypeError`, because Python does not delegate to the
-        right-hand operand’s `__rrshift__` method for built-in types.
-
-        To chain a raw value into a feature, wrap it explicitly using
-        `dt.Value`:
-
-        >>> dt.Value(1) >> dt.Add(b=1)
-
-        This is functionally equivalent and avoids the need for fallback
-        behavior.
+            `NotImplemented`, which may raise a `TypeError`.
 
         """
 
         if isinstance(other, Feature):
             return Chain(other, self)
-
-        if isinstance(other, DeepTrackNode):
-            return Chain(Value(other), self)
 
         return NotImplemented
 
