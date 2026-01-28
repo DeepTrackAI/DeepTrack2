@@ -2299,15 +2299,15 @@ class Feature(DeepTrackNode):
     ) -> Feature:
         """Adds another value or feature using '+'.
 
-        This operator is shorthand for chaining with `dt.Add`. The expression:
+        This operator is shorthand for chaining with `Add`. The expression
 
         >>> feature + other
 
-        is equivalent to:
+        is equivalent to
 
         >>> feature >> dt.Add(b=other)
 
-        Internally, this method constructs a new `Add` feature and uses the 
+        Internally, this method constructs a new `Add` feature and uses the
         right-shift operator (`>>`) to chain the current feature into it.
 
         Parameters
@@ -2326,6 +2326,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Add a constant value to a static input:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = feature + 5
         >>> result = pipeline()
@@ -2333,9 +2334,11 @@ class Feature(DeepTrackNode):
         [6, 7, 8]
 
         This is equivalent to:
+
         >>> pipeline = feature >> dt.Add(b=5)
 
         Add a dynamic feature that samples values at each call:
+
         >>> import numpy as np
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
@@ -2345,35 +2348,36 @@ class Feature(DeepTrackNode):
         [1.325563919290048, 2.325563919290048, 3.325563919290048]
 
         This is equivalent to:
+
         >>> pipeline = feature >> dt.Add(b=noise)
 
         """
 
-        return self >> Add(other)
+        return self >> Add(b=other)
 
     def __radd__(
         self: Feature,
-        other: Any
+        other: Any,
     ) -> Feature:
         """Adds this feature to another value using right '+'.
 
-        This operator is the right-hand version of `+`, enabling expressions 
-        where the `Feature` appears on the right-hand side. The expression:
+        This operator is the right-hand version of `+`, enabling expressions
+        where the `Feature` appears on the right-hand side. The expression
 
         >>> other + feature
 
-        is equivalent to:
+        is equivalent to
 
         >>> dt.Value(value=other) >> dt.Add(b=feature)
 
-        Internally, this method constructs a `Value` feature from `other` and 
-        chains it into an `Add` feature that adds the current feature as a 
+        Internally, this method constructs a `Value` feature from `other` and
+        chains it into an `Add` feature that adds the current feature as a
         dynamic value.
 
         Parameters
         ----------
         other: Any
-            A constant or `Feature` to which `self` will be added. It is 
+            A constant or `Feature` to which `self` will be added. It is
             passed as the input to `Value`.
 
         Returns
@@ -2386,6 +2390,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Add a feature to a constant:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = 5 + feature
         >>> result = pipeline()
@@ -2393,9 +2398,11 @@ class Feature(DeepTrackNode):
         [6, 7, 8]
 
         This is equivalent to:
+
         >>> pipeline = dt.Value(value=5) >> dt.Add(b=feature)
 
         Add a feature to a dynamic value:
+
         >>> import numpy as np
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
@@ -2405,6 +2412,7 @@ class Feature(DeepTrackNode):
         [1.5254613210875014, 2.5254613210875014, 3.5254613210875014]
 
         This is equivalent to:
+
         >>> pipeline = (
         ...     dt.Value(value=lambda: np.random.rand())
         ...     >> dt.Add(b=feature)
@@ -2412,7 +2420,7 @@ class Feature(DeepTrackNode):
 
         """
 
-        return Value(other) >> Add(self)
+        return Value(value=other) >> Add(b=self)
 
     def __sub__(
         self: Feature,
@@ -2420,12 +2428,11 @@ class Feature(DeepTrackNode):
     ) -> Feature:
         """Subtract another value or feature using '-'.
 
-        This operator is shorthand for chaining with `Subtract`.
-        The expression:
+        This operator is shorthand for chaining with `Subtract`. The expression
 
         >>> feature - other
 
-        is equivalent to:
+        is equivalent to
 
         >>> feature >> dt.Subtract(b=other)
 
@@ -2435,8 +2442,8 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         other: Any
-            The value or `Feature` to be subtracted. It is passed to
-            `Subtract` as the `value` argument.
+            The value or `Feature` to be subtracted. It is passed to `Subtract`
+            as the `value` argument.
 
         Returns
         -------
@@ -2448,6 +2455,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Subtract a constant value from a static input:
+
         >>> feature = dt.Value(value=[5, 6, 7])
         >>> pipeline = feature - 2
         >>> result = pipeline()
@@ -2455,9 +2463,11 @@ class Feature(DeepTrackNode):
         [3, 4, 5]
 
         This is equivalent to:
+
         >>> pipeline = feature >> dt.Subtract(b=2)
 
         Subtract a dynamic feature that samples a value at each call:
+
         >>> import numpy as np
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
@@ -2467,11 +2477,12 @@ class Feature(DeepTrackNode):
         [4.524072925059197, 5.524072925059197, 6.524072925059197]
 
         This is equivalent to:
+
         >>> pipeline = feature >> dt.Subtract(b=noise)
         
         """
 
-        return self >> Subtract(other)
+        return self >> Subtract(b=other)
 
     def __rsub__(
         self: Feature,
@@ -2480,11 +2491,11 @@ class Feature(DeepTrackNode):
         """Subtract this feature from another value using right '-'.
 
         This operator is the right-hand version of `-`, enabling expressions
-        where the `Feature` appears on the right-hand side. The expression:
+        where the `Feature` appears on the right-hand side. The expression
 
         >>> other - feature
 
-        is equivalent to:
+        is equivalent to
 
         >>> dt.Value(value=other) >> dt.Subtract(b=feature)
 
@@ -2508,6 +2519,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Subtract a feature from a constant:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = 5 - feature
         >>> result = pipeline()
@@ -2515,9 +2527,11 @@ class Feature(DeepTrackNode):
         [4, 3, 2]
 
         This is equivalent to:
-        >>> pipeline = dt.Value(b=5) >> dt.Subtract(b=feature)
+
+        >>> pipeline = dt.Value(value=5) >> dt.Subtract(b=feature)
 
         Subtract a feature from a dynamic value:
+
         >>> import numpy as np
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
@@ -2527,6 +2541,7 @@ class Feature(DeepTrackNode):
         [-0.18761746914784516, -1.1876174691478452, -2.1876174691478454]
 
         This is equivalent to:
+
         >>> pipeline = (
         ...     dt.Value(value=lambda: np.random.rand())
         ...     >> dt.Subtract(b=feature)
@@ -2534,7 +2549,7 @@ class Feature(DeepTrackNode):
 
         """
 
-        return Value(other) >> Subtract(self)
+        return Value(value=other) >> Subtract(b=self)
 
     def __mul__(
         self: Feature,
@@ -2542,12 +2557,11 @@ class Feature(DeepTrackNode):
     ) -> Feature:
         """Multiply this feature with another value using '*'.
 
-        This operator is shorthand for chaining with `Multiply`.
-        The expression:
+        This operator is shorthand for chaining with `Multiply`. The expression
 
         >>> feature * other
 
-        is equivalent to:
+        is equivalent to
 
         >>> feature >> dt.Multiply(b=other)
 
@@ -2557,8 +2571,8 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         other: Any
-            The value or `Feature` to be multiplied. It is passed to
-            `dt.Multiply` as the `value` argument.
+            The value or `Feature` to be multiplied. It is passed to `Multiply`
+            as the `value` argument.
 
         Returns
         -------
@@ -2570,6 +2584,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Multiply a constant value to a static input:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = feature * 2
         >>> result = pipeline()
@@ -2577,9 +2592,11 @@ class Feature(DeepTrackNode):
         [2, 4, 6]
 
         This is equivalent to:
+
         >>> pipeline = feature >> dt.Multiply(b=2)
 
         Multiply with a dynamic feature that samples a value at each call:
+
         >>> import numpy as np
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
@@ -2589,26 +2606,27 @@ class Feature(DeepTrackNode):
         [0.2809370704818722, 0.5618741409637444, 0.8428112114456167]
 
         This is equivalent to:
+
         >>> pipeline = feature >> dt.Multiply(value=noise)
 
         """
 
-        return self >> Multiply(other)
+        return self >> Multiply(b=other)
 
     def __rmul__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Multiply another value with this feature using right '*'.
+        """Multiply another value by this feature using right '*'.
 
         This operator is the right-hand version of `*`, enabling expressions
-        where the `Feature` appears on the right-hand side. The expression:
+        where the `Feature` appears on the right-hand side. The expression
 
         >>> other * feature
 
-        is equivalent to:
+        is equivalent to
 
-        >>> dt.Value(value=other) >> dt.Multiply(value=feature)
+        >>> dt.Value(value=other) >> dt.Multiply(b=feature)
 
         Internally, this method constructs a `Value` feature from `other` and
         chains it into a `Multiply` feature that multiplies the current feature
@@ -2630,6 +2648,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Multiply a feature to a constant:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = 2 * feature
         >>> result = pipeline()
@@ -2637,9 +2656,11 @@ class Feature(DeepTrackNode):
         [2, 4, 6]
 
         This is equivalent to:
-        >>> pipeline = dt.Value(value=2) >> dt.Multiply(value=feature)
+
+        >>> pipeline = dt.Value(value=2) >> dt.Multiply(b=feature)
 
         Multiply a feature to a dynamic value:
+
         >>> import numpy as np
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
@@ -2649,28 +2670,27 @@ class Feature(DeepTrackNode):
         [0.8784860790329121, 1.7569721580658242, 2.635458237098736]
 
         This is equivalent to:
+
         >>> pipeline = (
         ...     dt.Value(value=lambda: np.random.rand())
-        ...     >> dt.Multiply(value=feature)
+        ...     >> dt.Multiply(b=feature)
         ... )
 
         """
 
-        return Value(other) >> Multiply(self)
+        return Value(value=other) >> Multiply(b=self)
 
     def __truediv__(
         self: Feature,
         other: Any,
         ) -> Feature:
-        """Divide a feature (nominator) using `/` with another
-        value (denominator).
+        """Divide a feature (nominator) using `/` by a value (denominator).
 
-        This operator is shorthand for chaining with `dt.Divide`.
-        The expression:
+        This operator is shorthand for chaining with `Divide`. The expression
 
         >>> feature / other
 
-        is equivalent to:
+        is equivalent to
 
         >>> feature >> dt.Divide(value=other)
 
@@ -2693,6 +2713,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Divide a feature with a constant:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = feature / 5
         >>> result = pipeline()
@@ -2700,9 +2721,11 @@ class Feature(DeepTrackNode):
         [0.2, 0.4, 0.6]
 
         This is equivalent to:
+
         >>> pipeline = feature >> dt.Divide(value=5)
 
         Implement a normalization pipeline:
+
         >>> feature = dt.Value(value=[1, 25, 20])
         >>> magnitude = dt.Value(value=lambda: max(feature()))
         >>> pipeline = feature / magnitude
@@ -2711,32 +2734,32 @@ class Feature(DeepTrackNode):
         [0.04, 1.0, 0.8]
 
         This is equivalent to:
+
         >>> pipeline = (
         ...     feature
-        ...     >> dt.Divide(value=lambda: max(feature())
+        ...     >> dt.Divide(value=lambda: max(feature()))
         ... )
 
         """
 
-        return self >> Divide(other)
+        return self >> Divide(b=other)
 
     def __rtruediv__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Divide `other` value (nominator) by this feature (denominator)
-        using right '/'.
+        """Divide other value (nominator) by feature (denominator) using '/'.
 
-        This operator is shorthand for chaining with `dt.Divide`, and is the
+        This operator is shorthand for chaining with `Divide`, and is the
         right-hand side version of  `__truediv__`.
 
-        The expression:
+        The expression
 
         >>> other / feature
 
-        is equivalent to:
+        is equivalent to
 
-        >>> other >> dt.Divide(value=feature)
+        >>> other >> dt.Divide(b=feature)
 
         Internally, this method constructs a new `Value` feature from `other`
         and uses the right-shift operator (`>>`) to chain it into a `Divide`
@@ -2757,7 +2780,8 @@ class Feature(DeepTrackNode):
         --------
         >>> import deeptrack as dt
 
-        Divide a constant with a feature.
+        Divide a constant with a feature:
+
         >>> feature = dt.Value(value=[-1, 2, 2])
         >>> pipeline = 5 / feature
         >>> result = pipeline()
@@ -2765,12 +2789,14 @@ class Feature(DeepTrackNode):
         [-5.0, 2.5, 2.5]
 
         This is equivalent to:
+
         >>> pipeline = (
         ...     dt.Value(value=5)
-        ...     >> dt.Divide(value=feature)
+        ...     >> dt.Divide(b=feature)
         ... )
 
         Divide a dynamic value with a feature:
+
         >>> import numpy as np
         >>>
         >>> scale_factor = dt.Value(value=5)
@@ -2781,6 +2807,7 @@ class Feature(DeepTrackNode):
         0.13736078990870043
 
         This is equivalent to:
+
         >>> pipeline = (
         ...     dt.Value(value=lambda: np.random.rand())
         ...     >> dt.Divide(value=scale_factor)
@@ -2788,23 +2815,23 @@ class Feature(DeepTrackNode):
 
         """
 
-        return Value(other) >> Divide(self)
+        return Value(value=other) >> Divide(b=self)
 
     def __floordiv__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Perform floor division of feature with other using `//`.
+        """Perform floor division of feature with other value using `//`.
     
         It performs the floor division of `feature` (numerator) with `other`
-        (denominator) using `//`.
+        value (denominator) using `//`.
     
         This operator is shorthand for chaining with `FloorDivide`.
-        The expression:
+        The expression
     
         >>> feature // other
 
-        is equivalent to:
+        is equivalent to
 
         >>> feature >> dt.FloorDivide(value=other)
     
@@ -2827,6 +2854,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
     
         Floor divide a feature with a constant:
+
         >>> feature = dt.Value(value=[5, 9, 12])
         >>> pipeline = feature // 2
         >>> result = pipeline()
@@ -2834,27 +2862,30 @@ class Feature(DeepTrackNode):
         [2, 4, 6]
     
         This is equivalent to:
+
         >>> pipeline = feature >> dt.FloorDivide(value=2)
     
         Floor divide a dynamic feature by another feature:
+
         >>> import numpy as np
         >>>
         >>> randint = dt.Value(value=lambda: np.random.randint(1, 5))
         >>> feature = dt.Value(value=[20, 30, 40])
         >>> pipeline = feature // randint
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [6, 10, 13]
         
         This is equivalent to:
+
         >>> pipeline = (
         ...     feature
         ...     >> dt.FloorDivide(value=lambda: np.random.randint(1, 5))
         ... )
-        
+
         """
 
-        return self >> FloorDivide(other)
+        return self >> FloorDivide(b=other)
 
     def __rfloordiv__(
         self: Feature,
@@ -2866,13 +2897,13 @@ class Feature(DeepTrackNode):
         `feature` (denominator) using '//'.
     
         This operator is shorthand for chaining with `FloorDivide`.
-        The expression:
+        The expression
     
         >>> other // feature
     
-        is equivalent to:
+        is equivalent to
     
-        >>> dt.Value(value=other) >> dt.FloorDivide(value=feature)
+        >>> dt.Value(value=other) >> dt.FloorDivide(b=feature)
     
         Internally, this method constructs a `Value` feature from `other` and
         chains it into a `FloorDivide` feature that divides with the current
@@ -2894,6 +2925,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
     
         Floor divide a feature with a constant:
+
         >>> feature = dt.Value(value=[5, 9, 12])
         >>> pipeline = 10 // feature
         >>> result = pipeline()
@@ -2901,9 +2933,11 @@ class Feature(DeepTrackNode):
         [2, 1, 0]
     
         This is equivalent to:
-        >>> pipeline = dt.Value(value=10) >> dt.FloorDivide(value=feature)
+
+        >>> pipeline = dt.Value(value=10) >> dt.FloorDivide(b=feature)
     
         Floor divide a dynamic feature by another feature:
+
         >>> import numpy as np
         >>>
         >>> randint = dt.Value(value=lambda: np.random.randint(1, 5))
@@ -2914,14 +2948,15 @@ class Feature(DeepTrackNode):
         [1, 1, 0]
         
         This is equivalent to:
+
         >>> pipeline = (
         ...     dt.Value(value=lambda: np.random.randint(1, 5))
-        ...     >> dt.FloorDivide(value=feature)
+        ...     >> dt.FloorDivide(b=feature)
         ... )
         
         """
 
-        return Value(other) >> FloorDivide(self)
+        return Value(value=other) >> FloorDivide(value=self)
 
     def __pow__(
         self: Feature,
@@ -2929,13 +2964,13 @@ class Feature(DeepTrackNode):
     ) -> Feature:
         """Raise this feature (base) to a power (exponent) using '**'.
 
-        This operator is shorthand for chaining with `Power`. The expression:
+        This operator is shorthand for chaining with `Power`. The expression
 
         >>> feature ** other
 
-        is equivalent to:
+        is equivalent to
 
-        >>> feature >> dt.Power(value=other)
+        >>> feature >> dt.Power(b=other)
 
         Internally, this method constructs a new `Power` feature and uses the
         right-shift operator (`>>`) to chain the current feature into it.
@@ -2956,16 +2991,19 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Raise a static base to a constant exponent:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = feature ** 3
         >>> result = pipeline()
         >>> result
         [1, 8, 27]
 
-        This is equivalent to:
+        This is equivalent to
+
         >>> pipeline = feature >> dt.Power(value=3)
 
         Raise to a dynamic exponent that samples values at each call:
+
         >>> import numpy as np
         >>>
         >>> random_exponent = dt.Value(value=lambda: np.random.randint(10))
@@ -2974,28 +3012,28 @@ class Feature(DeepTrackNode):
         >>> result
         [1, 64, 729]
 
-        This is equivalent to:
-        >>> pipeline = feature >> dt.Power(value=random_exponent)
+        This is equivalent to
+
+        >>> pipeline = feature >> dt.Power(b=random_exponent)
  
         """
 
-        return self >> Power(other)
+        return self >> Power(b=other)
 
     def __rpow__(
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Raise another value (base) to this feature (exponent) as a power
-        using right '**'.
+        """Raise another value (base) to this feature (exponent) using '**'.
 
         This operator is the right-hand version of `**`, enabling expressions
-        where the `Feature` appears on the right-hand side. The expression:
+        where the `Feature` appears on the right-hand side. The expression
 
         >>> other ** feature
 
-        is equivalent to:
+        is equivalent to
 
-        >>> dt.Value(value=other) >> dt.Power(value=feature)
+        >>> dt.Value(value=other) >> dt.Power(b=feature)
 
         Internally, this method constructs a `Value` feature from `other`
         (base) and chains it into a `Power` feature (exponent).
@@ -3016,6 +3054,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Raise a static base to a constant exponent:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = 5 ** feature
         >>> result = pipeline()
@@ -3023,10 +3062,12 @@ class Feature(DeepTrackNode):
         [5, 25, 125]
 
         This is equivalent to:
-        >>> pipeline = dt.Value(value=5) >> dt.Power(value=feature)
+
+        >>> pipeline = dt.Value(value=5) >> dt.Power(b=feature)
 
         Raise a dynamic base that samples values at each call to the static
         exponent:
+
         >>> import numpy as np
         >>>
         >>> random_base = dt.Value(value=lambda: np.random.randint(10))
@@ -3036,14 +3077,15 @@ class Feature(DeepTrackNode):
         [9, 81, 729]
 
         This is equivalent to:
+
         >>> pipeline = (
         ...     dt.Value(value=lambda: np.random.randint(10))
-        ...     >> dt.Power(value=feature)
+        ...     >> dt.Power(b=feature)
         ... )
 
         """
 
-        return Value(other) >> Power(self)
+        return Value(value=other) >> Power(b=self)
 
     def __gt__(
         self: Feature,
@@ -3119,7 +3161,7 @@ class Feature(DeepTrackNode):
 
         is equivalent to:
 
-        >>> dt.Value(value=other) >> dt.GreaterThan(value=feature)
+        >>> dt.Value(value=other) >> dt.GreaterThan(b=feature)
 
         Internally, this method constructs a `Value` feature from `other`
         and chains it into a `GreaterThan` feature.
@@ -3148,7 +3190,7 @@ class Feature(DeepTrackNode):
         [True, False, False]
 
         This is equivalent to:
-        >>> pipeline = dt.Value(value=2) >> dt.GreaterThan(value=feature)
+        >>> pipeline = dt.Value(value=2) >> dt.GreaterThan(b=feature)
 
         Compare a constant to each element in a dynamic feature that samples
         values at each call:
@@ -3245,7 +3287,7 @@ class Feature(DeepTrackNode):
 
         is equivalent to:
 
-        >>> dt.Value(value=other) >> dt.LessThan(value=feature)
+        >>> dt.Value(value=other) >> dt.LessThan(b=feature)
 
         Internally, this method constructs a `Value` feature from `other`
         and chains it into a `LessThan` feature.
@@ -3274,7 +3316,7 @@ class Feature(DeepTrackNode):
         [False, False, True]
 
         This is equivalent to:
-        >>> pipeline = dt.Value(value=2) >> dt.LessThan(value=feature)
+        >>> pipeline = dt.Value(value=2) >> dt.LessThan(b=feature)
 
         Compare a constant to each element in a dynamic feature that samples
         values at each call:
@@ -3371,7 +3413,7 @@ class Feature(DeepTrackNode):
 
         is equivalent to:
 
-        >>> dt.Value(value=other) >> dt.LessThanOrEquals(value=feature)
+        >>> dt.Value(value=other) >> dt.LessThanOrEquals(b=feature)
 
         Internally, this method constructs a `Value` feature from `other`
         and chains it into a `LessThanOrEquals` feature.
@@ -3400,7 +3442,7 @@ class Feature(DeepTrackNode):
         [False, True, True]
 
         This is equivalent to:
-        >>> pipeline = dt.Value(value=2) >> dt.LessThanOrEquals(value=feature)
+        >>> pipeline = dt.Value(value=2) >> dt.LessThanOrEquals(b=feature)
 
         Compare a constant to each element in a dynamic feature that samples
         values at each call:
@@ -3497,7 +3539,7 @@ class Feature(DeepTrackNode):
 
         is equivalent to:
 
-        >>> dt.Value(value=other) >> dt.GreaterThanOrEquals(value=feature)
+        >>> dt.Value(value=other) >> dt.GreaterThanOrEquals(b=feature)
 
         Internally, this method constructs a `Value` feature from `other`
         and chains it into a `GreaterThanOrEquals` feature.
@@ -3528,7 +3570,7 @@ class Feature(DeepTrackNode):
         This is equivalent to:
         >>> pipeline = (
         ...     dt.Value(value=2)
-        ...     >> dt.GreaterThanOrEquals(value=feature)
+        ...     >> dt.GreaterThanOrEquals(b=feature)
         ... )
 
         Compare a constant to each element in a dynamic feature that samples
