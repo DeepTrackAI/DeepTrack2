@@ -2019,7 +2019,7 @@ class Feature(DeepTrackNode):
         
         is equivalent to
 
-        >>> feature.properties["my_property"]`()
+        >>> feature.properties["my_property"]
 
         This is only called if the attribute is not found via the normal lookup
         process (i.e., it's not a real attribute or method). It checks whether
@@ -2046,14 +2046,18 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Create a feature with a property:
+
         >>> feature = dt.DummyFeature(value=42)
 
         Access the property as an attribute:
+
         >>> feature.value()
         42
 
-        Attempting to access a non-existent property raises an `AttributeError`:
-        >>> feature.nonexistent()
+        An attempt to access a non-existent property raises an
+        `AttributeError`:
+
+        >>> feature.nonexistent
         ...
         AttributeError: 'DummyFeature' object has no attribute 'nonexistent'
 
@@ -2155,24 +2159,26 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Chains this feature with another feature or function using '>>'.
+        """Chain this feature with another feature or function using '>>'.
 
         This operator enables pipeline-style chaining. The expression:
 
         >>> feature >> other
 
-        creates a new pipeline where the output of `feature` is passed as 
-        input to `other`.
+        is equivalent to
 
-        If `other` is a `Feature` or `DeepTrackNode`, this returns a 
-        `Chain(feature, other)`. If `other` is a callable (e.g., a function),
-        it is wrapped using `dt.Lambda(lambda: other)` and chained 
-        similarly. The lambda returns the function itself, which is then 
-        automatically called with the upstream feature’s output during 
-        evaluation.
+        >>> Chain(feature, other)
 
-        If `other` is neither a `DeepTrackNode` nor a callable, the operator 
-        is not implemented and returns `NotImplemented`, which may lead to a 
+        It creates a new pipeline where the output of `feature` is passed as
+        input to `other`:
+        - If `other` is a `Feature` or `DeepTrackNode`, this returns a
+        `Chain(feature, other)`.
+        - If `other` is a callable (e.g., a function), it is wrapped using
+        `dt.Lambda(lambda: other)` and chained similarly. The lambda returns
+        the function itself, which is then automatically called with the
+        upstream feature’s output during evaluation.
+        - If `other` is neither a `DeepTrackNode` nor a callable, the operator
+        is not implemented and returns `NotImplemented`, which may lead to a
         `TypeError` if no matching reverse operator is defined.
 
         Parameters
@@ -2188,8 +2194,8 @@ class Feature(DeepTrackNode):
         Raises
         ------
         TypeError
-            If `other` is not a `DeepTrackNode` or callable, the operator 
-            returns `NotImplemented`, which may raise a `TypeError` if no 
+            If `other` is not a `DeepTrackNode` or callable, the operator
+            returns `NotImplemented`, which may raise a `TypeError` if no
             matching reverse operator is defined.
 
         Examples
@@ -2197,6 +2203,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Chain two features:
+
         >>> feature1 = dt.Value(value=[1, 2, 3])
         >>> feature2 = dt.Add(b=1)
         >>> pipeline = feature1 >> feature2
@@ -2205,6 +2212,7 @@ class Feature(DeepTrackNode):
         [2, 3, 4]
 
         Chain with a callable (e.g., NumPy function):
+
         >>> import numpy as np
         >>>
         >>> feature = dt.Value(value=np.array([1, 2, 3]))
@@ -2215,9 +2223,10 @@ class Feature(DeepTrackNode):
         2.0
 
         This is equivalent to:
+
         >>> pipeline = feature >> dt.Lambda(lambda: function)
 
-        The lambda returns the function object. During evaluation, DeepTrack 
+        The lambda returns the function object. During evaluation, DeepTrack
         internally calls that function with the resolved output of `feature`.
 
         Attempting to chain with an unsupported object raises a TypeError:
@@ -2242,14 +2251,14 @@ class Feature(DeepTrackNode):
         self: Feature,
         other: Any,
     ) -> Feature:
-        """Chains another feature or value with this feature using '>>'.
+        """Chain another feature or value with this feature using '>>'.
 
-        This operator supports chaining when the `Feature` appears on the 
+        This operator supports chaining when the `Feature` appears on the
         right-hand side of a pipeline. The expression:
 
         >>> other >> feature
 
-        triggers `feature.__rrshift__(other)` if `other` does not implement 
+        triggers `feature.__rrshift__(other)` if `other` does not implement
         `__rshift__`, or if its implementation returns `NotImplemented`.
 
         If `other` is a `Feature`, this is equivalent to:
@@ -2274,7 +2283,7 @@ class Feature(DeepTrackNode):
         Raises
         ------
         TypeError
-            If `other` is not a supported type, this method returns 
+            If `other` is not a supported type, this method returns
             `NotImplemented`, which may raise a `TypeError` if no matching 
             forward operator is defined.
 
@@ -2295,7 +2304,7 @@ class Feature(DeepTrackNode):
         fall back to calling `Add.__rrshift__(...)`, which constructs the
         chain.
 
-        However, this mechanism does **not** apply to built-in types like
+        However, this mechanism does not apply to built-in types like
         `int`, `float`, or `list`. Due to limitations in Python's operator
         overloading, expressions like:
 
@@ -3769,10 +3778,10 @@ class Feature(DeepTrackNode):
 
         >>> feature[:, 0]
 
-        to extract a slice from the output of the feature, just as one would 
+        to extract a slice from the output of the feature, just as one would
         with a NumPy array or PyTorch tensor.
 
-        Internally, this is equivalent to chaining with `dt.Slice`, and the 
+        Internally, this is equivalent to chaining with `dt.Slice`, and the
         expression:
 
         >>> feature[slices]
@@ -3782,7 +3791,7 @@ class Feature(DeepTrackNode):
         >>> feature >> dt.Slice(slices)
 
         If the slice is not already a tuple (i.e., a single index or slice),
-        it is wrapped in one. The resulting tuple is converted to a list to 
+        it is wrapped in one. The resulting tuple is converted to a list to
         allow sampling of dynamic slices at runtime.
 
         Parameters
