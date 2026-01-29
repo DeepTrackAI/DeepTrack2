@@ -1639,7 +1639,7 @@ class Feature(DeepTrackNode):
         >>> feature = dt.Value(lambda: random.randint(0, 10))
         >>> 
         >>> for _ in range(3):
-        ...     print(f"output={feature.update()()} seed={feature.seed()}")
+        ...     print(f"output={feature.new()} seed={feature.seed()}")
         output=3 seed=355549663
         output=5 seed=119234165
         output=9 seed=1956541335
@@ -1657,7 +1657,7 @@ class Feature(DeepTrackNode):
         to make the output deterministic and repeatable.
         >>> for _ in range(3):
         ...    feature.seed(seed)
-        ...    print(f"output={feature.update()()} seed={feature.seed()}")
+        ...    print(f"output={feature.new()} seed={feature.seed()}")
         output=5 seed=1933964715
         output=5 seed=1933964715
         output=5 seed=1933964715
@@ -2343,7 +2343,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = feature + noise
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [1.325563919290048, 2.325563919290048, 3.325563919290048]
 
@@ -2407,7 +2407,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = noise + feature
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [1.5254613210875014, 2.5254613210875014, 3.5254613210875014]
 
@@ -2472,7 +2472,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = feature - noise
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [4.524072925059197, 5.524072925059197, 6.524072925059197]
 
@@ -2536,7 +2536,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = noise - feature
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [-0.18761746914784516, -1.1876174691478452, -2.1876174691478454]
 
@@ -2601,7 +2601,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = feature * noise
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [0.2809370704818722, 0.5618741409637444, 0.8428112114456167]
 
@@ -2665,7 +2665,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = noise * feature
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [0.8784860790329121, 1.7569721580658242, 2.635458237098736]
 
@@ -2802,7 +2802,7 @@ class Feature(DeepTrackNode):
         >>> scale_factor = dt.Value(value=5)
         >>> noise = dt.Value(value=lambda: np.random.rand())
         >>> pipeline = noise / scale_factor
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         0.13736078990870043
 
@@ -2943,7 +2943,7 @@ class Feature(DeepTrackNode):
         >>> randint = dt.Value(value=lambda: np.random.randint(1, 5))
         >>> feature = dt.Value(value=[2, 3, 4])
         >>> pipeline = randint // feature
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [1, 1, 0]
         
@@ -3008,7 +3008,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> random_exponent = dt.Value(value=lambda: np.random.randint(10))
         >>> pipeline = feature ** random_exponent
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [1, 64, 729]
 
@@ -3072,7 +3072,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> random_base = dt.Value(value=lambda: np.random.randint(10))
         >>> pipeline = random_base ** feature
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [9, 81, 729]
 
@@ -3094,17 +3094,16 @@ class Feature(DeepTrackNode):
         """Check if this feature is greater than another using '>'.
 
         This operator is shorthand for chaining with `GreaterThan`.
-        The expression:
+        The expression
 
         >>> feature > other
 
-        is equivalent to:
+        is equivalent to
 
-        >>> feature >> dt.GreaterThan(value=other)
+        >>> feature >> dt.GreaterThan(b=other)
 
-        Internally, this method constructs a new `GreaterThan` feature and
-        uses the right-shift operator (`>>`) to chain the current feature
-        into it.
+        Internally, this method constructs a new `GreaterThan` feature and uses
+        the right-shift operator (`>>`) to chain the current feature into it.
 
         Parameters
         ----------
@@ -3123,6 +3122,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Compare each element in a feature to a constant:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = feature > 2
         >>> result = pipeline()
@@ -3130,23 +3130,26 @@ class Feature(DeepTrackNode):
         [False, False, True]
 
         This is equivalent to:
-        >>> pipeline = feature >> dt.GreaterThan(value=2)
+
+        >>> pipeline = feature >> dt.GreaterThan(b=2)
 
         Compare to a dynamic cutoff that samples values at each call:
+
         >>> import numpy as np
         >>>
         >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
         >>> pipeline = feature > random_cutoff
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [False, True, True]
 
         This is equivalent to:
-        >>> pipeline = feature >> dt.GreaterThan(value=random_cutoff)
+
+        >>> pipeline = feature >> dt.GreaterThan(b=random_cutoff)
 
         """
 
-        return self >> GreaterThan(other)
+        return self >> GreaterThan(b=other)
 
     def __rgt__(
         self: Feature,
@@ -3155,7 +3158,7 @@ class Feature(DeepTrackNode):
         """Check if another value is greater than feature using right '>'.
  
         This operator is the right-hand version of `>`, enabling expressions
-        where the `Feature` appears on the right-hand side. The expression:
+        where the `Feature` appears on the right-hand side. The expression
 
         >>> other > feature
 
@@ -3183,6 +3186,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Compare a constant to each element in a feature:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = 2 > feature
         >>> result = pipeline()
@@ -3190,28 +3194,30 @@ class Feature(DeepTrackNode):
         [True, False, False]
 
         This is equivalent to:
+
         >>> pipeline = dt.Value(value=2) >> dt.GreaterThan(b=feature)
 
         Compare a constant to each element in a dynamic feature that samples
         values at each call:
+
         >>> from random import randint
         >>>
         >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
         >>> pipeline = 2 > random
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [False, False, True]
 
         This is equivalent to:
+
         >>> pipeline = (
         ...     dt.Value(value=2)
-        ...     >> dt.GreaterThan(value=lambda:
-        ...         [randint(0, 3) for _ in range(3)])
+        ...     >> dt.GreaterThan(b=lambda: [randint(0, 3) for _ in range(3)])
         ... )
 
         """
 
-        return Value(other) >> GreaterThan(self)
+        return Value(value=other) >> GreaterThan(b=self)
 
     def __lt__(
         self: Feature,
@@ -3220,13 +3226,13 @@ class Feature(DeepTrackNode):
         """Check if this feature is less than another using '<'.
 
         This operator is shorthand for chaining with `LessThan`.
-        The expression:
+        The expression
 
         >>> feature < other
 
-        is equivalent to:
+        is equivalent to
 
-        >>> feature >> dt.LessThan(value=other)
+        >>> feature >> dt.LessThan(b=other)
 
         Internally, this method constructs a new `LessThan` feature and
         uses the right-shift operator (`>>`) to chain the current feature
@@ -3249,6 +3255,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Compare each element in a feature to a constant:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = feature < 2
         >>> result = pipeline()
@@ -3256,23 +3263,26 @@ class Feature(DeepTrackNode):
         [True, False, False]
 
         This is equivalent to:
-        >>> pipeline = feature >> dt.LessThan(value=2)
+
+        >>> pipeline = feature >> dt.LessThan(b=2)
 
         Compare to a dynamic cutoff that samples values at each call:
+
         >>> import numpy as np
         >>>
         >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
         >>> pipeline = feature < random_cutoff
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [False, False, False]
 
         This is equivalent to:
-        >>> pipeline = feature >> dt.LessThan(value=random_cutoff)
+
+        >>> pipeline = feature >> dt.LessThan(b=random_cutoff)
 
         """
 
-        return self >> LessThan(other)
+        return self >> LessThan(b=other)
 
     def __rlt__(
         self: Feature,
@@ -3281,11 +3291,11 @@ class Feature(DeepTrackNode):
         """Check if another value is less than this feature using right '<'.
 
         This operator is the right-hand version of `<`, enabling expressions
-        where the `Feature` appears on the right-hand side. The expression:
+        where the `Feature` appears on the right-hand side. The expression
 
         >>> other < feature
 
-        is equivalent to:
+        is equivalent to
 
         >>> dt.Value(value=other) >> dt.LessThan(b=feature)
 
@@ -3309,6 +3319,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Compare a constant to each element in a feature:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = 2 < feature
         >>> result = pipeline()
@@ -3316,28 +3327,30 @@ class Feature(DeepTrackNode):
         [False, False, True]
 
         This is equivalent to:
+
         >>> pipeline = dt.Value(value=2) >> dt.LessThan(b=feature)
 
         Compare a constant to each element in a dynamic feature that samples
         values at each call:
+
         >>> from random import randint
         >>>
         >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
         >>> pipeline = 2 < random
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [False, True, False]
 
         This is equivalent to:
+
         >>> pipeline = (
         ...     dt.Value(value=2)
-        ...     >> dt.LessThan(value=lambda:
-        ...         [randint(0, 3) for _ in range(3)])
+        ...     >> dt.LessThan(b=lambda: [randint(0, 3) for _ in range(3)])
         ... )
 
         """
 
-        return Value(other) >> LessThan(self)
+        return Value(value=other) >> LessThan(b=self)
 
     def __le__(
         self: Feature,
@@ -3346,13 +3359,13 @@ class Feature(DeepTrackNode):
         """Check if this feature is less than or equal to another using '<='.
 
         This operator is shorthand for chaining with `LessThanOrEquals`.
-        The expression:
+        The expression
 
         >>> feature <= other
 
-        is equivalent to:
+        is equivalent to
 
-        >>> feature >> dt.LessThanOrEquals(value=other)
+        >>> feature >> dt.LessThanOrEquals(b=other)
 
         Internally, this method constructs a new `LessThanOrEquals` feature
         and uses the right-shift operator (`>>`) to chain the current feature
@@ -3375,6 +3388,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Compare each element in a feature to a constant:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = feature <= 2
         >>> result = pipeline()
@@ -3382,23 +3396,26 @@ class Feature(DeepTrackNode):
         [True, True, False]
 
         This is equivalent to:
-        >>> pipeline = feature >> dt.LessThanOrEquals(value=2)
+
+        >>> pipeline = feature >> dt.LessThanOrEquals(b=2)
 
         Compare to a dynamic cutoff that samples values at each call:
+
         >>> import numpy as np
         >>>
         >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
         >>> pipeline = feature <= random_cutoff
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [False, False, False]
 
         This is equivalent to:
-        >>> pipeline = feature >> dt.LessThanOrEquals(value=random_cutoff)
+
+        >>> pipeline = feature >> dt.LessThanOrEquals(b=random_cutoff)
 
         """
 
-        return self >> LessThanOrEquals(other)
+        return self >> LessThanOrEquals(b=other)
 
     def __rle__(
         self: Feature,
@@ -3407,11 +3424,11 @@ class Feature(DeepTrackNode):
         """Check if other is less than or equal to feature using right '<='.
 
         This operator is the right-hand version of `<=`, enabling expressions
-        where the `Feature` appears on the right-hand side. The expression:
+        where the `Feature` appears on the right-hand side. The expression
 
         >>> other <= feature
 
-        is equivalent to:
+        is equivalent to
 
         >>> dt.Value(value=other) >> dt.LessThanOrEquals(b=feature)
 
@@ -3435,6 +3452,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Compare a constant to each element in a feature:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = 2 <= feature
         >>> result = pipeline()
@@ -3442,28 +3460,32 @@ class Feature(DeepTrackNode):
         [False, True, True]
 
         This is equivalent to:
+
         >>> pipeline = dt.Value(value=2) >> dt.LessThanOrEquals(b=feature)
 
         Compare a constant to each element in a dynamic feature that samples
         values at each call:
+
         >>> from random import randint
         >>>
         >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
         >>> pipeline = 2 <= random
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [True, False, False]
 
         This is equivalent to:
+
         >>> pipeline = (
         ...     dt.Value(value=2)
-        ...     >> dt.LessThanOrEquals(value=lambda:
-        ...         [randint(0, 3) for _ in range(3)])
+        ...     >> dt.LessThanOrEquals(
+        ...         b=lambda: [randint(0, 3) for _ in range(3)]
+        ...     )
         ... )
 
         """
 
-        return Value(other) >> LessThanOrEquals(self)
+        return Value(value=other) >> LessThanOrEquals(b=self)
 
     def __ge__(
         self: Feature,
@@ -3472,13 +3494,13 @@ class Feature(DeepTrackNode):
         """Check if this feature is greater than or equal to other using '>='.
 
         This operator is shorthand for chaining with `GreaterThanOrEquals`.
-        The expression:
+        The expression
 
         >>> feature >= other
 
-        is equivalent to:
+        is equivalent to
 
-        >>> feature >> dt.GreaterThanOrEquals(value=other)
+        >>> feature >> dt.GreaterThanOrEquals(b=other)
 
         Internally, this method constructs a new `GreaterThanOrEquals` feature
         and uses the right-shift operator (`>>`) to chain the current feature
@@ -3501,6 +3523,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Compare each element in a feature to a constant:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = feature >= 2
         >>> result = pipeline()
@@ -3508,23 +3531,26 @@ class Feature(DeepTrackNode):
         [False, True, True]
 
         This is equivalent to:
-        >>> pipeline = feature >> dt.GreaterThanOrEquals(value=2)
+
+        >>> pipeline = feature >> dt.GreaterThanOrEquals(b=2)
 
         Compare to a dynamic cutoff that samples values at each call:
+
         >>> import numpy as np
         >>>
         >>> random_cutoff = dt.Value(value=lambda: np.random.randint(3))
         >>> pipeline = feature >= random_cutoff
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [True, True, True]
 
         This is equivalent to:
-        >>> pipeline = feature >> dt.GreaterThanOrEquals(value=random_cutoff)
+
+        >>> pipeline = feature >> dt.GreaterThanOrEquals(b=random_cutoff)
 
         """
 
-        return self >> GreaterThanOrEquals(other)
+        return self >> GreaterThanOrEquals(b=other)
 
     def __rge__(
         self: Feature,
@@ -3533,11 +3559,11 @@ class Feature(DeepTrackNode):
         """Check if other is greater than or equal to feature using right '>='.
 
         This operator is the right-hand version of `>=`, enabling expressions
-        where the `Feature` appears on the right-hand side. The expression:
+        where the `Feature` appears on the right-hand side. The expression
 
         >>> other >= feature
 
-        is equivalent to:
+        is equivalent to
 
         >>> dt.Value(value=other) >> dt.GreaterThanOrEquals(b=feature)
 
@@ -3561,6 +3587,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Compare a constant to each element in a feature:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = 2 >= feature
         >>> result = pipeline()
@@ -3568,31 +3595,31 @@ class Feature(DeepTrackNode):
         [True, True, False]
 
         This is equivalent to:
-        >>> pipeline = (
-        ...     dt.Value(value=2)
-        ...     >> dt.GreaterThanOrEquals(b=feature)
-        ... )
+
+        >>> pipeline = (dt.Value(value=2) >> dt.GreaterThanOrEquals(b=feature))
 
         Compare a constant to each element in a dynamic feature that samples
         values at each call:
+
         >>> from random import randint
         >>>
         >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
         >>> pipeline = 2 >= random
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [True, False, True]
 
         This is equivalent to:
         >>> pipeline = (
         ...     dt.Value(value=2)
-        ...     >> dt.GreaterThanOrEquals(value=lambda:
-        ...         [randint(0, 3) for _ in range(3)])
+        ...     >> dt.GreaterThanOrEquals(
+        ...         b=lambda: [randint(0, 3) for _ in range(3)]
+        ...     )
         ... )
 
         """
 
-        return Value(other) >> GreaterThanOrEquals(self)
+        return Value(value=other) >> GreaterThanOrEquals(b=self)
 
     def __xor__(
         self: Feature,
@@ -3698,7 +3725,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
         >>> pipeline = feature & random
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [1, 2, 3, 3, 1, 3]
 
@@ -3756,7 +3783,7 @@ class Feature(DeepTrackNode):
         >>>
         >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
         >>> pipeline = random & feature
-        >>> result = pipeline.update()()
+        >>> result = pipeline()
         >>> result
         [0, 3, 1, 1, 2, 3]
 
@@ -3960,26 +3987,23 @@ class Feature(DeepTrackNode):
         return new_list
 
 
-def propagate_data_to_dependencies(feature: Feature, **kwargs: dict[str, Any]) -> None:
+def propagate_data_to_dependencies(
+    feature: Feature,
+    **kwargs: Any,
+) -> None:
     """Updates the properties of dependencies in a feature's dependency tree.
 
-    This function traverses the dependency tree of the given feature and 
-    updates the properties of each dependency based on the provided keyword 
-    arguments. Only properties that already exist in the `PropertyDict` of a 
+    This function traverses the dependency tree of the given feature and
+    updates the properties of each dependency based on the provided keyword
+    arguments. Only properties that already exist in the `PropertyDict` of a
     dependency are updated.
-
-    By dynamically updating the properties in the dependency tree, this 
-    function ensures that any changes in the feature's context or configuration
-    are propagated correctly to its dependencies.
 
     Parameters
     ----------
     feature: Feature
-        The feature whose dependencies are to be updated. The dependencies are 
-        recursively traversed to ensure that all relevant nodes in the 
-        dependency tree are considered.
-    **kwargs: dict of str, Any
-        Key-value pairs specifying the property names and their corresponding 
+        The feature whose dependencies are to be updated.
+    **kwargs: Any
+        Key-value pairs specifying the property names and their corresponding
         values to be set in the dependencies. Only properties that exist in the
         `PropertyDict` of a dependency will be updated.
 
@@ -3988,6 +4012,7 @@ def propagate_data_to_dependencies(feature: Feature, **kwargs: dict[str, Any]) -
     >>> import deeptrack as dt
 
     Update the properties of a feature and its dependencies:
+
     >>> feature = dt.DummyFeature(value=10)
     >>> dt.propagate_data_to_dependencies(feature, value=20)
     >>> feature.value()
@@ -3998,11 +4023,11 @@ def propagate_data_to_dependencies(feature: Feature, **kwargs: dict[str, Any]) -
 
     """
 
-    for dep in feature.recurse_dependencies():
-        if isinstance(dep, PropertyDict):
+    for dependecy in feature.recurse_dependencies():
+        if isinstance(dependecy, PropertyDict):
             for key, value in kwargs.items():
-                if key in dep:
-                    dep[key].set_value(value)
+                if key in dependecy:
+                    dependecy[key].set_value(value)
 
 
 class StructuralFeature(Feature):
