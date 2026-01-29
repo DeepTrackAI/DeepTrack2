@@ -204,6 +204,39 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(f3.node_name, "CustomName")
         self.assertEqual(f3.properties["name"](), "CustomName")
 
+    def test_Feature___call__(self):  # TODO
+        pass
+
+    def test_Feature__to_sequential(self):  # TODO
+        pass
+
+    def test_Feature__action(self):  # TODO
+        pass
+
+    def test_Feature_update(self):  # TODO
+        pass
+
+    def test_Feature_add_feature(self):  # TODO
+        pass
+
+    def test_Feature_seed(self):  # TODO
+        pass
+
+    def test_Feature_bind_arguments(self):  # TODO
+        pass
+
+    def test_Feature_plot(self):  # TODO
+        pass
+
+    def test_Feature__normalize(self):  # TODO
+        pass
+
+    def test_Feature__process_properties(self):  # TODO
+        pass
+
+    def test_Feature__activate_sources(self):  # TODO
+        pass
+
     def test_Feature_torch_numpy_get_backend_dtype_to(self):
         feature = features.DummyFeature()
 
@@ -536,6 +569,75 @@ class TestFeatures(unittest.TestCase):
         pipeline = 10 ** feature
         self.assertEqual(pipeline(), [100, 1_000, 10_000])
 
+        # __gt__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = feature > 2 
+        self.assertEqual(pipeline(), [False, False, True])
+
+        feature1 = features.Value(value=[1, 2, 3])
+        feature2 = features.Value(value=[3, 2, 1])
+        pipeline = feature1 > feature2
+        self.assertEqual(pipeline(), [False, False, True])
+
+        # __rgt__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = 2 > feature
+        self.assertEqual(pipeline(), [True, False, False])
+
+        # __lt__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = feature < 2 
+        self.assertEqual(pipeline(), [True, False, False])
+
+        feature1 = features.Value(value=[1, 2, 3])
+        feature2 = features.Value(value=[3, 2, 1])
+        pipeline = feature1 < feature2
+        self.assertEqual(pipeline(), [True, False, False])
+
+        # __rlt__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = 2 < feature
+        self.assertEqual(pipeline(), [False, False, True])
+
+        # __le__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = feature <= 2 
+        self.assertEqual(pipeline(), [True, True, False])
+
+        feature1 = features.Value(value=[1, 2, 3])
+        feature2 = features.Value(value=[3, 2, 1])
+        pipeline = feature1 <= feature2
+        self.assertEqual(pipeline(), [True, True, False])
+
+        # __rle__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = 2 <= feature
+        self.assertEqual(pipeline(), [False, True, True])
+
+        # __ge__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = feature >= 2 
+        self.assertEqual(pipeline(), [False, True, True])
+
+        feature1 = features.Value(value=[1, 2, 3])
+        feature2 = features.Value(value=[3, 2, 1])
+        pipeline = feature1 >= feature2
+        self.assertEqual(pipeline(), [False, True, True])
+
+        # __rge__
+        feature = features.Value(value=[1, 2, 3])
+        pipeline = 2 >= feature
+        self.assertEqual(pipeline(), [True, True, False])
+
+    def test_Feature___xor__(self):  # TODO
+        pass
+
+    def test_Feature___and__and__rand__(self):  # TODO
+        pass
+
+    def test_Feature___getitem__(self):  # TODO
+        pass
+
     def test_Feature_basics(self):
 
         F = features.DummyFeature()
@@ -836,17 +938,6 @@ class TestFeatures(unittest.TestCase):
         )
 
         self.assertEqual(D.total(), A.r() + B.r() + C.r() + D.r())
-
-    def test_backend_switching(self):
-
-        f = features.Add(b=5)
-
-        f.numpy()
-        self.assertEqual(f.get_backend(), "numpy")
-
-        if TORCH_AVAILABLE:
-            f.torch()
-            self.assertEqual(f.get_backend(), "torch")
 
 
     def test_Chain(self):
