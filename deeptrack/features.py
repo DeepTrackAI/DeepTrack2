@@ -3991,7 +3991,7 @@ def propagate_data_to_dependencies(
     feature: Feature,
     **kwargs: Any,
 ) -> None:
-    """Updates the properties of dependencies in a feature's dependency tree.
+    """Update the properties of dependencies in a feature's dependency tree.
 
     This function traverses the dependency tree of the given feature and
     updates the properties of each dependency based on the provided keyword
@@ -4023,11 +4023,11 @@ def propagate_data_to_dependencies(
 
     """
 
-    for dependecy in feature.recurse_dependencies():
-        if isinstance(dependecy, PropertyDict):
+    for dependency in feature.recurse_dependencies():
+        if isinstance(dependency, PropertyDict):
             for key, value in kwargs.items():
-                if key in dependecy:
-                    dependecy[key].set_value(value)
+                if key in dependency:
+                    dependency[key].set_value(value)
 
 
 class StructuralFeature(Feature):
