@@ -994,6 +994,7 @@ class MieScatterer(FieldScatterer):
             properties["collection_angle"] = np.arcsin(
                 properties["NA"] / properties["refractive_index_medium"]
             )
+        print('properties:', properties)
 
         if properties["offset_z"] == "auto":
             size = (
@@ -1006,7 +1007,7 @@ class MieScatterer(FieldScatterer):
             properties["offset_z"] = (
                 min_edge_size
                 * 0.45
-                * min(properties["voxel_size"][:2])
+                * min(get_active_voxel_size()[:2])# * min(properties["voxel_size"][:2])
                 / np.tan(properties["collection_angle"])
             )
         return properties
@@ -1155,24 +1156,46 @@ class MieScatterer(FieldScatterer):
         **kwargs,
     ) -> ArrayLike[float]:
         """Abstract method to initialize the Mie scatterer"""
-        
-        # Get size of the output.
+
+        # Get size of the output, considers upscale.
         xSize, ySize = self.get_xy_size(output_region, padding)
+
+        # Voxel size, considers upscale.
         voxel_size = get_active_voxel_size()
+
+        # Scale, considers upscale.
         scale = get_active_scale()
+
+        # Create array to calculate on. Will contain the complex optical field 
+        # sampled on the objective pupil plane, stored on a numerical grid that 
+        # will later be Fourier-transformed to obtain the detector image. 
+        # Pad to make fft efficient.
         arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
+        
+        # Scale particle position to meters. Considers upscale.
         position = np.array(position) * scale[: len(position)] * voxel_size[: len(position)]
-
+        
+        #  Diameter of the objective pupil plane that corresponds to the 
+        # numerical aperture (NA). Rays outside this circle are blocked by the 
+        # objective. 
         pupil_physical_size = working_distance * np.tan(collection_angle) * 2
-
-        z = z * voxel_size[2]
-
-        ratio = offset_z / (working_distance - z)
+        
+         # Scale zposition to meters. Considers upscale. ### Check units
+        z = z * voxel_size[2] * scale[2]
+        
+        # Geometric scaling factor that maps positions from the pupil plane to 
+        # the field-evaluation plane located at offset_z
+        ratio = (offset_z) / (working_distance - z)
 
         # Wave vector.
         k = 2 * np.pi / wavelength * refractive_index_medium
 
-        # Position of objective relative particle.
+
+        # The origin of the pupil coordinate system relative to the particle.
+        # position → particle lateral position (in meters)
+        # position_objective → optical axis reference (usually (0, 0))
+        # working_distance → distance from particle plane to pupil / back focal plane
+        # z → particle axial displacement
         relative_position = np.array(
             (
                 position_objective[0] - position[0],
@@ -1318,6 +1341,7 @@ class MieScatterer(FieldScatterer):
         fourier_field = (
             fourier_field * propagation_matrix * np.exp(-1j * k * offset_z) # Remove last part (from exp)) if Daniel
         )
+        print('fourier_field shape:', fourier_field.shape)
 
         if return_fft:
             return fourier_field[..., np.newaxis]

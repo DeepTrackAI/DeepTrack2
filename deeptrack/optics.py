@@ -405,12 +405,11 @@ class Microscope(StructuralFeature):
                     ),
                 )
 
-
             # Let the objective know about the limits of the volume and all the fields.
             propagate_data_to_dependencies(
                 self._objective,
                 limits=limits,
-                fields=field_samples, # should We add upscale?
+                fields=field_samples,
             )
 
             imaged_sample = self._objective.resolve(sample_volume)
