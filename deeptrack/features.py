@@ -4052,6 +4052,7 @@ def propagate_data_to_dependencies(
     #        stacklevel=2,
     #    )
 
+
 class StructuralFeature(Feature):
     """Provide the structure of a feature set without input transformations.
 
