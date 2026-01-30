@@ -668,8 +668,62 @@ class TestFeatures(unittest.TestCase):
     def test_Feature___and__and__rand__(self):  # TODO
         pass
 
-    def test_Feature___getitem__(self):  # TODO
-        pass
+    def test_Feature___getitem__(self):
+        base_feature = features.Value(value=np.array([10, 20, 30]))
+
+        # Constant index
+        indexed_feature = base_feature[1]
+        self.assertEqual(indexed_feature.resolve(), 20)
+
+        # Negative index
+        indexed_feature = base_feature[-1]
+        self.assertEqual(indexed_feature.resolve(), 30)
+
+        # Full slice (identity)
+        sliced_feature = base_feature[:]
+        np.testing.assert_array_equal(
+            sliced_feature.resolve(),
+            np.array([10, 20, 30]),
+        )
+
+        # Tail slice
+        sliced_feature = base_feature[1:]
+        np.testing.assert_array_equal(
+            sliced_feature.resolve(),
+            np.array([20, 30]),
+        )
+
+        # All-but-last slice
+        sliced_feature = base_feature[:-1]
+        np.testing.assert_array_equal(
+            sliced_feature.resolve(),
+            np.array([10, 20]),
+        )
+
+        # Strided slice
+        sliced_feature = base_feature[::2]
+        np.testing.assert_array_equal(
+            sliced_feature.resolve(),
+            np.array([10, 30]),
+        )
+
+        # Check that chaining still works
+        pipeline = base_feature[2] >> features.Add(b=5)
+        self.assertEqual(pipeline.resolve(), 35)
+
+        # 2D indexing and slicing
+        matrix_feature = features.Value(value=np.array([[1, 2, 3], [4, 5, 6]]))
+
+        # 2D index
+        indexed_feature = matrix_feature[0, 2]
+        self.assertEqual(indexed_feature.resolve(), 3)
+
+        # 2D slice
+        sliced_feature = matrix_feature[:, 1:]
+        np.testing.assert_array_equal(
+            sliced_feature.resolve(),
+            np.array([[2, 3], [5, 6]]),
+        )
 
     def test_Feature_basics(self):
 
@@ -1678,84 +1732,83 @@ class TestFeatures(unittest.TestCase):
         self.assertTrue(np.allclose(added_image, input_image + 10))
 
 
-    def test_Slice_constant(self):  # TODO
-        image = np.arange(9).reshape((3, 3))
+    def test_Slice_constant(self):
+        inputs = np.arange(9).reshape((3, 3))
 
         A = features.DummyFeature()
 
         A0 = A[0]
-        a0 = A0.resolve(image)
-        self.assertEqual(a0.tolist(), image[0].tolist())
+        a0 = A0.resolve(inputs)
+        self.assertEqual(a0.tolist(), inputs[0].tolist())
 
         A1 = A[1]
-        a1 = A1.resolve(image)
-        self.assertEqual(a1.tolist(), image[1].tolist())
+        a1 = A1.resolve(inputs)
+        self.assertEqual(a1.tolist(), inputs[1].tolist())
 
         A22 = A[2, 2]
-        a22 = A22.resolve(image)
-        self.assertEqual(a22, image[2, 2])
+        a22 = A22.resolve(inputs)
+        self.assertEqual(a22, inputs[2, 2])
 
         A12 = A[1, lambda: -1]
-        a12 = A12.resolve(image)
-        self.assertEqual(a12, image[1, -1])
+        a12 = A12.resolve(inputs)
+        self.assertEqual(a12, inputs[1, -1])
 
-    def test_Slice_colon(self):  # TODO
-        input = np.arange(16).reshape((4, 4))
+    def test_Slice_colon(self):
+        inputs = np.arange(16).reshape((4, 4))
 
         A = features.DummyFeature()
 
         A0 = A[0, :1]
-        a0 = A0.resolve(input)
-        self.assertEqual(a0.tolist(), input[0, :1].tolist())
+        a0 = A0.resolve(inputs)
+        self.assertEqual(a0.tolist(), inputs[0, :1].tolist())
 
         A1 = A[1, lambda: 0 : lambda: 4 : lambda: 2]
-        a1 = A1.resolve(input)
-        self.assertEqual(a1.tolist(), input[1, 0:4:2].tolist())
+        a1 = A1.resolve(inputs)
+        self.assertEqual(a1.tolist(), inputs[1, 0:4:2].tolist())
 
         A2 = A[lambda: slice(0, 4, 1), 2]
-        a2 = A2.resolve(input)
-        self.assertEqual(a2.tolist(), input[:, 2].tolist())
+        a2 = A2.resolve(inputs)
+        self.assertEqual(a2.tolist(), inputs[:, 2].tolist())
 
         A3 = A[lambda: 0 : lambda: 2, :]
-        a3 = A3.resolve(input)
-        self.assertEqual(a3.tolist(), input[0:2, :].tolist())
+        a3 = A3.resolve(inputs)
+        self.assertEqual(a3.tolist(), inputs[0:2, :].tolist())
 
-    def test_Slice_ellipse(self):  # TODO
-
-        input = np.arange(16).reshape((4, 4))
+    def test_Slice_ellipse(self):
+        inputs = np.arange(16).reshape((4, 4))
 
         A = features.DummyFeature()
 
         A0 = A[..., :1]
-        a0 = A0.resolve(input)
-        self.assertEqual(a0.tolist(), input[..., :1].tolist())
+        a0 = A0.resolve(inputs)
+        self.assertEqual(a0.tolist(), inputs[..., :1].tolist())
 
         A1 = A[..., lambda: 0 : lambda: 4 : lambda: 2]
-        a1 = A1.resolve(input)
-        self.assertEqual(a1.tolist(), input[..., 0:4:2].tolist())
+        a1 = A1.resolve(inputs)
+        self.assertEqual(a1.tolist(), inputs[..., 0:4:2].tolist())
 
         A2 = A[lambda: slice(0, 4, 1), ...]
-        a2 = A2.resolve(input)
-        self.assertEqual(a2.tolist(), input[:, ...].tolist())
+        a2 = A2.resolve(inputs)
+        self.assertEqual(a2.tolist(), inputs[:, ...].tolist())
 
         A3 = A[lambda: 0 : lambda: 2, lambda: ...]
-        a3 = A3.resolve(input)
-        self.assertEqual(a3.tolist(), input[0:2, ...].tolist())
+        a3 = A3.resolve(inputs)
+        self.assertEqual(a3.tolist(), inputs[0:2, ...].tolist())
 
-    def test_Slice_static_dynamic(self):  # TODO
-        image = np.arange(27).reshape((3, 3, 3))
-        expected_output = image[:, 1:2, ::-2]
+    def test_Slice_static_dynamic(self):
+        inputs = np.arange(27).reshape((3, 3, 3))
+        expected_output = inputs[:, 1:2, ::-2]
 
         feature = features.DummyFeature()
 
         static_slicing = feature[:, 1:2, ::-2]
-        static_output = static_slicing.resolve(image)
+        static_output = static_slicing.resolve(inputs)
         self.assertTrue(np.array_equal(static_output, expected_output))
 
         dynamic_slicing = feature >> features.Slice(
             slices=(slice(None), slice(1, 2), slice(None, None, -2))
         )
-        dinamic_output = dynamic_slicing.resolve(image)
+        dinamic_output = dynamic_slicing.resolve(inputs)
         self.assertTrue(np.array_equal(dinamic_output, expected_output))
 
 
