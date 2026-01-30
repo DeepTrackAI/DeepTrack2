@@ -654,8 +654,16 @@ class TestFeatures(unittest.TestCase):
         pipeline = 2 >= feature
         self.assertEqual(pipeline(), [True, True, False])
 
-    def test_Feature___xor__(self):  # TODO
-        pass
+    def test_Feature___xor__(self):
+        add_one = features.Add(b=1)
+
+        pipeline = features.Value(value=0) >> (add_one ^ 3)
+        self.assertEqual(pipeline.resolve(), 3)
+
+        # Defensive: non-integer repetition should fail.
+        with self.assertRaises(ValueError):
+            pipeline = add_one ^ 2.5
+            pipeline()
 
     def test_Feature___and__and__rand__(self):  # TODO
         pass
@@ -1626,7 +1634,7 @@ class TestFeatures(unittest.TestCase):
         self.assertTrue(is_transformed(output))
 
 
-    def test_Repeat(self):  # TODO
+    def test_Repeat(self):
         # Define a simple feature and pipeline
         add_ten = features.Add(b=10)
         pipeline = features.Repeat(add_ten, N=3)
