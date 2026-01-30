@@ -940,6 +940,36 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(D.total(), A.r() + B.r() + C.r() + D.r())
 
 
+    def test_propagate_data_to_dependencies(self):
+        feature = (
+            features.Value(value=np.ones((2, 2)))
+            >> features.Add(b=lambda: 1.0)
+            >> features.Multiply(b=lambda: 2.0)
+        )
+
+        out = feature()  # (1 + 1) * 2 = 4
+        np.testing.assert_array_equal(out, 4.0 * np.ones((2, 2)))
+
+        features.propagate_data_to_dependencies(feature, b=3.0)
+        out_default = feature()  # (1 + 3) * 3 = 12
+        np.testing.assert_array_equal(out_default, 12.0 * np.ones((2, 2)))
+
+        # With _ID
+        feature = (
+            features.Value(value=np.ones((2, 2)))
+            >> features.Add(b=lambda: 1.0)
+            >> features.Multiply(b=lambda: 2.0)
+        )
+
+        features.propagate_data_to_dependencies(feature, _ID=(1,), b=3.0)
+
+        out_ID_0 = feature(_ID=(0,))  # (1 + 1) * 2 = 4
+        np.testing.assert_array_equal(out_ID_0, 4.0 * np.ones((2, 2)))
+
+        out_ID_1 = feature(_ID=(1,))  # (1 + 3) * 3 = 12
+        np.testing.assert_array_equal(out_ID_1, 12.0 * np.ones((2, 2)))
+
+
     def test_Chain(self):
 
         class Addition(features.Feature):
