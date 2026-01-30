@@ -118,6 +118,30 @@ def test_operator(self, operator, emulated_operator=None):
         assessed_operator=operator,
     )
 
+    if TORCH_AVAILABLE:
+        grid_test_features(
+            self,
+            feature_a=features.Value,
+            feature_b=features.Value,
+            feature_a_inputs=[
+                {"value": torch.tensor(1.0)},
+                {"value": torch.tensor(0.5)},
+                {"value": torch.tensor(float("nan"))},
+                {"value": torch.tensor(float("inf"))},
+                {"value": torch.rand(10, 10)},
+            ],
+            feature_b_inputs=[
+                {"value": torch.tensor(1.0)},
+                {"value": torch.tensor(0.5)},
+                {"value": torch.tensor(float("nan"))},
+                {"value": torch.tensor(float("inf"))},
+                {"value": torch.rand(10, 10)},
+            ],
+            expected_result_function= \
+                lambda a, b: emulated_operator(a["value"], b["value"]),
+            assessed_operator=operator,
+        )
+
 
 class TestFeatures(unittest.TestCase):
 
@@ -971,55 +995,88 @@ class TestFeatures(unittest.TestCase):
         np.testing.assert_array_equal(out_ID_1, 12.0 * np.ones((2, 2)))
 
 
-    def test_Chain(self):  # TODO
+    def test_Chain(self):
 
         class Addition(features.Feature):
             """Simple feature that adds a constant."""
-            def get(self, image, **kwargs):
+            def get(self, inputs, **kwargs):
                 # 'addend' is a property set via self.properties (default: 0).
-                return image + self.properties.get("addend", 0)()
+                return inputs + self.properties.get("addend", 0)()
 
         class Multiplication(features.Feature):
             """Simple feature that multiplies by a constant."""
-            def get(self, image, **kwargs):
+            def get(self, inputs, **kwargs):
                 # 'multiplier' is a property set via self.properties
                 # (default: 1).
-                return image * self.properties.get("multiplier", 1)()
+                return inputs * self.properties.get("multiplier", 1)()
 
         A = Addition(addend=10)
         M = Multiplication(multiplier=0.5)
 
-        input_image = np.ones((2, 3))
+        inputs = np.ones((2, 3))
 
         chain_AM = features.Chain(A, M)
         self.assertTrue(
             np.array_equal(
-                chain_AM(input_image),
+                chain_AM(inputs),
                 (np.ones((2, 3)) + A.properties["addend"]())
                 * M.properties["multiplier"](),
             )
         )
         self.assertTrue(
             np.array_equal(
-                chain_AM(input_image),
-                (A >> M)(input_image),
+                chain_AM(inputs),
+                (A >> M)(inputs),
             )
         )
 
         chain_MA = features.Chain(M, A)
         self.assertTrue(
             np.array_equal(
-                chain_MA(input_image),
+                chain_MA(inputs),
                 (np.ones((2, 3)) * M.properties["multiplier"]()
                 + A.properties["addend"]()),
             )
         )
         self.assertTrue(
             np.array_equal(
-                chain_MA(input_image),
-                (M >> A)(input_image),
+                chain_MA(inputs),
+                (M >> A)(inputs),
             )
         )
+
+        if TORCH_AVAILABLE:
+            inputs = torch.ones((2, 3))
+
+            chain_AM = features.Chain(A, M)
+            self.assertTrue(
+                torch.allclose(
+                    chain_AM(inputs),
+                    (torch.ones((2, 3)) + A.properties["addend"]())
+                    * M.properties["multiplier"](),
+                )
+            )
+            self.assertTrue(
+                torch.allclose(
+                    chain_AM(inputs),
+                    (A >> M)(inputs),
+                )
+            )
+
+            chain_MA = features.Chain(M, A)
+            self.assertTrue(
+                torch.allclose(
+                    chain_MA(inputs),
+                    (torch.ones((2, 3)) * M.properties["multiplier"]()
+                    + A.properties["addend"]()),
+                )
+            )
+            self.assertTrue(
+                torch.allclose(
+                    chain_MA(inputs),
+                    (M >> A)(inputs),
+                )
+            )
 
 
     def test_DummyFeature(self):
@@ -1117,10 +1174,11 @@ class TestFeatures(unittest.TestCase):
             ))
 
 
-    def test_ArithmeticOperationFeature(self):  # TODO
+    def test_ArithmeticOperationFeature(self):
         # Basic addition with lists
-        addition_feature = \
-            features.ArithmeticOperationFeature(operator.add, b=10)
+        addition_feature = features.ArithmeticOperationFeature(
+            operator.add, b=10,
+        )
         input_values = [1, 2, 3, 4]
         expected_output = [11, 12, 13, 14]
         output = addition_feature(input_values)
