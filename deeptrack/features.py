@@ -692,6 +692,7 @@ class Feature(DeepTrackNode):
     def get(
         self: Feature,
         data: Any,
+        _ID: tuple[int, ...] = (),
         **kwargs: Any,
     ) -> Any:
         """Transform input data (abstract method).
@@ -704,6 +705,8 @@ class Feature(DeepTrackNode):
         data: Any
             The input data to be transformed, most commonly a NumPy array or a
             PyTorch tensor, but it can be anything.
+        _ID: tuple[int], optional
+            The unique identifier for the current execution. Defaults to ().
         **kwargs: Any
             The current value of all properties in the `properties` attribute,
             as well as any global arguments passed to the feature.
@@ -4054,7 +4057,7 @@ def propagate_data_to_dependencies(
     #    )
 
 
-class StructuralFeature(Feature):  # TODO
+class StructuralFeature(Feature):
     """Provide the structure of a feature set without input transformations.
 
     A `StructuralFeature` serves as a logical and organizational tool for
@@ -4071,25 +4074,21 @@ class StructuralFeature(Feature):  # TODO
 
     Attributes
     ----------
-    __property_verbosity__: int
-        Controls whether this feature's properties appear in the output
-        property list. A value of `2` hides them from the output.
     __distributed__: bool
-        If `True`, applies `.get()` to each element in a list individually.
-        If `False` (default), processes the entire list as a single unit.
+        If `False` (default), processes the entire input list as a single unit.
+        If `True`, applies `.get()` to each element in the list individually.
 
     """
 
-    __property_verbosity__: int = 2  # Hide properties from logs or output
     __distributed__: bool = False  # Process the entire image list in one call
 
 
-class Chain(StructuralFeature):  # TODO
+class Chain(StructuralFeature):
     """Resolve two features sequentially.
 
-    Applies two features sequentially: the outputs of `feature_1` are passed as
-    inputs to `feature_2`. This allows combining simple operations into complex
-    pipelines.
+    `Chain` applies two features sequentially: the outputs of `feature_1` are
+    passed as inputs to `feature_2`. This allows combining simple operations
+    into complex pipelines.
 
     The use of `Chain`
 
@@ -4128,8 +4127,8 @@ class Chain(StructuralFeature):  # TODO
     Create a feature chain where the first feature adds a constant offset, and 
     the second feature multiplies the result by a constant:
 
-    >>> A = dt.Add(value=10)
-    >>> M = dt.Multiply(value=0.5)
+    >>> A = dt.Add(b=10)
+    >>> M = dt.Multiply(b=0.5)
     >>>
     >>> chain = A >> M
 
@@ -4201,8 +4200,8 @@ class Chain(StructuralFeature):  # TODO
             The input data to transform sequentially. Most typically, this is
             a NumPy array or a PyTorch tensor.
         _ID: tuple[int, ...], optional
-            A unique identifier for caching or parallel execution. It defaults
-            to an empty tuple.
+            A unique identifier for caching or parallel execution. 
+            Defaults to an empty tuple.
         **kwargs: Any
             Additional parameters passed to or sampled by the features. These
             are unused here, as each sub-feature fetches its required
@@ -4431,7 +4430,7 @@ class Value(Feature):
         return value
 
 
-class ArithmeticOperationFeature(Feature):  # TODO
+class ArithmeticOperationFeature(Feature):
     """Apply an arithmetic operation element-wise to the inputs.
 
     This feature performs an arithmetic operation (e.g., addition, subtraction,
@@ -4440,13 +4439,13 @@ class ArithmeticOperationFeature(Feature):  # TODO
 
     If a list is passed, the operation is applied to each element.
 
-    If both inputs are lists of different lengths, the shorter list is cycled.
+    If the inputs are lists of different lengths, the shorter list is cycled.
 
     Parameters
     ----------
     op: Callable[[Any, Any], Any]
-        The arithmetic operation to apply, such as a built-in operator 
-        (`operator.add`, `operator.mul`) or a custom callable.
+        The arithmetic operation to apply, such as a built-in operator
+        (e.g., `operator.add`, `operator.mul`) or a custom callable.
     b: Any or list[Any], optional
         The second operand for the operation. Defaults to 0. If a list is
         provided, the operation will apply element-wise.
@@ -4538,23 +4537,23 @@ class ArithmeticOperationFeature(Feature):  # TODO
         Parameters
         ----------
         a: list[Any]
-            The input data, either a single value or a list of values, to be 
+            The input data, either a single value or a list of values, to be
             transformed by the arithmetic operation.
         b: Any or list[Any]
-            The second operand(s) for the operation. If a single value is 
-            provided, it is broadcast to match the input size. If a list is 
+            The second operand(s) for the operation. If a single value is
+            provided, it is broadcast to match the input size. If a list is
             provided, it will be cycled to match the length of the input list.
         **kwargs: Any
-            Additional parameters or property overrides. These are generally 
-            unused in this context but provided for compatibility with the 
+            Additional parameters or property overrides. These are generally
+            unused in this context but provided for compatibility with the
             `Feature` interface.
 
         Returns
         -------
         list[Any]
-            A list containing the results of applying the operation to the 
+            A list containing the results of applying the operation to the
             input data element-wise.
-            
+
         """
 
         # Note that a is ensured to be a list by the parent class.
@@ -4573,7 +4572,7 @@ class ArithmeticOperationFeature(Feature):  # TODO
         return [self.op(x, y) for x, y in zip(a, b)]
 
 
-class Add(ArithmeticOperationFeature):  # TODO
+class Add(ArithmeticOperationFeature):
     """Add a value to the input.
     
     This feature performs element-wise addition (+) to the input.
@@ -4639,7 +4638,7 @@ class Add(ArithmeticOperationFeature):  # TODO
         super().__init__(operator.add, b=b, **kwargs)
 
 
-class Subtract(ArithmeticOperationFeature):  # TODO
+class Subtract(ArithmeticOperationFeature):
     """Subtract a value from the input.
 
     This feature performs element-wise subtraction (-) from the input.
@@ -4696,7 +4695,7 @@ class Subtract(ArithmeticOperationFeature):  # TODO
             The value to subtract from the input. Defaults to 0.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature`.
-       
+
         """
 
         # Backward compatibility with deprecated 'value' parameter taken care
@@ -4705,7 +4704,7 @@ class Subtract(ArithmeticOperationFeature):  # TODO
         super().__init__(operator.sub, b=b, **kwargs)
 
 
-class Multiply(ArithmeticOperationFeature):  # TODO
+class Multiply(ArithmeticOperationFeature):
     """Multiply the input by a value.
 
     This feature performs element-wise multiplication (*) of the input.
@@ -4771,7 +4770,7 @@ class Multiply(ArithmeticOperationFeature):  # TODO
         super().__init__(operator.mul, b=b, **kwargs)
 
 
-class Divide(ArithmeticOperationFeature):  # TODO
+class Divide(ArithmeticOperationFeature):
     """Divide the input with a value.
 
     This feature performs element-wise division (/) of the input.
@@ -4837,13 +4836,13 @@ class Divide(ArithmeticOperationFeature):  # TODO
         super().__init__(operator.truediv, b=b, **kwargs)
 
 
-class FloorDivide(ArithmeticOperationFeature):  # TODO
+class FloorDivide(ArithmeticOperationFeature):
     """Divide the input with a value.
 
     This feature performs element-wise floor division (//) of the input.
     
-    Floor division produces an integer result when both operands are integers, 
-    but truncates towards negative infinity when operands are floating-point 
+    Floor division produces an integer result when both operands are integers,
+    but truncates towards negative infinity when operands are floating-point
     numbers.
     
     Parameters
@@ -4907,7 +4906,7 @@ class FloorDivide(ArithmeticOperationFeature):  # TODO
         super().__init__(operator.floordiv, b=b, **kwargs)
 
 
-class Power(ArithmeticOperationFeature):  # TODO
+class Power(ArithmeticOperationFeature):
     """Raise the input to a power.
 
     This feature performs element-wise power (**) of the input.
@@ -4973,7 +4972,7 @@ class Power(ArithmeticOperationFeature):  # TODO
         super().__init__(operator.pow, b=b, **kwargs)
 
 
-class LessThan(ArithmeticOperationFeature):  # TODO
+class LessThan(ArithmeticOperationFeature):
     """Determine whether input is less than value.
 
     This feature performs element-wise comparison (<) of the input.
@@ -5039,7 +5038,7 @@ class LessThan(ArithmeticOperationFeature):  # TODO
         super().__init__(operator.lt, b=b, **kwargs)
 
 
-class LessThanOrEquals(ArithmeticOperationFeature):  # TODO
+class LessThanOrEquals(ArithmeticOperationFeature):
     """Determine whether input is less than or equal to value.
 
     This feature performs element-wise comparison (<=) of the input.
@@ -5108,7 +5107,7 @@ class LessThanOrEquals(ArithmeticOperationFeature):  # TODO
 LessThanOrEqual = LessThanOrEquals
 
 
-class GreaterThan(ArithmeticOperationFeature):  # TODO
+class GreaterThan(ArithmeticOperationFeature):
     """Determine whether input is greater than value.
 
     This feature performs element-wise comparison (>) of the input.
@@ -5174,7 +5173,7 @@ class GreaterThan(ArithmeticOperationFeature):  # TODO
         super().__init__(operator.gt, b=b, **kwargs)
 
 
-class GreaterThanOrEquals(ArithmeticOperationFeature):  # TODO
+class GreaterThanOrEquals(ArithmeticOperationFeature):
     """Determine whether input is greater than or equal to value.
 
     This feature performs element-wise comparison (>=) of the input.
