@@ -1527,6 +1527,7 @@ class Feature(DeepTrackNode):
                 "A quick fix is to pass the information when resolving the "
                 "feature. The prefered solution is to use dt.Arguments",
                 DeprecationWarning,
+                stacklevel=2,
             )
 
         super().update()
@@ -2956,7 +2957,7 @@ class Feature(DeepTrackNode):
         
         """
 
-        return Value(value=other) >> FloorDivide(value=self)
+        return Value(value=other) >> FloorDivide(b=self)
 
     def __pow__(
         self: Feature,
@@ -4519,6 +4520,7 @@ class ArithmeticOperationFeature(Feature):
                 "The 'value' parameter is deprecated and will be removed"
                 "in a future version. Use 'b' instead.",
                 DeprecationWarning,
+                stacklevel=2,
             )
 
         super().__init__(b=b, **kwargs)
@@ -6254,6 +6256,7 @@ class BindUpdate(StructuralFeature):  # DEPRECATED
             "equivalent to prior implementations. "
             "Please use Bind instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         super().__init__(**kwargs)
@@ -6407,6 +6410,7 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
             "ConditionalSetFeature is deprecated and may be removed in a "
             "future release. Please use Arguments instead when possible.",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         if isinstance(condition, str):
@@ -6586,6 +6590,7 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
             "ConditionalSetFeature is deprecated and may be removed in a "
             "future release. Please use Arguments instead when possible.",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         if isinstance(condition, str):
@@ -7685,6 +7690,7 @@ class ChannelFirst2d(Feature):  # DEPRECATED
             "future release. The current implementation is not guaranteed "
             "to be exactly equivalent to prior implementations.",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         super().__init__(axis=axis, **kwargs)
