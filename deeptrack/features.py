@@ -110,7 +110,7 @@ Arithmetic Feature Classes:
 
 Functions:
 
-- `propagate_data_to_dependencies(feature, **kwargs) -> None`
+- `propagate_data_to_dependencies(feature, _ID, **kwargs) -> None`
 
     Propagates data to all dependencies of a feature, updating their properties
     with the provided values.
@@ -812,7 +812,7 @@ class Feature(DeepTrackNode):
             # If there are no self.arguments, instead propagate the values of
             # the kwargs to all properties in the computation graph.
             if kwargs and self.arguments is None:
-                propagate_data_to_dependencies(self, **kwargs)
+                propagate_data_to_dependencies(self, _ID=_ID, **kwargs)
 
             # If there are self.arguments, update the values of self.arguments
             # to match kwargs.
@@ -3989,23 +3989,26 @@ class Feature(DeepTrackNode):
 
 def propagate_data_to_dependencies(
     feature: Feature,
+    _ID: tuple[int, ...] = (),
     **kwargs: Any,
 ) -> None:
-    """Update the properties of dependencies in a feature's dependency tree.
+    """Propagate values to existing properties in the dependency tree.
 
-    This function traverses the dependency tree of the given feature and
-    updates the properties of each dependency based on the provided keyword
-    arguments. Only properties that already exist in the `PropertyDict` of a
-    dependency are updated.
+    This function traverses the dependency tree of `feature` and sets cached
+    values for matching properties. Only properties that already exist in a
+    dependency's `PropertyDict` are updated.
 
     Parameters
     ----------
     feature: Feature
-        The feature whose dependencies are to be updated.
+        The feature whose dependency tree will be traversed.
+    _ID: tuple[int, ...], optional
+        The dataset identifier to store the propagated values at. Defaults to
+        an empty tuple.
     **kwargs: Any
-        Key-value pairs specifying the property names and their corresponding
-        values to be set in the dependencies. Only properties that exist in the
-        `PropertyDict` of a dependency will be updated.
+        Key-value pairs mapping property names to values. A value is propagated
+        only if the corresponding property already exists in the dependency
+        tree.
 
     Examples
     --------
@@ -4018,17 +4021,36 @@ def propagate_data_to_dependencies(
     >>> feature.value()
     20
 
-    This will update the `value` property of the `feature` and its 
-    dependencies, provided they have a property named `value`.
+    >>> Update the properties of a feature and its dependencies at given `_ID`:
+
+    >>> feature = dt.Value(value=1) >> dt.Add(b=1.0) >> dt.Multiply(b=2.0)
+    >>> dt.propagate_data_to_dependencies(feature, _ID=(1,), b=3.0)
+    >>> feature(_ID=(0,))
+    4.0
+    >>> feature(_ID=(1,))
+    12.0
 
     """
+
+    # TODO Decide whether to keep warning
+    #matched_keys: set[str] = set()
 
     for dependency in feature.recurse_dependencies():
         if isinstance(dependency, PropertyDict):
             for key, value in kwargs.items():
                 if key in dependency:
-                    dependency[key].set_value(value)
+                    dependency[key].set_value(value, _ID=_ID)
 
+                    #matched_keys.add(key)
+
+    #unmatched_keys = set(kwargs) - matched_keys
+    #if unmatched_keys:
+    #    warnings.warn(
+    #        "The following properties were not found in the dependency "
+    #        f"tree and were ignored: {sorted(unmatched_keys)}",
+    #        UserWarning,
+    #        stacklevel=2,
+    #    )
 
 class StructuralFeature(Feature):
     """Provide the structure of a feature set without input transformations.
