@@ -4226,18 +4226,17 @@ Branch = Chain  # Alias for backwards compatibility
 class DummyFeature(Feature):
     """A no-op feature that simply returns the inputs unchanged.
 
-    `DummyFeature` can serve as a container for properties that don't directly 
-    transform the data but need to be logically grouped. 
+    `DummyFeature` can serve as a container for properties that do not directly
+    transform the data but need to be logically grouped.
     
-    Since it inherits from `Feature`, any keyword arguments passed to the
-    constructor are stored as `Property` instances in `self.properties`,
-    enabling dynamic behavior or parameterization without performing any
-    transformations on the input data.
+    Any keyword arguments passed to the constructor are stored as `Property`
+    instances in `self.properties`, enabling dynamic behavior or
+    parameterization without performing any transformations on the input data.
 
     Parameters
     ----------
     inputs: Any, optional
-        Optional inputs for the feature. Defaults to an empty list [].
+        Optional inputs for the feature. Defaults to an empty list.
     **kwargs: Any
         Additional keyword arguments are wrapped as `Property` instances and 
         stored in `self.properties`.
@@ -4245,7 +4244,7 @@ class DummyFeature(Feature):
     Methods
     -------
     `get(inputs, **kwargs) -> Any`
-        It simply returns the inputs unchanged.
+        Simply returns the inputs unchanged.
 
     Examples
     --------
@@ -4271,7 +4270,7 @@ class DummyFeature(Feature):
 
     Access a property stored in DummyFeature:
 
-    >>> dummy_feature.properties["prop1"]()
+    >>> dummy_feature.prop1()
     42
 
     """
@@ -4283,8 +4282,8 @@ class DummyFeature(Feature):
     ) -> Any:
         """Return the input unchanged.
 
-        This method simply returns the input without any transformation. 
-        It adheres to the `Feature` interface by accepting additional keyword 
+        This method simply returns the input without any transformation.
+        It adheres to the `Feature` interface by accepting additional keyword
         arguments for consistency, although they are not used.
 
         Parameters
@@ -4292,8 +4291,8 @@ class DummyFeature(Feature):
         inputs: Any
             The input to pass through without modification.
         **kwargs: Any
-            Additional properties sampled from `self.properties` or passed 
-            externally. These are unused here but provided for consistency 
+            Additional properties sampled from `self.properties` or passed
+            externally. These are unused here but provided for consistency
             with the `Feature` interface.
 
         Returns
