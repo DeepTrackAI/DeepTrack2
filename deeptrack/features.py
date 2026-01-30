@@ -3806,7 +3806,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Stack(self)
 
-    def __getitem__(  # TODO
+    def __getitem__(
         self: Feature,
         slices: Any,
     ) -> Feature:
@@ -3835,13 +3835,13 @@ class Feature(DeepTrackNode):
         Parameters
         ----------
         slices: Any
-            The slice or index to apply to the feature output. Can be an int, 
+            The slice or index to apply to the feature output. Can be an int,
             slice object, or a tuple of them.
 
         Returns
         -------
         Feature
-            A new feature that applies slicing to the output of the current 
+            A new feature that applies slicing to the output of the current
             feature.
 
         Examples
@@ -3849,29 +3849,34 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Create a feature:
+
         >>> import numpy as np
         >>>
         >>> feature = dt.Value(value=np.arange(9).reshape(3, 3))
         >>> feature()
         array([[0, 1, 2],
-            [3, 4, 5],
-            [6, 7, 8]])
+               [3, 4, 5],
+               [6, 7, 8]])
 
         Slice a row:
+
         >>> sliced = feature[1]
         >>> sliced()
         array([3, 4, 5])
 
         This is equivalent to:
+
         >>> sliced = feature >> dt.Slice([1])
 
         Slice with multiple axes:
+
         >>> sliced = feature[1:, 1:]
         >>> sliced()
         array([[4, 5],
                [7, 8]])
 
         This is equivalent to:
+
         >>> sliced = feature >> dt.Slice([slice(1, None), slice(1, None)])
 
         """
@@ -5984,10 +5989,10 @@ class Combine(StructuralFeature):  # TODO
         return [f(inputs, **kwargs) for f in self.features]
 
 
-class Slice(Feature):  # TODO
+class Slice(Feature):
     """Dynamically apply array indexing to inputs.
 
-    This feature allows dynamic slicing of an image using integer indices, 
+    This feature allows dynamic slicing of an inoput using integer indices,
     slice objects, or ellipses (`...`).
 
     While normal array indexing is preferred for static cases, `Slice` is
@@ -5997,15 +6002,15 @@ class Slice(Feature):  # TODO
     Parameters
     ----------
     slices: tuple[int or slice or ellipsis] or list[int or slice or ellipsis]
-        The slicing instructions for each dimension. Each element corresponds 
+        The slicing instructions for each dimension. Each element corresponds
         to a dimension in the input image.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(inputs, slices, **kwargs) -> array or list[array]`
-        Applies the specified slices to the input image.
+    `get(inputs, slices, _ID, **kwargs) -> array`
+        Applies the specified slices to the input.
 
     Examples
     --------
@@ -6064,16 +6069,16 @@ class Slice(Feature):  # TODO
 
     def get(
         self: Slice,
-        array: ArrayLike[Any] | list[ArrayLike[Any]],
+        array: ArrayLike[Any],
         slices: slice | tuple[int | slice | Ellipsis, ...],
         **kwargs: Any,
-    ) -> ArrayLike[Any] | list[ArrayLike[Any]]:
-        """Apply the specified slices to the input image.
+    ) -> ArrayLike[Any]:
+        """Apply the specified slices to the input array.
 
         Parameters
         ----------
-        image: array or list[array]
-            The input array(s) to be sliced.
+        array: array
+            The input array to be sliced.
         slices: slice ellipsis or tuple[int or slice or ellipsis, ...]
             The slicing instructions for the input image. Typically it is a
             tuple. Each element in the tuple corresponds to a dimension in the
