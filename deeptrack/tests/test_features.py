@@ -40,14 +40,15 @@ def grid_test_features(
         callable(expected_result_function)
     ), "Result function must be callable"
 
-    for f_a_input, f_b_input \
-        in itertools.product(feature_a_inputs, feature_b_inputs):
+    for f_a_input, f_b_input in itertools.product(
+        feature_a_inputs, feature_b_inputs
+    ):
 
         f_a = feature_a(**f_a_input)
         f_b = feature_b(**f_b_input)
 
         f = assessed_operator(f_a, f_b)
-        tester.assertIsInstance(f, features.Feature)
+        tester.assertIsInstance(f, features.Chain)
 
         try:
             output = f()
