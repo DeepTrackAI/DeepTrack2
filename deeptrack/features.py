@@ -1,4 +1,4 @@
-"""Core features for building and processing pipelines in DeepTrack2.
+"""Core features for building and processing pipelines in DeepTrack2.  # TODO
 
 This module defines the core classes and utilities used to create and
 manipulate features in DeepTrack2, enabling users to build sophisticated data
@@ -242,7 +242,7 @@ MERGE_STRATEGY_APPEND: int = 1
 
 
 class Feature(DeepTrackNode):
-    """Base feature class.
+    """Base feature class.  # TODO
 
     Features define the data generation and transformation process.
     
@@ -610,7 +610,7 @@ class Feature(DeepTrackNode):
         """The device to be used during evaluation."""
         return self._device
 
-    def __init__(
+    def __init__(  # TODO
         self: Feature,
         _input: Any | None = None,
         **kwargs: Any,
@@ -722,7 +722,7 @@ class Feature(DeepTrackNode):
 
         raise NotImplementedError
 
-    def __call__(
+    def __call__(  # TODO
         self: Feature,
         data_list: Any = None,
         _ID: tuple[int, ...] = (),
@@ -838,7 +838,7 @@ class Feature(DeepTrackNode):
 
     resolve = __call__
 
-    def to_sequential(
+    def to_sequential(  # TODO
         self: Feature,
         **kwargs: Any,
     ) -> Feature:
@@ -1348,7 +1348,7 @@ class Feature(DeepTrackNode):
 
         return tuple(batched)
 
-    def _action(
+    def _action(  # TODO
         self: Feature,
         _ID: tuple[int, ...] = (),
     ) -> Any | list[Any]:
@@ -1460,7 +1460,7 @@ class Feature(DeepTrackNode):
         else:
             return image_list
 
-    def update(
+    def update(  # TODO
         self: Feature,
         **global_arguments: Any,
     ) -> Feature:
@@ -1534,7 +1534,7 @@ class Feature(DeepTrackNode):
 
         return self
 
-    def add_feature(
+    def add_feature(  # TODO
         self: Feature,
         feature: Feature,
     ) -> Feature:
@@ -1593,7 +1593,7 @@ class Feature(DeepTrackNode):
 
         return feature
 
-    def seed(
+    def seed(  # TODO
         self: Feature,
         updated_seed: int | None = None,
         _ID: tuple[int, ...] = (),
@@ -1696,7 +1696,7 @@ class Feature(DeepTrackNode):
 
         return seed
 
-    def bind_arguments(
+    def bind_arguments(  # TODO
         self: Feature,
         arguments: Arguments | Feature,
     ) -> Feature:
@@ -1752,7 +1752,7 @@ class Feature(DeepTrackNode):
 
         return self
 
-    def plot(
+    def plot(  # TODO
         self: Feature,
         input_image: (
             np.ndarray
@@ -1882,7 +1882,7 @@ class Feature(DeepTrackNode):
                 ),
             )
 
-    def _normalize(
+    def _normalize(  # TODO
         self: Feature,
         **properties: dict[str, Any],
     ) -> dict[str, Any]:
@@ -1919,7 +1919,7 @@ class Feature(DeepTrackNode):
 
         return properties
 
-    def _process_properties(
+    def _process_properties(  # TODO
         self: Feature,
         propertydict: dict[str, Any],
     ) -> dict[str, Any]:
@@ -1955,7 +1955,7 @@ class Feature(DeepTrackNode):
 
         return propertydict
 
-    def _activate_sources(
+    def _activate_sources(  # TODO
         self: Feature,
         x: SourceItem | list[SourceItem] | Any,
     ) -> None:
@@ -3622,7 +3622,7 @@ class Feature(DeepTrackNode):
 
         return Value(value=other) >> GreaterThanOrEquals(b=self)
 
-    def __xor__(
+    def __xor__(  # TODO
         self: Feature,
         other: int,
     ) -> Feature:
@@ -3680,7 +3680,7 @@ class Feature(DeepTrackNode):
 
         return Repeat(self, other)
 
-    def __and__(
+    def __and__(  # TODO
         self: Feature,
         other: Any,
     ) -> Feature:
@@ -3737,7 +3737,7 @@ class Feature(DeepTrackNode):
 
         return self >> Stack(other)
 
-    def __rand__(
+    def __rand__(  # TODO
         self: Feature,
         other: Any,
     ) -> Feature:
@@ -3799,7 +3799,7 @@ class Feature(DeepTrackNode):
 
         return Value(other) >> Stack(self)
 
-    def __getitem__(
+    def __getitem__(  # TODO
         self: Feature,
         slices: Any,
     ) -> Feature:
@@ -3879,7 +3879,7 @@ class Feature(DeepTrackNode):
 
     # Private properties to dispatch based on config.
     @property
-    def _format_input(self: Feature) -> Callable[[Any], list[Any or Image]]:
+    def _format_input(self: Feature) -> Callable[[Any], list[Any or Image]]:  # TODO
         """Select the appropriate input formatting function for configuration.
 
         Returns either `_image_wrapped_format_input` or
@@ -3897,7 +3897,7 @@ class Feature(DeepTrackNode):
         return self._no_wrap_format_input
 
     @property
-    def _process_and_get(self: Feature) -> Callable[[Any], list[Any or Image]]:
+    def _process_and_get(self: Feature) -> Callable[[Any], list[Any or Image]]:  # TODO
         """Select the appropriate processing function based on configuration.
 
         Returns a method that applies the feature’s transformation (`get`) to
@@ -3914,7 +3914,7 @@ class Feature(DeepTrackNode):
 
         return self._no_wrap_process_and_get
 
-    def _no_wrap_format_input(
+    def _no_wrap_format_input(  # TODO
         self: Feature,
         image_list: Any,
         **kwargs: Any,
@@ -3945,7 +3945,7 @@ class Feature(DeepTrackNode):
 
         return image_list
 
-    def _no_wrap_process_and_get(
+    def _no_wrap_process_and_get(  # TODO
         self: Feature,
         image_list: Any | list[Any],
         **feature_input: dict[str, Any],
@@ -4054,7 +4054,7 @@ def propagate_data_to_dependencies(
     #    )
 
 
-class StructuralFeature(Feature):
+class StructuralFeature(Feature):  # TODO
     """Provide the structure of a feature set without input transformations.
 
     A `StructuralFeature` serves as a logical and organizational tool for
@@ -4084,7 +4084,7 @@ class StructuralFeature(Feature):
     __distributed__: bool = False  # Process the entire image list in one call
 
 
-class Chain(StructuralFeature):
+class Chain(StructuralFeature):  # TODO
     """Resolve two features sequentially.
 
     Applies two features sequentially: the outputs of `feature_1` are passed as
@@ -4405,7 +4405,7 @@ class Value(Feature):
         value: Any,
         **kwargs: Any,
     ) -> Any:
-        """Return the stored value, ignoring the input.
+        """Return the stored value, ignoring the inputs.
 
         The `.get()` method simply returns the stored numerical value, allowing 
         for dynamic overrides when the feature is called.
@@ -4431,7 +4431,7 @@ class Value(Feature):
         return value
 
 
-class ArithmeticOperationFeature(Feature):
+class ArithmeticOperationFeature(Feature):  # TODO
     """Apply an arithmetic operation element-wise to the inputs.
 
     This feature performs an arithmetic operation (e.g., addition, subtraction,
@@ -4573,7 +4573,7 @@ class ArithmeticOperationFeature(Feature):
         return [self.op(x, y) for x, y in zip(a, b)]
 
 
-class Add(ArithmeticOperationFeature):
+class Add(ArithmeticOperationFeature):  # TODO
     """Add a value to the input.
     
     This feature performs element-wise addition (+) to the input.
@@ -4639,7 +4639,7 @@ class Add(ArithmeticOperationFeature):
         super().__init__(operator.add, b=b, **kwargs)
 
 
-class Subtract(ArithmeticOperationFeature):
+class Subtract(ArithmeticOperationFeature):  # TODO
     """Subtract a value from the input.
 
     This feature performs element-wise subtraction (-) from the input.
@@ -4705,7 +4705,7 @@ class Subtract(ArithmeticOperationFeature):
         super().__init__(operator.sub, b=b, **kwargs)
 
 
-class Multiply(ArithmeticOperationFeature):
+class Multiply(ArithmeticOperationFeature):  # TODO
     """Multiply the input by a value.
 
     This feature performs element-wise multiplication (*) of the input.
@@ -4771,7 +4771,7 @@ class Multiply(ArithmeticOperationFeature):
         super().__init__(operator.mul, b=b, **kwargs)
 
 
-class Divide(ArithmeticOperationFeature):
+class Divide(ArithmeticOperationFeature):  # TODO
     """Divide the input with a value.
 
     This feature performs element-wise division (/) of the input.
@@ -4837,7 +4837,7 @@ class Divide(ArithmeticOperationFeature):
         super().__init__(operator.truediv, b=b, **kwargs)
 
 
-class FloorDivide(ArithmeticOperationFeature):
+class FloorDivide(ArithmeticOperationFeature):  # TODO
     """Divide the input with a value.
 
     This feature performs element-wise floor division (//) of the input.
@@ -4907,7 +4907,7 @@ class FloorDivide(ArithmeticOperationFeature):
         super().__init__(operator.floordiv, b=b, **kwargs)
 
 
-class Power(ArithmeticOperationFeature):
+class Power(ArithmeticOperationFeature):  # TODO
     """Raise the input to a power.
 
     This feature performs element-wise power (**) of the input.
@@ -4973,7 +4973,7 @@ class Power(ArithmeticOperationFeature):
         super().__init__(operator.pow, b=b, **kwargs)
 
 
-class LessThan(ArithmeticOperationFeature):
+class LessThan(ArithmeticOperationFeature):  # TODO
     """Determine whether input is less than value.
 
     This feature performs element-wise comparison (<) of the input.
@@ -5039,7 +5039,7 @@ class LessThan(ArithmeticOperationFeature):
         super().__init__(operator.lt, b=b, **kwargs)
 
 
-class LessThanOrEquals(ArithmeticOperationFeature):
+class LessThanOrEquals(ArithmeticOperationFeature):  # TODO
     """Determine whether input is less than or equal to value.
 
     This feature performs element-wise comparison (<=) of the input.
@@ -5108,7 +5108,7 @@ class LessThanOrEquals(ArithmeticOperationFeature):
 LessThanOrEqual = LessThanOrEquals
 
 
-class GreaterThan(ArithmeticOperationFeature):
+class GreaterThan(ArithmeticOperationFeature):  # TODO
     """Determine whether input is greater than value.
 
     This feature performs element-wise comparison (>) of the input.
@@ -5174,7 +5174,7 @@ class GreaterThan(ArithmeticOperationFeature):
         super().__init__(operator.gt, b=b, **kwargs)
 
 
-class GreaterThanOrEquals(ArithmeticOperationFeature):
+class GreaterThanOrEquals(ArithmeticOperationFeature):  # TODO
     """Determine whether input is greater than or equal to value.
 
     This feature performs element-wise comparison (>=) of the input.
@@ -5243,7 +5243,7 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
 GreaterThanOrEqual = GreaterThanOrEquals
 
 
-class Equals(ArithmeticOperationFeature):
+class Equals(ArithmeticOperationFeature):  # TODO
     """Determine whether input is equal to a given value.
 
     This feature performs element-wise comparison between the input and a
@@ -5329,7 +5329,7 @@ class Equals(ArithmeticOperationFeature):
 Equal = Equals
 
 
-class Stack(Feature):
+class Stack(Feature):  # TODO
     """Stack the input and the value.
     
     This feature combines the output of the input data (`inputs`) and the 
@@ -5466,7 +5466,7 @@ class Stack(Feature):
         return [*inputs, *value]
 
 
-class Arguments(Feature):
+class Arguments(Feature):  # TODO
     """A convenience container for pipeline arguments.
 
     `Arguments` allows dynamic control of pipeline behavior by providing a
@@ -5584,7 +5584,7 @@ class Arguments(Feature):
         return inputs
 
 
-class Probability(StructuralFeature):
+class Probability(StructuralFeature):  # TODO
     """Resolve a feature with a certain probability.
 
     This feature conditionally applies a given feature to an input based on a
@@ -5721,7 +5721,7 @@ class Probability(StructuralFeature):
         return inputs
 
 
-class Repeat(StructuralFeature):
+class Repeat(StructuralFeature):  # TODO
     """Apply a feature multiple times.
 
     `Repeat` iteratively applies another feature, passing the output of each
@@ -5873,7 +5873,7 @@ class Repeat(StructuralFeature):
         return x
 
 
-class Combine(StructuralFeature):
+class Combine(StructuralFeature):  # TODO
     """Combine multiple features into a single feature.
 
     This feature applies a list of features to the same input and returns their
@@ -5974,7 +5974,7 @@ class Combine(StructuralFeature):
         return [f(inputs, **kwargs) for f in self.features]
 
 
-class Slice(Feature):
+class Slice(Feature):  # TODO
     """Dynamically apply array indexing to inputs.
 
     This feature allows dynamic slicing of an image using integer indices, 
@@ -6089,7 +6089,7 @@ class Slice(Feature):
         return array[slices]
 
 
-class Bind(StructuralFeature):
+class Bind(StructuralFeature):  # TODO
     """Bind a feature with property arguments.
 
     When the feature is resolved, the kwarg arguments are passed to the child 
@@ -6184,7 +6184,7 @@ class Bind(StructuralFeature):
 BindResolve = Bind
 
 
-class BindUpdate(StructuralFeature):  # DEPRECATED
+class BindUpdate(StructuralFeature):  # DEPRECATED  # TODO
     """Bind a feature with certain arguments.
 
     .. deprecated:: 2.0
@@ -6289,7 +6289,7 @@ class BindUpdate(StructuralFeature):  # DEPRECATED
         return self.feature.resolve(inputs, **kwargs)
 
 
-class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
+class ConditionalSetProperty(StructuralFeature):  # DEPRECATED  # TODO
     """Conditionally override the properties of a child feature.
 
     .. deprecated:: 2.0
@@ -6459,7 +6459,7 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
         return self.feature(inputs)
 
 
-class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
+class ConditionalSetFeature(StructuralFeature):  # DEPRECATED  # TODO
     """Conditionally resolve one of two features.
 
     .. deprecated:: 2.0
@@ -6649,7 +6649,7 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
         return inputs
 
 
-class Lambda(Feature):
+class Lambda(Feature):  # TODO
     """Apply a user-defined function to the input.
 
     This feature allows applying a custom function to individual inputs in the
@@ -6760,7 +6760,7 @@ class Lambda(Feature):
         return function(inputs)
 
 
-class Merge(Feature):
+class Merge(Feature):  # TODO
     """Apply a custom function to a list of inputs.
 
     This feature allows applying a user-defined function to a list of inputs. 
@@ -6876,7 +6876,7 @@ class Merge(Feature):
         return function(list_of_inputs)
 
 
-class OneOf(Feature):
+class OneOf(Feature):  # TODO
     """Resolve one feature from a given collection.
 
     This feature selects and applies one of multiple features from a given 
@@ -7040,7 +7040,7 @@ class OneOf(Feature):
         return self.collection[key](inputs, _ID=_ID)
 
 
-class OneOfDict(Feature):
+class OneOfDict(Feature):  # TODO
     """Resolve one feature from a dictionary and apply it to an input.
 
     This feature selects a feature from a dictionary and applies it to an
@@ -7206,7 +7206,7 @@ class OneOfDict(Feature):
         return self.collection[key](inputs, _ID=_ID)
 
 
-class LoadImage(Feature):
+class LoadImage(Feature):  # TODO
     """Load an image from disk and preprocess it.
 
     `LoadImage` loads an image file using multiple fallback file readers
@@ -7494,7 +7494,7 @@ class LoadImage(Feature):
         return image
 
 
-class AsType(Feature):
+class AsType(Feature):  # TODO
     """Convert the data type of arrays.
 
     `Astype` changes the data type (`dtype`) of input arrays to a specified
@@ -7615,7 +7615,7 @@ class AsType(Feature):
         return image.astype(dtype)
 
 
-class ChannelFirst2d(Feature):  # DEPRECATED
+class ChannelFirst2d(Feature):  # DEPRECATED  # TODO
     """Convert an image to a channel-first format.
 
     This feature rearranges the axes of a 3D image so that the specified axis
@@ -7753,7 +7753,7 @@ class ChannelFirst2d(Feature):  # DEPRECATED
         return array
 
 
-class Store(Feature):
+class Store(Feature):  # TODO
     """Store the output of a feature for reuse.
 
     `Store` evaluates a given feature and stores its output in an internal
@@ -7890,7 +7890,7 @@ class Store(Feature):
         return self._store[key]
 
 
-class Squeeze(Feature):
+class Squeeze(Feature):  # TODO
     """Squeeze the input image to the smallest possible dimension.
 
     `Squeeze` removes axes of size 1 from the input image. By default, it 
@@ -7996,7 +7996,7 @@ class Squeeze(Feature):
         return xp.squeeze(image, axis=axis)
 
 
-class Unsqueeze(Feature):
+class Unsqueeze(Feature):  # TODO
     """Unsqueeze the input image to the smallest possible dimension.
 
     This feature adds new singleton dimensions to the input image at the 
@@ -8106,7 +8106,7 @@ class Unsqueeze(Feature):
 ExpandDims = Unsqueeze
 
 
-class MoveAxis(Feature):
+class MoveAxis(Feature):  # TODO
     """Moves the axis of the input image.
 
     This feature rearranges the axes of an input image, moving a specified 
@@ -8208,7 +8208,7 @@ class MoveAxis(Feature):
         return xp.moveaxis(image, source, destination)
 
 
-class Transpose(Feature):
+class Transpose(Feature):  # TODO
     """Transpose the input image.
 
     This feature rearranges the axes of an input image according to the 
@@ -8309,7 +8309,7 @@ class Transpose(Feature):
 Permute = Transpose
 
 
-class OneHot(Feature):
+class OneHot(Feature):  # TODO
     """Convert the input to a one-hot encoded array.
 
     This feature takes an input array of integer class labels and converts it 
@@ -8410,7 +8410,7 @@ class OneHot(Feature):
         return xp.eye(num_classes, dtype=np.float32)[image]
 
 
-class TakeProperties(Feature):
+class TakeProperties(Feature):  # TODO
     """Extract all instances of a set of properties from a pipeline.
 
     Only extracts the properties if the feature contains all given
