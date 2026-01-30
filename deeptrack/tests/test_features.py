@@ -665,8 +665,25 @@ class TestFeatures(unittest.TestCase):
             pipeline = add_one ^ 2.5
             pipeline()
 
-    def test_Feature___and__and__rand__(self):  # TODO
-        pass
+    def test_Feature___and__and__rand__(self):
+        base = features.Value(value=[1, 2, 3])
+        other = features.Value(value=[4, 5])
+
+        # Feature & Feature
+        pipeline = base & other
+        self.assertEqual(pipeline.resolve(), [1, 2, 3, 4, 5])
+
+        # Feature & value
+        pipeline = base & [4, 5]
+        self.assertEqual(pipeline.resolve(), [1, 2, 3, 4, 5])
+
+        # Value & Feature (__rand__)
+        pipeline = [4, 5] & base
+        self.assertEqual(pipeline.resolve(), [4, 5, 1, 2, 3])
+
+        # Chaining still works
+        pipeline = (base & [4]) >> features.Stack(value=[6])
+        self.assertEqual(pipeline.resolve(), [1, 2, 3, 4, 6])
 
     def test_Feature___getitem__(self):
         base_feature = features.Value(value=np.array([10, 20, 30]))
@@ -1379,7 +1396,7 @@ class TestFeatures(unittest.TestCase):
         self.assertTrue(np.array_equal(output_values, [False, True, False]))
 
 
-    def test_Stack(self):  # TODO
+    def test_Stack(self):
         value = features.Value(value=2)
         f = value & 3
         self.assertEqual(f(), [2, 3])
