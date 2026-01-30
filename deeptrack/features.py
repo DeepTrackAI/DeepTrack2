@@ -3625,26 +3625,26 @@ class Feature(DeepTrackNode):
 
         return Value(value=other) >> GreaterThanOrEquals(b=self)
 
-    def __xor__(  # TODO
+    def __xor__(
         self: Feature,
-        other: int,
+        N: int,
     ) -> Feature:
         """Repeat the feature a given number of times using '^'.
 
-        This operator is shorthand for chaining with `Repeat`. The expression:
+        This operator is shorthand for chaining with `Repeat`. The expression
 
-        >>> feature ^ other
+        >>> feature ^ N
 
-        is equivalent to:
+        is equivalent to
 
-        >>> dt.Repeat(feature, N=other)
+        >>> dt.Repeat(feature, N=N)
 
         Internally, this method constructs a new `Repeat` feature taking
-        `self` and `other` as argument.
+        `self` and `N` as argument.
 
         Parameters
         ----------
-        other: int
+        N: int
             The int value representing the repeat times. It is passed to
             `Repeat` as the `N` argument.
 
@@ -3658,6 +3658,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Repeat the `Add` feature by 3 times:
+
         >>> add_ten = dt.Add(value=10)
         >>> pipeline = add_ten ^ 3
         >>> result = pipeline([1, 2, 3])
@@ -3665,23 +3666,26 @@ class Feature(DeepTrackNode):
         [31, 32, 33]
 
         This is equivalent to:
+
         >>> pipeline = dt.Repeat(add_ten, N=3)
 
         Repeat by random times that samples values at each call:
+
         >>> import numpy as np
         >>>
         >>> random_times = dt.Value(value=lambda: np.random.randint(10))
         >>> pipeline = add_ten ^ random_times
-        >>> result = pipeline.update()([1, 2, 3])
+        >>> result = pipeline.new([1, 2, 3])
         >>> result
         [81, 82, 83]
 
         This is equivalent to:
+
         >>> pipeline = dt.Repeat(add_ten, N=random_times)
 
         """
 
-        return Repeat(self, other)
+        return Repeat(self, N=N)
 
     def __and__(  # TODO
         self: Feature,
@@ -5720,7 +5724,7 @@ class Probability(StructuralFeature):  # TODO
         return inputs
 
 
-class Repeat(StructuralFeature):  # TODO
+class Repeat(StructuralFeature):
     """Apply a feature multiple times.
 
     `Repeat` iteratively applies another feature, passing the output of each
@@ -5736,7 +5740,7 @@ class Repeat(StructuralFeature):  # TODO
 
     >>> dt.Repeat(A, 3)
 
-    is equivalent to using the `^` operator:
+    is equivalent to using the `^` operator
 
     >>> A ^ 3
     
@@ -5746,7 +5750,8 @@ class Repeat(StructuralFeature):  # TODO
         The feature to be repeated `N` times.
     N: int
         The number of times to apply the feature in sequence.
-    **kwargs: Any
+    **kwargs: Any, optional
+        Additional keyword arguments.
 
     Attributes
     ----------
@@ -5756,8 +5761,8 @@ class Repeat(StructuralFeature):  # TODO
     Methods
     -------
     `get(x, N, _ID, **kwargs) -> Any`
-        It applies the feature `N` times in sequence, passing the output of
-        each iteration as the input to the next.
+        Applies the feature `N` times in sequence, passing the output of each
+        iteration as the input to the next.
 
     Examples
     --------
@@ -5781,7 +5786,16 @@ class Repeat(StructuralFeature):  # TODO
     >>> pipeline = add_ten_feature ^ 3
     >>> pipeline.resolve([1, 2, 3])
     [31, 32, 33]
-    
+
+    >>> pipeline.feature(_ID=(0,))
+    [11, 12, 13]
+
+    >>> pipeline.feature(_ID=(1,))
+    [21, 22, 23]
+
+    >>> pipeline.feature(_ID=(2,))
+    [31, 32, 33]
+
     """
 
     feature: Feature
@@ -5794,9 +5808,9 @@ class Repeat(StructuralFeature):  # TODO
     ):
         """Initialize the Repeat feature.
 
-        This feature applies `feature` iteratively, passing the output of each 
-        iteration as the input to the next. The number of repetitions is 
-        controlled by `N`, and each iteration has its own dynamically updated 
+        This feature applies `feature` iteratively, passing the output of each
+        iteration as the input to the next. The number of repetitions is
+        controlled by `N`, and each iteration has its own dynamically updated
         properties.
 
         Parameters
@@ -5804,10 +5818,10 @@ class Repeat(StructuralFeature):  # TODO
         feature: Feature
             The feature to be applied sequentially `N` times.
         N: int
-            The number of times to sequentially apply `feature`, passing the 
+            The number of times to sequentially apply `feature`, passing the
             output of each iteration as the input to the next.
         **kwargs: Any
-            Keyword arguments that override properties dynamically at each 
+            Keyword arguments that override properties dynamically at each
             iteration and are also passed to the parent `Feature` class.
 
         """
@@ -5818,7 +5832,7 @@ class Repeat(StructuralFeature):  # TODO
 
     def get(
         self: Repeat,
-        x: Any,
+        inputs: Any,
         *,
         N: int,
         _ID: tuple[int, ...] = (),
@@ -5826,8 +5840,8 @@ class Repeat(StructuralFeature):  # TODO
     ) -> Any:
         """Sequentially apply the feature N times.
 
-        This method applies the feature `N` times, passing the output of each 
-        iteration as the input to the next. The `_ID` tuple is updated at 
+        This method applies the feature `N` times, passing the output of each
+        iteration as the input to the next. The `_ID` tuple is updated at
         each iteration, ensuring dynamic property updates and reproducibility.
   
         Each iteration uses the output of the previous one. This makes `Repeat`
@@ -5842,7 +5856,7 @@ class Repeat(StructuralFeature):  # TODO
             The number of times to sequentially apply the feature, where each 
             iteration builds on the previous output.
         _ID: tuple[int, ...], optional
-            A unique identifier for tracking the iteration index, ensuring 
+            A unique identifier for tracking the iteration index, ensuring
             reproducibility, caching, and dynamic property updates.
             Defaults to ().
         **kwargs: Any
@@ -5860,16 +5874,13 @@ class Repeat(StructuralFeature):  # TODO
             raise ValueError("Using Repeat, N must be a non-negative integer.")
 
         for n in range(N):
-
-            index = _ID + (n,)  # Track iteration index
-
-            x = self.feature(
-                x,
-                _ID=index,
-                replicate_index=index,  # Legacy property
+            inputs = self.feature(
+                inputs,
+                _ID=_ID + (n,),  # Track iteration index
+                replicate_index=_ID + (n,),  # Legacy property
             )
 
-        return x
+        return inputs
 
 
 class Combine(StructuralFeature):  # TODO
