@@ -3687,17 +3687,17 @@ class Feature(DeepTrackNode):
 
         return Repeat(self, N=N)
 
-    def __and__(  # TODO
+    def __and__(
         self: Feature,
         other: Any,
     ) -> Feature:
         """Stack this feature with another using '&'.
 
-        This operator is shorthand for chaining with `Stack`. The expression:
+        This operator is shorthand for chaining with `Stack`. The expression
 
         >>> feature & other
 
-        is equivalent to:
+        is equivalent to
 
         >>> feature >> dt.Stack(value=other)
 
@@ -3719,6 +3719,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Stack with the fixed data:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = feature & [4, 5, 6]
         >>> result = pipeline()
@@ -3726,9 +3727,11 @@ class Feature(DeepTrackNode):
         [1, 2, 3, 4, 5, 6]
 
         This is equivalent to:
+
         >>> pipeline = feature >> dt.Stack(value=[4, 5, 6])
 
-        Stack with the dynamic data that samples values at each call:
+        Stack with dynamic data sampling values at each call:
+
         >>> from random import randint
         >>>
         >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
@@ -3744,18 +3747,18 @@ class Feature(DeepTrackNode):
 
         return self >> Stack(other)
 
-    def __rand__(  # TODO
+    def __rand__(
         self: Feature,
         other: Any,
     ) -> Feature:
         """Stack another value with this feature using right '&'.
 
         This operator is the right-hand version of `&`, enabling expressions
-        where the `Feature` appears on the right-hand side. The expression:
+        where the `Feature` appears on the right-hand side. The expression
 
         >>> other & feature
 
-        is equivalent to:
+        is equivalent to
 
         >>> dt.Value(value=other) >> dt.Stack(value=feature)
 
@@ -3777,6 +3780,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Stack with the fixed data:
+
         >>> feature = dt.Value(value=[1, 2, 3])
         >>> pipeline = [4, 5, 6] & feature
         >>> result = pipeline()
@@ -3784,9 +3788,11 @@ class Feature(DeepTrackNode):
         [4, 5, 6, 1, 2, 3]
 
         This is equivalent to:
+
         >>> pipeline = dt.Value(value=[4, 5, 6]) >> dt.Stack(value=feature)
 
         Stack with the dynamic data that samples values at each call:
+
         >>> from random import randint
         >>>
         >>> random = dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
@@ -3796,9 +3802,9 @@ class Feature(DeepTrackNode):
         [0, 3, 1, 1, 2, 3]
 
         This is equivalent to:
+
         >>> pipeline = (
-        ...     dt.Value(value=lambda:
-        ...         [randint(0, 3) for _ in range(3)])
+        ...     dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
         ...     >> dt.Stack(value=feature)
         ... )
         
@@ -5337,25 +5343,25 @@ class Equals(ArithmeticOperationFeature):  # TODO
 Equal = Equals
 
 
-class Stack(Feature):  # TODO
+class Stack(Feature):
     """Stack the input and the value.
     
-    This feature combines the output of the input data (`inputs`) and the 
-    value produced by the specified feature (`value`). The resulting output 
+    This feature combines the output of the input data (`inputs`) and the
+    value produced by the specified feature (`value`). The resulting output
     is a list where the elements of the `inputs` and `value` are concatenated.
 
-    If B is a feature, `Stack` can be visualized as:
+    If B is a feature, `Stack` can be visualized as
 
     >>>   A >> Stack(B) = [*A(), *B()]
 
-    It is equivalent to using the `&` operator:
+    It is equivalent to using the `&` operator
 
     >>> A & B
 
     Parameters
     ----------
     value: PropertyLike[Any]
-        The feature or data to stack with the input.
+        The feature or data to stack with the input data.
     **kwargs: Any
         Additional arguments passed to the parent `Feature` class.
 
@@ -5363,12 +5369,12 @@ class Stack(Feature):  # TODO
     ----------
     __distributed__: bool
         Set to `False`, indicating that this feature’s `.get()` method
-        processes the entire input at once even if it is a list, rather than 
+        processes the entire input at once even if it is a list, rather than
         distributing calls for each item of the list.
 
     Methods
     -------
-    `get(inputs, value, **kwargs) -> list[Any]`
+    `get(inputs, value, _ID, **kwargs) -> list[Any]`
         Concatenate the inputs with the value.
 
     Examples
@@ -5442,7 +5448,7 @@ class Stack(Feature):  # TODO
     ) -> list[Any]:
         """Concatenate the input with the value.
 
-        It ensures that both the input (`inputs`) and the value (`value`) are 
+        It ensures that both the input (`inputs`) and the value (`value`) are
         treated as lists before concatenation.
 
         Parameters
