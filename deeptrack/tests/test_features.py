@@ -1900,26 +1900,26 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(output_override, [21, 22, 23])
 
 
-    def test_Combine(self):  # TODO
+    def test_Combine(self):
 
         noise_feature = Gaussian(mu=0, sigma=2)
         add_feature = features.Add(b=10)
         combined_feature = features.Combine([noise_feature, add_feature])
 
-        input_image = np.ones((10, 10))
-        output_list = combined_feature.resolve(input_image)
+        input_array = np.ones((10, 10))
+        output_list = combined_feature.resolve(input_array)
 
         self.assertTrue(isinstance(output_list, list))
         self.assertTrue(len(output_list) == 2)
 
         for output in output_list:
-            self.assertTrue(output.shape == input_image.shape)
+            self.assertTrue(output.shape == input_array.shape)
 
         noisy_image = output_list[0]
         added_image = output_list[1]
 
         self.assertFalse(np.all(noisy_image == 1))
-        self.assertTrue(np.allclose(added_image, input_image + 10))
+        self.assertTrue(np.allclose(added_image, input_array + 10))
 
 
     def test_Slice_constant(self):
