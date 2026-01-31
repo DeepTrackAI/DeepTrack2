@@ -236,8 +236,27 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(f3.node_name, "CustomName")
         self.assertEqual(f3.properties["name"](), "CustomName")
 
-    def test_Feature___call__(self):  # TODO
-        pass
+    def test_Feature___call__(self):
+
+        feature = features.Add(b=2)
+
+        x = np.array([1, 2, 3])
+
+        # Normal behavior
+        out1 = feature(x)
+        self.assertTrue((out1 == np.array([3, 4, 5])).all())
+
+        # Temporary override
+        out2 = feature(x, b=1)
+        self.assertTrue((out2 == np.array([2, 3, 4])).all())
+
+        # Uses cached value
+        out3 = feature(x)
+        self.assertTrue((out3 == np.array([2, 3, 4])).all())
+
+        # Ensure original value is restored
+        out3 = feature.new(x)
+        self.assertTrue((out3 == np.array([3, 4, 5])).all())
 
     def test_Feature__to_sequential(self):  # TODO
         pass
@@ -251,8 +270,25 @@ class TestFeatures(unittest.TestCase):
         feature = TestFeature(value=2)
         self.assertEqual(feature(3), 5)
 
-    def test_Feature_update(self):  # TODO
-        pass
+    def test_Feature_update(self):
+
+        feature = features.Value(lambda: np.random.rand())
+
+        out1a = feature(_ID=(0,))
+        out1b = feature(_ID=(0,))
+        self.assertEqual(out1a, out1b)
+
+        out2a = feature(_ID=(1,))
+        out2b = feature(_ID=(1,))
+        self.assertEqual(out2a, out2b)
+
+        feature.update()
+
+        out1c = feature(_ID=(0,))
+        out2c = feature(_ID=(1,))
+
+        self.assertNotEqual(out1a, out1c)
+        self.assertNotEqual(out2a, out2c)
 
     def test_Feature_add_feature(self):  # TODO
         pass
