@@ -242,8 +242,14 @@ class TestFeatures(unittest.TestCase):
     def test_Feature__to_sequential(self):  # TODO
         pass
 
-    def test_Feature__action(self):  # TODO
-        pass
+    def test_Feature__action(self):
+
+        class TestFeature(features.Feature):
+            def get(self, inputs, value, **kwargs):
+                return inputs + value
+
+        feature = TestFeature(value=2)
+        self.assertEqual(feature(3), 5)
 
     def test_Feature_update(self):  # TODO
         pass
