@@ -2162,15 +2162,15 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(clean_image.std(), 0)
 
 
-    def test_Lambda_dependence(self):  # TODO
+    def test_Lambda_dependence(self):
         # Without Lambda
         A = features.DummyFeature(a=1, b=2, c=3)
 
         B = features.DummyFeature(
             key="a",
-            prop=lambda key: A.a() if key == "a"
-                             else (A.b() if key == "b"
-                                   else A.c()),
+            prop=lambda key: (
+                A.a() if key == "a" else (A.b() if key == "b" else A.c())
+            ),
         )
 
         B.update()
@@ -2190,7 +2190,9 @@ class TestFeatures(unittest.TestCase):
 
         def func_factory(key="a"):
             def func(A):
-                return A.a() if key == "a" else (A.b() if key == "b" else A.c())
+                return (
+                    A.a() if key == "a" else (A.b() if key == "b" else A.c())
+                )
             return func
 
         B = features.Lambda(function=func_factory, key="a")
@@ -2207,15 +2209,15 @@ class TestFeatures(unittest.TestCase):
         B.key.set_value("a")
         self.assertEqual(B(A), 1)
 
-    def test_Lambda_dependence_twice(self):  # TODO
+    def test_Lambda_dependence_twice(self):
         # Without Lambda
         A = features.DummyFeature(a=1, b=2, c=3)
 
         B = features.DummyFeature(
             key="a",
-            prop=lambda key: A.a() if key == "a"
-                             else (A.b() if key == "b"
-                                   else A.c()),
+            prop=lambda key: (
+                A.a() if key == "a" else (A.b() if key == "b" else A.c())
+            ),
             prop2=lambda prop: prop * 2,
         )
 
@@ -2231,20 +2233,21 @@ class TestFeatures(unittest.TestCase):
         B.key.set_value("a")
         self.assertEqual(B.prop2(), 2)
 
-    def test_Lambda_dependence_other_feature(self):  # TODO
+    def test_Lambda_dependence_other_feature(self):
 
         A = features.DummyFeature(a=1, b=2, c=3)
 
         B = features.DummyFeature(
             key="a",
-            prop=lambda key: A.a() if key == "a"
-                             else (A.b() if key == "b"
-                                   else A.c()),
+            prop=lambda key: (
+                A.a() if key == "a" else (A.b() if key == "b" else A.c())
+            ),
             prop2=lambda prop: prop * 2,
         )
 
-        C = features.DummyFeature(B_prop=B.prop2,
-                                  prop=lambda B_prop: B_prop * 2)
+        C = features.DummyFeature(
+            B_prop=B.prop2, prop=lambda B_prop: B_prop * 2,
+        )
 
         C.update()
         self.assertEqual(C.prop(), 4)
@@ -2258,7 +2261,7 @@ class TestFeatures(unittest.TestCase):
         B.key.set_value("a")
         self.assertEqual(C.prop(), 4)
 
-    def test_Lambda_scaling(self):  # TODO
+    def test_Lambda_scaling(self):
         def scale_function_factory(scale=2):
             def scale_function(image):
                 return image * scale
