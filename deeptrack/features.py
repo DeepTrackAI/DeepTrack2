@@ -5928,7 +5928,7 @@ class Repeat(StructuralFeature):
         return inputs
 
 
-class Combine(StructuralFeature):  # TODO
+class Combine(StructuralFeature):
     """Combine multiple features into a single feature.
 
     This feature applies a list of features to the same input and returns their
@@ -5956,9 +5956,9 @@ class Combine(StructuralFeature):  # TODO
 
     Define a list of features:
 
-    >>> add_1 = dt.Add(value=1)
-    >>> add_2 = dt.Add(value=2)
-    >>> add_3 = dt.Add(value=3)
+    >>> add_1 = dt.Add(b=1)
+    >>> add_2 = dt.Add(b=2)
+    >>> add_3 = dt.Add(b=3)
 
     Combine the features:
 
@@ -5976,9 +5976,9 @@ class Combine(StructuralFeature):  # TODO
     >>> output_list
     [array([[1., 1., 1.],
             [1., 1., 1.]]),
-    array([[2., 2., 2.],
+     array([[2., 2., 2.],
             [2., 2., 2.]]),
-    array([[3., 3., 3.],
+     array([[3., 3., 3.],
             [3., 3., 3.]])]
 
     """
@@ -5993,7 +5993,7 @@ class Combine(StructuralFeature):  # TODO
         Parameters
         ----------
         features: list[Feature]
-            A list of features to combine. Each feature is added as a 
+            A list of features to combine. Each feature is added as a
             dependency to ensure proper execution in the computation graph.
         **kwargs: Any
             Additional keyword arguments passed to the parent 
