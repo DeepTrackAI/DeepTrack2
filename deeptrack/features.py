@@ -1350,16 +1350,16 @@ class Feature(DeepTrackNode):
 
         return tuple(batched)
 
-    def _action(  # TODO
+    def _action(
         self: Feature,
         _ID: tuple[int, ...] = (),
     ) -> Any | list[Any]:
         """Core logic to create or transform the input.
 
-        This method is the central point where the feature's transformation is
-        actually executed. It retrieves the input data, evaluates the current
-        values of all properties, formats the input into a list of `Image`
-        objects, and applies the `get()` method to perform the desired
+        The `._action()` method is the central point where the feature's
+        transformation is actually executed. It retrieves the input data,
+        evaluates the current values of all properties, formats the input into
+        a list , and applies the `.get()` method to perform the desired
         transformation.
 
         Depending on the configuration, the transformation can be applied to
@@ -1367,16 +1367,15 @@ class Feature(DeepTrackNode):
 
         The outputs are optionally post-processed, and then merged back into
         the input according to the configured merge strategy.
-        Parameters
 
         The behavior of this method is influenced by several class attributes:
 
-        - `__distributed__`: If `True` (default), the `get()` method is applied
-          independently to each input in the input list. If `False`, the
-          `get()` method is applied to the entire list at once.
+        - `__distributed__`: If `True` (default), the `.get()` method is
+          applied independently to each input in the input list. If `False`,
+          the `.get()` method is applied to the entire list at once.
 
         - `__list_merge_strategy__`: Determines how the outputs returned by
-          `get()` are combined with the original inputs:
+          `.get()` are combined with the original inputs:
             * `MERGE_STRATEGY_OVERRIDE` (default): The output replaces the
               input.
             * `MERGE_STRATEGY_APPEND`: The output is appended to the input
@@ -1386,6 +1385,7 @@ class Feature(DeepTrackNode):
           properties before they are passed to `get()` (e.g., for unit
           normalization).
 
+        Parameters
         ----------
         _ID: tuple[int], optional
             The unique identifier for the current execution. It defaults to ().
@@ -1401,6 +1401,7 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Define a feature that adds a sampled value:
+
         >>> import numpy as np
         >>>
         >>> feature = (
@@ -1409,11 +1410,13 @@ class Feature(DeepTrackNode):
         ... )
 
         Execute core logic manually:
+
         >>> output = feature.action()
         >>> output
         array([1.5, 2.5, 3.5])
 
         Use a list of inputs:
+
         >>> feature = (
         ...     dt.Value(value=[
         ...         np.array([1, 2, 3]),
@@ -1428,39 +1431,40 @@ class Feature(DeepTrackNode):
         """
 
         # Retrieve the input images.
-        image_list = self._input(_ID=_ID)
+        inputs = self._input(_ID=_ID)
 
         # Get the current property values.
-        feature_input = self.properties(_ID=_ID).copy()
+        properties_copy = self.properties(_ID=_ID).copy()
 
         # Call the _process_properties hook, default does nothing.
         # For example, it can be used to ensure properties are formatted
         # correctly or to rescale properties.
-        feature_input = self._process_properties(feature_input)
-        if _ID != ():
-            feature_input["_ID"] = _ID
+        properties_copy = self._process_properties(properties_copy)
+        if _ID:
+            properties_copy["_ID"] = _ID
 
         # Ensure that input is a list.
-        image_list = self._format_input(image_list, **feature_input)
+        inputs_list = self._format_input(inputs, **properties_copy)
 
         # Set the seed from the hash_key. Ensures equal results.
+        # Fo now, this should be taken care by the user.
         # self.seed(_ID=_ID)
 
         # _process_and_get calls the get function correctly according
         # to the __distributed__ attribute.
-        new_list = self._process_and_get(image_list, **feature_input)
+        results_list = self._process_and_get(inputs_list, **properties_copy)
 
         # Merge input and new_list.
-        if self.__list_merge_strategy__ == MERGE_STRATEGY_OVERRIDE:
-            image_list = new_list
-        elif self.__list_merge_strategy__ == MERGE_STRATEGY_APPEND:
-            image_list = image_list + new_list
+        if self.__list_merge_strategy__ == MERGE_STRATEGY_APPEND:
+            results_list = inputs_list + results_list
+        elif self.__list_merge_strategy__ == MERGE_STRATEGY_OVERRIDE:
+            pass
 
-        # For convencience, list images of length one are unwrapped.
-        if len(image_list) == 1:
-            return image_list[0]
-        else:
-            return image_list
+        # For convencience, list of length one are unwrapped.
+        if len(results_list) == 1:
+            return results_list[0]
+
+        return results_list
 
     def update(  # TODO
         self: Feature,
@@ -1884,46 +1888,106 @@ class Feature(DeepTrackNode):
                 ),
             )
 
-    def _normalize(  # TODO
+    def _normalize(
         self: Feature,
-        **properties: dict[str, Any],
+        **properties: Any,
     ) -> dict[str, Any]:
-        """Normalize the properties.
+        """Normalize and convert feature properties.
 
-        This method handles all unit normalizations and conversions. For each
-        class in the method resolution order (MRO), it checks if the class has
-        a `__conversion_table__` attribute. If found, it calls the `convert`
-        method of the conversion table using the properties as arguments.
+        This method performs unit normalization and value conversion for all
+        feature properties before they are passed to ``.get()``.
+
+        Conversions are applied by traversing the class hierarchy of the
+        feature (its method resolution order, MRO) from base classes to
+        subclasses. For each class defining a `.__conversion_table__`
+        attribute, the corresponding conversion table is applied to the current
+        set of properties.
+
+        Applying conversions in this order ensures that:
+        - Generic, base-class conversions (e.g., physical unit handling) are
+          applied first.
+        - More specific, subclass-level conversions can refine or override
+          earlier conversions.
+
+        After all conversion tables have been applied, any remaining
+        `Quantity` values are converted to their unitless magnitudes to ensure
+        backend compatibility (e.g., NumPy or PyTorch operations).
 
         Parameters
         ----------
-        **properties: dict[str, Any]
-            The properties to be normalized and converted.
+        **properties: Any
+            The feature properties to normalize and convert. Each key
+            corresponds to a property name, and values may include unit-aware
+            quantities.
 
         Returns
         -------
         dict[str, Any]
-            The normalized and converted properties.
+            A dictionary of normalized, unitless property values suitable for
+            downstream numerical processing.
 
         Examples
         --------
-        TODO
+        Normalization is applied during feature evaluation and operates on a
+        copy of the sampled properties. The normalized values are passed to
+        `.get()`, while the stored properties remain unchanged.
+
+        >>> import deeptrack as dt
+        >>> from deeptrack import units_registry as u
+
+        >>> class BaseFeature(dt.Feature):
+        ...     __conversion_table__ = dt.ConversionTable(
+        ...         length=(u.um, u.m),
+        ...         time=(u.s, u.ms),
+        ...     )
+        ...
+        ...     def get(self, _, length, time, **kwargs):
+        ...         print(
+        ...             "Inside get():\n"
+        ...             f" length={length}\n"
+        ...             f" time={time}"
+        ...         )
+        ...         return None
+
+        Create and evaluate the feature with a dummy input:
+
+        >>> feature = BaseFeature(length=5 * u.um, time=2 * u.s)
+        >>> feature("dummy input")
+        Inside get():
+        length=5e-06
+        time=2000.0
+
+        The stored property values are not modified by normalization:
+
+        >>> print(
+        ...     "In the feature:\n"
+        ...     f" length={feature.length()}\n"
+        ...     f" time={feature.time()}"
+        ... )
+        In the feature:
+        length=5 micrometer
+        time=2 second
 
         """
 
-        for cl in type(self).mro():
+        # Apply conversion tables defined along the class hierarchy.
+        # Base-class conversions are applied first, followed by subclasses,
+        # allowing subclasses to override or refine behavior.
+        for cl in reversed(type(self).mro()):
             if hasattr(cl, "__conversion_table__"):
                 properties = cl.__conversion_table__.convert(**properties)
 
-        for key, val in properties.items():
-            if isinstance(val, Quantity):
-                properties[key] = val.magnitude
+        # Strip remaining units by extracting magnitudes from Quantity objects.
+        # This ensures that only unitless values are passed to backends.
+        for key, value in properties.items():
+            if isinstance(value, Quantity):
+                properties[key] = value.magnitude
 
         return properties
 
-    def _process_properties(  # TODO
+    def _process_properties(
         self: Feature,
-        propertydict: dict[str, Any],
+        property_dict: dict[str, Any],
     ) -> dict[str, Any]:
         """Preprocess the input properties before calling `.get()`.
 
@@ -1932,30 +1996,104 @@ class Feature(DeepTrackNode):
         computation.
 
         Notes:
-        - Calls `_normalize()` internally to standardize input properties.
+        - Calls `._normalize()` internally to standardize input properties.
         - Subclasses may override this method to implement additional 
           preprocessing steps.
 
         Parameters
         ----------
-        propertydict: dict[str, Any]
-            The dictionary of properties to be processed before being passed 
-            to the `.get()` method.
+        property_dict: dict[str, Any]
+            Dictionary with properties to be processed before being passed to
+            the `.get()` method.
 
         Returns
         -------
         dict[str, Any]
             The processed property dictionary after normalization.
 
-        Examples
-        --------
-        TODO
+        """
+
+        return self._normalize(**property_dict)
+
+    def _format_input(
+        self: Feature,
+        inputs: Any,
+        **kwargs: Any,
+    ) -> list[Any]:
+        """Ensure that inputs are represented as a list.
+
+        This method returns the input list as-is (after ensuring it is a list).
+
+        This method standardizes the internal representation of inputs before
+        calling `.get()`. If `inputs` is already a list, it is returned
+        unchanged. If `inputs` is `None`, an empty list is returned.
+        Otherwise, `inputs` is wrapped in a single-element list.
+
+        Parameters
+        ----------
+        inputs: Any
+            The input data to format. If ``None``, an empty list is returned.
+            If not already a list, it is wrapped in a list.
+        **kwargs: Any
+            Additional keyword arguments (ignored). Included for signature
+            compatibility with subclasses that may require extra parameters.
+
+        Returns
+        -------
+        list[Any]
+            The formatted inputs as a list.
 
         """
 
-        propertydict = self._normalize(**propertydict)
+        if inputs is None:
+            return []
 
-        return propertydict
+        if not isinstance(inputs, list):
+            return [inputs]
+
+        return inputs
+
+    def _process_and_get(
+        self: Feature,
+        inputs: list[Any],
+        **properties: Any,
+    ) -> list[Any]:
+        """Apply `.get()` to inputs and return results as a list.
+
+        If `__distributed__` is `True` (default), `.get()` is called once per
+        element in `inputs`. If `False`, `.get()` is called once with the full
+        list of inputs.
+
+        Regardless of distribution mode, the return value is always a list. If
+        the underlying `.get()` returns a single value, it is wrapped in a
+        list.
+
+        Parameters
+        ----------
+        inputs: list[Any]
+            The formatted input list to process.
+        **properties: Any
+            Sampled property values passed to ``.get()``.
+
+        Returns
+        -------
+        list[Any]
+            The outputs produced by ``.get()``, always returned as a list.
+
+        """
+
+        if self.__distributed__:
+            # Call get on each input in list.
+            return [self.get(x, **properties) for x in inputs]
+
+        # Else, call get on entire list.
+        results = self.get(inputs, **properties)
+
+        # Ensure the result is a list.
+        if isinstance(results, list):
+            return results
+
+        return [results]
 
     def _activate_sources(  # TODO
         self: Feature,
@@ -3893,116 +4031,6 @@ class Feature(DeepTrackNode):
         slices = list(slices)
 
         return self >> Slice(slices)
-
-    # Private properties to dispatch based on config.
-    @property
-    def _format_input(self: Feature) -> Callable[[Any], list[Any or Image]]:  # TODO
-        """Select the appropriate input formatting function for configuration.
-
-        Returns either `_image_wrapped_format_input` or
-        `_no_wrap_format_input`, depending on whether image metadata
-        (properties) should be preserved and processed downstream.
-
-        Returns
-        -------
-        Callable
-            A function that formats the input into a list of Image objects or
-            raw arrays, depending on the configuration.
-
-        """
-
-        return self._no_wrap_format_input
-
-    @property
-    def _process_and_get(self: Feature) -> Callable[[Any], list[Any or Image]]:  # TODO
-        """Select the appropriate processing function based on configuration.
-
-        Returns a method that applies the feature’s transformation (`get`) to
-        the input data, either with or without wrapping and preserving `Image`
-        metadata.
-
-        Returns
-        -------
-        Callable
-            A function that applies `.get()` to the input, either preserving
-            or ignoring metadata depending on configuration.
-
-        """
-
-        return self._no_wrap_process_and_get
-
-    def _no_wrap_format_input(  # TODO
-        self: Feature,
-        image_list: Any,
-        **kwargs: Any,
-    ) -> list[Any]:
-        """Process input data without wrapping it as Image instances.
-
-        This method returns the input list as-is (after ensuring it is a list).
-        It is used when metadata is not needed or performance is a concern.
-
-        Parameters
-        ----------
-        image_list: Any
-            The input to the feature. If not already a list, it is wrapped in
-            one. If `None`, it returns an empty list.
-
-        Returns
-        -------
-        list[Any]
-            A list of raw input elements, without any transformation.
-
-        """
-
-        if image_list is None:
-            return []
-
-        if not isinstance(image_list, list):
-            image_list = [image_list]
-
-        return image_list
-
-    def _no_wrap_process_and_get(  # TODO
-        self: Feature,
-        image_list: Any | list[Any],
-        **feature_input: dict[str, Any],
-    ) -> list[Any]:
-        """Process input data without additional wrapping and retrieve results.
-
-        This method applies the `get()` method to the input without wrapping 
-        results in `Image` objects, and without propagating or merging metadata.
-
-        If `__distributed__ = True`, `get()` is called separately for each 
-        element in the input list. If `False`, the full list is passed to 
-        `get()` at once.
-
-        Parameters
-        ----------
-        image_list: Any or list[Any]
-            The input data to be processed.
-        **feature_input: dict
-            The keyword arguments containing the sampled properties to pass 
-            to the `get()` method.
-
-        Returns
-        -------
-        list[Any]
-            The list of processed outputs (raw arrays, tensors, etc.).
-
-        """
-
-        if self.__distributed__:
-            # Call get on each image in list, and merge properties from
-            # corresponding image
-            return [self.get(x, **feature_input) for x in image_list]
-
-        # Else, call get on entire list.
-        new_list = self.get(image_list, **feature_input)
-
-        if not isinstance(new_list, list):
-            new_list = [new_list]
-
-        return new_list
 
 
 def propagate_data_to_dependencies(
