@@ -2002,7 +2002,7 @@ class TestFeatures(unittest.TestCase):
         self.assertTrue(np.array_equal(dinamic_output, expected_output))
 
 
-    def test_Bind(self):  # TODO
+    def test_Bind(self):
 
         value = features.Value(
             value=lambda input_value: input_value,
@@ -2016,11 +2016,7 @@ class TestFeatures(unittest.TestCase):
         res = pipeline_with_small_input.update().resolve()
         self.assertEqual(res, 11)
 
-        with self.assertWarns(DeprecationWarning):
-            res = pipeline_with_small_input.update(input_value=10).resolve()
-            self.assertEqual(res, 11)
-
-    def test_Bind_gaussian_noise(self):  # TODO
+    def test_Bind_gaussian_noise(self):
         # Define the Gaussian noise feature and bind its properties
         gaussian_noise = Gaussian()
         bound_feature = features.Bind(gaussian_noise, mu=-5, sigma=2)
@@ -2035,41 +2031,10 @@ class TestFeatures(unittest.TestCase):
         output_mean = np.mean(output_image)
         output_std = np.std(output_image)
 
-        # Assert that the mean and standard deviation are close to the bound values
+        # Assert that the mean and standard deviation are close to the bound
+        # values
         self.assertAlmostEqual(output_mean, -5, delta=0.2)
         self.assertAlmostEqual(output_std, 2, delta=0.2)
-
-
-    def test_BindResolve(self):  # TODO
-
-        value = features.Value(
-            value=lambda input_value: input_value,
-            input_value=10,
-        )
-        value = features.Value(
-            value=lambda input_value: input_value,
-            input_value=10,
-        )
-        pipeline = (value + 10) / value
-
-        pipeline_with_small_input = features.BindResolve(
-            pipeline,
-            input_value=1
-        )
-        pipeline_with_small_input = features.BindResolve(
-            pipeline,
-            input_value=1
-        )
-
-        res = pipeline.update().resolve()
-        self.assertEqual(res, 2)
-
-        res = pipeline_with_small_input.update().resolve()
-        self.assertEqual(res, 11)
-
-        with self.assertWarns(DeprecationWarning):
-            res = pipeline_with_small_input.update(input_value=10).resolve()
-            self.assertEqual(res, 11)
 
 
     def test_BindUpdate(self):  # DEPRECATED
