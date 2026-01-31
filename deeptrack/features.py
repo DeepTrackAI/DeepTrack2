@@ -610,7 +610,7 @@ class Feature(DeepTrackNode):
         """The device to be used during evaluation."""
         return self._device
 
-    def __init__(  # TODO
+    def __init__(
         self: Feature,
         _input: Any | None = None,
         **kwargs: Any,
@@ -625,7 +625,6 @@ class Feature(DeepTrackNode):
 
         The input is wrapped internally as a `DeepTrackNode`, allowing it to
         participate in lazy evaluation, caching, and graph traversal.
-
 
         Initialization proceeds in the following order:
         1. Backend, dtypes, and device are set from the global configuration.
