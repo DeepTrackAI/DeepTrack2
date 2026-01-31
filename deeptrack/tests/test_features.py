@@ -290,8 +290,16 @@ class TestFeatures(unittest.TestCase):
         self.assertNotEqual(out1a, out1c)
         self.assertNotEqual(out2a, out2c)
 
-    def test_Feature_add_feature(self):  # TODO
-        pass
+    def test_Feature_add_feature(self):
+
+        feature = features.Add(b=2)
+        dependency = features.Value(value=42)
+
+        returned = feature.add_feature(dependency)
+
+        self.assertIs(returned, dependency)
+        self.assertIn(dependency, feature.recurse_dependencies())
+        self.assertIn(feature, dependency.recurse_children())
 
     def test_Feature_seed(self):  # TODO
         pass
