@@ -2788,31 +2788,31 @@ class TestFeatures(unittest.TestCase):
             torch.testing.assert_close(cached_output, value_feature())
 
 
-    def test_Squeeze(self):  # TODO
+    def test_Squeeze(self):
         ### Test with NumPy array
-        input_image = np.array([[[[3], [2], [1]]], [[[1], [2], [3]]]])
+        input_array = np.array([[[[3], [2], [1]]], [[[1], [2], [3]]]])
         # shape: (2, 1, 3, 1)
 
         # Squeeze axis 1
         squeeze_feature = features.Squeeze(axis=1)
-        output_image = squeeze_feature(input_image)
-        self.assertEqual(output_image.shape, (2, 3, 1))
-        expected_output = np.squeeze(input_image, axis=1)
-        np.testing.assert_array_equal(output_image, expected_output)
+        output_array = squeeze_feature(input_array)
+        self.assertEqual(output_array.shape, (2, 3, 1))
+        expected_output = np.squeeze(input_array, axis=1)
+        np.testing.assert_array_equal(output_array, expected_output)
 
         # Squeeze all singleton dimensions
         squeeze_feature = features.Squeeze()
-        output_image = squeeze_feature(input_image)
-        self.assertEqual(output_image.shape, (2, 3))
-        expected_output = np.squeeze(input_image)
-        np.testing.assert_array_equal(output_image, expected_output)
+        output_array = squeeze_feature(input_array)
+        self.assertEqual(output_array.shape, (2, 3))
+        expected_output = np.squeeze(input_array)
+        np.testing.assert_array_equal(output_array, expected_output)
 
         # Squeeze multiple axes
         squeeze_feature = features.Squeeze(axis=(1, 3))
-        output_image = squeeze_feature(input_image)
-        self.assertEqual(output_image.shape, (2, 3))
-        expected_output = np.squeeze(np.squeeze(input_image, axis=3), axis=1)
-        np.testing.assert_array_equal(output_image, expected_output)
+        output_array = squeeze_feature(input_array)
+        self.assertEqual(output_array.shape, (2, 3))
+        expected_output = np.squeeze(np.squeeze(input_array, axis=3), axis=1)
+        np.testing.assert_array_equal(output_array, expected_output)
 
         ### Test with PyTorch tensor (if available)
         if TORCH_AVAILABLE:
@@ -2838,27 +2838,27 @@ class TestFeatures(unittest.TestCase):
             torch.testing.assert_close(output_tensor, expected_tensor)
 
 
-    def test_Unsqueeze(self):  # TODO
+    def test_Unsqueeze(self):
         ### Test with NumPy array
-        input_image = np.array([1, 2, 3])
+        input_array = np.array([1, 2, 3])
 
         unsqueeze_feature = features.Unsqueeze(axis=0)
-        output_image = unsqueeze_feature(input_image)
-        self.assertEqual(output_image.shape, (1, 3))
+        output_array = unsqueeze_feature(input_array)
+        self.assertEqual(output_array.shape, (1, 3))
 
         unsqueeze_feature = features.Unsqueeze()
-        output_image = unsqueeze_feature(input_image)
-        self.assertEqual(output_image.shape, (3, 1))
+        output_array = unsqueeze_feature(input_array)
+        self.assertEqual(output_array.shape, (3, 1))
 
         # Multiple axes
         unsqueeze_feature = features.Unsqueeze(axis=(0, 2))
-        output_image = unsqueeze_feature(input_image)
-        self.assertEqual(output_image.shape, (1, 3, 1))
+        output_array = unsqueeze_feature(input_array)
+        self.assertEqual(output_array.shape, (1, 3, 1))
 
         # Multiple axes
         unsqueeze_feature = features.Unsqueeze(axis=(0, 2))
-        output_image = unsqueeze_feature(input_image)
-        self.assertEqual(output_image.shape, (1, 3, 1))
+        output_array = unsqueeze_feature(input_array)
+        self.assertEqual(output_array.shape, (1, 3, 1))
 
         ### Test with PyTorch tensor (if available)
         if TORCH_AVAILABLE:
