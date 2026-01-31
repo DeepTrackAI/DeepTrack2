@@ -7952,12 +7952,12 @@ class Store(Feature):  # TODO
         return self._store[key]
 
 
-class Squeeze(Feature):  # TODO
-    """Squeeze the input image to the smallest possible dimension.
+class Squeeze(Feature):
+    """Squeeze the input array or tensor to the smallest possible dimension.
 
-    `Squeeze` removes axes of size 1 from the input image. By default, it 
-    removes all singleton dimensions. If a specific axis or axes are specified, 
-    only those axes are squeezed.
+    `Squeeze` removes axes of size 1 from the input array or tensor.
+    By default, it removes all singleton dimensions.
+    If a specific axis or axes are specified, only those axes are squeezed.
 
     Parameters
     ----------
@@ -7968,9 +7968,9 @@ class Squeeze(Feature):  # TODO
 
     Methods
     -------
-    `get(image, axis, **kwargs) -> array`
-        Squeeze the input array by removing singleton dimensions. The input and
-        output arrays can be a NumPy array or a PyTorch tensor.
+    `get(inputs, axis, **kwargs) -> array`
+        Squeeze the input array or tensor by removing singleton dimensions. The
+        input and output can be a NumPy array or a PyTorch tensor.
 
     Examples
     --------
@@ -7980,29 +7980,29 @@ class Squeeze(Feature):  # TODO
 
     >>> import numpy as np
     >>>
-    >>> input_image = np.array([[[[1], [2], [3]]]])
-    >>> input_image.shape
+    >>> input_array = np.array([[[[1], [2], [3]]]])
+    >>> input_array.shape
     (1, 1, 3, 1)
 
     Create a Squeeze feature:
 
     >>> squeeze_feature = dt.Squeeze(axis=0)
-    >>> output_image = squeeze_feature(input_image)
-    >>> output_image.shape
+    >>> output_array = squeeze_feature(input_array)
+    >>> output_array.shape
     (1, 3, 1)
 
     Without specifying an axis:
 
     >>> squeeze_feature = dt.Squeeze()
-    >>> output_image = squeeze_feature(input_image)
-    >>> output_image.shape
+    >>> output_array = squeeze_feature(input_array)
+    >>> output_array.shape
     (3,)
 
     """
 
     def __init__(
         self: Squeeze,
-        axis: int | tuple[int, ...] | None = None,
+        axis: PropertyLike[int | tuple[int, ...] | None] = None,
         **kwargs: Any,
     ):
         """Initialize the Squeeze feature.
@@ -8010,7 +8010,7 @@ class Squeeze(Feature):  # TODO
         Parameters
         ----------
         axis: int or tuple[int, ...], optional
-            The axis or axes to squeeze. It defaults to `None`, which squeezes 
+            The axis or axes to squeeze. Defaults to `None`, which squeezes
             all singleton axes.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
@@ -8021,17 +8021,17 @@ class Squeeze(Feature):  # TODO
 
     def get(
         self: Squeeze,
-        image: np.ndarray | torch.Tensor,
+        inputs: np.ndarray | torch.Tensor,
         axis: int | tuple[int, ...] | None = None,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
-        """Squeeze the input image by removing singleton dimensions.
+        """Squeeze the input array or tensor by removing singleton dimensions.
 
         Parameters
         ----------
-        image: array or tensor
-            The input image to process. The input array can be a NumPy array or
-            a PyTorch tensor.
+        inputs: array or tensor
+            The input array or tensor to process. The input can be a NumPy
+            array or a PyTorch tensor.
         axis: int or tuple[int, ...], optional
             The axis or axes to squeeze. Defaults to `None`, which squeezes all
             singleton axes.
@@ -8041,33 +8041,33 @@ class Squeeze(Feature):  # TODO
         Returns
         -------
         array or tensor
-            The squeezed array with reduced dimensions. The output array can be
-            a NumPy array or a PyTorch tensor.
+            The squeezed array or tensor with reduced dimensions. The output
+            can be a NumPy array or a PyTorch tensor.
 
         """
 
-        if apc.is_torch_array(image):
+        if apc.is_torch_array(inputs):
             if axis is None:
-                return image.squeeze()
+                return inputs.squeeze()
             if isinstance(axis, int):
-                return image.squeeze(axis)
+                return inputs.squeeze(axis)
             for ax in sorted(axis, reverse=True):
-                image = image.squeeze(ax)
-            return image
+                inputs = inputs.squeeze(ax)
+            return inputs
 
-        return xp.squeeze(image, axis=axis)
+        return xp.squeeze(inputs, axis=axis)
 
 
-class Unsqueeze(Feature):  # TODO
-    """Unsqueeze the input image to the smallest possible dimension.
+class Unsqueeze(Feature):
+    """Unsqueeze the input array or tensor to the smallest possible dimension.
 
-    This feature adds new singleton dimensions to the input image at the 
-    specified axis or axes. If no axis is specified, it defaults to adding 
-    a singleton dimension at the last axis.
+    This feature adds new singleton dimensions to the input array or tensor at
+    the specified axis or axes. Defaults to adding a singleton dimension at the
+    last axis if no axis is specified.
 
     Parameters
     ----------
-    axis: int or tuple[int, ...], optional
+    axis: PropertyLike[int or tuple[int, ...]], optional
         The axis or axes where new singleton dimensions should be added.
         Defaults to `None`, which adds a singleton dimension at the last axis.
     **kwargs: Any
@@ -8075,9 +8075,9 @@ class Unsqueeze(Feature):  # TODO
 
     Methods
     -------
-    `get(image, axis, **kwargs) -> array or tensor`
-        Add singleton dimensions to the input image. The input and output
-        arrays can be a NumPy array or a PyTorch tensor.
+    `get(inputs, axis, **kwargs) -> array or tensor`
+        Add singleton dimensions to the input array or tensor. The input and
+        output can be a NumPy array or a PyTorch tensor.
 
     Examples
     --------
@@ -8087,36 +8087,36 @@ class Unsqueeze(Feature):  # TODO
 
     >>> import numpy as np
     >>>
-    >>> input_image = np.array([1, 2, 3])
-    >>> input_image.shape
+    >>> input_array = np.array([1, 2, 3])
+    >>> input_array.shape
     (3,)
 
     Apply Unsqueeze feature:
 
     >>> unsqueeze_feature = dt.Unsqueeze(axis=0)
-    >>> output_image = unsqueeze_feature(input_image)
-    >>> output_image.shape
+    >>> output_array = unsqueeze_feature(input_array)
+    >>> output_array.shape
     (1, 3)
 
     Without specifying an axis, in unsqueezes the last dimension:
 
     >>> unsqueeze_feature = dt.Unsqueeze()
-    >>> output_image = unsqueeze_feature(input_image)
-    >>> output_image.shape
+    >>> output_array = unsqueeze_feature(input_array)
+    >>> output_array.shape
     (3, 1)
 
     """
 
     def __init__(
         self: Unsqueeze,
-        axis: int | tuple[int, ...] | None = -1,
+        axis: PropertyLike[int | tuple[int, ...] | None] = -1,
         **kwargs: Any,
     ):
         """Initialize the Unsqueeze feature.
 
         Parameters
         ----------
-        axis: int or tuple[int, ...], optional
+        axis: PropertyLike[int or tuple[int, ...]], optional
             The axis or axes where new singleton dimensions should be added. 
             Defaults to -1, which adds a singleton dimension at the last axis.
         **kwargs:: Any
@@ -8128,7 +8128,7 @@ class Unsqueeze(Feature):  # TODO
 
     def get(
         self: Unsqueeze,
-        image: np.ndarray | torch.Tensor,
+        inputs: np.ndarray | torch.Tensor,
         axis: int | tuple[int, ...] | None = -1,
         **kwargs: Any,
 
@@ -8138,10 +8138,10 @@ class Unsqueeze(Feature):  # TODO
         Parameters
         ----------
         image: array
-            The input image to process. The input array can be a NumPy array or
-            a PyTorch tensor.
+            The input array or tensor to process. The input array can be a
+            NumPy array or a PyTorch tensor.
         axis: int or tuple[int, ...], optional
-            The axis or axes where new singleton dimensions should be added. 
+            The axis or axes where new singleton dimensions should be added.
             It defaults to -1, which adds a singleton dimension at the last
             axis.
         **kwargs: Any
@@ -8150,19 +8150,19 @@ class Unsqueeze(Feature):  # TODO
         Returns
         -------
         array or tensor
-            The input image with the specified singleton dimensions added. The
-            output array can be a NumPy array, or a PyTorch tensor.
+            The input array or tensor with the specified singleton dimensions
+            added. The output can be a NumPy array, or a PyTorch tensor.
 
         """
 
-        if apc.is_torch_array(image):
+        if apc.is_torch_array(inputs):
             if isinstance(axis, int):
                 axis = (axis,)
             for ax in sorted(axis):
-                image = image.unsqueeze(ax)
-            return image
+                inputs = inputs.unsqueeze(ax)
+            return inputs
 
-        return xp.expand_dims(image, axis=axis)
+        return xp.expand_dims(inputs, axis=axis)
 
 
 ExpandDims = Unsqueeze
