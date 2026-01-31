@@ -5639,7 +5639,7 @@ class Arguments(Feature):  # TODO
         return inputs
 
 
-class Probability(StructuralFeature):  # TODO
+class Probability(StructuralFeature):
     """Resolve a feature with a certain probability.
 
     This feature conditionally applies a given feature to an input based on a
@@ -5655,8 +5655,6 @@ class Probability(StructuralFeature):  # TODO
         The feature to resolve conditionally.
     probability: PropertyLike[float]
         The probability (from 0 to 1) of resolving the feature.
-    *args: Any
-        Positional arguments passed to the parent `StructuralFeature` class.
     **kwargs: Any
         Additional keyword arguments passed to the parent `StructuralFeature` 
         class.
@@ -5664,7 +5662,7 @@ class Probability(StructuralFeature):  # TODO
     Methods
     -------
     `get(inputs, probability, random_number, **kwargs) -> Any`
-        Resolves the feature if the sampled random number is less than the 
+        Resolves the feature if the sampled random number is less than the
         specified probability.
 
     Examples
@@ -5708,7 +5706,6 @@ class Probability(StructuralFeature):  # TODO
         self: Probability,
         feature: Feature,
         probability: PropertyLike[float],
-        *args: Any,
         **kwargs: Any,
     ):
         """Initialize the Probability feature.
@@ -5722,9 +5719,6 @@ class Probability(StructuralFeature):  # TODO
             The feature to resolve conditionally.
         probability: PropertyLike[float]
             The probability (between 0 and 1) of resolving the feature.
-        *args: Any
-            Positional arguments passed to the parent `StructuralFeature`
-            class.
         **kwargs: Any
             Additional keyword arguments passed to the parent
             `StructuralFeature` class.
@@ -5732,7 +5726,6 @@ class Probability(StructuralFeature):  # TODO
         """
 
         super().__init__(
-            *args,
             probability=probability,
             random_number=np.random.rand,
             **kwargs,
@@ -5757,7 +5750,7 @@ class Probability(StructuralFeature):  # TODO
         random_number: float
             A random number sampled to determine whether to resolve the
             feature. It is initialized when this feature is initialized.
-            It can be updated using the `update()` method.
+            It can be updated using the `.update()` method.
         **kwargs: Any
             Additional arguments passed to the feature's `resolve()` method.
 
