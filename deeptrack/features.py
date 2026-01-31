@@ -6704,21 +6704,21 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
         return inputs
 
 
-class Lambda(Feature):  # TODO
+class Lambda(Feature):
     """Apply a user-defined function to the input.
 
     This feature allows applying a custom function to individual inputs in the
     input pipeline. The `function` parameter must be wrapped in an outer
-    function that can depend on other properties of the pipeline. 
+    function that can depend on other properties of the pipeline.
     The inner function processes a single input.
 
     Parameters
     ----------
     function: Callable[..., Callable[[Any], Any]]
-        A callable that produces a function. The outer function can accept 
-        additional arguments from the pipeline, while the inner function 
+        A callable that produces a function. The outer function can accept
+        additional arguments from the pipeline, while the inner function
         operates on a single input.
-    **kwargs: dict[str, Any]
+    **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
@@ -6741,19 +6741,19 @@ class Lambda(Feature):  # TODO
 
     >>> lambda_feature = dt.Lambda(function=scale_function_factory, scale=5)
 
-    Create an image:
+    Create an array:
 
     >>> import numpy as np
     >>> 
-    >>> input_image = np.ones((2, 3))
-    >>> input_image
+    >>> input_array = np.ones((2, 3))
+    >>> input_array
     array([[1., 1., 1.],
            [1., 1., 1.]])
 
-    Apply the feature to the image:
+    Apply the feature to the array:
 
-    >>> output_image = lambda_feature(input_image)
-    >>> output_image
+    >>> output_array = lambda_feature(input_array)
+    >>> output_array
     array([[5., 5., 5.],
            [5., 5., 5.]])
 
@@ -6766,15 +6766,15 @@ class Lambda(Feature):  # TODO
     ):
         """Initialize the Lambda feature.
 
-        This feature applies a user-defined function to process an input. The 
-        `function` parameter must be a callable that returns another function, 
+        This feature applies a user-defined function to process an input. The
+        `function` parameter must be a callable that returns another function,
         where the inner function operates on the input.
 
         Parameters
         ----------
         function: Callable[..., Callable[[Any], Any]]
-            A callable that produces a function. The outer function can accept 
-            additional arguments from the pipeline, while the inner function 
+            A callable that produces a function. The outer function can accept
+            additional arguments from the pipeline, while the inner function
             processes a single input.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
@@ -6791,8 +6791,8 @@ class Lambda(Feature):  # TODO
     ) -> Any:
         """Apply the custom function to the input.
 
-        This method applies a user-defined function to transform the input. The
-        function should be a callable that takes an input and returns a
+        This method applies a user-defined function to transform the input.
+        The function should be a callable that takes an input and returns a
         modified version of it.
 
         Parameters
@@ -6800,7 +6800,7 @@ class Lambda(Feature):  # TODO
         inputs: Any
             The input to be processed.
         function: Callable[[Any], Any]
-            A callable function that takes an input and returns a transformed 
+            A callable function that takes an input and returns a transformed
             output.
         **kwargs: Any
             Additional keyword arguments (unused in this implementation).
