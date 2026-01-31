@@ -242,7 +242,7 @@ MERGE_STRATEGY_APPEND: int = 1
 
 
 class Feature(DeepTrackNode):
-    """Base feature class.  # TODO
+    """Base feature class.
 
     Features define the data generation and transformation process.
     
@@ -386,6 +386,10 @@ class Feature(DeepTrackNode):
         Normalizes the properties of the feature.
     `_process_properties(propertydict) -> dict[str, Any]`
         Preprocesses the input properties before calling the `get` method.
+    `_format_input(data_list, **kwargs) -> list[Any]`
+        Formats the input data for the feature.
+    `_process_and_get(data_list, **kwargs) -> list[Any]`
+        Calls the `.get()` method according to the `__distributed__` attribute.
     `_activate_sources(x) -> None`
         Activates sources in the input data.
     `__getattr__(key) -> Any`
@@ -446,10 +450,6 @@ class Feature(DeepTrackNode):
         Overrides right and operator.
     `__getitem__(key) -> Feature`
         Allows direct slicing of the data.
-    `_format_input(data_list, **kwargs) -> list[Any]`
-        Formats the input data for the feature.
-    `_process_and_get(data_list, **kwargs) -> list[Any]`
-        Calls the `.get()` method according to the `__distributed__` attribute.
 
     Examples
     --------
@@ -1364,9 +1364,6 @@ class Feature(DeepTrackNode):
 
         Depending on the configuration, the transformation can be applied to
         each element of the input independently or to the full list at once.
-
-        The outputs are optionally post-processed, and then merged back into
-        the input according to the configured merge strategy.
 
         The behavior of this method is influenced by several class attributes:
 
@@ -6232,7 +6229,7 @@ class Bind(StructuralFeature):  # TODO
 BindResolve = Bind
 
 
-class BindUpdate(StructuralFeature):  # DEPRECATED  # TODO
+class BindUpdate(StructuralFeature):  # DEPRECATED
     """Bind a feature with certain arguments.
 
     .. deprecated:: 2.0
@@ -6241,8 +6238,8 @@ class BindUpdate(StructuralFeature):  # DEPRECATED  # TODO
         Further, the current implementation is not guaranteed to be exactly
         equivalent to prior implementations.
 
-    This feature binds a child feature with specific properties (`kwargs`) that 
-    are passed to it when it is updated. It is similar to the `Bind` feature 
+    This feature binds a child feature with specific properties (`kwargs`) that
+    are passed to it when it is updated. It is similar to the `Bind` feature
     but is marked as deprecated in favor of `Bind`.
 
     Parameters
@@ -6337,16 +6334,16 @@ class BindUpdate(StructuralFeature):  # DEPRECATED  # TODO
         return self.feature.resolve(inputs, **kwargs)
 
 
-class ConditionalSetProperty(StructuralFeature):  # DEPRECATED  # TODO
+class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
     """Conditionally override the properties of a child feature.
 
     .. deprecated:: 2.0
         This feature is deprecated and may be removed in a future release. It
         is recommended to use `Arguments` instead.
 
-    This feature modifies the properties of a child feature only when a 
-    specified condition is met. If the condition evaluates to `True`, 
-    the given properties are applied; otherwise, the child feature remains 
+    This feature modifies the properties of a child feature only when a
+    specified condition is met. If the condition evaluates to `True`,
+    the given properties are applied; otherwise, the child feature remains
     unchanged.
 
     It is advisable to use `Arguments` instead when possible, since this
@@ -6363,17 +6360,17 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED  # TODO
     feature: Feature
         The child feature whose properties will be modified conditionally.
     condition: PropertyLike[str or bool] or None, optional
-        Either a boolean value (`True`, `False`) or the name of a boolean 
-        property in the feature’s property dictionary. If the condition 
+        Either a boolean value (`True`, `False`) or the name of a boolean
+        property in the feature’s property dictionary. If the condition
         evaluates to `True`, the specified properties are applied.
     **kwargs: Any
-        The properties to be applied to the child feature if `condition` is 
+        The properties to be applied to the child feature if `condition` is
         `True`.
 
     Methods
     -------
     `get(inputs, condition, **kwargs) -> Any`
-        Resolves the child feature, conditionally applying the specified 
+        Resolves the child feature, conditionally applying the specified
         properties.
 
     Examples
@@ -6445,11 +6442,11 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED  # TODO
         feature: Feature
             The child feature to conditionally modify.
         condition: PropertyLike[str or bool] or None, optional
-            A boolean value or the name of a boolean property in the feature's 
-            property dictionary. If the condition evaluates to `True`, the 
+            A boolean value or the name of a boolean property in the feature's
+            property dictionary. If the condition evaluates to `True`, the
             specified properties are applied.
         **kwargs: Any
-            Properties to apply to the child feature if the condition is 
+            Properties to apply to the child feature if the condition is
             `True`.
 
         """
@@ -6481,11 +6478,11 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED  # TODO
         inputs: Any
             The input data to process.
         condition: str or  bool
-            A boolean value or the name of a boolean property in the feature's 
-            property dictionary. If the condition evaluates to `True`, the 
+            A boolean value or the name of a boolean property in the feature's
+            property dictionary. If the condition evaluates to `True`, the
             specified properties are applied.
         **kwargs:: Any
-            Additional properties to apply to the child feature if the 
+            Additional properties to apply to the child feature if the
             condition is `True`.
 
         Returns
@@ -6507,15 +6504,15 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED  # TODO
         return self.feature(inputs)
 
 
-class ConditionalSetFeature(StructuralFeature):  # DEPRECATED  # TODO
+class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
     """Conditionally resolve one of two features.
 
     .. deprecated:: 2.0
         This feature is deprecated and may be removed in a future release. It
         is recommended to use `Arguments` instead.
 
-    This feature allows dynamically selecting and resolving one of two child 
-    features depending on whether a specified condition evaluates to `True` or 
+    This feature allows dynamically selecting and resolving one of two child
+    features depending on whether a specified condition evaluates to `True` or
     `False`.
     
     The `condition` parameter specifies either:
@@ -6527,7 +6524,7 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED  # TODO
     >>> feature.resolve(is_label=False)  # Resolves `on_false`
     >>> feature.update(is_label=True)    # Updates both features
 
-    Both `on_true` and `on_false` are updated during each call, even if only 
+    Both `on_true` and `on_false` are updated during each call, even if only
     one is resolved.
 
     It is advisable to use `Arguments` instead when possible.
@@ -6535,14 +6532,14 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED  # TODO
     Parameters
     ----------
     on_false: Feature, optional
-        The feature to resolve if the condition is `False`. If not provided, 
+        The feature to resolve if the condition is `False`. If not provided,
         the input image remains unchanged.
     on_true: Feature, optional
-        The feature to resolve if the condition is `True`. If not provided, 
+        The feature to resolve if the condition is `True`. If not provided,
         the input image remains unchanged.
     condition: str or bool, optional
-        The name of the conditional property or a boolean value. If a string 
-        is provided, its value is retrieved from `kwargs` or `self.properties`. 
+        The name of the conditional property or a boolean value. If a string
+        is provided, its value is retrieved from `kwargs` or `self.properties`.
         If not found, the default value is `True`.
     **kwargs: Any
         Additional keyword arguments passed to the parent `StructuralFeature`.
@@ -6669,8 +6666,8 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED  # TODO
         inputs: Any
             The inputs to process.
         condition: str or bool
-            The name of the conditional property or a boolean value. If a 
-            string is provided, it is looked up in `kwargs` to get the actual 
+            The name of the conditional property or a boolean value. If a
+            string is provided, it is looked up in `kwargs` to get the actual
             boolean value.
         **kwargs:: Any
             Additional keyword arguments to pass to the resolved feature.
@@ -6678,8 +6675,8 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED  # TODO
         Returns
         -------
         Any
-            The processed data after resolving the appropriate feature. If 
-            neither `on_true` nor `on_false` is provided for the corresponding 
+            The processed data after resolving the appropriate feature. If
+            neither `on_true` nor `on_false` is provided for the corresponding
             condition, the input is returned unchanged.
 
         """
@@ -7663,7 +7660,7 @@ class AsType(Feature):  # TODO
         return image.astype(dtype)
 
 
-class ChannelFirst2d(Feature):  # DEPRECATED  # TODO
+class ChannelFirst2d(Feature):  # DEPRECATED
     """Convert an image to a channel-first format.
 
     This feature rearranges the axes of a 3D image so that the specified axis
