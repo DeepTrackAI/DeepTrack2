@@ -8168,12 +8168,12 @@ class Unsqueeze(Feature):  # TODO
 ExpandDims = Unsqueeze
 
 
-class MoveAxis(Feature):  # TODO
-    """Moves the axis of the input image.
+class MoveAxis(Feature):
+    """Moves the axis of the input array or tensor.
 
-    This feature rearranges the axes of an input image, moving a specified 
-    source axis to a new destination position. All other axes remain in their 
-    original order.
+    This feature rearranges the axes of an input array or tensor, moving a
+    specified source axis to a new destination position. All other axes remain
+    in their original order.
 
     Parameters
     ----------
@@ -8186,9 +8186,9 @@ class MoveAxis(Feature):  # TODO
 
     Methods
     -------
-    `get(image, source, destination, **kwargs) -> array or tensor`
-        Move the specified axis of the input image to a new position. The input
-        and output can be NumPy arrays or PyTorch tensors.
+    `get(inputs, source, destination, **kwargs) -> array or tensor`
+        Move the specified axis of the input to a new position. The input and
+        output can be NumPy arrays or PyTorch tensors.
 
     Examples
     --------
@@ -8198,15 +8198,15 @@ class MoveAxis(Feature):  # TODO
 
     >>> import numpy as np
     >>>
-    >>> input_image = np.random.rand(2, 3, 4)
-    >>> input_image.shape
+    >>> input_array = np.random.rand(2, 3, 4)
+    >>> input_array.shape
     (2, 3, 4)
 
     Apply a MoveAxis feature:
 
     >>> move_axis_feature = dt.MoveAxis(source=0, destination=2)
-    >>> output_image = move_axis_feature(input_image)
-    >>> output_image.shape
+    >>> output_array = move_axis_feature(input_array)
+    >>> output_array.shape
     (3, 4, 2)
 
     """
@@ -8234,7 +8234,7 @@ class MoveAxis(Feature):  # TODO
 
     def get(
         self: MoveAxis,
-        image: np.ndarray | torch.Tensor,
+        inputs: np.ndarray | torch.Tensor,
         source: int,
         destination: int,
         **kwargs: Any,
@@ -8243,7 +8243,7 @@ class MoveAxis(Feature):  # TODO
 
         Parameters
         ----------
-        image: array or tensor
+        inputs: array or tensor
             The input image to process. The input can be a NumPy array or a
             PyTorch tensor.
         source: int
@@ -8261,35 +8261,35 @@ class MoveAxis(Feature):  # TODO
 
         """
 
-        if apc.is_torch_array(image):
-            axes = list(range(image.ndim))
+        if apc.is_torch_array(inputs):
+            axes = list(range(inputs.ndim))
             axis = axes.pop(source)
             axes.insert(destination, axis)
-            return image.permute(*axes)
+            return inputs.permute(*axes)
 
-        return xp.moveaxis(image, source, destination)
+        return xp.moveaxis(inputs, source, destination)
 
 
-class Transpose(Feature):  # TODO
-    """Transpose the input image.
+class Transpose(Feature):
+    """Transpose the input array or tensor.
 
-    This feature rearranges the axes of an input image according to the 
-    specified order. The `axes` parameter determines the new order of the 
+    This feature rearranges the axes of an input array or tensor according to
+    the specified order. The `axes` parameter determines the new order of the
     dimensions.
 
     Parameters
     ----------
     axes: tuple[int, ...], optional
-        A tuple specifying the permutation of the axes. If `None`, the axes are 
-        reversed by default.
+        A tuple specifying the permutation of the axes.
+        If `None` (default), the axes are reversed.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image, axes, **kwargs) -> array or tensor`
-        Transpose the axes of the input image(s). The input and output can be
-        NumPy arrays or PyTorch tensors.
+    `get(inputs, axes, **kwargs) -> array or tensor`
+        Transpose the axes of the input array(s) or tensor(s). The inputs and
+        outputs can be NumPy arrays or PyTorch tensors.
 
     Examples
     --------
@@ -8299,22 +8299,22 @@ class Transpose(Feature):  # TODO
 
     >>> import numpy as np
     >>>
-    >>> input_image = np.random.rand(2, 3, 4)
-    >>> input_image.shape
+    >>> input_array = np.random.rand(2, 3, 4)
+    >>> input_array.shape
     (2, 3, 4)
 
     Apply a Transpose feature:
 
     >>> transpose_feature = dt.Transpose(axes=(1, 2, 0))
-    >>> output_image = transpose_feature(input_image)
-    >>> output_image.shape
+    >>> output_array = transpose_feature(input_array)
+    >>> output_array.shape
     (3, 4, 2)
 
     Without specifying axes:
 
     >>> transpose_feature = dt.Transpose()
-    >>> output_image = transpose_feature(input_image)
-    >>> output_image.shape
+    >>> output_array = transpose_feature(input_array)
+    >>> output_array.shape
     (4, 3, 2)
 
     """
@@ -8329,8 +8329,8 @@ class Transpose(Feature):  # TODO
         Parameters
         ----------
         axes: tuple[int, ...], optional
-            A tuple specifying the permutation of the axes. If `None`, the 
-            axes are reversed by default.
+            A tuple specifying the permutation of the axes.
+            If `None` (default), the axes are reversed.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
         
@@ -8340,20 +8340,20 @@ class Transpose(Feature):  # TODO
 
     def get(
         self: Transpose,
-        image: np.ndarray | torch.Tensor,
+        inputs: np.ndarray | torch.Tensor,
         axes: tuple[int, ...] | None = None,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
-        """Transpose the axes of the input image.
+        """Transpose the axes of the input array or tensor.
 
         Parameters
         ----------
-        image: array or tenor
-            The input image to process. The input can be a NumPy array or a
-            PyTorch tensor.
+        inputs: array or tenor
+            The input array or tensor to process. The input can be a NumPy
+            array or a PyTorch tensor.
         axes: tuple[int, ...], optional
-            A tuple specifying the permutation of the axes. If `None`, the 
-            axes are reversed by default.
+            A tuple specifying the permutation of the axes.
+            If `None` (default), the axes are reversed.
         **kwargs: Any
             Additional keyword arguments (unused here).
 
@@ -8365,7 +8365,7 @@ class Transpose(Feature):  # TODO
 
         """
 
-        return xp.transpose(image, axes)
+        return xp.transpose(inputs, axes)
 
 
 Permute = Transpose
