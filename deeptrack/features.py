@@ -724,7 +724,7 @@ class Feature(DeepTrackNode):
 
         raise NotImplementedError
 
-    def __call__(  # TODO
+    def __call__(
         self: Feature,
         data_list: Any = None,
         _ID: tuple[int, ...] = (),
@@ -793,48 +793,62 @@ class Feature(DeepTrackNode):
 
         """
 
+        def _should_set_input(value: Any) -> bool:
+            # Potentially fragile.
+            # Maybe a special variable dt._last_input instead?
+
+            if value is None:
+                return False
+
+            if isinstance(value, list) and len(value) == 0:
+                return False
+
+            if isinstance(value, tuple) and any(
+                isinstance(x, SourceItem) for x in value
+            ):
+                return False
+
+            return True
+
         with config.with_backend(self._backend):
             # If data_list is a Source, activate it.
             self._activate_sources(data_list)
 
-            # Potentially fragile.
-            # Maybe a special variable dt._last_input instead?
             # If the input is not empty, set the value of the input.
-            if (
-                data_list is not None
-                and not (isinstance(data_list, list) and len(data_list) == 0)
-                and not (isinstance(data_list, tuple)
-                        and any(isinstance(x, SourceItem) for x in data_list))
-            ):
+            if _should_set_input(data_list):
                 self._input.set_value(data_list, _ID=_ID)
 
             # A dict to store values of self.arguments before updating them.
-            original_values = {}
+            original_values: dict[str, Any] = {}
 
-            # If there are no self.arguments, instead propagate the values of
-            # the kwargs to all properties in the computation graph.
-            if kwargs and self.arguments is None:
-                propagate_data_to_dependencies(self, _ID=_ID, **kwargs)
+            try:
+                # If there are no self.arguments, instead propagate the values
+                # of the kwargs to all properties in the computation graph.
+                if kwargs and self.arguments is None:
+                    propagate_data_to_dependencies(self, _ID=_ID, **kwargs)
 
-            # If there are self.arguments, update the values of self.arguments
-            # to match kwargs.
-            if isinstance(self.arguments, Feature):
-                for key, value in kwargs.items():
-                    if key in self.arguments.properties:
-                        original_values[key] = \
-                            self.arguments.properties[key](_ID=_ID)
-                        self.arguments.properties[key] \
-                            .set_value(value, _ID=_ID)
+                # If there are self.arguments, update the values
+                # of self.arguments to match kwargs.
+                if isinstance(self.arguments, Feature):
+                    for key, value in kwargs.items():
+                        if key in self.arguments.properties:
+                            original_values[key] = \
+                                self.arguments.properties[key](_ID=_ID)
+                            self.arguments.properties[key] \
+                                .set_value(value, _ID=_ID)
 
-            # This executes the feature.
-            # DeepTrackNode will determine if it needs to be recalculated.
-            # If it does, it will call the `.action()` method.
-            output = super().__call__(_ID=_ID)
+                # This executes the feature.
+                # DeepTrackNode will determine if it needs to be recalculated.
+                # If it does, it will call the `.action()` method.
+                output = super().__call__(_ID=_ID)
 
-            # If there are self.arguments, reset the values of self.arguments
-            # to their original values.
-            for key, value in original_values.items():
-                self.arguments.properties[key].set_value(value, _ID=_ID)
+            finally:
+                # If there are self.arguments, reset the values
+                # of self.arguments to their original values.
+                if isinstance(self.arguments, Feature):
+                    for key, value in original_values.items():
+                        self.arguments.properties[key].set_value(value,
+                                                                 _ID=_ID)
 
         return output
 
@@ -1463,7 +1477,7 @@ class Feature(DeepTrackNode):
 
         return results_list
 
-    def update(  # TODO
+    def update(
         self: Feature,
         **global_arguments: Any,
     ) -> Feature:
@@ -1475,7 +1489,7 @@ class Feature(DeepTrackNode):
         Calling `.update()` forces the feature to recompute and return a new
         value the next time it is evaluated.
 
-        Calling `.new()` is equivalent to calling `.update()` plus evaulation.
+        Calling `.new()` is equivalent to calling `.update()` plus evaluation.
 
         Parameters
         ----------
