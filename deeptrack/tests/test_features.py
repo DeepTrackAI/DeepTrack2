@@ -2022,7 +2022,7 @@ class TestFeatures(unittest.TestCase):
             self.assertEqual(res, 11)
 
 
-    def test_BindUpdate(self):  # TODO
+    def test_BindUpdate(self):  # DEPRECATED
         value = features.Value(
             value=lambda input_value: input_value, 
             input_value=10,
@@ -2049,7 +2049,7 @@ class TestFeatures(unittest.TestCase):
             res = pipeline_with_small_input.update(input_value=10).resolve()
             self.assertEqual(res, 11)
 
-    def test_BindUpdate_gaussian_noise(self):  # TODO
+    def test_BindUpdate_gaussian_noise(self):  # DEPRECATED
         # Define the Gaussian noise feature and bind its properties
         gaussian_noise = Gaussian()
         with self.assertWarns(DeprecationWarning):
@@ -2070,7 +2070,7 @@ class TestFeatures(unittest.TestCase):
         self.assertAlmostEqual(output_std, 3, delta=0.5)
 
 
-    def test_ConditionalSetProperty(self):  # TODO
+    def test_ConditionalSetProperty(self):  # DEPRECATED
 
         # Set up a Gaussian feature and a test image before each test.
         gaussian_noise = Gaussian(sigma=0)
@@ -2105,7 +2105,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(clean_image.std(), 0)
 
 
-    def test_ConditionalSetFeature(self):  # TODO
+    def test_ConditionalSetFeature(self):  # DEPRECATED
         # Set up Gaussian noise features and test image before each test.
         true_feature = Gaussian(sigma=0)    # Clean image (no noise)
         false_feature = Gaussian(sigma=5)   # Noisy image (sigma=5)
@@ -2661,7 +2661,7 @@ class TestFeatures(unittest.TestCase):
                     self.assertTrue(torch.equal(output_image, expected))
 
 
-    def test_ChannelFirst2d(self):  # TODO
+    def test_ChannelFirst2d(self):  # DEPRECATED
 
         with self.assertWarns(DeprecationWarning):
             channel_first_feature = features.ChannelFirst2d()
