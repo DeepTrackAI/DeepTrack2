@@ -2884,13 +2884,13 @@ class TestFeatures(unittest.TestCase):
             torch.testing.assert_close(output_tensor, expected_tensor)
 
 
-    def test_MoveAxis(self):  # TODO
+    def test_MoveAxis(self):
         ### Test with NumPy array
-        input_image = np.random.rand(2, 3, 4)
+        input_array = np.random.rand(2, 3, 4)
 
         move_axis_feature = features.MoveAxis(source=0, destination=2)
-        output_image = move_axis_feature(input_image)
-        self.assertEqual(output_image.shape, (3, 4, 2))
+        output_array = move_axis_feature(input_array)
+        self.assertEqual(output_array.shape, (3, 4, 2))
 
         ### Test with PyTorch tensor (if available)
         if TORCH_AVAILABLE:
@@ -2901,23 +2901,23 @@ class TestFeatures(unittest.TestCase):
             self.assertEqual(output_tensor.shape, (3, 4, 2))
 
 
-    def test_Transpose(self):  # TODO
+    def test_Transpose(self):
         ### Test with NumPy array
-        input_image = np.random.rand(2, 3, 4)
+        input_array = np.random.rand(2, 3, 4)
 
         # Explicit axes
         transpose_feature = features.Transpose(axes=(1, 2, 0))
-        output_image = transpose_feature(input_image)
-        self.assertEqual(output_image.shape, (3, 4, 2))
-        expected_output = np.transpose(input_image, (1, 2, 0))
-        self.assertTrue(np.allclose(output_image, expected_output))
+        output_array = transpose_feature(input_array)
+        self.assertEqual(output_array.shape, (3, 4, 2))
+        expected_output = np.transpose(input_array, (1, 2, 0))
+        self.assertTrue(np.allclose(output_array, expected_output))
 
         # Reversed axes
         transpose_feature = features.Transpose()
-        output_image = transpose_feature(input_image)
-        self.assertEqual(output_image.shape, (4, 3, 2))
-        expected_output = np.transpose(input_image)
-        self.assertTrue(np.allclose(output_image, expected_output))
+        output_array = transpose_feature(input_array)
+        self.assertEqual(output_array.shape, (4, 3, 2))
+        expected_output = np.transpose(input_array)
+        self.assertTrue(np.allclose(output_array, expected_output))
 
         ### Test with PyTorch tensor (if available)
         if TORCH_AVAILABLE:
