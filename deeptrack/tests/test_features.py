@@ -12,11 +12,18 @@ import unittest
 import warnings
 
 import numpy as np
+from pint import Quantity
 
 from deeptrack import (
-    config, features, Gaussian, properties, TORCH_AVAILABLE, xp,
+    config,
+    ConversionTable,
+    features,
+    Gaussian,
+    properties,
+    TORCH_AVAILABLE,
+    xp,
 )
-
+from deeptrack import units_registry as u
 
 if TORCH_AVAILABLE:
     import torch
@@ -253,11 +260,127 @@ class TestFeatures(unittest.TestCase):
     def test_Feature_plot(self):  # TODO
         pass
 
-    def test_Feature__normalize(self):  # TODO
-        pass
+    def test_Feature__normalize(self):
 
-    def test_Feature__process_properties(self):  # TODO
-        pass
+        class BaseFeature(features.Feature):
+            __conversion_table__ = ConversionTable(
+                length=(u.um, u.m),
+                time=(u.s, u.ms),
+            )
+
+            def get(self, _, length, time, **kwargs):
+                return length, time
+
+        class DerivedFeature(BaseFeature):
+            __conversion_table__ = ConversionTable(
+                length=(u.m, u.nm),
+            )
+
+        # BaseFeature: length um -> m, time s -> ms.
+        base = BaseFeature(length=5 * u.um, time=2 * u.s)
+        length_m, time_ms = base("dummy input")
+
+        self.assertAlmostEqual(length_m, 5e-6)
+        self.assertAlmostEqual(time_ms, 2000.0)
+
+        # Normalization operates on a copy.
+        # Stored properties remain quantities.
+        stored_length = base.length()
+        stored_time = base.time()
+
+        self.assertIsInstance(stored_length, Quantity)
+        self.assertIsInstance(stored_time, Quantity)
+        self.assertEqual(str(stored_length.units), str((1 * u.um).units))
+        self.assertEqual(str(stored_time.units), str((1 * u.s).units))
+
+        # MRO should apply BaseFeature conversion first (um->m),
+        # then DerivedFeature conversion (m->nm).
+        derived = DerivedFeature(length=5 * u.um, time=2 * u.s)
+        length_nm, time_ms = derived("dummy input")
+
+        self.assertAlmostEqual(length_nm, 5000.0)
+        self.assertAlmostEqual(time_ms, 2000.0)
+            
+        # Stored property remains unchanged (still in micrometers).
+        stored_length = derived.length()
+
+        self.assertIsInstance(stored_length, Quantity)
+        self.assertEqual(str(stored_length.units), str((1 * u.um).units))
+
+    def test_Feature__process_properties(self):
+
+        class BaseFeature(features.Feature):
+            __conversion_table__ = ConversionTable(
+                length=(u.um, u.m),
+            )
+
+        class DerivedFeature(BaseFeature):
+            __conversion_table__ = ConversionTable(
+                length=(u.m, u.nm),
+            )
+
+        feature = BaseFeature()
+        props = {"length": 5 * u.um}
+        props_copy = props.copy()
+
+        processed = feature._process_properties(props)
+
+        # Normalized values are unitless magnitudes (um -> m).
+        self.assertAlmostEqual(processed["length"], 5e-6)
+
+        # The input dict should not be mutated.
+        self.assertEqual(props, props_copy)
+
+        derived = DerivedFeature()
+        processed = derived._process_properties({"length": 5 * u.um})
+
+        # MRO behavior: um -> m (BaseFeature) then m -> nm (DerivedFeature).
+        self.assertAlmostEqual(processed["length"], 5000.0)
+
+    def test_Feature__format_input(self):
+        feature = features.Feature()
+
+        self.assertEqual(feature._format_input(None), [])
+        self.assertEqual(feature._format_input(1), [1])
+
+        inputs = [1, 2, 3]
+        formatted = feature._format_input(inputs)
+        self.assertIs(formatted, inputs)
+        self.assertEqual(formatted, [1, 2, 3])
+
+    def test_Feature__process_and_get(self):
+
+        class DistributedFeature(features.Feature):
+            __distributed__ = True
+
+            def get(self, inputs, **kwargs):
+                return inputs + 1
+
+        class NonDistributedFeature(features.Feature):
+            __distributed__ = False
+
+            def get(self, inputs, **kwargs):
+                return [x + 1 for x in inputs]
+
+        class NonDistributedScalarReturn(features.Feature):
+            __distributed__ = False
+
+            def get(self, inputs, **kwargs):
+                return sum(inputs)
+
+        inputs = [1, 2, 3]
+
+        feature = DistributedFeature()
+        out = feature._process_and_get(inputs)
+        self.assertEqual(out, [2, 3, 4])
+
+        feature = NonDistributedFeature()
+        out = feature._process_and_get(inputs)
+        self.assertEqual(out, [2, 3, 4])
+
+        feature = NonDistributedScalarReturn()
+        out = feature._process_and_get(inputs)
+        self.assertEqual(out, [6])
 
     def test_Feature__activate_sources(self):  # TODO
         pass
