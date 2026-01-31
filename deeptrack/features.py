@@ -1551,21 +1551,21 @@ class Feature(DeepTrackNode):
 
         return self
 
-    def add_feature(  # TODO
+    def add_feature(
         self: Feature,
         feature: Feature,
     ) -> Feature:
         """Add a feature to the dependecy graph of this one.
 
-        This method establishes a dependency relationship by registering the 
-        provided `feature` as a child node of the current feature. This ensures
+        This method establishes a dependency relationship by registering the
+        provided `feature` as a dependency of the current feature. This ensures
         that its evaluation and property resolution are included in the current
         feature’s computation graph.
 
-        Internally, it calls `feature.add_child(self)`, which automatically 
+        Internally, it calls `feature.add_child(self)`, which automatically
         handles graph integration and triggers recomputation if necessary.
 
-        This is often used to define explicit data dependencies or to ensure 
+        This is often used to define explicit data dependencies or to ensure
         side-effect features are computed when this feature is resolved.
 
         Parameters
@@ -1583,15 +1583,19 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Define the main feature that adds a constant to the input:
+
         >>> feature = dt.Add(b=2)
 
         Define a side-effect feature:
-        >>> dependency = dt.Value(b=42)
+
+        >>> dependency = dt.Value(value=42)
 
         Register the dependency so its state becomes part of the graph:
+
         >>> feature.add_feature(dependency)
 
         Execute the main feature on an input array:
+
         >>> import numpy as np
         >>>
         >>> result = feature(np.array([1, 2, 3]))
@@ -1606,7 +1610,6 @@ class Feature(DeepTrackNode):
         """
 
         feature.add_child(self)
-        # self.add_dependency(feature)  # Already done by add_child().
 
         return feature
 
