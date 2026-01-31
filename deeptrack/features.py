@@ -6144,12 +6144,12 @@ class Slice(Feature):
         return array[slices]
 
 
-class Bind(StructuralFeature):  # TODO
+class Bind(StructuralFeature):
     """Bind a feature with property arguments.
 
-    When the feature is resolved, the kwarg arguments are passed to the child 
-    feature. Thus, this feature allows passing additional keyword arguments 
-    (`kwargs`) to a child feature when it is resolved. These properties can 
+    When the feature is resolved, the keyword arguments (`kwargs`) are passed
+    to the child feature. Thus, this feature allows passing additional keyword
+    arguments to a child feature when it is resolved. These properties can
     dynamically control the behavior of the child feature.
 
     Parameters
@@ -6162,7 +6162,7 @@ class Bind(StructuralFeature):  # TODO
     Methods
     -------
     `get(inputs, **kwargs) -> Any`
-        It resolves the child feature with the provided arguments.
+        Resolves the child feature with the provided arguments.
 
     Examples
     --------
@@ -6176,7 +6176,7 @@ class Bind(StructuralFeature):  # TODO
 
     >>> import numpy as np
     >>>
-    >>> input_image = np.zeros((512, 512))
+    >>> input_array = np.zeros((512, 512))
 
     Bind fixed values to the parameters:
 
@@ -6184,8 +6184,8 @@ class Bind(StructuralFeature):  # TODO
 
     Resolve the bound feature:
 
-    >>> output_image = bound_feature.resolve(input_image)
-    >>> round(np.mean(output_image), 1), round(np.std(output_image), 1)
+    >>> output_array = bound_feature.resolve(input_array)
+    >>> round(np.mean(output_array), 1), round(np.std(output_array), 1)
     (-5.0, 2.0)
 
     """
