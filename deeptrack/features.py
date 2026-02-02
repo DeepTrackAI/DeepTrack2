@@ -170,7 +170,7 @@ from pint import Quantity
 from deeptrack.backend import config, TORCH_AVAILABLE, xp
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.backend.units import ConversionTable
-from deeptrack.properties import PropertyDict, SequentialProperty
+from deeptrack.properties import Property, PropertyDict, SequentialProperty
 from deeptrack.sources import SourceItem
 from deeptrack.types import ArrayLike, PropertyLike
 
@@ -370,8 +370,10 @@ class Feature(DeepTrackNode):
         Batches the feature for repeated execution.
     `action(_ID) -> Any or list[Any]`
         Implements the core logic to create or transform the input(s).
-    `update(**global_arguments) -> Feature`
+    `update() -> Feature`
         Refreshes the feature to create a new output.
+    `new(data_list, _ID, **kwargs) -> Any`
+        Resets and recomputes the feature output.
     `add_feature(feature) -> Feature`
         Adds a feature to the dependency graph of this one.
     `seed(updated_seed, _ID) -> int`
@@ -1551,6 +1553,37 @@ class Feature(DeepTrackNode):
 
         return self
 
+    def new(
+        self: Feature,
+        data_list: Any = None,
+        _ID: tuple[int, ...] = (),
+        **kwargs: Any,
+    ) -> Any:
+        """Reset and recompute the feature output for the given `_ID`.
+
+        This method invalidates the cached data (via `.update()`), then
+        immediately evaluates the feature using the same input and keyword
+        override semantics as `.__call__()`.
+
+        Parameters
+        ----------
+        data_list: Any, optional
+            The input data passed to `.__call__()`. Defaults to `None`.
+        _ID: tuple[int, ...], optional
+            The identifier for which the value should be recomputed. Defaults
+            to an empty tuple.
+        **kwargs: Any
+            Keyword arguments forwarded to `.__call__()`, overriding
+            properties.
+
+        Returns
+        -------
+        Any
+            The newly computed output.
+
+        """
+        return self.update()(data_list, _ID=_ID, **kwargs)
+
     def add_feature(
         self: Feature,
         feature: Feature,
@@ -2001,8 +2034,8 @@ class Feature(DeepTrackNode):
 
     def _process_properties(
         self: Feature,
-        property_dict: dict[str, Any],
-    ) -> dict[str, Any]:
+        property_dict: dict[str, Property],
+    ) -> dict[str, Property]:
         """Preprocess the input properties before calling `.get()`.
 
         This method acts as a preprocessing hook for subclasses, allowing them 
@@ -2016,13 +2049,13 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        property_dict: dict[str, Any]
+        property_dict: dict[str, Property]
             Dictionary with properties to be processed before being passed to
             the `.get()` method.
 
         Returns
         -------
-        dict[str, Any]
+        dict[str, Property]
             The processed property dictionary after normalization.
 
         """
@@ -5298,7 +5331,7 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
 GreaterThanOrEqual = GreaterThanOrEquals
 
 
-class Equals(ArithmeticOperationFeature):  # TODO
+class Equals(ArithmeticOperationFeature):
     """Determine whether input is equal to a given value.
 
     This feature performs element-wise comparison between the input and a
@@ -5306,11 +5339,11 @@ class Equals(ArithmeticOperationFeature):  # TODO
 
     Notes
     -----
-    - Unlike other arithmetic operators, `Equals` does not define `__eq__` 
-      (`==`) and `__req__` (`==`) in `DeepTrackNode` and `Feature`, as this 
+    - Unlike other arithmetic operators, `Equals` does not define `__eq__`
+      (`==`) and `__req__` (`==`) in `DeepTrackNode` and `Feature`, as this
       would affect Python’s built-in identity comparison.
-    - This means that the standard `==` operator is overloaded only for 
-      expressions involving `Feature` instances but not for comparisons 
+    - This means that the standard `==` operator is overloaded only for
+      expressions involving `Feature` instances but not for comparisons
       involving regular Python objects.
     - Always use `>>` to apply `Equals` correctly in a feature chain.
 
@@ -6931,10 +6964,10 @@ class Merge(Feature):  # TODO
         return function(list_of_inputs)
 
 
-class OneOf(Feature):  # TODO
+class OneOf(Feature):
     """Resolve one feature from a given collection.
 
-    This feature selects and applies one of multiple features from a given 
+    This feature selects and applies one of multiple features from a given
     collection. The default behavior selects a feature randomly, but this 
     behavior can be controlled by specifying a `key`, which determines the 
     index of the feature to apply.
@@ -6946,7 +6979,7 @@ class OneOf(Feature):  # TODO
     ----------
     collection: Iterable[Feature]
         A collection of features to choose from.
-    key: int or None, optional
+    key: PropertyLike[int or None], optional
         The index of the feature to resolve from the collection. If not 
         provided, a feature is selected randomly at each execution.
     **kwargs: Any
@@ -6972,34 +7005,40 @@ class OneOf(Feature):  # TODO
 
     Define multiple features:
 
-    >>> feature_1 = dt.Add(value=10)
-    >>> feature_2 = dt.Multiply(value=2)
+    >>> feature_1 = dt.Add(b=10)
+    >>> feature_2 = dt.Multiply(b=2)
     
     Create a `OneOf` feature that randomly selects a transformation:
 
     >>> one_of_feature = dt.OneOf([feature_1, feature_2])
 
-    Create an input image:
+    Create an input array:
 
     >>> import numpy as np
     >>>
-    >>> input_image = np.array([1, 2, 3])
+    >>> input_array = np.array([1, 2, 3])
 
     Apply the `OneOf` feature to the input image:
 
-    >>> output_image = one_of_feature(input_image)
-    >>> output_image  # The output depends on the randomly selected feature
+    >>> output_array = one_of_feature(input_array)
+    >>> output_array  # The output depends on the randomly selected feature
+    array([2, 4, 6])  # Alternative: array([11, 12, 13])
+
+    Potentially selects a different feature:
+
+    >>> output_array = one_of_feature.new(input_array)
+    >>> output_array
 
     Use `key` to apply a specific feature:
 
     >>> controlled_feature = dt.OneOf([feature_1, feature_2], key=0)
-    >>> output_image = controlled_feature(input_image)
-    >>> output_image
+    >>> output_array = controlled_feature(input_array)
+    >>> output_array
     array([11, 12, 13])
 
     >>> controlled_feature.key.set_value(1)
-    >>> output_image = controlled_feature(input_image)
-    >>> output_image
+    >>> output_array = controlled_feature(input_array)
+    >>> output_array
     array([2, 4, 6])
 
     """
@@ -7011,7 +7050,7 @@ class OneOf(Feature):  # TODO
     def __init__(
         self: Feature,
         collection: Iterable[Feature],
-        key: int | None = None,
+        key: PropertyLike[int | None] = None,
         **kwargs: Any,
     ):
         """Initialize the OneOf feature.
@@ -7021,8 +7060,8 @@ class OneOf(Feature):  # TODO
         collection: Iterable[Feature]
             A collection of features to choose from. It will be stored as a
             tuple.
-        key: int | None, optional
-            The index of the feature to resolve from the collection. If not 
+        key: PropertyLike[int or None], optional
+            The index of the feature to resolve from the collection. If not
             provided, a feature is selected randomly at execution.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
@@ -7039,31 +7078,31 @@ class OneOf(Feature):  # TODO
 
     def _process_properties(
         self: Feature,
-        propertydict: dict,
-    ) -> dict:
+        property_dict: dict[str, Property],
+    ) -> dict[str, Property]:
         """Process the properties to determine the feature index.
 
         If `key` is not provided, a random feature index is assigned.
         
         Parameters
         ----------
-        propertydict: dict
+        propertydict: dict[str, Property]
             The dictionary containing properties of the feature.
 
         Returns
         -------
-        dict
+        dict[str, Property]
             The updated property dictionary with the `key` property set.
 
         """
 
-        super()._process_properties(propertydict)
+        super()._process_properties(property_dict)
 
         # Randomly sample a feature index if `key` is not specified.
-        if propertydict["key"] is None:
-            propertydict["key"] = np.random.randint(len(self.collection))
+        if property_dict["key"] is None:
+            property_dict["key"] = np.random.randint(len(self.collection))
 
-        return propertydict
+        return property_dict
 
     def get(
         self: Feature,
@@ -7072,7 +7111,7 @@ class OneOf(Feature):  # TODO
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
     ) -> Any:
-        """Apply the selected feature to the input image.
+        """Apply the selected feature to the input data.
 
         Parameters
         ----------
@@ -7095,23 +7134,23 @@ class OneOf(Feature):  # TODO
         return self.collection[key](inputs, _ID=_ID)
 
 
-class OneOfDict(Feature):  # TODO
+class OneOfDict(Feature):
     """Resolve one feature from a dictionary and apply it to an input.
 
     This feature selects a feature from a dictionary and applies it to an
     input.  The selection is made randomly by default, but it can be controlled
     using the `key` argument.
 
-    If `key` is not specified, a random key from the dictionary is selected, 
-    and the corresponding feature is applied. Otherwise, the feature mapped to 
+    If `key` is not specified, a random key from the dictionary is selected,
+    and the corresponding feature is applied. Otherwise, the feature mapped to
     `key` is resolved.
 
     Parameters
     ----------
     collection: dict[Any, Feature]
         A dictionary where keys are identifiers and values are features.
-    key: Any | None, optional
-        The key of the feature to resolve from the dictionary. If `None`, 
+    key: PropertyLike[Any or None], optional
+        The key of the feature to resolve from the dictionary. If `None`,
         a random key is selected.
     **kwargs: Any
         Additional parameters passed to the parent `Feature` class.
@@ -7120,7 +7159,7 @@ class OneOfDict(Feature):  # TODO
     ----------
     __distributed__: bool
         Set to `False`, indicating that this feature’s `.get()` method
-        processes the entire input at once even if it is a list, rather than 
+        processes the entire input at once even if it is a list, rather than
         distributing calls for each item of the list.
 
     Methods
@@ -7145,27 +7184,28 @@ class OneOfDict(Feature):  # TODO
 
     >>> one_of_dict_feature = dt.OneOfDict(features_dict)
 
-    Creare an image:
+    Creare an array:
 
     >>> import numpy as np
     >>>
-    >>> input_image = np.array([1, 2, 3])
+    >>> input_array = np.array([1, 2, 3])
 
-    Apply a randomly selected feature to the image:
+    Apply a randomly selected feature to the array:
 
-    >>> output_image = one_of_dict_feature(input_image)
-    >>> output_image  # The output depends on the randomly selected feature
+    >>> output_array = one_of_dict_feature(input_array)
+    >>> output_array  # The output depends on the randomly selected feature
+    array([2, 4, 6])  # Alternatively: array([11, 12, 13])
 
     Potentially select a different feature:
 
-    >>> output_image = one_of_dict_feature.new(input_image)
-    >>> output_image
+    >>> output_array = one_of_dict_feature.new(input_array)
+    >>> output_array
 
     Use a specific key to apply a predefined feature:
 
     >>> controlled_feature = dt.OneOfDict(features_dict, key="add")
-    >>> output_image = controlled_feature(input_image)
-    >>> output_image
+    >>> output_array = controlled_feature(input_array)
+    >>> output_array
     array([11, 12, 13])
 
     """
@@ -7177,7 +7217,7 @@ class OneOfDict(Feature):  # TODO
     def __init__(
         self: Feature,
         collection: dict[Any, Feature],
-        key: Any | None = None,
+        key: PropertyLike[Any | None] = None,
         **kwargs: Any,
     ):
         """Initialize the OneOfDict feature.
@@ -7186,8 +7226,8 @@ class OneOfDict(Feature):  # TODO
         ----------
         collection: dict[Any, Feature]
             A dictionary where keys are identifiers and values are features.
-        key: Any | None, optional
-            The key of the feature to resolve from the dictionary. If `None`, 
+        key: PropertyLike[Any or None], optional
+            The key of the feature to resolve from the dictionary. If `None`,
             a random key is selected.
         **kwargs: Any
             Additional parameters passed to the parent `Feature` class.
@@ -7204,32 +7244,32 @@ class OneOfDict(Feature):  # TODO
 
     def _process_properties(
         self: Feature,
-        propertydict: dict,
-    ) -> dict:
+        property_dict: dict[str, Property],
+    ) -> dict[str, Property]:
         """Determine which feature to apply based on the selected key.
 
         If no key is provided, a random key from `collection` is selected.
 
         Parameters
         ----------
-        propertydict: dict
+        propertydict: dict[str, Property]
             The dictionary containing feature properties.
 
         Returns
         -------
-        dict
+        dict[str, Property]
             The updated property dictionary with the `key` property set.
 
         """
 
-        super()._process_properties(propertydict)
+        super()._process_properties(property_dict)
 
         # Randomly sample a key if `key` is not specified.
-        if propertydict["key"] is None:
-            propertydict["key"] = \
+        if property_dict["key"] is None:
+            property_dict["key"] = \
                 np.random.choice(list(self.collection.keys()))
 
-        return propertydict
+        return property_dict
 
     def get(
         self: Feature,
@@ -7549,7 +7589,7 @@ class LoadImage(Feature):  # TODO
         return image
 
 
-class AsType(Feature):  # TODO
+class AsType(Feature):
     """Convert the data type of arrays.
 
     `Astype` changes the data type (`dtype`) of input arrays to a specified
@@ -7565,7 +7605,7 @@ class AsType(Feature):  # TODO
 
     Methods
     -------
-    `get(image, dtype, **kwargs) -> array`
+    `get(inputs, dtype, **kwargs) -> array`
         Convert the data type of the input image.
 
     Examples
@@ -7576,18 +7616,18 @@ class AsType(Feature):  # TODO
 
     >>> import numpy as np
     >>>
-    >>> input_image = np.array([1.5, 2.5, 3.5])
+    >>> input_array = np.array([1.5, 2.5, 3.5])
 
     Apply an AsType feature to convert to "`int32"`:
 
     >>> astype_feature = dt.AsType(dtype="int32")
-    >>> output_image = astype_feature.get(input_image, dtype="int32")
-    >>> output_image
+    >>> output_array = astype_feature.get(input_array, dtype="int32")
+    >>> output_array
     array([1, 2, 3], dtype=int32)
 
     Verify the data type:
 
-    >>> output_image.dtype
+    >>> output_array.dtype
     dtype('int32')
 
     """
@@ -7612,7 +7652,7 @@ class AsType(Feature):  # TODO
 
     def get(
         self: Feature,
-        image: np.ndarray | torch.Tensor,
+        inputs: np.ndarray | torch.Tensor,
         dtype: str,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
@@ -7620,23 +7660,23 @@ class AsType(Feature):  # TODO
 
         Parameters
         ----------
-        image: array
-            The input image to process. It can be a NumPy array, a PyTorch
+        inputs: array
+            The input data to process. It can be a NumPy array, a PyTorch
             tensor, or an Image.
         dtype: str
-            The desired data type for the image.
+            The desired data type.
         **kwargs: Any
             Additional keyword arguments (unused here).
 
         Returns
         -------
         array
-            The input image converted to the specified data type. It can be a
+            The input data converted to the specified data type. It can be a
             NumPy array or a PyTorch tensor.
 
         """
 
-        if apc.is_torch_array(image):
+        if apc.is_torch_array(inputs):
             # Mapping from string to torch dtype
             torch_dtypes = {
                 "float64": torch.float64,
@@ -7665,9 +7705,9 @@ class AsType(Feature):  # TODO
                     f"Unsupported dtype for torch.Tensor: {dtype}"
                 )
 
-            return image.to(dtype=torch_dtype)
+            return inputs.to(dtype=torch_dtype)
 
-        return image.astype(dtype)
+        return inputs.astype(dtype)
 
 
 class ChannelFirst2d(Feature):  # DEPRECATED
