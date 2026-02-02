@@ -706,7 +706,7 @@ class Feature(DeepTrackNode):
         data: Any
             The input data to be transformed, most commonly a NumPy array or a
             PyTorch tensor, but it can be anything.
-        _ID: tuple[int], optional
+        _ID: tuple[int, ...], optional
             The unique identifier for the current execution. Defaults to ().
         **kwargs: Any
             The current value of all properties in the `properties` attribute,
@@ -1400,7 +1400,7 @@ class Feature(DeepTrackNode):
 
         Parameters
         ----------
-        _ID: tuple[int], optional
+        _ID: tuple[int, ...], optional
             The unique identifier for the current execution. It defaults to ().
 
         Returns
@@ -7848,7 +7848,7 @@ class ChannelFirst2d(Feature):  # DEPRECATED
         return array
 
 
-class Store(Feature):  # TODO
+class Store(Feature):
     """Store the output of a feature for reuse.
 
     `Store` evaluates a given feature and stores its output in an internal
@@ -7860,7 +7860,7 @@ class Store(Feature):  # TODO
     ----------
     feature: Feature
         The feature to evaluate and store.
-    key: Any
+    key: PropertyLike[Any]
         The key used to identify the stored output.
     replace: PropertyLike[bool], optional
         If `True`, replaces the stored value with the current computation.
@@ -7872,12 +7872,12 @@ class Store(Feature):  # TODO
     ----------
     __distributed__: bool
         Always `False` for `Store`, as it handles caching locally.
-    _store: dict[Any, Any]
+    _store: dict[tuple[Any, tuple[int, ...]], Any]
         A dictionary used to store the outputs of the evaluated feature.
 
     Methods
     -------
-    `get(*_, key, replace, **kwargs) -> Any`
+    `get(inputs, key, replace, _ID, **kwargs) -> Any`
         Evaluate and store the feature output, or return the cached result.
 
     Examples
@@ -7893,36 +7893,39 @@ class Store(Feature):  # TODO
 
     Retrieve and store the value:
 
-    >>> output = store_feature(None, key="example", replace=False)
+    >>> output = store_feature(None)  # replace=False
+    >>> output
+    0.16627384166489168
 
     Retrieve the stored value without recomputing:
 
-    >>> value_feature.update()
-    >>> cached_output = store_feature(None, key="example", replace=False)
-    >>> print(cached_output == output)
-    True
+    >>> value_feature.new()
+    0.6541155683335725
 
-    >>> print(cached_output == value_feature())
-    False
+    >>> cached_output = store_feature(None)  # replace=False
+    >>> cached_output
+    0.16627384166489168
 
-    Retrieve the stored value recomputing:
+    Retrieve the stored value while recomputing:
 
-    >>> value_feature.update()
-    >>> cached_output = store_feature(None, key="example", replace=True)
-    >>> print(cached_output == output)
-    False
-
-    >>> print(cached_output == value_feature())
-    True
+    >>> value_feature.new()
+    0.26025510106604566
+    
+    >>> cached_output = store_feature(None, replace=True)
+    >>> cached_output
+    0.26025510106604566
 
     """
 
     __distributed__: bool = False
 
+    feature: Feature
+    _store: dict[tuple[Any, tuple[int, ...]], Any]
+
     def __init__(
         self: Store,
         feature: Feature,
-        key: Any,
+        key: PropertyLike[Any],
         replace: PropertyLike[bool] = False,
         **kwargs: Any,
     ):
@@ -7932,37 +7935,40 @@ class Store(Feature):  # TODO
         ----------
         feature: Feature
             The feature to evaluate and store.
-        key: Any
+        key: PropertyLike[Any]
             The key used to identify the stored output.
         replace: PropertyLike[bool], optional
             If `True`, replaces the stored value with a new computation.
             Defaults to `False`.
-        **kwargs:: Any
+        **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
         """
 
         super().__init__(key=key, replace=replace, **kwargs)
-        self.feature = self.add_feature(feature, **kwargs)
-        self._store: dict[Any, Image] = {}
+        self.feature = self.add_feature(feature)
+        self._store = {}
 
     def get(
         self: Store,
-        *_: Any,
+        inputs: Any,
         key: Any,
         replace: bool,
+        _ID: tuple[int, ...] = (),
         **kwargs: Any,
     ) -> Any:
         """Evaluate and store the feature output, or return the cached result.
 
         Parameters
         ----------
-        *_: Any
-            Placeholder for unused image input.
+        inputs: Any
+            Inputs to the feature.
         key: Any
             The key used to identify the stored output.
         replace: bool
             If `True`, replaces the stored value with a new computation.
+        _ID: tuple[int, ...], optional
+            The unique identifier for the current execution. Defaults to ().
         **kwargs: Any
             Additional keyword arguments passed to the feature.
 
@@ -7973,16 +7979,11 @@ class Store(Feature):  # TODO
 
         """
 
-        # Check if the value should be recomputed or retrieved from the store
-        if replace or not key in self._store:
-            self._store[key] = self.feature()
+        store_key = (key, _ID)
+        if replace or store_key not in self._store:
+            self._store[store_key] = self.feature(inputs, _ID=_ID, **kwargs)
 
-        # TODO TBE
-        ## Return the stored or newly computed result
-        #if self._wrap_array_with_image:
-        #    return Image(self._store[key], copy=False)
-
-        return self._store[key]
+        return self._store[store_key]
 
 
 class Squeeze(Feature):
@@ -8534,7 +8535,7 @@ class TakeProperties(Feature):
 
     Methods
     -------
-    `get(inputs, names, _ID, **kwargs) -> list[Any] | tuple[list[Any], ...]`
+    `get(*_, names, _ID, **kwargs) -> list[Any] | tuple[list[Any], ...]`
         Extract the specified properties from the feature pipeline.
         When evaluating the feature, single-element lists may be unwrapped to
         scalars by the Feature post-processing.
@@ -8598,7 +8599,7 @@ class TakeProperties(Feature):
 
     def get(
         self: TakeProperties,
-        inputs: Any,
+        *_: Any,
         names: tuple[str, ...],
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
@@ -8610,7 +8611,7 @@ class TakeProperties(Feature):
 
         Parameters
         ----------
-        inputs: Any
+        *_: Any
             The input data (unused in this method).
         names: tuple[str, ...]
             The names of the properties to extract.
