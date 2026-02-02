@@ -2749,20 +2749,20 @@ class TestFeatures(unittest.TestCase):
             self.assertTrue(torch.equal(output_image, input_image.permute(2, 0, 1)))
 
 
-    def test_Store(self):  # TODO
+    def test_Store(self):
         value_feature = features.Value(lambda: np.random.rand())
 
         store_feature = features.Store(feature=value_feature, key="example")
 
-        output = store_feature(None, key="example", replace=False)
+        output = store_feature(None)
 
         value_feature.update()
-        cached_output = store_feature(None, key="example", replace=False)
+        cached_output = store_feature(None)
         self.assertEqual(cached_output, output)
         self.assertNotEqual(cached_output, value_feature())
 
         value_feature.update()
-        cached_output = store_feature(None, key="example", replace=True)
+        cached_output = store_feature(None, replace=True)
         self.assertNotEqual(cached_output, output)
         self.assertEqual(cached_output, value_feature())
 
@@ -2771,19 +2771,19 @@ class TestFeatures(unittest.TestCase):
             value_feature = features.Value(lambda: torch.rand(1))
 
             store_feature = features.Store(
-                feature=value_feature, key="example"
+                feature=value_feature, key="example",
             )
 
-            output = store_feature(None, key="example", replace=False)
+            output = store_feature(None)
 
             value_feature.update()
-            cached_output = store_feature(None, key="example", replace=False)
+            cached_output = store_feature(None)
             torch.testing.assert_close(cached_output, output)
             with self.assertRaises(AssertionError):
                 torch.testing.assert_close(cached_output, value_feature())
 
             value_feature.update()
-            cached_output = store_feature(None, key="example", replace=True)
+            cached_output = store_feature(None, replace=True)
             with self.assertRaises(AssertionError):
                 torch.testing.assert_close(cached_output, output)
             torch.testing.assert_close(cached_output, value_feature())
