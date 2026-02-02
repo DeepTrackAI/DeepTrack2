@@ -8404,23 +8404,23 @@ class Transpose(Feature):
 Permute = Transpose
 
 
-class OneHot(Feature):  # TODO
+class OneHot(Feature):
     """Convert the input to a one-hot encoded array.
 
-    This feature takes an input array of integer class labels and converts it 
-    into a one-hot encoded array. The last dimension of the input is replaced 
+    This feature takes an input array of integer class labels and converts it
+    into a one-hot encoded array. The last dimension of the input is replaced
     by the one-hot encoding.
 
     Parameters
     ----------
-    num_classes: int
+    num_classes: PropertyLike[int]
         The total number of classes for the one-hot encoding.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
     Methods
     -------
-    `get(image, num_classes, **kwargs) -> array or tensor`
+    `get(inputs, num_classes, **kwargs) -> array or tensor`
         Convert the input array of class labels into a one-hot encoded array.
         The input and output can be NumPy arrays or PyTorch tensors.
 
@@ -8440,14 +8440,14 @@ class OneHot(Feature):  # TODO
     >>> one_hot_encoded = one_hot_feature.get(input_data, num_classes=3)
     >>> one_hot_encoded
     array([[1., 0., 0.],
-        [0., 1., 0.],
-        [0., 0., 1.]])
+           [0., 1., 0.],
+           [0., 0., 1.]], dtype=float32)
 
     """
 
     def __init__(
         self: OneHot,
-        num_classes: int,
+        num_classes: PropertyLike[int],
         **kwargs: Any,
     ):
         """Initialize the OneHot feature.
@@ -8474,7 +8474,7 @@ class OneHot(Feature):  # TODO
         Parameters
         ----------
         image: array or tensor
-            The input array of class labels. The last dimension should contain 
+            The input array of class labels. The last dimension should contain
             integers representing class indices. The input can be a NumPy array
             or a PyTorch tensor.
         num_classes: int
@@ -8485,7 +8485,7 @@ class OneHot(Feature):  # TODO
         Returns
         -------
         array or tensor
-            The one-hot encoded array. The last dimension is replaced with 
+            The one-hot encoded array. The last dimension is replaced with
             one-hot vectors of length `num_classes`. The output can be a NumPy
             array or a PyTorch tensor. In all cases, it is of data type float32
             (e.g., np.float32 or torch.float32).
@@ -8505,11 +8505,11 @@ class OneHot(Feature):  # TODO
         return xp.eye(num_classes, dtype=np.float32)[image]
 
 
-class TakeProperties(Feature):  # TODO
+class TakeProperties(Feature):
     """Extract all instances of a set of properties from a pipeline.
 
-    Only extracts the properties if the feature contains all given
-    property-names. The order of the properties is not guaranteed to be the
+    Only extracts the properties from dependencies that contain all given
+    property names. The order of the properties is not guaranteed to be the
     same as the evaluation order.
 
     If there is only a single property name, this will return a list of the
@@ -8519,8 +8519,8 @@ class TakeProperties(Feature):  # TODO
     ----------
     feature: Feature
         The feature from which to extract properties.
-    names: list[str]
-        The names of the properties to extract
+    *names: str
+        The names of the properties to extract.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
 
@@ -8534,27 +8534,29 @@ class TakeProperties(Feature):  # TODO
 
     Methods
     -------
-    `get(image, names, **kwargs) -> array or tensor or tuple of arrays/tensors`
+    `get(inputs, names, _ID, **kwargs) -> list[Any] | tuple[list[Any], ...]`
         Extract the specified properties from the feature pipeline.
+        When evaluating the feature, single-element lists may be unwrapped to
+        scalars by the Feature post-processing.
 
     Examples
     --------
     >>> import deeptrack as dt
 
-    >>> class ExampleFeature(Feature):
+    >>> class ExampleFeature(dt.Feature):
     ...     def __init__(self, my_property, **kwargs):
     ...         super().__init__(my_property=my_property, **kwargs)
 
     Create an example feature with a property:
 
-    >>> feature = ExampleFeature(my_property=Property(42))
+    >>> feature = ExampleFeature(my_property=dt.Property(42))
 
     Use `TakeProperties` to extract the property:
 
-    >>> take_properties = dt.TakeProperties(feature)
-    >>> output = take_properties.get(image=None, names=["my_property"])
-    >>> print(output)
-    [42]
+    >>> take_my_property = dt.TakeProperties(feature, "my_property")
+    >>> output = take_my_property(None)
+    >>> output
+    42
 
     Create a `Gaussian` feature:
 
@@ -8562,10 +8564,10 @@ class TakeProperties(Feature):  # TODO
 
     Use `TakeProperties` to extract the property:
 
-    >>> take_properties = dt.TakeProperties(noise_feature)
-    >>> output = take_properties.get(image=None, names=["mu"])
-    >>> print(output)
-    [7]
+    >>> take_properties = dt.TakeProperties(noise_feature, "mu", "sigma")
+    >>> output = take_properties(None)
+    >>> output
+    (7, 12)
 
     """
 
@@ -8575,7 +8577,7 @@ class TakeProperties(Feature):  # TODO
     def __init__(
         self: TakeProperties,
         feature: Feature,
-        *names: PropertyLike[str],
+        *names: str,
         **kwargs: Any,
     ):
         """Initialize the TakeProperties feature.
@@ -8584,7 +8586,7 @@ class TakeProperties(Feature):  # TODO
         ----------
         feature: Feature
             The feature from which to extract properties.
-        *names: PropertyLike[str]
+        *names: str
             One or more names of the properties to extract.
         **kwargs: Any, optional
             Additional keyword arguments passed to the parent `Feature` class.
@@ -8595,26 +8597,21 @@ class TakeProperties(Feature):  # TODO
         self.feature = self.add_feature(feature)
 
     def get(
-        self: Feature,
-        image: np.ndarray | torch.Tensor,
+        self: TakeProperties,
+        inputs: Any,
         names: tuple[str, ...],
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
-    ) -> (
-        np.ndarray
-        | torch.Tensor
-        | tuple[np.ndarray, ...]
-        | tuple[torch.Tensor, ...]
-    ):
+    ) -> list[Any] | tuple[list[Any], ...]:
         """Extract the specified properties from the feature pipeline.
 
         This method retrieves the values of the specified properties from the
-        feature's dependency graph and returns them as NumPy arrays.
+        feature's dependency graph and returns them as lists of values.
 
         Parameters
         ----------
-        image: array or tensor
-            The input image (unused in this method).
+        inputs: Any
+            The input data (unused in this method).
         names: tuple[str, ...]
             The names of the properties to extract.
         _ID: tuple[int, ...], optional
@@ -8625,11 +8622,12 @@ class TakeProperties(Feature):  # TODO
 
         Returns
         -------
-        array or tensor or tuple of arrays or tensors
-            If a single property name is provided, a NumPy array or a PyTorch
-            tensor containing the property values is returned. If multiple
-            property names are provided, a tuple of NumPy arrays or PyTorch
-            tensors is returned, where each array/tensor corresponds to a property.
+        list[Any] or tuple[list[Any], ...]
+            If a single property name is provided, a list of extracted values
+            is returned. If multiple property names are provided, a tuple of
+            lists is returned, one per property name.
+            Note that when evaluating the feature (calling it), DeepTrack may
+            unwrap single-element lists and return scalars.
 
         """
 
@@ -8645,8 +8643,10 @@ class TakeProperties(Feature):  # TODO
         # Traverse the dependencies of the feature.
         for dep in self.feature.recurse_dependencies():
             # Check if the dependency contains all required property names.
-            if (isinstance(dep, PropertyDict) 
-                and all(name in dep for name in names)):
+            if (
+                isinstance(dep, PropertyDict)
+                and all(name in dep for name in names)
+            ):
                 for name in names:
                     # Extract property values that match the current _ID.
                     data = dep[name].data.dict
@@ -8655,9 +8655,9 @@ class TakeProperties(Feature):  # TODO
                             res[name].append(value.current_value())
 
         # Convert the results to tuple.
-        res = tuple([res[name] for name in names])
+        res = tuple(res[name] for name in names)
 
-        # Return a single array if only one property name is specified.
+        # Return a single list if only one property name is specified.
         if len(res) == 1:
             res = res[0]
 
