@@ -290,6 +290,25 @@ class TestFeatures(unittest.TestCase):
         self.assertNotEqual(out1a, out1c)
         self.assertNotEqual(out2a, out2c)
 
+    def test_new(self):
+        counter = {"i": 0}
+
+        def sampling_rule():
+            counter["i"] += 1
+            return counter["i"]
+
+        feature = features.Value(0) >> features.Add(b=sampling_rule)
+
+        out1 = feature.new()
+        out2 = feature.new()
+
+        self.assertEqual(out1, 1)
+        self.assertEqual(out2, 2)
+
+        out3 = feature.new(b=5)
+
+        self.assertEqual(out3, 5)
+
     def test_Feature_add_feature(self):
 
         feature = features.Add(b=2)
@@ -1550,17 +1569,18 @@ class TestFeatures(unittest.TestCase):
         test_operator(self, operator.ge)
 
 
-    def test_Equals(self):  # TODO
+    def test_Equals(self):
         """
         Important Notes
         ---------------
-        - Unlike other arithmetic operators, `Equals` does not define `__eq__` 
-          (`==`) and `__req__` (`==`) in `DeepTrackNode` and `Feature`, as this 
+        - Unlike other arithmetic operators, `Equals` does not define `__eq__`
+          (`==`) and `__req__` (`==`) in `DeepTrackNode` and `Feature`, as this
           would affect Python’s built-in identity comparison.
-        - This means that the standard `==` operator is overloaded only for 
-          expressions involving `Feature` instances but not for comparisons 
+        - This means that the standard `==` operator is overloaded only for
+          expressions involving `Feature` instances but not for comparisons
           involving regular Python objects.
         - Always use `>>` to apply `Equals` correctly in a feature chain.
+
         """
 
         equals_feature = features.Equals(b=2)
@@ -2315,7 +2335,7 @@ class TestFeatures(unittest.TestCase):
         )
 
 
-    def test_OneOf(self):  # TODO
+    def test_OneOf(self):
         # Set up the features and input image for testing.
         feature_1 = features.Add(b=10)
         feature_2 = features.Multiply(b=2)
@@ -2334,7 +2354,7 @@ class TestFeatures(unittest.TestCase):
         ]
         self.assertTrue(
             any(
-                np.array_equal(output_image, expected) 
+                np.array_equal(output_image, expected)
                 for expected in expected_outputs
             )
         )
@@ -2350,7 +2370,7 @@ class TestFeatures(unittest.TestCase):
         expected_output = input_image * 2
         self.assertTrue(np.array_equal(output_image, expected_output))
 
-    def test_OneOf_list(self):  # TODO
+    def test_OneOf_list(self):
 
         values = features.OneOf(
             [features.Value(1), features.Value(2), features.Value(3)]
@@ -2381,7 +2401,7 @@ class TestFeatures(unittest.TestCase):
 
         self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
 
-    def test_OneOf_tuple(self):  # TODO
+    def test_OneOf_tuple(self):
 
         values = features.OneOf(
             (features.Value(1), features.Value(2), features.Value(3))
@@ -2412,7 +2432,7 @@ class TestFeatures(unittest.TestCase):
 
         self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
 
-    def test_OneOf_set(self):  # TODO
+    def test_OneOf_set(self):
 
         values = features.OneOf(
             set([features.Value(1), features.Value(2), features.Value(3)])
@@ -2438,7 +2458,7 @@ class TestFeatures(unittest.TestCase):
         self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
 
 
-    def test_OneOfDict_basic(self):  # TODO
+    def test_OneOfDict_basic(self):
 
         values = features.OneOfDict(
             {
@@ -2471,9 +2491,12 @@ class TestFeatures(unittest.TestCase):
 
         self.assertEqual(values.update().resolve(key="3"), 3)
 
-        self.assertRaises(KeyError, lambda: values.update().resolve(key="4"))
+        self.assertRaises(
+            KeyError,
+            lambda: values.new(key="4"),
+        )
 
-    def test_OneOfDict(self):  # TODO
+    def test_OneOfDict(self):
         features_dict = {
             "add": features.Add(b=10),
             "multiply": features.Multiply(b=2),
@@ -2502,6 +2525,10 @@ class TestFeatures(unittest.TestCase):
         expected_output = input_image * 2
         self.assertTrue(np.array_equal(output_image, expected_output))
 
+        self.assertRaises(
+            KeyError,
+            lambda: controlled_feature.new(key="not a key!!!"),
+        )
 
     def test_LoadImage(self):  # TODO
         return
@@ -2617,27 +2644,35 @@ class TestFeatures(unittest.TestCase):
                 os.remove(file)
 
 
-    def test_AsType(self):  # TODO
+    def test_AsType(self):
 
         # Test for Numpy arrays.
-        input_image = np.array([1.5, 2.5, 3.5])
+        input_array = np.array([1.5, 2.5, 3.5])
 
-        data_types = ["float64", "int32", "uint16", "int16", "uint8", "int8"]
+        data_types = [
+            "float64",
+            "int32",
+            "uint16",
+            "int16",
+            "uint8",
+            "int8",
+        ]
+
         for dtype in data_types:
             astype_feature = features.AsType(dtype=dtype)
-            output_image = astype_feature.get(input_image, dtype=dtype)
-            self.assertTrue(output_image.dtype == np.dtype(dtype))
+            output_array = astype_feature.get(input_array, dtype=dtype)
+            self.assertTrue(output_array.dtype == np.dtype(dtype))
 
             # Additional check for specific behavior of integers.
             if np.issubdtype(np.dtype(dtype), np.integer):
                 # Verify that fractional parts are truncated
                 self.assertTrue(
-                    np.all(output_image == np.array([1, 2, 3], dtype=dtype))
+                    np.all(output_array == np.array([1, 2, 3], dtype=dtype))
                 )
 
         ### Test with PyTorch tensor (if available)
         if TORCH_AVAILABLE:
-            input_image_torch = torch.tensor([1.5, 2.5, 3.5])
+            input_tensor = torch.tensor([1.5, 2.5, 3.5])
 
             data_types_torch = [
                 "float64",
@@ -2661,11 +2696,9 @@ class TestFeatures(unittest.TestCase):
 
             for dtype in data_types_torch:
                 astype_feature = features.AsType(dtype=dtype)
-                output_image = astype_feature.get(
-                    input_image_torch, dtype=dtype
-                )
+                output_tensor = astype_feature.get(input_tensor, dtype=dtype)
                 expected_dtype = torch_dtypes_map[dtype]
-                self.assertEqual(output_image.dtype, expected_dtype)
+                self.assertEqual(output_tensor.dtype, expected_dtype)
 
                 # Additional check for specific behavior of integers.
                 if expected_dtype in [
@@ -2676,7 +2709,7 @@ class TestFeatures(unittest.TestCase):
                 ]:
                     # Verify that fractional parts are truncated
                     expected = torch.tensor([1, 2, 3], dtype=expected_dtype)
-                    self.assertTrue(torch.equal(output_image, expected))
+                    self.assertTrue(torch.equal(output_tensor, expected))
 
 
     def test_ChannelFirst2d(self):  # DEPRECATED
