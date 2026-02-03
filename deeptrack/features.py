@@ -1749,13 +1749,13 @@ class Feature(DeepTrackNode):
 
         return seed
 
-    def bind_arguments(  # TODO
+    def bind_arguments(
         self: Feature,
         arguments: Arguments | Feature,
     ) -> Feature:
         """Bind another feature’s properties as arguments to this feature.
 
-        This method allows properties of `arguments` to be dynamically linked 
+        This method allows properties of `arguments` to be dynamically linked
         to this feature, enabling shared configurations across multiple
         features. It is commonly used in advanced feature pipelines.
 
@@ -1782,9 +1782,11 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Create an `Arguments` feature:
+
         >>> arguments = dt.Arguments(scale=2.0)
 
         Bind it with a pipeline:
+
         >>> pipeline = dt.Value(value=3) >> dt.Add(b=1 * arguments.scale)
         >>> pipeline.bind_arguments(arguments)
         >>> result = pipeline()
@@ -1792,6 +1794,7 @@ class Feature(DeepTrackNode):
         5.0
 
         Override the argument dynamically:
+
         >>> result = pipeline(scale=1.0)
         >>> result
         4.0
