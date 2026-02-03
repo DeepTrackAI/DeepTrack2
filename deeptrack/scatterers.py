@@ -178,7 +178,7 @@ from deeptrack.backend.units import (
 from deeptrack.backend import mie
 from deeptrack.math import AveragePooling
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
-from deeptrack.image import pad_image_to_fft
+from deeptrack.optics import pad_image_to_fft
 # from deeptrack.types import ArrayLike TBE
 from deeptrack import units_registry as u
 
