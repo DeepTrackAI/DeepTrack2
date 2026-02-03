@@ -179,7 +179,7 @@ from deeptrack.backend import mie
 from deeptrack.math import AveragePooling
 from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
 from deeptrack.image import pad_image_to_fft
-from deeptrack.types import ArrayLike
+# from deeptrack.types import ArrayLike TBE
 from deeptrack import units_registry as u
 
 from deeptrack.backend import xp
@@ -216,7 +216,7 @@ class Scatterer(Feature):
 
     Attributes
     ----------
-    position:  ArrayLike[float, float (, float)]
+    position:   tuple[float, float] | tuple[float, float, float]
         The position of the particle, length 2 or 3. Third index is optional,
         and represents the position in the direction normal to the
         camera plane.
@@ -252,7 +252,7 @@ class Scatterer(Feature):
 
     def __init__(
         self,
-        position: ArrayLike[float] = (32, 32),
+        position: tuple[float, float] | tuple[float, float, float] = (32.0, 32.0),
         z: float = 0.0,
         value: float = 1.0,
         position_unit: str = "pixel",
@@ -306,16 +306,18 @@ class Scatterer(Feature):
         properties = super()._process_properties(properties)
         self._processed_properties = True
         return properties
-
+        
     def _process_and_get(
         self,
         *args,
-        voxel_size: ArrayLike[int],
+        voxel_size: np.ndarray,
         upsample: int,
         upsample_axes=None,
         crop_empty=True,
         **kwargs
-    ) -> list[np.ndarray]:
+    ) -> list[np.ndarray | torch.Tensor]:
+
+
         # Post processes the created object to handle upsampling,
         # as well as cropping empty slices.
         if not self._processed_properties:
@@ -409,7 +411,7 @@ class PointParticle(VolumeScatterer):
 
     Parameters
     ----------
-    position:  ArrayLike[float, float (, float)]
+    position:  tuple[float, float] | tuple[float, float, float] = (32.0, 32.0)
         Particle position in 2D or 3D. Third index is optional,
         and represents the position in the direction normal to the
         camera plane.
@@ -453,14 +455,14 @@ class Ellipse(VolumeScatterer):
 
     Parameters
     ----------
-    radius: float | ArrayLike[float, (,float)]
+    radius: float | tuple[float, float]
         Radius of the ellipse in meters. If only one value,
         assume circular.
         
     rotation: float
         Orientation angle of the ellipse in the camera plane in radians.
         
-    position: ArrayLike[float]
+    position: tuple[float, float] | tuple[float, float, float]
         The position of the particle. Third index is optional,
         and represents the position in the direction normal to the
         camera plane.
@@ -537,8 +539,8 @@ class Ellipse(VolumeScatterer):
         *ignore,
         radius: np.ndarray | torch.Tensor | float,
         rotation: float,
-        voxel_size: float,
-        transpose: float,
+        voxel_size: np.ndarray | torch.Tensor,
+        transpose: bool,
         **kwargs
     ) -> np.ndarray | torch.Tensor:
         """Abstract method to initialize the ellipse scatterer"""
@@ -582,7 +584,7 @@ class Sphere(VolumeScatterer):
     radius: float
         Radius of the sphere in meters.
         
-    position: ArrayLike[float, float (, float)]
+        position: tuple[float, float] | tuple[float, float, float]
         The position of the particle, length 2 or 3. Third index is optional,
         and represents the position in the direction normal to the
         camera plane.
@@ -616,16 +618,12 @@ class Sphere(VolumeScatterer):
         self,
         image: np.ndarray | torch.Tensor,
         radius: float,
-        voxel_size: float,
+        voxel_size: np.ndarray | torch.Tensor,
         **kwargs
     ) -> np.ndarray | torch.Tensor:
         """Abstract method to initialize the sphere scatterer"""
 
         # Create a grid to calculate on.
-        # rad = radius * xp.ones(3) / voxel_size
-        # rad_ceil = int(
-        #     xp.ceil(xp.max(radius) / xp.min(voxel_size)).item()
-        # )
         rad = xp.asarray(radius) * xp.ones(3) / xp.asarray(voxel_size)
         rad_ceil = xp.ceil(rad)
         if hasattr(rad_ceil, "astype"):
@@ -657,14 +655,14 @@ class Ellipsoid(VolumeScatterer):
 
     Parameters
     ----------
-    radius: float | ArrayLike[float (, float, float)]
+        radius: float | tuple[float, float, float]
         Radius of the ellipsoid in meters. If only one value,
         assume spherical.
         
     rotation: float
         Rotation of the ellipsoid in about the x, y and z axis.
         
-    position: ArrayLike[float, float (, float)]
+    position: tuple[float, float] | tuple[float, float, float]
         The position of the particle. Third index is optional,
         and represents the position in the direction normal to the
         camera plane.
@@ -835,69 +833,57 @@ class MieScatterer(FieldScatterer):
     Attributes
     ----------
     coefficients: Callable[int] -> tuple[ndarray, ndarray]
-    
         Function that returns the harmonics coefficients.
         
     offset_z: "auto" | float
-    
         Distance from the particle in the z direction the field is evaluated.
         If "auto", this is calculated from the pixel size and
         `collection_angle`.
         
     collection_angle: "auto" | float
-    
         The maximum collection angle in radians. If "auto", this
         is calculated from the objective NA (which is true if the objective is
         the limiting aperature).
         
     input_polarization: float | Quantity
-    
         Defines the polarization angle of the input. For simulating circularly
         polarized light we recommend a coherent sum of two simulated fields. 
         For unpolarized light we recommend a incoherent sum of two simulated
         fields. If defined as "circular", the coefficients are set to 1/2.
         
     output_polarization: float | Quantity | None
-    
         If None, the output light is not polarized. Otherwise defines the
         angle of the polarization filter after the sample. For off-axis, keep
         the same as input_polarization. If defined as "circular", the
         coefficients are multiplied by 1. I.e. no change.
         
-    L: int | str
-    
+    L: int | str    
         The number of terms used to evaluate the mie theory. If `"auto"`,
         it determines the number of terms automatically.
         
-    position: ArrayLike[float, float (, float)]
-    
+    position: tuple[float, float] | tuple[float, float, float]
         The position of the particle, length 2 or 3. Third index is optional,
         and represents the position in the direction normal to the
         camera plane.
         
     z: float
-    
         The position in the direction normal to the
         camera plane. Used if `position` is of length 2.
         
     return_fft: bool
-    
         If True, the feature returns the fft of the field, rather than the
         field itself.
         
     coherence_length: float
-    
         The temporal coherence length of a partially coherent light given in
         meters. If None, the illumination is assumed to be coherent.
         
     amp_factor: float
-    
         A factor that scales the amplification of the field. 
         This is useful for scaling the field to the correct intensity.
         Default is 1.
         
     phase_shift_correction: bool
-    
         If True, the feature applies a phase shift correction to the output
         field. This is necessary for ISCAT simulations. 
         The correction depends on the k-vector and z according to the formula: 
@@ -912,7 +898,7 @@ class MieScatterer(FieldScatterer):
         collection_angle=(u.radian, u.radian),
         wavelength=(u.meter, u.meter),
         offset_z=(u.meter, u.meter),
-        coherence_length=(u.meter, u.pixel),
+        coherence_length=(u.meter, u.meter),
     )
 
     def __init__(
@@ -936,7 +922,6 @@ class MieScatterer(FieldScatterer):
         illumination_angle: float=0,
         amp_factor: float=1,
         phase_shift_correction: bool=False,
-        # pupil: ArrayLike=[], # Daniel
         **kwargs,
     ) -> None:
         if polarization_angle is not None:
@@ -969,7 +954,6 @@ class MieScatterer(FieldScatterer):
             illumination_angle=illumination_angle,
             amp_factor=amp_factor,
             phase_shift_correction=phase_shift_correction,
-            # pupil=pupil, # Daniel
             **kwargs,
         )
 
@@ -994,7 +978,6 @@ class MieScatterer(FieldScatterer):
             properties["collection_angle"] = np.arcsin(
                 properties["NA"] / properties["refractive_index_medium"]
             )
-        print('properties:', properties)
 
         if properties["offset_z"] == "auto":
             size = (
@@ -1002,34 +985,37 @@ class MieScatterer(FieldScatterer):
                 - properties["output_region"][:2]
             )
             xSize, ySize = size
-            arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
-            min_edge_size = np.min(arr.shape)
+            # arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
+            # min_edge_size = np.min(arr.shape)
+            # offset_z should be calculated with the physical size of the image
+            # not the fft-padded size
+            min_edge_size=np.min([xSize,ySize])
             properties["offset_z"] = (
                 min_edge_size
                 * 0.45
-                * min(get_active_voxel_size()[:2])# * min(properties["voxel_size"][:2])
+                * min(get_active_voxel_size()[:2])
                 / np.tan(properties["collection_angle"])
             )
         return properties
 
     def get_xy_size(
         self,
-        output_region: ArrayLike[int],
-        padding: ArrayLike[int]
-    ) -> ArrayLike[int]:
+        output_region: tuple[int, int, int, int],
+        padding: tuple[int, int, int, int],
+    ) -> tuple[int, int]:
         """Computes the x and y dimensions of the output region with padding.
 
         Parameters
         ----------
-        output_region: ArrayLike[int]
+        output_region: tuple[int, int, int, int]
             The coordinates defining the output region.
 
-        padding: ArrayLike[int]
+        padding: tuple[int, int, int, int]
             The padding applied in each direction.
 
         Returns
         -------
-        ArrayLike[int]
+        tuple[int, int]
             The total size in x and y directions.
 
         """
@@ -1038,24 +1024,25 @@ class MieScatterer(FieldScatterer):
             output_region[3] - output_region[1] + padding[1] + padding[3],
         )
 
+
     def get_XY(
         self,
-        shape: ArrayLike[float],
-        voxel_size: ArrayLike[float]
-    ) -> ArrayLike[int] :
+        shape: tuple[int, int],
+        voxel_size: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Generates meshgrid for X and Y given the shape and voxel size.
 
         Parameters
         ----------
-        shape: ArrayLike[float]
+        shape: tuple[int, int]
             The dimensions of the output region.
 
-        voxel_size: ArrayLike[float]
+        voxel_size: tuple[float, float]
             The size of each voxel in meters.
 
         Returns
         -------
-        ArrayLike[int]
+        tuple[np.ndarray, np.ndarray]
             The meshgrid of X and Y coordinates.
 
         """
@@ -1065,18 +1052,18 @@ class MieScatterer(FieldScatterer):
 
     def get_detector_mask(
         self,
-        X: float,
-        Y: float,
-        radius: float
-    ) -> ArrayLike[bool]:
+        X: np.ndarray,
+        Y: np.ndarray,
+        radius: float,
+    ) -> np.ndarray:
         """Creates a mask based on a circular aperture.
 
         Parameters
         ----------
-        X: float
+        X: np.ndarray
             X-coordinates of the field.
 
-        Y: float
+        Y: np.ndarray
             Y-coordinates of the field.
 
         radius: float
@@ -1084,7 +1071,7 @@ class MieScatterer(FieldScatterer):
 
         Returns
         -------
-        ArrayLike[bool]
+        np.ndarray
             A boolean mask.
 
         """
@@ -1093,13 +1080,36 @@ class MieScatterer(FieldScatterer):
 
     def get_plane_in_polar_coords(
         self,
-        shape: int,
-        voxel_size: ArrayLike[float],
-        plane_position: float,
+        shape: tuple[int, int],
+        voxel_size: np.ndarray,
+        plane_position: np.ndarray,
         illumination_angle: float,
-        # k: float, # Daniel
-    ) -> tuple[float, float, float, float]:
-        """Computes the coordinates of the plane in polar form."""
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Computes the coordinates of the plane in polar form.
+        
+        Parameters
+        ----------
+        shape
+            Shape of the evaluation plane (Nx, Ny).
+        voxel_size
+            Physical voxel size in meters (dx, dy, dz).
+        plane_position
+            Position of the plane relative to the particle (x, y, z) in meters.
+        illumination_angle
+            Incident illumination angle in radians.
+
+        Returns
+        -------
+        R3
+            Radial distance from particle to plane.
+        cos_theta
+            Cosine of the scattering angle.
+        illumination_cos_theta
+            Cosine of the effective illumination angle.
+        phi
+            Azimuthal angle.
+        
+        """
 
         X, Y = self.get_XY(shape, voxel_size)
 
@@ -1111,14 +1121,6 @@ class MieScatterer(FieldScatterer):
         R2_squared = X ** 2 + Y ** 2
         R3 = np.sqrt(R2_squared + Z ** 2)  # Might be +z instead of -z.
         
-        # # DANIEL
-        # Q = np.sqrt(R2_squared)/voxel_size[0]**2*2*np.pi/shape[0]
-        # # is dimensionally ok?
-        # sin_theta=Q/(k)
-        # pupil_mask=sin_theta<1
-        # cos_theta=np.zeros(sin_theta.shape)
-        # cos_theta[pupil_mask]=np.sqrt(1-sin_theta[pupil_mask]**2)
-
         # Fet the angles.
         cos_theta = Z / R3
         
@@ -1127,14 +1129,15 @@ class MieScatterer(FieldScatterer):
             )
         phi = np.arctan2(Y, X)
 
-        return R3, cos_theta, illumination_cos_theta, phi#, pupil_mask # Daniel
+        return R3, cos_theta, illumination_cos_theta, phi
+
 
     def get(
         self,
         inp,
-        position: ArrayLike[float, float],
-        voxel_size: ArrayLike[float],
-        padding: ArrayLike[int],
+        position: np.ndarray,
+        voxel_size: np.ndarray,
+        padding: np.ndarray,
         wavelength: float,
         refractive_index_medium: float,
         L: int | str,
@@ -1148,22 +1151,21 @@ class MieScatterer(FieldScatterer):
         position_objective: float,
         return_fft: bool,
         coherence_length: float,
-        output_region: ArrayLike[int],
+        output_region: np.ndarray,
         illumination_angle: float,
         amp_factor: float,
         phase_shift_correction: bool,
-        # pupil: ArrayLike, # Daniel
         **kwargs,
-    ) -> ArrayLike[float]:
+    ) -> np.ndarray:
         """Abstract method to initialize the Mie scatterer"""
 
-        # Get size of the output, considers upscale.
+        # Get size of the output properly upscaled with padding.
         xSize, ySize = self.get_xy_size(output_region, padding)
 
-        # Voxel size, considers upscale.
+        # Voxel size in upscaled grid.
         voxel_size = get_active_voxel_size()
 
-        # Scale, considers upscale.
+        # Scale of upscale.
         scale = get_active_scale()
 
         # Create array to calculate on. Will contain the complex optical field 
@@ -1171,7 +1173,6 @@ class MieScatterer(FieldScatterer):
         # will later be Fourier-transformed to obtain the detector image. 
         # Pad to make fft efficient.
         arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
-        
         # Scale particle position to meters. Considers upscale.
         position = np.array(position) * scale[: len(position)] * voxel_size[: len(position)]
         
@@ -1180,7 +1181,7 @@ class MieScatterer(FieldScatterer):
         # objective. 
         pupil_physical_size = working_distance * np.tan(collection_angle) * 2
         
-         # Scale zposition to meters. Considers upscale. ### Check units
+        # Scale z position to meters. Considers upscale. ### Check units
         z = z * voxel_size[2] * scale[2]
         
         # Geometric scaling factor that maps positions from the pupil plane to 
@@ -1204,13 +1205,12 @@ class MieScatterer(FieldScatterer):
             )
         )
 
-        # Get field evaluation plane at offset_z. # , pupil_mask # Daniel
+        # Get field evaluation plane at offset_z.
         R3_field, cos_theta_field, illumination_angle_field, phi_field =\
         self.get_plane_in_polar_coords(
             arr.shape, voxel_size,
             relative_position * ratio,
             illumination_angle,
-            # k # Daniel
         )
         
         cos_phi_field, sin_phi_field = np.cos(phi_field), np.sin(phi_field)
@@ -1228,7 +1228,7 @@ class MieScatterer(FieldScatterer):
             sin_phi_field / ratio
         )
 
-        # If the beam is within the pupil. Remove if Daniel
+        # If the beam is within the pupil.
         pupil_mask = (x_farfield - position_objective[0]) ** 2 + (
             y_farfield - position_objective[1]
         ) ** 2 < (pupil_physical_size / 2) ** 2
@@ -1255,7 +1255,7 @@ class MieScatterer(FieldScatterer):
                     S2_coef = 1/2
 
         if isinstance(output_polarization, (float, int, Quantity)):
-            if isinstance(input_polarization, Quantity):
+            if isinstance(output_polarization, Quantity):
                 output_polarization = output_polarization.to("rad")
                 output_polarization = output_polarization.magnitude
 
@@ -1270,6 +1270,8 @@ class MieScatterer(FieldScatterer):
         A, B = coefficients(L)
         PI, TAU = mie.harmonics(illumination_angle_field, L)
 
+
+        # All Mie arrays are 1-based in physics, but stored 0-based in Python. 
         # Normalization factor.
         E = [(2 * i + 1) / (i * (i + 1)) for i in range(1, L + 1)]
 
@@ -1282,8 +1284,6 @@ class MieScatterer(FieldScatterer):
             [E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(0, L)]
         )
         
-        # Daniel
-        # arr[pupil_mask] = (S2 * S2_coef + S1 * S1_coef)/amp_factor
         arr[pupil_mask] = (
             -1j
             / (k * R3_field)
@@ -1310,21 +1310,13 @@ class MieScatterer(FieldScatterer):
             mask = np.exp(-0.5 * (x ** 2 + y ** 2) / ((sigma) ** 2))
             arr = arr * mask
 
-        # Not sure if needed... CM
-        # if len(pupil)>0:
-        #     c_pix=[arr.shape[0]//2,arr.shape[1]//2] 
 
-        #     arr[c_pix[0]-pupil.shape[0]//2:c_pix[0]+pupil.shape[0]//2,c_pix[1]-pupil.shape[1]//2:c_pix[1]+pupil.shape[1]//2]*=pupil
-        
-        # Daniel
-        # fourier_field = -np.fft.ifft2(np.fft.fftshift(np.fft.fft2(np.fft.fftshift(arr)))) 
         fourier_field = np.fft.fft2(arr)
 
         propagation_matrix = get_propagation_matrix(
             fourier_field.shape,
             pixel_size=voxel_size[:2], # this needs a double check
             wavelength=wavelength / refractive_index_medium,
-            # to_z=(-z), # Daniel
             to_z=(-offset_z - z),
             dy=(
                 relative_position[0] * ratio
@@ -1339,9 +1331,8 @@ class MieScatterer(FieldScatterer):
         )
 
         fourier_field = (
-            fourier_field * propagation_matrix * np.exp(-1j * k * offset_z) # Remove last part (from exp)) if Daniel
+            fourier_field * propagation_matrix * np.exp(-1j * k * offset_z)
         )
-        print('fourier_field shape:', fourier_field.shape)
 
         if return_fft:
             return fourier_field[..., np.newaxis]
@@ -1373,7 +1364,7 @@ class MieSphere(MieScatterer):
         The number of terms used to evaluate the mie theory. If `"auto"`,
         it determines the number of terms automatically.
         
-    position: ArrayLike[float, float (, float)]
+    position: tuple[float, float] | tuple[float, float, float]
         The position of the particle. Third index is optional,
         and represents the position in the direction normal to the
         camera plane.
@@ -1458,50 +1449,41 @@ class MieStratifiedSphere(MieScatterer):
     Parameters
     ----------
     radius: list[float]
-    
         The radius of each cell in increasing order.
         
     refractive_index: list[float]
-    
         Refractive index of each cell in the same order as `radius`.
         
     L: int | str
-    
         The number of terms used to evaluate the mie theory. If `"auto"`,
         it determines the number of terms automatically.
         
-    position: ArrayLike[float, float (, float)]
-    
+    position: tuple[float, float] | tuple[float, float, float]
         The position of the particle. Third index is optional,
         and represents the position in the direction normal to the
         camera plane.
         
     z: float
-    
         The position in the direction normal to the
         camera plane. Used if `position` is of length 2.
         
     offset_z: "auto" | float
-    
         Distance from the particle in the z direction the field is evaluated.
         If "auto", this is calculated from the pixel size and
         `collection_angle`.
         
     collection_angle: "auto" | float
-    
         The maximum collection angle in radians. If "auto", this
         is calculated from the objective NA (which is true if the objective
         is the limiting aperature).
         
     input_polarization: float | Quantity
-    
         Defines the polarization angle of the input. For simulating circularly
         polarized light we recommend a coherent sum of two simulated fields.
         For unpolarized light we recommend a incoherent sum of two
         simulated fields.
         
     output_polarization: float | Quantity | None
-    
         If None, the output light is not polarized. Otherwise defines the angle
         of the polarization filter after the sample. For off-axis, keep the
         same as input_polarization.
@@ -1511,8 +1493,8 @@ class MieStratifiedSphere(MieScatterer):
 
     def __init__(
         self,
-        radius: ArrayLike[float] = [1e-6],
-        refractive_index: ArrayLike[float] = [1.45],
+        radius: tuple[float, ...] = (1e-6,),
+        refractive_index: tuple[float, ...] = (1.45,),
         **kwargs,
     ) -> None:
         def coeffs(
@@ -1559,7 +1541,7 @@ class ScatteredBase:
         return self.array.ndim
 
     @property
-    def shape(self) -> int:
+    def shape(self) -> tuple[int, ...]:
         """Number of dimensions of the underlying array."""
         return self.array.shape
 
@@ -1605,7 +1587,7 @@ class ScatteredBase:
         )
 
 
-    def as_array(self) -> ArrayLike:
+    def as_array(self) -> np.ndarray | torch.Tensor:
         """Return the underlying array.
 
         Notes

@@ -288,6 +288,10 @@ class Microscope(StructuralFeature):
             )
         if isinstance(ux, float) and ux.is_integer():
             ux = int(ux)
+
+        # Center the detector integration window
+        shift = (ux // 2)
+        image = xp.roll(image, shift=(shift, shift), axis=(0, 1))    
         return AveragePooling(ux)(image)
 
     def get(
@@ -1738,6 +1742,7 @@ class Brightfield(Optics):
         refractive_index_medium: float,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
+        """Extracts the refractive index contrast volume for brightfield imaging."""
 
         ri = scattered.get_property("refractive_index", None)
         value = scattered.get_property("value", None)

@@ -1690,11 +1690,14 @@ def coerce(
 
 # Generate a sorted list of "fastest" sizes for FFT computation.
 # These sizes are optimized for FFT algorithms, typically being products of
-# small primes (powers of 2 and 3).
-_FASTEST_SIZES = [0]
+# small primes (powers of 2 and 3). It doesn't allow sizes that are powers of 3
+# only, as those are generally slower than sizes that include factors of 2 and
+# they also produce parity issues in some FFT implementations.
+_FASTEST_SIZES = []
 for n in range(1, 10):
-    _FASTEST_SIZES += [2**a * 3**(n - a - 1) for a in range(n)]
-_FASTEST_SIZES = np.sort(_FASTEST_SIZES)
+    for a in range(1, n):  # start at 1 → at least one factor of 2
+        _FASTEST_SIZES.append(2**a * 3**(n - a - 1))
+_FASTEST_SIZES = np.unique(_FASTEST_SIZES)
 
 
 #TODO ***??*** revise pad_image_to_fft - typing, docstring, unit test
