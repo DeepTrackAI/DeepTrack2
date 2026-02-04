@@ -342,8 +342,8 @@ class TestFeatures(unittest.TestCase):
         result_again = pipeline()
         self.assertEqual(result_again, 5.0)
 
-    def test_Feature_plot(self):  # TODO
-        pass
+    def test_Feature_plot(self):
+        pass  # Test not needed as only visualization
 
     def test_Feature__normalize(self):
 
