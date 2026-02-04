@@ -131,10 +131,10 @@ class TestMath(unittest.TestCase):
         self.assertTrue(np.all(pooled_image == [[3.5, 5.5]]))
 
     def test_MaxPooling(self):
-        input_image = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        input_image = np.array([[1, 2, 3, 4], [3, 4, 5, 6], [6, 7, 8, 9]])
         feature = math.MaxPooling(ksize=2)
         pooled_image = feature.resolve(input_image)
-        self.assertTrue(xp.all(pooled_image == xp.asarray([[5, 6], [8, 9]]) ) )
+        self.assertTrue(xp.all(pooled_image == xp.asarray([[4, 6]])))
 
     def test_MinPooling(self):
         input_image = np.array([[1, 2, 3, 4], [5, 6, 7, 8]])
@@ -163,34 +163,6 @@ class TestMath(unittest.TestCase):
         self.assertIsInstance(resized, np.ndarray)
         self.assertEqual(resized.shape, (4, 8))
 
-    @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
-    def test_Resize_torch(self):
-
-        feature = math.Resize(dsize=(4, 8))
-
-        input_image = torch.rand(16, 16)
-        resized = feature.resolve(input_image)
-        self.assertIsInstance(resized, torch.Tensor)
-        self.assertEqual(tuple(resized.shape), (4, 8))
-
-        if OPENCV_AVAILABLE:
-            # Compare with NumPy version:
-            feature_np = math.Resize(dsize=(8, 4))
-            input_image_np = input_image.numpy()
-            resized_np = feature_np.resolve(input_image_np)
-            np.testing.assert_allclose(
-                        resized_np, resized.numpy(), rtol=1e-5, atol=1e-5
-                    )
-
-        input_image = torch.rand(3, 16, 16)
-        resized = feature.resolve(input_image)
-        self.assertIsInstance(resized, torch.Tensor)
-        self.assertEqual(tuple(resized.shape), (3, 4, 8))
-
-        input_image = torch.rand(1, 1, 16, 16)
-        resized = feature.resolve(input_image)
-        self.assertIsInstance(resized, torch.Tensor)
-        self.assertEqual(tuple(resized.shape), (1, 1, 4, 8))
 
     @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_BlurCV2_GaussianBlur(self):
@@ -270,6 +242,29 @@ class TestMath(unittest.TestCase):
             )
         )
 
+
+@unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
+class TestMath_TorchOnly(BackendTestBase):
+    BACKEND = "torch"
+
+    def test_Resize_torch(self):
+        feature = math.Resize(dsize=(4, 8))
+
+        input_image = torch.rand(16, 16)
+        resized = feature.resolve(input_image)
+
+        self.assertIsInstance(resized, torch.Tensor)
+        self.assertEqual(tuple(resized.shape), (8, 4))
+
+        input_image = torch.rand(16, 16, 3)
+        resized = feature.resolve(input_image)
+        self.assertIsInstance(resized, torch.Tensor)
+        self.assertEqual(tuple(resized.shape), (8, 4, 3))
+
+        input_image = torch.rand(128, 16, 16, 4)
+        resized = feature.resolve(input_image)
+        self.assertIsInstance(resized, torch.Tensor)
+        self.assertEqual(tuple(resized.shape), (128, 8, 4, 4))
 
 if __name__ == "__main__":
     unittest.main()

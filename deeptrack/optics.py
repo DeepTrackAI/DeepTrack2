@@ -1256,18 +1256,12 @@ class Fluorescence(Optics):
         if not np.any(np.array(upscale) != 1):
             return image
 
-        ux, uy = upscale[:2]
-        if ux != uy:
-            raise ValueError(
-                f"Energy-conserving detector integration requires ux == uy, "
-                f"got ux={ux}, uy={uy}."
-            )
-        if isinstance(ux, float) and ux.is_integer():
-            ux = int(ux)
+        ux, uy, uz = upscale
+        ux, uy, uz = int(ux), int(uy), int(uz)
 
-        norm = np.prod(upscale)
+        norm = ux*uy*uz
         # Energy-conserving detector integration
-        return SumPooling(ux)(image)/norm
+        return SumPooling((ux, uy))(image)/norm
 
     def get(
         self: Fluorescence,
