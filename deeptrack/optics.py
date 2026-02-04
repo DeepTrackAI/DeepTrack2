@@ -1270,9 +1270,24 @@ class Fluorescence(Optics):
         limits: np.ndarray,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
-        """
-        Backend-dispatched fluorescence imaging.
+        """ Backend-dispatched fluorescence imaging.
 
+        Parameters
+        ----------
+        illuminated_volume: np.ndarray | torch.Tensor
+            The illuminated 3D volume to be imaged.
+        limits: np.ndarray
+            Boundaries of the illuminated volume in each dimension.
+        **kwargs: Any
+            Additional properties for the imaging process, such as:
+            - 'padding': Padding to apply to the sample.
+            - 'output_region': Specific region to extract from the image.
+        
+        Returns
+        -------
+        image: np.ndarray | torch.Tensor
+            A 2D image object representing the fluorescence projection.
+        
         """
         
         backend = self.get_backend()
@@ -1320,7 +1335,7 @@ class Fluorescence(Optics):
 
         Parameters
         ----------
-        illuminated_volume: array_like[complex]
+        illuminated_volume: np.ndarray | torch.Tensor
             The illuminated 3D volume to be imaged.
         limits: array_like[int, int]
             Boundaries of the illuminated volume in each dimension.
@@ -1421,6 +1436,7 @@ class Fluorescence(Optics):
 
         z_index = 0
 
+        # Get scale to normalize slices correctly
         scale = get_active_scale()
 
         # Loop through volume and convolve sample with pupil function
@@ -1453,8 +1469,9 @@ class Fluorescence(Optics):
         limits: torch.Tensor,
         **kwargs: Any,
     ) -> torch.Tensor:
-        """
-        Torch implementation of fluorescence imaging. Fully differentiable w.r.t. illuminated_volume.
+        """ Torch implementation of fluorescence imaging. 
+        
+        Fully differentiable w.r.t. illuminated_volume.
 
         """
 
@@ -1527,6 +1544,7 @@ class Fluorescence(Optics):
 
         z_index = 0
 
+        # Get scale to normalize slices correctly
         scale = get_active_scale()
 
         # Main convolution loop
@@ -1559,7 +1577,6 @@ class Fluorescence(Optics):
         ]
 
         return output_image
-
 
 
 #TODO ***??*** revise Brightfield - torch, typing, docstring, unit test
