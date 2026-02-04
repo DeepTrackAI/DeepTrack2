@@ -1,4 +1,4 @@
-"""Core features for building and processing pipelines in DeepTrack2.  # TODO
+"""Core features for building and processing pipelines in DeepTrack2.
 
 This module defines the core classes and utilities used to create and
 manipulate features in DeepTrack2, enabling users to build sophisticated data
@@ -5544,18 +5544,23 @@ class Stack(Feature):
         return [*inputs, *value]
 
 
-class Arguments(Feature):  # TODO
+class Arguments(Feature):
     """A convenience container for pipeline arguments.
 
     `Arguments` allows dynamic control of pipeline behavior by providing a
     container for arguments that can be modified or overridden at runtime. This
     is particularly useful when working with parametrized pipelines, such as
-    toggling behaviors based on whether an image is a label or a raw input.
+    toggling behaviors based on whether an array is a label or a raw input.
+
+    Parameters
+    ----------
+    **kwargs: Any
+        Properties to expose as pipeline arguments.
 
     Methods
     -------
     `get(inputs, **kwargs) -> Any`
-        It passes the inputs through unchanged, while allowing for property
+        Passes the inputs through unchanged, while allowing for property
         overrides.
 
     Examples
@@ -5573,30 +5578,24 @@ class Arguments(Feature):  # TODO
 
     A typical use-case is:
 
-    >>> arguments = dt.Arguments(is_label=False)
+    >>> arguments = dt.Arguments(noise_level=0.0)
     >>> image_pipeline = (
     ...     dt.LoadImage(path=temp_png.name)
-    ...     >> dt.Gaussian(sigma=arguments.is_label)  # Image with no noise
+    ...     >> dt.Gaussian(sigma=arguments.noise_level)  # Image with no noise
     ... )
     >>> image_pipeline.bind_arguments(arguments)
-    >>>
+
     >>> image = image_pipeline()
     >>> image.std()
     0.0
 
     Change the argument:
 
-    >>> image = image_pipeline(is_label=True)  # Image with added noise
+    >>> image = image_pipeline(noise_level=1.0)  # Image with added noise
     >>> image.std()
     1.0104364326447652
 
-    Remove the temporary image:
-
-    >>> import os
-    >>>
-    >>> os.remove(temp_png.name)
-
-    For a non-mathematical dependence, create a local link to the property as 
+    For a conditional dependence, create a local link to the property as
     follows:
 
     >>> arguments = dt.Arguments(is_label=False)
@@ -5609,8 +5608,16 @@ class Arguments(Feature):  # TODO
     ... )
     >>> image_pipeline.bind_arguments(arguments)
 
-    As with any feature, all arguments can be passed by deconstructing the 
-    properties dict:
+    >>> image = image_pipeline()  # Image with added noise
+    >>> image.std()
+    0.9994058570249776
+
+    >>> image = image_pipeline(is_label=True)  # Raw image with no noise
+    >>> image.std()
+    0.0
+
+    As with any feature, all arguments can be passed by unpacking the
+    properties dictionary:
 
     >>> arguments = dt.Arguments(is_label=False, noise_sigma=5)
     >>> image_pipeline = (
@@ -5623,7 +5630,7 @@ class Arguments(Feature):  # TODO
     ...     )
     ... )
     >>> image_pipeline.bind_arguments(arguments)
-    >>>
+
     >>> image = image_pipeline()  # Image with added noise
     >>> image.std()
     5.002151761964336
@@ -5632,6 +5639,12 @@ class Arguments(Feature):  # TODO
     >>> image.std()
     0.0
 
+    Remove the temporary image:
+
+    >>> import os
+    >>>
+    >>> os.remove(temp_png.name)
+
     """
 
     def get(
@@ -5639,7 +5652,6 @@ class Arguments(Feature):  # TODO
         inputs: Any,
         **kwargs: Any,
     ) -> Any:
-
         """Return the inputs and allow property overrides.
 
         This method does not modify the inputs but provides a mechanism for
