@@ -280,19 +280,14 @@ class Microscope(StructuralFeature):
         if not np.any(np.array(upscale) != 1):
             return image
 
-        ux, uy = upscale[:2]
-        if ux != uy:
-            raise ValueError(
-                f"Energy-conserving detector integration requires ux == uy, "
-                f"got ux={ux}, uy={uy}."
-            )
-        if isinstance(ux, float) and ux.is_integer():
-            ux = int(ux)
+        ux, uy, uz = upscale
+        ux, uy, uz = int(ux), int(uy), int(uz)
 
-        # Center the detector integration window
-        shift = (ux // 2)
-        image = xp.roll(image, shift=(shift, shift), axis=(0, 1))    
-        return AveragePooling(ux)(image)
+        image = xp.roll(image, shift=(ux//2, uy//2), axis=(0, 1)) 
+        norm = ux*uy
+
+        # Detector integration
+        return SumPooling((ux, uy))(image)/norm
 
     def get(
         self: Microscope,
@@ -1251,7 +1246,11 @@ class Fluorescence(Optics):
 
         return value * scattered.array
 
-    def downscale_image(self, image: np.ndarray | torch.Tensor, upscale):
+    def downscale_image(
+            self, 
+            image: np.ndarray | torch.Tensor, 
+            upscale
+    ) -> np.ndarray | torch.Tensor:
         """Detector downscaling (energy conserving)"""
         if not np.any(np.array(upscale) != 1):
             return image
@@ -1259,8 +1258,10 @@ class Fluorescence(Optics):
         ux, uy, uz = upscale
         ux, uy, uz = int(ux), int(uy), int(uz)
 
-        norm = ux*uy*uz
-        # Energy-conserving detector integration
+        norm = ux*uy*uz # We sum over z in this case
+        image = xp.roll(image, shift=(ux//2, uy//2), axis=(0,1))
+
+        # Detector integration
         return SumPooling((ux, uy))(image)/norm
 
     def get(

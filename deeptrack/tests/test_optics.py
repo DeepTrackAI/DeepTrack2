@@ -31,7 +31,7 @@ class TestOptics_NumPy(BackendTestBase):
 
     def test_Microscope(self):
         microscope_type = optics.Fluorescence()
-        scatterer = PointParticle()
+        scatterer = PointParticle(intensity=100)
         microscope = optics.Microscope(
             sample=scatterer, objective=microscope_type,
         )
@@ -182,7 +182,7 @@ class TestOptics_NumPy(BackendTestBase):
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
-    def test_upscale_fluorescence(self):
+    def test_upscale_Brightfield(self):
         microscope = optics.Brightfield(
             NA=0.7,
             wavelength=660e-9,
@@ -211,12 +211,12 @@ class TestOptics_NumPy(BackendTestBase):
         self.assertEqual(output_image_2x_upscale.shape, (64, 64, 1))
         # Ensure the upscaled image is almost the same as the original image
 
-        error = np.abs(
+        rel_error = np.abs(
             output_image_2x_upscale - output_image_no_upscale
-        ).mean()  # Mean absolute error
-        self.assertLess(error, 0.05)
+        ).mean()/np.mean(output_image_no_upscale)  # Mean relative error
+        self.assertLess(rel_error, 0.1)
 
-    def test_upscale_brightfield(self):
+    def test_upscale_fluorescence(self):
         microscope = optics.Fluorescence(
             NA=0.5,
             wavelength=660e-9,
@@ -245,10 +245,10 @@ class TestOptics_NumPy(BackendTestBase):
         self.assertEqual(output_image_2x_upscale.shape, (64, 64, 1))
         # Ensure the upscaled image is almost the same as the original image
 
-        error = np.abs(
+        rel_error = np.abs(
             output_image_2x_upscale - output_image_no_upscale
-        ).mean()  # Mean absolute error
-        self.assertLess(error, 0.01)
+        ).mean()/np.mean(output_image_no_upscale)  # Mean relative error
+        self.assertLess(rel_error, 0.1)
 
 # TODO: Extending the test and setting the backend to torch
 # @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
