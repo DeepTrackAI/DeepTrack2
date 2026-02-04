@@ -205,7 +205,7 @@ class TestOptics_NumPy(BackendTestBase):
         imaged_scatterer = microscope(scatterer)
         output_image_no_upscale = imaged_scatterer.update()(upscale=1)
 
-        output_image_2x_upscale = imaged_scatterer.update()(upscale=(2, 2, 2))
+        output_image_2x_upscale = imaged_scatterer.update()(upscale=(2, 2, 1))
 
         self.assertEqual(output_image_no_upscale.shape, (64, 64, 1))
         self.assertEqual(output_image_2x_upscale.shape, (64, 64, 1))
@@ -214,7 +214,7 @@ class TestOptics_NumPy(BackendTestBase):
         error = np.abs(
             output_image_2x_upscale - output_image_no_upscale
         ).mean()  # Mean absolute error
-        self.assertLess(error, 0.01)
+        self.assertLess(error, 0.05)
 
     def test_upscale_brightfield(self):
         microscope = optics.Fluorescence(

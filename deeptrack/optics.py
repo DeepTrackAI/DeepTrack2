@@ -1265,8 +1265,9 @@ class Fluorescence(Optics):
         if isinstance(ux, float) and ux.is_integer():
             ux = int(ux)
 
+        norm = np.prod(upscale)
         # Energy-conserving detector integration
-        return SumPooling(ux)(image)
+        return SumPooling(ux)(image)/norm
 
     def get(
         self: Fluorescence,
@@ -1425,6 +1426,8 @@ class Fluorescence(Optics):
 
         z_index = 0
 
+        scale = get_active_scale()
+
         # Loop through volume and convolve sample with pupil function
         for i, z in zip(index_iterator, z_iterator):
 
@@ -1443,7 +1446,7 @@ class Fluorescence(Optics):
             field = np.real(field)
             output_image[:, :, 0] += field[
                 : padded_volume.shape[0], : padded_volume.shape[1]
-            ]
+            ]/scale[2]
 
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
 
@@ -1529,6 +1532,8 @@ class Fluorescence(Optics):
 
         z_index = 0
 
+        scale = get_active_scale()
+
         # Main convolution loop
         for i in range(Z):
             if zero_plane[i]:
@@ -1549,7 +1554,7 @@ class Fluorescence(Optics):
             convolved = field_fft * otf
             field = torch.fft.ifft2(convolved).real
 
-            output_image[:, :, 0] += field[:H, :W]
+            output_image[:, :, 0] += field[:H, :W]/scale[2]
 
         # Remove padding
         output_image = output_image[
