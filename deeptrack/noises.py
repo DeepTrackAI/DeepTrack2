@@ -37,9 +37,8 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import NDArray
 
-from deeptrack import Feature, Image, PropertyLike, TORCH_AVAILABLE
+from deeptrack import Feature, PropertyLike, TORCH_AVAILABLE
 
 if TORCH_AVAILABLE:
     import torch
@@ -75,10 +74,10 @@ class Background(Noise):
     Methods
     -------
     get(
-        image: np.ndarray, torch.Tensor, or Image,
+        image: np.ndarray | torch.Tensor
         offset: float,
         **kwargs,
-    ) -> np.ndarray, torch.Tensor, or Image
+    ) -> np.ndarray | torch.Tensor
         Adds the constant offset to the input image.
 
     Examples
@@ -119,22 +118,22 @@ class Background(Noise):
 
     def get(
         self: Background,
-        image: NDArray[Any] | torch.Tensor | Image,
+        image: np.ndarray | torch.Tensor,
         offset: float,
         **kwargs: Any,
-    ) -> NDArray[Any] | torch.Tensor | Image:
+    ) -> np.ndarray | torch.Tensor:
         """Add the given offset to the image.
 
         Parameters
         ----------
-        image: np.ndarray, torch.Tensor, or Image
+        image: np.ndarray | torch.Tensor
             The input image.
         offset: float
             The value to add to the image.
 
         Returns
         -------
-        np.ndarray, torch.Tensor, or Image
+        np.ndarray | torch.Tensor
             The image with offset added.
         """
 
@@ -166,12 +165,12 @@ class Gaussian(Noise):
     Methods
     -------
     get(
-        image: np.ndarray, torch.Tensor, or Image,
+        image: np.ndarray | torch.Tensor,
         snr: float,
         background: float,
         max_val: float, optional,
         **kwargs,
-    ) -> np.ndarray, torch.Tensor, or Image
+    ) -> np.ndarray | torch.Tensor
         Returns an image with Gaussian noise added.
 
     Examples
@@ -205,12 +204,11 @@ class Gaussian(Noise):
 
     def get(
         self: Gaussian,
-        image: NDArray[Any] | torch.Tensor | Image,
+        image: np.ndarray | torch.Tensor,
         mu: float,
         sigma: float,
         **kwargs: Any,
-    ) -> NDArray[Any] | torch.Tensor | Image:
-
+    ) -> np.ndarray | torch.Tensor:
         # For a Numpy backend.
         if self.get_backend() == "numpy":
             noisy_image = mu + image + np.random.randn(*image.shape) * sigma
@@ -250,12 +248,12 @@ class ComplexGaussian(Noise):
     Methods
     -------
     get(
-        image: np.ndarray, torch.Tensor, or Image,
+        image: np.ndarray | torch.Tensor,
         snr: float,
         background: float,
         max_val: float, optional,
         **kwargs,
-    ) -> np.ndarray, torch.Tensor, or Image
+    ) -> np.ndarray | torch.Tensor
         Returns an image with complex Gaussian noise added.
 
     Examples
@@ -290,12 +288,11 @@ class ComplexGaussian(Noise):
 
     def get(
         self: ComplexGaussian,
-        image: NDArray[Any] | torch.Tensor | Image,
+        image: np.ndarray | torch.Tensor,
         mu: float,
         sigma: float,
         **kwargs: Any,
-    ) -> NDArray[Any] | torch.Tensor | Image:
-
+    ) -> np.ndarray | torch.Tensor:
         # For a Numpy backend.
         if self.get_backend() == "numpy":
             real_noise = np.random.randn(*image.shape)
@@ -340,12 +337,12 @@ class Poisson(Noise):
     Methods
     -------
     get(
-        image: np.ndarray, torch.Tensor, or Image,
+        image: np.ndarray | torch.Tensor
         snr: float,
         background: float,
         max_val: float, optional,
         **kwargs,
-    ) -> np.ndarray, torch.Tensor, or Image
+    ) -> np.ndarray | torch.Tensor
         Returns an image with Poisson noise added.
 
     Examples
@@ -388,12 +385,12 @@ class Poisson(Noise):
 
     def get(
         self: Poisson,
-        image: NDArray[Any] | torch.Tensor | Image,
+        image: np.ndarray | torch.Tensor,
         snr: float,
         background: float,
         max_val: float,
         **kwargs: Any,
-    ) -> NDArray[Any] | torch.Tensor | Image:
+    ) -> np.ndarray | torch.Tensor:
 
         # For a numpy backend.
         if self.get_backend() == "numpy":
@@ -406,10 +403,7 @@ class Poisson(Noise):
                 rescale, 1e-10, max_val / np.abs(image_max)
             )
             try:
-                noisy_image = Image(
-                    np.random.poisson(image * rescale) / rescale
-                )
-                noisy_image.merge_properties_from(image)
+                noisy_image = np.random.poisson(image * rescale) / rescale
                 return noisy_image
             except ValueError:
                 raise ValueError(

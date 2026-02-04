@@ -6,7 +6,6 @@ import unittest
 
 import numpy as np
 
-from deeptrack.image import Image
 from deeptrack import noises
 
 from deeptrack.backend import TORCH_AVAILABLE, xp
@@ -29,7 +28,7 @@ class TestNoises_NumPy(BackendTestBase):
 
     def test_Offset(self):
         noise = noises.Offset(offset=0.5)
-        input_image = Image(xp.zeros((256, 256)))
+        input_image = xp.zeros((256, 256))
         output_image = noise.resolve(input_image)
 
         self.assertIsInstance(output_image, self.array_type)
@@ -37,9 +36,9 @@ class TestNoises_NumPy(BackendTestBase):
         self.assertTrue(xp.all(xp.asarray(output_image) == 0.5))
 
     def test_Background(self):
-        # Test with DeepTrack Image
+        # Test with DeepTrack image
         noise = noises.Background(offset=0.5)
-        input_image = Image(xp.zeros((256, 256)))
+        input_image = xp.zeros((256, 256))
         output_image = noise.resolve(input_image)
 
         self.assertIsInstance(output_image, self.array_type)
@@ -57,7 +56,7 @@ class TestNoises_NumPy(BackendTestBase):
 
     def test_Gaussian(self):
         noise = noises.Gaussian(mu=0.1, sigma=0.05)
-        input_image = Image(xp.zeros((256, 256)))
+        input_image = xp.zeros((256, 256))
         output_image = noise.resolve(input_image)
         
         self.assertIsInstance(output_image, self.array_type)
@@ -65,7 +64,7 @@ class TestNoises_NumPy(BackendTestBase):
 
     def test_ComplexGaussian(self):
         noise = noises.ComplexGaussian(mu=0.1, sigma=0.05)
-        input_image = Image(xp.zeros((256, 256)))
+        input_image = xp.zeros((256, 256))
         output_image = noise.resolve(input_image)
 
         self.assertIsInstance(output_image, self.array_type)

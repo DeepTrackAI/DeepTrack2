@@ -280,19 +280,14 @@ class Microscope(StructuralFeature):
         if not np.any(np.array(upscale) != 1):
             return image
 
-        ux, uy = upscale[:2]
-        if ux != uy:
-            raise ValueError(
-                f"Energy-conserving detector integration requires ux == uy, "
-                f"got ux={ux}, uy={uy}."
-            )
-        if isinstance(ux, float) and ux.is_integer():
-            ux = int(ux)
+        ux, uy, uz = upscale
+        ux, uy, uz = int(ux), int(uy), int(uz)
 
-        # Center the detector integration window
-        shift = (ux // 2)
-        image = xp.roll(image, shift=(shift, shift), axis=(0, 1))    
-        return AveragePooling(ux)(image)
+        image = xp.roll(image, shift=(ux//2, uy//2), axis=(0, 1)) 
+        norm = ux*uy
+
+        # Detector integration
+        return SumPooling((ux, uy))(image)/norm
 
     def get(
         self: Microscope,
@@ -1251,22 +1246,23 @@ class Fluorescence(Optics):
 
         return value * scattered.array
 
-    def downscale_image(self, image: np.ndarray | torch.Tensor, upscale):
+    def downscale_image(
+            self, 
+            image: np.ndarray | torch.Tensor, 
+            upscale
+    ) -> np.ndarray | torch.Tensor:
         """Detector downscaling (energy conserving)"""
         if not np.any(np.array(upscale) != 1):
             return image
 
-        ux, uy = upscale[:2]
-        if ux != uy:
-            raise ValueError(
-                f"Energy-conserving detector integration requires ux == uy, "
-                f"got ux={ux}, uy={uy}."
-            )
-        if isinstance(ux, float) and ux.is_integer():
-            ux = int(ux)
+        ux, uy, uz = upscale
+        ux, uy, uz = int(ux), int(uy), int(uz)
 
-        # Energy-conserving detector integration
-        return SumPooling(ux)(image)
+        norm = ux*uy*uz # We sum over z in this case
+        image = xp.roll(image, shift=(ux//2, uy//2), axis=(0,1))
+
+        # Detector integration
+        return SumPooling((ux, uy))(image)/norm
 
     def get(
         self: Fluorescence,
@@ -1274,9 +1270,24 @@ class Fluorescence(Optics):
         limits: np.ndarray,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
-        """
-        Backend-dispatched fluorescence imaging.
+        """ Backend-dispatched fluorescence imaging.
 
+        Parameters
+        ----------
+        illuminated_volume: np.ndarray | torch.Tensor
+            The illuminated 3D volume to be imaged.
+        limits: np.ndarray
+            Boundaries of the illuminated volume in each dimension.
+        **kwargs: Any
+            Additional properties for the imaging process, such as:
+            - 'padding': Padding to apply to the sample.
+            - 'output_region': Specific region to extract from the image.
+        
+        Returns
+        -------
+        image: np.ndarray | torch.Tensor
+            A 2D image object representing the fluorescence projection.
+        
         """
         
         backend = self.get_backend()
@@ -1324,7 +1335,7 @@ class Fluorescence(Optics):
 
         Parameters
         ----------
-        illuminated_volume: array_like[complex]
+        illuminated_volume: np.ndarray | torch.Tensor
             The illuminated 3D volume to be imaged.
         limits: array_like[int, int]
             Boundaries of the illuminated volume in each dimension.
@@ -1425,6 +1436,9 @@ class Fluorescence(Optics):
 
         z_index = 0
 
+        # Get scale to normalize slices correctly
+        scale = get_active_scale()
+
         # Loop through volume and convolve sample with pupil function
         for i, z in zip(index_iterator, z_iterator):
 
@@ -1443,7 +1457,7 @@ class Fluorescence(Optics):
             field = np.real(field)
             output_image[:, :, 0] += field[
                 : padded_volume.shape[0], : padded_volume.shape[1]
-            ]
+            ]/scale[2]
 
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
 
@@ -1455,8 +1469,9 @@ class Fluorescence(Optics):
         limits: torch.Tensor,
         **kwargs: Any,
     ) -> torch.Tensor:
-        """
-        Torch implementation of fluorescence imaging. Fully differentiable w.r.t. illuminated_volume.
+        """ Torch implementation of fluorescence imaging. 
+        
+        Fully differentiable w.r.t. illuminated_volume.
 
         """
 
@@ -1529,6 +1544,9 @@ class Fluorescence(Optics):
 
         z_index = 0
 
+        # Get scale to normalize slices correctly
+        scale = get_active_scale()
+
         # Main convolution loop
         for i in range(Z):
             if zero_plane[i]:
@@ -1549,7 +1567,7 @@ class Fluorescence(Optics):
             convolved = field_fft * otf
             field = torch.fft.ifft2(convolved).real
 
-            output_image[:, :, 0] += field[:H, :W]
+            output_image[:, :, 0] += field[:H, :W]/scale[2]
 
         # Remove padding
         output_image = output_image[
@@ -1559,7 +1577,6 @@ class Fluorescence(Optics):
         ]
 
         return output_image
-
 
 
 #TODO ***??*** revise Brightfield - torch, typing, docstring, unit test

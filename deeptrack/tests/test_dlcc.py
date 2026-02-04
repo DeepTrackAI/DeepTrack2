@@ -706,8 +706,6 @@ class TestDLCC(unittest.TestCase):
         )
         np.testing.assert_allclose(sim_im_pip(), expected_1,
                                    rtol=1e-7, atol=1e-7)
-        np.testing.assert_allclose(sim_im_pip(), expected_1,
-                                   rtol=1e-7, atol=1e-7)
 
         expected_2 = np.array(
             [[[0.05257224], [0.05257224], [0.08457224], [0.05657224],

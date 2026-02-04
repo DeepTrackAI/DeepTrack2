@@ -1377,14 +1377,30 @@ class MedianBlur(Blur):
 class Pool(Feature):
     """Abstract base class for pooling features."""
 
-
     def __init__(
         self,
-        ksize: PropertyLike[int] = 2,
+        ksize: PropertyLike[int | tuple[int, int] | tuple[int, int, int]] = 2,
         **kwargs: Any,
     ):
-        self.ksize = int(ksize)
+        self.ksize = self._normalize_ksize(ksize)
         super().__init__(**kwargs)
+
+    @staticmethod
+    def _normalize_ksize(ksize) -> tuple[int, int, int]:
+        if isinstance(ksize, int):
+            return (ksize, ksize, ksize)
+
+        if isinstance(ksize, tuple):
+            if len(ksize) == 2:
+                kx, ky = ksize
+                return (kx, ky, 1)
+            if len(ksize) == 3:
+                return ksize
+
+        raise TypeError(
+            "ksize must be int, (kx, ky), or (kz, kx, ky)"
+        )
+
 
     def get(
         self,
@@ -1425,20 +1441,15 @@ class Pool(Feature):
     # ---------- shared helpers ----------
 
     def _get_pool_size(self, array) -> tuple[int, int, int]:
-        k = self.ksize
+        px, py, pz = self.ksize
 
         if array.ndim == 2:
-            return k, k, 1
+            return px, py, 1
 
-        if array.ndim == 3:
-            if array.shape[-1] <= 4:   # channel heuristic
-                return k, k, 1
-            return k, k, k
+        if array.ndim == 3 and array.shape[-1] <= 4:
+            return px, py, 1
 
-        if array.ndim == 4:
-            return k, k, k
-
-        raise ValueError(f"Unsupported array shape {array.shape}")
+        return px, py, pz
 
     def _crop_center(self, array):
         px, py, pz = self._get_pool_size(array)
@@ -1922,7 +1933,7 @@ class Resize(Feature):
     PyTorch example:
 
     >>> import torch
-    >>> input_image = torch.rand(16, 16)         # channels-last
+    >>> input_image = torch.rand(16, 16)         
     >>> feature = dt.math.Resize(dsize=(8, 4))
     >>> resized_image = feature.resolve(input_image)
     >>> resized_image.shape
