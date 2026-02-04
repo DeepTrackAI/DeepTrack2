@@ -6838,22 +6838,20 @@ class Lambda(Feature):
         return function(inputs)
 
 
-class Merge(Feature):  # TODO
+class Merge(Feature):
     """Apply a custom function to a list of inputs.
 
-    This feature allows applying a user-defined function to a list of inputs. 
-    The `function` parameter must be a callable that returns another function, 
-    where:
-      - The outer function can depend on other properties in the pipeline.
-      - The inner function takes a list of inputs and returns a single outputs
-      or a list of outputs.
-    
+    `Merge` applies a user-defined function to a list of inputs. The `function`
+    parameter must be a callable that returns another function, where:
+    - The outer function can depend on other properties in the pipeline.
+    - The inner function takes a list of inputs and return a single output.
+
     The function must be wrapped in an outer layer to enable dependencies on
     other properties while ensuring correct execution.
 
     Parameters
     ----------
-    function: Callable[..., Callable[[list[Any]], Any or list[Any]]
+    function: Callable[..., Callable[[list[Any]], Any]]
         A callable that produces a function. The outer function can depend on
         other properties of the pipeline, while the inner function processes a
         list of inputs and returns either a single output or a list of outputs.
@@ -6864,40 +6862,40 @@ class Merge(Feature):  # TODO
     ----------
     __distributed__: bool
         Set to `False`, indicating that this feature’s `.get()` method
-        processes the entire input at once even if it is a list, rather than 
+        processes the entire input at once even if it is a list, rather than
         distributing calls for each item of the list.
 
     Methods
     -------
-    `get(list_of_inputs, function, **kwargs) -> Any or list[Any]`
+    `get(list_of_inputs, function, **kwargs) -> Any`
         Applies the custom function to the list of inputs.
 
     Examples
     --------
     >>> import deeptrack as dt
 
-    Define a merge function that averages multiple images:
+    Define a merge function that averages multiple arrays:
 
     >>> import numpy as np
     >>>
     >>> def merge_function_factory():
-    ...     def merge_function(images):
-    ...         return np.mean(np.stack(images), axis=0)
+    ...     def merge_function(list_of_inputs):
+    ...         return np.mean(np.stack(list_of_inputs), axis=0)
     ...     return merge_function
 
     Create a Merge feature:
 
     >>> merge_feature = dt.Merge(function=merge_function_factory)
 
-    Create some images:
+    Create some arrays:
 
-    >>> image_1 = np.ones((2, 3)) * 2
-    >>> image_2 = np.ones((2, 3)) * 4
+    >>> array_1 = np.ones((2, 3)) * 2
+    >>> array_2 = np.ones((2, 3)) * 4
 
-    Apply the feature to a list of images:
+    Apply the feature to a list of arrays:
 
-    >>> output_image = merge_feature([image_1, image_2])
-    >>> output_image
+    >>> output_array = merge_feature([array_1, array_2])
+    >>> output_array
     array([[3., 3., 3.],
            [3., 3., 3.]])
 
@@ -6906,15 +6904,15 @@ class Merge(Feature):  # TODO
     __distributed__: bool = False
 
     def __init__(
-        self: Feature,
-        function: Callable[..., Callable[[list[Any]], Any | list[Any]]],
+        self: Merge,
+        function: Callable[..., Callable[[list[Any]], Any]],
         **kwargs: Any,
     ):
         """Initialize the Merge feature.
 
         Parameters
         ----------
-        function: Callable[..., Callable[[list[Any]], Any or list[Any]]
+        function: Callable[..., Callable[[list[Any]], Any]]
             A callable that returns a function for processing a list of images.
             The outer function can depend on other properties in the pipeline.
             The inner function takes a list of inputs and returns either a
@@ -6927,26 +6925,28 @@ class Merge(Feature):  # TODO
         super().__init__(function=function, **kwargs)
 
     def get(
-        self: Feature,
+        self: Merge,
         list_of_inputs: list[Any],
-        function: Callable[[list[Any]], Any | list[Any]],
+        function: Callable[[list[Any]], Any],
         **kwargs: Any,
-    ) -> Any | list[Any]:
+    ) -> Any:
         """Apply the custom function to a list of inputs.
 
         Parameters
         ----------
         list_of_inputs: list[Any]
             A list of inputs to be processed by the function.
-        function: Callable[[list[Any]], Any or list[Any]]
+        function: Callable[[list[Any]], Any]
             The function that processes the list of inputs and returns either a
-            single transformed input or a list of transformed inputs.
+            single transformed input or a list of transformed inputs. The
+            function is expected to be the evaluated inner function produced by
+            the factory passed at initialization.
         **kwargs: Any
             Additional arguments (unused in this implementation).
 
         Returns
         -------
-        Any or list[Any]
+        Any
             The processed inputs after applying the function.
 
         """
