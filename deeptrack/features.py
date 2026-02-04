@@ -1809,67 +1809,73 @@ class Feature(DeepTrackNode):
 
         return self
 
-    def plot(  # TODO
+    def plot(
         self: Feature,
         input_image: (
             np.ndarray
             | list[np.ndarray]
             | torch.Tensor
             | list[torch.Tensor]
+            | None
         ) = None,
-        resolve_kwargs: dict = None,
-        interval: float = None,
+        resolve_kwargs: dict[str, Any] | None = None,
+        interval: float | None = None,
         **kwargs: Any,
     ) -> Any:
         """Visualize the output of the feature.
 
-        The `.plot()` method resolves the feature and visualizes the result. If
-        the output is a single image (NumPy array or PyTorch tensor), it is
-        displayed using `pyplot.imshow()`. If the output is a list, an
-        animation is created. In Jupyter notebooks, the animation is played
-        inline using `to_jshtml()`. In scripts, the animation is displayed
-        using the matplotlib backend.
-
-        Any parameters in `kwargs` are passed to `pyplot.imshow`.
+        The `.plot()` method resolves the feature and visualizes the result:
+        - If the output is a single image (NumPy array or PyTorch tensor), it
+          is displayed using `pyplot.imshow()`. Any parameters in `kwargs` are
+          passed to `pyplot.imshow()`.
+        - If the output is a list or a tuple, an animation is created. In
+          Jupyter notebooks, the animation is played inline using
+          `.to_jshtml()`. In scripts, the animation is displayed using the
+          matplotlib backend.
 
         Parameters
         ----------
-        input_image: np.ndarray, torch.tensor, or Image or list[np.ndarray,
-            torch.tensor, or Image], optional
+        input_image: array or tensor, or list[array] or list[tensor], optional
             The input image or list of images passed as an argument to the
-            `resolve` call. If `None`, uses previously set input values or
+            `.resolve()` call. If `None`, uses previously set input values or
             propagates properties.
-        resolve_kwargs: dict, optional
-            Additional keyword arguments passed to the `resolve` call.
+        resolve_kwargs: dict[str, Any], optional
+            Additional keyword arguments passed to the `.resolve()` call.
         interval: float, optional
-            The time between frames in the animation, in milliseconds. The
-            default value is 33 ms.
-        **kwargs: dict, optional
-            Additional keyword arguments passed to `pyplot.imshow`.
+            The time between frames in the animation, in milliseconds.
+            Defaults to ~33 ms (30 fps).
+        **kwargs: Any
+            Additional keyword arguments passed to `pyplot.imshow()`.
 
         Returns
         -------
-        Any
-            The output of the feature or pipeline after execution.
+        matplotlib.axes.Axes or matplotlib.animation.ArtistAnimation or Any
+            For single images, returns the current axes. For videos, returns
+            the animation. In notebook fallback mode, may return an interactive
+            widget.
         
         Examples
         --------
         >>> import deeptrack as dt
 
         Create an instance of a dummy feature that returns the input:
+
         >>> feature = dt.DummyFeature()
 
         Generate and plot a grayscale image:
+
         >>> import numpy as np
         >>>
         >>> img = np.random.randint(0, 256, (64, 64))
         >>> feature.plot(img, cmap="gray");
 
         Generate and plot a grayscale video:
+
         >>> video = [np.random.randint(0, 256, (64, 64)) for _ in range(10)]
         >>> feature.plot(video, interval=100, cmap="gray");
 
         Generate a grayscale image using torch and plot it:
+
         >>> import torch
         >>>
         >>> img = torch.randint(0, 256, size=(64, 64))
@@ -1877,65 +1883,69 @@ class Feature(DeepTrackNode):
 
         Generate a simulated image of a point particle visualized using
         brightfield microscopy and plot it:
-        >>> particle = dt.PointParticle()
-        >>> optics = dt.Brightfield()
+
+        >>> particle = dt.PointParticle(intensity=100)
+        >>> optics = dt.Fluorescence()
         >>> imaged_particle = optics(particle)
         >>> imaged_particle.plot(cmap="gray");
 
         """
 
-        from IPython.display import HTML, display
-
         output_image = self.resolve(input_image, **(resolve_kwargs or {}))
 
-        # If a list, assume video
-        if not isinstance(output_image, list):
-            # Single image
+        # Single image, if not a list
+        if not isinstance(output_image, (list, tuple)):
             output_image = xp.squeeze(output_image)
             plt.imshow(output_image, **kwargs)
             return plt.gca()
 
-        # Assume video
-        fig = plt.figure()
+        # Assume video, if a list
+        fig, ax = plt.subplots()
         images = []
-        plt.axis("off")
+        ax.axis("off")
         for image in output_image:
             image = xp.squeeze(image)
-            images.append([plt.imshow(image, **kwargs)])
+            images.append([ax.imshow(image, **kwargs)])
 
-        if not interval:
-            if isinstance(output_image[0], Image):
-                interval = (
-                    output_image[0].get_property("interval") or (1 / 30 * 1000)
-                )
-            else:
-                interval = 1 / 30 * 1000
+        if interval is None:
+            interval = 1 / 30 * 1000
 
         anim = animation.ArtistAnimation(
-            fig, images, interval=interval, blit=True, repeat_delay=0
+            fig,
+            images,
+            interval=interval,
+            blit=True,
+            repeat_delay=0,
         )
 
         try:
-            get_ipython  # Throws NameError if not in Notebook
+            from IPython.display import HTML, display
+
+            get_ipython()  # Throws NameError if not in notebook
             display(HTML(anim.to_jshtml()))
             return anim
 
-        except NameError:
-            # Not in an notebook
+        except (ImportError, NameError):
+            # Not in notebook
             plt.show()
+            return anim
 
         except RuntimeError:
             # In notebook, but animation failed
             import ipywidgets as widgets
 
             def plotter(frame=0):
-                plt.imshow(output_image[frame][:, :, 0], **kwargs)
+                image = xp.squeeze(output_image[frame])
+                plt.imshow(image, **kwargs)
                 plt.show()
 
             return widgets.interact(
                 plotter,
                 frame=widgets.IntSlider(
-                    value=0, min=0, max=len(images) - 1, step=1
+                    value=0,
+                    min=0,
+                    max=len(images) - 1,
+                    step=1,
                 ),
             )
 
