@@ -329,7 +329,7 @@ class TestFeatures(unittest.TestCase):
 
         pipeline = (
             features.Value(value=3)
-            >> dt.Add(b=1 * arguments.scale)
+            >> features.Add(b=1 * arguments.scale)
         )
         pipeline.bind_arguments(arguments)
 
