@@ -1711,10 +1711,10 @@ class TestFeatures(unittest.TestCase):
             self.assertTrue(torch.equal(result[1], t2))
 
 
-    def test_Arguments(self):  # TODO
+    def test_Arguments(self):
         from tempfile import NamedTemporaryFile
         from PIL import Image as PIL_Image
-        import os 
+        import os
 
         # Create a temporary test image.
         test_image_array = (np.ones((50, 50)) * 128).astype(np.uint8)
@@ -1777,13 +1777,11 @@ class TestFeatures(unittest.TestCase):
             image = image_pipeline(is_label=True)
             self.assertAlmostEqual(image.std(), 0.0, places=3)  # No noise
 
-        except Exception:
-            raise
         finally:
             if os.path.exists(temp_png.name):
                 os.remove(temp_png.name)
 
-    def test_Arguments_feature_passing(self):  # TODO
+    def test_Arguments_feature_passing(self):
         # Tests that arguments are correctly passed and updated.
 
         # Define Arguments with static and dynamic values
@@ -1826,7 +1824,7 @@ class TestFeatures(unittest.TestCase):
         second_d = arguments.d.update()()
         self.assertNotEqual(first_d, second_d)  # Check that values change
 
-    def test_Arguments_binding(self):  # TODO
+    def test_Arguments_binding(self):
         # Create a dynamic argument container
         arguments = features.Arguments(x=10)
 
