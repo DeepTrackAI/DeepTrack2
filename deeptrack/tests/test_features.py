@@ -323,8 +323,24 @@ class TestFeatures(unittest.TestCase):
     def test_Feature_seed(self):  # TODO
         pass
 
-    def test_Feature_bind_arguments(self):  # TODO
-        pass
+    def test_Feature_bind_arguments(self):
+
+        arguments = features.Arguments(scale=2.0)
+
+        pipeline = (
+            features.Value(value=3)
+            >> dt.Add(b=1 * arguments.scale)
+        )
+        pipeline.bind_arguments(arguments)
+
+        result = pipeline()
+        self.assertEqual(result, 5.0)
+
+        overridden = pipeline(scale=1.0)
+        self.assertEqual(overridden, 4.0)
+
+        result_again = pipeline()
+        self.assertEqual(result_again, 5.0)
 
     def test_Feature_plot(self):  # TODO
         pass
