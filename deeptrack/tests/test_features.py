@@ -2319,34 +2319,34 @@ class TestFeatures(unittest.TestCase):
         self.assertTrue(np.array_equal(output_image, np.ones((5, 5)) * 3))
 
 
-    def test_Merge(self):  # TODO
+    def test_Merge(self):
 
         def merge_function_factory():
-            def merge_function(images):
-                return np.mean(np.stack(images), axis=0)
+            def merge_function(list_of_inputs):
+                return np.mean(np.stack(list_of_inputs), axis=0)
             return merge_function
 
         merge_feature = features.Merge(function=merge_function_factory)
 
-        image_1 = np.ones((5, 5)) * 2
-        image_2 = np.ones((5, 5)) * 4
-        output_image = merge_feature.resolve([image_1, image_2])
+        array_1 = np.ones((5, 5)) * 2
+        array_2 = np.ones((5, 5)) * 4
+        output = merge_feature.resolve([array_1, array_2])
         self.assertIsNone(
             np.testing.assert_array_almost_equal(
-                output_image, np.ones((5, 5)) * 3,
+                output, np.ones((5, 5)) * 3,
             )
         )
 
-        image_1 = np.ones((5, 5)) * 2
-        image_2 = np.ones((3, 3)) * 4
+        array_1 = np.ones((5, 5)) * 2
+        array_2 = np.ones((3, 3)) * 4
         with self.assertRaises(ValueError):
-            merge_feature.resolve([image_1, image_2])
+            merge_feature.resolve([array_1, array_2])
 
-        image_1 = np.ones((5, 5)) * 2
-        output_image = merge_feature.resolve([image_1])
+        array = np.ones((5, 5)) * 2
+        output = merge_feature.resolve([array])
         self.assertIsNone(
             np.testing.assert_array_almost_equal(
-                output_image, image_1,
+                output, array,
             )
         )
 
