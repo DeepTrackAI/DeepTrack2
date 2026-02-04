@@ -1933,7 +1933,7 @@ class Resize(Feature):
     PyTorch example:
 
     >>> import torch
-    >>> input_image = torch.rand(16, 16)         # channels-last
+    >>> input_image = torch.rand(16, 16)         
     >>> feature = dt.math.Resize(dsize=(8, 4))
     >>> resized_image = feature.resolve(input_image)
     >>> resized_image.shape
