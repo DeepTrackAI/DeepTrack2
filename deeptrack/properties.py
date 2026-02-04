@@ -77,7 +77,7 @@ Handle sequential properties:
 
 >>> seq_prop = dt.SequentialProperty(
 ...     sampling_rule=lambda: np.random.randint(10, 20),
-...     sequence_length = 5,
+...     sequence_length=5,
 ... )
 >>> for step in range(seq_prop.sequence_length()):
 ...     seq_prop()

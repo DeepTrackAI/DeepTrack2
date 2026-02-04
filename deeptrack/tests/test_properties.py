@@ -26,11 +26,6 @@ class TestProperties(unittest.TestCase):
             PropertyDict,
             SequentialProperty,
         )
-        from deeptrack.properties import (
-            Property,
-            PropertyDict,
-            SequentialProperty,
-        )
 
 
     def test_Property_constant_list_nparray_tensor(self):
