@@ -543,7 +543,7 @@ class NormalizeStandard(Feature):
             The standardized image.
         """
 
-        backend = config.get_backend()
+        backend = self.get_backend()
 
         if backend == "torch":
             # ---- HARD GUARD: torch only ----
@@ -707,7 +707,7 @@ class NormalizeQuantile(Feature):
         featurewise: bool,
         **kwargs: Any,
     ):
-        backend = config.get_backend()
+        backend = self.get_backend()
 
         if backend == "torch":
             # ---- HARD GUARD: torch only ----
@@ -876,7 +876,7 @@ class Blur(Feature):
         image: np.ndarray | torch.Tensor,
         **kwargs,
     ):
-        backend = config.get_backend()
+        backend = self.get_backend()
 
         if backend == "torch":
             # ---- HARD GUARD: torch only ----
@@ -1392,7 +1392,7 @@ class Pool(Feature):
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         
-        backend = config.get_backend()
+        backend = self.get_backend()
 
         if backend == "torch":
             # ---- HARD GUARD: torch only ----
@@ -2008,7 +2008,7 @@ class Resize(Feature):
 
         """
 
-        backend = config.get_backend()
+        backend = self.get_backend()
 
         if backend == "torch":
             # ---- HARD GUARD: torch only ----

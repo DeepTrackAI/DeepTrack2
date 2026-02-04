@@ -137,7 +137,7 @@ Simulating an image with the `Fluorescence` class:
 from __future__ import annotations
 
 from pint import Quantity
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Iterable
 import warnings
 
 import numpy as np
@@ -154,8 +154,8 @@ from deeptrack.backend.units import (
 from deeptrack.math import AveragePooling, SumPooling
 from deeptrack.features import propagate_data_to_dependencies
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
-from deeptrack.image import pad_image_to_fft
-from deeptrack.types import ArrayLike, PropertyLike
+from deeptrack.image import pad_image_to_fft #TODO ***??***  pad_image_to_fft should be moved
+from deeptrack.types import PropertyLike
 
 from deeptrack import image
 from deeptrack import units_registry as u
@@ -288,6 +288,10 @@ class Microscope(StructuralFeature):
             )
         if isinstance(ux, float) and ux.is_integer():
             ux = int(ux)
+
+        # Center the detector integration window
+        shift = (ux // 2)
+        image = xp.roll(image, shift=(shift, shift), axis=(0, 1))    
         return AveragePooling(ux)(image)
 
     def get(
@@ -396,7 +400,6 @@ class Microscope(StructuralFeature):
                 **additional_sample_kwargs,
             )
 
-            print('1',type(sample_volume))
             if volume_samples:
                 # Interpret the merged volume semantically
                 sample_volume = self._extract_contrast_volume(
@@ -406,26 +409,16 @@ class Microscope(StructuralFeature):
                     ),
                 )
 
-
             # Let the objective know about the limits of the volume and all the fields.
             propagate_data_to_dependencies(
                 self._objective,
                 limits=limits,
-                fields=field_samples, # should We add upscale?
+                fields=field_samples,
             )
 
             imaged_sample = self._objective.resolve(sample_volume)
 
         imaged_sample = self._downscale_image(imaged_sample, upscale)
-        # # Handling upscale from dt.Upscale() here to eliminate Image
-        # # wrapping issues.
-        # if np.any(np.array(upscale) != 1):
-        #     ux, uy = upscale[:2]
-        #     if contrast_type == "intensity":
-        #         print("Using sum pooling for intensity downscaling.")   
-        #         imaged_sample = SumPoolingCM((ux, uy, 1))(imaged_sample)
-        #     else:
-        #         imaged_sample = AveragePoolingCM((ux, uy, 1))(imaged_sample)
 
         return imaged_sample
 
@@ -533,10 +526,10 @@ class Optics(Feature):
         NA: PropertyLike[float] = 0.7,
         wavelength: PropertyLike[float] = 0.66e-6,
         magnification: PropertyLike[float] = 10,
-        resolution: PropertyLike[float | ArrayLike[float]] = 1e-6,
+        resolution: PropertyLike[float | tuple[float, float]] = 1e-6,
         refractive_index_medium: PropertyLike[float] = 1.33,
-        padding: PropertyLike[ArrayLike[int]] = (10, 10, 10, 10),
-        output_region: PropertyLike[ArrayLike[int]] = (0, 0, 128, 128),
+        padding: PropertyLike[tuple[int, int, int, int]] = (10, 10, 10, 10),
+        output_region: PropertyLike[tuple[int, int, int, int]] = (0, 0, 128, 128),
         pupil: Feature = None,
         illumination: Feature = None,
         upscale: int = 1,
@@ -621,14 +614,14 @@ class Optics(Feature):
             pass
 
         def get_voxel_size(
-            resolution: float | ArrayLike[float], 
+            resolution: float | tuple[float, float] | tuple[float, float, float],
             magnification: float,
-        ) -> ArrayLike[float]:
+        ) -> tuple[float, float, float]:
             """ Calculate the voxel size.
             
             Parameters
             ----------
-            resolution: float or array_like[float]
+            resolution: float or tuple[float, float] or tuple[float, float, float]
                 The distance between pixels of the camera in meters. A third 
                 value can define the resolution in the z-direction.
             magnification: float
@@ -636,7 +629,7 @@ class Optics(Feature):
 
             Returns
             -------
-            array_like[float]
+            tuple[float, float, float]
                 The voxel size of the optical system.
 
             """
@@ -645,7 +638,7 @@ class Optics(Feature):
             return np.ones((3,)) * props["resolution"] / props["magnification"]
 
         def get_pixel_size(
-            resolution: float | ArrayLike[float],
+            resolution: float | tuple[float, float] | tuple[float, float, float],
             magnification: float,
         ) -> float:
             """ Calculate the pixel size.
@@ -654,7 +647,7 @@ class Optics(Feature):
 
             Parameters
             ----------
-            resolution: float or array_like[float]
+            resolution: float or tuple[float, float] or tuple[float, float, float]
                 The distance between pixels in the camera. A third value can
                 define the resolution in the z-direction.
             magnification: float
@@ -740,11 +733,11 @@ class Optics(Feature):
         return propertydict
 
     def _pupil(self, shape, **kwargs):
-        kwargs.setdefault("NA", float(self.NA()))
-        kwargs.setdefault("wavelength", float(self.wavelength()))
+        kwargs.setdefault("NA", self.NA())
+        kwargs.setdefault("wavelength", self.wavelength())
         kwargs.setdefault(
             "refractive_index_medium",
-            float(self.refractive_index_medium()),
+            self.refractive_index_medium(),
         )
 
         return (
@@ -756,19 +749,19 @@ class Optics(Feature):
 
     def _pupil_numpy(
         self: Optics,
-        shape: ArrayLike[int],
+        shape: tuple[int, int],
         NA: float,
         wavelength: float,
         refractive_index_medium: float,
-        include_aberration: bool = True,   
-        defocus: float | ArrayLike[float] = 0,
+        include_aberration: bool = True,
+        defocus: float | np.ndarray = 0.0,
         **kwargs: Any,
-    ):
+    ) -> np.ndarray:
         """Calculates the pupil function at different focal points.
 
         Parameters
         ----------
-        shape: array_like[int, int]
+        shape: tuple[int, int]
             The shape of the pupil function.
         NA: float
             The NA of the limiting aperture.
@@ -776,7 +769,7 @@ class Optics(Feature):
             The wavelength of the scattered light in meters.
         refractive_index_medium: float
             The refractive index of the medium.
-        voxel_size: array_like[float (, float, float)]
+        voxel_size: np.ndarray
             The distance between pixels in the camera. A third value can be
             included to define the resolution in the z-direction.
         include_aberration: bool
@@ -787,7 +780,7 @@ class Optics(Feature):
 
         Returns
         -------
-        pupil: array_like[complex]
+        pupil: np.ndarray
             The pupil function. Shape is (z, y, x).
 
         Examples
@@ -864,10 +857,7 @@ class Optics(Feature):
         wavelength: float,
         refractive_index_medium: float,
         include_aberration: bool = True,
-        defocus: float | np.ndarray | torch.Tensor = 0,
-        *,
-        device: torch.device | None = None,
-        dtype: torch.dtype = torch.complex64,
+        defocus: float | torch.Tensor = 0,
         **kwargs: Any,
     ) -> torch.Tensor:
         """
@@ -880,12 +870,21 @@ class Optics(Feature):
             semantics: (z, y, x) where your code uses shape=(shape[0], shape[1])
             but constructs meshgrid(y, x) and ends up with (shape[0], shape[1]).
         """
+        
         # Resolve device
-        if device is None:
-            # best-effort: use current torch default device
+        if isinstance(defocus, torch.Tensor):
+            device = defocus.device
+            complex_dtype = (
+                defocus.dtype
+                if defocus.dtype in (torch.complex64, torch.complex128)
+                else torch.complex64
+            )
+        else:
             device = torch.device("cpu")
+            complex_dtype = torch.complex64
 
-        # shape -> (H, W) following your current usage where shape[0] is x-axis length in your code
+
+        # shape -> (H, W) following current usage where shape[0] is x-axis length 
         shape_arr = np.array(shape, dtype=int)
         if shape_arr.size != 2:
             raise ValueError(f"shape must be length-2, got {shape}")
@@ -907,7 +906,7 @@ class Optics(Feature):
         # Build coordinates exactly like NumPy:
         # np.linspace(-(N/2), N/2 - 1, N) / radius + 1e-8
         # Use float for coordinate grid to reduce artifacts
-        real_dtype = torch.float32 if dtype in (torch.complex64, torch.float32) else torch.float64
+        real_dtype = torch.float32 if complex_dtype == torch.complex64 else torch.float64
 
         x = torch.linspace(
             -H / 2.0,
@@ -929,9 +928,9 @@ class Optics(Feature):
         # i.e. first argument becomes columns, second becomes rows
         Wg, Hg = torch.meshgrid(y, x, indexing="xy")  # Wg: (H, W), Hg: (H, W)
 
-        RHO = (Wg**2 + Hg**2).to(dtype=torch.complex64 if dtype == torch.complex64 else torch.complex128)
+        RHO = (Wg**2 + Hg**2)
 
-        pupil_function = (RHO.real < 1.0).to(dtype=torch.complex64 if dtype == torch.complex64 else torch.complex128)
+        pupil_function = (RHO.real < 1.0).to(complex_dtype)
 
         # z_shift term:
         # 2*pi*n/wavelength * vz * sqrt(1 - (NA/n)^2 * RHO)
@@ -939,16 +938,19 @@ class Optics(Feature):
         alpha = (float(NA) / float(refractive_index_medium)) ** 2
 
         inside = 1.0 - alpha * RHO  # complex
-        sqrt_term = torch.sqrt(inside)
+        sqrt_term = torch.sqrt(inside.to(complex_dtype))
 
         z_shift = (k0 * float(vz)) * sqrt_term  # complex
 
         # NumPy: z_shift[z_shift.imag != 0] = 0
         # Torch equivalent:
-        z_shift = torch.where(z_shift.imag != 0, torch.zeros_like(z_shift), z_shift)
+        z_shift = torch.where(
+            z_shift.imag.abs() > 1e-12,
+            torch.zeros_like(z_shift),
+            z_shift,
+        )
 
         # nan_to_num equivalent
-        # z_shift = _torch_nan_to_num(z_shift)
         z_shift = torch.nan_to_num(z_shift)
 
         # defocus reshape (-1,1,1)
@@ -979,39 +981,37 @@ class Optics(Feature):
         pupil_functions = pupil_function.unsqueeze(0) * torch.exp(1j * z_shift_3d)
 
         # Cast to requested complex dtype
-        if dtype == torch.complex64:
-            return pupil_functions.to(torch.complex64)
-        return pupil_functions.to(torch.complex128)
+        return pupil_functions.to(complex_dtype)
 
 
     def _pad_volume(
         self: Optics,
-        volume: ArrayLike[complex],
-        limits: ArrayLike[int] = None,
-        padding: ArrayLike[int] = None,
-        output_region: ArrayLike[int] = None,
+        volume: np.ndarray | torch.Tensor,
+        limits: tuple[int, int, int, int] | None = None,
+        padding: tuple[int, int, int, int] | None = None,
+        output_region: tuple[int, int, int, int] | None = None,
         **kwargs: Any,
-    ) -> tuple:
+    ) -> tuple[np.ndarray | torch.Tensor, tuple[int, int, int, int]]:
         """Pads the volume with zeros to avoid edge effects.
 
         Parameters
         ----------
-        volume: array_like[complex]
+        volume: np.ndarray | torch.Tensor
             The volume to pad.
-        limits: array_like[int, int]
+        limits: tuple[int, int, int, int] | None
             The limits of the volume.
-        padding: array_like[int]
+        padding: tuple[int, int, int, int] | None
             The padding to apply. Format is (left, right, top, bottom).
-        output_region: array_like[int, int]
+        output_region: tuple[int, int, int, int] | None
             The region of the volume to return. Used to remove regions of the
             volume that are far outside the view. If None, the full volume is
             returned.
 
         Returns
         -------
-        new_volume: array_like[complex]
+        new_volume: np.ndarray | torch.Tensor
             The padded volume.
-        new_limits: array_like[int, int]
+        new_limits: tuple[int, int, int, int]
             The new limits of the volume.
 
         Examples
@@ -1036,51 +1036,7 @@ class Optics(Feature):
          [ 0 10]]
         
         """
-        
-        # if limits is None:
-        #     limits = np.zeros((3, 2))
-
-        # new_limits = np.array(limits)
-        # output_region = np.array(output_region)
-
-        # # Replace None entries with current limit
-        # output_region[0] = (
-        #     output_region[0] if not output_region[0] is None else new_limits[0, 0]
-        # )
-        # output_region[1] = (
-        #     output_region[1] if not output_region[1] is None else new_limits[0, 1]
-        # )
-        # output_region[2] = (
-        #     output_region[2] if not output_region[2] is None else new_limits[1, 0]
-        # )
-        # output_region[3] = (
-        #     output_region[3] if not output_region[3] is None else new_limits[1, 1]
-        # )
-
-        # for i in range(2):
-        #     new_limits[i, :] = (
-        #         np.min([new_limits[i, 0], output_region[i] - padding[i]]),
-        #         np.max(
-        #             [
-        #                 new_limits[i, 1],
-        #                 output_region[i + 2] + padding[i + 2],
-        #             ]
-        #         ),
-        #     )
-        # new_volume = np.zeros(
-        #     np.diff(new_limits, axis=1)[:, 0].astype(np.int32),
-        #     dtype=complex,
-        # )
-
-        # old_region = (limits - new_limits).astype(np.int32)
-        # limits = limits.astype(np.int32)
-        # new_volume[
-        #     old_region[0, 0] : old_region[0, 0] + limits[0, 1] - limits[0, 0],
-        #     old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
-        #     old_region[2, 0] : old_region[2, 0] + limits[2, 1] - limits[2, 0],
-        # ] = volume
-        # return new_volume, new_limits
-
+    
         if limits is None:
             limits = xp.zeros((3, 2), dtype=xp.int32)
         else:
@@ -1171,27 +1127,7 @@ class Optics(Feature):
 
         """
 
-        ### TBE
-        # from deeptrack.scatterers import MieScatterer # Temporary place for this import.
-
-        # if isinstance(self, (Darkfield, ISCAT, Holography)) and not isinstance(sample, MieScatterer):
-        #     warnings.warn(
-        #         f"{type(self).__name__} optics must be used with Mie scatterers "
-        #         f"to produce a {type(self).__name__} image. "
-        #         f"Got sample of type {type(sample).__name__}.",
-        #         UserWarning,
-        #     )
-
         return Microscope(sample, self, **kwargs)
-
-    # def _no_wrap_format_input(self, *args, **kwargs) -> list:
-    #     return self._image_wrapped_format_input(*args, **kwargs)
-    
-    # def _no_wrap_process_and_get(self, *args, **feature_input) -> list:
-    #     return self._image_wrapped_process_and_get(*args, **feature_input)
-    
-    # def _no_wrap_process_output(self, *args, **feature_input):
-    #     return self._image_wrapped_process_output(*args, **feature_input)
 
 
 #TODO ***??*** revise Fluorescence - torch, typing, docstring, unit test
@@ -1285,7 +1221,7 @@ class Fluorescence(Optics):
             )
 
 
-    def extract_contrast_volume(self, scattered: ScatteredVolume, **kwargs) -> np.ndarray:
+    def extract_contrast_volume(self, scattered: ScatteredVolume, **kwargs) -> np.ndarray | torch.Tensor:
         scale = np.asarray(get_active_scale(), float)
         scale_volume = np.prod(scale)
 
@@ -1340,12 +1276,14 @@ class Fluorescence(Optics):
     ) -> np.ndarray | torch.Tensor:
         """
         Backend-dispatched fluorescence imaging.
+
         """
-        backend = config.get_backend()
+        
+        backend = self.get_backend()
 
         if backend == "torch":
             # ---- HARD GUARD: torch only ----
-            if not isinstance(image, torch.Tensor):
+            if not isinstance(illuminated_volume, torch.Tensor):
                 raise TypeError(
                     "Torch backend selected but image is not a torch.Tensor"
                 )
@@ -1358,7 +1296,7 @@ class Fluorescence(Optics):
 
         elif backend == "numpy":
             # ---- HARD GUARD: numpy only ----
-            if not isinstance(image, np.ndarray):
+            if not isinstance(illuminated_volume, np.ndarray):
                 raise TypeError(
                     "NumPy backend selected but image is not a np.ndarray"
                 )
@@ -1518,8 +1456,8 @@ class Fluorescence(Optics):
         **kwargs: Any,
     ) -> torch.Tensor:
         """
-        Torch implementation of fluorescence imaging.
-        Fully differentiable w.r.t. illuminated_volume.
+        Torch implementation of fluorescence imaging. Fully differentiable w.r.t. illuminated_volume.
+
         """
 
         import torch
@@ -1527,7 +1465,7 @@ class Fluorescence(Optics):
         device = illuminated_volume.device
         dtype = illuminated_volume.dtype
 
-        # --- Pad volume (must return torch tensors) ---
+        # Pad volume (must return torch tensors)
         padded_volume, limits = self._pad_volume(
             illuminated_volume, limits=limits, **kwargs
         )
@@ -1562,7 +1500,7 @@ class Fluorescence(Optics):
             dtype=torch.float32,
         )
 
-        # --- z iterator ---
+        # z iterator ---
         z_iterator = torch.linspace(
             z_limits[0],
             z_limits[1],
@@ -1579,10 +1517,10 @@ class Fluorescence(Optics):
 
         z_values = z_iterator[~zero_plane]
 
-        # --- FFT padding ---
+        # FFT padding
         volume = pad_image_to_fft(padded_volume, axes=(0, 1))
 
-        # --- Pupil (torch) ---
+        # Pupil (torch)
         pupils = self._pupil(
             volume.shape[:2],
             defocus=z_values,
@@ -1591,7 +1529,7 @@ class Fluorescence(Optics):
 
         z_index = 0
 
-        # --- Main convolution loop ---
+        # Main convolution loop
         for i in range(Z):
             if zero_plane[i]:
                 continue
@@ -1605,7 +1543,7 @@ class Fluorescence(Optics):
                     torch.fft.fftshift(pupil)
                 )
             ) ** 2
-
+            
             otf = torch.fft.fft2(psf)
             field_fft = torch.fft.fft2(volume[:, :, i])
             convolved = field_fft * otf
@@ -1613,7 +1551,7 @@ class Fluorescence(Optics):
 
             output_image[:, :, 0] += field[:H, :W]
 
-        # --- Remove padding ---
+        # Remove padding
         output_image = output_image[
             pad[0]: output_image.shape[0] - pad[2],
             pad[1]: output_image.shape[1] - pad[3],
@@ -1708,7 +1646,6 @@ class Brightfield(Optics):
     
     """
 
-
     __conversion_table__ = ConversionTable(
     working_distance=(u.meter, u.meter),
 )
@@ -1729,7 +1666,8 @@ class Brightfield(Optics):
         scattered: ScatteredVolume,
         refractive_index_medium: float,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor:
+        """Extracts the refractive index contrast volume for brightfield imaging."""
 
         ri = scattered.get_property("refractive_index", None)
         value = scattered.get_property("value", None)
@@ -1756,11 +1694,11 @@ class Brightfield(Optics):
 
     def get(
         self: Brightfield,
-        illuminated_volume: ArrayLike[complex],
-        limits: ArrayLike[int],
-        fields: ArrayLike[complex],
+        illuminated_volume: np.ndarray | torch.Tensor,
+        limits: tuple[int, int, int, int],
+        fields: np.ndarray | torch.Tensor,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor:
         """Simulates imaging with brightfield microscopy.
 
         This method propagates light through the given volume, applying 
@@ -1770,11 +1708,11 @@ class Brightfield(Optics):
 
         Parameters
         ----------
-        illuminated_volume: array_like[complex]
+        illuminated_volume: np.ndarray | torch.Tensor
             Discretized volume representing the sample to be imaged.
-        limits: array_like[int, int]
+        limits: tuple[int, int, int, int]
             Boundaries of the sample volume in each dimension.
-        fields: array_like[complex]
+        fields: np.ndarray | torch.Tensor
             Input fields to be used in the imaging process.
         **kwargs: Any
             Additional parameters for the imaging process, including:
@@ -1785,7 +1723,7 @@ class Brightfield(Optics):
 
         Returns
         -------
-        image: np.ndarray
+        image: np.ndarray | torch.Tensor
             Processed image after simulating the brightfield imaging process.
 
         Examples
@@ -1853,7 +1791,10 @@ class Brightfield(Optics):
         ]
         z_limits = limits[2, :]
 
-        output_image = np.zeros((*padded_volume.shape[0:2], 1))
+        output_image = xp.zeros(
+            (*padded_volume.shape[0:2], 1),
+            dtype=xp.float32 if self.get_backend() == "torch" else float,
+        )
 
         index_iterator = range(padded_volume.shape[2])
         z_iterator = np.linspace(
@@ -1863,7 +1804,7 @@ class Brightfield(Optics):
             endpoint=False,
         )
 
-        zero_plane = np.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+        zero_plane = xp.all(padded_volume == 0, axis=(0, 1), keepdims=False)
         # z_values = z_iterator[~zero_plane]
 
         volume = pad_image_to_fft(padded_volume, axes=(0, 1))
@@ -1888,11 +1829,11 @@ class Brightfield(Optics):
             )[0]
         ]
 
-        pupil_step = np.fft.fftshift(pupils[0])
+        pupil_step = xp.fft.fftshift(pupils[0])
 
-        light_in = np.ones(volume.shape[:2], dtype=complex)
+        light_in = xp.ones(volume.shape[:2], dtype=xp.complex64 if self.get_backend() == "torch" else complex)
         light_in = self.illumination.resolve(light_in)
-        light_in = np.fft.fft2(light_in)
+        light_in = xp.fft.fft2(light_in)
 
         K = 2 * np.pi / kwargs["wavelength"]*kwargs["refractive_index_medium"]
 
@@ -1904,11 +1845,12 @@ class Brightfield(Optics):
                 continue
 
             ri_slice = volume[:, :, i]
-            light = np.fft.ifft2(light_in)
-            light_out = light * np.exp(1j * ri_slice * voxel_size[-1] * K)
-            light_in = np.fft.fft2(light_out)
+            light = xp.fft.ifft2(light_in)
+            light_out = light * xp.exp(1j * ri_slice * voxel_size[-1] * K)
+            light_in = xp.fft.fft2(light_out)
+
   
-        shifted_pupil = np.fft.fftshift(pupils[1])
+        shifted_pupil = xp.fft.fftshift(pupils[1])
         light_in_focus = light_in * shifted_pupil
 
         if len(fields) > 0:
@@ -1930,29 +1872,24 @@ class Brightfield(Optics):
 
                 field_arrays.append(arr)
 
-            field = np.sum(field_arrays, axis=0)
+            field = xp.sum(field_arrays, axis=0)
             light_in_focus += field[..., 0]
-        shifted_pupil = np.fft.fftshift(pupils[-1])
+        shifted_pupil = xp.fft.fftshift(pupils[-1])
         light_in_focus = light_in_focus * shifted_pupil
         # Mask to remove light outside the pupil.
         mask = np.abs(shifted_pupil) > 0
         light_in_focus = light_in_focus * mask
 
-        output_image = np.fft.ifft2(light_in_focus)[
+        output_image = xp.fft.ifft2(light_in_focus)[
             : padded_volume.shape[0], : padded_volume.shape[1]
         ]
-        output_image = np.expand_dims(output_image, axis=-1)
+        # output_image = np.expand_dims(output_image, axis=-1)
+        output_image = xp.expand_dims(output_image, axis=-1)
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
 
         if not kwargs.get("return_field", False):
-            output_image = np.square(np.abs(output_image))
-        # else:
-        # Fudge factor. Not sure why this is needed.
-        # output_image = output_image - 1
-        # output_image = output_image * np.exp(1j * -np.pi / 4)
-        # output_image = output_image + 1
-
-        # output_image.properties = illuminated_volume.properties
+            # output_image = np.square(np.abs(output_image))
+            output_image = xp.square(xp.abs(output_image))
 
         return output_image
 
@@ -2154,7 +2091,7 @@ class Darkfield(Brightfield):
         scattered: ScatteredVolume,
         refractive_index_medium: float,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor:
         """
         Approximate darkfield contrast from a volume (toy model).
 
@@ -2210,11 +2147,11 @@ class Darkfield(Brightfield):
     #Retrieve get as super
     def get(
         self: Darkfield,
-        illuminated_volume: ArrayLike[complex],
-        limits: ArrayLike[int],
-        fields: ArrayLike[complex],
+        illuminated_volume: np.ndarray | torch.Tensor,
+        limits: tuple[int, int, int, int],
+        fields: np.ndarray | torch.Tensor,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor:
         """Retrieve the darkfield image of the illuminated volume.
 
         Parameters
@@ -2237,7 +2174,7 @@ class Darkfield(Brightfield):
         """
 
         field = super().get(illuminated_volume, limits, fields, return_field=True, **kwargs)
-        return np.square(np.abs(field-1))
+        return xp.square(xp.abs(field-1))
 
 
 #TODO ***??*** revise IlluminationGradient - torch, typing, docstring, unit test
@@ -2291,9 +2228,9 @@ class IlluminationGradient(Feature):
 
     def __init__(
         self: IlluminationGradient,
-        gradient: PropertyLike[ArrayLike[float]] = (0, 0),
-        constant: PropertyLike[float] = 0,
-        vmin: PropertyLike[float] = 0,
+        gradient: PropertyLike[tuple[float, float]] = (0.0, 0.0),
+        constant: PropertyLike[float] = 0.0,
+        vmin: PropertyLike[float] = 0.0,
         vmax: PropertyLike[float] = np.inf,
         **kwargs: Any,
     ) -> None:
@@ -2301,7 +2238,7 @@ class IlluminationGradient(Feature):
 
         Parameters
         ----------
-        gradient: array_like of float, optional
+        gradient: tuple[float, float], optional
             Gradient of the plane to add to the field amplitude, specified in 
             pixels. Default is (0, 0).
         constant: float, optional
@@ -2323,21 +2260,21 @@ class IlluminationGradient(Feature):
 
     def get(
         self: IlluminationGradient,
-        image: ArrayLike[complex],
-        gradient: ArrayLike[float],
+        image: np.ndarray,
+        gradient: tuple[float, float],
         constant: float,
         vmin: float,
         vmax: float,
         **kwargs: Any,
-    ) -> ArrayLike[complex]:
+    ) -> np.ndarray:
         """Applies the gradient and constant offset to the amplitude of the 
         field.
 
         Parameters
         ----------
-        image: numpy.ndarray
+        image: np.ndarray
             The input field to which the gradient and constant are applied.
-        gradient: array_like of float
+        gradient: tuple[float, float]
             Gradient of the plane to add to the field amplitude.
         constant: float
             Constant value to add to the field amplitude.
@@ -2350,7 +2287,7 @@ class IlluminationGradient(Feature):
 
         Returns
         -------
-        numpy.ndarray
+        np.ndarray
             The modified field with the gradient and constant applied.
 
         Examples
@@ -2697,7 +2634,6 @@ class NonOverlapping(Feature):
         from deeptrack.scatterers import ScatteredVolume
 
         from deeptrack.augmentations import CropTight, Pad # these are not compatibles with torch backend
-        from deeptrack.optics import _get_position
         from deeptrack.math import isotropic_erosion, isotropic_dilation
 
         min_distance = self.min_distance()
@@ -3283,8 +3219,6 @@ class SampleToMasks(Feature):
             dtype=list_of_labels[0].array.dtype,
         )
 
-        from deeptrack.optics import _get_position
-
         # Merge masks into the output.
         for volume in list_of_labels:
             label = volume.array
@@ -3424,7 +3358,7 @@ def _get_position(
     if len(position) == 3:
         position = position * scale + 0.5 * (scale - 1)
         if return_z:
-            return position * scale - shift
+            return position - shift
         else:
             return position[0:2] - shift[0:2]
 
@@ -3442,39 +3376,8 @@ def _get_position(
 
     return position
 
-# def get_position_torch(
-#     volume: torch.Tensor,          # (Z, Y, X) or (Y, X)
-#     position: torch.Tensor,        # base position (pixel units)
-#     scale: torch.Tensor,           # active scale
-#     return_z: bool = False,
-# ):
-#     # magnitude field (keeps gradients)
-#     w = volume.abs()
 
-#     eps = 1e-8
-#     w_sum = w.sum() + eps
-
-#     dims = w.ndim
-#     coords = torch.meshgrid(
-#         *[torch.arange(s, device=w.device, dtype=w.dtype) for s in w.shape],
-#         indexing="ij",
-#     )
-
-#     com = [ (w * c).sum() / w_sum for c in coords ]
-
-#     com = torch.stack(com)  # (Z,Y,X) or (Y,X)
-
-#     # shift relative to volume origin
-#     if dims == 3 and not return_z:
-#         com = com[1:]  # drop Z
-
-#     # scaled physical position
-#     pos = position * scale + 0.5 * (scale - 1)
-
-#     return pos - com
-
-
-def _bilinear_interpolate_numpy(
+def _bilinear_interpolate(
     scatterer: np.ndarray, x_off: float, y_off: float
 ) -> np.ndarray:
     """Apply bilinear subpixel interpolation in the x–y plane (NumPy)."""
@@ -3498,40 +3401,16 @@ def _bilinear_interpolate_numpy(
     return out
 
 
-def _bilinear_interpolate_torch(
-    scatterer: torch.Tensor, x_off: float, y_off: float
-) -> torch.Tensor:
-    """Apply bilinear subpixel interpolation in the x–y plane (Torch).
-
-    Uses grid_sample for autograd-friendly interpolation.
-    """
-    H, W, D = scatterer.shape
-
-    # Normalized shifts in [-1,1]
-    x_shift = 2 * x_off / (W - 1)
-    y_shift = 2 * y_off / (H - 1)
-
-    yy, xx = torch.meshgrid(
-        torch.linspace(-1, 1, H, device=scatterer.device, dtype=scatterer.dtype),
-        torch.linspace(-1, 1, W, device=scatterer.device, dtype=scatterer.dtype),
-        indexing="ij",
-    )
-    grid = torch.stack((xx + x_shift, yy + y_shift), dim=-1)  # (H,W,2)
-    grid = grid.unsqueeze(0).repeat(D, 1, 1, 1)               # (D,H,W,2)
-
-    inp = scatterer.permute(2, 0, 1).unsqueeze(1)             # (D,1,H,W)
-
-    out = F.grid_sample(inp, grid, mode="bilinear",
-                        padding_mode="zeros", align_corners=True)
-    return out.squeeze(1).permute(1, 2, 0)                    # (H,W,D)
-
 
 #TODO ***??*** revise _create_volume - torch, typing, docstring, unit test
+
+# This is where differentiability respect to position, shape, etc is broken.
 def _create_volume(
     list_of_scatterers: list,
     pad: tuple = (0, 0, 0, 0),
     output_region: tuple = (None, None, None, None),
     refractive_index_medium: float = 1.33,
+    backend: Literal["numpy", "torch"] = "numpy",
     **kwargs: Any,
 ) -> tuple:
     """Converts a list of scatterers into a volumetric representation.
@@ -3560,16 +3439,39 @@ def _create_volume(
         - limits: numpy.ndarray
             Spatial limits of the volume.
 
+    Notes
+    -----
+    This function is non-differentiable with respect to scatterer parameters.
+    If torch tensors are provided, they are converted to NumPy internally and
+    converted back before returning.
+
     """
-    # contrast_type = kwargs.get("contrast_type", None)
-    # if contrast_type is None:
-    #     raise RuntimeError(
-    #         "_create_volume requires a contrast_type "
-    #         "(e.g. 'intensity' or 'refractive_index')"
-    #     )
 
     if not isinstance(list_of_scatterers, list):
         list_of_scatterers = [list_of_scatterers]
+
+    backend = config.get_backend()
+
+    device = None
+
+    for s in list_of_scatterers:
+        arr = s.array
+
+        if backend == "torch":
+            if not isinstance(arr, torch.Tensor):
+                raise TypeError(
+                    "Torch backend active but scatterer.array is not a torch.Tensor"
+                )
+
+        elif backend == "numpy":
+            if isinstance(arr, torch.Tensor):
+                raise TypeError(
+                    "NumPy backend active but scatterer.array is a torch.Tensor"
+                )
+
+        else:
+            raise RuntimeError(f"Unknown backend: {backend}")
+
 
     volume = np.zeros((1, 1, 1), dtype=complex)
     limits = None
@@ -3595,10 +3497,12 @@ def _create_volume(
 
     for scatterer in list_of_scatterers:
 
-        if isinstance(scatterer.array, torch.Tensor):
-            device = scatterer.array.device
-            dtype = scatterer.array.dtype
-            scatterer.array = scatterer.array.detach().cpu().numpy()
+        if backend == "torch" and isinstance(scatterer.array, torch.Tensor):
+            if device is None:
+                device = scatterer.array.device
+            scatterer = scatterer.copy( 
+                array=scatterer.array.detach().cpu().numpy()
+            )
 
         position = _get_position(scatterer, mode="corner", return_z=True)
 
@@ -3614,7 +3518,7 @@ def _create_volume(
             or position[1] > OR[3]
         ):
             continue
-
+        
         # Pad scatterer to avoid edge effects during interpolation
         padded_scatterer_arr = np.pad(  #Use Pad instead and make it torch-compatible?
                 scatterer.array,
@@ -3622,8 +3526,8 @@ def _create_volume(
                 "constant",
                 constant_values=0,
             )
-        padded_scatterer = ScatteredVolume(
-            array=padded_scatterer_arr, properties=scatterer.properties.copy(),
+        padded_scatterer = scatterer.copy(
+            array=padded_scatterer_arr,
             )
         position = _get_position(padded_scatterer, mode="corner", return_z=True)
         shape = np.array(padded_scatterer.array.shape)
@@ -3638,16 +3542,7 @@ def _create_volume(
         x_off = position[0] - np.floor(position[0])
         y_off = position[1] - np.floor(position[1])
 
-        
-        if isinstance(padded_scatterer.array, np.ndarray): # get_backend is a method of Features and not exposed 
-            splined_scatterer = _bilinear_interpolate_numpy(padded_scatterer.array, x_off, y_off)
-        elif isinstance(padded_scatterer.array, torch.Tensor):
-            splined_scatterer = _bilinear_interpolate_torch(padded_scatterer.array, x_off, y_off)
-        else:
-            raise TypeError(
-                f"Unsupported array type {type(padded_scatterer.array)}. "
-                "Expected np.ndarray or torch.Tensor."
-            )
+        splined_scatterer = _bilinear_interpolate(padded_scatterer.array, x_off, y_off)
 
         position = np.floor(position)
         new_limits = np.zeros(limits.shape, dtype=np.int32)
@@ -3690,50 +3585,8 @@ def _create_volume(
             int(within_volume_position[2] + shape[2]),
         ] += splined_scatterer
 
-    if config.get_backend() == "torch":
-        volume = torch.from_numpy(volume).to(device=device, dtype=torch.float64)
+    if backend == "torch":
+        if device is None:
+            device = torch.device("cpu")
+        volume = torch.from_numpy(volume).to(device=device)
     return volume, limits
-
-# # Move to image
-# def pad_image_to_fft(
-#     image: np.ndarray | torch.Tensor,
-#     axes: Iterable[int] = (0, 1),
-# ):
-#     """Pad image to FFT-friendly sizes.
-
-#     Preserves backend:
-#     - NumPy input → NumPy output
-#     - Torch input → Torch output (fully differentiable)
-#     """
-
-#     def _closest(dim: int) -> int:
-#         for size in _FASTEST_SIZES:
-#             if size >= dim:
-#                 return size
-#         raise ValueError(
-#             f"No suitable size found in _FASTEST_SIZES={_FASTEST_SIZES} "
-#             f"for dimension {dim}."
-#         )
-
-#     shape = list(image.shape)
-#     new_shape = list(shape)
-
-#     for axis in axes:
-#         new_shape[axis] = _closest(shape[axis])
-
-#     pad_sizes = [(0, new - old) for old, new in zip(shape, new_shape)]
-
-#     # --- NumPy backend ---
-#     if isinstance(image, np.ndarray):
-#         return np.pad(image, pad_sizes, mode="constant")
-
-#     # --- Torch backend ---
-#     if isinstance(image, torch.Tensor):
-#         # torch.nn.functional.pad expects reversed flat list
-#         pad = []
-#         for before, after in reversed(pad_sizes):
-#             pad.extend([before, after])
-
-#         return torch.nn.functional.pad(image, pad, mode="constant", value=0.0)
-
-#     raise TypeError(f"Unsupported type: {type(image)}")
