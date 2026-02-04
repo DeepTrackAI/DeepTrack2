@@ -1763,19 +1763,20 @@ class Feature(DeepTrackNode):
         which provides a utility that helps manage and propagate feature
         arguments efficiently.
 
-        The values from `arguments` override the corresponding feature’s own
-        properties at call-time, but do not modify them permanently.
+        The values from `arguments` override the corresponding properties
+        during feature evaluation (call-time), without permanently modifying
+        the feature’s own properties.
 
         Parameters
         ----------
         arguments: Arguments or Feature
-            The feature whose properties will be bound as arguments to this
-            feature.
+            A feature whose properties will be used as call-time arguments for
+            this feature. Typically an `Arguments` feature.
 
         Returns
         -------
         Feature
-            The current feature instance with bound arguments.
+            The current feature instance with bound arguments for chaining.
 
         Examples
         --------
@@ -1799,8 +1800,8 @@ class Feature(DeepTrackNode):
         >>> result
         4.0
 
-        Without binding, the result would be still 5.0 as `scale` would still
-        be the original one.
+        Without binding, overriding `scale` at call-time would have no effect,
+        and the result would remain 5.0.
 
         """
 
@@ -4128,25 +4129,11 @@ def propagate_data_to_dependencies(
 
     """
 
-    # TODO Decide whether to keep warning
-    #matched_keys: set[str] = set()
-
     for dependency in feature.recurse_dependencies():
         if isinstance(dependency, PropertyDict):
             for key, value in kwargs.items():
                 if key in dependency:
                     dependency[key].set_value(value, _ID=_ID)
-
-                    #matched_keys.add(key)
-
-    #unmatched_keys = set(kwargs) - matched_keys
-    #if unmatched_keys:
-    #    warnings.warn(
-    #        "The following properties were not found in the dependency "
-    #        f"tree and were ignored: {sorted(unmatched_keys)}",
-    #        UserWarning,
-    #        stacklevel=2,
-    #    )
 
 
 class StructuralFeature(Feature):
