@@ -1646,15 +1646,15 @@ class Feature(DeepTrackNode):
 
         return feature
 
-    def seed(  # TODO
+    def seed(
         self: Feature,
         updated_seed: int | None = None,
         _ID: tuple[int, ...] = (),
     ) -> int:
         """Seed all random number generators for reproducibility.
 
-        This method sets the global random seed for Python's `random` module, 
-        NumPy, and (if available) PyTorch. If `updated_seed` is provided, it 
+        This method sets the global random seed for Python's `random` module,
+        NumPy, and (if available) PyTorch. If `updated_seed` is provided, it
         replaces the value of the internal `_random_seed` node before
         resolution.
 
@@ -1672,9 +1672,9 @@ class Feature(DeepTrackNode):
         ----------
         updated_seed: int or None, optional
             If provided, sets a fixed value for the internal `_random_seed`.
+            Defaults to `None`.
         _ID: tuple[int, ...], optional
-            Unique identifier used to resolve the seed value. It defaults to
-            `()`.
+            Unique identifier used to resolve the seed value. Defaults to `()`.
 
         Returns
         -------
@@ -1686,8 +1686,10 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         **Using `random`**
+
         Define a feature that samples a random integer from 0 to 10 using the
         Python standard library's `random` module:
+
         >>> import random
         >>>
         >>> feature = dt.Value(lambda: random.randint(0, 10))
@@ -1703,12 +1705,14 @@ class Feature(DeepTrackNode):
         produces a new deterministic seed, but different output values.
 
         Fix the seed to reuse it later for reproducibility:
+
         >>> seed = feature.seed()
         >>> seed
         1956541335
 
         Now reseed the feature with the same value before each update,
         to make the output deterministic and repeatable.
+
         >>> for _ in range(3):
         ...    feature.seed(seed)
         ...    print(f"output={feature.new()} seed={feature.seed()}")
@@ -1721,20 +1725,24 @@ class Feature(DeepTrackNode):
         differ if it's re-sampled internally, but the output remains stable.
 
         **Using NumPy**
+
         Similar observations can be made with NumPy:
+
         >>> import numpy as np
         >>>
         >>> feature = dt.Value(lambda: np.random.randint(0, 10))
 
-        **Using PyTorch**        
+        **Using PyTorch**
+
         Similar observations can be made with PyTorch:
+
         >>> import torch
         >>>
         >>> feature = dt.Value(lambda: torch.randint(0, 10, (1,)).item())
 
         """
 
-        if updated_seed:
+        if updated_seed is not None:
             self._random_seed.set_value(updated_seed)
 
         seed = self._random_seed(_ID=_ID)
