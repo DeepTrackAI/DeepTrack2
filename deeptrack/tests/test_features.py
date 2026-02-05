@@ -320,8 +320,37 @@ class TestFeatures(unittest.TestCase):
         self.assertIn(dependency, feature.recurse_dependencies())
         self.assertIn(feature, dependency.recurse_children())
 
-    def test_Feature_seed(self):  # TODO
-        pass
+    def test_Feature_seed(self):
+        import random
+
+        feature = features.DummyFeature()
+
+        seed = feature.seed(0)
+        self.assertEqual(seed, 0)
+
+        py_1 = random.randint(0, 10)
+        self.assertEqual(py_1, 6)
+
+        np_1 = np.random.randint(0, 10)
+        self.assertEqual(np_1, 5)
+
+        seed = feature.seed(0)
+        self.assertEqual(seed, 0)
+
+        py_2 = random.randint(0, 10)
+        self.assertEqual(py_2, py_1)
+
+        np_2 = np.random.randint(0, 10)
+        self.assertEqual(np_2, np_1)
+
+        if TORCH_AVAILABLE:
+            feature.seed(0)
+            t_1 = torch.randint(0, 10, (1,)).item()
+
+            feature.seed(0)
+            t_2 = torch.randint(0, 10, (1,)).item()
+
+            self.assertEqual(t_1, t_2)
 
     def test_Feature_bind_arguments(self):
 
