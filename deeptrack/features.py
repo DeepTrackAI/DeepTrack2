@@ -856,7 +856,7 @@ class Feature(DeepTrackNode):
 
     resolve = __call__
 
-    def to_sequential(  # TODO
+    def to_sequential(
         self: Feature,
         **kwargs: Any,
     ) -> Feature:
@@ -875,20 +875,57 @@ class Feature(DeepTrackNode):
         self: Feature
             Feature to make sequential.
         kwargs: Any
-            Keyword arguments to pass on as sequential properties of `feature`.
+            Keyword arguments mapping property names to sequential sampling
+            rules.
 
         Returns
         -------
         Feature
-            The input feature evolved as a sequence
+            The feature itself (returned for chaining), now configured to
+            resolve sequentially.
 
         Examples
         --------
         >>> import deeptrack as dt
 
-        Sequentially evaluate a rotating ellipse.
+        **Sequentially evaluate a feature.**
+
+        This example shows how `to_sequential()` can be used together with
+        `__distributed__ = False` to create a feature that generates values
+        over time, rather than transforming input data.
+
+        Define a feature that returns a position value and does not depend on
+        any inputs:
+
+        >>> class PositionFeature(dt.Feature):
+        ...     __distributed__ = False
+        ...
+        ...     def __init__(self, position, **kwargs):
+        ...         super().__init__(position=position, **kwargs)
+        ...
+        ...     def get(self, input_list, position, **kwargs):
+        ...         return position
+
+        Convert the `position` property into a sequential property that
+        increments at each time step:
+
+        >>> feature = PositionFeature(position=0)
+        >>> feature.to_sequential(
+        ...     position=lambda previous_value: 0
+        ...     if previous_value is None
+        ...     else previous_value + 1
+        ... )
+
+        Wrap the feature in a `Sequence` and evaluate it:
+
+        >>> sequence = dt.Sequence(feature, sequence_length=5)
+        >>> sequence()
+        [0, 1, 2, 3, 4]
+
+        **Sequentially evaluate a rotating ellipse.**
 
         Create the optics:
+
         >>> optics = dt.Fluorescence(
         ...     NA=0.6,
         ...     magnification=10,
@@ -898,7 +935,8 @@ class Feature(DeepTrackNode):
         ... )
 
         Create the scatterer:
-        >>> ellipse = Ellipse(
+
+        >>> ellipse = dt.Ellipse(
         ...     position_unit="pixel",
         ...     position=(16, 16),
         ...     intensity=1,
@@ -907,6 +945,7 @@ class Feature(DeepTrackNode):
         ... )
 
         Implement a function to increment the rotation:
+
         >>> from numpy import pi
         >>>
         >>> def get_rotation(sequence_length, previous_value):
@@ -914,62 +953,79 @@ class Feature(DeepTrackNode):
         ...     return previous_value + delta
 
         Call `to_sequential()` to resolve the feature sequentially:
+
         >>> rotating_ellipse = ellipse.to_sequential(rotation=get_rotation)
 
         Image the scatterer with the optics:
+
         >>> imaged_rotating_ellipse = optics(rotating_ellipse)
 
         Encapsulate as a `Sequence` object and specify the sequence length:
-        >>> imaged_rotating_ellipse_sequence = Sequence(
+
+        >>> imaged_rotating_ellipse_sequence = dt.Sequence(
         ...     imaged_rotating_ellipse,
-        ...     sequence_length=10
+        ...     sequence_length=10,
         ... )
 
         Finally observe the scatterer rotate:
+
         >>> imaged_rotating_ellipse_sequence.update().plot();
 
         """
 
-        for property_name in kwargs.keys():
+        for property_name in kwargs:
             if property_name in self.properties:
-                # Insert sequential property with initialized value taken from
-                # the already available property.
+                # Insert sequential property with initial value taken from the
+                # already available property.
                 self.properties[property_name] = SequentialProperty(
-                    self.properties[property_name], **self.properties
+                    node_name=property_name,
+                    initial_sampling_rule=self.properties[property_name],
                 )
             else:
-                # Insert empty sequential property.
-                self.properties[property_name] = SequentialProperty()
+                # Insert sequential property without initial value.
+                self.properties[property_name] = SequentialProperty(
+                    node_name=property_name,
+                )
 
             self.properties.add_dependency(self.properties[property_name])
-            # self.properties[property_name].add_child(self.properties)
 
         for property_name, sampling_rule in kwargs.items():
             prop = self.properties[property_name]
 
-            all_kwargs = dict(
-                previous_value=prop.previous_value,
-                previous_values=prop.previous_values,
-                sequence_length=prop.sequence_length,
-                sequence_index=prop.sequence_index,
-            )
+            all_kwargs = {
+                "previous_value": prop.previous_value,
+                "previous_values": prop.previous_values,
+                "sequence_length": prop.sequence_length,
+                "sequence_index": prop.sequence_index,
+            }
 
             for key, value in self.properties.items():
                 if key == property_name:
                     continue
 
+                all_kwargs[key] = value
                 if isinstance(value, SequentialProperty):
-                    all_kwargs[key] = value
-                    all_kwargs["previous_" + key] = value.previous_values
-                else:
-                    all_kwargs[key] = value
+                    all_kwargs[f"previous_value_{key}"] = value.previous_value
+                    all_kwargs[f"previous_values_{key}"] = \
+                        value.previous_values
 
-            if not prop.initial_sampling_rule:
-                prop.initial_sampling_rule = prop.create_action(
-                    sampling_rule,
-                    **{k:all_kwargs[k] for k in all_kwargs
-                       if k != "previous_value"},
-                )
+                # TBE ??
+                #if isinstance(value, SequentialProperty):
+                #    all_kwargs[key] = value
+                #    all_kwargs["previous_" + key] = value.previous_values
+                #else:
+                #    all_kwargs[key] = value
+
+            # TBE ??
+            #if prop.initial_sampling_rule is None:
+            #    prop.initial_sampling_rule = prop.create_action(
+            #        sampling_rule,
+            #        **{
+            #            k:all_kwargs[k]
+            #            for k in all_kwargs
+            #            if k != "previous_value"
+            #        },
+            #    )
 
             prop.sample = prop.create_action(sampling_rule, **all_kwargs)
 
