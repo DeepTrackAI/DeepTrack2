@@ -261,6 +261,7 @@ class TestFeatures(unittest.TestCase):
 
     def test_Feature__to_sequential(self):
 
+        # Two properties, both made sequential
         class _TwoPropertyFeature(features.Feature):
             __distributed__ = False
 
@@ -289,6 +290,92 @@ class TestFeatures(unittest.TestCase):
             ((0, 1, 2, 3, 4), (10, 8, 6, 4, 2)),
         )
 
+        # Mixed sequential + non-sequential properties
+        class _MixedFeature(features.Feature):
+            __distributed__ = False
+
+            def __init__(self, x, y, scale, **kwargs):
+                super().__init__(x=x, y=y, scale=scale, **kwargs)
+
+            def get(self, input_list, x, y, scale, **kwargs):
+                return x, y, scale
+
+        feature = _MixedFeature(x=0, y=10, scale=3)
+
+        feature.to_sequential(
+            x=lambda previous_value, scale: (
+                0 if previous_value is None else previous_value + scale
+            ),
+        )
+
+        sequence = sequences.Sequence(feature, sequence_length=4)
+        values = sequence()
+
+        self.assertEqual(
+            values,
+            (
+                (0, 3, 6, 9),          # x depends on non-sequential scale
+                (10, 10, 10, 10),      # y unchanged (not sequential)
+                (3, 3, 3, 3),          # scale unchanged (not sequential)
+            ),
+        )
+
+        # Idempotency / does not rewrap existing SequentialProperty
+        class _OnePropertyFeature(features.Feature):
+            __distributed__ = False
+
+            def __init__(self, x, **kwargs):
+                super().__init__(x=x, **kwargs)
+
+            def get(self, input_list, x, **kwargs):
+                return x
+
+        feature = _OnePropertyFeature(x=0)
+
+        feature.to_sequential(
+            x=lambda previous_value: (
+                0 if previous_value is None else previous_value + 1
+            ),
+        )
+        feature.to_sequential(
+            x=lambda previous_value: (
+                0 if previous_value is None else previous_value + 1
+            ),
+        )
+
+        sequence = sequences.Sequence(feature, sequence_length=4)
+        values = sequence()
+
+        self.assertEqual(values, [0, 1, 2, 3])
+
+        # Cross-property helpers
+        class _TwoPropertyFeature(features.Feature):
+            __distributed__ = False
+
+            def __init__(self, x, y, **kwargs):
+                super().__init__(x=x, y=y, **kwargs)
+
+            def get(self, input_list, x, y, **kwargs):
+                return x, y
+
+        feature = _TwoPropertyFeature(x=0, y=0)
+
+        feature.to_sequential(
+            x=lambda previous_value: (
+                0 if previous_value is None else previous_value + 1
+            ),
+            y=lambda previous_value_x: (
+                0 if previous_value_x is None else 2 * previous_value_x
+            ),
+        )
+
+        sequence = sequences.Sequence(feature, sequence_length=4)
+        values = sequence()
+
+        self.assertEqual(
+            values,
+            ((0, 1, 2, 3), (0, 0, 2, 4)),
+        )
 
     def test_Feature__action(self):
 
