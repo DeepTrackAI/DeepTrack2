@@ -904,7 +904,10 @@ class SequentialProperty(Property):
         
         """
 
-        if self.sequence_index(_ID=_ID) == 0 and self.initial_sampling_rule:
+        if (
+            self.sequence_index(_ID=_ID) == 0
+            and self.initial_sampling_rule is not None
+        ):
             return self.initial_sampling_rule(_ID=_ID)
 
         return self.sample(_ID=_ID)
