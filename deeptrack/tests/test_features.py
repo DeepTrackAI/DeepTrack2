@@ -20,6 +20,7 @@ from deeptrack import (
     features,
     Gaussian,
     properties,
+    sequences,
     TORCH_AVAILABLE,
     xp,
 )
@@ -258,8 +259,36 @@ class TestFeatures(unittest.TestCase):
         out3 = feature.new(x)
         self.assertTrue((out3 == np.array([3, 4, 5])).all())
 
-    def test_Feature__to_sequential(self):  # TODO
-        pass
+    def test_Feature__to_sequential(self):
+
+        class _TwoPropertyFeature(features.Feature):
+            __distributed__ = False
+
+            def __init__(self, x, y, **kwargs):
+                super().__init__(x=x, y=y, **kwargs)
+
+            def get(self, input_list, x, y, **kwargs):
+                return x, y
+
+        feature = _TwoPropertyFeature(x=0, y=10)
+
+        feature.to_sequential(
+            x=lambda previous_value: (
+                0 if previous_value is None else previous_value + 1
+            ),
+            y=lambda previous_value: (
+                10 if previous_value is None else previous_value - 2
+            ),
+        )
+
+        sequence = sequences.Sequence(feature, sequence_length=5)
+        values = sequence()
+
+        self.assertEqual(
+            values,
+            ((0, 1, 2, 3, 4), (10, 8, 6, 4, 2)),
+        )
+
 
     def test_Feature__action(self):
 
