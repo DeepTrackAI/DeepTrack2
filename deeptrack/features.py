@@ -973,26 +973,40 @@ class Feature(DeepTrackNode):
 
         """
 
+        # Pass 1: Ensure all requested properties are SequentialProperty
+        # instances.
         for property_name in kwargs:
-            if property_name in self.properties:
+            existing = self.properties.get(property_name, None)
+
+            if isinstance(existing, SequentialProperty):
+                # Already sequential: keep as-is.
+                prop = existing
+            elif existing is not None:
                 # Insert sequential property with initial value taken from the
                 # already available property.
-                self.properties[property_name] = SequentialProperty(
+                prop = SequentialProperty(
                     node_name=property_name,
-                    initial_sampling_rule=self.properties[property_name],
+                    initial_sampling_rule=existing,
                 )
+                self.properties[property_name] = prop
             else:
                 # Insert sequential property without initial value.
-                self.properties[property_name] = SequentialProperty(
-                    node_name=property_name,
-                )
+                prop = SequentialProperty(node_name=property_name)
+                self.properties[property_name] = prop
 
-            self.properties.add_dependency(self.properties[property_name])
+            # Safe because does not duplicate: dependencies are stored as sets.
+            self.properties.add_dependency(prop)
 
+        # Pass 2: Configure the sampling rule for each sequential property.
         for property_name, sampling_rule in kwargs.items():
             prop = self.properties[property_name]
 
-            all_kwargs = {
+            if not isinstance(prop, SequentialProperty):
+                raise TypeError(
+                    f"Property '{property_name}' is not a SequentialProperty."
+                )
+
+            all_kwargs: dict[str, Any] = {
                 "previous_value": prop.previous_value,
                 "previous_values": prop.previous_values,
                 "sequence_length": prop.sequence_length,
@@ -1006,26 +1020,9 @@ class Feature(DeepTrackNode):
                 all_kwargs[key] = value
                 if isinstance(value, SequentialProperty):
                     all_kwargs[f"previous_value_{key}"] = value.previous_value
-                    all_kwargs[f"previous_values_{key}"] = \
+                    all_kwargs[f"previous_values_{key}"] = (
                         value.previous_values
-
-                # TBE ??
-                #if isinstance(value, SequentialProperty):
-                #    all_kwargs[key] = value
-                #    all_kwargs["previous_" + key] = value.previous_values
-                #else:
-                #    all_kwargs[key] = value
-
-            # TBE ??
-            #if prop.initial_sampling_rule is None:
-            #    prop.initial_sampling_rule = prop.create_action(
-            #        sampling_rule,
-            #        **{
-            #            k:all_kwargs[k]
-            #            for k in all_kwargs
-            #            if k != "previous_value"
-            #        },
-            #    )
+                    )
 
             prop.sample = prop.create_action(sampling_rule, **all_kwargs)
 
