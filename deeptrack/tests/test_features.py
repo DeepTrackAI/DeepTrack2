@@ -2742,118 +2742,148 @@ class TestFeatures(unittest.TestCase):
             lambda: controlled_feature.new(key="not a key!!!"),
         )
 
-    def test_LoadImage(self):  # TODO
-        return
 
-        from tempfile import NamedTemporaryFile
-        from PIL import Image as PIL_Image
+    def test_LoadImage(self):
         import os
+        from tempfile import NamedTemporaryFile
 
-        # Create temporary image files in multiple formats for testing.
+        from PIL import Image as PIL_Image
+
         test_image_array = (np.random.rand(50, 50) * 255).astype(np.uint8)
+        test_rgb_array = np.stack([test_image_array] * 3, axis=-1)
+
+        temp_files: list[str] = []
 
         try:
-            with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy:
-                pass
+            temp_npy = NamedTemporaryFile(suffix=".npy", delete=False)
+            temp_npy.close()
             np.save(temp_npy.name, test_image_array)
-                # npy_filename = temp_npy.name
+            temp_files.append(temp_npy.name)
 
-            with NamedTemporaryFile(suffix=".npy", delete=False) as temp_npy2:
-                pass
+            temp_npy2 = NamedTemporaryFile(suffix=".npy", delete=False)
+            temp_npy2.close()
             np.save(temp_npy2.name, test_image_array)
+            temp_files.append(temp_npy2.name)
 
-            with NamedTemporaryFile(suffix=".png", delete=False) as temp_png:
-                PIL_Image.fromarray(test_image_array).save(temp_png.name)
-                # png_filename = temp_png.name
+            temp_png = NamedTemporaryFile(suffix=".png", delete=False)
+            temp_png.close()
+            PIL_Image.fromarray(test_rgb_array).save(temp_png.name)
+            temp_files.append(temp_png.name)
 
-            with NamedTemporaryFile(suffix=".jpg", delete=False) as temp_jpg:
-                PIL_Image.fromarray(test_image_array).convert("RGB") \
-                    .save(temp_jpg.name)
-                # jpg_filename = temp_jpg.name
+            temp_jpg = NamedTemporaryFile(suffix=".jpg", delete=False)
+            temp_jpg.close()
+            PIL_Image.fromarray(test_rgb_array).save(temp_jpg.name)
+            temp_files.append(temp_jpg.name)
 
-            # Test loading a .npy file.
-            load_feature = features.LoadImage(path=temp_npy.name)
-            loaded_image = load_feature.resolve()
-            self.assertEqual(loaded_image.shape[:2],
-                             test_image_array.shape[:2])
+            # Silence noisy third-party warnings (imageio/pkg_resources).
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", ResourceWarning)
+                warnings.simplefilter("ignore", DeprecationWarning)
 
-            # Test loading a .png file.
-            load_feature = features.LoadImage(path=temp_png.name)
-            loaded_image = load_feature.resolve()
-            self.assertEqual(loaded_image.shape[:2],
-                             test_image_array.shape[:2])
-
-            # Test loading a .jpg file.
-            load_feature = features.LoadImage(path=temp_jpg.name)
-            loaded_image = load_feature.resolve()
-            self.assertEqual(loaded_image.shape[:2],
-                             test_image_array.shape[:2])
-
-            # Test loading an image and converting it to grayscale.
-            load_feature = features.LoadImage(path=temp_png.name,
-                                              to_grayscale=True)
-            # loaded_image = load_feature.resolve()  # TODO Check this
-            # self.assertEqual(loaded_image.shape[-1], 1)
-
-            # Test ensuring a minimum number of dimensions.
-            load_feature = features.LoadImage(path=temp_png.name, ndim=4)
-            loaded_image = load_feature.resolve()
-            self.assertGreaterEqual(len(loaded_image.shape), 4)
-
-            # Test loading a list of images
-            load_feature = features.LoadImage(
-                path=[temp_npy.name, temp_npy2.name], as_list=True
-            )
-            loaded_list = load_feature.resolve()
-            self.assertIsInstance(loaded_list, list)
-            self.assertEqual(len(loaded_list), 2)
-
-            for img in loaded_list:
-                self.assertTrue(isinstance(img, np.ndarray))
-
-            # Test loading a random image from a list of images
-            load_feature = features.LoadImage(
-                path=[temp_npy.name, temp_npy2.name],
-                ndim=4,
-                as_list=True,
-                get_one_random=True,
-            )
-            loaded_image = load_feature.resolve()
-            self.assertTrue(
-                np.allclose(
-                    loaded_image[:, :, 0, 0], test_image_array, rtol=1.e-3
+                # Test loading a .npy file.
+                load_feature = features.LoadImage(path=temp_npy.name)
+                loaded_image = load_feature()
+                self.assertEqual(
+                    loaded_image.shape[:2],
+                    test_image_array.shape[:2],
                 )
-            )
-            self.assertEqual(loaded_image.shape, (50, 50, 1, 1))
 
-            import gc
-            gc.collect()
+                # Test loading a .png file.
+                load_feature = features.LoadImage(path=temp_png.name)
+                loaded_image = load_feature()
+                self.assertEqual(
+                    loaded_image.shape[:2],
+                    test_image_array.shape[:2],
+                )
+
+                # Test loading a .jpg file.
+                load_feature = features.LoadImage(path=temp_jpg.name)
+                loaded_image = load_feature()
+                self.assertEqual(
+                    loaded_image.shape[:2],
+                    test_image_array.shape[:2],
+                )
+
+                # Test ensuring a minimum number of dimensions.
+                load_feature = features.LoadImage(path=temp_png.name, ndim=4)
+                loaded_image = load_feature()
+                self.assertGreaterEqual(len(loaded_image.shape), 4)
+
+                # Test loading a list of images.
+                load_feature = features.LoadImage(
+                    path=[temp_npy.name, temp_npy2.name],
+                    as_list=True,
+                )
+                loaded_list = load_feature()
+                self.assertIsInstance(loaded_list, list)
+                self.assertEqual(len(loaded_list), 2)
+
+                for img in loaded_list:
+                    self.assertIsInstance(img, np.ndarray)
+
+                # Test loading a random image from a list of images.
+                load_feature = features.LoadImage(
+                    path=[temp_npy.name, temp_npy2.name],
+                    ndim=4,
+                    as_list=True,
+                    get_one_random=True,
+                )
+                loaded_image = load_feature()
+                self.assertEqual(loaded_image.shape, (50, 50, 1, 1))
+                self.assertTrue(
+                    np.allclose(
+                        loaded_image[:, :, 0, 0],
+                        test_image_array,
+                        rtol=1e-3,
+                    )
+                )
+
+            # Test grayscale conversion (skip if scikit-image is not installed).
+            try:
+                import skimage  # noqa: F401
+            except ImportError:
+                skimage = None
+
+            if skimage is not None:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", ResourceWarning)
+                    warnings.simplefilter("ignore", DeprecationWarning)
+                    warnings.simplefilter("error", UserWarning)
+
+                    load_feature = features.LoadImage(
+                        path=temp_png.name,
+                        to_grayscale=True,
+                    )
+                    loaded_image = load_feature()
+
+                self.assertEqual(loaded_image.shape, (50, 50, 1))
 
             # Test loading an image as a torch tensor.
             if TORCH_AVAILABLE:
-                load_feature = features.LoadImage(path=temp_png.name)
-                load_feature.torch()
-                loaded_image = load_feature.resolve()
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", ResourceWarning)
+                    warnings.simplefilter("ignore", DeprecationWarning)
+
+                    load_feature = features.LoadImage(path=temp_png.name)
+                    load_feature.torch()
+                    loaded_image = load_feature()
+
                 self.assertIsInstance(loaded_image, torch.Tensor)
-                self.assertEqual(
-                    loaded_image.shape[:2], test_image_array.shape
-                )
+                self.assertEqual(tuple(loaded_image.shape[:2]), (50, 50))
 
                 loaded_image_np = loaded_image.numpy()
                 self.assertTrue(
                     np.allclose(
-                        test_image_array, loaded_image_np[:, :, 0], rtol=1.e-3
+                        test_image_array,
+                        loaded_image_np[:, :, 0],
+                        rtol=1e-3,
                     )
                 )
 
         finally:
-            for file in [
-                temp_npy.name,
-                temp_png.name,
-                temp_jpg.name,
-                temp_npy2.name
-            ]:
-                os.remove(file)
+            for file in temp_files:
+                if os.path.exists(file):
+                    os.remove(file)
 
 
     def test_AsType(self):
