@@ -2217,26 +2217,24 @@ class Feature(DeepTrackNode):
 
         return [results]
 
-    def _activate_sources(  # TODO
+    def _activate_sources(
         self: Feature,
-        x: SourceItem | list[SourceItem] | Any,
+        x: SourceItem | list[Any] | tuple[Any, ...] | Any,
     ) -> None:
-        """Activates source items within the given input.
+        """Activate source items contained in the input.
 
-        This method checks whether the input `x` or its elements (if `x` is a 
-        list) are instances of `SourceItem`. If so, the source is called to 
-        trigger its behavior—typically to update or emit a new value. This is 
-        necessary to ensure source-driven features (e.g., time-dependent or 
-        externally updated values) are evaluated when the pipeline is run.
+        This method checks whether `x` (or its elements if `x` is a list/tuple)
+        is a `SourceItem`. Any detected sources are called to trigger their
+        behavior, e.g., updating internal state or emitting a new value.
 
-        Non-`SourceItem` elements in `x` are ignored.
+        Non-`SourceItem` elements are ignored.
 
-        This method is typically invoked at the beginning of `__call__()` to 
+        This method is typically invoked at the beginning of `.__call__()` to
         activate all relevant sources before resolving a feature.
 
         Parameters
         ----------
-        x: SourceItem or list[SourceItem] or Any
+        x: SourceItem or list[SourceItem or Any] or Any
             The input to process. If `x` is a `SourceItem`, it is activated.
             If `x` is a list, each `SourceItem` within the list is activated.
             If `x` is `None` or contains no sources, the method has no effect.
@@ -2246,17 +2244,20 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Create a dummy source that prints when called:
+
         >>> class MySource(dt.sources.SourceItem):
         ...     def __call__(self):
         ...         print("Source activated")
 
         Instantiate a feature and manually activate a source:
+
         >>> feature = dt.Value(value=1)
         >>> source = MySource(callbacks=[])
         >>> feature._activate_sources(source)
         Source activated
 
         Use a list of sources:
+
         >>> feature._activate_sources([source, 42, "text"])
         Source activated
 
@@ -2264,10 +2265,14 @@ class Feature(DeepTrackNode):
 
         if isinstance(x, SourceItem):
             x()
-        elif isinstance(x, list):
-            for source in x:
-                if isinstance(source, SourceItem):
-                    source()
+            return
+
+        if isinstance(x, (list, tuple)):
+            for item in x:
+                if isinstance(item, SourceItem):
+                    item()
+                elif isinstance(item, (list, tuple)):
+                    self._activate_sources(item)
 
     def __getattr__(
         self: Feature,
