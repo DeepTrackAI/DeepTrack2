@@ -7379,7 +7379,7 @@ class OneOfDict(Feature):
         return self.collection[key](inputs, _ID=_ID)
 
 
-class LoadImage(Feature):  # TODO
+class LoadImage(Feature):
     """Load an image from disk and preprocess it.
 
     `LoadImage` loads an image file using multiple fallback file readers
@@ -7396,15 +7396,15 @@ class LoadImage(Feature):  # TODO
     load_options: PropertyLike[dict[str, Any]], optional
         Additional options passed to the file reader. Defaults to `None`.
     as_list: PropertyLike[bool], optional
-        If `True`, the first dimension of the image will be treated as a list.
+        If `True`, returns a Python list of loaded images (one per path).
         Defaults to `False`.
     ndim: PropertyLike[int], optional
         Ensures the image has at least this many dimensions. Defaults to `3`.
     to_grayscale: PropertyLike[bool], optional
         If `True`, converts the image to grayscale. Defaults to `False`.
     get_one_random: PropertyLike[bool], optional
-        If `True`, extracts a single random image from a stack of images. Only
-        used when `as_list` is `True`. Defaults to `False`.
+        If `True`, extracts a single random image from a list of loaded images.
+        Only used when `as_list` is `True`. Defaults to `False`.
 
     Attributes
     ----------
@@ -7444,7 +7444,7 @@ class LoadImage(Feature):  # TODO
     Load the image using `LoadImage`:
 
     >>> load_image_feature = dt.LoadImage(path=temp_file.name)
-    >>> loaded_image = load_image_feature.resolve()
+    >>> loaded_image = load_image_feature()
 
     Print image shape:
 
@@ -7457,7 +7457,7 @@ class LoadImage(Feature):  # TODO
     ...     path=temp_file.name,
     ...     to_grayscale=True,
     ... )
-    >>> loaded_image = load_image_feature.resolve()
+    >>> loaded_image = load_image_feature()
     >>> loaded_image.shape
     (100, 100, 1)
 
@@ -7467,7 +7467,7 @@ class LoadImage(Feature):  # TODO
     ...     path=temp_file.name,
     ...     ndim=4,
     ... )
-    >>> loaded_image = load_image_feature.resolve()
+    >>> loaded_image = load_image_feature()
     >>> loaded_image.shape
     (100, 100, 3, 1)
 
@@ -7475,9 +7475,9 @@ class LoadImage(Feature):  # TODO
 
     >>> load_image_feature = dt.LoadImage(path=temp_file.name)
     >>> load_image_feature.torch()
-    >>> loaded_image = load_image_feature.resolve()
+    >>> loaded_image = load_image_feature()
     >>> type(loaded_image)
-    <class 'torch.Tensor'>
+    torch.Tensor
 
     Cleanup the temporary file:
 
@@ -7489,8 +7489,8 @@ class LoadImage(Feature):  # TODO
 
     def __init__(
         self: Feature,
-        path: PropertyLike[str | list[str]],
-        load_options: PropertyLike[dict] = None,
+        path: PropertyLike[str | list[str] | tuple[str, ...]],
+        load_options: PropertyLike[dict[str, Any] | None] = None,
         as_list: PropertyLike[bool] = False,
         ndim: PropertyLike[int] = 3,
         to_grayscale: PropertyLike[bool] = False,
@@ -7501,15 +7501,15 @@ class LoadImage(Feature):  # TODO
 
         Parameters
         ----------
-        path: PropertyLike[str or list[str]]
+        path: PropertyLike[str or list[str] or tuple[str, ...]]
             The path(s) to the image(s) to load. Can be a single string or a
             list of strings.
         load_options: PropertyLike[dict[str, Any]], optional
             Additional options passed to the file reader (e.g., `mode` for
             OpenCV, `allow_pickle` for NumPy). Defaults to `None`.
         as_list: PropertyLike[bool], optional
-            If `True`, treats the first dimension of the image as a list of
-            images. Defaults to `False`.
+            If `True`, returns a Python list of loaded images (one per path).
+            Defaults to `False`.
         ndim: PropertyLike[int], optional
             Ensures the image has at least this many dimensions. If the loaded
             image has fewer dimensions, extra dimensions are added. Defaults to
@@ -7538,7 +7538,7 @@ class LoadImage(Feature):  # TODO
     def get(
         self: Feature,
         *_: Any,
-        path: str | list[str],
+        path: str | list[str] | tuple[str, ...],
         load_options: dict[str, Any] | None,
         ndim: int,
         to_grayscale: bool,
@@ -7560,7 +7560,7 @@ class LoadImage(Feature):  # TODO
 
         Parameters
         ----------
-        path: str or list[str]
+        path: str or list[str] or tuple[str, ...]
             The file path(s) to the image(s) to be loaded. A single string
             loads one image, while a list of paths loads multiple images.
         load_options: dict of str to Any, optional
@@ -7573,11 +7573,11 @@ class LoadImage(Feature):  # TODO
         to_grayscale: bool
             If `True`, converts the image to grayscale. Defaults to `False`.
         as_list: bool
-            If `True`, treats the first dimension as a list of images instead
-            of stacking them into a NumPy array. Defaults to `False`.
+            If `True`, returns a Python list of loaded images (one per path).
+            Defaults to `False`.
         get_one_random: bool
-            If `True`, selects a single random image from a multi-frame stack
-            when `as_list=True`. Defaults to `False`.
+            If `True`, selects a single random image from a list of loaded
+            images when `as_list=True`. Defaults to `False`.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -7596,9 +7596,12 @@ class LoadImage(Feature):  # TODO
 
         """
 
-        path_is_list = isinstance(path, list)
+        path_is_list = isinstance(path, (list, tuple))
         if not path_is_list:
             path = [path]
+        else:
+            path = list(path)
+
         if load_options is None:
             load_options = {}
 
@@ -7607,24 +7610,44 @@ class LoadImage(Feature):  # TODO
             import imageio
 
             image = [imageio.v3.imread(file) for file in path]
-        except (IOError, ImportError, AttributeError, KeyError):
+        except (ImportError, AttributeError, KeyError, OSError, ValueError):
             try:
                 image = [np.load(file, **load_options) for file in path]
-            except (IOError, ValueError):
+            except (OSError, ValueError):
                 try:
-                    import PIL.Image
+                    from PIL import Image
 
-                    image = [
-                        PIL.Image.open(file, **load_options) for file in path
-                    ]
+                    image = []
+                    for file in path:
+                        with Image.open(file, **load_options) as img:
+                            image.append(np.asarray(img))
                 except (IOError, ImportError):
-                    import cv2
-
-                    image = [cv2.imread(file, **load_options) for file in path]
-                    if not image:
+                    try:
+                        import cv2
+                    except ImportError:
                         raise IOError(
-                            "No filereader available for file {0}".format(path)
+                            f"No available file reader could load: {path}. "
+                            "Tried ImageIO, NumPy, Pillow, "
+                            "and OpenCV (cv2 not installed)."
+                        ) from None
+
+                    raw = [cv2.imread(file, **load_options) for file in path]
+                    failed_paths = [
+                        p for p, img in zip(path, raw) if img is None
+                    ]
+                    if failed_paths:
+                        raise IOError(
+                            "OpenCV could not read the following file(s): "
+                            f"{failed_paths}."
                         )
+
+                    # Ensure color consistency
+                    image = []
+                    for img in raw:
+                        if img.ndim == 3 and img.shape[-1] >= 3:
+                            image.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                        else:
+                            image.append(img)
 
         # Convert to list or stack as needed.
         if as_list:
@@ -7640,20 +7663,34 @@ class LoadImage(Feature):  # TODO
         # Convert to grayscale if requested.
         if to_grayscale:
             try:
-                import skimage
+                from skimage.color import rgb2gray
+            except ImportError:
+                raise ImportError(
+                    "Grayscale conversion requires scikit-image. "
+                    "Install it with `pip install scikit-image`."
+                ) from None
 
-                image = skimage.color.rgb2gray(image)
+            try:
+                image = rgb2gray(image)
             except ValueError:
                 warnings.warn(
-                    "Non-rgb image, ignoring to_grayscale",
+                    "Non-RGB image, ignoring `to_grayscale=True`.",
                     UserWarning,
                     stacklevel=2,
                 )
 
         # Ensure the image has at least `ndim` dimensions.
-        if not isinstance(image, list) and ndim:
-            while image.ndim < ndim:
-                image = np.expand_dims(image, axis=-1)
+        if ndim:
+            if isinstance(image, list):
+                processed = []
+                for img in image:
+                    while img.ndim < ndim:
+                        img = np.expand_dims(img, axis=-1)
+                    processed.append(img)
+                image = processed
+            else:
+                while image.ndim < ndim:
+                    image = np.expand_dims(image, axis=-1)
 
         # Convert to PyTorch tensor if needed.
         if self.get_backend() == "torch":
