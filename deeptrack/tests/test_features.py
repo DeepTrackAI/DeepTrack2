@@ -21,6 +21,7 @@ from deeptrack import (
     Gaussian,
     properties,
     sequences,
+    sources,
     TORCH_AVAILABLE,
     xp,
 )
@@ -612,8 +613,60 @@ class TestFeatures(unittest.TestCase):
         out = feature._process_and_get(inputs)
         self.assertEqual(out, [6])
 
-    def test_Feature__activate_sources(self):  # TODO
-        pass
+    def test_Feature__activate_sources(self):
+
+        class MySource(sources.SourceItem):
+            def __call__(self):
+                check[len(check) + 1] = len(check) + 1
+
+        source1 = MySource(callbacks=[])
+        source2 = MySource(callbacks=[])
+        source3 = MySource(callbacks=[])
+
+        feature = features.DummyFeature()
+
+        # 1) Single source
+        check = {}
+        feature._activate_sources(source1)
+        self.assertTrue(len(check) == 1)
+
+        # 2) List with mixed items
+        check = {}
+        feature._activate_sources([source1, 42, "text", None])
+        self.assertTrue(len(check) == 1)
+
+        # 3) Tuple with mixed items
+        check = {}
+        feature._activate_sources((source2, 0, "a"))
+        self.assertTrue(len(check) == 1)
+
+        # 4) Multiple sources in one list
+        check = {}
+        feature._activate_sources([source1, source2, source3])
+        self.assertTrue(len(check) == 3)
+
+        # 5) Nested containers
+        # If _activate_sources is recursive, this should activate source1,
+        # source2, and source3 (3 calls). If it is not recursive, only the
+        # top-level source1 is activated.
+        check = {}
+        feature._activate_sources([source1, [source2, (source3, 7)], "ignore"])
+        self.assertTrue(len(check) == 3)
+
+        # 6) No sources: should do nothing
+        check = {}
+        feature._activate_sources([])
+        feature._activate_sources(())
+        feature._activate_sources(123)
+        feature._activate_sources("not a container")
+        self.assertTrue(len(check) == 0)
+
+        # 7) Repeated activation calls every time
+        check = {}
+        feature._activate_sources(source1)
+        feature._activate_sources(source1)
+        feature._activate_sources(source1)
+        self.assertTrue(len(check) == 3)
 
     def test_Feature_torch_numpy_get_backend_dtype_to(self):
         feature = features.DummyFeature()
