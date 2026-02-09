@@ -93,7 +93,8 @@ from typing import Any
 
 import numpy as np
 
-from deeptrack.image import Image
+from deeptrack.backend.units import get_active_voxel_size
+
 from deeptrack import Feature
 
 
@@ -185,7 +186,7 @@ class Rescale(Feature):
 
     Methods
     -------
-    `get(image: Image | np.ndarray, rescale: float, **kwargs: dict[str, Any]) -> Image | np.ndarray`
+    `get(image: np.ndarray, rescale: float, **kwargs: dict[str, Any]) -> np.ndarray`
         Rescales the image while preserving phase information.
 
     Examples
@@ -202,16 +203,16 @@ class Rescale(Feature):
 
     def get(
         self: Rescale, 
-        image: Image | np.ndarray, 
+        image: np.ndarray, 
         rescale: float, 
         **kwargs: Any,
-    ) -> Image | np.ndarray:
+    ) -> np.ndarray:
         """Rescales the image by subtracting the real part of the field before
         multiplication.
 
         Parameters
         ----------
-        image: Image or ndarray
+        image: np.ndarray
             The image to rescale.
         rescale: float
             The rescaling factor.
@@ -220,7 +221,7 @@ class Rescale(Feature):
 
         Returns
         -------
-        Image or ndarray
+        np.ndarray
             The rescaled image.
 
         """
@@ -247,7 +248,7 @@ class FourierTransform(Feature):
 
     Methods
     -------
-    `get(image: Image | np.ndarray, padding: int, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image: np.ndarray, padding: int, **kwargs: dict[str, Any]) -> np.ndarray`
         Computes the 2D Fourier transform of the input image.
 
     Returns
@@ -268,7 +269,7 @@ class FourierTransform(Feature):
 
     def get(
         self: FourierTransform,
-        image: Image | np.ndarray,
+        image: np.ndarray,
         padding: int = 32,
         **kwargs: Any,
     ) -> np.ndarray: 
@@ -276,7 +277,7 @@ class FourierTransform(Feature):
 
         Parameters
         ----------
-        image: Image or ndarray
+        image: np.ndarray
             The image to transform.
         padding: int, optional
             Number of pixels to pad symmetrically around the image (default is 32).
@@ -319,12 +320,12 @@ class InverseFourierTransform(Feature):
 
     Methods
     -------
-    `get(image: Image | np.ndarray, padding: int, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image: np.ndarray, padding: int, **kwargs: dict[str, Any]) -> np.ndarray`
         Applies the power of the propagation matrix to the image.
 
     Returns
     -------
-    Image | np.ndarray
+    np.ndarray
         The transformed image.
 
     Examples
@@ -345,15 +346,15 @@ class InverseFourierTransform(Feature):
 
     def get(
         self: InverseFourierTransform,
-        image: Image | np.ndarray,
+        image: np.ndarray,
         padding: int = 32,
         **kwargs: Any,
-    ) -> Image | np.ndarray:
+    ) -> np.ndarray:
         """Computes the inverse Fourier transform and removes padding.
 
         Parameters
         ----------
-        image: Image or ndarray
+        image: np.ndarray
             The image to transform.
         padding: int, optional
             Number of pixels removed symmetrically after inverse transformation
@@ -393,12 +394,12 @@ class FourierTransformTransformation(Feature):
 
     Methods
     -------
-    `get(image: Image | np.ndarray, Tz: np.ndarray, Tzinv: np.ndarray, i: int, **kwargs: dict[str, Any]) -> Image | np.ndarray`
+    `get(image: np.ndarray, Tz: np.ndarray, Tzinv: np.ndarray, i: int, **kwargs: dict[str, Any]) -> np.ndarray`
         Applies the power of the propagation matrix to the image.
 
     Returns
     -------
-    Image | np.ndarray
+    np.ndarray
         The transformed image.
 
     Examples
@@ -419,17 +420,17 @@ class FourierTransformTransformation(Feature):
 
     def get(
         self: FourierTransformTransformation,
-        image: Image | np.ndarray,
+        image: np.ndarray,
         Tz: np.ndarray,
         Tzinv: np.ndarray,
         i: int,
         **kwargs: Any,
-    ) -> Image | np.ndarray:
+    ) -> np.ndarray:
         """Applies the power of the propagation matrix to the image.
 
         Parameters
         ----------
-        image: Image or ndarray
+        image: np.ndarray
             The image to transform.
         Tz: np.ndarray
             Forward propagation matrix.
@@ -443,7 +444,7 @@ class FourierTransformTransformation(Feature):
         
         Returns
         -------
-        Image or ndarray
+        np.ndarray
             The transformed image.
 
         """
