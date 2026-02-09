@@ -96,12 +96,15 @@ Process an input image:
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, Literal, Tuple, TYPE_CHECKING
+import warnings
 
 import array_api_compat as apc
 import numpy as np
 from scipy import ndimage
 import skimage
 import skimage.measure
+
+from deeptrack.backend.units import get_active_voxel_size
 
 from deeptrack import utils, OPENCV_AVAILABLE, TORCH_AVAILABLE
 from deeptrack.features import Feature

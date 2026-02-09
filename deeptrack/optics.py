@@ -137,11 +137,10 @@ Simulating an image with the `Fluorescence` class:
 from __future__ import annotations
 
 from pint import Quantity
-from typing import Any, TYPE_CHECKING, Iterable
+from typing import Any, TYPE_CHECKING, Iterable, Callable, Literal
 import warnings
 
 import numpy as np
-from scipy.ndimage import convolve # might be removed later
 import torch
 import torch.nn.functional as F
 
@@ -2389,7 +2388,7 @@ class NonOverlapping(Feature):
         Get the overlapping volume between a volume and a bounding cube.
     `_check_volumes_non_overlapping(...) -> bool`
         Check if two volumes are non-overlapping.
-    `_resample_volume_position(volume) -> Image`
+    `_resample_volume_position(volume) -> np.ndarray`
         Resample the position of a volume to avoid overlap.
     
     Notes
@@ -2988,12 +2987,14 @@ class NonOverlapping(Feature):
             )
             return bool((dist > min_distance).all())
         else:
+            from scipy.spatial.distance import cdist
+        
             return np.all(cdist(positions_1, positions_2) > min_distance)
 
     def _resample_volume_position(
         self: NonOverlapping,
-        volume: np.ndarray | Image,
-    ) -> Image:
+        volume: np.ndarray,
+    ) -> np.ndarray:
         """Resamples the position of a 3D volume using its internal position 
         sampler.
 
@@ -3011,7 +3012,7 @@ class NonOverlapping(Feature):
 
         Returns
         -------
-        Image
+        np.ndarray
             The same input volume with its `position` property updated to the 
             newly sampled value.
 
@@ -3046,7 +3047,7 @@ class SampleToMasks(Feature):
 
     Parameters
     ----------
-    transformation_function: Callable[[Image], Image]
+    transformation_function: Callable[[np.ndarray], np.ndarray]
         A function that transforms each input image into a mask with 
         `number_of_masks` layers.
     number_of_masks: PropertyLike[int], optional
@@ -3067,9 +3068,9 @@ class SampleToMasks(Feature):
 
     Methods
     -------
-    `get(image, transformation_function, **kwargs) -> Image`
+    `get(image, transformation_function, **kwargs) -> np.ndarray`
         Applies the transformation function to the input image.
-    `_process_and_get(images, **kwargs) -> Image | np.ndarray`
+    `_process_and_get(images, **kwargs) -> np.ndarray`
         Processes a list of images and generates a multi-layer mask.
 
     Returns
@@ -3146,7 +3147,7 @@ class SampleToMasks(Feature):
 
         Parameters
         ----------
-        transformation_function: Callable[[Image], Image]
+        transformation_function: Callable[[np.ndarray], np.ndarray]
             Function to transform input images into masks.
         number_of_masks: PropertyLike[int], optional
             Number of mask layers. Default is 1.
@@ -3186,7 +3187,7 @@ class SampleToMasks(Feature):
 
         Returns
         -------
-        Image
+        np.ndarray
             The transformed image.
 
         """
@@ -3202,7 +3203,7 @@ class SampleToMasks(Feature):
 
         Parameters
         ----------
-        images: np.ndarray or list[np.ndarrray] or  Image or list[Image]
+        images: np.ndarray or list[np.ndarrray]
             List of input images or a single image.
         **kwargs: dict[str, Any]
             Additional parameters including `output_region`, `number_of_masks`, 
@@ -3210,7 +3211,7 @@ class SampleToMasks(Feature):
 
         Returns
         -------
-        Image or np.ndarray
+        np.ndarray
             The final mask image.
             
         """
@@ -3331,7 +3332,7 @@ class SampleToMasks(Feature):
 
 #TODO ***??*** revise _get_position - torch, typing, docstring, unit test
 def _get_position(
-    scatterer: ScatteredObject,
+    scatterer: ScatteredVolume,
     mode: str = "corner",
     return_z: bool = False,
 ) -> np.ndarray:
@@ -3406,6 +3407,9 @@ def _bilinear_interpolate(
         ]
     )
     out = np.zeros_like(scatterer)
+
+    from scipy.ndimage import convolve # might be removed later
+
     for z in range(scatterer.shape[2]):
         if np.iscomplexobj(scatterer):
             out[:, :, z] = (
