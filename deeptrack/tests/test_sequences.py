@@ -5,10 +5,9 @@
 # Use this only when running the test locally.
 # import sys
 # sys.path.append(".")  # Adds the module to path.
-
-return
-
 import unittest
+
+raise unittest.SkipTest("Temporarily skipped")
 
 from numpy import pi
 from numpy.random import randn

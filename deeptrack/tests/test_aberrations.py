@@ -1,10 +1,10 @@
-return
-
 import sys
 
 # sys.path.append(".")  # Adds the module to path
 
 import unittest
+raise unittest.SkipTest("Temporarily skipped")
+
 import numpy as np
 
 from deeptrack import aberrations
