@@ -95,7 +95,7 @@ Process an input image:
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Tuple, TYPE_CHECKING
+from typing import Any, Callable, Dict, Literal, Tuple, TYPE_CHECKING
 
 import array_api_compat as apc
 import numpy as np
