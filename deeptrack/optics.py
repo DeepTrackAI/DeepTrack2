@@ -139,6 +139,7 @@ from __future__ import annotations
 from pint import Quantity
 from typing import Any, TYPE_CHECKING, Iterable, Callable, Literal
 import warnings
+import itertools
 
 import numpy as np
 import torch
@@ -2647,8 +2648,6 @@ class NonOverlapping(Feature):
         - If bounding cubes overlap, voxel-level checks are performed.
 
         """
-        import itertools
-
         from deeptrack.scatterers import ScatteredVolume
 
         from deeptrack.augmentations import CropTight, Pad # these are not compatibles with torch backend
