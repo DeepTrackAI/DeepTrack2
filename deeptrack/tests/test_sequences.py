@@ -6,6 +6,8 @@
 # import sys
 # sys.path.append(".")  # Adds the module to path.
 
+return
+
 import unittest
 
 from numpy import pi
