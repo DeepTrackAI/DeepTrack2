@@ -57,10 +57,8 @@ if TYPE_CHECKING:
     from deeptrack import pytorch
     from deeptrack import deeplay
 
-# from deeptrack import tests
 
 from deeptrack import (
-    image,
     utils,
     backend,
     # Fake imports for IDE autocomplete
