@@ -31,14 +31,14 @@ from deeptrack.backend import *
 
 from deeptrack.properties import *
 from deeptrack.features import *
+from deeptrack.sequences import *
+
 from deeptrack.aberrations import *
 from deeptrack.augmentations import *
-
 from deeptrack.math import *
 from deeptrack.noises import *
 from deeptrack.optics import *
 from deeptrack.scatterers import *
-from deeptrack.sequences import *
 from deeptrack.elementwise import *
 from deeptrack.statistics import *
 from deeptrack.holography import *
