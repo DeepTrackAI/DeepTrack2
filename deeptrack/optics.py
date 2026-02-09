@@ -2647,6 +2647,8 @@ class NonOverlapping(Feature):
         - If bounding cubes overlap, voxel-level checks are performed.
 
         """
+        import itertools
+
         from deeptrack.scatterers import ScatteredVolume
 
         from deeptrack.augmentations import CropTight, Pad # these are not compatibles with torch backend
