@@ -1,4 +1,4 @@
-"""Utility classes and functions for dynamic data sources in DeepTrack.
+"""Utility classes and functions for dynamic data sources in DeepTrack2.
 
 This module provides core abstractions for representing and manipulating
 collections of data in a modular and composable way. It defines the structure
@@ -68,13 +68,7 @@ Classes:
 
 Functions:
 
-- `random_split(source, lengths, generator)`
-
-    def random_split(
-        source: Source,
-        lengths: list[int | float],
-        generator: np.random.Generator = np.random.default_rng(),
-    ) -> list[Subset]
+- `random_split(source, lengths, generator) -> list[Subset]`
 
     Randomly splits a `Source` into multiple non-overlapping subsets.
 
@@ -102,6 +96,7 @@ Activated: SourceItem({'a': 1, 'b': 3}, 2 callback(s))
 >>> node = SourceDeepTrackNode(lambda: {"a": 1, "b": {"x": 42}})
 >>> node.a()
 1
+
 >>> node.b.x()
 42
 
@@ -115,6 +110,7 @@ Activated: SourceItem({'a': 1, 'b': 3}, 2 callback(s))
 >>> feature = dt.Value(joined.a) + dt.Value(joined.b)
 >>> feature(train[0])
 4
+
 >>> feature(val[0])
 12
 
