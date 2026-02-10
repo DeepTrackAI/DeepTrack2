@@ -14,6 +14,7 @@ import deeptrack as dt
 from deeptrack import TORCH_AVAILABLE
 from deeptrack.sources import base
 
+
 if TORCH_AVAILABLE:
     import torch
 
@@ -30,6 +31,7 @@ class TestBase(unittest.TestCase):
             Join,
             random_split,
         )
+
 
     def test_SourceItem(self):
 
