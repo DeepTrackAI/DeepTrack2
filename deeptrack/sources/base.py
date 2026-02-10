@@ -216,7 +216,7 @@ class SourceDeepTrackNode(DeepTrackNode):
 
     def __getattr__(
         self: SourceDeepTrackNode,
-        name: str
+        name: str,
     ) -> SourceDeepTrackNode:
         """Return a child node corresponding to a key in the underlying data.
 
@@ -255,7 +255,6 @@ class SourceDeepTrackNode(DeepTrackNode):
 
         node = SourceDeepTrackNode(lambda: self()[name])
         node.add_dependency(self)
-        # self.add_child(node)
         return node
 
 
