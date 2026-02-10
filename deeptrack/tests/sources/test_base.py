@@ -79,6 +79,7 @@ class TestBase(unittest.TestCase):
             returned = item_torch()
             self.assertIn(item_torch, called)
 
+
     def test_Source(self):
         # Prepare test data
         data_variants = {
@@ -122,6 +123,7 @@ class TestBase(unittest.TestCase):
                 source.set_index(0)
                 self.assertEqual(source.a(), a[0])
                 self.assertEqual(source.b(), b[0])
+
 
     def test_Product(self):
         data_variants = {
@@ -167,6 +169,7 @@ class TestBase(unittest.TestCase):
         with self.assertRaises(ValueError):
             base.Product(source, x=[10, 20])
 
+
     def test_Subset(self):
         data_variants = {
             "list": ([1, 2, 3], [10, 20, 30]),
@@ -206,6 +209,7 @@ class TestBase(unittest.TestCase):
                     self.assertEqual(subset.a().item(), a[0].item())
                 else:
                     self.assertEqual(subset.a(), a[0])
+
 
     def test_Sources(self):
         data_variants = {
@@ -250,6 +254,7 @@ class TestBase(unittest.TestCase):
                 feature = dt.Value(joined.a) + dt.Value(joined.b)
                 self.assertEqual(feature(train[0]), a1[0] + b1[0])
                 self.assertEqual(feature(val[1]), a2[1] + b2[1])
+
 
     def test_random_split(self):
         data_variants = {
