@@ -149,10 +149,7 @@ import os
 from deeptrack.sources.base import Source, SourceItem
 
 
-__all__ = [
-    "ImageFolder",
-    "known_extensions",
-]
+__all__ = ["ImageFolder"]
 
 
 known_extensions = ["png", "jpg", "jpeg", "tif", "tiff", "bmp", "gif"]
