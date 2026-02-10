@@ -353,12 +353,10 @@ def _propagate_sequential_data(
     for dep in feature.recurse_dependencies():
         if isinstance(dep, SequentialProperty):
             for key, value in kwargs.items():
-                if hasattr(dep, key):
-                    attr = getattr(dep, key, None)
-                    set_value = getattr(attr, "set_value", None)
-                    if callable(set_value):
-                        set_value(value, _ID=_ID)
-
+                attr = getattr(dep, key, None)
+                set_value = getattr(attr, "set_value", None)
+                if callable(set_value):
+                    set_value(value, _ID=_ID)
 
 
 def Sequential(feature: Feature, **kwargs: Any) -> Feature:  # DEPRECATED
