@@ -285,14 +285,11 @@ def _propagate_sequential_data(
                     getattr(dep, key).set_value(value)
 
 
-def Sequential(
-    feature: Feature,
-    **kwargs: Any,
-) -> Feature:  # DEPRECATED
+def Sequential(feature: Feature, **kwargs: Any) -> Feature:  # DEPRECATED
     """Converts a feature to be resolved as a sequence.
 
     .. deprecated:: 2.0
-        This function has been substituted by the `Feature.to_sequence()` 
+        This function has been substituted by the `Feature.to_sequence()`
         method and will be removed in a future release.
 
     Should be called on individual features, not combinations of features. All
@@ -322,7 +319,8 @@ def Sequential(
     warnings.warn(
         "The `Sequential()` function is deprecated and will be removed in a "
         "future release. Please use `Feature.to_sequence()` instead.",
-        category=DeprecationWarning,
+        DeprecationWarning,
+        stacklevel=2,
     )
 
     for property_name in kwargs.keys():
