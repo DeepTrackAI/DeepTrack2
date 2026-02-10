@@ -1,23 +1,27 @@
 """Tools for evaluating and propagating sequences of features.
 
-This module enables sequential evaluation of DeepTrack2 features by
-resolving them over multiple time steps. It provides tools for propagating
-values like `sequence_index` and `sequence_length` to all dependent
-`SequentialProperty` attributes, allowing simulation of dynamic behaviors
-(e.g., microscopy videos).
+This module provides functionality for sequentially evaluating DeepTrack2
+features over multiple time steps. It enables the propagation of sequential
+context—such as `sequence_index` and `sequence_length`—to all dependent
+`SequentialProperty` attributes in a feature graph.
+
+By injecting this contextual information before each evaluation, the module
+supports simulations of dynamic, time-dependent systems, such as microscopy
+videos, animations, and temporal data generation pipelines.
 
 Key Features
 ------------
-- **Temporal Simulation via SequentialProperty**
+- **Temporal simulation via `SequentialProperty`**
 
-    Features can be annotated with sampling rules that evolve over a sequence
-    of time steps, enabling animations and simulations of time-dependent
-    systems.
+    Features can be annotated with sampling rules that evolve across discrete
+    time steps. These rules may depend on the current step index, the total
+    sequence length, or values from previous steps.
 
-- **Graph-wide Sequential Data Propagation**
+- **Graph-wide sequential data propagation**
 
-    Sequential information is passed to all relevant nodes in the feature
-    graph.
+    Sequential context is propagated to all relevant nodes in the feature
+    dependency graph, ensuring consistent and synchronized updates across
+    composed and nested features.
 
 Module Structure
 ----------------
@@ -25,46 +29,79 @@ Classes:
 
 - `Sequence`
 
-    It resolves a feature over multiple time steps, using a defined
-    `sequence_length`. Injects sequential arguments into all dependent
-    `SequentialProperty` attributes before each evaluation.
+    Resolves a feature repeatedly over a specified number of time steps
+    (`sequence_length`). Before each evaluation, sequential context is
+    propagated to all dependent `SequentialProperty` attributes.
 
 Examples
 --------
 >>> import deeptrack as dt
 
-Simulating a spinning ellipsoid.
+**Sequential evaluation**
 
-Define imaging system:
+In this example, a feature is evaluated repeatedly while one of its properties
+evolves over time. No optics or image formation is involved.
+
+Define a simple feature with a time-dependent property:
+
+>>> feature = dt.Value(value=0)
+
+Define a sampling rule that increments the value at each step:
+
+>>> def increment(sequence_length, previous_value):
+...     return previous_value + 1
+
+Convert the feature to a sequential feature:
+
+>>> sequential_feature = feature.to_sequential(value=increment)
+
+Wrap the feature in a `Sequence` and evaluate it:
+
+>>> sequence = dt.Sequence(sequential_feature, sequence_length=5)
+>>> sequence()
+[0, 1, 2, 3, 4]
+
+**Simulating a spinning ellipsoid.**
+
+Define an imaging system:
+
 >>> optics = dt.Fluorescence(output_region=(0, 0, 32, 32))
 
 Define a static ellipse:
+
 >>> ellipse = dt.Ellipse(
-...     radius=(1e-6,0.5e-6),
+...     radius=(1e-6, 0.5e-6),
 ...     position=(16, 16),
 ...     rotation=0.78,  # Initial rotation
+...     intensity=1,
 ... )
 
 Define a rotation function that increments the previous angle:
+
 >>> def rotate(sequence_length, previous_value):
 ...     return previous_value + 6.28 / sequence_length
 
 Convert the ellipse to a sequential feature:
+
 >>> rotating_ellipse = ellipse.to_sequential(rotation=rotate)
 
 Compose with the optics:
+
 >>> imaged_rotating_ellipse = optics(rotating_ellipse)
 
-Wrap the full feature in a Sequence:
+Wrap the composed feature in a `Sequence`:
+
 >>> imaged_rotating_ellipse_sequence = dt.Sequence(
 ...     imaged_rotating_ellipse,
 ...     sequence_length=50,
 ... )
 
-Generate and display the result
+Generate and display the result:
+
 >>> imaged_rotating_ellipse_sequence.update().plot();
 
 """
+
 
 from __future__ import annotations
 
