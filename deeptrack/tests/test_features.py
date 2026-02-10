@@ -288,7 +288,7 @@ class TestFeatures(unittest.TestCase):
 
         self.assertEqual(
             values,
-            ((0, 1, 2, 3, 4), (10, 8, 6, 4, 2)),
+            ([0, 1, 2, 3, 4], [10, 8, 6, 4, 2]),
         )
 
         # Mixed sequential + non-sequential properties
@@ -315,9 +315,9 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(
             values,
             (
-                (0, 3, 6, 9),          # x depends on non-sequential scale
-                (10, 10, 10, 10),      # y unchanged (not sequential)
-                (3, 3, 3, 3),          # scale unchanged (not sequential)
+                [0, 3, 6, 9],          # x depends on non-sequential scale
+                [10, 10, 10, 10],      # y unchanged (not sequential)
+                [3, 3, 3, 3],          # scale unchanged (not sequential)
             ),
         )
 
@@ -375,7 +375,7 @@ class TestFeatures(unittest.TestCase):
 
         self.assertEqual(
             values,
-            ((0, 1, 2, 3), (0, 0, 2, 4)),
+            ([0, 1, 2, 3], [0, 0, 2, 4]),
         )
 
     def test_Feature__action(self):
