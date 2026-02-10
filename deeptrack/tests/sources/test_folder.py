@@ -11,6 +11,10 @@ from deeptrack.sources import folder
 
 class TestFolder(unittest.TestCase):
 
+    def test___all__(self):
+        from deeptrack.sources import ImageFolder
+
+
     def setUp(self):
         self.root_dir = "temp_test_dir"
         self.classes = ["cat", "dog", "bird"]
