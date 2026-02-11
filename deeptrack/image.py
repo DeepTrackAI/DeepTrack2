@@ -97,12 +97,13 @@ import operator as ops
 from typing import Any, Callable, Iterable
 
 import numpy as np
+from numpy.typing import NDArray
 
 from deeptrack.properties import Property
 from deeptrack.types import NumberLike
 
 
-#TODO ***??*** revise _binary_method - typing, docstring, unit test
+#TODO ***??*** revise _binary_method - unit test
 def _binary_method(
     op: Callable[[NumberLike, NumberLike], NumberLike],
 ) -> Callable[[Image, Image | NumberLike], Image]:
@@ -110,8 +111,8 @@ def _binary_method(
 
     This function generates a binary method (e.g., `__add__`, `__sub__`) for
     the `Image` class, enabling operations like addition, subtraction, or
-    comparison between `Image` objects or between an `Image` object and a
-    scalar/array. It operates between the operands `self`and `other`.
+    comparison between `Image` objects, or between an `Image` object and a
+    scalar/array. It operates between the operands `self` and `other`.
 
     The resulting method applies the specified operator (`op`) to the `_value`
     attribute of the `Image` object, preserving the `Image` structure and its
@@ -138,44 +139,42 @@ def _binary_method(
 
     Examples
     --------
+    >>> import deeptrack as dt
+
+    Define `__add__()` for the Image class:
     >>> import operator
-    >>> import numpy as np
-    >>> from deeptrack.image import _binary_method, Image
-
-    Define __add__ for the Image class:
-
-    >>> Image.__add__ = _binary_method(operator.add)
+    >>> from deeptrack import Image
+    >>> 
+    >>> Image.__add__ = image._binary_method(operator.add)
 
     Create two images and add them:
-
+    >>> import numpy as np
+    >>>
     >>> img1 = Image(np.array([1, 2, 3]))
     >>> img2 = Image(np.array([4, 5, 6]))
     >>> result = img1 + img2
-    >>> print(result)
+    >>> result
     Image(array([5, 7, 9]))
 
     Add a scalar to an Image:
-
     >>> result = img1 + 10
-    >>> print(result)
+    >>> result
     Image(array([11, 12, 13]))
 
     """
 
     def func(
-        self: Image | np.ndarray,
-        other: Image | np.ndarray | NumberLike,
+        self: Image,
+        other: Image | NDArray[Any] | NumberLike,
     ) -> Image:
 
-        # Coerce inputs to compatible types.
-        self, other = coerce([self, other])
-
         if isinstance(other, Image):
-            # Perform operation and merge properties from both Images.
+            # Perform operation and merge properties from both Image objects.
             return Image(
                 op(self._value, other._value),
                 copy=False,
             ).merge_properties_from([self, other])
+
         else:
             # Perform operation and retain properties from `self`.
             return Image(
@@ -664,12 +663,12 @@ class Image:
 
     """
 
-    # Attributes.
-    _value: np.ndarray
+    # Attributes
+    _value: NDArray[Any]
     properties: list[dict[str, Property]]
 
     def __init__(
-        self: Image | np.ndarray,
+        self: Image,
         value: Image | np.ndarray | list | int | float | bool,
         copy: bool = True,
     ):
@@ -1538,7 +1537,7 @@ class Image:
 
         return f"Image({repr(self._value)})"
 
-    # Comparison methods.
+    # Comparison methods
     __lt__ = _binary_method(ops.lt)
     __le__ = _binary_method(ops.le)
     __eq__ = _binary_method(ops.eq)
@@ -1546,7 +1545,7 @@ class Image:
     __gt__ = _binary_method(ops.gt)
     __ge__ = _binary_method(ops.ge)
 
-    # Numeric methods.
+    # Numeric methods
     __add__, __radd__, __iadd__ = _numeric_methods(ops.add)
     __sub__, __rsub__, __isub__ = _numeric_methods(ops.sub)
     __mul__, __rmul__, __imul__ = _numeric_methods(ops.mul)
