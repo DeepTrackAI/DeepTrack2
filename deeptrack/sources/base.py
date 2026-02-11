@@ -178,24 +178,33 @@ __all__ = [
 class SourceDeepTrackNode(DeepTrackNode):
     """A node that creates child nodes when attributes are accessed.
     
-    `SourceDeepTrackNode` is a subclass of `DeepTrackNode` designed to
-    facilitate structured data access. When an attribute is accessed, it
-    creates a new child node that retrieves the corresponding key from the
-    underlying dictionary-like data.
+    `SourceDeepTrackNode` is a specialization of `DeepTrackNode` intended for
+    structured access to dictionary-like data. When an attribute is accessed
+    and no explicit attribute exists, the node returns a child node that
+    resolves to the corresponding key in the parent node's value.
 
-    This is particularly useful when working with hierarchical or nested
-    data sources, allowing intuitive access via attribute syntax (e.g.,
-    `source.position.x`) and automatic dependency tracking between nodes.
-    
-    It assumes the value of the node is dictionary-like (i.e., that it has a
-    `__getitem__()` method that takes a string).
+    In other words, accessing `source.a.b` constructs a small dependency chain
+    of nodes that (when evaluated) retrieves `source()["a"]["b"]`.
+
+    Child nodes are cached to provide stable identity (`source.a is source.a`)
+    and to make the dependency/children trees inspectable even when the user
+    does not hold external references.
+
+    Notes
+    -----
+    - Attribute names starting with "_" are not treated as data keys. This
+      prevents clashes with internal `DeepTrackNode` attributes and avoids
+      accidental creation of nodes for private/dunder names.
+    - The value returned by evaluating this node (`self()`) must support
+      string-key indexing (i.e., implement the `.__getitem__(str)` method).
 
     Parameters
     ----------
-    action: Callable or Any
-        A callable that returns the value of the node. The return value
-        must be a dictionary-like object supporting string-key indexing.
-        If non-callable, it is treated as a constant value.
+    action: Any or Callable
+        The node action. If callable, it is evaluated to produce the node's
+        value. If non-callable, it is treated as a constant value.
+        The produced value must be dictionary-like (support `value[key]` where
+        `key` is a string).
     node_name: str or None, optional
         Optional name assigned to the node. Defaults to `None`.
     **kwargs: Any
@@ -205,10 +214,13 @@ class SourceDeepTrackNode(DeepTrackNode):
     --------
     >>> from deeptrack.sources.base import SourceDeepTrackNode
 
-    Basic usage with a dictionary-like source:
+    Create a dictionary-like source:
 
     >>> data = {"x": 42, "y": {"z": 3.14}}
-    >>> source = SourceDeepTrackNode(data)
+    >>> source = SourceDeepTrackNode(data, node_name="root")
+
+    Access nested keys as nodes:
+
     >>> source.x()
     42
 
@@ -218,54 +230,81 @@ class SourceDeepTrackNode(DeepTrackNode):
     >>> source.y.z()
     3.14
 
+    Keys starting with "_" are not accessible via attribute syntax:
+
+    >>> source = SourceDeepTrackNode({"_x": 1})
+    >>> source._x
+    Traceback (most recent call last):
+    AttributeError: ...
+
     """
 
     def __getattr__(
         self: SourceDeepTrackNode,
         name: str,
     ) -> SourceDeepTrackNode:
-        """Return a child node corresponding to a key in the underlying data.
+        """Create or return a cached child node for the given key.
 
-        This method is triggered when an attribute is accessed and no
-        explicitly defined attribute is found. It constructs a new
-        `SourceDeepTrackNode` that retrieves the value associated with the
-        given key from the parent node's dictionary-like output.
-
-        The new node is registered as a dependent of the current node to ensure
-        correct dependency tracking during evaluation.
+        This method is invoked only if normal attribute lookup fails. It
+        returns a child node that resolves to `self()[name]` when evaluated.
 
         Parameters
         ----------
         name: str
-            The key to retrieve from the dictionary-like data returned by
-            `self()`.
+            The key to retrieve from the dictionary-like value returned by
+            evaluating the parent node.
 
         Returns
         -------
         SourceDeepTrackNode
-            A new node that resolves to `self()[name]` when evaluated.
+            A child node representing the requested key.
 
-        Examples
-        --------
-        >>> from deeptrack.sources.base import SourceDeepTrackNode
-
-        Basic usage with a dictionary-like source:
-
-        >>> source = SourceDeepTrackNode(lambda: {"a": {"b": 1}})
-        >>> source.a()
-        {'b': 1}
-    
-        >>> source.a.b()
-        1
+        Raises
+        ------
+        AttributeError
+            If `name` starts with "_" (reserved for internal/private
+            attributes).
 
         """
+
+        if name.startswith("_"):
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{name}'"
+            )
+
+        cache = self._get_child_cache()
+        cached = cache.get(name)
+        if cached is not None:
+            return cached
 
         node = SourceDeepTrackNode(
             lambda parent=self, key=name: parent()[key],
             node_name=name,
         )
         node.add_dependency(self)
+        cache[name] = node
         return node
+
+    def _get_child_cache(
+        self: SourceDeepTrackNode,
+    ) -> dict[str, SourceDeepTrackNode]:
+        """Return the per-instance cache of attribute-created child nodes.
+
+        The cache is stored in a private attribute to avoid polluting the
+        instance namespace with arbitrary data keys, and is created lazily.
+
+        Returns
+        -------
+        dict[str, SourceDeepTrackNode]
+            Mapping from key name to cached child node.
+
+        """
+        try:
+            return object.__getattribute__(self, "_child_cache")
+        except AttributeError:
+            cache: dict[str, SourceDeepTrackNode] = {}
+            object.__setattr__(self, "_child_cache", cache)
+            return cache
 
 
 class SourceItem(dict):
