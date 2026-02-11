@@ -83,6 +83,17 @@ class TestMath_Numpy(BackendTestBase):
         #self.assertTrue(xp.all(blurred_image == expected_output))
 
 
+
+    def test_AveragePooling(self):
+        input_image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
+        feature = math.AveragePooling(ksize=2)
+        pooled_image = feature.resolve(input_image)
+        
+        expected = xp.asarray([[3.5, 5.5]])
+        
+        self.assertTrue(xp.all(pooled_image == expected))
+        self.assertEqual(pooled_image.shape, (1, 2))
+
     def test_MaxPooling(self):
         input_image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
         feature = math.MaxPooling(ksize=2)
@@ -109,8 +120,7 @@ class TestMath_Numpy(BackendTestBase):
 class TestMath_Torch(TestMath_Numpy):
     BACKEND = "torch"
     pass
-
-
+    
 class TestMath(unittest.TestCase):
 
     def test_GaussianBlur(self):
@@ -129,6 +139,7 @@ class TestMath(unittest.TestCase):
         feature = math.AveragePooling(ksize=2)
         pooled_image = feature.resolve(input_image)
         self.assertTrue(np.all(pooled_image == [[3.5, 5.5]]))
+
 
     def test_MaxPooling(self):
         input_image = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
