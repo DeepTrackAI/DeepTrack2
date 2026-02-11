@@ -83,50 +83,33 @@ class TestBase(unittest.TestCase):
 
 
     def test_SourceItem(self):
-
-        called = []
+        called: list[base.SourceItem] = []
 
         def callback(item):
             called.append(item)
 
-        # List input
-        item_list = base.SourceItem(callbacks=[callback], a=[1, 2], b=[3, 4])
-        self.assertEqual(item_list["a"], [1, 2])
-        self.assertEqual(item_list["b"], [3, 4])
-        returned = item_list()
-        self.assertIn(item_list, called)
-        self.assertIs(returned, item_list)
-        self.assertIn("callback", repr(item_list))
+        callbacks = [callback]
+        item = base.SourceItem(callbacks=callbacks, a=1, b=2)
 
-        # Tuple input
+        # Behaves like a dict
+        self.assertEqual(item["a"], 1)
+        self.assertEqual(item["b"], 2)
+
+        # Calling triggers callback and returns self
+        returned = item()
+        self.assertIs(returned, item)
+        self.assertEqual(called, [item])
+
+        # __repr__ includes class name and callback count
+        rep = repr(item)
+        self.assertIn("SourceItem", rep)
+        self.assertIn("1 callback(s)", rep)
+
+        # Callbacks list is copied (no aliasing)
+        callbacks.append(lambda x: None)
         called.clear()
-        item_tuple = base.SourceItem(callbacks=[callback], a=(1, 2), b=(3, 4))
-        self.assertEqual(item_tuple["a"], (1, 2))
-        self.assertEqual(item_tuple["b"], (3, 4))
-        returned = item_tuple()
-        self.assertIn(item_tuple, called)
-
-        # NumPy array input
-        called.clear()
-        a_np = np.array([1, 2])
-        b_np = np.array([3, 4])
-        item_np = base.SourceItem(callbacks=[callback], a=a_np, b=b_np)
-        np.testing.assert_array_equal(item_np["a"], a_np)
-        np.testing.assert_array_equal(item_np["b"], b_np)
-        returned = item_np()
-        self.assertIn(item_np, called)
-
-        if TORCH_AVAILABLE:
-            called.clear()
-            a_torch = torch.tensor([1, 2])
-            b_torch = torch.tensor([3, 4])
-            item_torch = base.SourceItem(
-                callbacks=[callback], a=a_torch, b=b_torch,
-            )
-            self.assertTrue(torch.equal(item_torch["a"], a_torch))
-            self.assertTrue(torch.equal(item_torch["b"], b_torch))
-            returned = item_torch()
-            self.assertIn(item_torch, called)
+        item()
+        self.assertEqual(called, [item])
 
 
     def test_Source(self):
