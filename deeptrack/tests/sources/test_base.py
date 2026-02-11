@@ -34,7 +34,52 @@ class TestBase(unittest.TestCase):
 
 
     def test_SourceDeepTrackNode(self):
-        pass
+        source = base.SourceDeepTrackNode(
+            lambda: {"a": {"b": 1}, "_x": 2},
+            node_name="root",
+        )
+
+        # Access returns nodes (not values) when not calling.
+        node_a_1 = source.a
+        self.assertIsInstance(node_a_1, base.SourceDeepTrackNode)
+        self.assertEqual(node_a_1(), {"b": 1})
+
+        node_b_1 = source.a.b
+        self.assertIsInstance(node_b_1, base.SourceDeepTrackNode)
+        self.assertEqual(node_b_1(), 1)
+
+        # Child nodes are cached.
+        node_a_2 = source.a
+        self.assertIs(node_a_1, node_a_2)
+
+        node_b_2 = source.a.b
+        self.assertIs(node_b_1, node_b_2)
+
+        # Node names use dotted paths when the parent is named.
+        self.assertEqual(node_a_1.node_name, "root.a")
+        self.assertEqual(node_b_1.node_name, "root.a.b")
+
+        # Private/dunder-like names are rejected as data keys.
+        with self.assertRaises(AttributeError):
+            _ = source._x
+
+        # Dependencies/children are registered.
+        children = source.recurse_children()
+        self.assertIn(source, children)
+        self.assertIn(node_a_1, children)
+        self.assertIn(node_b_1, children)
+        self.assertEqual(len(children), 3)
+
+        deps_a = node_a_1.recurse_dependencies()
+        self.assertIn(node_a_1, deps_a)
+        self.assertIn(source, deps_a)
+        self.assertEqual(len(deps_a), 2)
+
+        deps_b = node_b_1.recurse_dependencies()
+        self.assertIn(node_b_1, deps_b)
+        self.assertIn(node_a_1, deps_b)
+        self.assertIn(source, deps_b)
+        self.assertEqual(len(deps_b), 3)
 
 
     def test_SourceItem(self):
