@@ -184,25 +184,31 @@ class SourceDeepTrackNode(DeepTrackNode):
     underlying dictionary-like data.
 
     This is particularly useful when working with hierarchical or nested
-    data sources, allowing intuitive access via attribute syntax (e.g.
+    data sources, allowing intuitive access via attribute syntax (e.g.,
     `source.position.x`) and automatic dependency tracking between nodes.
     
-    It assumes the value of the node is dict-like (i.e., that it has a
+    It assumes the value of the node is dictionary-like (i.e., that it has a
     `__getitem__()` method that takes a string).
 
     Parameters
     ----------
-    action: Callable[[...], Any]
+    action: Callable or Any
         A callable that returns the value of the node. The return value
         must be a dictionary-like object supporting string-key indexing.
+        If non-callable, it is treated as a constant value.
+    node_name: str or None, optional
+        Optional name assigned to the node. Defaults to `None`.
+    **kwargs: Any
+        Additional arguments for subclasses or extended functionality.
 
     Examples
     --------
-    >>> from deeptrack.sources import SourceDeepTrackNode
+    >>> from deeptrack.sources.base import SourceDeepTrackNode
 
     Basic usage with a dictionary-like source:
+
     >>> data = {"x": 42, "y": {"z": 3.14}}
-    >>> source = SourceDeepTrackNode(lambda: data)
+    >>> source = SourceDeepTrackNode(data)
     >>> source.x()
     42
 
@@ -244,6 +250,7 @@ class SourceDeepTrackNode(DeepTrackNode):
         >>> from deeptrack.sources.base import SourceDeepTrackNode
 
         Basic usage with a dictionary-like source:
+
         >>> source = SourceDeepTrackNode(lambda: {"a": {"b": 1}})
         >>> source.a()
         {'b': 1}
@@ -253,7 +260,10 @@ class SourceDeepTrackNode(DeepTrackNode):
 
         """
 
-        node = SourceDeepTrackNode(lambda: self()[name])
+        node = SourceDeepTrackNode(
+            lambda parent=self, key=name: parent()[key],
+            node_name=name,
+        )
         node.add_dependency(self)
         return node
 
