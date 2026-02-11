@@ -310,12 +310,12 @@ class SourceDeepTrackNode(DeepTrackNode):
 
 
 class SourceItem(dict):
-    """A dict-like object that triggers a list of callbacks when called.
+    """A dictionary-like object that triggers a list of callbacks when called.
 
-    `SourceItem` is used within the `Source` framework to wrap a dictionary
-    entry that activates one or more callbacks when accessed via calling.
-    This mechanism ensures that all dependent `DeepTrackNode`s are updated
-    when a particular item in the source is selected.
+    `SourceItem` wraps a dictionary entry that activates one or more callbacks
+    when accessed via calling. This mechanism ensures that all dependent
+    `DeepTrackNode`s are updated when a particular item in the source is
+    selected.
 
     Parameters
     ----------
@@ -342,13 +342,16 @@ class SourceItem(dict):
     >>> from deeptrack.sources import SourceItem
 
     Implement a callback function:
+
     >>> def log_callback(item):
     ...     print(f"CALLBACK - Accessed item: {item}")
 
     Create a SourceItem with dictionary contents and callbacks:
+
     >>> item = dt.SourceItem(callbacks=[log_callback], a=1, b=2)
 
     Call the item to trigger the callbacks:
+
     >>> item();
     CALLBACK - Accessed item: SourceItem({'a': 1, 'b': 2}, 1 callback(s))
 
@@ -404,8 +407,10 @@ class SourceItem(dict):
 
         """
 
-        return (f"SourceItem({super().__repr__()}, "
-                f"{len(self._callbacks)} callback(s))")
+        return (
+            f"SourceItem({super().__repr__()}, "
+            f"{len(self._callbacks)} callback(s))"
+        )
 
 
 class Source:
