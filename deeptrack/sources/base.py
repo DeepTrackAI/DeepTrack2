@@ -176,7 +176,7 @@ __all__ = [
 
 
 class SourceDeepTrackNode(DeepTrackNode):
-    """A node that creates child nodes when attributes are accessed.
+    """A node that creates and caches child nodes when attributes are accessed.
     
     `SourceDeepTrackNode` is a specialization of `DeepTrackNode` intended for
     structured access to dictionary-like data. When an attribute is accessed
@@ -277,9 +277,12 @@ class SourceDeepTrackNode(DeepTrackNode):
         if cached is not None:
             return cached
 
+        parent_name = self.node_name
+        child_name = f"{parent_name}.{name}" if parent_name else name
+
         node = SourceDeepTrackNode(
             lambda parent=self, key=name: parent()[key],
-            node_name=name,
+            node_name=child_name,
         )
         node.add_dependency(self)
         cache[name] = node
