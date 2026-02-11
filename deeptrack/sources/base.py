@@ -234,8 +234,7 @@ class SourceDeepTrackNode(DeepTrackNode):
 
     >>> source = SourceDeepTrackNode({"_x": 1})
     >>> source._x
-    Traceback (most recent call last):
-    AttributeError: ...
+    AttributeError: 'SourceDeepTrackNode' object has no attribute '_x'
 
     """
 
