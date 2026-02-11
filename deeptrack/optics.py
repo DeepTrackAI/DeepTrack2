@@ -207,8 +207,11 @@ class Microscope(StructuralFeature):
 
     __distributed__ = False
 
+    _sample: Feature
+    _objective: Feature
+
     def __init__(
-        self:  Microscope,
+        self: Microscope,
         sample: Feature,
         objective: Feature,
         **kwargs: Any,
@@ -237,8 +240,9 @@ class Microscope(StructuralFeature):
         super().__init__(**kwargs)
 
         self._sample = self.add_feature(sample)
+        # self._sample.store_properties()  #TODO ***??*** eliminated the need to store properties - check that this doesn't create problems down the line
+
         self._objective = self.add_feature(objective)
-        self._sample.store_properties()
 
     def get(
         self: Microscope,
@@ -289,7 +293,8 @@ class Microscope(StructuralFeature):
 
         with u.context(
             create_context(
-                *additional_sample_kwargs["voxel_size"], *_upscale_given_by_optics
+                *additional_sample_kwargs["voxel_size"],
+                *_upscale_given_by_optics,
             )
         ):
 
