@@ -319,13 +319,13 @@ class SourceItem(dict):
 
     Parameters
     ----------
-    callbacks: list[Callable[[Any], None]]
-        A list of callback functions that are executed when the item is called.
-        Each function receives the `SourceItem` itself as argument.
+    callbacks: Sequence[Callable[[SourceItem], None]]
+        A sequence of callback functions that are executed when the item is
+        called. Each function receives the `SourceItem` itself as argument.
 
     Attributes
     ----------
-    _callbacks : list[Callable[[SourceItem], None]]
+    _callbacks: list[Callable[[SourceItem], None]]
         Internal list of callbacks that are triggered on call.
 
     Methods
@@ -348,7 +348,7 @@ class SourceItem(dict):
 
     Create a SourceItem with dictionary contents and callbacks:
 
-    >>> item = dt.SourceItem(callbacks=[log_callback], a=1, b=2)
+    >>> item = SourceItem(callbacks=[log_callback], a=1, b=2)
 
     Call the item to trigger the callbacks:
 
@@ -357,25 +357,25 @@ class SourceItem(dict):
 
     """
 
-    _callbacks: list[Callable[[Any], None]]
+    _callbacks: list[Callable[[SourceItem], None]]
 
     def __init__(
         self: SourceItem,
-        callbacks: list[Callable[[Any], None]],
+        callbacks: Sequence[Callable[[SourceItem], None]],
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize a SourceItem.
 
         Parameters
         ----------
-        callbacks: list[Callable[[SourceItem], None]]
-            The list of callbacks to trigger when the item is called.
+        callbacks: Sequence[Callable[[SourceItem], None]]
+            The sequence of callbacks to trigger when the item is called.
         **kwargs: Any
             Additional key-value pairs stored in the dictionary.
 
         """
 
-        self._callbacks = callbacks
+        self._callbacks = list(callbacks)
 
         super().__init__(**kwargs)
 
@@ -408,7 +408,7 @@ class SourceItem(dict):
         """
 
         return (
-            f"SourceItem({super().__repr__()}, "
+            f"{self.__class__.__name__}({dict.__repr__(self)}, "
             f"{len(self._callbacks)} callback(s))"
         )
 
@@ -421,7 +421,7 @@ class Source:
     activate registered callbacks (e.g., for dependency tracking) when called.
 
     Each named field is accessible as an attribute (e.g., `source.a`) and
-    can be passed directly to DeepTrack features such as `Value`. Features
+    can be passed directly to DeepTrack2 features such as `Value`. Features
     can then be evaluated on specific items by indexing the source (e.g.,
     `feature(source[i])`).
 
@@ -442,50 +442,48 @@ class Source:
     _current_index: DeepTrackNode
         A node that holds the current active index. Used for dynamic access
         when a source attribute (e.g., `source.a`) is passed to a feature.
-    _callbacks: set[Callable[[Any], None]]
+    _callbacks: set[Callable[[SourceItem], None]]
         A set of callback functions triggered when a `SourceItem` is called.
 
     Methods
     -------
-    product(**kwargs: Sequence[Any]) -> Product
-        It returns a new source representing the cartesian product of the
-        current source with the given sequences.
-
-    constants(**kwargs: Sequence[Any]) -> Product
-        It returns a new source where the given values are treated as
-        constants.
-
-    filter(predicate: Callable[..., bool]) -> Subset
-        It returns a new source containing only the items for which the
-        predicate returns `True`.
-    set_index(index) -> Source
-        It sets the active index used when evaluating attributes, like in
+    `product(**kwargs: Sequence[Any]) -> Product`
+        Return a new source representing the cartesian product of the current
+        source with the given sequences.
+    `constants(**kwargs: Sequence[Any]) -> Product`
+        Return a new source where the given values are treated as constants.
+    `filter(predicate: Callable[..., bool]) -> Subset`
+        Return a new source containing only the items for which the predicate
+        returns `True`.
+    `set_index(index) -> Source`
+        Set the active index used when evaluating attributes, like in
         `source.a()`.
 
-    on_activate(callback: Callable[[SourceItem], None]) -> None
-        It registers a callback to be called when any item is activated.
+    **Callback registration.**
+    `on_activate(callback: Callable[[SourceItem], None]) -> None`
+        Register a callback to be called when any item is activated.
 
     **Private and internal methods.**
-    __len__() -> int
-        It returns the number of items in the source.
-    __getitem__(index: int | slice) -> SourceItem or list[SourceItem]
-        It retrieves one or more items by index or slice.
-    _get_item(index: int) -> SourceItem:
-        It retrieves a single SourceItem at a specified index.
-    _get_slice(slice_obj: slice) -> list[SourceItem]:
-        It retrieves a list of SourceItems corresponding to a slice.
-    _validate_all_same_length(kwargs: dict[str, Sequence[Any]]) -> None:
-        It validates that all input sequences have the same length.
-    _wrap(key: str) -> SourceDeepTrackNode
-        It wraps a field from the source into a SourceDeepTrackNode.
-    _wrap_indexable(key: str) -> SourceDeepTrackNode
-        It wraps an indexable field as a SourceDeepTrackNode.
-    _wrap_iterable(key: str) -> SourceDeepTrackNode
-        It wraps a non-indexable iterable field as a SourceDeepTrackNode.
-    __iter__() -> Generator[SourceItem, None, None]
-        It iterates over all items in the source.
-    __repr__() -> str:
-        It returns a string representation of the source object.
+    `__len__() -> int`
+        Return the number of items in the source.
+    `__getitem__(index) -> SourceItem or list[SourceItem]`
+        Retrieve one or more items by index or slice.
+    `_get_item(index: int) -> SourceItem`
+        Retrieve a single SourceItem at a specified index.
+    `_get_slice(slice_obj) -> list[SourceItem]`
+        Retrieve a list of SourceItems corresponding to a slice.
+    `_validate_all_same_length(kwargs) -> None`
+        Validate that all input sequences have the same length.
+    `_wrap(key) -> SourceDeepTrackNode`
+        Wrap a field from the source into a SourceDeepTrackNode.
+    `_wrap_indexable(key) -> SourceDeepTrackNode`
+        Wrap an indexable field as a SourceDeepTrackNode.
+    `_wrap_iterable(key) -> SourceDeepTrackNode`
+        Wrap a non-indexable iterable field as a SourceDeepTrackNode.
+    `__iter__() -> Generator[SourceItem, None, None]`
+        Iterate over all items in the source.
+    `__repr__() -> str:`
+        Return a string representation of the source object.
 
     Examples
     --------
@@ -493,56 +491,69 @@ class Source:
     >>> from deeptrack.sources import Source
 
     Define a source with two fields:
+
     >>> source = Source(
     ...     a=[1, 2, 3, 4, 5, 6, 7, 8, 9],
     ...     b=[10, 20, 30, 40, 50, 60, 70, 80, 90],
-    >>> )
+    ... )
 
     Create features from the source:
+
     >>> feature_a = dt.Value(source.a)
     >>> feature_b = dt.Value(source.b)
     >>> sum_feature = feature_a + feature_b
 
     Evaluate features on individual items:
+
     >>> sum_feature(source[0])
     11
+
     >>> sum_feature(source[8])
     99
 
     Filter items using a predicate:
+
     >>> filtered = source.filter(lambda a, b: a > 5 and b < 80)
     >>> list(filtered)
     [SourceItem({'a': 6, 'b': 60}, 1 callback(s)),
-    SourceItem({'a': 7, 'b': 70}, 1 callback(s))]
+     SourceItem({'a': 7, 'b': 70}, 1 callback(s))]
 
     Slice the source:
+
     >>> subset = source[3:5]
     >>> subset
     [SourceItem({'a': 4, 'b': 40}, 1 callback(s)),
-    SourceItem({'a': 5, 'b': 50}, 1 callback(s))]
+     SourceItem({'a': 5, 'b': 50}, 1 callback(s))]
 
     Add a constant field to the source:
+
     >>> augmented = source.constants(label="train")
     >>> augmented[0]["label"]
     'train'
 
     Take a Cartesian product with a new field:
+
     >>> extended = source.product(c=[100, 200])
     >>> len(extended)
-    18  # 9 original items × 2 values in "c"
+    18  # 9 original items x 2 values in "c"
+
     >>> extended[0]["c"]
     100
+
     >>> extended[17]["c"]
     200
 
     Use set_index to manually select the active item:
+
     >>> source.set_index(1)
     >>> source.a()
     2
+
     >>> source.b()
     20
 
     Iterate over items in the source:
+
     >>> for item in source:
     ...     print(item["a"], item["b"])
     1 10
@@ -560,12 +571,12 @@ class Source:
     _dict: dict[str, Sequence[Any]]
     _length: int
     _current_index: DeepTrackNode
-    _callbacks: set[Callable[[Any], None]]
+    _callbacks: set[Callable[[SourceItem], None]]
 
     def __init__(
         self: Source,
         **kwargs: Sequence[Any],
-    ):
+    ) -> None:
         """Initialize a Source with one or more named data sequences.
 
         The input sequences must all have the same length and support integer
@@ -1295,7 +1306,7 @@ class Product(Source):
         self: Product,
         __source: Source | None = None,
         **kwargs: list[Any],
-    ):
+    ) -> None:
         """Initialize the Cartesian product of a source with additional fields.
 
         Parameters
@@ -1410,7 +1421,7 @@ class Subset(Source):
         self: Subset,
         source: Source,
         indices: list[int],
-    ):
+    ) -> None:
         """Initialize a Subset from a source and a list of indices.
 
         This constructor extracts a subset of items from the given source
@@ -1651,7 +1662,7 @@ class Sources:
     def __init__(
         self: Sources,
         *sources: Source,
-    ):
+    ) -> None:
         """Initialize a joined multi-source access point.
 
         Parameters
