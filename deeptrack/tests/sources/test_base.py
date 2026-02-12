@@ -174,7 +174,6 @@ class TestBase(unittest.TestCase):
         }
 
         if TORCH_AVAILABLE:
-            import torch
             data_variants["torch"] = (
                 torch.tensor([1, 2]),
                 torch.tensor([10, 20]),
@@ -224,37 +223,59 @@ class TestBase(unittest.TestCase):
         }
 
         if TORCH_AVAILABLE:
-            import torch
             data_variants["torch"] = (
                 torch.tensor([1, 2, 3]),
                 torch.tensor([10, 20, 30]),
             )
 
-        for name, (a, b) in data_variants.items():
-            with self.subTest(dtype=name):
-                source = base.Source(a=a, b=b)
-                indices = [0, 2]
-                subset = base.Subset(source, indices)
+        for a, b in data_variants.values():
+            source = base.Source(a=a, b=b)
+            subset = base.Subset(source, [0, 2])
 
-                # Length
-                self.assertEqual(len(subset), 2)
+            # Provenance exposed
+            self.assertIs(subset.source, source)
+            self.assertEqual(subset.indices, [0, 2])
 
-                # Items should match corresponding ones from original source
-                for i, idx in enumerate(indices):
-                    item = subset[i]
-                    self.assertEqual(item["a"], a[idx])
-                    self.assertEqual(item["b"], b[idx])
+            # Length
+            self.assertEqual(len(subset), 2)
 
-                # Iteration should return correct items
-                for i, item in enumerate(subset):
-                    self.assertEqual(item["a"], a[indices[i]])
-                    self.assertEqual(item["b"], b[indices[i]])
+            # Indexing
+            item0 = subset[0]
+            self.assertIsInstance(item0, base.SourceItem)
+            self.assertEqual(item0["a"], a[0])
+            self.assertEqual(item0["b"], b[0])
 
-                # Dynamic attribute access
-                if TORCH_AVAILABLE and isinstance(a, torch.Tensor):
-                    self.assertEqual(subset.a().item(), a[0].item())
-                else:
-                    self.assertEqual(subset.a(), a[0])
+            item1 = subset[1]
+            self.assertEqual(item1["a"], a[2])
+            self.assertEqual(item1["b"], b[2])
+
+            # Iteration
+            items = list(subset)
+            self.assertEqual(len(items), 2)
+            self.assertEqual(items[0]["a"], a[0])
+            self.assertEqual(items[1]["b"], b[2])
+
+            # Dynamic behavior is independent of parent
+            source.set_index(1)
+            self.assertEqual(source.a(), a[1])
+
+            subset.set_index(0)
+            self.assertEqual(subset.a(), a[0])
+            self.assertEqual(subset.b(), b[0])
+
+            subset.set_index(1)
+            self.assertEqual(subset.a(), a[2])
+            self.assertEqual(subset.b(), b[2])
+
+            # Negative index at construction
+            subset_neg = base.Subset(source, [-1])
+            self.assertEqual(len(subset_neg), 1)
+            self.assertEqual(subset_neg[0]["a"], a[-1])
+            self.assertEqual(subset_neg[0]["b"], b[-1])
+
+            # Out-of-range index raises
+            with self.assertRaises(IndexError):
+                base.Subset(source, [100])
 
 
     def test_Sources(self):
@@ -263,43 +284,42 @@ class TestBase(unittest.TestCase):
             "tuple": ((1, 2), (10, 20), (3, 4), (30, 40)),
             "numpy": (
                 np.array([1, 2]), np.array([10, 20]),
-                np.array([3, 4]), np.array([30, 40])
+                np.array([3, 4]), np.array([30, 40]),
             ),
         }
 
         if TORCH_AVAILABLE:
             data_variants["torch"] = (
                 torch.tensor([1, 2]), torch.tensor([10, 20]),
-                torch.tensor([3, 4]), torch.tensor([30, 40])
+                torch.tensor([3, 4]), torch.tensor([30, 40]),
             )
 
-        for name, (a1, b1, a2, b2) in data_variants.items():
-            with self.subTest(dtype=name):
-                train = base.Source(a=a1, b=b1)
-                val = base.Source(a=a2, b=b2)
+        for a1, b1, a2, b2 in data_variants.values():
+            train = base.Source(a=a1, b=b1)
+            val = base.Source(a=a2, b=b2)
 
-                joined = base.Sources(train, val)
+            joined = base.Sources(train, val)
 
-                # Verify dynamic fields exist and have callable values
-                self.assertTrue(callable(joined.a))
-                self.assertTrue(callable(joined.b))
+            # Verify dynamic fields exist and have callable values
+            self.assertTrue(callable(joined.a))
+            self.assertTrue(callable(joined.b))
 
-                # Trigger update by activating an item
-                item_train = train[0]
-                item_val = val[1]
+            # Trigger update by activating an item
+            item_train = train[0]
+            item_val = val[1]
 
-                item_train()
-                self.assertEqual(joined.a(), a1[0])
-                self.assertEqual(joined.b(), b1[0])
+            item_train()
+            self.assertEqual(joined.a(), a1[0])
+            self.assertEqual(joined.b(), b1[0])
 
-                item_val()
-                self.assertEqual(joined.a(), a2[1])
-                self.assertEqual(joined.b(), b2[1])
+            item_val()
+            self.assertEqual(joined.a(), a2[1])
+            self.assertEqual(joined.b(), b2[1])
 
-                # Feature access
-                feature = dt.Value(joined.a) + dt.Value(joined.b)
-                self.assertEqual(feature(train[0]), a1[0] + b1[0])
-                self.assertEqual(feature(val[1]), a2[1] + b2[1])
+            # Feature access
+            feature = dt.Value(joined.a) + dt.Value(joined.b)
+            self.assertEqual(feature(train[0]), a1[0] + b1[0])
+            self.assertEqual(feature(val[1]), a2[1] + b2[1])
 
 
     def test_random_split(self):
@@ -347,6 +367,51 @@ class TestBase(unittest.TestCase):
                     for item in subset:
                         all_indices.add(item["a"])
                 self.assertEqual(len(all_indices), 5)
+
+
+    def test__accumulate(self):
+        # Default cumulative sum
+        self.assertEqual(
+            list(base._accumulate([1, 2, 3, 4, 5])),
+            [1, 3, 6, 10, 15],
+        )
+
+        # Custom operator (multiplication)
+        import operator
+        
+        self.assertEqual(
+            list(base._accumulate([1, 2, 3, 4, 5], fn=operator.mul)),
+            [1, 2, 6, 24, 120],
+        )
+
+        # Empty iterable
+        self.assertEqual(
+            list(base._accumulate([])),
+            [],
+        )
+
+        # Single element
+        self.assertEqual(
+            list(base._accumulate([7])),
+            [7],
+        )
+
+        # Ensure function is called expected number of times
+        calls: list[tuple[int, int]] = []
+
+        def fn(x: int, y: int) -> int:
+            calls.append((x, y))
+            return x + y
+
+        self.assertEqual(
+            list(base._accumulate([1, 2, 3, 4], fn=fn)),
+            [1, 3, 6, 10],
+        )
+
+        self.assertEqual(
+            calls,
+            [(1, 2), (3, 3), (6, 4)],
+        )
 
 
 if __name__ == "__main__":
