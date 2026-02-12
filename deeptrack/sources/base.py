@@ -1320,6 +1320,7 @@ class Product(Source):
     used. This allows syntax such as:
 
     >>> Product(x=[1, 2], y=[3, 4])
+    Product(x=[1, 1, 2, 2], y=[3, 4, 3, 4])
 
     to create a Cartesian product of just the keyword arguments.
 
@@ -1327,14 +1328,18 @@ class Product(Source):
     approach is not type-safe. Internally, `Source(__dummy=[0])` is used and
     then cleaned up to preserve correctness and consistency.
 
+    Notes
+    -----
+    If the base source is empty, the Cartesian product is also empty. In this
+    case, the resulting `Product` contains the expected field names, but all
+    fields have length 0.
 
     Parameters
     ----------
-    __source: Source | None, optional
+    __source: Source or None, optional
         The base source to be expanded. If None, a default single-item
         source is used, allowing `Product` to act on keyword arguments alone.
-
-    **kwargs: list[Any]
+    **kwargs: Sequence[Any]
         Named sequences to take the product with. Each field will be
         broadcasted across all items in the base source.
 
@@ -1343,6 +1348,7 @@ class Product(Source):
     >>> from deeptrack.sources import Source
 
     Using the recommended Source.product() method:
+
     >>> source = Source(a=[1, 2])
     >>> product = source.product(b=[10, 20])
     >>> product
@@ -1350,38 +1356,47 @@ class Product(Source):
 
     >>> list(product)
     [SourceItem({'b': 10, 'a': 1}, 1 callback(s)),
-    SourceItem({'b': 20, 'a': 1}, 1 callback(s)),
-    SourceItem({'b': 10, 'a': 2}, 1 callback(s)),
-    SourceItem({'b': 20, 'a': 2}, 1 callback(s))]
+     SourceItem({'b': 20, 'a': 1}, 1 callback(s)),
+     SourceItem({'b': 10, 'a': 2}, 1 callback(s)),
+     SourceItem({'b': 20, 'a': 2}, 1 callback(s))]
 
     Equivalent direct usage of Product (advanced):
+
     >>> from deeptrack.sources.base import Product
     >>>
     >>> product = Product(source, b=[10, 20])
+    >>> product
+    Product(b=[10, 20, 10, 20], a=[1, 1, 2, 2])
 
     Using Product without a base source:
+
     >>> product = Product(x=[1, 2], y=["a", "b"])
     >>> product
     Product(x=[1, 1, 2, 2], y=['a', 'b', 'a', 'b'])
+
+    Empty base sources are supported:
+
+    >>> empty = Source(a=[], b=[])
+    >>> product = empty.product(c=[1, 2])
+    >>> len(product)
+    Product(b=[], a=[], c=[])
 
     """
 
     def __init__(
         self: Product,
         __source: Source | None = None,
-        **kwargs: list[Any],
+        **kwargs: Sequence[Any],
     ) -> None:
         """Initialize the Cartesian product of a source with additional fields.
 
         Parameters
         ----------
-        __source: Source | None
-            The base source to be expanded via Cartesian product.
-            It defaults to None.
-
-        **kwargs: list[Any]
-            Named sequences to take the product with. Each value must be
-            a list or array of equal length.
+        __source: Source or None
+            The base source to be expanded via Cartesian product. Defaults to
+            `None`.
+        **kwargs: Sequence[Any]
+            Named sequences to take the product with.
 
         Raises
         ------
@@ -1390,34 +1405,35 @@ class Product(Source):
 
         """
 
-        # This might be fragile and could be changed to a dummy source
-        if __source == None:
-            __source = [{}]
+        if __source is None:
+            __source = Source(__dummy=[0])
+            remove_dummy = True
+        else:
+            remove_dummy = False
 
-        # Compute the cartesian product of all items
-        product = itertools.product(__source, *kwargs.values())
-
-        dict_of_lists = {k: [] for k in kwargs.keys()}
-        source_dict = {k: [] for k in __source[0].keys()}
+        base_keys = set(__source._dict.keys())
+        new_keys = set(kwargs.keys())
 
         # Check for overlapping keys. If overlapping keys, error.
-        if set(kwargs.keys()).intersection(set(source_dict.keys())):
+        overlap = base_keys & new_keys
+        if overlap:
             raise ValueError(
-                f"Overlapping keys in product. Duplicate keys: "
-                f"{set(kwargs.keys()).intersection(set(source_dict.keys()))}"
+                f"Overlapping keys in product. Duplicate keys: {overlap}"
             )
 
-        # Initialize combined dictionary
-        dict_of_lists.update(source_dict)
-
-        # Populate each field from the cartesian product
-        for source, *items in product:
-            for k, v in source.items():
+        dict_of_lists: dict[str, list[Any]] = {
+            k: [] for k in base_keys | new_keys
+        }
+        for base_item, *items in itertools.product(__source, *kwargs.values()):
+            for k, v in base_item.items():
                 dict_of_lists[k].append(v)
             for k, v in zip(kwargs.keys(), items):
                 dict_of_lists[k].append(v)
 
-        super().__init__(**dict_of_lists)    
+        if remove_dummy:
+            dict_of_lists.pop("__dummy", None)
+
+        super().__init__(**dict_of_lists)
 
 
 class Subset(Source):
@@ -1509,8 +1525,9 @@ class Subset(Source):
         self.indices = indices
 
         # Build the field dictionary for the subset by slicing each field
-        self._dict = {k: [v[i] for i in indices]
-                      for k, v in source._dict.items()}
+        self._dict = {
+            k: [v[i] for i in indices] for k, v in source._dict.items()
+        }
 
     def __iter__(
         self: Subset,
