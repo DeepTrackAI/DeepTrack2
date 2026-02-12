@@ -427,7 +427,7 @@ class Source:
 
     Parameters
     ----------
-    *kwargs: Sequence[Any]
+    **kwargs: Sequence[Any]
         Named data sources, where each key is the name of a source (e.g., "x",
         "label") and each value is an indexable sequence (e.g., list, NumPy
         array, PyTorch tensor). All sequences must have the same length and
@@ -581,7 +581,7 @@ class Source:
 
         The input sequences must all have the same length and support integer
         indexing (i.e., implement both `__getitem__` and `__len__`). Each key
-        becomes an attribute of the source and can be passed to DeepTrack
+        becomes an attribute of the source and can be passed to DeepTrack2
         features for dynamic evaluation.
 
         Parameters
@@ -590,12 +590,13 @@ class Source:
             Named data sources, where each key is the name of a field (e.g.,
             "x", "label") and each value is an indexable sequence (e.g., list,
             NumPy array, PyTorch tensor). All sequences must have the same
-            length.
+            length. At least one sequence is required.
 
         Raises
         ------
         ValueError
-            If the input sequences do not all have the same length.
+            If the input sequences do not all have the same length, or if there
+            are no input sequences.
 
         Examples
         --------
@@ -603,12 +604,14 @@ class Source:
 
         Create a source with two named sequences (note that they are of the
         same length):
+
         >>> source = Source(
         ...     a=[1, 2, 3, 4, 5, 6, 7, 8, 9],
         ...     b=[10, 20, 30, 40, 50, 60, 70, 80, 90],
-        >>> )
+        ... )
 
         Iterate over items in the source:
+
         >>> for item in source:
         ...     print(item["a"], item["b"])
         1 10
@@ -623,16 +626,47 @@ class Source:
 
         """
 
+        if not kwargs:
+            raise ValueError(
+                "Source must be initialized with at least one field."
+            )
+
         self._validate_all_same_length(kwargs)
 
         self._dict = kwargs
         self._length = len(kwargs[list(kwargs.keys())[0]])
-        self._current_index = DeepTrackNode(0)
+        self._current_index = DeepTrackNode(0, node_name="index")
         self._callbacks = set()
 
-        for k in kwargs:
-            setattr(self, k, self._wrap(k))
+        for key in kwargs:
+            setattr(self, key, self._wrap(key))
 
+    def __getattr__(self, name: str) -> SourceDeepTrackNode:
+        """Fallback attribute access for dynamically created source fields.
+
+        The `Source` class creates its public attributes dynamically in
+        `.__init__()` using `setattr()` (e.g., `source.a`, `source.b`, ...).
+        Because these attributes are injected at runtime, static type
+        checkers cannot infer their existence.
+
+        This method is defined primarily to support static typing tools.
+        By declaring `.__getattr__()` with a return type of
+        `SourceDeepTrackNode`, we explicitly signal that dynamically
+        created attributes are expected and that they resolve to
+        `SourceDeepTrackNode` instances.
+
+        Importantly, this method is not expected to be reached at runtime for
+        valid source keys, since they are assigned during initialization.
+        If this method is invoked, it indicates that an invalid attribute
+        was requested.
+
+        Do not remove this method unless the dynamic attribute injection
+        mechanism is changed accordingly.
+
+        """
+
+        raise AttributeError(name)
+    
     def __len__(
         self: Source,
     ) -> int:
@@ -651,9 +685,11 @@ class Source:
         >>> from deeptrack.sources import Source
 
         Create a source:
+
         >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
 
         Get its length:
+
         >>> len(source)
         3
 
@@ -686,28 +722,32 @@ class Source:
         >>> from deeptrack.sources import Source
 
         Create a source:
+
         >>> source = Source(
         ...     a=[1, 2, 3, 4, 5, 6, 7, 8, 9],
         ...     b=[10, 20, 30, 40, 50, 60, 70, 80, 90],
         ... )
 
         Retrieve a single item:
+
         >>> item = source[1]
         >>> item
         SourceItem({'a': 2, 'b': 20}, 1 callback(s))
 
         >>> item["a"]
-        20
 
-        >>> item["b"]
         2
 
+        >>> item["b"]
+        20
+
         Retrieve a slice of items:
+
         >>> items = source[1:4]
         >>> items
         [SourceItem({'a': 2, 'b': 20}, 1 callback(s)),
-        SourceItem({'a': 3, 'b': 30}, 1 callback(s)),
-        SourceItem({'a': 4, 'b': 40}, 1 callback(s))]
+         SourceItem({'a': 3, 'b': 30}, 1 callback(s)),
+         SourceItem({'a': 4, 'b': 40}, 1 callback(s))]
  
         >>> [(item["a"], item["b"]) for item in items]
         [(2, 20), (3, 30), (4, 40)]
@@ -748,19 +788,23 @@ class Source:
         >>> from deeptrack.sources import Source
 
         Create a source:
+
         >>> source = Source(a=[1, 2], b=[10, 20])
 
         Extract the source item corresponding to index 1:
+
         >>> item = source._get_item(1)
         >>> item
         SourceItem({'a': 2, 'b': 20}, 1 callback(s))
 
         Since the item has not been activated the current index of the source
         is still 0:
+
         >>> source._current_index()
         0
 
         Activate the item and sets the source's current index to 1:
+
         >>> item()
         >>> source._current_index()
         1
@@ -773,7 +817,7 @@ class Source:
         # Prepend the set_index callback so the active index is updated first
         callbacks = [lambda _: self.set_index(index)] + list(self._callbacks)
 
-        return SourceItem(callbacks, **values)
+        return SourceItem(callbacks=callbacks, **values)
 
     def _get_slice(
         self: Source,
@@ -800,25 +844,29 @@ class Source:
         >>> from deeptrack.sources import Source
 
         Create a source:
+
         >>> source = Source(
         ...     a=[1, 2, 3, 4, 5, 6, 7, 8, 9],
         ...     b=[10, 20, 30, 40, 50, 60, 70, 80, 90],
         ... )
 
         Get a slice of the source:
+
         >>> source[1:4]
         [SourceItem({'a': 2, 'b': 20}, 1 callback(s)),
-        SourceItem({'a': 3, 'b': 30}, 1 callback(s)),
-        SourceItem({'a': 4, 'b': 40}, 1 callback(s))]
+         SourceItem({'a': 3, 'b': 30}, 1 callback(s)),
+         SourceItem({'a': 4, 'b': 40}, 1 callback(s))]
 
         This is equivalent to:
+
         >>> source._get_slice(slice(1, 4))
+
         """
 
         # Convert the slice to a list of indices
         indices = list(range(*slice_obj.indices(len(self))))
 
-        # Get values for each index using _get_item()
+        # Get values for each index using ._get_item()
         return [self[i] for i in indices]
 
     def product(
@@ -850,12 +898,12 @@ class Source:
         >>> from deeptrack.sources import Source
 
         Create an initial source:
+
         >>> source = Source(a=[1, 2], b=[3, 4])
 
         Take the product with a new sequence:
-        >>> new_source = source.product(c=[5, 6])
 
-        Result:
+        >>> new_source = source.product(c=[5, 6])
         >>> new_source
         Product(c=[5, 6, 5, 6], a=[1, 1, 2, 2], b=[3, 3, 4, 4])
 
@@ -891,12 +939,12 @@ class Source:
         >>> from deeptrack.sources import Source
 
         Create a source:
+
         >>> source = Source(a=[1, 2], b=[3, 4])
 
         Add a constant field:
-        >>> new_source = source.constants(c=5)
 
-        Result:
+        >>> new_source = source.constants(c=5)
         >>> new_source
         Product(c=[5, 5], a=[1, 2], b=[3, 4])
 
@@ -930,12 +978,12 @@ class Source:
         >>> from deeptrack.sources import Source
 
         Create a source:
+
         >>> source = Source(a=[1, 2], b=[3, 4])
 
         Filter to keep only items where a > 1:
-        >>> new_source = source.filter(lambda a, b: a > 1)
 
-        Result:
+        >>> new_source = source.filter(lambda a, b: a > 1)
         >>> new_source
         Subset(a=[2], b=[4])
 
@@ -970,14 +1018,16 @@ class Source:
         >>> from deeptrack.sources import Source
 
         This works:
+
         >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
 
         This raises a ValueError:
+
         >>> source = Source(a=[1, 2], b=[10, 20, 30])
 
         """
 
-        lengths = [len(v) for v in kwargs.values()]
+        lengths = [len(value) for value in kwargs.values()]
         unique_lengths = set(lengths)
 
         if len(unique_lengths) > 1:
@@ -996,8 +1046,9 @@ class Source:
         input sequences into graph-compatible nodes.
 
         This method checks whether the field associated with the given key
-        is indexable (i.e., supports `__getitem__()`) and wraps it accordingly
-        using either `_wrap_indexable()` or `_wrap_iterable()`.
+        is indexable (i.e., supports `.__getitem__()` and `.__len__()`) and
+        wraps it accordingly using either `._wrap_indexable()` or
+        `._wrap_iterable()`.
 
         Parameters
         ----------
@@ -1013,8 +1064,8 @@ class Source:
 
         value = self._dict[key]
 
-        # If the value supports __getitem__, treat it as indexable
-        if hasattr(value, "__getitem__"):
+        # If the value supports __getitem__ and __len__, treat it as indexable
+        if hasattr(value, "__getitem__") and hasattr(value, "__len__"):
             return self._wrap_indexable(key)
 
         # Otherwise, attempt to convert it into a list and wrap it
@@ -1028,7 +1079,7 @@ class Source:
 
         This method creates a node that returns the value at the current
         index for a field that supports direct indexing (i.e., implements
-        `__getitem__`).
+        `.__getitem__()`).
 
         The returned node depends on the `_current_index` node, allowing
         dynamic evaluation as the index changes.
@@ -1049,7 +1100,6 @@ class Source:
             lambda: self._dict[key][self._current_index()]
         )
         value_getter.add_dependency(self._current_index)
-        # self._current_index.add_child(value_getter)
         return value_getter
 
     def _wrap_iterable(
@@ -1080,9 +1130,8 @@ class Source:
 
         value_getter = SourceDeepTrackNode(
             lambda: list(self._dict[key])[self._current_index()]
-            )
+        )
         value_getter.add_dependency(self._current_index)
-        # self._current_index.add_child(value_getter)
         return value_getter
 
     def __iter__(
@@ -1092,7 +1141,7 @@ class Source:
 
         This method allows the source to be used in for-loops and
         comprehensions by yielding each `SourceItem` in sequence. Each item is
-        constructed using `__getitem__()`, which attaches the appropriate
+        constructed using `.__getitem__()`, which attaches the appropriate
         callbacks.
 
         Yields
@@ -1122,7 +1171,7 @@ class Source:
     ) -> Source:
         """Set the active index of the source for dynamic evaluation.
 
-        This method updates the internal `_current_index` node, which is
+        This method updates the internal `._current_index()` node, which is
         used when evaluating attribute-based access such as `source.a()`.
         It is typically called automatically when a `SourceItem` is
         activated, but can also be called manually to override the index.
@@ -1142,6 +1191,7 @@ class Source:
         >>> from deeptrack.sources import Source
 
         Create a source:
+
         >>> source = Source(
         ...     a=[1, 2, 3, 4, 5, 6, 7, 8, 9],
         ...     b=[10, 20, 30, 40, 50, 60, 70, 80, 90],
@@ -1191,10 +1241,12 @@ class Source:
         >>> from deeptrack.sources import Source
 
         Define a callback function:
+
         >>> def log_access(item):
         ...     print(f"CALLBACK - Item accessed: {item}")
 
         Create a source and register the callback:
+
         >>> source = Source(a=[1, 2], b=[10, 20])
         >>> source.on_activate(log_access)
 
