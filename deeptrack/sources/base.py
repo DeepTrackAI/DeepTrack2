@@ -1480,16 +1480,18 @@ class Subset(Source):
     >>> from deeptrack.sources import Source, Subset
 
     Create a source:
+
     >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
 
     Extract a subset:
+
     >>> subset = Subset(source, [0, 2])
     >>> subset
     Subset(a=[1, 3], b=[10, 30])
 
     >>> list[subset]
     [SourceItem({'a': 1, 'b': 10}, 1 callback(s)),
-    SourceItem({'a': 3, 'b': 30}, 1 callback(s))]
+     SourceItem({'a': 3, 'b': 30}, 1 callback(s))]
 
     """
 
@@ -1547,12 +1549,15 @@ class Subset(Source):
         >>> from deeptrack.sources import Source, Subset
 
         Create a source:
+
         >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
 
         Extract a subset:
+
         >>> subset = Subset(source, [0, 2])
 
         Iterate ove the items of the subset:
+
         >>> for item in subset:
         ...     print(item["a"], item["b"])
         1 10
@@ -1588,9 +1593,11 @@ class Subset(Source):
         >>> from deeptrack.sources import Source, Subset
 
         Create a source:
+
         >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
 
         Extract a subset:
+
         >>> subset = Subset(source, [0, 2])
 
         >>> item = subset[1]
@@ -1619,12 +1626,15 @@ class Subset(Source):
         >>> from deeptrack.sources import Source, Subset
 
         Create a source:
+
         >>> source = Source(a=[1, 2, 3])
 
         Extract a subset:
+
         >>> subset = Subset(source, [0, 2])
 
         Get the length of the subset:
+
         >>> len(subset)
         2
 
@@ -1657,6 +1667,7 @@ class Subset(Source):
         >>> from deeptrack.sources import Source, Subset
 
         Create a source:
+
         >>> source = Source(a=[1, 2, 3])
 
         Extract a subset:
