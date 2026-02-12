@@ -157,7 +157,7 @@ import itertools
 import math
 
 from collections.abc import Sequence
-from typing import Any, Callable, Generator
+from typing import Any, Callable, Generator, overload
 
 import numpy as np
 
@@ -696,6 +696,18 @@ class Source:
         """
 
         return self._length
+
+    # Overloads are required for static type checkers. They allow tools such
+    # as PyLance to infer that `source[i]` returns a `SourceItem` while
+    # `source[i:j]` returns a `list[SourceItem]`. Without these overloads,
+    # the return type would be a union, and attribute access like
+    # `source[i]["a"]` would raise typing errors.
+
+    @overload
+    def __getitem__(self, index: int) -> SourceItem: ...
+        
+    @overload
+    def __getitem__(self, index: slice) -> list[SourceItem]: ...
 
     def __getitem__(
         self: Source,
