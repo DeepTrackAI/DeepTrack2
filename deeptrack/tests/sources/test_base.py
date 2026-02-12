@@ -180,22 +180,21 @@ class TestBase(unittest.TestCase):
                 torch.tensor([10, 20]),
             )
 
-        for name, (a, b) in data_variants.items():
-            with self.subTest(dtype=name):
-                source = base.Source(a=a)
-                product = base.Product(source, b=b)
+        for a, b in data_variants.values():
+            source = base.Source(a=a)
+            product = base.Product(source, b=b)
 
-                # Check length: 2 source × 2 b = 4
-                self.assertEqual(len(product), 4)
+            # Check length: 2 source × 2 b = 4
+            self.assertEqual(len(product), 4)
 
-                # Check content consistency
-                expected_a = [a[0], a[0], a[1], a[1]]
-                expected_b = [b[0], b[1], b[0], b[1]]
+            # Check content consistency
+            expected_a = [a[0], a[0], a[1], a[1]]
+            expected_b = [b[0], b[1], b[0], b[1]]
 
-                for i, item in enumerate(product):
-                    self.assertEqual(item["a"], expected_a[i])
-                    self.assertEqual(item["b"], expected_b[i])
-                    self.assertIsInstance(item, base.SourceItem)
+            for i, item in enumerate(product):
+                self.assertIsInstance(item, base.SourceItem)
+                self.assertEqual(item["a"], expected_a[i])
+                self.assertEqual(item["b"], expected_b[i])
 
         # Test Product without source (i.e., only kwargs)
         product = base.Product(x=[1, 2], y=[100, 200])
@@ -204,6 +203,12 @@ class TestBase(unittest.TestCase):
         for i, item in enumerate(product):
             self.assertEqual(item["x"], expected_pairs[i][0])
             self.assertEqual(item["y"], expected_pairs[i][1])
+
+        # Test empty base source yields empty product
+        empty = base.Source(a=[])
+        product = base.Product(empty, b=[10, 20])
+        self.assertEqual(len(product), 0)
+        self.assertEqual(list(product), [])
 
         # Test error on overlapping keys
         source = base.Source(x=[1, 2])
