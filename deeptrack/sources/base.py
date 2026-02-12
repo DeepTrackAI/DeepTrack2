@@ -1437,43 +1437,33 @@ class Product(Source):
 
 
 class Subset(Source):
-    """A filtered view of a Source defined by a list of indices.
+    """A subset of a source defined by a list of indices.
 
-    `Subset` represents a restricted view of a parent `Source`, exposing
-    only the items corresponding to the provided list of indices. It
-    supports indexing, iteration, and can be passed to DeepTrack features.
+    `Subset` represents a restricted version of a parent `Source`, containing
+    only the items at the specified indices. The subset is materialized: all
+    fields are sliced at construction time and stored as new sequences.
 
-    The subset preserves all attributes and dynamic behavior of the
-    original source, but limits iteration and indexing to the selected
-    indices.
+    Because the subset is materialized, it behaves like a normal `Source`:
+
+    - `len(subset)` equals the number of selected indices.
+    - `subset[i]` returns the i-th element of the subset.
+    - Dynamic field access (e.g., `subset.a()`) uses the subset's own active
+      index and is independent of the parent source.
 
     Parameters
     ----------
     source: Source
         The original source to take a subset from.
-    indices: list[int]
-        A list of indices specifying which items to include.
+    indices: Sequence[int]
+        Indices of the items to include in the subset. Indices follow normal
+        Python indexing rules for the original source (including negatives).
 
     Attributes
     ----------
     source: Source
-        The original full source that this subset is derived from.
+        The original source this subset was created from.
     indices: list[int]
-        The list of selected indices within the original source.
-    _dict: dict[str, Sequence[Any]]
-        Dictionary of sliced field values for compatibility with the
-        `Source` interface and `__repr__()`.
-
-    Methods
-    -------
-    __iter__() -> Generator[SourceItem, None, None]
-        It iterates over the items at the specified indices.
-    __getitem__(index: int) -> SourceItem
-        It retrieves the item at a given position in the subset.
-    __len__() -> int
-        It returns the number of items in the subset.
-    __getattr__(name: str) -> Any
-        It delegates attribute access to the parent source.
+        The indices used to construct the subset.
 
     Examples
     --------
@@ -1489,199 +1479,56 @@ class Subset(Source):
     >>> subset
     Subset(a=[1, 3], b=[10, 30])
 
-    >>> list[subset]
+    >>> list(subset)
     [SourceItem({'a': 1, 'b': 10}, 1 callback(s)),
      SourceItem({'a': 3, 'b': 30}, 1 callback(s))]
+
+    >>> subset.set_index(0)
+    >>> subset.a(), subset.b()
+    (1, 10)
+
+    >>> subset.set_index(1)
+    >>> subset.a(), subset.b()
+    (3, 30)
 
     """
 
     source: Source
     indices: list[int]
-    _dict: dict[str, Sequence[Any]]
 
     def __init__(
         self: Subset,
         source: Source,
-        indices: list[int],
+        indices: Sequence[int],
     ) -> None:
-        """Initialize a Subset from a source and a list of indices.
-
-        This constructor extracts a subset of items from the given source
-        by selecting only the entries corresponding to the provided indices.
-
-        The underlying source is preserved in `self.source`, while `self._dict`
-        holds the sliced values for compatibility with `Source` methods
-        such as `__repr__`. The subset supports all dynamic attribute access
-        via delegation to the original source.
+        """Initialize a materialized subset from a source and indices.
 
         Parameters
         ----------
         source: Source
-            The original source from which to extract the subset.
-        indices: list[int]
-            The indices of the items to include in the subset.
+            The source to slice.
+        indices: Sequence[int]
+            Indices to include in the subset.
+
+        Raises
+        ------
+        IndexError
+            If any index is out of range for the source.
 
         """
-
         self.source = source
-        self.indices = indices
+        self.indices = list(indices)
 
-        # Build the field dictionary for the subset by slicing each field
-        self._dict = {
-            k: [v[i] for i in indices] for k, v in source._dict.items()
+        sliced: dict[str, list[Any]] = {
+            k: [v[i] for i in self.indices]
+            for k, v in source._dict.items()
         }
 
-    def __iter__(
-        self: Subset,
-    ) -> Generator[SourceItem, None, None]:
-        """Iterate over the items in the subset.
-
-        This method yields each `SourceItem` corresponding to the indices
-        stored in the subset. Items are retrieved from the original source.
-
-        Yields
-        ------
-        SourceItem
-            An item from the original source at one of the selected indices.
-
-        Examples
-        --------
-        >>> from deeptrack.sources import Source, Subset
-
-        Create a source:
-
-        >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
-
-        Extract a subset:
-
-        >>> subset = Subset(source, [0, 2])
-
-        Iterate ove the items of the subset:
-
-        >>> for item in subset:
-        ...     print(item["a"], item["b"])
-        1 10
-        3 30
-
-        """
-
-        for i in self.indices:
-            yield self.source[i]
-
-    def __getitem__(
-        self: Subset,
-        index: int,
-    ) -> SourceItem:
-        """Retrieve a SourceItem at a given position in the subset.
-
-        This method returns the item at the specified position in the
-        subset, mapped to its corresponding index in the original source.
-
-        Parameters
-        ----------
-        index: int
-            The position within the subset (not the original source).
-
-        Returns
-        -------
-        SourceItem
-            The item corresponding to `self.indices[index]` in the original
-            source.
-
-        Examples
-        --------
-        >>> from deeptrack.sources import Source, Subset
-
-        Create a source:
-
-        >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
-
-        Extract a subset:
-
-        >>> subset = Subset(source, [0, 2])
-
-        >>> item = subset[1]
-        >>> item["a"], item["b"]
-        (3, 30)
-
-        """
-
-        return self.source[self.indices[index]]
-
-    def __len__(
-        self: Subset,
-    ) -> int:
-        """Return the number of items in the subset.
-
-        This corresponds to the number of selected indices from the
-        original source.
-
-        Returns
-        -------
-        int
-            The number of items in the subset.
-
-        Examples
-        --------
-        >>> from deeptrack.sources import Source, Subset
-
-        Create a source:
-
-        >>> source = Source(a=[1, 2, 3])
-
-        Extract a subset:
-
-        >>> subset = Subset(source, [0, 2])
-
-        Get the length of the subset:
-
-        >>> len(subset)
-        2
-
-        """
-
-        return len(self.indices)
-
-    def __getattr__(
-        self: Subset,
-        name: str,
-    ) -> Any:
-        """Delegate attribute access to the original source.
-
-        This allows the subset to transparently expose dynamic attributes
-        from the original source, such as fields like `source.a` or methods
-        defined on the source class.
-
-        Parameters
-        ----------
-        name: str
-            The name of the attribute to access.
-
-        Returns
-        -------
-        Any
-            The corresponding attribute from the original source.
-
-        Examples
-        --------
-        >>> from deeptrack.sources import Source, Subset
-
-        Create a source:
-
-        >>> source = Source(a=[1, 2, 3])
-
-        Extract a subset:
-        >>> subset = Subset(source, [0, 2])
-        >>> subset.a()
-        1
-    
-        """
-
-        return getattr(self.source, name)
+        super().__init__(**sliced)
 
 
 class Sources:
-    """Joins multiple sources into a single dynamic access point.
+    """Join multiple sources into a single dynamic access point.
 
     `Sources` is used to combine multiple `Source` objects into one logical
     interface. It enables multiple independent sources to share the same
@@ -1692,6 +1539,9 @@ class Sources:
     When any item from one of the joined sources is activated (i.e., called),
     the corresponding fields in the `Sources` object are updated and
     propagated through the computational graph via `SourceDeepTrackNode`.
+
+    Fields that are not present in the activated item remain unchanged (or
+    `None` if never set).
 
     Aliased as `Join` for semantic clarity in different contexts.
 
@@ -1706,18 +1556,13 @@ class Sources:
     ----------
     sources: tuple[Source, ...]
         The tuple of joined source instances.
-
     _dict: dict[str, Any]
         Dictionary used internally to store the currently active values
         for each field.
 
-    <dynamic field accessors>: SourceDeepTrackNode
-        Each field key becomes a `SourceDeepTrackNode` that reflects the
-        currently activated item from any of the joined sources.
-
     Methods
     -------
-    _callback(item: SourceItem) -> None
+    `_callback(item) -> None`
         Internal method triggered on activation. Updates dynamic fields
         with the activated item values.
 
@@ -1727,22 +1572,29 @@ class Sources:
     >>> from deeptrack.sources import Source, Sources
 
     Create two disjoint sources:
+
     >>> train = Source(a=[1, 2], b=[10, 20])
     >>> val = Source(a=[3, 4], b=[30, 40])
 
     Join them together:
+
     >>> joined = Sources(train, val)
 
     Create a shared feature:
+
     >>> feature = dt.Value(joined.a) + dt.Value(joined.b)
 
     Evaluate on items from different sources:
+
     >>> feature(train[0])
     11
-    >>> feature(train[0])
+
+    >>> feature(train[1])
     22
-    >>> feature(val[1])
+
+    >>> feature(val[0])
     33
+
     >>> feature(val[1])
     44
 
@@ -1759,7 +1611,7 @@ class Sources:
 
         Parameters
         ----------
-        *sources : Source
+        *sources: Source
             One or more `Source` instances to join.
 
         """
@@ -1777,9 +1629,9 @@ class Sources:
         # Create dynamic nodes for each key
         for key in keys:
             node = SourceDeepTrackNode(
-                functools.partial(lambda key: self._dict[key], key)
+                lambda k=key: self._dict[k],
+                node_name=key,
             )
-
             setattr(self, key, node)
 
         # Register callback for each source
@@ -1790,23 +1642,41 @@ class Sources:
         self: Sources,
         item: SourceItem,
     ) -> None:
-        """Update dictionary and nodes with values from activated item.
+        """Update the active field values from an activated item.
 
-        This method is called when an item is activated from any of the joined
-        sources. It updates the internal `_dict` with the field values from the
-        item and sets the corresponding `SourceDeepTrackNode` values to reflect
-        the active state.
+        This method is called when a `SourceItem` from any joined source is
+        activated (i.e., when `item()` is invoked). It updates the internal
+        dictionary of active values and invalidates the corresponding field
+        nodes so that downstream computations see the new active values.
+
+        Notes
+        -----
+        The field nodes created in `__init__` read their values from `self._dict`.
+        Therefore, this callback updates `self._dict` and invalidates the nodes,
+        rather than setting node values directly.
 
         Parameters
         ----------
-        item : SourceItem
-            The activated item whose values will update the joined source nodes.
+        item: SourceItem
+            The activated item whose values should become the current active
+            values for this `Sources` instance.
 
         """
 
-        for key in item:
+        for key, value in item.items():
             getattr(self, key).invalidate()
-            getattr(self, key).set_value(item[key])
+            self._dict[key] = value
+
+    def __getattr__(self, name: str) -> SourceDeepTrackNode:
+        """Fallback for dynamically injected field accessors.
+
+        Field nodes are created dynamically in `__init__` via `setattr`.
+        This method exists primarily to inform static type checkers that
+        such attributes resolve to `SourceDeepTrackNode` instances.
+
+        It is not expected to be reached at runtime for valid field names.
+        """
+        raise AttributeError(name)
 
 
 Join = Sources
@@ -1887,16 +1757,16 @@ def random_split(
         for i, frac in enumerate(lengths):
             if frac < 0 or frac > 1:
                 raise ValueError(
-                    f"Fraction at index {i} is not between 0 and 1"
-                    )
+                    f"Fraction at index {i} is not between 0 and 1."
+                )
             n_items_in_split = int(
-                math.floor(len(source) * frac)  # type: ignore[arg-type]
+                math.floor(len(source) * frac)
             )
             subset_lengths.append(n_items_in_split)
-        remainder = len(source) - sum(subset_lengths)  # type: ignore[arg-type]
+        remainder = len(source) - sum(subset_lengths)
 
         # Add 1 to all the lengths in round-robin fashion
-        #  until the remainder is 0.
+        # until the remainder is 0.
         for i in range(remainder):
             idx_to_add_at = i % len(subset_lengths)
             subset_lengths[idx_to_add_at] += 1
@@ -1910,20 +1780,24 @@ def random_split(
                     "This might result in an empty source."
                 )
 
-    # Cannot verify that dataset is Sized.
-    if sum(lengths) != len(source):    # type: ignore[arg-type]
-        raise ValueError("Sum of input lengths does not\
-                          equal the length of the input dataset!")
+    # Cannot verify that dataset is sized.
+    if sum(lengths) != len(source):
+        raise ValueError(
+            "Sum of input lengths "
+            "does not equal the length of the input dataset."
+        )
 
     indices = generator.permutation(
-        sum(lengths)).tolist()  # type: ignore[call-overload]
-    return [Subset(source, indices[offset - length : offset])\
-            for offset, length in zip(_accumulate(lengths), lengths)]
+        sum(lengths)).tolist()
+    return [
+        Subset(source, indices[offset - length : offset])
+        for offset, length in zip(_accumulate(lengths), lengths)
+    ]
 
 
 def _accumulate(
     iterable: list[int],
-    fn: Callable [[int, int], int]=lambda x, y: x + y,
+    fn: Callable [[int, int], int] = lambda x, y: x + y,
 ) -> Generator[int, None, None]:
     """Return running totals using a binary accumulation function.
 
@@ -1933,11 +1807,11 @@ def _accumulate(
 
     Parameters
     ----------
-    iterable : list[int]
+    iterable: list[int]
         A list of integers to be accumulated.
-    fn : Callable[[int, int], int], optional
+    fn: Callable[[int, int], int], optional
         A binary function that takes two integers and returns a new integer.
-        It defaults to addition.
+        Defaults to addition.
 
     Yields
     ------
@@ -1949,6 +1823,7 @@ def _accumulate(
     >>> from deeptrack.sources.base import _accumulate
 
     Default behavior (cumulative sum):
+
     >>> for value in _accumulate([1, 2, 3, 4, 5]):
     ...     print(value)
     1
@@ -1958,6 +1833,7 @@ def _accumulate(
     15
 
     Using a custom operator (e.g., multiplication):
+
     >>> import operator
     >>>
     >>> for value in _accumulate([1, 2, 3, 4, 5], fn=operator.mul):
