@@ -121,40 +121,49 @@ class TestBase(unittest.TestCase):
         }
 
         if TORCH_AVAILABLE:
-            import torch
             data_variants["torch"] = (
-                torch.tensor([1, 2, 3]),
-                torch.tensor([10, 20, 30]),
+                torch.tensor([1, 2, 3]), torch.tensor([10, 20, 30]),
             )
 
-        for name, (a, b) in data_variants.items():
-            with self.subTest(dtype=name):
-                source = base.Source(a=a, b=b)
+        for a, b in data_variants.values():
+            source = base.Source(a=a, b=b)
 
-                # Test length
-                self.assertEqual(len(source), 3)
+            # Test length
+            self.assertEqual(len(source), 3)
 
-                # Test indexing
-                item = source[1]
-                self.assertEqual(item["a"], a[1])
-                self.assertEqual(item["b"], b[1])
+            # Test indexing
+            item = source[1]
+            self.assertEqual(item["a"], a[1])
+            self.assertEqual(item["b"], b[1])
 
-                # Test iteration
-                items = list(source)
-                self.assertEqual(len(items), 3)
-                self.assertEqual(items[2]["a"], a[2])
-                self.assertEqual(items[2]["b"], b[2])
+            # Test iteration
+            items = list(source)
+            self.assertEqual(len(items), 3)
+            self.assertEqual(items[2]["a"], a[2])
+            self.assertEqual(items[2]["b"], b[2])
 
-                # Test slice
-                sliced = source[1:3]
-                self.assertEqual(len(sliced), 2)
-                self.assertEqual(sliced[0]["a"], a[1])
-                self.assertEqual(sliced[1]["b"], b[2])
+            # Test slice
+            sliced = source[1:3]
+            self.assertEqual(len(sliced), 2)
+            self.assertEqual(sliced[0]["a"], a[1])
+            self.assertEqual(sliced[0]["b"], b[1])
+            self.assertEqual(sliced[1]["a"], a[2])
+            self.assertEqual(sliced[1]["b"], b[2])
 
-                # Test dynamic field
-                source.set_index(0)
-                self.assertEqual(source.a(), a[0])
-                self.assertEqual(source.b(), b[0])
+            # Test dynamic field
+            source.set_index(0)
+            self.assertEqual(source.a(), a[0])
+            self.assertEqual(source.b(), b[0])
+
+            # Activation updates current index and dynamic access
+            source.set_index(0)
+            item = source[2]
+            self.assertEqual(source.a(), a[0])
+            self.assertEqual(source.b(), b[0])
+
+            item()
+            self.assertEqual(source.a(), a[2])
+            self.assertEqual(source.b(), b[2])
 
 
     def test_Product(self):
