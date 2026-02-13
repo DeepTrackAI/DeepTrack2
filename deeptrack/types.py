@@ -10,110 +10,98 @@ Defined Types
 -------------
 - `PropertyLike`
     A type alias representing a value of type `T` or a callable returning `T`.
-- `DTImageLike`
-    A type alias for array-like structures, namely, NumPy arrays, PyTorch
-    tensors, and `Image` objects.
 - `ArrayLike`
     A type alias for array-like structures, namely, tuples, lists, NumPy
-    arrays, PyTorch tensors, and `Image` objects.
+    arrays, and PyTorch tensors.
 - `NumberLike`
     A type alias for numeric types, including scalars and arrays, namely, NumPy
-    arrays, PyTorch tensors, bool, int, float, and complex
+    arrays, PyTorch tensors, bool, int, float, and complex.
 
 Examples
 --------
 >>> import deeptrack as dt
 
 **Using `PropertyLike`**
+
 >>> def scale(value: PropertyLike[float]) -> float:
 ...     if callable(value):
 ...         return value()
 ...     return value
 
 It works for a given type (in this case, a `float`):
+
 >>> scale(3.14)
 
 It also works for function returning the same type (in this case, a function
 returning a `float`):
+
 >>> scale(lambda: 2.71)
 
 `PropertyLike[Type]` is generally used for typing arguments passed to a feature
 that are then passed to the constructor of the feature parent, because these
-can be intrisically either `Type` or `Callable[..., Type]`.
-
-**Using `ImageLike`**
->>> def print_imagelike(image: dt.types.ArrayLike[float]) -> None:
-...     print(image)
-
-- NumPy arrays:
->>> import numpy as np
->>>
->>> print_imagelike(np.array([7.0, 8.0, 9.0]))
-
-- PyTorch tensors:
->>> import torch
->>>
->>> print_imagelike(torch.Tensor([1.0, 2.0, 3.0]))
-
-- `Image` objects:
->>> print_imagelike(dt.types.Image([1.0, 2.0, 3.0]))
+can be intrinsically either `Type` or `Callable[..., Type]`.
 
 **Using `ArrayLike`**
+
 >>> def print_arraylike(array: dt.types.ArrayLike[float]) -> None:
 ...     print(array)
 
 It works for:
 
 - Lists:
+
 >>> print_arraylike([1.0, 2.0, 3.0])
 
 - Tuples:
+
 >>> print_arraylike((4.0, 5.0, 6.0))
 
 - NumPy arrays:
+
 >>> import numpy as np
 >>>
 >>> print_arraylike(np.array([7.0, 8.0, 9.0]))
 
 - PyTorch tensors:
+
 >>> import torch
 >>>
->>> print_arraylike(torch.Tensor([1.0, 2.0, 3.0]))
-
-- `Image` objects:
->>> print_arraylike(dt.types.Image([1.0, 2.0, 3.0]))
+>>> print_arraylike(torch.tensor([1.0, 2.0, 3.0]))
 
 **Using `NumberLike`**
+
 >>> def add_numbers(a: NumberLike, b: NumberLike) -> NumberLike:
 ...     return a + b
 
 It works for:
 
 - Scalars (bool, int, float, complex):
+
 >>> add_numbers(5, 3.2)
 
 - NumPy arrays:
+
 >>> import numpy as np
 >>>
 >>> add_numbers(np.array([1, 2, 3]), 4)
 
 - PyTorch tensors:
+
 >>> import torch
 >>>
->>> add_numbers(torch.Tensor([1, 2, 3]), 4)
+>>> add_numbers(torch.tensor([1, 2, 3]), 4)
 
 """
 
 from __future__ import annotations
 
-from typing import Any, Callable, TypeVar, TYPE_CHECKING, Union
+from typing import Any, Callable, TypeAlias, TypeVar, TYPE_CHECKING, Union
 
 from numpy.typing import NDArray
 
 
 __all__ = [
     "PropertyLike",
-    "ImageLike",
     "ArrayLike",
     "NumberLike",
 ]
@@ -121,36 +109,27 @@ __all__ = [
 
 if TYPE_CHECKING:
     import torch
-    from deeptrack.image import Image
 
 
 # T is a generic type variable defining generic types for reusability.
-_T: TypeVar = TypeVar("T")
+_T = TypeVar("_T")
 
 # PropertyLike is a type alias representing a value of type T
 # or a callable returning type T.
-PropertyLike = Union[_T, Callable[..., _T]]
-
-# ImageLike is a type alias representing any 
-ImageLike = Union[
-    NDArray[Any],
-    "torch.Tensor",
-    "Image",
-]
+PropertyLike: TypeAlias = Union[_T, Callable[..., _T]]
 
 # ArrayLike is a type alias representing any array-like structure.
-# It supports tuples, lists, and NumPy arrays containing elements of type T,
-# as well as PyTorch tensors and Image objects.
-ArrayLike = Union[
+# It supports tuples and lists containing elements of type T as well as NumPy
+# arrays and PyTorch tensors.
+ArrayLike: TypeAlias = Union[
     NDArray[Any],
     "torch.Tensor",
-    "Image",
     list[_T],
     tuple[_T, ...],
 ]
 
 # NumberLike is a type alias representing any numeric type including arrays.
-NumberLike = Union[
+NumberLike: TypeAlias = Union[
     NDArray[Any],
     "torch.Tensor",
     bool,
