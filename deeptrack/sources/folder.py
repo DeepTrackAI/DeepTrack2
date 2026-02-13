@@ -8,7 +8,7 @@ to images stored in a hierarchical folder layout, such as:
     root/test/bird/image3.jpg
 
 The class supports automatic labeling based on directory names, integration
-with DeepTrack data pipelines, and flexible splitting of datasets by folder.
+with DeepTrack2 data pipelines, and flexible splitting of datasets by folder.
 
 Key Features
 ------------
@@ -53,17 +53,21 @@ Examples
 >>> import shutil
 
 Temporary root directory:
+
 >>> root = "tmp_data"
 
 Remove existing directory if needed:
+
 >>> if os.path.exists(root):
 ...     shutil.rmtree(root)
 
 Define splits and classes:
+
 >>> splits = ["train", "test"]
 >>> classes = ["cat", "dog", "bird"]
 
 Create directories and dummy files:
+
 >>> for split in splits:
 ...     for cls in classes:
 ...         folder_path = os.path.join(root, split, cls)
@@ -74,14 +78,17 @@ Create directories and dummy files:
 ...                 f.write("dummy")
 
 Load a split of the dataset, specifically, the training set:
->>> from deeptrack.sources.folder import ImageFolder
+
+>>> from deeptrack.sources import ImageFolder
 >>>
 >>> train_data = ImageFolder(os.path.join(root, "train"))
 
 >>> len(train_data)
 6
+
 >>> train_data.classes
-['bird', 'dog', 'cat']
+['bird', 'cat', 'dog']
+
 >>> train_data.path()
 'tmp_data/train/bird/image_0.jpg'
 
@@ -101,7 +108,7 @@ Load a split of the dataset, specifically, the training set:
 **Convert between label names and indices**
 
 >>> train_data.name_to_label("cat")
-2
+1
 
 >>> train_data.label_to_name(0)
 'bird'
@@ -120,6 +127,7 @@ Test size: 6
 **Print paths in each split**
 
 Train files:
+
 >>> for item in train:
 ...     print(item["path"])
 tmp_data/train/bird/image_0.jpg
@@ -130,6 +138,7 @@ tmp_data/train/dog/image_0.jpg
 tmp_data/train/dog/image_1.jpg
 
 Test files:
+
 >>> for item in test:
 ...     print(item["path"])
 tmp_data/test/bird/image_0.jpg
@@ -155,6 +164,15 @@ __all__ = ["ImageFolder"]
 known_extensions = ["png", "jpg", "jpeg", "tif", "tiff", "bmp", "gif"]
 
 
+def _has_known_extension(path: str) -> bool:
+    """Return True if `path` ends with a recognized image extension."""
+
+    _, ext = os.path.splitext(path)
+    if not ext:
+        return False
+    return ext.lstrip(".").lower() in known_extensions
+
+
 class ImageFolder(Source):
     """Data source for images organized in a directory structure.
 
@@ -166,6 +184,20 @@ class ImageFolder(Source):
     It behaves like a standard `Source`, returning `SourceItem` objects that
     include image file paths, label indices, and label names. This allows
     seamless integration with feature pipelines in DeepTrack2.
+
+    Labeling is always based on the first path component under the provided
+    `root`. If `root` contains split folders (e.g., `train/`, `test/`),
+    call `.split()` first or pass `root/train` as the root for class
+    labeling. Note that after splitting, labels are re-inferred relative to
+    the new root, so flat folders will use filenames as `label_name`.
+
+    Notes
+    -----
+    `split()` returns new `ImageFolder` instances rooted at `root/<split>`.
+    Each returned dataset re-infers labels relative to its new root using the
+    same rule as `ImageFolder`: the first path component under that root.
+    If `root/<split>` contains images directly (no subfolders), filenames
+    become the `label_name`.
 
     Parameters
     ----------
@@ -188,17 +220,17 @@ class ImageFolder(Source):
 
     Methods
     -------
-    __len__() -> int
+    `__len__() -> int`
         Return the number of image files found.
-    classes -> list[str]
+    `classes -> list[str]`
         Return a list of unique class names found in the directory.
-    get_category_name(path: str, directory_level: int) -> str
+    `get_category_name(path, directory_level) -> str`
         Return the category name for a given image path.
-    label_to_name(label: int) -> str
+    `label_to_name(label) -> str`
         Convert an integer label back to its string category name.
-    name_to_label(name: str) -> int
+    `name_to_label(name) -> int`
         Convert a string category name to its integer label.
-    split(*splits: str) -> tuple[ImageFolder, ...]
+    `split(*splits) -> tuple[ImageFolder, ...]`
         Return one or more subsets of the data based on top-level folder names.
 
     Examples
@@ -209,9 +241,11 @@ class ImageFolder(Source):
     >>> import shutil
 
     Temporary root directory:
+
     >>> root = "tmp_data"
 
     Remove existing directory if needed:
+
     >>> if os.path.exists(root):
     ...     shutil.rmtree(root)
 
@@ -220,6 +254,7 @@ class ImageFolder(Source):
     >>> classes = ["cat", "dog", "bird"]
 
     Create directories and dummy files:
+
     >>> for split in splits:
     ...     for cls in classes:
     ...         folder_path = os.path.join(root, split, cls)
@@ -230,6 +265,7 @@ class ImageFolder(Source):
     ...                 f.write("dummy")
 
     Load a split of the dataset, specifically, the training set:
+
     >>> from deeptrack.sources.folder import ImageFolder
     >>>
     >>> train_data = ImageFolder(os.path.join(root, "train"))
@@ -238,6 +274,7 @@ class ImageFolder(Source):
     6
     >>> train_data.classes
     ['bird', 'dog', 'cat']
+
     >>> train_data.path()
     'tmp_data/train/bird/image_0.jpg'
 
@@ -276,6 +313,7 @@ class ImageFolder(Source):
     **Print paths in each split**
 
     Train files:
+
     >>> for item in train:
     ...     print(item["path"])
     tmp_data/train/bird/image_0.jpg
@@ -286,6 +324,7 @@ class ImageFolder(Source):
     tmp_data/train/dog/image_1.jpg
 
     Test files:
+
     >>> for item in test:
     ...     print(item["path"])
     tmp_data/test/bird/image_0.jpg
@@ -304,9 +343,7 @@ class ImageFolder(Source):
     _int_to_category: dict[int, str]
 
     @property
-    def classes(
-        self: ImageFolder,
-    ) -> list[str]:
+    def classes(self: ImageFolder) -> list[str]:
         """List of category names in the dataset.
 
         Returns
@@ -317,12 +354,12 @@ class ImageFolder(Source):
 
         """
 
-        return list(self._category_to_int.keys())
+        return sorted(self._category_to_int.keys())
 
     def __init__(
         self: ImageFolder,
         root: str,
-    ):
+    ) -> None:
         """Initialize an `ImageFolder` from a directory structure.
 
         This constructor scans a given root directory recursively for image
@@ -346,7 +383,7 @@ class ImageFolder(Source):
         Raises
         ------
         ValueError
-            If no valid image files are found or directory is malformed.
+            If no valid image files are found.
 
         """
 
@@ -354,24 +391,34 @@ class ImageFolder(Source):
         self._root = root
 
         # Recursively collect all file paths under root
-        self._paths = glob.glob(f"{root}/**/*", recursive=True)
+        paths = glob.glob(os.path.join(root, "**", "*"), recursive=True)
 
         # Filter for valid image files using known extensions
-        self._paths = [
-            path for path in self._paths
-            if os.path.isfile(path) and path.split(".")[-1] in known_extensions
+        paths = [
+            path for path in paths
+            if os.path.isfile(path) and _has_known_extension(path)
         ]
         # Ensure consistent order across runs
-        self._paths.sort()
+        paths.sort()
+
+        if not paths:
+            raise ValueError(
+                "No valid image files were found under the provided root."
+            )
+
+        # Store paths
+        self._paths = paths
+
         # Store total number of valid image paths
         self._length = len(self._paths)
 
         # Extract category name from path (1 level down from root)
         category_per_path = [
-            self.get_category_name(path, 0) for path in self._paths
+            self.get_category_name(path, 0)
+            for path in self._paths
         ]
         # Compute the set of unique category names
-        unique_categories = set(category_per_path)
+        unique_categories = sorted(set(category_per_path))
 
         # Create mapping: category name -> integer label
         self._category_to_int = {
@@ -434,13 +481,21 @@ class ImageFolder(Source):
 
         """
 
-        relative_path = path.replace(self._root, "", 1).lstrip(os.sep)
-        folder = (
-            relative_path.split(os.sep)[directory_level]
-            if relative_path
-            else ""
-        )
-        return folder
+        rel = os.path.relpath(path, start=self._root)
+        parts = rel.split(os.sep)
+
+        if parts and parts[0] == os.pardir:
+            raise ValueError(
+                f"Path is not under root: root={self._root!r}, path={path!r}"
+            )
+
+        try:
+            return parts[directory_level]
+        except IndexError as exc:
+            raise ValueError(
+                f"Path does not contain directory level {directory_level}: "
+                f"{path!r}"
+            ) from exc
 
     def label_to_name(
         self: ImageFolder,
@@ -491,7 +546,7 @@ class ImageFolder(Source):
     def split(
         self: ImageFolder,
         *splits: str,
-    ) -> tuple[str]:
+    ) -> tuple[ImageFolder, ...]:
         """Split the dataset into subsets by folder name.
 
         This method splits the dataset into subsets based on the first folder
@@ -521,21 +576,21 @@ class ImageFolder(Source):
         """
 
         # Get top-level folder names present in image paths
-        all_splits = set([self.get_category_name(path, 0)
-                          for path in self._paths])
+        all_splits = sorted(
+            {self.get_category_name(path, 0) for path in self._paths}
+        )
 
         # If no specific splits provided, return all available
         if len(splits) == 0:
-
-            if len(all_splits) == 0:
-                raise ValueError("No categories to split into")
             return self.split(*all_splits)
 
         # Validate requested splits
-        if not all(split in all_splits for split in splits):
+        unknown = sorted(set(splits) - set(all_splits))
+        if unknown:
             raise ValueError(
-                f"Unknown split. Available splits are {all_splits}"
-                )
+                f"Unknown split(s): {unknown}. "
+                f"Available splits are {all_splits}."
+            )
 
         output = []
 
@@ -544,8 +599,9 @@ class ImageFolder(Source):
         ) -> None:
             """Inner function which updates attributes of root source."""
             for key in item:
-                getattr(self, key).invalidate()
-                getattr(self, key).set_value(item[key])
+                prop = getattr(self, key)
+                prop.invalidate()
+                prop.set_value(item[key])
 
         for split in splits:
             # Create ImageFolder pointing to subdirectory
