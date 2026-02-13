@@ -338,35 +338,91 @@ class TestBase(unittest.TestCase):
                 torch.tensor([10, 20, 30, 40, 50]),
             )
 
-        for dtype, (a, b) in data_variants.items():
-            with self.subTest(dtype=dtype):
-                source = base.Source(a=a, b=b)
+        for a, b in data_variants.values():
+            source = base.Source(a=a, b=b)
 
-                # Test integer split
-                train, val = base.random_split(source, [3, 2])
-                self.assertEqual(len(train), 3)
-                self.assertEqual(len(val), 2)
+            expected = list(a)
+            if hasattr(a, "tolist"):
+                expected = a.tolist()
 
-                train_indices = {item["a"] for item in train}
-                val_indices = {item["a"] for item in val}
-                self.assertTrue(train_indices.isdisjoint(val_indices))
+            # Integer split (3, 2)
+            gen = np.random.default_rng(123)
+            train, val = base.random_split(
+                source,
+                [3, 2],
+                generator=gen,
+            )
 
-                combined = sorted(train_indices | val_indices)
-                expected = sorted(list(a))
-                if TORCH_AVAILABLE and isinstance(a, torch.Tensor):
-                    expected = expected  # torch.Tensor already sorted and list-like
-                self.assertEqual(combined, expected)
+            self.assertEqual(len(train), 3)
+            self.assertEqual(len(val), 2)
 
-                # Test fractional split
-                splits = base.random_split(source, [0.4, 0.6])
-                self.assertEqual(sum(len(s) for s in splits), 5)
+            train_a = {item["a"] for item in train}
+            val_a = {item["a"] for item in val}
 
-                # Ensure all indices are unique and complete
-                all_indices = set()
-                for subset in splits:
-                    for item in subset:
-                        all_indices.add(item["a"])
-                self.assertEqual(len(all_indices), 5)
+            self.assertTrue(train_a.isdisjoint(val_a))
+            self.assertEqual(sorted(train_a | val_a), sorted(expected))
+
+            # Fractional split (0.4, 0.6)
+            gen = np.random.default_rng(123)
+            splits = base.random_split(
+                source,
+                [0.4, 0.6],
+                generator=gen,
+            )
+
+            self.assertEqual([len(s) for s in splits], [2, 3])
+
+            all_a: list[int] = []
+            for subset in splits:
+                all_a.extend(item["a"] for item in subset)
+
+            self.assertEqual(len(all_a), len(expected))
+            self.assertEqual(len(set(all_a)), len(expected))
+            self.assertEqual(sorted(all_a), sorted(expected))
+
+        if TORCH_AVAILABLE:
+            source = base.Source(
+                a=[1, 2, 3, 4, 5],
+                b=[10, 20, 30, 40, 50],
+            )
+            expected = [1, 2, 3, 4, 5]
+
+            torch_gen = torch.Generator()
+            torch_gen.manual_seed(123)
+
+            train, val = base.random_split(
+                source,
+                [3, 2],
+                generator=torch_gen,
+            )
+
+            self.assertEqual(len(train), 3)
+            self.assertEqual(len(val), 2)
+
+            train_a = {item["a"] for item in train}
+            val_a = {item["a"] for item in val}
+
+            self.assertTrue(train_a.isdisjoint(val_a))
+            self.assertEqual(sorted(train_a | val_a), sorted(expected))
+
+            torch_gen = torch.Generator()
+            torch_gen.manual_seed(123)
+
+            splits = base.random_split(
+                source,
+                [0.4, 0.6],
+                generator=torch_gen,
+            )
+
+            self.assertEqual([len(s) for s in splits], [2, 3])
+
+            all_a = []
+            for subset in splits:
+                all_a.extend(item["a"] for item in subset)
+
+            self.assertEqual(len(all_a), len(expected))
+            self.assertEqual(len(set(all_a)), len(expected))
+            self.assertEqual(sorted(all_a), sorted(expected))
 
 
     def test__accumulate(self):
