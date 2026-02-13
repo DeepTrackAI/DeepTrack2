@@ -27,51 +27,32 @@ Module Structure
 ----------------
 Functions:
 
-- `hasmethod(obj, method_name)`
+- `hasmethod(obj, method_name) -> bool`
 
-    def hasmethod(
-        obj: Any,
-        method_name: str,
-    ) -> bool
+    Checks whether an object has a callable method named `method_name`.
 
-    Check if an object has a callable method named `method_name`.
+- `as_list(obj) -> list[Any]`
 
-- `as_list(obj)`
+    Ensures that the input is a list, wrapping if necessary.
 
-    def as_list(obj: Any) -> list[Any]
+- `get_kwarg_names(function) -> list[str]`
 
-    Ensure that the input is a list, wrapping if necessary.
+    Retrieves the names of the keyword arguments accepted by a function.
 
-- `get_kwarg_names(function)`
+- `kwarg_has_default(function, argument) -> bool`
 
-    def get_kwarg_names(function: Callable[..., Any]) -> list[str]
+    Checks whether a specific argument of a function has a default value.
 
-    Retrieve the names of the keyword arguments accepted by a function.
+- `safe_call(function, positional_args=None, **kwargs) -> Any`
 
-- `kwarg_has_default(function, argument)`
-
-    def kwarg_has_default(
-          function: Callable[..., Any],
-          argument: str,
-    ) -> bool
-
-    Check if a specific argument of a function has a default value.
-
-- `safe_call(function, positional_args=None, **kwargs)`
-
-    def safe_call(
-        function: Callable[..., Any],
-        positional_args: list[Any] | None = None,
-        **kwargs: Any,
-    ) -> Any
-
-    Call a function, passing only valid arguments from a dictionary.
+    Calls a function, passing only valid arguments from a dictionary.
 
 Examples
 --------
 >>> import deeptrack as dt
 
 Check if a method exists in an object:
+
 >>> class Example:
 ...     def foo(self): pass
 
@@ -82,6 +63,7 @@ True
 False
 
 Convert various objects to lists:
+
 >>> dt.utils.as_list(42)
 [42]
 
@@ -92,6 +74,7 @@ Convert various objects to lists:
 ['abc']
 
 Retrieve keyword argument names from a function:
+
 >>> def func(x, y=1, z=2):
 ...     pass
 
@@ -99,6 +82,7 @@ Retrieve keyword argument names from a function:
 ['x', 'y', 'z']
 
 Check if a function argument has a default value:
+
 >>> def func(x, y=1):
 ...     pass
 
@@ -109,6 +93,7 @@ False
 True
 
 Safely call a function with extra arguments:
+
 >>> def f(a, b=2, c=3):
 ...     return a + b + c
 
@@ -135,9 +120,9 @@ def hasmethod(
     obj: Any,
     method_name: str,
 ) -> bool:
-    """Check if an object has a callable method named `method_name`.
+    """Check whether an object has a callable method named `method_name`.
 
-    It returns `True` if the object has a field named `method_name` that is
+    Returns `True` if the object has a field named `method_name` that is
     callable. Otherwise, returns `False`.
 
     Parameters
@@ -158,6 +143,7 @@ def hasmethod(
     >>> from deeptrack.utils import hasmethod
 
     Check if an object has a method called 'foo':
+
     >>> class MyClass:
     ...     def foo(self):
     ...         return 42
@@ -170,6 +156,7 @@ def hasmethod(
     False
 
     Built-in types:
+
     >>> hasmethod([1, 2, 3], "append")
     True
 
@@ -177,6 +164,7 @@ def hasmethod(
     False
 
     Modules:
+
     >>> import math
     >>> hasmethod(math, "sqrt")
     True
@@ -185,6 +173,7 @@ def hasmethod(
     False
 
     Edge cases:
+
     >>> hasmethod(42, "bit_length")
     True
 
@@ -196,14 +185,17 @@ def hasmethod(
 
     """
 
-    return hasattr(obj, method_name) and callable(getattr(obj, method_name, None))
+    return (
+        hasattr(obj, method_name)
+        and callable(getattr(obj, method_name, None))
+    )
 
 
 def as_list(obj: Any) -> list[Any]:
     """Ensure that the input is a list.
 
-    It converts the input to a list if it is iterable and not a string or
-    bytes; otherwise, it wraps it in a list.
+    Converts the input to a list if it is iterable and not a string or bytes;
+    otherwise, it wraps it in a list.
 
     Note: If `obj` is a PyTorch Tensor, this function will return a list of its
     elements along the first dimension (e.g., for a 2D tensor, the result
@@ -228,6 +220,7 @@ def as_list(obj: Any) -> list[Any]:
 
     >>> as_list(5)
     [5]
+
     >>> as_list(None)
     [None]
 
@@ -240,6 +233,7 @@ def as_list(obj: Any) -> list[Any]:
 
     >>> as_list((1, 2, 3))
     [1, 2, 3]
+
     >>> sorted(as_list({3, 2, 1}))
     [1, 2, 3]
 
@@ -253,6 +247,7 @@ def as_list(obj: Any) -> list[Any]:
 
     >>> as_list("abc")
     ['abc']
+
     >>> as_list(b"xyz")
     [b'xyz']
 
@@ -284,7 +279,7 @@ def as_list(obj: Any) -> list[Any]:
 def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
     """Retrieve the names of the keyword arguments accepted by a function.
 
-    It retrieves the names of the keyword arguments accepted by `function` as a
+    Retrieves the names of the keyword arguments accepted by `function` as a
     list of strings.
 
     Parameters
@@ -302,6 +297,7 @@ def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
     from deeptrack.utils import get_kwarg_names
 
     Basic usage:
+
     >>> def f(a, b=1, c=2):
     ...     pass
 
@@ -309,6 +305,7 @@ def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
     ['a', 'b', 'c']
 
     Functions with only positional arguments:
+
     >>> def g(x, y):
     ...     pass
 
@@ -316,6 +313,7 @@ def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
     ['x', 'y']
 
     Functions with *args and **kwargs (note: **kwargs are not listed):
+
     >>> def k(*args, alpha=0.1, beta=0.2, **kwargs):
     ...     pass
 
@@ -323,14 +321,17 @@ def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
     ['alpha', 'beta']
 
     Built-in functions (may return an empty list):
+
     >>> get_kwarg_names(len)
     ['obj']
 
     Lambda functions:
+
     >>> get_kwarg_names(lambda x, y=5: x + y)
     ['x', 'y']
 
     Methods (including 'self'):
+
     >>> class MyClass:
     ...     def method(self, a, b=2):
     ...         pass
@@ -339,6 +340,7 @@ def get_kwarg_names(function: Callable[..., Any]) -> list[str]:
     ['self', 'a', 'b']
 
     """
+
     try:
         argspec = inspect.getfullargspec(function)
     except TypeError:
@@ -353,7 +355,7 @@ def kwarg_has_default(
     function: Callable[..., Any],
     argument: str,
 ) -> bool:
-    """Check if a specific argument of a function has a default value.
+    """Check whether a specific argument of a function has a default value.
 
     Parameters
     ----------
@@ -372,6 +374,7 @@ def kwarg_has_default(
     from deeptrack.utils import kwarg_has_default
 
     Check default values for positional and keyword-only arguments:
+
     >>> def f(a, b=2, c=3):
     ...     pass
 
@@ -385,10 +388,12 @@ def kwarg_has_default(
     True
 
     Missing argument:
+
     >>> kwarg_has_default(f, "not_present")
     False
 
     Keyword-only arguments without defaults:
+
     >>> def g(*, flag):
     ...     pass
 
@@ -396,6 +401,7 @@ def kwarg_has_default(
     False
 
     Method example:
+
     >>> class MyClass:
     ...     def method(self, x, y=42):
     ...         pass
@@ -428,7 +434,7 @@ def safe_call(
 ) -> Any:
     """Calls a function with valid arguments from a dictionary of arguments.
 
-    It filters `kwargs` to include only arguments accepted by the function,
+    Filters `kwargs` to include only arguments accepted by the function,
     ensuring that no invalid arguments are passed. This function also supports
     positional arguments.
 
@@ -437,8 +443,9 @@ def safe_call(
     function: Callable[..., Any]
         The function to call.
     positional_args: list[Any] | None, optional
-        List of positional arguments to pass to the function. Defaults to None.
-    **kwargs: dict[str, Any]
+        List of positional arguments to pass to the function.
+        Defaults to `None`.
+    **kwargs: Any
         Dictionary of keyword arguments to filter and pass.
 
     Returns
@@ -451,6 +458,7 @@ def safe_call(
     from deeptrack.utils import safe_call
 
     Basic usage with positional and keyword arguments:
+
     >>> def f(a, b=2, c=3):
     ...     return a + b + c
 
@@ -458,20 +466,24 @@ def safe_call(
     8
 
     All keyword arguments:
+
     >>> safe_call(f, a=1, b=2, c=3)
     6
 
     Extra keyword arguments (ignored if not accepted by the function):
+
     >>> safe_call(f, a=2, extra=42)
     7
 
     Missing required argument (raises TypeError):
+
     >>> safe_call(f, b=2, c=3)
     Traceback (most recent call last):
         ...
     TypeError: ...
 
     Function with *args and **kwargs (the kwargs are not passed):
+
     >>> def g(a, *args, b=5, **kwargs):
     ...     return a, args, b, kwargs
 
@@ -479,6 +491,7 @@ def safe_call(
     (1, (10,), 7, {})
 
     Function with only *args (positional):
+
     >>> def h(*args):
     ...     return args
 
@@ -486,6 +499,7 @@ def safe_call(
     (1, 2, 3)
 
     Function with only **kwargs (the kwargs are not passed):
+
     >>> def i(**kwargs):
     ...     return sorted(kwargs.items())
 
@@ -499,7 +513,9 @@ def safe_call(
 
     # Filter kwargs to include only keys present in the function's signature.
     input_arguments = {
-        key: kwargs[key] for key in get_kwarg_names(function) if key in kwargs
+        key: kwargs[key]
+        for key in get_kwarg_names(function)
+        if key in kwargs
     }
 
     return function(*positional_args, **input_arguments)
