@@ -27,12 +27,13 @@ Classes:
 
 Examples
 --------
->>> import numpy as np
 >>> import deeptrack as dt
->>> from deeptrack.torch.features import ToTensor
+>>> from deeptrack.pytorch.features import ToTensor
 
 Convert a NumPy image to a torch tensor:
 
+>>> import numpy as np
+>>>
 >>> feature = (
 ...     dt.Value(value=np.zeros((32, 32), dtype=np.float32))
 ...     >> ToTensor()
@@ -79,25 +80,22 @@ class ToTensor(Feature):
 
     Parameters
     ----------
-    dtype: torch.dtype | None, optional
+    dtype: torch.dtype or None, optional
         Dtype to cast the resulting tensor to. If `None`, no dtype cast is
         performed.
-    device: torch.device | str | None, optional
+    device: torch.device or str or None, optional
         Device to move the tensor to. If `None`, no device transfer is
         performed.
     add_dim_to_number: bool, optional
         If `True`, scalar numbers are converted to a 1D tensor of shape `(1,)`.
         If `False`, scalar numbers are returned unchanged. Defaults to `False`.
-    permute_mode: {"always", "never", "numpy", "numpy_and_not_int"}, optional
+    permute_mode: "always", "never", "numpy", or "numpy_and_not_int"}, optional
         Controls channel-last to channel-first permutation:
-
         - `"always"`: permute whenever the resulting tensor has `ndim > 2`
-        - `"never"`: never permute
+        - `"never"` (default): never permute
         - `"numpy"`: permute only if the input was a NumPy array
         - `"numpy_and_not_int"`: permute only if the input was a NumPy array
-        and its dtype is not an integer dtype
-
-        Defaults to `"never"`.
+          and its dtype is not an integer dtype
 
     Notes
     -----
@@ -115,30 +113,27 @@ class ToTensor(Feature):
         permute_mode: _PERMUTE_MODE_ = "never",
         **kwargs: Any,
     ) -> None:
-        """Initialize the `ToTensor` feature.
+        """Initialize the ToTensor feature.
 
         Parameters
         ----------
-        dtype: torch.dtype | None, optional
+        dtype: torch.dtype or None, optional
             Dtype to cast the resulting tensor to. If `None`, no dtype cast is
             performed.
-        device: torch.device | str | None, optional
+        device: torch.device or str or None, optional
             Device to move the tensor to. If `None`, no device transfer is
             performed.
         add_dim_to_number: bool, optional
             If `True`, scalar numbers are converted to a 1D tensor of shape
             `(1,)`. If `False`, scalar numbers are returned unchanged.
             Defaults to `False`.
-        permute_mode: {"always", "never", "numpy", "numpy_and_not_int"}, optional
+        permute_mode: "always", "never", "numpy", "numpy_and_not_int", optional
             Controls channel-last to channel-first permutation:
-
             - `"always"`: permute whenever the resulting tensor has `ndim > 2`
-            - `"never"`: never permute
+            - `"never"` (default): never permute
             - `"numpy"`: permute only if the input was a NumPy array
             - `"numpy_and_not_int"`: permute only if the input was a NumPy
               array and its dtype is not an integer dtype
-
-            Defaults to `"never"`.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
 
