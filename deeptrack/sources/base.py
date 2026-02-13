@@ -155,6 +155,7 @@ from __future__ import annotations
 import functools
 import itertools
 import math
+import warnings
 
 from collections.abc import Sequence
 from typing import Any, Callable, Generator, overload
@@ -1684,8 +1685,8 @@ Join = Sources
 
 def random_split(
     source: Source,
-    lengths: list[int | float],
-    generator: np.random.Generator = np.random.default_rng(),
+    lengths: list[int] | list[float],
+    generator: np.random.Generator | None = None,
 ) -> list[Subset]:
     """Randomly split a source into non-overlapping subsets of specified sizes.
 
@@ -1699,14 +1700,14 @@ def random_split(
 
     Parameters
     ----------
-    source : Source
+    source: Source
         The input `Source` to split.
-    lengths : list[int or float]
+    lengths: list[int] or list[float]
         A list of lengths for the resulting splits. If all values are floats
         summing to 1 (or slightly less), they are treated as proportions.
-    generator : np.random.Generator, optional
-        A NumPy random generator used for shuffling. Defaults to
-        `np.random.default_rng()`.
+    generator: np.random.Generator or None, optional
+        A NumPy random generator used for shuffling. Defaults to `None`, in
+        which case it is initialized to `np.random.default_rng()`.
 
     Returns
     -------
@@ -1723,12 +1724,14 @@ def random_split(
     >>> from deeptrack.sources import Source, random_split
 
     Create a source:
+
     >>> source = Source(
     ...     a=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
     ...     b=[10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
     ... )
 
     Split into train (70%) and validation (30%):
+
     >>> train, val, test = random_split(source, [0.4, 0.3, 0.3])
     >>> train
     Subset(a=[3, 2, 7, 9], b=[13, 12, 17, 19])
@@ -1740,6 +1743,7 @@ def random_split(
     Subset(a=[0, 8, 4], b=[10, 18, 14])
 
     Split into fixed sizes:
+
     >>> train, val, test = random_split(source, [4, 3, 3])
     >>> train
     Subset(a=[3, 2, 7, 9], b=[13, 12, 17, 19])
@@ -1752,46 +1756,58 @@ def random_split(
 
     """
 
-    if math.isclose(sum(lengths), 1) and sum(lengths) <= 1:
-        subset_lengths = []
-        for i, frac in enumerate(lengths):
-            if frac < 0 or frac > 1:
+    if generator is None:
+        generator = np.random.default_rng()
+
+    if (
+        all(isinstance(x, float) for x in lengths)
+        and (float(sum(lengths)) <= 1.0 + 1e-12)
+    ):
+        subset_lengths: list[int] = []
+        for i, fraction in enumerate(lengths):
+            if not (0 <= fraction <= 1):
                 raise ValueError(
                     f"Fraction at index {i} is not between 0 and 1."
+                    f"Instead, it is {fraction}."
                 )
             n_items_in_split = int(
-                math.floor(len(source) * frac)
+                math.floor(len(source) * fraction)
             )
             subset_lengths.append(n_items_in_split)
         remainder = len(source) - sum(subset_lengths)
 
-        # Add 1 to all the lengths in round-robin fashion
-        # until the remainder is 0.
+        # Add 1 to lengths in round-robin fashion until the remainder is 0.
         for i in range(remainder):
             idx_to_add_at = i % len(subset_lengths)
             subset_lengths[idx_to_add_at] += 1
-        lengths = subset_lengths
-        for i, length in enumerate(lengths):
-            if length == 0:
-                import warnings
-
+        for i, subset_length in enumerate(subset_lengths):
+            if subset_length == 0:
                 warnings.warn(
                     f"Length of split at index {i} is 0. "
-                    "This might result in an empty source."
+                    "This might result in an empty source.",
+                    stacklevel=2,
                 )
+    else:
+        if any(isinstance(x, float) for x in lengths):
+            raise ValueError(
+                "If `lengths` contains floats, all entries must be floats and "
+                "their sum must be <= 1."
+            )
+
+        subset_lengths: list[int] = lengths
 
     # Cannot verify that dataset is sized.
-    if sum(lengths) != len(source):
+    if sum(subset_lengths) != len(source):
         raise ValueError(
-            "Sum of input lengths "
-            "does not equal the length of the input dataset."
+            f"The sum of input lengths ({sum(subset_lengths)}) does not equal "
+            f"the length of the input dataset ({len(source)})."
         )
 
-    indices = generator.permutation(
-        sum(lengths)).tolist()
+    indices = generator.permutation(sum(subset_lengths)).tolist()
     return [
-        Subset(source, indices[offset - length : offset])
-        for offset, length in zip(_accumulate(lengths), lengths)
+        Subset(source, indices[offset - subset_length : offset])
+        for offset, subset_length
+        in zip(_accumulate(subset_lengths), subset_lengths)
     ]
 
 
