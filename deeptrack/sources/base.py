@@ -158,7 +158,7 @@ import math
 import warnings
 
 from collections.abc import Sequence
-from typing import Any, Callable, Generator, overload
+from typing import Any, Callable, Generator, overload, TYPE_CHECKING
 
 import numpy as np
 
@@ -174,6 +174,10 @@ __all__ = [
     "Join",
     "random_split",
 ]
+
+
+if TYPE_CHECKING:
+    import torch
 
 
 class SourceDeepTrackNode(DeepTrackNode):
@@ -1686,7 +1690,7 @@ Join = Sources
 def random_split(
     source: Source,
     lengths: list[int] | list[float],
-    generator: np.random.Generator | None = None,
+    generator: np.random.Generator | torch.Generator | None = None,
 ) -> list[Subset]:
     """Randomly split a source into non-overlapping subsets of specified sizes.
 
@@ -1705,7 +1709,7 @@ def random_split(
     lengths: list[int] or list[float]
         A list of lengths for the resulting splits. If all values are floats
         summing to 1 (or slightly less), they are treated as proportions.
-    generator: np.random.Generator or None, optional
+    generator: np.random.Generator or torch.Generator or None, optional
         A NumPy random generator used for shuffling. Defaults to `None`, in
         which case it is initialized to `np.random.default_rng()`.
 
@@ -1756,30 +1760,30 @@ def random_split(
 
     """
 
-    if generator is None:
-        generator = np.random.default_rng()
+    n_total = len(source)
 
+    # Determine subset lengths
     if (
         all(isinstance(x, float) for x in lengths)
-        and (float(sum(lengths)) <= 1.0 + 1e-12)
+        and float(sum(lengths)) <= 1.0 + 1e-12
     ):
         subset_lengths: list[int] = []
+
         for i, fraction in enumerate(lengths):
-            if not (0 <= fraction <= 1):
+            if not (0.0 <= fraction <= 1.0):
                 raise ValueError(
-                    f"Fraction at index {i} is not between 0 and 1."
+                    f"Fraction at index {i} is not between 0 and 1. "
                     f"Instead, it is {fraction}."
                 )
-            n_items_in_split = int(
-                math.floor(len(source) * fraction)
-            )
-            subset_lengths.append(n_items_in_split)
-        remainder = len(source) - sum(subset_lengths)
+
+            subset_lengths.append(int(math.floor(n_total * fraction)))
+
+        remainder = n_total - sum(subset_lengths)
 
         # Add 1 to lengths in round-robin fashion until the remainder is 0.
         for i in range(remainder):
-            idx_to_add_at = i % len(subset_lengths)
-            subset_lengths[idx_to_add_at] += 1
+            subset_lengths[i % len(subset_lengths)] += 1
+
         for i, subset_length in enumerate(subset_lengths):
             if subset_length == 0:
                 warnings.warn(
@@ -1790,24 +1794,58 @@ def random_split(
     else:
         if any(isinstance(x, float) for x in lengths):
             raise ValueError(
-                "If `lengths` contains floats, all entries must be floats and "
-                "their sum must be <= 1."
+                "If `lengths` contains floats, all entries must be floats "
+                "and their sum must be <= 1."
             )
 
-        subset_lengths: list[int] = lengths
+        subset_lengths = list(lengths)
 
-    # Cannot verify that dataset is sized.
-    if sum(subset_lengths) != len(source):
+        for i, subset_length in enumerate(subset_lengths):
+            if subset_length < 0:
+                raise ValueError(
+                    f"Length at index {i} is negative: {subset_length}."
+                )
+
+    if sum(subset_lengths) != n_total:
         raise ValueError(
-            f"The sum of input lengths ({sum(subset_lengths)}) does not equal "
-            f"the length of the input dataset ({len(source)})."
+            f"The sum of input lengths ({sum(subset_lengths)}) does not "
+            f"equal the length of the input dataset ({n_total})."
         )
 
-    indices = generator.permutation(sum(subset_lengths)).tolist()
+    # Generate permutation
+    if generator is None:
+        indices = np.random.default_rng().permutation(n_total).tolist()
+
+    elif isinstance(generator, np.random.Generator):
+        indices = generator.permutation(n_total).tolist()
+
+    else:
+        try:
+            import torch  # pylint: disable=import-outside-toplevel
+        except ModuleNotFoundError as exc:
+            raise TypeError(
+                "A torch.Generator was provided, but torch is not "
+                "installed."
+            ) from exc
+
+        if isinstance(generator, torch.Generator):
+            indices = torch.randperm(
+                n_total,
+                generator=generator,
+            ).tolist()
+        else:
+            raise TypeError(
+                "Unsupported generator type. Expected "
+                "np.random.Generator, torch.Generator, or None."
+            )
+
+    # Build subsets
     return [
-        Subset(source, indices[offset - subset_length : offset])
-        for offset, subset_length
-        in zip(_accumulate(subset_lengths), subset_lengths)
+        Subset(source, indices[offset - subset_length:offset])
+        for offset, subset_length in zip(
+            _accumulate(subset_lengths),
+            subset_lengths,
+        )
     ]
 
 
