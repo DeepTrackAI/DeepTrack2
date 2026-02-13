@@ -12,8 +12,10 @@ import numpy as np
 
 from deeptrack import TORCH_AVAILABLE, utils
 
+
 if TORCH_AVAILABLE:
     import torch
+
 
 class DummyClass:
     def method(self): pass
@@ -34,6 +36,7 @@ class TestUtils(unittest.TestCase):
         # Built-in edge cases
         self.assertTrue(utils.hasmethod([], "append"))
         self.assertFalse(utils.hasmethod([], "not_a_real_method"))
+
 
     def test_as_list(self):
         # Scalars
@@ -68,6 +71,7 @@ class TestUtils(unittest.TestCase):
             self.assertEqual(len(result), 2)
             self.assertTrue(all(isinstance(x, torch.Tensor) for x in result))
 
+
     def test_get_kwarg_names(self):
         def f1(): pass
         self.assertEqual(utils.get_kwarg_names(f1), [])
@@ -100,6 +104,7 @@ class TestUtils(unittest.TestCase):
         # Method
         self.assertIn("self", utils.get_kwarg_names(DummyClass.method))
 
+
     def test_kwarg_has_default(self):
         def f1(a, b=2): pass
         self.assertFalse(utils.kwarg_has_default(f1, "a"))
@@ -107,6 +112,7 @@ class TestUtils(unittest.TestCase):
 
         # Not in function
         self.assertFalse(utils.kwarg_has_default(f1, "c"))
+
 
     def test_safe_call(self):
         def f(a, b=2, c=3): return a + b + c
@@ -126,13 +132,13 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(utils.safe_call(g, a=42, extrakw=1), 42)
 
         # Missing required arg should raise error
-        def f(a): return a
+        def h(a): return a
         with self.assertRaises(TypeError):
-            utils.safe_call(f)
+            utils.safe_call(h)
 
-        def g(a, *, b): return a + b
+        def k(a, *, b): return a + b
         with self.assertRaises(TypeError):
-            utils.safe_call(g, a=1)  # Missing b
+            utils.safe_call(k, a=1)  # Missing b
 
 
 if __name__ == "__main__":
