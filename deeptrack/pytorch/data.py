@@ -1,22 +1,37 @@
-#TODO ***??*** class docstring
-#TODO ***??*** Add DTATxxx
+from __future__ import annotations
 
-import torch
-import torch.nn as nn
+from typing import Any, Callable, Sequence
+
 import numpy as np
-from typing import Union, Optional
-from deeptrack.image import Image
+import torch
 
-#TODO ***??*** revise Dataset - torch, docstring, unit test
+from deeptrack import Feature
+
+
+__all__ = ["Dataset"]
+
+
 class Dataset(torch.utils.data.Dataset):
+
+    pipeline: Feature
+    replace: bool | float | Callable[[], bool] | Callable[[int], bool]
+    inputs: Sequence[Any]
+    data: list[tuple[Any, ...]]
+    float_dtype: torch.dtype | str | None
+
     def __init__(
-        self,
-        pipeline,
-        inputs=None,
-        length=None,
-        replace: Union[bool, float] = False,
-        float_dtype: Optional[Union[torch.dtype, str]] = "default",
-    ):
+        self: Dataset,
+        pipeline: Feature,
+        inputs: Sequence[Any] | None = None,
+        length: int | None = None,
+        replace: (
+            bool
+            | float
+            | Callable[[], bool]
+            | Callable[[int], bool]
+        ) = False,
+        float_dtype: torch.dtype | str | None = "default",
+    ) -> None:
         self.pipeline = pipeline
         self.replace = replace
         if inputs is None:
@@ -33,17 +48,15 @@ class Dataset(torch.utils.data.Dataset):
 
 
     def __getitem__(
-        self,
-        index,
-    ):
+        self: Dataset,
+        index: int,
+    ) -> tuple[Any, ...]:
         if self._should_replace(index):
             self.pipeline.update()
             res =  self.pipeline(self.inputs[index])
             if not isinstance(res, (tuple, list)):
                 res = (res, )
-            res = tuple(res._value if isinstance(res, Image) else res
-                        for res in res)
-            res = tuple(self._as_tensor(res) for res in res)
+            res = tuple(self._as_tensor(r) for r in res)
 
             # Convert all numpy arrays to torch tensors
             # res = tuple(self._as_tensor(r) for r in res)
@@ -52,7 +65,10 @@ class Dataset(torch.utils.data.Dataset):
 
         return self.data[index]
     
-    def _as_tensor(self, x):
+    def _as_tensor(
+        self: Dataset,
+        x: Any,
+    ) -> torch.Tensor:
         if isinstance(x, (int, float, bool)):
             x = torch.from_numpy(np.array([x]))
         if isinstance(x, np.ndarray):
@@ -60,10 +76,7 @@ class Dataset(torch.utils.data.Dataset):
             if x.ndim > 2 and x.dtype not in [np.uint8, np.uint16, np.uint32,
                                               np.uint64]:
                 x = x.permute(-1, *range(x.ndim - 1))
-        if isinstance(x, Image):
-            self._as_tensor(x._value)
-        else:
-            x = torch.Tensor(x)
+        x = torch.Tensor(x)
 
         # if float, convert to torch default float
         if self.float_dtype and x.dtype in [torch.float16, torch.float32,
@@ -75,9 +88,9 @@ class Dataset(torch.utils.data.Dataset):
         return x
 
     def _should_replace(
-        self,
-        index,
-    ):
+        self: Dataset,
+        index: int,
+    ) -> bool:
         if self.data[index] is None:
             return True
 
@@ -97,6 +110,6 @@ class Dataset(torch.utils.data.Dataset):
             )
 
     def __len__(
-        self,
-    ):
+        self: Dataset,
+    ) -> int:
         return len(self.inputs)
