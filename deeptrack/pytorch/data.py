@@ -196,22 +196,13 @@ class Dataset(torch.utils.data.Dataset):
             self.data[index] = result
 
         out = self.data[index]
-        if out is None:
+        if out is None:  # pragma: no cover
             raise RuntimeError("Dataset cache invariant broken.")
         return out
     
     def _as_tensor(
         self: Dataset,
-        x: (
-            torch.Tensor
-            | np.ndarray
-            | int
-            | float
-            | bool
-            | complex
-            | Sequence[int | float | bool | complex]
-            | Any
-        ),
+        x: Any,
     ) -> torch.Tensor:
         """Convert an object to a `torch.Tensor`.
 
@@ -311,7 +302,7 @@ class Dataset(torch.utils.data.Dataset):
             except TypeError:
                 return bool(replace_fn(index))
 
-        if isinstance(self.replace, float) and 0 <= self.replace <= 1:
+        if isinstance(self.replace, (int, float)) and 0 <= self.replace <= 1:
             return bool(np.random.rand() < self.replace)
 
         raise TypeError(
