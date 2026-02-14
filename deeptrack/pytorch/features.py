@@ -6,12 +6,12 @@ pipelines and PyTorch training workflows.
 
 Key Features
 ------------
-- **Convert arbitrary outputs to `torch.Tensor`**
+- **Convert Arbitrary Outputs to `torch.Tensor`**
 
     Supports NumPy arrays, PyTorch tensors, Python scalars, and array-like
     sequences.
 
-- **Optional channel-last to channel-first permutation**
+- **Optional Channel-Last to Channel-First Permutation**
 
     Enables converting `(H, W, C)` arrays to `(C, H, W)` tensors for common
     computer-vision conventions.
