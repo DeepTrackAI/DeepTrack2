@@ -362,6 +362,5 @@ class TestSequences(unittest.TestCase):
         outputs = imaged_rotating_ellipse_sequence()
 
 
-
 if __name__ == "__main__":
     unittest.main()
