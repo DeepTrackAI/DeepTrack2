@@ -72,6 +72,9 @@ import torch
 from deeptrack.features import Feature
 
 
+__all__ = ["ToTensor"]
+
+
 _PERMUTE_MODE_ = Literal["always", "never", "numpy", "numpy_and_not_int"]
 
 
@@ -166,23 +169,18 @@ class ToTensor(Feature):
         ----------
         x: Any
             The input object to convert. Supported types include:
-
             - `torch.Tensor`
             - `numpy.ndarray`
             - Python scalars (`int`, `float`, `bool`, `complex`)
             - Array-like sequences
-
-        dtype: torch.dtype | None
+        dtype: torch.dtype or None
             If provided, the resulting tensor is cast to this dtype.
-
-        device: torch.device | str | None
+        device: torch.device or str or None
             If provided, the resulting tensor is moved to this device.
-
         add_dim_to_number: bool
             If `True`, scalar numbers are converted to tensors of shape
             `(1,)`. If `False`, scalar numbers are returned unchanged.
-
-        permute_mode: {"always", "never", "numpy", "numpy_and_not_int"}
+        permute_mode: "always", "never", "numpy", or "numpy_and_not_int"
             Controls whether channel-last inputs are permuted to
             channel-first layout.
 
