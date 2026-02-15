@@ -102,7 +102,6 @@ def radialcenter(
     derivatives.
 
     """
-
     # Local import to avoid hard import-time dependency costs if unused.
     import scipy.signal  # pylint: disable=import-outside-toplevel
 
@@ -132,13 +131,14 @@ def radialcenter(
     )[None, :]
     xm = np.repeat(xm_onerow, ny - 1, axis=0)
 
+    # Note that y increases "downward" (increasing row number).
     ym_onecol = np.arange(
         -(ny - 1) / 2.0 + 0.5,
         (ny - 1) / 2.0 + 0.5,
         dtype=float,
-    )[:, None]  # Note that y increases "downward."
+    )[:, None]
     ym = np.repeat(ym_onecol, nx - 1, axis=1)
-    
+
     # Derivatives along 45-degree shifted coordinates (u and v).
     dIdu = arr[: ny - 1, 1:nx] - arr[1:ny, : nx - 1]
     dIdv = arr[: ny - 1, : nx - 1] - arr[1:ny, 1:nx]
