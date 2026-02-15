@@ -102,6 +102,7 @@ def radialcenter(
     derivatives.
 
     """
+
     # Local import to avoid hard import-time dependency costs if unused.
     import scipy.signal  # pylint: disable=import-outside-toplevel
 
