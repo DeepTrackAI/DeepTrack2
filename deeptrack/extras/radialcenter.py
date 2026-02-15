@@ -1,188 +1,206 @@
-"""Radial center calculation function
+"""Radial center calculation.
 
-This module provides a function to calculate the center location
-of a given intensity distribution.
+This module provides a robust implementation of the radial symmetry center
+estimator introduced by Parthasarathy (2011-2012).
+
+The estimator computes local intensity gradients on a half-pixel grid and
+solves a weighted least-squares problem to find the point that best matches
+radial symmetry.
 
 Key Features
 ------------
+- **Gradient-Based Least-Squares Estimation**
 
-- **Gradient-based analysis with least-squares method.**
+    Uses intensity gradients evaluated on a half-pixel grid and solves a
+    weighted least-squares system to estimate the center.
 
-  Uses intensity gradients to determine the
-  radial symmetry of 2D intensity distributions.
-  
+- **Numerical Safeguards**
 
-- **Flexible output**
+    Handles common degeneracies (e.g., constant images, singular systems)
+    by returning `nan` coordinates instead of raising obscure runtime errors.
 
-  Allows inversion of the axis based on user preference.
+- **Optional Coordinate Swapping**
 
+    Can swap the returned `(x, y)` coordinate order for convenience.
 
 Module Structure
 ----------------
 Functions:
 
-- `radialcenter`: Calculates the center of a 2D intensity distribution.
+- `radialcenter(I, invert_xy) -> tuple[float, float]`
 
-Example
+    Estimates the center of radial symmetry of a 2D intensity distribution.
+
+Examples
+--------
+>>> from deeptrack.extras.radialcenter import radialcenter
+
+Estimate the center of a 2D Gaussian:
+
+>>> import numpy as np
+>>>
+>>> lin = np.linspace(-10, 10, 101)
+>>> xg, yg = np.meshgrid(lin, lin, indexing="xy")
+>>> img = np.exp(-0.5 * (xg**2 + yg**2))
+>>>
+>>> x, y = radialcenter(img)
+>>> (round(x, 3), round(y, 3))
+(50.0, 50.0)
+
+References
+----------
+- Raghuveer Parthasarathy, University of Oregon (2011–2012).
+- Python implementation by Benjamin Midtvedt, University of Gothenburg (2020).
+
+License
 -------
-Calculate center of an image containing randomly generated Gaussian blur.
+GNU General Public License v3 or later (GPL-3.0-or-later), per the original
+distribution by Parthasarathy.
 
->>> from deeptrack.extras import radialcenter as rc
-
->>> linspace = np.linspace(-10, 10, 100)
->>> gaussian = np.exp(-0.5 * (
-...            linspace[:, None] ** 2 + linspace[None, :] ** 2)
-...        )
->>> intensity_map = np.random.normal(0, 0.005, (100, 100))
->>> x, y = rc.radialcenter(gaussian_blur)
->>> print(f"Center of distribution = {x}, {y}")
-
-
-  Python implementation by Benjamin Midtvedt, University of Gothenburg, 2020
-  Copyright 2011-2012, Raghuveer Parthasarathy, The University of Oregon
-
-  Disclaimer / License  
-    This program is free software: you can redistribute it and/or 
-      modify it under the terms of the GNU General Public License as 
-      published by the Free Software Foundation, either version 3 of the 
-      License, or (at your option) any later version.
-    This set of programs is distributed in the hope that it will be useful, 
-    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-    General Public License for more details.
-    You should have received a copy of the GNU General Public License 
-    (gpl.txt) along with this program. 
-     If not, see <http://www.gnu.org/licenses/>.
-
-  Raghuveer Parthasarathy
-  The University of Oregon
-  August 21, 2011 (begun)
-  last modified Apr. 6, 2012 (minor change)
-  Copyright 2011-2012, Raghuveer Parthasarathy
 """
-
-#TODO ***??*** revise class docstring
-#TODO ***??*** revise DTAT395
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
-import scipy.signal
+
+__all__ = ["radialcenter"]
 
 
-#TODO ***??*** revise radialcenter - torch, docstring, unit test
 def radialcenter(
-    I,
-    invert_xy=False,
+    I: Any,
+    invert_xy: bool = False,
 ) -> tuple[float, float]:
-    """Calculates the center of a 2D intensity distribution.
+    """Calculate the center of a 2D intensity distribution.
 
-    Considers lines passing through each half-pixel point with slope
-    parallel to the gradient of the intensity at that point. Considers the
-    distance of closest approach between these lines and the coordinate
-    origin, and determines (analytically) the origin that minimizes the
-    weighted sum of these distances-squared.
+    The method considers, for each half-pixel midpoint, a line passing through
+    that point with slope parallel to the local intensity gradient. It then
+    finds the point that minimizes a weighted sum of squared perpendicular
+    distances to all such lines (weighted least squares).
 
     Parameters
     ----------
-    I : np.ndarray
-      2D intensity distribution (i.e. a grayscale image)
-      Size need not be an odd number of pixels along each dimension
+    I: Any
+        2D intensity distribution (e.g. a grayscale image). The input is
+        converted to a NumPy array. Extra singleton dimensions are removed.
+    invert_xy: bool, optional
+        If `True`, return `(y, x)` instead of `(x, y)`. Defaults to `False`.
 
     Returns
     -------
-    float, float
-        Coordinate pair x, y of the center of radial symmetry, 
-        px, from px #1 = left/topmost pixel.
-        So a shape centered in the middle of a 2*N+1 x 2*N+1
-        square (e.g. from make2Dgaussian.m with x0=y0=0) will return
-        a center value at x0=y0=N+1.
+    tuple[float, float]
+        The estimated center coordinate `(x, y)` in pixel units, where
+        `(0, 0)` corresponds to the left/top-most pixel. The returned
+        coordinates are floating-point and may fall between pixels.
+        If the center cannot be estimated (e.g., constant image or singular
+        system), returns `(nan, nan)` (or swapped if `invert_xy=True`).
 
-        Note that y increases with increasing row number (i.e. "downward")
+    Notes
+    -----
+    This function requires SciPy for the 2D convolution used to smooth
+    derivatives.
 
     """
 
-    I = np.squeeze(I)
-    Ny, Nx = I.shape[:2]
+    # Local import to avoid hard import-time dependency costs if unused.
+    import scipy.signal  # pylint: disable=import-outside-toplevel
 
-    # Grid coordinates are -n:n, where Nx (or Ny) = 2*n+1.
-    # Grid midpoint coordinates are -n+0.5:n-0.5.
-    # The two lines below replace:
-    #    xm = repmat(-(Nx-1)/2.0+0.5:(Nx-1)/2.0-0.5,Ny-1,1);
-    # And are faster (by a factor of >15!).
-    # The idea is taken from the repmat source code.
-    xm_onerow = np.arange(-(Nx - 1) / 2.0 + 0.5, (Nx - 1) / 2.0 + 0.5)
-    xm_onerow = np.reshape(xm_onerow, (1, xm_onerow.size))
-    xm = xm_onerow[(0,) * (Ny - 1), :]
+    arr = np.asarray(I)
+    arr = np.squeeze(arr)
 
-    # Similarly replacing:
-    #    ym = repmat((-(Ny-1)/2.0+0.5:(Ny-1)/2.0-0.5)', 1, Nx-1).
+    if arr.ndim != 2:
+        raise ValueError(
+            "radialcenter expects a 2D array after squeezing, got shape "
+            f"{arr.shape}."
+        )
+
+    ny, nx = arr.shape
+    if ny < 2 or nx < 2:
+        raise ValueError(
+            "radialcenter requires an array of shape at least (2, 2), got "
+            f"{arr.shape}."
+        )
+
+    # Grid midpoint coordinates:
+    # x: -(nx-1)/2+0.5 ... (nx-1)/2-0.5, repeated ny-1 times
+    # y: -(ny-1)/2+0.5 ... (ny-1)/2-0.5, repeated nx-1 times
+    xm_onerow = np.arange(
+        -(nx - 1) / 2.0 + 0.5,
+        (nx - 1) / 2.0 + 0.5,
+        dtype=float,
+    )[None, :]
+    xm = np.repeat(xm_onerow, ny - 1, axis=0)
+
     ym_onecol = np.arange(
-        -(Ny - 1) / 2.0 + 0.5, (Ny - 1) / 2.0 + 0.5
-    )  # Note that y increases "downward."
-    ym_onecol = np.reshape(ym_onecol, (ym_onecol.size, 1))
-    ym = ym_onecol[:, (0,) * (Nx - 1)]
+        -(ny - 1) / 2.0 + 0.5,
+        (ny - 1) / 2.0 + 0.5,
+        dtype=float,
+    )[:, None]  # Note that y increases "downward."
+    ym = np.repeat(ym_onecol, nx - 1, axis=1)
+    
+    # Derivatives along 45-degree shifted coordinates (u and v).
+    dIdu = arr[: ny - 1, 1:nx] - arr[1:ny, : nx - 1]
+    dIdv = arr[: ny - 1, : nx - 1] - arr[1:ny, 1:nx]
 
-    # Calculate derivatives along 45-degree shifted coordinates (u and v).
-    # Note that y increases "downward" (increasing row number) -- we'll deal
-    # with this when calculating "m" below.
-    dIdu = I[: Ny - 1, 1:Nx] - I[1:Ny, : Nx - 1]
-    dIdv = I[: Ny - 1, : Nx - 1] - I[1:Ny, 1:Nx]
+    # Smooth derivatives to reduce noise.
+    kernel = np.ones((3, 3), dtype=float) / 9.0
+    fdu = scipy.signal.convolve2d(dIdu, kernel, mode="same")
+    fdv = scipy.signal.convolve2d(dIdv, kernel, mode="same")
 
-    # Apply a smoothing filter.
-    h = np.ones((3, 3)) / 9
-    fdu = scipy.signal.convolve2d(dIdu, h, "same")
-    fdv = scipy.signal.convolve2d(dIdv, h, "same")
-
-    # Gradient magnitude, squared.
+    # Gradient magnitude squared.
     dImag2 = fdu * fdu + fdv * fdv
 
-    # Slope of the gradient.
-    # Note that we need a 45-degree rotation of
-    # the u,v components to express the slope in the x-y coordinate system.
-    # The negative sign "flips" the array to account for y increasing
-    # "downward."
-    m = -(fdv + fdu) / (fdu - fdv)
-    m[np.isnan(m)] = 0
+    sdI2 = float(np.sum(dImag2))
+    if not np.isfinite(sdI2) or sdI2 <= 0.0:
+        out = (float("nan"), float("nan"))
+        return out[::-1] if invert_xy else out
 
-    # Handle infinite slopes by setting them to a large value.
-    isinfbool = np.isinf(m)
-    m[isinfbool] = 1000000
+    # Slope in x-y coordinates (accounting for y increasing downward).
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m = -(fdv + fdu) / (fdu - fdv)
 
-    # Shorthand "b," which also happens to be the
-    # y intercept of the line of slope m that goes through each grid midpoint.
+    # Replace NaNs and infs robustly.
+    m = np.where(np.isfinite(m), m, 0.0)
+    m = np.where(np.isinf(m), 1e6, m)
+
+    # Line intercepts for lines passing through each midpoint: y = m x + b.
     b = ym - m * xm
 
-    # Weighting: Weight by square of gradient magnitude and inverse
-    # distance to gradient intensity centroid.
-    sdI2 = np.sum(dImag2)
-    xcentroid = np.sum(dImag2 * xm) / sdI2
-    ycentroid = np.sum(dImag2 * ym) / sdI2
-    w = dImag2 / np.sqrt(
-        (xm - xcentroid) * (xm - xcentroid) + (ym - ycentroid) * (ym - ycentroid)
-    )
+    # Centroid of gradient energy.
+    xcentroid = float(np.sum(dImag2 * xm) / sdI2)
+    ycentroid = float(np.sum(dImag2 * ym) / sdI2)
 
-    # Least squares solution to determine the radial symmetry center.
-    # Inputs m, b, w are defined on a grid.
-    # w are the weights for each point.
-    wm2p1 = w / (m * m + 1)
-    sw = np.sum(wm2p1)
-    mwm2pl = m * wm2p1
-    smmw = np.sum(m * mwm2pl)
-    smw = np.sum(mwm2pl)
-    smbw = np.sum(np.sum(b * mwm2pl))
-    sbw = np.sum(np.sum(b * wm2p1))
+    # Weighting: gradient magnitude squared divided by distance to centroid.
+    with np.errstate(divide="ignore", invalid="ignore"):
+        r = np.sqrt((xm - xcentroid) ** 2 + (ym - ycentroid) ** 2)
+        w = dImag2 / r
+
+    # Avoid infinities when r == 0 at the centroid.
+    w = np.where(np.isfinite(w), w, 0.0)
+
+    # Weighted least squares.
+    wm2p1 = w / (m * m + 1.0)
+    sw = float(np.sum(wm2p1))
+    mwm2p1 = m * wm2p1
+    smmw = float(np.sum(m * mwm2p1))
+    smw = float(np.sum(mwm2p1))
+
+    # b*weights sums (note: b, m, w are 2D arrays).
+    smbw = float(np.sum(b * mwm2p1))
+    sbw = float(np.sum(b * wm2p1))
+
     det = smw * smw - smmw * sw
-    xc = (smbw * sw - smw * sbw) / det
-    # Relative to image center.
-    yc = (smbw * smw - smmw * sbw) / det
-    # Relative to image center.
+    if not np.isfinite(det) or det == 0.0:
+        out = (float("nan"), float("nan"))
+        return out[::-1] if invert_xy else out
 
-    # Adjust coordinates relative to the image center.
-    xc = xc + (Nx + 1) / 2.0 - 1
-    yc = yc + (Ny + 1) / 2.0 - 1
+    # Center relative to image center.
+    xc_rel = (smbw * sw - smw * sbw) / det
+    yc_rel = (smbw * smw - smmw * sbw) / det
 
-    if invert_xy:
-        return yc, xc
-    else:
-        return xc, yc
+    # Convert to pixel coordinates with (0, 0) at top-left.
+    xc = float(xc_rel + (nx + 1) / 2.0 - 1.0)
+    yc = float(yc_rel + (ny + 1) / 2.0 - 1.0)
+
+    return (yc, xc) if invert_xy else (xc, yc)
