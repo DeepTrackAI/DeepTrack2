@@ -514,8 +514,8 @@ Sin = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the sine function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the sine function will be applied.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -546,7 +546,7 @@ Sin = create_elementwise_class(
     >>> result
     array([0.0000000e+00, 1.0000000e+00, 1.2246468e-16])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([0, torch.pi / 2, torch.pi]))
     >>> pipeline = value >> Sin()
@@ -574,8 +574,8 @@ Cos = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the cosine function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the cosine function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -606,7 +606,7 @@ Cos = create_elementwise_class(
     >>> result
     array([ 1.000000e+00,  6.123234e-17, -1.000000e+00])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([0, torch.pi / 2, torch.pi]))
     >>> pipeline = value >> Cos()
@@ -634,8 +634,8 @@ Tan = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the tangent function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the tangent function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -666,7 +666,7 @@ Tan = create_elementwise_class(
     >>> result
     array([0.00000000e+00, 1.00000000e+00, 1.63312394e+16])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([0, torch.pi / 4, torch.pi / 2]))
     >>> pipeline = value >> Tan()
@@ -697,8 +697,8 @@ Arcsin = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the arccosine function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the arccosine function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -729,7 +729,7 @@ Arcsin = create_elementwise_class(
     >>> result
     array([0.        , 0.52359878, 1.57079633])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([0.0, 0.5, 1.0]))
     >>> pipeline = value >> Arcsin()
@@ -757,8 +757,8 @@ Arctan = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the arctangent function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the arctangent function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -789,7 +789,7 @@ Arctan = create_elementwise_class(
     >>> result
     array([-0.78539816,  0.        ,  0.78539816])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
     >>> pipeline = value >> Arctan()
@@ -818,7 +818,8 @@ Sinh = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the hyperbolic sine function will be 
-        applied. If None, the function is applied to the input array directly.
+        applied. If None, the function is directly applied to the input array
+        or tensor.
 
     Examples
     --------
@@ -849,7 +850,7 @@ Sinh = create_elementwise_class(
     >>> result
     array([-1.17520119,  0.        ,  1.17520119])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
     >>> pipeline = value >> Sinh()
@@ -878,7 +879,8 @@ Cosh = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the hyperbolic cosine function will be 
-        applied. If None, the function is applied to the input array directly.
+        applied. If None, the function is directly applied to the input array
+        or tensor.
 
     Examples
     --------
@@ -909,7 +911,7 @@ Cosh = create_elementwise_class(
     >>> result
     array([1.54308063, 1.        , 1.54308063])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
     >>> pipeline = value >> Cosh()
@@ -938,7 +940,8 @@ Tanh = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the hyperbolic tangent function will be 
-        applied. If None, the function is applied to the input array directly.
+        applied. If None, the function is directly applied to the input array
+        or tensor.
 
     Examples
     --------
@@ -969,7 +972,7 @@ Tanh = create_elementwise_class(
     >>> result
     array([-0.76159416,  0.        ,  0.76159416])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
     >>> pipeline = value >> Tanh()
@@ -998,7 +1001,8 @@ Arcsinh = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the hyperbolic arcsine function will be 
-        applied. If None, the function is applied to the input array directly.
+        applied. If None, the function is directly applied to the input array
+        or tensor.
 
     Examples
     --------
@@ -1029,7 +1033,7 @@ Arcsinh = create_elementwise_class(
     >>> result
     array([-0.88137359,  0.        ,  0.88137359])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
     >>> pipeline = value >> Arcsinh()
@@ -1061,7 +1065,8 @@ Arccosh = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the hyperbolic arccosine function will be 
-        applied. If None, the function is applied to the input array directly.
+        applied. If None, the function is directly applied to the input array
+        or tensor.
 
     Examples
     --------
@@ -1092,7 +1097,7 @@ Arccosh = create_elementwise_class(
     >>> result
     array([0.        , 1.3169579 , 1.76274717])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([1.0, 2.0, 3.0]))
     >>> pipeline = value >> Arccosh()
@@ -1124,7 +1129,8 @@ Arctanh = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the hyperbolic arctangent function will be 
-        applied. If None, the function is applied to the input array directly.
+        applied. If None, the function is directly applied to the input array
+        or tensor.
 
     Examples
     --------
@@ -1155,7 +1161,7 @@ Arctanh = create_elementwise_class(
     >>> result
     array([-0.54930614,  0.        ,  0.54930614])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-0.5, 0.0, 0.5]))
     >>> pipeline = value >> Arctanh()
@@ -1187,8 +1193,8 @@ Round = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the round function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the round function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -1219,7 +1225,7 @@ Round = create_elementwise_class(
     >>> result
     array([-2., -0.,  0.,  2.])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-1.5, -0.5, 0.5, 1.5]))
     >>> pipeline = value >> Round()
@@ -1247,8 +1253,8 @@ class Floor(ElementwiseFeature):
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the floor function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the floor function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -1279,7 +1285,7 @@ class Floor(ElementwiseFeature):
     >>> result
     array([-2., -1.,  0.,  0.,  1.])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-1.7, -0.5, 0.0, 0.5, 1.7]))
     >>> pipeline = value >> Floor()
@@ -1361,8 +1367,8 @@ class Ceil(ElementwiseFeature):
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the ceil function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the ceil function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -1393,7 +1399,7 @@ class Ceil(ElementwiseFeature):
     >>> result
     array([-1., -0.,  0.,  1.,  2.])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-1.7, -0.5, 0.0, 0.5, 1.7]))
     >>> pipeline = value >> Ceil()
@@ -1477,8 +1483,8 @@ Exp = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the exponential function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the exponential function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -1507,7 +1513,7 @@ Exp = create_elementwise_class(
     >>> result
     array([0.36787944, 1.        , 2.71828183])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-1.0, 0.0, 1.0]))
     >>> pipeline = value >> Exp()
@@ -1540,7 +1546,8 @@ Log = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the natural logarithm function will be 
-        applied. If None, the function is applied to the input array directly.
+        applied. If None, the function is directly applied to the input array
+        or tensor.
 
     Examples
     --------
@@ -1569,7 +1576,7 @@ Log = create_elementwise_class(
     >>> result
     array([0.        , 1.        , 2.30258509])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor(
     ...     [1.0, torch.exp(torch.tensor(1.0)), 10.0])
@@ -1604,7 +1611,8 @@ Log10 = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the logarithm function with base 10 will be
-        applied. If None, the function is applied to the input array directly.
+        applied. If None, the function is directly applied to the input array
+        or tensor.
 
     Examples
     --------
@@ -1633,7 +1641,7 @@ Log10 = create_elementwise_class(
     >>> result
     array([0., 1., 2.])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([1.0, 10.0, 100.0]))
     >>> pipeline = value >> Log10()
@@ -1666,7 +1674,8 @@ Log2 = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the logarithm function with base 2 will be 
-        applied. If None, the function is applied to the input array directly.
+        applied. If None, the function is directly applied to the input array
+        or tensor.
 
     Examples
     --------
@@ -1695,7 +1704,7 @@ Log2 = create_elementwise_class(
     >>> result
     array([0., 1., 2., 3.])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([1.0, 2.0, 4.0, 8.0]))
     >>> pipeline = value >> Log2()
@@ -1727,8 +1736,8 @@ Angle = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the angle function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the angle function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -1757,7 +1766,7 @@ Angle = create_elementwise_class(
     >>> result
     array([0.        , 1.57079633, 3.14159265, 0.78539816])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([1+0j, 0+1j, -1+0j, 1+1j]))
     >>> pipeline = value >> Angle()
@@ -1788,8 +1797,8 @@ Real = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the real function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the real function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -1818,7 +1827,7 @@ Real = create_elementwise_class(
     >>> result
     array([ 1. ,  3. , -4.5])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([1+2j, 3+0j, -4.5+0j]))
     >>> pipeline = value >> Real()
@@ -1874,7 +1883,7 @@ class Imag(ElementwiseFeature):
     >>> result
     array([ 2.,  0.,  0.])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([1+2j, 3+0j, -4.5+0j]))
     >>> pipeline = value >> Imag()
@@ -1914,17 +1923,18 @@ class Imag(ElementwiseFeature):
         """Dispatch imag function based on backend and dtype.
 
         This method extracts the imaginary part of the input. For NumPy arrays,
-        `np.imag` always returns an array, returning zeros for real-valued inputs.
-        However, PyTorch's `torch.imag()` raises a `RuntimeError` when called on
-        real tensors.
+        `np.imag` always returns an array, returning zeros for real-valued
+        inputs. However, PyTorch's `torch.imag()` raises a `RuntimeError` when
+        called on real tensors.
 
-        To ensure compatibility with both backends, this function checks whether
-        the input is a complex tensor before calling `torch.imag`. If it is not
-        complex, it returns a zero tensor of the same shape and dtype.
+        To ensure compatibility with both backends, this function checks
+        whether the input is a complex tensor before calling `torch.imag`. If
+        it is not complex, it returns a zero tensor of the same shape and
+        dtype.
 
-        This logic is necessary because `xp.imag` (from array-api-compat) does not
-        handle real PyTorch tensors safely, and thus this function cannot be
-        created using the factory-based method.
+        This logic is necessary because `xp.imag` (from array-api-compat) does
+        not handle real PyTorch tensors safely, and thus this function cannot
+        be created using the factory-based method.
 
         Parameters
         ----------
@@ -1984,7 +1994,7 @@ Abs = create_elementwise_class(
     >>> result
     array([3., 0., 3.])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-3.0, 0.0, 3.0]))
     >>> pipeline = value >> Abs()
@@ -2015,8 +2025,8 @@ Conj = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the conjugate function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the conjugate function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -2045,7 +2055,7 @@ Conj = create_elementwise_class(
     >>> result
     array([ 1.-2.j,  3.-0.j, -4.5+0.j])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([1+2j, 3+0j, -4.5+0j]))
     >>> pipeline = value >> Conj()
@@ -2081,8 +2091,8 @@ Sqrt = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the square root function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the square root function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -2111,7 +2121,7 @@ Sqrt = create_elementwise_class(
     >>> result
     array([0., 1., 2.])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([0.0, 1.0, 4.0]))
     >>> pipeline = value >> Sqrt()
@@ -2141,8 +2151,8 @@ Square = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the square function will be applied. 
-        If None, the function is applied to the input array directly.
+        The input feature to which the square function will be applied.
+        If None, the function is directly applied to the input array or tensor.
 
     Examples
     --------
@@ -2171,7 +2181,7 @@ Square = create_elementwise_class(
     >>> result
     array([4., 0., 9.])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-2.0, 0.0, 3.0]))
     >>> pipeline = value >> Square()
@@ -2201,7 +2211,7 @@ class Sign(ElementwiseFeature):
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the sign function will be applied. 
+        The input feature to which the sign function will be applied.
         If None, the function is applied directly to the input array.
 
     Examples
@@ -2231,7 +2241,7 @@ class Sign(ElementwiseFeature):
     >>> result
     array([-1.,  0.,  1.])
 
-    Use in a pipeline with a Torch value:
+    Use in a pipeline with a PyTorch value:
 
     >>> value = dt.Value(value=torch.tensor([-5.0, 0.0, 2.0]))
     >>> pipeline = value >> Sign()
@@ -2253,8 +2263,8 @@ class Sign(ElementwiseFeature):
         """Initialize the Sign feature.
 
         This constructor sets up the elementwise sign operation using a
-        backend-aware dispatch. It optionally accepts another Feature whose output
-        will be processed by the sign function.
+        backend-aware dispatch. It optionally accepts another Feature whose
+        output will be processed by the sign function.
 
         Parameters
         ----------
