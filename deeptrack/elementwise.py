@@ -284,18 +284,12 @@ class ElementwiseFeature(Feature):
     """
 
     __distributed__: bool
-    function: Callable[
-        [NDArray[Any] | torch.Tensor],
-        NDArray[Any] | torch.Tensor,
-    ]
+    function: Callable[[Any], Any]
     feature: Feature | None
 
     def __init__(
         self: ElementwiseFeature,
-        function: Callable[
-            [NDArray[Any] | torch.Tensor],
-            NDArray[Any] | torch.Tensor,
-        ],
+        function: Callable[[Any], Any],
         feature: Feature | None = None,
         **kwargs: Any,
     ):
@@ -328,7 +322,7 @@ class ElementwiseFeature(Feature):
         )
 
         # If the feature is set, prevent distributed resolution
-        if feature is not None:
+        if self.feature is not None:
             self.__distributed__ = False
 
     @overload
@@ -383,10 +377,7 @@ class ElementwiseFeature(Feature):
 
 def create_elementwise_class(
     name: str,
-    function: Callable[
-        [NDArray[Any] | torch.Tensor],
-        NDArray[Any] | torch.Tensor,
-    ],
+    function: Callable[[Any], Any],
     docstring: str = "",
 ) -> type[ElementwiseFeature]:
     """Factory function to create subclasses of ElementwiseFeature.
@@ -575,7 +566,7 @@ Cos = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the cosine function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -635,7 +626,7 @@ Tan = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the tangent function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -697,8 +688,8 @@ Arcsin = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the arccosine function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        The input feature to which the arcsine function will be applied.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -758,7 +749,7 @@ Arctan = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the arctangent function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -817,8 +808,8 @@ Sinh = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the hyperbolic sine function will be 
-        applied. If None, the function is directly applied to the input array
+        The input feature to which the hyperbolic sine function will be
+        applied. If None, the function is applied directly to the input array
         or tensor.
 
     Examples
@@ -878,8 +869,8 @@ Cosh = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the hyperbolic cosine function will be 
-        applied. If None, the function is directly applied to the input array
+        The input feature to which the hyperbolic cosine function will be
+        applied. If None, the function is applied directly to the input array
         or tensor.
 
     Examples
@@ -939,8 +930,8 @@ Tanh = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the hyperbolic tangent function will be 
-        applied. If None, the function is directly applied to the input array
+        The input feature to which the hyperbolic tangent function will be
+        applied. If None, the function is applied directly to the input array
         or tensor.
 
     Examples
@@ -1000,8 +991,8 @@ Arcsinh = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the hyperbolic arcsine function will be 
-        applied. If None, the function is directly applied to the input array
+        The input feature to which the hyperbolic arcsine function will be
+        applied. If None, the function is applied directly to the input array
         or tensor.
 
     Examples
@@ -1064,8 +1055,8 @@ Arccosh = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the hyperbolic arccosine function will be 
-        applied. If None, the function is directly applied to the input array
+        The input feature to which the hyperbolic arccosine function will be
+        applied. If None, the function is applied directly to the input array
         or tensor.
 
     Examples
@@ -1128,8 +1119,8 @@ Arctanh = create_elementwise_class(
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the hyperbolic arctangent function will be 
-        applied. If None, the function is directly applied to the input array
+        The input feature to which the hyperbolic arctangent function will be
+        applied. If None, the function is applied directly to the input array
         or tensor.
 
     Examples
@@ -1194,7 +1185,7 @@ Round = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the round function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -1254,7 +1245,7 @@ class Floor(ElementwiseFeature):
     ----------
     feature: Feature or None, optional
         The input feature to which the floor function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -1322,7 +1313,9 @@ class Floor(ElementwiseFeature):
         )
 
     @staticmethod
-    def _floor_dispatch(x):
+    def _floor_dispatch(
+        x: NDArray[Any] | torch.Tensor,
+    ) -> NDArray[Any] | torch.Tensor:
         """Dispatch floor function based on backend.
 
         This method applies `torch.floor` if the input is a PyTorch tensor,
@@ -1339,12 +1332,12 @@ class Floor(ElementwiseFeature):
 
         Parameters
         ----------
-        x: np.ndarray or torch.Tensor
+        x: numpy.ndarray or torch.Tensor
             The input to transform.
 
         Returns
         -------
-        np.ndarray or torch.Tensor
+        numpy.ndarray or torch.Tensor
             The result after applying floor elementwise.
 
         """
@@ -1368,7 +1361,7 @@ class Ceil(ElementwiseFeature):
     ----------
     feature: Feature or None, optional
         The input feature to which the ceil function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -1432,11 +1425,13 @@ class Ceil(ElementwiseFeature):
         super().__init__(
             function=self._ceil_dispatch,
             feature=feature,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
-    def _ceil_dispatch(x):
+    def _ceil_dispatch(
+        x: NDArray[Any] | torch.Tensor,
+    ) -> NDArray[Any] | torch.Tensor:
         """Dispatch ceiling function based on backend.
 
         This method applies `torch.ceil` if the input is a PyTorch tensor,
@@ -1453,12 +1448,12 @@ class Ceil(ElementwiseFeature):
 
         Parameters
         ----------
-        x: np.ndarray or torch.Tensor
+        x: numpy.ndarray or torch.Tensor
             The input to transform.
 
         Returns
         -------
-        np.ndarray or torch.Tensor
+        numpy.ndarray or torch.Tensor
             The result after applying ceil elementwise.
 
         """
@@ -1484,7 +1479,7 @@ Exp = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the exponential function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -1539,14 +1534,14 @@ Log = create_elementwise_class(
     PyTorch tensor. It supports both direct input and pipeline composition.
 
     The input must be strictly positive. Passing zero or negative values will
-    return `-inf` or `NaN`, and may raise warnings or errors depending on 
+    return `-inf` or `NaN`, and may raise warnings or errors depending on
     the backend.
 
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the natural logarithm function will be 
-        applied. If None, the function is directly applied to the input array
+        The input feature to which the natural logarithm function will be
+        applied. If None, the function is applied directly to the input array
         or tensor.
 
     Examples
@@ -1604,14 +1599,14 @@ Log10 = create_elementwise_class(
     PyTorch tensor. It supports both direct input and pipeline composition.
 
     The input must be strictly positive. Passing zero or negative values will
-    return `-inf` or `NaN`, and may raise warnings or errors depending on 
+    return `-inf` or `NaN`, and may raise warnings or errors depending on
     the backend.
 
     Parameters
     ----------
     feature: Feature or None, optional
         The input feature to which the logarithm function with base 10 will be
-        applied. If None, the function is directly applied to the input array
+        applied. If None, the function is applied directly to the input array
         or tensor.
 
     Examples
@@ -1667,14 +1662,14 @@ Log2 = create_elementwise_class(
     PyTorch tensor. It supports both direct input and pipeline composition.
 
     The input must be strictly positive. Passing zero or negative values will
-    return `-inf` or `NaN`, and may raise warnings or errors depending on 
+    return `-inf` or `NaN`, and may raise warnings or errors depending on
     the backend.
 
     Parameters
     ----------
     feature: Feature or None, optional
-        The input feature to which the logarithm function with base 2 will be 
-        applied. If None, the function is directly applied to the input array
+        The input feature to which the logarithm function with base 2 will be
+        applied. If None, the function is applied directly to the input array
         or tensor.
 
     Examples
@@ -1720,24 +1715,26 @@ Log2 = create_elementwise_class(
 )
 
 
-Angle = create_elementwise_class(
-    name="Angle",
-    function=xp.angle,
-    docstring="""
-    Apply the angle (phase) function elementwise.
+class Angle(ElementwiseFeature):
+    """Apply the angle (phase) function elementwise.
 
-    This feature applies `xp.angle` to each element in a NumPy array or a
-    PyTorch tensor. It supports both direct input and pipeline composition.
+    This feature applies an angle/phase operation to each element in a NumPy
+    array or a PyTorch tensor. It supports both direct input and pipeline
+    composition.
 
     The angle function returns the phase angle (in radians) of a complex
     number. For real-valued inputs, it returns 0 for positive and π for
     negative values.
 
+    Note: This feature is implemented with a manual dispatch because `xp.angle`
+    (from `array-api-compat`) may return a NumPy array even when given a
+    PyTorch tensor. This class guarantees backend preservation.
+
     Parameters
     ----------
     feature: Feature or None, optional
         The input feature to which the angle function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -1779,7 +1776,53 @@ Angle = create_elementwise_class(
     >>> pipeline = Angle(value)
 
     """
-)
+
+    def __init__(
+        self: Angle,
+        feature: Feature | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the Angle feature.
+
+        Parameters
+        ----------
+        feature: Feature or None, optional
+            The input feature whose output will be transformed.
+        **kwargs: Any
+            Additional keyword arguments passed to the base Feature class.
+
+        """
+        super().__init__(
+            function=self._angle_dispatch,
+            feature=feature,
+            **kwargs,
+        )
+
+    @staticmethod
+    def _angle_dispatch(
+        x: NDArray[Any] | torch.Tensor,
+    ) -> NDArray[Any] | torch.Tensor:
+        """Dispatch the angle operation based on backend.
+
+        This method uses `torch.angle` when the input is a PyTorch tensor, and
+        `np.angle` otherwise. It guarantees that a torch input yields a torch
+        output, avoiding backend fallbacks in `array-api-compat`.
+
+        Parameters
+        ----------
+        x: numpy.ndarray or torch.Tensor
+            The input array or tensor.
+
+        Returns
+        -------
+        numpy.ndarray or torch.Tensor
+            The phase angle of the input.
+
+        """
+        if TORCH_AVAILABLE and isinstance(x, torch.Tensor):
+            return torch.angle(x)
+
+        return np.angle(x)
 
 
 Real = create_elementwise_class(
@@ -1798,7 +1841,7 @@ Real = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the real function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -1915,11 +1958,13 @@ class Imag(ElementwiseFeature):
         super().__init__(
             function=self._imag_dispatch,
             feature=feature,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
-    def _imag_dispatch(x):
+    def _imag_dispatch(
+        x: NDArray[Any] | torch.Tensor,
+    ) -> NDArray[Any] | torch.Tensor:
         """Dispatch imag function based on backend and dtype.
 
         This method extracts the imaginary part of the input. For NumPy arrays,
@@ -1938,11 +1983,11 @@ class Imag(ElementwiseFeature):
 
         Parameters
         ----------
-        x: np.ndarray or torch.Tensor
+        x: numpy.ndarray or torch.Tensor
 
         Returns
         -------
-        np.ndarray or torch.Tensor
+        numpy.ndarray or torch.Tensor
             Imaginary part of the input, or zero if real.
 
         """
@@ -2026,7 +2071,7 @@ Conj = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the conjugate function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -2092,7 +2137,7 @@ Sqrt = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the square root function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -2152,7 +2197,7 @@ Square = create_elementwise_class(
     ----------
     feature: Feature or None, optional
         The input feature to which the square function will be applied.
-        If None, the function is directly applied to the input array or tensor.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -2212,7 +2257,7 @@ class Sign(ElementwiseFeature):
     ----------
     feature: Feature or None, optional
         The input feature to which the sign function will be applied.
-        If None, the function is applied directly to the input array.
+        If None, the function is applied directly to the input array or tensor.
 
     Examples
     --------
@@ -2268,11 +2313,11 @@ class Sign(ElementwiseFeature):
 
         Parameters
         ----------
-        feature : Feature or None, optional
+        feature: Feature or None, optional
             An optional input feature to be wrapped. If provided, the sign
             operation will be applied to the result of this feature.
             If None, the sign function is applied to the input directly.
-        **kwargs : Any
+        **kwargs: Any
             Additional keyword arguments passed to the base Feature class.
 
         """
@@ -2284,7 +2329,9 @@ class Sign(ElementwiseFeature):
         )
 
     @staticmethod
-    def _sign_dispatch(x):
+    def _sign_dispatch(
+        x: NDArray[Any] | torch.Tensor,
+    ) -> NDArray[Any] | torch.Tensor:
         """Dispatch the sign operation depending on backend and input type.
 
         This method returns the sign of each element in the input:
@@ -2292,7 +2339,7 @@ class Sign(ElementwiseFeature):
         -  0 for zero,
         - +1 for positive values.
 
-        For complex inputs, it returns `x / abs(x)` if `x ≠ 0`.
+        For complex inputs, it returns `x / abs(x)` if `x != 0`.
 
         This function uses `torch.sign()` when the input is a `torch.Tensor`,
         and `np.sign()` otherwise. It avoids using `xp.sign()` from
@@ -2304,12 +2351,12 @@ class Sign(ElementwiseFeature):
 
         Parameters
         ----------
-        x : np.ndarray or torch.Tensor
+        x: numpy.ndarray or torch.Tensor
             The input array or tensor whose elementwise signs will be computed.
 
         Returns
         -------
-        np.ndarray or torch.Tensor
+        numpy.ndarray or torch.Tensor
             The elementwise sign values of the input.
 
         """
