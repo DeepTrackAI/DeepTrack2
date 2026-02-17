@@ -205,12 +205,12 @@ class SourceDeepTrackNode(DeepTrackNode):
 
     Parameters
     ----------
-    action: Any or Callable
+    action: Any | Callable
         The node action. If callable, it is evaluated to produce the node's
         value. If non-callable, it is treated as a constant value.
         The produced value must be dictionary-like (support `value[key]` where
         `key` is a string).
-    node_name: str or None, optional
+    node_name: str | None, optional
         Optional name assigned to the node. Defaults to `None`.
     **kwargs: Any
         Additional arguments for subclasses or extended functionality.
@@ -1341,7 +1341,7 @@ class Product(Source):
 
     Parameters
     ----------
-    __source: Source or None, optional
+    __source: Source | None, optional
         The base source to be expanded. If None, a default single-item
         source is used, allowing `Product` to act on keyword arguments alone.
     **kwargs: Sequence[Any]
@@ -1706,10 +1706,10 @@ def random_split(
     ----------
     source: Source
         The input `Source` to split.
-    lengths: list[int] or list[float]
+    lengths: list[int] | list[float]
         A list of lengths for the resulting splits. If all values are floats
         summing to 1 (or slightly less), they are treated as proportions.
-    generator: np.random.Generator or torch.Generator or None, optional
+    generator: np.random.Generator | torch.Generator | None, optional
         A NumPy random generator used for shuffling. Defaults to `None`, in
         which case it is initialized to `np.random.default_rng()`.
 

@@ -144,7 +144,7 @@ class Property(DeepTrackNode):
         The rule for sampling values. Can be a constant, function, list,
         dictionary, iterator, tuple, NumPy array, PyTorch tensor, slice,
         or `DeepTrackNode`.
-    node_name: str or None
+    node_name: str | None
         The name of this node. Defaults to None.
     **dependencies: Property
         Additional dependencies passed as named arguments. These dependencies 
@@ -513,7 +513,7 @@ class PropertyDict(DeepTrackNode, dict):
 
     Parameters
     ----------
-    node_name: str or None, optional
+    node_name: str | None, optional
         The name of this node. Defaults to `None`.
     **kwargs: Any
         Key-value pairs used to initialize the dictionary, where values are
@@ -684,7 +684,7 @@ class SequentialProperty(Property):
 
     Parameters
     ----------
-    node_name: str or None, optional
+    node_name: str | None, optional
         The name of this node. Defaults to `None`.
     initial_sampling_rule: Any, optional
         A sampling rule for the first step (step == 0). Can be any value or

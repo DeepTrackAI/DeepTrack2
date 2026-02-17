@@ -4734,7 +4734,7 @@ class Add(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    b: PropertyLike[Any or list[Any]], optional
+    b: PropertyLike[Any | list[Any]], optional
         The value to add to the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -4800,7 +4800,7 @@ class Subtract(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    b: PropertyLike[Any or list[Any]], optional
+    b: PropertyLike[Any | list[Any]], optional
         The value to subtract from the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -4866,7 +4866,7 @@ class Multiply(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    b: PropertyLike[Any or list[Any]], optional
+    b: PropertyLike[Any | list[Any]], optional
         The value to multiply the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -4932,7 +4932,7 @@ class Divide(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    b: PropertyLike[Any or list[Any]], optional
+    b: PropertyLike[Any | list[Any]], optional
         The value to divide the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -5002,7 +5002,7 @@ class FloorDivide(ArithmeticOperationFeature):
     
     Parameters
     ----------
-    b: PropertyLike[Any or list[Any]], optional
+    b: PropertyLike[Any | list[Any]], optional
         The value to floor-divide the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -5068,7 +5068,7 @@ class Power(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    b: PropertyLike[Any or list[Any]], optional
+    b: PropertyLike[Any | list[Any]], optional
         The value to take the power of the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -5134,7 +5134,7 @@ class LessThan(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    b: PropertyLike[Any or list[Any]], optional
+    b: PropertyLike[Any | list[Any]], optional
         The value to compare (<) with the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -5200,7 +5200,7 @@ class LessThanOrEquals(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    b: PropertyLike[Any or list[Any]], optional
+    b: PropertyLike[Any | list[Any]], optional
         The value to compare (<=) with the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -5269,7 +5269,7 @@ class GreaterThan(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    b: PropertyLike[Any or list[Any]], optional
+    b: PropertyLike[Any | list[Any]], optional
         The value to compare (>) with the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -5335,7 +5335,7 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    b: PropertyLike[Any or list[Any]], optional
+    b: PropertyLike[Any | list[Any]], optional
         The value to compare (<=) with the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -5415,7 +5415,7 @@ class Equals(ArithmeticOperationFeature):
 
     Parameters
     ----------
-    b: PropertyLike[Any or list[Any]], optional
+    b: PropertyLike[Any | list[Any]], optional
         The value to compare (==) with the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
@@ -6152,7 +6152,7 @@ class Slice(Feature):
 
     Parameters
     ----------
-    slices: tuple[int or slice or ellipsis] or list[int or slice or ellipsis]
+    slices: tuple[int | slice | ellipsis] | list[int | slice | ellipsis]
         The slicing instructions for each dimension. Each element corresponds
         to a dimension in the input image.
     **kwargs: Any
@@ -6480,7 +6480,7 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
     ----------
     feature: Feature
         The child feature whose properties will be modified conditionally.
-    condition: PropertyLike[str or bool] or None, optional
+    condition: PropertyLike[str | bool] | None, optional
         Either a boolean value (`True`, `False`) or the name of a boolean
         property in the feature’s property dictionary. If the condition
         evaluates to `True`, the specified properties are applied.
@@ -6658,7 +6658,7 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
     on_true: Feature, optional
         The feature to resolve if the condition is `True`. If not provided,
         the input image remains unchanged.
-    condition: str or bool, optional
+    condition: str | bool, optional
         The name of the conditional property or a boolean value. If a string
         is provided, its value is retrieved from `kwargs` or `self.properties`.
         If not found, the default value is `True`.
@@ -7057,7 +7057,7 @@ class OneOf(Feature):
     ----------
     collection: Iterable[Feature]
         A collection of features to choose from.
-    key: PropertyLike[int or None], optional
+    key: PropertyLike[int | None], optional
         The index of the feature to resolve from the collection. If not 
         provided, a feature is selected randomly at each execution.
     **kwargs: Any
@@ -7227,7 +7227,7 @@ class OneOfDict(Feature):
     ----------
     collection: dict[Any, Feature]
         A dictionary where keys are identifiers and values are features.
-    key: PropertyLike[Any or None], optional
+    key: PropertyLike[Any | None], optional
         The key of the feature to resolve from the dictionary. If `None`,
         a random key is selected.
     **kwargs: Any
@@ -7390,7 +7390,7 @@ class LoadImage(Feature):
 
     Parameters
     ----------
-    path: PropertyLike[str or list[str]]
+    path: PropertyLike[str | list[str]]
         The path(s) to the image(s) to load. Can be a single string or a list
         of strings.
     load_options: PropertyLike[dict[str, Any]], optional
@@ -8110,7 +8110,7 @@ class Squeeze(Feature):
 
     Parameters
     ----------
-    axis: int or tuple[int, ...], optional
+    axis: int | tuple[int, ...], optional
         The axis or axes to squeeze. Defaults to `None`, squeezing all axes.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
@@ -8216,7 +8216,7 @@ class Unsqueeze(Feature):
 
     Parameters
     ----------
-    axis: PropertyLike[int or tuple[int, ...]], optional
+    axis: PropertyLike[int | tuple[int, ...]], optional
         The axis or axes where new singleton dimensions should be added.
         Defaults to `None`, which adds a singleton dimension at the last axis.
     **kwargs: Any

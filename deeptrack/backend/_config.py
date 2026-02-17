@@ -826,7 +826,7 @@ class Config:
 
         Parameters
         ----------
-        device: str or torch.device
+        device: str | torch.device
             The device to use.
 
         Examples
@@ -985,7 +985,7 @@ class Config:
 
         Parameters
         ----------
-        backend : "numpy" or "torch"
+        backend : "numpy" | "torch"
             The backend to use for array operations.
 
         Examples
@@ -1089,7 +1089,7 @@ class Config:
 
         Parameters
         ----------
-        context_backend: "numpy" or "torch"
+        context_backend: "numpy" | "torch"
             The backend to temporarily use within the context.
 
         Returns

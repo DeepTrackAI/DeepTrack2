@@ -259,11 +259,11 @@ class ElementwiseFeature(Feature):
 
     Parameters
     ----------
-    function: Callable[[array], array]
+    function: Callable[[array], array] | Callable[[tensor], tensor]
         A backend-specific function (e.g., `np.sin`, `torch.abs`) or a
         backend-agnostic function (e.g., `xp.sin`, `xp.abs`) that will be
         applied elementwise to the input NumPy array or PyTorch tensor.
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to be transformed. If provided, the function is
         applied to the output of this feature. If `None`, the function is
         applied directly to the input passed during evaluation.
@@ -303,7 +303,7 @@ class ElementwiseFeature(Feature):
         function: Callable[[array], array]
             The function to apply elementwise to the input NumPy array or
             PyTorch tensor.
-        feature: Feature or None, optional
+        feature: Feature | None, optional
             The feature whose output will be transformed. If `None`, the
             function is applied to the direct input.
         **kwargs: Any
@@ -392,7 +392,7 @@ def create_elementwise_class(
     ----------
     name: str
         Name of the new class to be created (e.g., "Sin", "Exp").
-    function: Callable[[array], array]
+    function: Callable[[array], array] | Callable[[tensor], tensor]
         The elementwise function to apply, such as `np.sin`, `torch.exp`, or
         `xp.abs`. The arrays can be NumPy arrays or PyTorch tensors.
     docstring: str, optional
@@ -504,7 +504,7 @@ Sin = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the sine function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -564,7 +564,7 @@ Cos = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the cosine function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -624,7 +624,7 @@ Tan = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the tangent function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -687,7 +687,7 @@ Arcsin = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the arcsine function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -747,7 +747,7 @@ Arctan = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the arctangent function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -807,7 +807,7 @@ Sinh = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the hyperbolic sine function will be
         applied. If None, the function is applied directly to the input array
         or tensor.
@@ -868,7 +868,7 @@ Cosh = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the hyperbolic cosine function will be
         applied. If None, the function is applied directly to the input array
         or tensor.
@@ -929,7 +929,7 @@ Tanh = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the hyperbolic tangent function will be
         applied. If None, the function is applied directly to the input array
         or tensor.
@@ -990,7 +990,7 @@ Arcsinh = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the hyperbolic arcsine function will be
         applied. If None, the function is applied directly to the input array
         or tensor.
@@ -1054,7 +1054,7 @@ Arccosh = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the hyperbolic arccosine function will be
         applied. If None, the function is applied directly to the input array
         or tensor.
@@ -1118,7 +1118,7 @@ Arctanh = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the hyperbolic arctangent function will be
         applied. If None, the function is applied directly to the input array
         or tensor.
@@ -1183,7 +1183,7 @@ Round = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the round function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -1243,7 +1243,7 @@ class Floor(ElementwiseFeature):
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the floor function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -1359,7 +1359,7 @@ class Ceil(ElementwiseFeature):
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the ceil function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -1477,7 +1477,7 @@ Exp = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the exponential function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -1539,7 +1539,7 @@ Log = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the natural logarithm function will be
         applied. If None, the function is applied directly to the input array
         or tensor.
@@ -1604,7 +1604,7 @@ Log10 = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the logarithm function with base 10 will be
         applied. If None, the function is applied directly to the input array
         or tensor.
@@ -1667,7 +1667,7 @@ Log2 = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the logarithm function with base 2 will be
         applied. If None, the function is applied directly to the input array
         or tensor.
@@ -1732,7 +1732,7 @@ class Angle(ElementwiseFeature):
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the angle function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -1839,7 +1839,7 @@ Real = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the real function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -1895,7 +1895,7 @@ class Imag(ElementwiseFeature):
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the imaginary-part function will be applied.
         If None, the function is applied directly to the input.
 
@@ -2069,7 +2069,7 @@ Conj = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the conjugate function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -2135,7 +2135,7 @@ Sqrt = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the square root function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -2195,7 +2195,7 @@ Square = create_elementwise_class(
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the square function will be applied.
         If None, the function is applied directly to the input array or tensor.
 
@@ -2255,7 +2255,7 @@ class Sign(ElementwiseFeature):
 
     Parameters
     ----------
-    feature: Feature or None, optional
+    feature: Feature | None, optional
         The input feature to which the sign function will be applied.
         If None, the function is applied directly to the input array or tensor.
 

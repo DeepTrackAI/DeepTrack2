@@ -1249,10 +1249,10 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        action: Callable or Any, optional
+        action: Callable | Any, optional
             Action to compute this node's value. If not provided, uses a no-op
             action (`lambda: None`).
-        node_name: str or None, optional
+        node_name: str | None, optional
             Name for the node. Defaults to `None`.
         **kwargs: Any
             Additional arguments for subclasses or extended functionality.
@@ -1912,7 +1912,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: DeepTrackNode | Any
             The node or value to add.
 
         Returns
@@ -1935,7 +1935,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: DeepTrackNode | Any
             The value or node to add.
 
         Returns
@@ -1958,7 +1958,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: DeepTrackNode | Any
             The node or value to subtract.
 
         Returns
@@ -2006,7 +2006,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: DeepTrackNode | Any
             The node or value to multiply by.
 
         Returns
@@ -2054,7 +2054,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: DeepTrackNode | Any
             The node or value to divide by.
 
         Returns
@@ -2100,7 +2100,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: DeepTrackNode | Any
             The node or value to divide by.
 
         Returns
@@ -2148,7 +2148,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: DeepTrackNode | Any
             The node or value to compare with.
 
         Returns
@@ -2171,7 +2171,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: DeepTrackNode | Any
             The node or value to compare with.
 
         Returns
@@ -2194,7 +2194,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: DeepTrackNode | Any
             The node or value to compare with.
 
         Returns
@@ -2217,7 +2217,7 @@ class DeepTrackNode:
 
         Parameters
         ----------
-        other: DeepTrackNode or Any
+        other: DeepTrackNode | Any
             The node or value to compare with.
 
         Returns
