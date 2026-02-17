@@ -1580,7 +1580,7 @@ class ScatteredBase:
         ScatteredBase
             A new ScatteredBase instance.
         """
-        return ScatteredBase(
+        return type(self)(
             array=self.array if array is None else array,
             properties=self.properties.copy() if properties is None else properties,
         )

@@ -1,10 +1,10 @@
 """Classes to augment images.
 
 This module provides the `augmentations` DeepTrack2 classes
-that manipulates an image object with various transformations.
+that manipulates a scatterer or array object with various transformations.
 
 When used in a training pipeline, these augmentations synthetically
-increase the volume of training data for machine learning models.
+increase the volume of training data for data-driven learning models.
 
 Key Features
 ------------
@@ -104,20 +104,23 @@ import scipy.ndimage as ndimage
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage.interpolation import map_coordinates
 
-from deeptrack import utils
+from deeptrack import utils, TORCH_AVAILABLE
 from deeptrack.features import Feature
-from deeptrack.image import Image
+from deeptrack.image import Image # TBE
 from deeptrack.types import PropertyLike
+from deeptrack.scatterers import ScatteredVolume, ScatteredField
+from deeptrack.backend import xp, config
+
+if TORCH_AVAILABLE:
+    import torch
+    import torch.nn.functional as F
 
 
 class Augmentation(Feature):
     """Base abstract augmentation class.
 
     This class provides the template for the other augmentation
-    classes to inherit from, and is primarily used to handle the
-    input cases of either `Image` objects or `list[Image]` objects
-    via the `_image_wrapped_process_and_get` and `_no_wrap_process_and_get`
-    methods respectively.
+    classes to inherit from.
 
     Parameters
     ----------
@@ -126,121 +129,120 @@ class Augmentation(Feature):
 
     Methods
     -------
-    `_image_wrapped_process_and_get(image_list: list[Image] | list[np.ndarray], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
-        Augments a list of images and returns a wrapped output.
-        
-    `_no_wrap_process_and_get(image_list: list[Image] | list[np.ndarray], time_consistent: PropertyLike[bool], **kwargs) -> list[list]`
-        Augments a list of images and returns the raw output.
-        
-    `update_properties(*args, **kwargs)`
-        Abstract method to update the properties of the image.
+    `_process_and_get(elements, time_consistent, **kwargs) -> list[list]`
+        Augments a list of scatterers or arrays and returns an output of the same type.   
+
+    `_augment_element(element, **kwargs)`
+        Augments a single scatterer or array element.
+
+    `_augment_array(array, **kwargs)`
+        Augments a single array element, dispatching to the appropriate backend method.
+
+    # `_get_numpy(data, **kwargs) -> np.ndarray`
+    #     Abstract method to augment a single array element using numpy.
+
+    # `_get_torch(data, **kwargs) -> torch.Tensor`
+    #     Abstract method to augment a single array element using torch.
     
     """
 
     def __init__(
         self: Augmentation,
         time_consistent: bool = False,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__(time_consistent=time_consistent, **kwargs)
 
-    def _image_wrapped_process_and_get (
+
+    def _process_and_get(
         self: Augmentation,
-        image_list: list[Image] | list[np.ndarray],
+        elements: list[ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor] | ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor | None,
         time_consistent: PropertyLike[bool],
         **kwargs
     ) -> list[list]:
-        """Augments a list of images and returns a wrapped output.
+        """Augments a list of scatterers or arrays and returns an output of the same type.
         
-        This function handles input to ensure compatibility with nested
-        image lists and wraps the output into a new `Image` object.
-        
-        For non-wrapping, see the `_no_wrap_process_and_get` method.
-        
-        """
-        
-        if not isinstance(image_list, list):
-            wrap_depth = 2
-            image_list_of_lists = [[image_list]]
-        elif len(image_list) == 0 or not isinstance(image_list[0], list):
-            wrap_depth = 1
-            image_list_of_lists = [image_list]
-        else:
-            wrap_depth = 0
-            image_list_of_lists = image_list
-
-        new_list_of_lists = []
-        for image_list in image_list_of_lists:
-
-            if time_consistent:
-                self.seed()
-
-            augmented_list = []
-            for image in image_list:
-                self.seed()
-                augmented_image = Image(self.get(image, **kwargs))
-                augmented_image.merge_properties_from(image)
-                self.update_properties(augmented_image, **kwargs)
-                augmented_list.append(augmented_image)
-
-            new_list_of_lists.append(augmented_list)
-
-        for _ in range(wrap_depth):
-            new_list_of_lists = new_list_of_lists[0]
-
-        return new_list_of_lists
-    
-    def _no_wrap_process_and_get(
-        self: Augmentation,
-        image_list: list[Image] | list[np.ndarray],
-        time_consistent: PropertyLike[bool],
-        **kwargs
-    ) -> list[list]:
-        """Augments a list of images and returns the raw output.
-        
-        This function handles input to ensure compatibility with nested
-        image lists and does not wrap the output into a new `Image` object.
-        
-        For wrapping, see the `_image_wrapped_process_and_get` method.
+        This method processes the input elements, which can be a single scatterer or array, a list of scatterers or 
+        arrays, or a list of lists of scatterers or arrays (for sequence batches). It applies the augmentation to each 
+        element while respecting the `time_consistent` property, which ensures that all images in a sequence are 
+        augmented in the same way if set to True.
         
         """
-        if not isinstance(image_list, list):
-            wrap_depth = 2
-            image_list_of_lists = [[image_list]]
-        elif len(image_list) == 0 or not isinstance(image_list[0], list):
-            wrap_depth = 1
-            image_list_of_lists = [image_list]
-        else:
-            wrap_depth = 0
-            image_list_of_lists = image_list
+        #  None input
+        if elements is None:
+            return elements
 
-        new_list_of_lists = []
-        for image_list in image_list_of_lists:
-
-            if time_consistent:
-                self.seed()
-
-            augmented_list = []
-            for image in image_list:
-                self.seed()
-                augmented_image = self.get(image, **kwargs)
-                augmented_list.append(augmented_image)
-
-            new_list_of_lists.append(augmented_list)
-
-        for _ in range(wrap_depth):
-            new_list_of_lists = new_list_of_lists[0]
-
-        return new_list_of_lists
-
-
-    def update_properties(self, *args, **kwargs):
-        pass
-    """Abstract method to update the properties of the image.
-
-    Currently not in use.
+        # Single element
+        if not isinstance(elements, list):
+            return self._augment_element(elements, **kwargs)
     
-    """    
+        # list-of-lists (sequence batches)
+        if len(elements) > 0 and isinstance(elements[0], list):
+            out = []
+            for seq in elements:
+                if time_consistent:
+                    self.seed()
+                out.append([self._augment_element(x, **kwargs) for x in seq])
+            return out
+
+        # flat list (most common in pipelines)
+        if time_consistent:
+            self.seed()
+        return [self._augment_element(x, **kwargs) for x in elements]
+           
+    
+    def _augment_element(
+        self: Augmentation, 
+        element: ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor, 
+        **kwargs: Any,
+    ) -> ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor:
+        """Augments a single scatterer or array element.
+
+        """
+
+        if isinstance(element, (ScatteredVolume, ScatteredField)):
+            new_volume = element.copy()
+            new_volume.array = self._augment_array(
+                new_volume.array, **kwargs
+            )
+            return new_volume
+
+        # Arrays
+        return self._augment_array(element, **kwargs)
+
+    def _augment_array(self, array, **kwargs):
+
+        # TBE *CM* this is a bit hacky, but it allows us to use the old style get() method for augmentations 
+        # that haven't been updated yet, while still allowing new style get() methods to work. We check for 
+        # the old style get() method first, and if it exists, we use it. If not, we check for the backend 
+        # and use the appropriate method. This way, we can gradually update augmentations to the new style 
+        # without breaking existing ones.
+        if hasattr(self, "get") and type(self).get is not Augmentation.get:
+            return self.get(array, **kwargs)
+
+        backend = self.get_backend()
+
+        if hasattr(self, "_get_xp"):
+            xp = np if backend == "numpy" else torch
+            return self._get_xp(array, xp=xp, **kwargs)
+
+        if backend == "numpy":
+            return self._get_numpy(array, **kwargs)
+
+        if backend == "torch":
+            return self._get_torch(array, **kwargs)
+
+        raise RuntimeError(f"Unknown backend: {backend}")
+
+
+    # def _get_xp(self, data, xp, **kwargs) -> np.ndarray | torch.Tensor:
+    #     raise NotImplementedError
+
+    # def _get_numpy(self, data, **kwargs: Any) -> np.ndarray:
+    #     raise NotImplementedError
+
+    # def _get_torch(self, data, **kwargs: Any) -> torch.Tensor:
+    #     raise NotImplementedError
 
 
 class Reuse(Feature):
@@ -266,7 +268,7 @@ class Reuse(Feature):
 
     Methods
     -------
-    `get(image: Image | np.ndarray, uses: PropertyLike[int], storage: PropertyLike[int], **kwargs) -> list[Image]`
+    `get(image: np.ndarray | torch.Tensor, uses: PropertyLike[int], storage: PropertyLike[int], **kwargs) -> np.ndarray | torch.Tensor`
         Abstract method which performs the `Reuse` augmentation.
 
     """
@@ -287,40 +289,26 @@ class Reuse(Feature):
 
     def get(
         self: Reuse,
-        image: Image | np.ndarray,
+        data: np.ndarray | torch.Tensor,
         uses: int,
         storage: int,
-        **kwargs
-    ) -> list[Image]:
+        **kwargs,
+    ) -> np.ndarray | torch.Tensor:
         """Abstract method which performs the `Reuse` augmentation.
 
         """
-
+        # Trim cache
         self.cache = self.cache[-storage:]
-        output = None
 
         if len(self.cache) < storage or self.counter % (uses * storage) == 0:
-            output = self.feature(image)
+            output = self.feature(data)
             self.cache.append(output)
         else:
             output = random.choice(self.cache)
 
         self.counter += 1
 
-        if not isinstance(output, list):
-            output = [output]
-
-        if not self._wrap_array_with_image:
-            return output
-        
-        outputs = []
-        for image in output:
-            image_copy = Image(image)
-            # shallow copy properties before output
-            image_copy.properties = [prop.copy() for prop in image.properties]
-            outputs.append(image_copy)
-
-        return outputs
+        return output
 
 
 class FlipLR(Augmentation):
@@ -333,17 +321,17 @@ class FlipLR(Augmentation):
     ----------
     p: float
        Probability of flipping the image, 
-       leaving as default (0.5 ) is sufficient most of the time.
+       leaving as default (0.5) is sufficient most of the time.
 
     augment: bool
        Whether to perform the augmentation.
 
     Methods
     -------
-    `get(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> Image`
+    `get(image: np.ndarray | torch.Tensor, augment: PropertyLike[bool], **kwargs) -> np.ndarray | torch.Tensor`
         Abstract method which performs the `FlipLR` augmentation.
 
-    `update_properties(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> None`
+    `update_properties(image: np.ndarray | torch.Tensor, augment: PropertyLike[bool], **kwargs) -> None`
         Abstract method to update the properties of the image.
        
     """
@@ -364,10 +352,10 @@ class FlipLR(Augmentation):
 
     def get(
         self: FlipLR,
-        image: Image | np.ndarray,
+        image: np.ndarray | torch.Tensor,
         augment: bool,
         **kwargs
-    ) -> Image:
+    ) -> np.ndarray | torch.Tensor:
         """Abstract method which performs the `FlipLR` augmentation.
 
         """
@@ -378,7 +366,7 @@ class FlipLR(Augmentation):
 
     def update_properties(
         self: FlipLR,
-        image: Image | np.ndarray,
+        image: np.ndarray | torch.Tensor,
         augment: bool,
         **kwargs
     ) -> None:
@@ -827,19 +815,22 @@ class ElasticTransformation(Augmentation):
             **kwargs,
         )
 
-    def get(
+    def _get_numpy(
         self: ElasticTransformation,
-        image: Image | np.ndarray,
+        image: np.ndarray,
         sigma: float,
         alpha: float,
         ignore_last_dim: bool,
         **kwargs
-    ) -> Image:
+    ) -> np.ndarray:
         """Abstract method which performs the `ElasticTransformation` augmentation.
 
-        """    
-        shape = image.shape
+        """
 
+        # from scipy.ndimage import gaussian_filter, map_coordinates
+
+        shape = image.shape
+        
         if ignore_last_dim:
             shape = shape[:-1]
 
@@ -881,10 +872,6 @@ class ElasticTransformation(Augmentation):
                 map_coordinates, input=image, coordinates=coordinates, **kwargs
             ).reshape(shape)
 
-        # TODO: implement interpolated coordinate mapping for property positions
-        # for prop in image:
-        #     if "position" in prop:
-
         return image
 
 
@@ -922,9 +909,7 @@ class Crop(Augmentation):
     def __init__(
         self: Crop,
         *args,
-        crop: int | list[int] | tuple[int] | Callable[[Image], tuple[int]] = (
-            64, 64
-        ),        
+        crop: int | list[int] | tuple[int] | Callable[[Image], tuple[int]] = (64, 64),        
         crop_mode: PropertyLike[str] = "retain",
         corner: PropertyLike[str] = "random",
         **kwargs
@@ -1157,50 +1142,112 @@ class Pad(Augmentation):
     ) -> None:
         super().__init__(px=px, mode=mode, cval=cval, **kwargs)
 
-    def get(
-        self: Pad,
-        image: Image | np.ndarray,
-        px: int,
-        **kwargs
-    ) -> Image:
-        """Abstract method which performs the `Pad` augmentation.
 
-        """    
-        padding = []
+    def _get_numpy(self, image, px, mode="constant", cval=0, **kwargs):
+        if not isinstance(image, np.ndarray):
+            raise TypeError(f"Pad (numpy) expects ndarray, got {type(image)}")
+
+        if image.ndim < 2:
+            raise ValueError("Pad expects at least 2D array (H, W[, C])")
+
+        spatial_ndim = image.ndim - 1  # channel-last
+
         if callable(px):
             px = px(image)
-        elif isinstance(px, int):
-            padding = [(px, px)] * image.ndim
 
-        for idx in range(0, len(px), 2):
-            padding.append((px[idx], px[idx + 1]))
+        if isinstance(px, int):
+            padding = [(px, px)] * spatial_ndim
+        else:
+            if len(px) != 2 * spatial_ndim:
+                raise ValueError(
+                    f"px must have length {2 * spatial_ndim} for channel-last data"
+                )
+            padding = [(px[i], px[i + 1]) for i in range(0, len(px), 2)]
 
-        while len(padding) < image.ndim:
-            padding.append((0, 0))
+        # Do NOT pad channels
+        padding.append((0, 0))
+        out = np.pad(image, pad_width=padding, mode=mode, constant_values=cval)
+        return out
+    
 
-        return utils.safe_call(
-            np.pad,
-            positional_args=(image, padding),
-            **kwargs,
-            )
+    def _get_torch(self, image, px, mode="constant", cval=0, **kwargs):
+
+        if not isinstance(image, torch.Tensor):
+            raise TypeError(f"Pad (torch) expects Tensor, got {type(image)}")
+
+        if image.ndim < 2:
+            raise ValueError("Pad expects at least 2D tensor (H, W[, C])")
+
+        spatial_ndim = image.ndim - 1  # channel-last
+
+        if callable(px):
+            px = px(image)
+
+        if isinstance(px, int):
+            pad_pairs = [(px, px)] * spatial_ndim
+        else:
+            if len(px) != 2 * spatial_ndim:
+                raise ValueError(
+                    f"px must have length {2 * spatial_ndim} for channel-last data"
+                )
+            pad_pairs = [(px[i], px[i + 1]) for i in range(0, len(px), 2)]
+
+        # torch wants reverse order, flattened
+        # also: do NOT pad channels
+        pad_pairs.append((0, 0))
+        pad = [v for pair in reversed(pad_pairs) for v in pair]
+
+        if mode == "constant":
+            return F.pad(image, pad, mode="constant", value=cval)
+
+        return F.pad(image, pad, mode=mode)
+
+
+
+    # def get(
+    #     self: Pad,
+    #     image: Image | np.ndarray,
+    #     px: int,
+    #     **kwargs
+    # ) -> Image:
+    #     """Abstract method which performs the `Pad` augmentation.
+
+    #     """    
+    #     padding = []
+    #     if callable(px):
+    #         px = px(image)
+    #     elif isinstance(px, int):
+    #         padding = [(px, px)] * image.ndim
+
+    #     for idx in range(0, len(px), 2):
+    #         padding.append((px[idx], px[idx + 1]))
+
+    #     while len(padding) < image.ndim:
+    #         padding.append((0, 0))
+
+    #     return utils.safe_call(
+    #         np.pad,
+    #         positional_args=(image, padding),
+    #         **kwargs,
+    #         )
  
 
-    def _image_wrap_process_and_get(
-        self: Pad,
-        images: list[Image] | list[np.ndarray],
-        **kwargs
-    ) -> list[Image]:
-        """Simple method which wraps an `Image` in a `list`.
+    # def _image_wrap_process_and_get(
+    #     self: Pad,
+    #     images: list[Image] | list[np.ndarray],
+    #     **kwargs
+    # ) -> list[Image]:
+    #     """Simple method which wraps an `Image` in a `list`.
         
-        """
-        results = [self.get(image, **kwargs) for image in images]
+    #     """
+    #     results = [self.get(image, **kwargs) for image in images]
 
-        # for idx, result in enumerate(results):
-        #    if isinstance(result, tuple):
-        #    results[idx] = Image(result[0]).merge_properties_from(images[idx])
-        #    else:
-        #    Image(results[idx]).merge_properties_from(images[idx])
-        return results
+    #     # for idx, result in enumerate(results):
+    #     #    if isinstance(result, tuple):
+    #     #    results[idx] = Image(result[0]).merge_properties_from(images[idx])
+    #     #    else:
+    #     #    Image(results[idx]).merge_properties_from(images[idx])
+    #     return results
 
 
 class PadToMultiplesOf(Pad):
