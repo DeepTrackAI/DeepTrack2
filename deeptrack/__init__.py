@@ -43,9 +43,6 @@ from deeptrack.elementwise import *
 from deeptrack.statistics import *
 from deeptrack.holography import *
 
-from deeptrack.image import strip
-
-
 if TORCH_AVAILABLE:
     import deeptrack.pytorch
 
