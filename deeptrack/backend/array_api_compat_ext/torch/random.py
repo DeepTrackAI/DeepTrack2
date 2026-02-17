@@ -19,20 +19,120 @@ __all__ = [
 ]
 
 
-def rand(*args: int) -> torch.Tensor:
-    return torch.rand(*args)
+def rand(*size: int) -> torch.Tensor:
+    """Sample uniform random numbers in [0, 1) with a given shape.
+
+    This function mirrors `numpy.random.rand`, i.e., it takes the output shape
+    as positional integer arguments.
+
+    Parameters
+    ----------
+    *size: int
+        Output shape given as positional integers. If empty, returns a scalar
+        0D tensor.
+
+    Returns
+    -------
+    torch.Tensor
+        A tensor of shape `size` (or scalar if `size` is empty) with values
+        sampled uniformly from [0, 1).
+
+    Examples
+    --------
+    >>> import deeptrack.backend.array_api_compat_ext.torch.random as rnd
+
+    >>> rnd.rand(2, 3).shape
+    torch.Size([2, 3])
+
+    Scalar sample:
+
+    >>> rnd.rand()
+    tensor(0.1735)
+
+    """
+
+    if not size:
+        return torch.rand(())
+
+    return torch.rand(*size)
 
 
 def random(size: tuple[int, ...] | None = None) -> torch.Tensor:
-    return torch.rand(*size) if size else torch.rand()
+    """Sample uniform random numbers in [0, 1).
+
+    This function mirrors `numpy.random.random`, which takes the output
+    shape as a tuple. If `size` is `None`, a scalar 0D tensor is returned.
+
+    Parameters
+    ----------
+    size: tuple[int, ...] or None, optional
+        Output shape. If `None`, returns a scalar tensor.
+
+    Returns
+    -------
+    torch.Tensor
+        A tensor of shape `size` (or scalar if `size` is `None`) with values
+        sampled uniformly from [0, 1).
+
+    Examples
+    --------
+    >>> import deeptrack.backend.array_api_compat_ext.torch.random as rnd
+
+    >>> rnd.random((2, 3)).shape
+    torch.Size([2, 3])
+
+    Scalar sample:
+
+    >>> rnd.random()
+    tensor(0.1124)
+
+    """
+
+    if size is None:
+        return torch.rand(())
+
+    return torch.rand(*size)
 
 
-def random_sample(size: tuple[int, ...] | None = None) -> torch.Tensor:
-    return torch.rand(*size) if size else torch.rand()
+random_sample = random
 
 
-def randn(*args: int) -> torch.Tensor:
-    return torch.randn(*args)
+def randn(*size: int) -> torch.Tensor:
+    """Sample from the standard normal distribution.
+
+    This function mirrors `numpy.random.randn`, i.e. it takes the output
+    shape as positional integer arguments.
+
+    Parameters
+    ----------
+    *size: int
+        Output shape given as positional integers. If empty, returns a scalar
+        0D tensor.
+
+    Returns
+    -------
+    torch.Tensor
+        A tensor of shape `size` (or scalar if `size` is empty) with values
+        sampled from a standard normal distribution.
+
+    Examples
+    --------
+    >>> import deeptrack.backend.array_api_compat_ext.torch.random as rnd
+
+    >>> rnd.randn(2, 3).shape
+    torch.Size([2, 3])
+
+    Scalar sample:
+    
+    >>> rnd.randn()
+    tensor(-2.2435)
+
+    """
+
+    if not size:
+        return torch.randn(())
+
+    return torch.randn(*size)
 
 
 def beta(
@@ -103,6 +203,3 @@ def poisson(
     size: tuple[int, ...] | None = None,
 ) -> torch.Tensor:
     return torch.poisson(torch.full(size, lam))
-
-
-# TODO: implement the rest of the functions as they are needed
