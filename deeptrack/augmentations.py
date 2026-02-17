@@ -101,8 +101,8 @@ import random
 
 import numpy as np
 import scipy.ndimage as ndimage
-from scipy.ndimage import gaussian_filter
-from scipy.ndimage.interpolation import map_coordinates
+# from scipy.ndimage import gaussian_filter
+# from scipy.ndimage.interpolation import map_coordinates
 
 from deeptrack import utils, TORCH_AVAILABLE
 from deeptrack.features import Feature
@@ -206,7 +206,7 @@ class Augmentation(Feature):
             new_volume.array = self._augment_array(
                 new_volume.array, **kwargs
             )
-            new_volume = self._update_properties(new_volume, old_shape, new_volume.array.shape)
+            new_volume = self._update_properties(new_volume, old_shape, new_volume.array.shape, **kwargs)
             return new_volume
 
         # Arrays
@@ -236,40 +236,40 @@ class Augmentation(Feature):
 
         raise RuntimeError(f"Unknown backend: {backend}")
     
-    def _update_properties(self, element, old_shape, new_shape):
+    def _update_properties(self, element, old_shape, new_shape, **kwargs):
         return element
 
 
-    # def _get_xp(self, data, xp, **kwargs) -> np.ndarray | torch.Tensor:
-    #     raise NotImplementedError
-
-    # def _get_numpy(self, data, **kwargs: Any) -> np.ndarray:
-    #     raise NotImplementedError
-
-    # def _get_torch(self, data, **kwargs: Any) -> torch.Tensor:
-    #     raise NotImplementedError
-
-
 class Reuse(Feature):
-    """Acts like cache.
+    """Caches and reuses the output of a feature.
 
-    `Reuse` stores the output of a feature and reuses it for subsequent calls,
-    even if it is updated. This is can be used after a time-consuming feature
-    to augment the output of the feature without recalculating it.
+    `Reuse` wraps another feature and avoids recomputing it at every call.
+    Instead, it stores up to `storage` previously computed outputs and
+    reuses them for a controlled number of calls.
+
+    A new output from `feature` is computed when:
+
+    - The cache contains fewer than `storage` elements, or
+    - The internal call counter is a multiple of `uses * storage`.
+
+    Otherwise, one of the cached outputs is returned (uniformly at random).
+
+    This is useful when a computationally expensive feature should only
+    be evaluated intermittently while still producing varying outputs
+    through reuse.
 
     Parameters
     ----------
-    feature: Feature
-       The feature to reuse.
-       
-    uses: int
-       Number of each stored image uses before evaluating `feature`.
-       Note that the actual total number of uses is `uses * storage`.
-       Should be constant.
-       
-    storage: int
-       Number of instances of the output of `feature` to cache.
-       Should be constant.
+    feature : Feature
+        The feature whose output should be cached and reused.
+
+    uses : PropertyLike[int], default=2
+        Number of times each cached output is reused before triggering
+        a new evaluation cycle.
+
+    storage : PropertyLike[int], default=1
+        Maximum number of outputs from `feature` stored in the cache.
+
 
     Methods
     -------
@@ -302,14 +302,19 @@ class Reuse(Feature):
         """Abstract method which performs the `Reuse` augmentation.
 
         """
-        # Trim cache
-        self.cache = self.cache[-storage:]
 
-        if len(self.cache) < storage or self.counter % (uses * storage) == 0:
+        recompute = (
+            len(self.cache) < storage
+            or self.counter % (uses * storage) == 0
+        )
+
+        if recompute:
             output = self.feature(data)
             self.cache.append(output)
+            self.cache = self.cache[-storage:]
         else:
-            output = random.choice(self.cache)
+            index = self.counter % storage
+            output = self.cache[index]
 
         self.counter += 1
 
@@ -319,8 +324,8 @@ class Reuse(Feature):
 class FlipLR(Augmentation):
     """Flips images left-right.
 
-    If scattered volume or field, updates all properties called "position" to flip the second index in the 
-    image.
+    If scattered volume or field, updates all properties called "position"
+    to flip the second index (width axis) of the image.
 
     Parameters
     ----------
@@ -332,10 +337,10 @@ class FlipLR(Augmentation):
 
     Methods
     -------
-    `_get_xp(image: np.ndarray | torch.Tensor, augment: PropertyLike[bool], **kwargs) -> np.ndarray | torch.Tensor`
+    `_get_xp(image: np.ndarray | torch.Tensor, xp: Any, augment: PropertyLike[bool], **kwargs) -> np.ndarray | torch.Tensor`
         Abstract method which performs the `FlipLR` augmentation.
 
-    `_update_properties(image: np.ndarray | torch.Tensor, augment: PropertyLike[bool], **kwargs) -> None`
+    `_update_properties(element: ScatteredVolume | ScatteredField, old_shape: tuple, new_shape: tuple, augment: PropertyLike[bool], **kwargs) -> ScatteredVolume | ScatteredField`
         Abstract method to update the properties of the scattered volume or field.
        
     """
@@ -357,60 +362,45 @@ class FlipLR(Augmentation):
     def _get_xp(
         self: FlipLR, 
         array: np.ndarray | torch.Tensor, 
-        xp: , 
+        xp: Any, 
         augment: bool, 
         **kwargs,
     ) -> np.ndarray | torch.Tensor:
 
         if not augment:
             return array
-
-        return xp.flip(array, axis=1)
+        
+        if xp.__name__ == "torch":
+            return xp.flip(array, dims=(1,))
+        
+        return xp.flip(array, axis=1)        
 
     def _update_properties(
-        self: , 
-        element, 
-        old_shape, 
-        new_shape, 
-        augment: bool, 
+        self: FlipLR, 
+        element: ScatteredVolume | ScatteredField, 
+        old_shape: tuple, 
+        new_shape: tuple, 
         **kwargs,
-    ) -> :
+    ) -> ScatteredVolume | ScatteredField:
 
-        if not augment:
-            return element
 
         if hasattr(element, "properties"):
             for prop in element.properties:
                 if "position" in prop:
                     pos = prop["position"]
                     W = old_shape[1]
-                    pos[..., 1] = W - 1 - pos[..., 1]
-                    prop["position"] = pos
+                    new_pos = pos.clone() if hasattr(pos, "clone") else pos.copy()
+                    new_pos[..., 1] = W - 1 - new_pos[..., 1]
+                    prop["position"] = new_pos
 
         return element
+
 
 class FlipUD(Augmentation):
     """Flips images up-down.
 
-    Updates all properties called "position" to flip the first index
-    in the image.
-
-    Parameters
-    ----------
-    p: float
-       Probability of flipping the image,
-       leaving as default (0.5) is sufficient most of the time.
-
-    augment: bool
-       Whether to perform the augmentation.
-
-    Methods
-    -------
-    `get(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> Image`
-        Abstract method which performs the `FlipUD` augmentation.
-    `update_properties(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> None`
-        Abstract method to update the properties of the image.
-       
+    If scattered volume or field, updates all properties called "position"
+    to flip the first index (height axis) of the image.
     """
 
     def __init__(
@@ -427,51 +417,51 @@ class FlipUD(Augmentation):
             **kwargs,
         )
 
-    def _get_xp(self, array, xp, augment: bool, **kwargs):
+    def _get_xp(
+        self,
+        array: np.ndarray | torch.Tensor,
+        xp: Any,
+        augment: bool,
+        **kwargs,
+    ) -> np.ndarray | torch.Tensor:
 
         if not augment:
             return array
 
+        if xp.__name__ == "torch":
+            return xp.flip(array, dims=(0,))
+
         return xp.flip(array, axis=0)
 
-    def _update_properties(self, element, old_shape, new_shape, augment: bool, **kwargs):
-
-        if not augment:
-            return element
+    def _update_properties(
+        self,
+        element: ScatteredVolume | ScatteredField,
+        old_shape: tuple,
+        new_shape: tuple,
+        **kwargs,
+    ) -> ScatteredVolume | ScatteredField:
 
         if hasattr(element, "properties"):
             for prop in element.properties:
                 if "position" in prop:
                     pos = prop["position"]
                     H = old_shape[0]
-                    pos[..., 0] = H - 1 - pos[..., 0]
-                    prop["position"] = pos
+
+                    new_pos = (
+                        pos.clone() if hasattr(pos, "clone") else pos.copy()
+                    )
+
+                    new_pos[..., 0] = H - 1 - new_pos[..., 0]
+                    prop["position"] = new_pos
 
         return element
 
 
 class FlipDiagonal(Augmentation):
-    """Flips images along the main diagonal.
+    """Flips images along the main diagonal (transpose).
 
-    Updates all properties called "position" by swapping
-    the first and second index.
-
-    Parameters
-    ----------
-    p: float
-       Probability of flipping the image,
-       leaving as default (0.5) is sufficient most of the time.
-
-    augment: bool
-       Whether to perform the augmentation.
-       
-    Methods
-    -------
-    `get(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> Image`
-        Abstract method which performs the `FlipDiagonal` augmentation.
-    `update_properties(image: Image | np.ndarray, augment: PropertyLike[bool], **kwargs) -> None`
-        Abstract method to update the properties of the image.
-
+    If scattered volume or field, swaps position coordinates
+    (y, x) -> (x, y).
     """
 
     def __init__(
@@ -479,45 +469,56 @@ class FlipDiagonal(Augmentation):
         p: PropertyLike[float] = 0.5,
         augment: PropertyLike[bool] = None,
         **kwargs
-    ):
+    ) -> None:
         super().__init__(
             p=p,
             augment=(
                 lambda p: np.random.rand() < p
-                ) if augment is None else augment,
+            ) if augment is None else augment,
             **kwargs,
         )
 
-    def get(
-        self: FlipDiagonal,
-        image: Image | np.ndarray,
+    def _get_xp(
+        self,
+        array: np.ndarray | torch.Tensor,
+        xp: Any,
         augment: bool,
-        **kwargs
-    ) -> Image:
-        """Abstract method which performs the `FlipDiagonal` augmentation.
+        **kwargs,
+    ) -> np.ndarray | torch.Tensor:
 
-        """        
-        if augment:
-            image = np.transpose(image, axes=(1, 0, *range(2, image.ndim)))
-        return image
+        if not augment:
+            return array
 
-    def update_properties(
-        self: FlipDiagonal,
-        image: Image | np.ndarray,
-        augment: bool,
-        **kwargs
-    ) -> None:
-        """Abstract method to update the properties of the image.
-    
-        """            
-        if augment:
-            for prop in image.properties:
+        if xp.__name__ == "torch":
+            return array.transpose(0, 1)
+
+        return xp.swapaxes(array, 0, 1)
+
+    def _update_properties(
+        self,
+        element: ScatteredVolume | ScatteredField,
+        old_shape: tuple,
+        new_shape: tuple,
+        **kwargs,
+    ) -> ScatteredVolume | ScatteredField:
+
+        if hasattr(element, "properties"):
+            for prop in element.properties:
                 if "position" in prop:
-                    position = np.array(prop["position"])
-                    t = np.array(position[..., 0])
-                    position[..., 0] = position[..., 1]
-                    position[..., 1] = t
-                    prop["position"] = position
+                    pos = prop["position"]
+
+                    new_pos = (
+                        pos.clone() if hasattr(pos, "clone") else pos.copy()
+                    )
+
+                    # swap y and x
+                    tmp = new_pos[..., 0].clone() if hasattr(new_pos, "clone") else new_pos[..., 0].copy()
+                    new_pos[..., 0] = new_pos[..., 1]
+                    new_pos[..., 1] = tmp
+
+                    prop["position"] = new_pos
+
+        return element
 
 
 class Affine(Augmentation):
@@ -610,125 +611,386 @@ class Affine(Augmentation):
             **kwargs,
         )
 
-    def _process_properties(
-        self: Affine,
-        properties: dict
-    ) -> dict:
+    # def _process_properties(
+    #     self: Affine,
+    #     properties: dict
+    # ) -> dict:
         
-        properties = super()._process_properties(properties)
-        # Make translate tuple.
-        translate = properties["translate"]
-        if isinstance(translate, (float, int)):
-            translate = (translate, translate)
-        if isinstance(translate, dict):
-            translate = (translate["x"], translate["y"])
-        properties["translate"] = translate
+    #     properties = super()._process_properties(properties)
+    #     # Make translate tuple.
+    #     translate = properties["translate"]
+    #     if isinstance(translate, (float, int)):
+    #         translate = (translate, translate)
+    #     if isinstance(translate, dict):
+    #         translate = (translate["x"], translate["y"])
+    #     properties["translate"] = translate
 
-        # Make scale tuple.
-        scale = properties["scale"]
-        if isinstance(scale, (float, int)):
-            scale = (scale, scale)
-        if isinstance(scale, dict):
-            scale = (scale["x"], scale["y"])
-        properties["scale"] = scale
+    #     # Make scale tuple.
+    #     scale = properties["scale"]
+    #     if isinstance(scale, (float, int)):
+    #         scale = (scale, scale)
+    #     if isinstance(scale, dict):
+    #         scale = (scale["x"], scale["y"])
+    #     properties["scale"] = scale
 
-        return properties
+    #     return properties
 
-    def get(
-        self: Affine,
-        image: Image | np.ndarray,
-        scale: float,
-        translate: float,
-        rotate: float,
-        shear: float,
-        **kwargs
-    ) -> Image:
-        """Abstract method which performs the `Affine` augmentation.
+    # def get(
+    #     self: Affine,
+    #     image: Image | np.ndarray,
+    #     scale: float,
+    #     translate: float,
+    #     rotate: float,
+    #     shear: float,
+    #     **kwargs
+    # ) -> Image:
+    #     """Abstract method which performs the `Affine` augmentation.
         
-        Affine transformations include:
-        - `Translation`
-        - `Scaling`
-        - `Rotation`
-        - `Shearing`
+    #     Affine transformations include:
+    #     - `Translation`
+    #     - `Scaling`
+    #     - `Rotation`
+    #     - `Shearing`
 
-        """    
-        assert (
-            image.ndim == 2 or image.ndim == 3
-        ), "Affine only supports 2-dimensional or 3-dimension inputs, got {0}"\
-        .format(image.ndim)
+    #     """    
+    #     assert (
+    #         image.ndim == 2 or image.ndim == 3
+    #     ), "Affine only supports 2-dimensional or 3-dimension inputs, got {0}"\
+    #     .format(image.ndim)
+
+    #     dx, dy = translate
+    #     fx, fy = scale
+
+    #     cr = np.cos(rotate)
+    #     sr = np.sin(rotate)
+
+    #     k = np.tan(shear)
+
+    #     scale_map = np.array([[1 / fx, 0], [0, 1 / fy]])
+    #     rotation_map = np.array([[cr, sr], [-sr, cr]])
+    #     shear_map = np.array([[1, 0], [-k, 1]])
+
+    #     mapping = scale_map @ rotation_map @ shear_map
+
+    #     shape = image.shape
+    #     center = np.array(shape[:2]) / 2
+
+    #     d = center - np.dot(mapping, center) - np.array([dy, dx])
+
+    #     # Clean up kwargs.
+    #     kwargs.pop("input", False)
+    #     kwargs.pop("matrix", False)
+    #     kwargs.pop("offset", False)
+    #     kwargs.pop("output", False)
+
+    #     # Call affine_transform.
+    #     if image.ndim == 2:
+    #         new_image = utils.safe_call(
+    #             ndimage.affine_transform,
+    #             input=image,
+    #             matrix=mapping,
+    #             offset=d,
+    #             **kwargs,
+    #         )
+
+    #         new_image = Image(new_image)
+    #         new_image.merge_properties_from(image)
+    #         image = new_image
+
+    #     elif image.ndim == 3:
+    #         for z in range(shape[-1]):
+    #             image[:, :, z] = utils.safe_call(
+    #                 ndimage.affine_transform,
+    #                 input=image[:, :, z],
+    #                 matrix=mapping,
+    #                 offset=d,
+    #                 **kwargs,
+    #             )
+
+    #     # Map positions.
+    #     if hasattr(image, "properties"):
+    #         inverse_mapping = np.linalg.inv(mapping)
+    #         for prop in image.properties:
+    #             if "position" in prop:
+    #                 position = np.array(prop["position"])
+
+    #                 inverted = (
+    #                     np.dot(
+    #                         inverse_mapping,
+    #                         (position[..., :2] - center + np.array([dy, dx]))[
+    #                             ..., np.newaxis
+    #                         ],
+    #                     )
+    #                     .squeeze()
+    #                     .transpose()
+    #                 ) + center
+
+    #                 position[..., :2] = inverted
+
+    #                 prop["position"] = position
+
+    #     return image
+
+    def _build_mapping(self, array, scale, translate, rotate, shear):
+
+        xp = np if isinstance(array, np.ndarray) else torch
+
+        dx, dy = translate
+        fx, fy = scale
+
+        cr = xp.cos(xp.asarray(rotate))
+        sr = xp.sin(xp.asarray(rotate))
+        k = xp.tan(xp.asarray(shear))
+
+        scale_map = xp.asarray([[1 / fx, 0], [0, 1 / fy]])
+        rotation_map = xp.asarray([[cr, sr], [-sr, cr]])
+        shear_map = xp.asarray([[1, 0], [-k, 1]])
+
+        mapping = scale_map @ rotation_map @ shear_map
+
+        shape = array.shape
+        center = xp.asarray(shape[:2]) / 2
+        offset = center - mapping @ center - xp.asarray([dy, dx])
+
+        return mapping, offset
+
+    def _get_numpy(
+        self,
+        array: np.ndarray,
+        scale,
+        translate,
+        rotate,
+        shear,
+        order=1,
+        cval=0.0,
+        mode="reflect",
+        **kwargs,
+    ):
+
+        from scipy.ndimage import affine_transform
 
         dx, dy = translate
         fx, fy = scale
 
         cr = np.cos(rotate)
         sr = np.sin(rotate)
-
         k = np.tan(shear)
 
         scale_map = np.array([[1 / fx, 0], [0, 1 / fy]])
         rotation_map = np.array([[cr, sr], [-sr, cr]])
         shear_map = np.array([[1, 0], [-k, 1]])
 
-        mapping = scale_map @ rotation_map @ shear_map
+        matrix = scale_map @ rotation_map @ shear_map
 
-        shape = image.shape
+        shape = array.shape
         center = np.array(shape[:2]) / 2
+        offset = center - matrix @ center - np.array([dy, dx])
 
-        d = center - np.dot(mapping, center) - np.array([dy, dx])
+        self._last_affine = {
+            "mapping": matrix,
+            "offset": offset,
+        }
 
-        # Clean up kwargs.
-        kwargs.pop("input", False)
-        kwargs.pop("matrix", False)
-        kwargs.pop("offset", False)
-        kwargs.pop("output", False)
+        if array.ndim == 2:
 
-        # Call affine_transform.
-        if image.ndim == 2:
-            new_image = utils.safe_call(
-                ndimage.affine_transform,
-                input=image,
-                matrix=mapping,
-                offset=d,
-                **kwargs,
+            return affine_transform(
+                array,
+                matrix=matrix,
+                offset=offset,
+                order=order,
+                mode=mode,
+                cval=cval,
             )
 
-            new_image = Image(new_image)
-            new_image.merge_properties_from(image)
-            image = new_image
+        elif array.ndim == 3:
 
-        elif image.ndim == 3:
-            for z in range(shape[-1]):
-                image[:, :, z] = utils.safe_call(
-                    ndimage.affine_transform,
-                    input=image[:, :, z],
-                    matrix=mapping,
-                    offset=d,
-                    **kwargs,
+            out = np.empty_like(array)
+
+            for c in range(array.shape[-1]):
+                out[..., c] = affine_transform(
+                    array[..., c],
+                    matrix=matrix,
+                    offset=offset,
+                    order=order,
+                    mode=mode,
+                    cval=cval,
                 )
 
-        # Map positions.
-        if hasattr(image, "properties"):
-            inverse_mapping = np.linalg.inv(mapping)
-            for prop in image.properties:
-                if "position" in prop:
-                    position = np.array(prop["position"])
+            return out
 
-                    inverted = (
-                        np.dot(
-                            inverse_mapping,
-                            (position[..., :2] - center + np.array([dy, dx]))[
-                                ..., np.newaxis
-                            ],
-                        )
-                        .squeeze()
-                        .transpose()
-                    ) + center
+        else:
+            raise ValueError("Affine only supports 2D or 3D arrays.")
+    
+    def _get_torch(
+        self,
+        array: torch.Tensor,
+        scale,
+        translate,
+        rotate,
+        shear,
+        order=1,
+        cval=0.0,
+        mode="reflect",
+        **kwargs,
+    ):
 
-                    position[..., :2] = inverted
+        import torch.nn.functional as F
 
-                    prop["position"] = position
+        if array.ndim not in (2, 3):
+            raise ValueError("Affine only supports 2D or 3D tensors.")
 
-        return image
+        device = array.device
+        dtype = array.dtype
+
+        dx, dy = translate
+        fx, fy = scale
+
+        cr = torch.cos(torch.tensor(rotate, dtype=dtype, device=device))
+        sr = torch.sin(torch.tensor(rotate, dtype=dtype, device=device))
+        k = torch.tan(torch.tensor(shear, dtype=dtype, device=device))
+
+        scale_map = torch.tensor([[1 / fx, 0], [0, 1 / fy]], dtype=dtype, device=device)
+        rotation_map = torch.stack([
+            torch.stack([cr, sr]),
+            torch.stack([-sr, cr])
+        ])
+        shear_map = torch.tensor([[1, 0], [-k, 1]], dtype=dtype, device=device)
+
+        matrix = scale_map @ rotation_map @ shear_map
+
+        H, W = array.shape[:2]
+        center = torch.tensor([H / 2, W / 2], dtype=dtype, device=device)
+
+        offset = center - matrix @ center - torch.tensor([dy, dx], dtype=dtype, device=device)
+
+        # Store transform BEFORE grid_sample
+        self._last_affine = {
+            "mapping": matrix,
+            "offset": offset,
+        }
+
+        # Build grid
+        yy, xx = torch.meshgrid(
+            torch.arange(H, dtype=dtype, device=device),
+            torch.arange(W, dtype=dtype, device=device),
+            indexing="ij",
+        )
+
+        coords = torch.stack([yy, xx], dim=-1).reshape(-1, 2)
+
+        inv_matrix = torch.linalg.inv(matrix)
+
+        warped = (inv_matrix @ (coords - offset).T).T
+
+        y_warp = warped[:, 0]
+        x_warp = warped[:, 1]
+
+        # Align_corners=True assumption
+        x_norm = 2 * x_warp / (W - 1) - 1
+        y_norm = 2 * y_warp / (H - 1) - 1
+
+        grid = torch.stack([x_norm, y_norm], dim=-1).view(1, H, W, 2)
+
+        if array.ndim == 2:
+            tensor = array.unsqueeze(0).unsqueeze(0)
+        else:
+            tensor = array.permute(2, 0, 1).unsqueeze(0)
+
+        mode_map = {
+            0: "nearest",
+            1: "bilinear",
+        }
+
+        padding_mode = {
+            "reflect": "reflection",
+            "nearest": "border",
+            "constant": "zeros",
+        }.get(mode, "reflection")
+
+        out = F.grid_sample(
+            tensor,
+            grid,
+            mode=mode_map.get(order, "bilinear"),
+            padding_mode=padding_mode,
+            align_corners=True,  # DO NOT CHANGE
+        )
+
+        if array.ndim == 2:
+            return out.squeeze(0).squeeze(0)
+
+        return out.squeeze(0).permute(1, 2, 0)
+
+    def _update_properties(
+        self,
+        element,
+        old_shape,
+        new_shape,
+        **kwargs,
+    ):
+        """
+        Update geometric metadata (positions, directions) after affine transform.
+
+        Convention A:
+            - All metadata (positions, directions) are NumPy arrays.
+            - Backend affects only image resampling, not metadata.
+        """
+
+        if not hasattr(element, "properties"):
+            return element
+
+        # Retrieve mapping and offset used for resampling
+        mapping = self._last_affine["mapping"]
+        offset = self._last_affine["offset"]
+
+        # If backend was torch, convert transform to numpy
+        if self.get_backend() == "torch":
+            mapping = mapping.detach().cpu().numpy()
+            offset = offset.detach().cpu().numpy()
+
+        inverse_mapping = np.linalg.inv(mapping)
+
+        for prop in element.properties:
+
+            # Update positions
+            if "position" in prop:
+
+                pos = prop["position"]
+
+                # Enforce numpy metadata convention
+                if not isinstance(pos, np.ndarray):
+                    pos = np.asarray(pos)
+
+                new_pos = pos.copy()
+
+                coords = new_pos[..., :2]
+
+                transformed = (
+                    inverse_mapping @ (coords - offset)[..., None]
+                ).squeeze(-1)
+
+                new_pos[..., :2] = transformed
+                prop["position"] = new_pos
+
+            # Update direction vectors
+            if "direction" in prop:
+
+                direction = prop["direction"]
+
+                if not isinstance(direction, np.ndarray):
+                    direction = np.asarray(direction)
+
+                new_dir = direction.copy()
+
+                coords = new_dir[..., :2]
+
+                transformed_dir = (
+                    inverse_mapping @ coords[..., None]
+                ).squeeze(-1)
+
+                new_dir[..., :2] = transformed_dir
+                prop["direction"] = new_dir
+
+        return element
 
 
 class ElasticTransformation(Augmentation):
@@ -827,7 +1089,7 @@ class ElasticTransformation(Augmentation):
 
         """
 
-        # from scipy.ndimage import gaussian_filter, map_coordinates
+        from scipy.ndimage import gaussian_filter, map_coordinates
 
         shape = image.shape
         
