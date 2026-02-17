@@ -25,14 +25,14 @@ __all__ = [
 def rand(*size: int) -> torch.Tensor:
     """Sample uniform random numbers in [0, 1) with a given shape.
 
-    This function mirrors `numpy.random.rand`, i.e., it takes the output shape
-    as positional integer arguments.
+    This function mirrors `numpy.random.rand`, i.e., it takes the output
+    shape as positional integer arguments.
 
     Parameters
     ----------
     *size: int
-        Output shape given as positional integers. If empty, returns a scalar
-        0D tensor.
+        Output shape given as positional integers. If empty, returns a
+        scalar 0D tensor.
 
     Returns
     -------
@@ -109,8 +109,8 @@ def randn(*size: int) -> torch.Tensor:
     Parameters
     ----------
     *size: int
-        Output shape given as positional integers. If empty, returns a scalar
-        0D tensor.
+        Output shape given as positional integers. If empty, returns a
+        scalar 0D tensor.
 
     Returns
     -------
@@ -126,7 +126,7 @@ def randn(*size: int) -> torch.Tensor:
     torch.Size([2, 3])
 
     Scalar sample:
-    
+
     >>> rnd.randn()
     tensor(-2.2435)
 
@@ -156,9 +156,9 @@ def beta(
     b: float | torch.Tensor
         Second shape parameter (beta). Can be a scalar or a tensor.
     size: tuple[int, ...] | None, optional
-        Sample shape prepended to the broadcasted parameter shape. If `None`,
-        returns samples with the broadcasted parameter shape (scalar if both
-        parameters are scalars).
+        Sample shape prepended to the broadcasted parameter shape. If
+        `None`, returns samples with the broadcasted parameter shape
+        (scalar if both parameters are scalars).
 
     Returns
     -------
@@ -172,7 +172,7 @@ def beta(
 
     Scalar parameters:
 
-    >>> rnd.beta(2.0, 5.0).ndim
+    >>> rnd.beta(2.0, 5.0)
     tensor(0.0784)
 
     Tensor parameters (broadcasted):
@@ -206,8 +206,8 @@ def binomial(
 ) -> torch.Tensor:
     """Sample from a Binomial distribution.
 
-    Mirrors `numpy.random.binomial`, including support for tensor
-    parameters and broadcasting.
+    Mirrors `numpy.random.binomial`, including support for tensor parameters
+    and broadcasting.
 
     Parameters
     ----------
@@ -223,7 +223,8 @@ def binomial(
     -------
     torch.Tensor
         Samples drawn from Binomial(n, p). Output shape is
-        `size + batch_shape`.
+        `size + batch_shape`. The returned dtype is `torch.int64` to match
+        NumPy parity.
 
     Examples
     --------
@@ -231,6 +232,9 @@ def binomial(
 
     >>> rnd.binomial(10, 0.5)
     tensor(6.)
+
+    >>> rnd.binomial(10, 0.5).dtype
+    torch.int64
 
     >>> rnd.binomial(10, 0.5, (2, 3)).shape
     torch.Size([2, 3])
@@ -240,9 +244,9 @@ def binomial(
     dist = Binomial(total_count=n, probs=p)
 
     if size is None:
-        return dist.sample()
+        return dist.sample().to(torch.int64)
 
-    return dist.sample(size)
+    return dist.sample(size).to(torch.int64)
 
 
 def choice(
@@ -258,8 +262,8 @@ def choice(
     Parameters
     ----------
     a: int | torch.Tensor
-        If an integer, samples are drawn from `torch.arange(a)`. If a tensor,
-        it must be 1D and samples are drawn from its elements.
+        If an integer, samples are drawn from `torch.arange(a)`. If a
+        tensor, it must be 1D and samples are drawn from its elements.
     size: tuple[int, ...] | None, optional
         Output shape. If `None`, returns a scalar 0D tensor.
     replace: bool, optional
@@ -276,8 +280,8 @@ def choice(
     Raises
     ------
     ValueError
-        If `a` is a tensor and is not 1D, if `a` is an integer < 1, or if `p`
-        has an incompatible shape.
+        If `a` is a tensor and is not 1D, if `a` is an integer < 1, or if
+        `p` has an incompatible shape.
 
     Examples
     --------
@@ -312,7 +316,7 @@ def choice(
     if isinstance(a, int):
         if a < 1:
             raise ValueError("`a` must be >= 1 when provided as an integer")
-        population = torch.arange(a)
+        population = torch.arange(a, dtype=torch.int64)
     else:
         if a.ndim != 1:
             raise ValueError("`a` must be 1D")
@@ -321,7 +325,11 @@ def choice(
     n = population.shape[0]
 
     if p is None:
-        probs = torch.ones(n, dtype=torch.float, device=population.device)
+        probs = torch.ones(
+            n,
+            dtype=torch.float,
+            device=population.device,
+        )
     else:
         if p.shape != (n,):
             raise ValueError("`p` must have shape (len(a),)")
@@ -365,9 +373,9 @@ def multinomial(
     Returns
     -------
     torch.Tensor
-        Counts per category. Output shape is
-        `(len(pvals),)` if `size=None`,
-        otherwise `size + (len(pvals),)`.
+        Counts per category. Output shape is `(len(pvals),)` if `size=None`,
+        otherwise `size + (len(pvals),)`. The returned dtype is
+        `torch.int64` to match NumPy parity.
 
     Examples
     --------
@@ -381,6 +389,9 @@ def multinomial(
     >>> rnd.multinomial(5, p)
     tensor([1., 4.])
 
+    >>> rnd.multinomial(5, p).dtype
+    torch.int64
+
     Multiple draws:
 
     >>> rnd.multinomial(5, p, (3,)).shape
@@ -391,15 +402,15 @@ def multinomial(
     if pvals.ndim != 1:
         raise ValueError("`pvals` must be 1D")
 
-    probs = pvals.to(dtype=torch.float)
+    probs = pvals.to(dtype=torch.float, device=pvals.device)
     probs = probs / probs.sum()
 
     dist = Multinomial(total_count=n, probs=probs)
 
     if size is None:
-        return dist.sample()
+        return dist.sample().to(torch.int64)
 
-    return dist.sample(size)
+    return dist.sample(size).to(torch.int64)
 
 
 def randint(
@@ -414,9 +425,9 @@ def randint(
     Parameters
     ----------
     low: int
-        Lowest integer (inclusive) if `high` is provided.
-        If `high` is None, this is treated as the exclusive upper bound,
-        and `low` is set to 0.
+        Lowest integer (inclusive) if `high` is provided. If `high` is
+        `None`, this is treated as the exclusive upper bound, and `low` is
+        set to 0.
     high: int | None, optional
         Upper bound (exclusive).
     size: tuple[int, ...] | None, optional
@@ -425,7 +436,7 @@ def randint(
     Returns
     -------
     torch.Tensor
-        Random integers in `[low, high)`.
+        Random integers in `[low, high)` with dtype `torch.int64`.
 
     Examples
     --------
@@ -492,8 +503,8 @@ def permutation(x: int | torch.Tensor) -> torch.Tensor:
     Parameters
     ----------
     x: int | torch.Tensor
-        If an integer, returns a permutation of `torch.arange(x)`.
-        If a tensor, returns a permuted copy along the first axis.
+        If an integer, returns a permutation of `torch.arange(x)`. If a
+        tensor, returns a permuted copy along the first axis.
 
     Returns
     -------
@@ -534,7 +545,8 @@ def uniform(
 ) -> torch.Tensor:
     """Sample from a uniform distribution on [low, high).
 
-    Mirrors `numpy.random.uniform`.
+    Mirrors `numpy.random.uniform`, including support for tensor parameters
+    and broadcasting.
 
     Parameters
     ----------
@@ -548,7 +560,9 @@ def uniform(
     Returns
     -------
     torch.Tensor
-        Samples drawn uniformly from [low, high).
+        Samples drawn uniformly from [low, high). Output shape is
+        `size + batch_shape`, where `batch_shape` is the broadcasted shape of
+        `low` and `high`.
 
     Examples
     --------
@@ -565,12 +579,20 @@ def uniform(
     low_t = torch.as_tensor(low)
     high_t = torch.as_tensor(high)
 
+    dtype = torch.result_type(low_t, high_t)
+    device: torch.device | None = None
+    if isinstance(low, torch.Tensor):
+        device = low.device
+    elif isinstance(high, torch.Tensor):
+        device = high.device
+
+    batch_shape = torch.broadcast_shapes(low_t.shape, high_t.shape)
     if size is None:
-        base = torch.rand_like(
-            torch.broadcast_tensors(low_t, high_t)[0]
-        )
+        full_shape = batch_shape
     else:
-        base = torch.rand(size, dtype=low_t.dtype)
+        full_shape = size + batch_shape
+
+    base = torch.rand(full_shape, dtype=dtype, device=device)
 
     return base * (high_t - low_t) + low_t
 
@@ -582,7 +604,8 @@ def normal(
 ) -> torch.Tensor:
     """Sample from a normal distribution.
 
-    Mirrors `numpy.random.normal`.
+    Mirrors `numpy.random.normal`, including support for tensor parameters
+    and broadcasting.
 
     Parameters
     ----------
@@ -596,7 +619,9 @@ def normal(
     Returns
     -------
     torch.Tensor
-        Samples drawn from N(loc, scale^2).
+        Samples drawn from N(loc, scale^2). Output shape is
+        `size + batch_shape`, where `batch_shape` is the broadcasted shape of
+        `loc` and `scale`.
 
     Examples
     --------
@@ -613,14 +638,23 @@ def normal(
     loc_t = torch.as_tensor(loc)
     scale_t = torch.as_tensor(scale)
 
+    if torch.any(scale_t < 0):
+        raise ValueError("`scale` must be non-negative")
+
+    dtype = torch.result_type(loc_t, scale_t)
+    device: torch.device | None = None
+    if isinstance(loc, torch.Tensor):
+        device = loc.device
+    elif isinstance(scale, torch.Tensor):
+        device = scale.device
+
+    batch_shape = torch.broadcast_shapes(loc_t.shape, scale_t.shape)
     if size is None:
-        base_shape = torch.broadcast_shapes(
-            loc_t.shape,
-            scale_t.shape,
-        )
-        base = torch.randn(base_shape, dtype=loc_t.dtype)
+        full_shape = batch_shape
     else:
-        base = torch.randn(size, dtype=loc_t.dtype)
+        full_shape = size + batch_shape
+
+    base = torch.randn(full_shape, dtype=dtype, device=device)
 
     return base * scale_t + loc_t
 
@@ -631,7 +665,8 @@ def poisson(
 ) -> torch.Tensor:
     """Sample from a Poisson distribution.
 
-    Mirrors `numpy.random.poisson`.
+    Mirrors `numpy.random.poisson`, including support for tensor parameters
+    and broadcasting. The returned dtype is `torch.int64` for NumPy parity.
 
     Parameters
     ----------
@@ -643,7 +678,8 @@ def poisson(
     Returns
     -------
     torch.Tensor
-        Samples drawn from a Poisson distribution (int64).
+        Samples drawn from a Poisson distribution (int64). Output shape is
+        `size + batch_shape`, where `batch_shape` is the shape of `lam`.
 
     Examples
     --------
@@ -651,6 +687,9 @@ def poisson(
 
     >>> rnd.poisson(3.0)
     tensor(4)
+
+    >>> rnd.poisson(3.0).dtype
+    torch.int64
 
     >>> rnd.poisson(3.0, (2, 3)).shape
     torch.Size([2, 3])
@@ -662,11 +701,16 @@ def poisson(
     if torch.any(lam_t < 0):
         raise ValueError("`lam` must be non-negative")
 
+    device: torch.device | None = None
+    if isinstance(lam, torch.Tensor):
+        device = lam.device
+
+    batch_shape = lam_t.shape
     if size is None:
-        base = lam_t
+        full_shape = batch_shape
     else:
-        base = torch.broadcast_to(lam_t, size)
+        full_shape = size + batch_shape
 
-    samples = torch.poisson(base)
+    base = lam_t.expand(full_shape).to(device=device)
 
-    return samples.to(torch.int64)
+    return torch.poisson(base).to(torch.int64)
