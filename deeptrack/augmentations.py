@@ -202,9 +202,11 @@ class Augmentation(Feature):
 
         if isinstance(element, (ScatteredVolume, ScatteredField)):
             new_volume = element.copy()
+            old_shape = new_volume.array.shape
             new_volume.array = self._augment_array(
                 new_volume.array, **kwargs
             )
+            new_volume = self._update_properties(new_volume, old_shape, new_volume.array.shape)
             return new_volume
 
         # Arrays
@@ -233,6 +235,9 @@ class Augmentation(Feature):
             return self._get_torch(array, **kwargs)
 
         raise RuntimeError(f"Unknown backend: {backend}")
+    
+    def _update_properties(self, element, old_shape, new_shape):
+        return element
 
 
     # def _get_xp(self, data, xp, **kwargs) -> np.ndarray | torch.Tensor:
@@ -314,25 +319,24 @@ class Reuse(Feature):
 class FlipLR(Augmentation):
     """Flips images left-right.
 
-    Updates all properties called "position" to flip the second index in the 
+    If scattered volume or field, updates all properties called "position" to flip the second index in the 
     image.
 
     Parameters
     ----------
     p: float
-       Probability of flipping the image, 
-       leaving as default (0.5) is sufficient most of the time.
+       Probability of flipping, default is 0.5.
 
     augment: bool
        Whether to perform the augmentation.
 
     Methods
     -------
-    `get(image: np.ndarray | torch.Tensor, augment: PropertyLike[bool], **kwargs) -> np.ndarray | torch.Tensor`
+    `_get_xp(image: np.ndarray | torch.Tensor, augment: PropertyLike[bool], **kwargs) -> np.ndarray | torch.Tensor`
         Abstract method which performs the `FlipLR` augmentation.
 
-    `update_properties(image: np.ndarray | torch.Tensor, augment: PropertyLike[bool], **kwargs) -> None`
-        Abstract method to update the properties of the image.
+    `_update_properties(image: np.ndarray | torch.Tensor, augment: PropertyLike[bool], **kwargs) -> None`
+        Abstract method to update the properties of the scattered volume or field.
        
     """
 
@@ -350,36 +354,40 @@ class FlipLR(Augmentation):
             **kwargs,
         )
 
-    def get(
-        self: FlipLR,
-        image: np.ndarray | torch.Tensor,
-        augment: bool,
-        **kwargs
+    def _get_xp(
+        self: FlipLR, 
+        array: np.ndarray | torch.Tensor, 
+        xp: , 
+        augment: bool, 
+        **kwargs,
     ) -> np.ndarray | torch.Tensor:
-        """Abstract method which performs the `FlipLR` augmentation.
 
-        """
-        
-        if augment:
-            image = image[:, ::-1]
-        return image
+        if not augment:
+            return array
 
-    def update_properties(
-        self: FlipLR,
-        image: np.ndarray | torch.Tensor,
-        augment: bool,
-        **kwargs
-    ) -> None:
-        """Abstract method to update the properties of the image.
-    
-        """            
-        if augment:
-            for prop in image.properties:
+        return xp.flip(array, axis=1)
+
+    def _update_properties(
+        self: , 
+        element, 
+        old_shape, 
+        new_shape, 
+        augment: bool, 
+        **kwargs,
+    ) -> :
+
+        if not augment:
+            return element
+
+        if hasattr(element, "properties"):
+            for prop in element.properties:
                 if "position" in prop:
-                    position = np.array(prop["position"])
-                    position[..., 1] = image.shape[1] - position[..., 1] - 1
-                    prop["position"] = position
+                    pos = prop["position"]
+                    W = old_shape[1]
+                    pos[..., 1] = W - 1 - pos[..., 1]
+                    prop["position"] = pos
 
+        return element
 
 class FlipUD(Augmentation):
     """Flips images up-down.
@@ -419,35 +427,27 @@ class FlipUD(Augmentation):
             **kwargs,
         )
 
-    def get(
-        self: FlipUD,
-        image: Image | np.ndarray,
-        augment: bool,
-        **kwargs
-    ) -> Image:
-        """Abstract method which performs the `FlipUD` augmentation.
+    def _get_xp(self, array, xp, augment: bool, **kwargs):
 
-        """
-        
-        if augment:
-            image = image[::-1]
-        return image
+        if not augment:
+            return array
 
-    def update_properties(
-        self: FlipUD,
-        image: Image | np.ndarray,
-        augment: bool,
-        **kwargs
-    ) -> None:
-        """Abstract method to update the properties of the image.
-    
-        """    
-        if augment:
-            for prop in image.properties:
+        return xp.flip(array, axis=0)
+
+    def _update_properties(self, element, old_shape, new_shape, augment: bool, **kwargs):
+
+        if not augment:
+            return element
+
+        if hasattr(element, "properties"):
+            for prop in element.properties:
                 if "position" in prop:
-                    position = np.array(prop["position"])
-                    position[..., 0] = image.shape[0] - position[..., 0] - 1
-                    prop["position"] = position
+                    pos = prop["position"]
+                    H = old_shape[0]
+                    pos[..., 0] = H - 1 - pos[..., 0]
+                    prop["position"] = pos
+
+        return element
 
 
 class FlipDiagonal(Augmentation):
